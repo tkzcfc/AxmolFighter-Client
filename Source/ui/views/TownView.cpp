@@ -29,8 +29,8 @@ namespace gameui
 
 namespace
 {
-// 城镇试点：town 41 → city_newcity_xueyuan
-constexpr int32_t TOWN_ID = 41;
+// 默认城镇：town 41 → city_newcity_xueyuan
+constexpr int32_t DEFAULT_TOWN_ID = 41;
 // 状态上报间隔（秒）
 constexpr float REPORT_INTERVAL = 0.2f;
 // 位置变化上报阈值（像素）
@@ -117,6 +117,17 @@ constexpr float REMOTE_FACING_SNAP_DISTANCE = 60.0f;
 constexpr uint32_t LOCAL_MOVE_KEY_MASK = (1u << INPUT_SLOT_MOVE_LEFT) | (1u << INPUT_SLOT_MOVE_RIGHT) |
                                          (1u << INPUT_SLOT_MOVE_UP) | (1u << INPUT_SLOT_MOVE_DOWN);
 }  // namespace
+
+TownView::TownView()
+{
+    m_boot.townId = DEFAULT_TOWN_ID;
+}
+
+TownView::TownView(TownBootParams boot) : m_boot(std::move(boot))
+{
+    if (m_boot.townId <= 0)
+        m_boot.townId = DEFAULT_TOWN_ID;
+}
 
 void TownView::onEnter()
 {
@@ -227,9 +238,9 @@ bool TownView::initGameWord()
 
     m_gameWord->setMode(GameWordMode::kTown);
 
-    if (!m_gameWord->loadMap(TOWN_ID))
+    if (!m_gameWord->loadMap(m_boot.townId))
     {
-        AXLOGE("TownView: loadMap({}) failed", TOWN_ID);
+        AXLOGE("TownView: loadMap({}) failed", m_boot.townId);
         return false;
     }
 
@@ -246,10 +257,15 @@ bool TownView::createLocalPlayer()
         return false;
     }
 
-    // 出生点：优先 TownConfig.actorPos，否则 map scope 中心
+    // 出生点：传送门指定位置 > TownConfig.actorPos > map scope 中心
     int32_t spawnX = 0;
     int32_t spawnY = 0;
-    if (const auto* town = Config::getInstance()->getTownConfigById(TOWN_ID))
+    if (m_boot.spawnX >= 0 && m_boot.spawnZ >= 0)
+    {
+        spawnX = m_boot.spawnX;
+        spawnY = m_boot.spawnZ;
+    }
+    else if (const auto* town = Config::getInstance()->getTownConfigById(m_boot.townId))
     {
         spawnX = town->actorPosX;
         spawnY = town->actorPosZ;
@@ -280,6 +296,12 @@ bool TownView::createLocalPlayer()
     m_gameWord->bindLocalPlayer(player->getId());
     player->notifyEntityReady();
 
+    if (auto* transform = MG_GET_COMPONENT(player, TransformComponent))
+    {
+        transform->facingDirection =
+            m_boot.facing < 0 ? FacingDirection::kFacingLeft : FacingDirection::kFacingRight;
+    }
+
     return true;
 }
 
@@ -287,7 +309,7 @@ void TownView::sendEnterScene()
 {
     PB::Game::EnterSceneReq req;
     req.set_type(PB::Types::SceneEnterType::Map);
-    req.set_map_id(static_cast<uint32_t>(TOWN_ID));
+    req.set_map_id(static_cast<uint32_t>(m_boot.townId));
     fillLocalState(req.mutable_state());
 
     this->call(req, [this](const PB::Game::EnterSceneResp* resp, std::string_view error) {
@@ -936,10 +958,10 @@ void TownView::initPortals()
     if (!m_gameWord)
         return;
 
-    const auto* town = Config::getInstance()->getTownConfigById(TOWN_ID);
+    const auto* town = Config::getInstance()->getTownConfigById(m_boot.townId);
     if (!town || town->portals.empty())
     {
-        AXLOGI("TownView: town {} has no portals", TOWN_ID);
+        AXLOGI("TownView: town {} has no portals", m_boot.townId);
         return;
     }
 
@@ -978,6 +1000,14 @@ void TownView::initPortals()
         portal.destType = entry.destType;
         portal.posX     = localPos.x;
         portal.posY     = localPos.y;
+        if (!entry.dests.empty())
+        {
+            const auto& dest   = entry.dests.front();
+            portal.destTownId  = dest.realRoomId > 0 ? dest.realRoomId : dest.roomId;
+            portal.destPosX    = dest.posX;
+            portal.destPosZ    = dest.posZ;
+            portal.destFacing  = dest.vectorX != 0 ? dest.vectorX : 1;
+        }
 
         const auto* portalCfg = Config::getInstance()->getPortalConfigById(entry.portalId);
         portal.radius         = portalCfg && portalCfg->radius > 0 ? static_cast<float>(portalCfg->radius) : 80.0f;
@@ -1023,9 +1053,10 @@ void TownView::initPortals()
         entityNode->addChild(visualRoot, 10);
         portal.visual = visualRoot;
 
-        AXLOGI("TownView: portal id={} slot={} destType={} at ({:.1f},{:.1f}) radius={} animIndex={}", portal.portalId,
-               portal.slot, portal.destType, portal.posX, portal.posY, portal.radius,
-               resolvePortalSpineAnimIndex(portalCfg));
+        AXLOGI("TownView: portal id={} slot={} destType={} destTown={} destPos=({},{}) at ({:.1f},{:.1f}) radius={} "
+               "animIndex={}",
+               portal.portalId, portal.slot, portal.destType, portal.destTownId, portal.destPosX, portal.destPosZ,
+               portal.posX, portal.posY, portal.radius, resolvePortalSpineAnimIndex(portalCfg));
         m_portals.push_back(portal);
     }
 }
@@ -1075,7 +1106,8 @@ void TownView::onPortalTriggered(const TownPortal& portal)
     constexpr int32_t kDestTypeFunction = 1;
     constexpr int32_t kDestTypeCity     = 5;
 
-    AXLOGI("TownView: portal triggered id={} slot={} destType={}", portal.portalId, portal.slot, portal.destType);
+    AXLOGI("TownView: portal triggered id={} slot={} destType={} destTown={}", portal.portalId, portal.slot,
+           portal.destType, portal.destTownId);
 
     if (portal.destType == kDestTypeFunction)
     {
@@ -1085,7 +1117,27 @@ void TownView::onPortalTriggered(const TownPortal& portal)
 
     if (portal.destType == kDestTypeCity)
     {
-        AXLOGI("TownView: city portal not implemented yet (portalId={})", portal.portalId);
+        if (portal.destTownId <= 0)
+        {
+            AXLOGW("TownView: city portal missing destTownId (portalId={})", portal.portalId);
+            MessagePopup::show("传送目标无效");
+            return;
+        }
+
+        if (!Config::getInstance()->getTownConfigById(portal.destTownId))
+        {
+            AXLOGW("TownView: dest town {} not found (portalId={})", portal.destTownId, portal.portalId);
+            MessagePopup::show("目标城镇配置不存在");
+            return;
+        }
+
+        TownBootParams boot;
+        boot.townId = portal.destTownId;
+        boot.spawnX = portal.destPosX;
+        boot.spawnZ = portal.destPosZ;
+        boot.facing = portal.destFacing;
+        AXLOGI("TownView: transferring to town {} at ({},{})", boot.townId, boot.spawnX, boot.spawnZ);
+        getViewManager()->switchView<TownView>(boot);
         return;
     }
 
@@ -1172,11 +1224,25 @@ void TownView::onImGUIRender()
     }
 
     ImGui::Separator();
+    ImGui::Text("当前城镇: %d", m_boot.townId);
     ImGui::Text("传送门: %d", static_cast<int>(m_portals.size()));
-    for (const auto& portal : m_portals)
+    for (size_t i = 0; i < m_portals.size(); ++i)
     {
-        ImGui::Text("  slot=%d id=%d dest=%d (%.0f,%.0f) r=%.0f", portal.slot, portal.portalId, portal.destType,
-                    portal.posX, portal.posY, portal.radius);
+        const auto& portal = m_portals[i];
+        ImGui::Text("  slot=%d id=%d dest=%d -> town %d (%.0f,%.0f)", portal.slot, portal.portalId, portal.destType,
+                    portal.destTownId, portal.posX, portal.posY);
+        if (portal.destType == 5 && portal.destTownId > 0)
+        {
+            const std::string btn = fmt::format("传送到城镇 {}##portal_{}", portal.destTownId, i);
+            if (ImGui::Button(btn.c_str(), ImVec2(-1, 0)))
+                onPortalTriggered(portal);
+        }
+        else if (portal.destType == 1)
+        {
+            const std::string btn = fmt::format("触发功能门##portal_{}", i);
+            if (ImGui::Button(btn.c_str(), ImVec2(-1, 0)))
+                onPortalTriggered(portal);
+        }
     }
     if (ImGui::Button("打开副本选择", ImVec2(-1, 0)))
     {

@@ -22,6 +22,16 @@ class Node;
 namespace gameui
 {
 
+// 进入/切换城镇参数（城际传送门传入）
+struct TownBootParams
+{
+    int32_t townId = 41;
+    // <0 表示使用 TownConfig.actorPos
+    int32_t spawnX  = -1;
+    int32_t spawnZ  = -1;
+    int32_t facing  = 1;
+};
+
 // 城镇视图：本地玩家使用完整 Mugen 逻辑移动，通过 town 服状态同步
 // 展示同场景其他玩家（远程实体只做渲染插值，不参与逻辑模拟）。
 class TownView : public View
@@ -30,6 +40,9 @@ public:
     typedef View Super;
 
 public:
+    TownView();
+    explicit TownView(TownBootParams boot);
+
     virtual void onEnter() override;
     virtual void onExit() override;
     virtual void onUpdate(float delta) override;
@@ -72,14 +85,18 @@ private:
     // 城镇传送门运行时数据
     struct TownPortal
     {
-        int32_t portalId  = 0;
-        int32_t slot      = 0;
-        int32_t destType  = 0;
-        float posX        = 0.0f;
-        float posY        = 0.0f;
-        float radius      = 0.0f;
-        bool playerInside = false;
-        ax::Node* visual  = nullptr;
+        int32_t portalId   = 0;
+        int32_t slot       = 0;
+        int32_t destType   = 0;
+        int32_t destTownId = 0;
+        int32_t destPosX   = 0;
+        int32_t destPosZ   = 0;
+        int32_t destFacing = 1;
+        float posX         = 0.0f;
+        float posY         = 0.0f;
+        float radius       = 0.0f;
+        bool playerInside  = false;
+        ax::Node* visual   = nullptr;
     };
 
     bool initGameWord();
@@ -114,6 +131,7 @@ private:
     void requestSoloBattle();
 
 private:
+    TownBootParams m_boot;
     std::map<ax::EventKeyboard::KeyCode, uint32_t> m_slotMap;
     std::unique_ptr<mugen::GameWord> m_gameWord   = nullptr;
     ax::EventListenerKeyboard* m_keyboardListener = nullptr;
