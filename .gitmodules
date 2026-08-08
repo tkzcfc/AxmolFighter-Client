@@ -1,3 +1,6 @@
 [submodule "Content"]
 	path = Content
 	url = git@github.com:tkzcfc/AxmolFighter-Client-Content.git
+[submodule "Source/3rd/protobuf"]
+	path = Source/3rd/protobuf
+	url = https://github.com/protocolbuffers/protobuf.git
