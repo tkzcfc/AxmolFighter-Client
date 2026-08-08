@@ -34,6 +34,10 @@ struct PlayerSpawnParams
     }
 };
 
+// 将服务器 class_id（JobType：1/2/4）解析为可玩英雄 RoleConfig id（101/102/103）。
+// 若传入已是有效英雄 RoleConfig id（带 /hero/ spine），原样返回；否则回退 101。
+int32_t resolvePlayableRoleId(int32_t classOrRoleId);
+
 Entity* spawnRolePlayerActor(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y);
 Entity* spawnRolePlayerActor(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y, const ActorSpawnParams& params);
 Entity* spawnRolePlayerActor(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y, const PlayerSpawnParams& params);

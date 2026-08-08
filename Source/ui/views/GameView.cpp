@@ -1,10 +1,14 @@
 #include "GameView.h"
 
+#include "TownView.h"
 #include "mugen/Components.h"
 #include "mugen/GameWord.h"
 #include "mugen/conf/GameDef.h"
 #include "ui/battle/LocalBattleMode.h"
 #include "ui/battle/OnlineBattleMode.h"
+#include "ui/core/ViewManager.h"
+
+#include "imgui.h"
 
 using namespace mugen;
 
@@ -14,6 +18,8 @@ namespace gameui
 GameView::GameView() = default;
 
 GameView::GameView(BattleBootParams boot) : m_boot(std::move(boot)) {}
+
+GameView::GameView(LocalBattleParams local) : m_local(std::move(local)) {}
 
 GameView::~GameView() = default;
 
@@ -51,7 +57,8 @@ void GameView::onEnter()
         return;
     }
 
-    MG_LOG_I("GameView: entered (local={}, seed ready)", !m_boot.has_value());
+    MG_LOG_I("GameView: entered (online={}, localRoom={})", m_boot.has_value(),
+             m_local.has_value() ? m_local->roomId : 0);
 }
 
 void GameView::onExit()
@@ -131,7 +138,29 @@ std::unique_ptr<IBattleMode> GameView::createBattleMode()
     if (m_boot)
         return std::make_unique<OnlineBattleMode>(std::move(*m_boot));
 
+    if (m_local)
+        return std::make_unique<LocalBattleMode>(m_local->roomId);
+
     return std::make_unique<LocalBattleMode>();
+}
+
+void GameView::onImGUIRender()
+{
+    // 仅本地副本模式显示返回城镇按钮
+    if (!m_local || m_local->roomId <= 0)
+        return;
+
+    ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(200.0f, 80.0f), ImGuiCond_FirstUseEver);
+    ImGui::Begin("副本");
+
+    ImGui::Text("房间 ID: %d", m_local->roomId);
+    if (ImGui::Button("返回城镇", ImVec2(-1, 0)))
+    {
+        getViewManager()->switchView<TownView>();
+    }
+
+    ImGui::End();
 }
 
 }  // namespace gameui

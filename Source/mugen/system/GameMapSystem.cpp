@@ -40,7 +40,8 @@ void GameMapSystem::onEntityAdded(Entity* entity)
     if (soundSys)
     {
         const auto& mapDataConfigs = Config::getInstance()->mapDataConfigs;
-        auto it                    = mapDataConfigs.find(gameMapComp->mapId);
+        const int32_t mapDataKey   = gameMapComp->mapDataId > 0 ? gameMapComp->mapDataId : gameMapComp->mapId;
+        auto it                    = mapDataConfigs.find(mapDataKey);
         if (it != mapDataConfigs.end())
         {
             soundSys->playBgmById(it->second.soundId);

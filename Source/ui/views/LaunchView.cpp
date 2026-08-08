@@ -1,7 +1,7 @@
 #include "LaunchView.h"
 #include "ui/core/ViewManager.h"
 #include "mugen/conf/Config.h"
-#include "GameView.h"
+#include "CharacterLobbyView.h"
 
 namespace gameui
 {
@@ -81,7 +81,7 @@ void LaunchView::onUpdate(float /*dt*/)
         if (m_progressBar->getValue() >= m_progressBar->getMax() &&
             !GTween::isTweening(m_progressBar, TweenPropType::Progress))
         {
-            getViewManager()->switchView<GameView>();
+            getViewManager()->switchView<CharacterLobbyView>();
         }
         break;
     case LoadingState::Failed:

@@ -4,6 +4,7 @@
 #include "ui/battle/BattleBootParams.h"
 #include "ui/battle/BattleMode.h"
 
+#include <map>
 #include <optional>
 
 namespace mugen
@@ -22,11 +23,13 @@ public:
 public:
     GameView();
     explicit GameView(BattleBootParams boot);
+    explicit GameView(LocalBattleParams local);
     ~GameView() override;
 
     virtual void onEnter() override;
     virtual void onExit() override;
     virtual void onUpdate(float delta) override;
+    virtual void onImGUIRender() override;
 
     // Keyboard
     void onKeyPressed(ax::EventKeyboard::KeyCode code, ax::Event* event);
@@ -39,6 +42,7 @@ private:
 
 private:
     std::optional<BattleBootParams> m_boot;
+    std::optional<LocalBattleParams> m_local;
     std::unique_ptr<mugen::GameWord> m_gameWord;
     std::unique_ptr<IBattleMode> m_battleMode;
     std::map<ax::EventKeyboard::KeyCode, uint32_t> m_slotMap;

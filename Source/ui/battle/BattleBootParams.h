@@ -17,4 +17,10 @@ struct BattleBootParams
     std::string worldDump;
 };
 
+// 本地副本启动参数（单机调试期；联网后由 BattleBootParams 取代）
+struct LocalBattleParams
+{
+    std::int32_t roomId = 0;  // RoomConfig id
+};
+
 }  // namespace gameui

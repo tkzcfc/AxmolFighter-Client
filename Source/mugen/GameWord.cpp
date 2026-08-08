@@ -92,10 +92,12 @@ bool GameWord::loadMap(int32_t mapId)
 {
     auto* config = Config::getInstance();
 
-    // 优先：town id / mapData id → mapKey → 运行时 MapConfig
+    // 优先：town id / room id / mapData id → mapKey → 运行时 MapConfig
     std::string mapKey;
-    int32_t mapDataId            = mapId;
+    int32_t logicalId            = mapId;  // 写入 mapComp->mapId（刷怪查表用）
+    int32_t mapDataId            = mapId;  // 写入 mapComp->mapDataId（视差/BGM）
     const TownConfig* townConfig = nullptr;
+    const RoomConfig* roomConfig = nullptr;
 
     auto townIt = config->townConfigs.find(mapId);
     if (townIt != config->townConfigs.end() && !townIt->second.mapKey.empty())
@@ -106,11 +108,22 @@ bool GameWord::loadMap(int32_t mapId)
     }
     else
     {
-        auto mapDataIt = config->mapDataConfigs.find(mapId);
-        if (mapDataIt != config->mapDataConfigs.end() && !mapDataIt->second.mapKey.empty())
+        auto roomIt = config->roomConfigs.find(mapId);
+        if (roomIt != config->roomConfigs.end() && !roomIt->second.mapKey.empty())
         {
-            mapKey    = mapDataIt->second.mapKey;
-            mapDataId = mapId;
+            roomConfig = &roomIt->second;
+            mapKey     = roomConfig->mapKey;
+            mapDataId  = roomConfig->mapDataId > 0 ? roomConfig->mapDataId : mapId;
+            // logicalId 保持 roomId，GameMapSystem 用它查 RoomConfig 刷怪
+        }
+        else
+        {
+            auto mapDataIt = config->mapDataConfigs.find(mapId);
+            if (mapDataIt != config->mapDataConfigs.end() && !mapDataIt->second.mapKey.empty())
+            {
+                mapKey    = mapDataIt->second.mapKey;
+                mapDataId = mapId;
+            }
         }
     }
 
@@ -129,14 +142,21 @@ bool GameWord::loadMap(int32_t mapId)
             mapConfig->spawnPoints.clear();
             mapConfig->spawnPoints.push_back(Vector2i{townConfig->actorPosX, townConfig->actorPosZ});
         }
+        // 副本房间出生点
+        else if (roomConfig && !roomConfig->actorSpawns.empty())
+        {
+            mapConfig->spawnPoints.clear();
+            mapConfig->spawnPoints.push_back(
+                Vector2i{roomConfig->actorSpawns.front().posX, roomConfig->actorSpawns.front().posZ});
+        }
 
-        return loadMapByKey(mapKey, mapDataId);
+        return loadMapByKey(mapKey, logicalId, mapDataId);
     }
 
     auto mapConfig = config->getMapConfigById(mapId);
     if (!mapConfig)
     {
-        MG_LOG_E("GameWord::loadMap: no Town/MapData/MapConfig for id={}", mapId);
+        MG_LOG_E("GameWord::loadMap: no Town/Room/MapData/MapConfig for id={}", mapId);
         return false;
     }
 
@@ -166,7 +186,7 @@ bool GameWord::loadMap(int32_t mapId)
     return true;
 }
 
-bool GameWord::loadMapByKey(const std::string& mapKey, int32_t logicalId)
+bool GameWord::loadMapByKey(const std::string& mapKey, int32_t logicalId, int32_t mapDataId)
 {
     auto* config   = Config::getInstance();
     auto mapConfig = config->getOrCreateMapConfigByKey(mapKey);
@@ -191,10 +211,12 @@ bool GameWord::loadMapByKey(const std::string& mapKey, int32_t logicalId)
     auto map                  = ecsManager.newEntity();
     directorComp->mapEntityId = map->getId();
 
+    const int32_t resolvedMapDataId = mapDataId >= 0 ? mapDataId : logicalId;
+
     auto mapRenderComp = MG_ADD_COMPONENT(map, GameMapRenderComponent);
     auto mapComp       = MG_ADD_COMPONENT(map, GameMapComponent);
     mapComp->mapId     = logicalId > 0 ? logicalId : 0;
-    mapComp->mapDataId = logicalId > 0 ? logicalId : 0;
+    mapComp->mapDataId = resolvedMapDataId > 0 ? resolvedMapDataId : 0;
     mapComp->mapConfig = mapConfig;
     (void)mapRenderComp;
 

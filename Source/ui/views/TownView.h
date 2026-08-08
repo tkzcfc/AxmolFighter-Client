@@ -7,10 +7,16 @@
 #include <map>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace PB::Types
 {
 class PlayerState;
+}
+
+namespace ax
+{
+class Node;
 }
 
 namespace gameui
@@ -63,11 +69,30 @@ private:
         int32_t facing = 0;
     };
 
+    // 城镇传送门运行时数据
+    struct TownPortal
+    {
+        int32_t portalId  = 0;
+        int32_t slot      = 0;
+        int32_t destType  = 0;
+        float posX        = 0.0f;
+        float posY        = 0.0f;
+        float radius      = 0.0f;
+        bool playerInside = false;
+        ax::Node* visual  = nullptr;
+    };
+
     bool initGameWord();
     bool createLocalPlayer();
     void sendEnterScene();
     void fillLocalState(PB::Types::PlayerState* state) const;
     void reportLocalState(float delta);
+
+    // 传送门
+    void initPortals();
+    void updatePortals();
+    void onPortalTriggered(const TownPortal& portal);
+    static ax::Node* findChildByNameRecursive(ax::Node* root, const std::string& name);
 
     // 添加消息推送监听
     void addMessagePushReceiver();
@@ -95,6 +120,9 @@ private:
 
     // player_id -> 远程玩家数据
     std::unordered_map<int64_t, RemotePlayer> m_remotePlayers;
+
+    // 城镇传送门
+    std::vector<TownPortal> m_portals;
 
     bool m_enteredScene = false;
 

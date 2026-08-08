@@ -36,10 +36,18 @@ public:
         return spineScale > 0.0f ? spineScale : 1.0f;
     }
 
-    const std::string& getSpineSkeleton() const { return resSpine ? resSpine->spine : spineSkeleton; }
+    const std::string& getSpineSkeleton() const
+    {
+        // spawn 时写入的路径（含城镇 *_city 覆盖）优先于表配置
+        if (!spineSkeleton.empty())
+            return spineSkeleton;
+        return resSpine ? resSpine->spine : spineSkeleton;
+    }
 
     const std::string& getSpineAtlas() const
     {
+        if (!spineAtlas.empty())
+            return spineAtlas;
         return resSpine && !resSpine->atlas.empty() ? resSpine->atlas : spineAtlas;
     }
 

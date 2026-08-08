@@ -2,6 +2,7 @@
 
 #include "AppContext.h"
 #include "TownView.h"
+#include "mugen/ActorSpawner.h"
 #include "mugen/avatar/render/Avatar.h"
 #include "mugen/avatar/render/AvatarBuilder.h"
 #include "mugen/avatar/render/SpineLayer.h"
@@ -94,28 +95,25 @@ void CharacterLobbyView::updateCharacterList()
         nameText->setText(fmt::format("Lv{} {}", c.level, c.name));
         professionText->setText("鬼剑士");
 
-        // classID is the server role id. Keep the preview on the same
-        // RoleConfig/ResSpineConfig path used by spawned actors.
-        int32_t roleId = c.classID > 0 ? c.classID : 1;
-        auto* config   = mugen::Config::getInstance();
-        auto* role     = config->getRoleConfigById(roleId);
-        if (!role)
-        {
-            roleId = 1;
-            role   = config->getRoleConfigById(roleId);
-        }
+        // classID 是服务器 JobType（1/2/4），需映射到英雄 RoleConfig id（101/...）
+        const int32_t roleId = mugen::actor_spawner::resolvePlayableRoleId(c.classID);
+        auto* config         = mugen::Config::getInstance();
+        auto* role           = config->getRoleConfigById(roleId);
         const auto* spine = role && role->resSpineId > 0 ? config->getResSpineConfigById(role->resSpineId) : nullptr;
         mugen::SpineAvatarDesc desc;
-        if (spine)
+        if (spine && !spine->spine.empty() && !spine->atlas.empty())
         {
             desc.skeleton    = spine->spine;
             desc.atlas       = spine->atlas;
             desc.defaultSkin = spine->defaultSkin;
             desc.scale       = spine->scale;
         }
-        auto* previewAvatar = spine ? mugen::AvatarBuilder::createAvatar(desc) : nullptr;
+        auto* previewAvatar =
+            (!desc.skeleton.empty() && !desc.atlas.empty()) ? mugen::AvatarBuilder::createAvatar(desc) : nullptr;
         if (!previewAvatar)
         {
+            AXLOGW("CharacterLobbyView: preview avatar failed classId={} roleId={} spine='{}'", c.classID, roleId,
+                   spine ? spine->spine : "");
             avatarLoader->setContent(nullptr);
             continue;
         }

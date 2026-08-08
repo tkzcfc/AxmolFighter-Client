@@ -14,11 +14,13 @@ namespace gameui
 
 namespace
 {
-// 单机城镇：town 41 → city_newcity_xueyuan
+// 单机城镇调试图：town 41 → city_newcity_xueyuan
 constexpr int32_t LOCAL_MAP_ID = 41;
 // 英雄 role 101（resSpineId=88101）
 constexpr int32_t PILOT_ROLE_ID = 101;
 }  // namespace
+
+LocalBattleMode::LocalBattleMode(int32_t roomId) : m_roomId(roomId) {}
 
 bool LocalBattleMode::init(mugen::GameWord* gameWord)
 {
@@ -29,11 +31,13 @@ bool LocalBattleMode::init(mugen::GameWord* gameWord)
         return false;
     }
 
-    m_gameWord->setMode(GameWordMode::kTown);
+    const bool isDungeon = m_roomId > 0;
+    m_gameWord->setMode(isDungeon ? GameWordMode::kBattle : GameWordMode::kTown);
 
-    if (!m_gameWord->loadMap(LOCAL_MAP_ID))
+    const int32_t mapId = isDungeon ? m_roomId : LOCAL_MAP_ID;
+    if (!m_gameWord->loadMap(mapId))
     {
-        MG_LOG_E("LocalBattleMode: loadMap({}) failed", LOCAL_MAP_ID);
+        MG_LOG_E("LocalBattleMode: loadMap({}) failed", mapId);
         return false;
     }
 
@@ -43,7 +47,7 @@ bool LocalBattleMode::init(mugen::GameWord* gameWord)
         return false;
     }
 
-    MG_LOG_I("LocalBattleMode: map {} loaded with local player", LOCAL_MAP_ID);
+    MG_LOG_I("LocalBattleMode: map {} loaded with local player (dungeon={})", mapId, isDungeon);
     return true;
 }
 
@@ -120,7 +124,7 @@ bool LocalBattleMode::spawnLocalPlayer()
     {
         if (session->selectedCharacter.characterID != 0)
         {
-            roleId   = static_cast<int32_t>(session->selectedCharacter.characterID);
+            roleId   = actor_spawner::resolvePlayableRoleId(session->selectedCharacter.classID);
             playerId = session->account.playerID;
             name     = session->selectedCharacter.name;
             if (!config->getRoleConfigById(roleId))

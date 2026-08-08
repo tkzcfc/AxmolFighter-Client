@@ -247,6 +247,41 @@ Entity* spawnRemoteRoleImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32_t 
 
 }  // namespace
 
+int32_t resolvePlayableRoleId(int32_t classOrRoleId)
+{
+    // 服务器 class_id 是 JobType，不是 RoleConfig id
+    constexpr int32_t kDefaultHeroRoleId = 101;
+    switch (classOrRoleId)
+    {
+    case static_cast<int32_t>(JobType::kSwordman):
+        return 101;
+    case static_cast<int32_t>(JobType::kRanger):
+        return 102;
+    case static_cast<int32_t>(JobType::kMage):
+        return 103;
+    default:
+        break;
+    }
+
+    if (classOrRoleId <= 0)
+        return kDefaultHeroRoleId;
+
+    auto* config = Config::getInstance();
+    const auto* role = config->getRoleConfigById(classOrRoleId);
+    if (!role || role->resSpineId <= 0)
+        return kDefaultHeroRoleId;
+
+    const auto* spine = config->getResSpineConfigById(role->resSpineId);
+    if (!spine || spine->spine.empty())
+        return kDefaultHeroRoleId;
+
+    // 英雄资源路径约定：mugen/spine/hero/...
+    if (spine->spine.find("/hero/") == std::string::npos)
+        return kDefaultHeroRoleId;
+
+    return classOrRoleId;
+}
+
 Entity* spawnRoleActor(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y, const ActorSpawnParams& params)
 {
     return spawnRoleFullActorImpl(ecs, roleId, x, y, params);

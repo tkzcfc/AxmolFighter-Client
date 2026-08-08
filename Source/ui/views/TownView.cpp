@@ -1,15 +1,20 @@
 #include "TownView.h"
 
 #include "AppContext.h"
+#include "DungeonSelectView.h"
 #include "GameView.h"
 #include "mugen/ActorSpawner.h"
 #include "mugen/Components.h"
 #include "mugen/conf/Config.h"
 #include "mugen/conf/GameDef.h"
+#include "mugen/conf/TableConfig.h"
+#include "mugen/render/SpineSkeletonLoader.h"
 #include "ui/battle/BattleBootParams.h"
 #include "ui/widgets/common/MessagePopup.h"
 
+#include "2d/DrawNode.h"
 #include "imgui.h"
+#include "spine/SkeletonAnimation.h"
 
 #include <net/client_game.pb.h>
 #include <net/client_town.pb.h>
@@ -102,6 +107,7 @@ void TownView::onUpdate(float delta)
     m_gameWord->update(delta);
 
     updateRemoteInterpolation(delta);
+    updatePortals();
     reportLocalState(delta);
 }
 
@@ -167,6 +173,7 @@ bool TownView::initGameWord()
         return false;
     }
 
+    initPortals();
     return true;
 }
 
@@ -198,8 +205,8 @@ bool TownView::createLocalPlayer()
         }
     }
 
-    // classID 与可创建职业 / 英雄 roleId 对齐
-    const int32_t roleId = session->selectedCharacter.classID > 0 ? session->selectedCharacter.classID : 1;
+    // classID 是 JobType，映射到可玩英雄 RoleConfig
+    const int32_t roleId = actor_spawner::resolvePlayableRoleId(session->selectedCharacter.classID);
     auto player          = actor_spawner::spawnRolePlayerActor(
         &m_gameWord->ecsManager, roleId, spawnX, spawnY,
         actor_spawner::PlayerSpawnParams{static_cast<int32_t>(session->account.playerID),
@@ -419,8 +426,8 @@ void TownView::addOrUpdateRemotePlayer(const PB::Types::PlayerState& state, bool
         return;
     }
 
-    // 新的远程玩家：创建展示实体
-    const int32_t roleId = state.class_id() > 0 ? state.class_id() : 1;
+    // 新的远程玩家：创建展示实体（class_id 同样是 JobType）
+    const int32_t roleId = actor_spawner::resolvePlayableRoleId(state.class_id());
     auto entity          = actor_spawner::spawnRemoteRoleActor(
         &m_gameWord->ecsManager, roleId, static_cast<int32_t>(state.pos_x()), static_cast<int32_t>(state.pos_y()),
         actor_spawner::PlayerSpawnParams{static_cast<int32_t>(playerId), state.name()}.toActorParams());
@@ -845,6 +852,186 @@ void TownView::respondDuelInvite(int32_t accept)
             MessagePopup::show(resp->message().empty() ? "决斗回应失败" : resp->message());
         }
     });
+}
+
+ax::Node* TownView::findChildByNameRecursive(ax::Node* root, const std::string& name)
+{
+    if (!root)
+        return nullptr;
+    if (root->getName() == name)
+        return root;
+
+    const auto& children = root->getChildren();
+    for (auto* child : children)
+    {
+        if (auto* found = findChildByNameRecursive(child, name))
+            return found;
+    }
+    return nullptr;
+}
+
+void TownView::initPortals()
+{
+    m_portals.clear();
+    if (!m_gameWord)
+        return;
+
+    const auto* town = Config::getInstance()->getTownConfigById(TOWN_ID);
+    if (!town || town->portals.empty())
+    {
+        AXLOGI("TownView: town {} has no portals", TOWN_ID);
+        return;
+    }
+
+    auto director     = m_gameWord->getDirector();
+    auto directorComp = director ? MG_GET_COMPONENT(director, DirectorComponent) : nullptr;
+    auto* mapEntity   = directorComp ? m_gameWord->ecsManager.getEntity(directorComp->mapEntityId) : nullptr;
+    auto* mapRender   = mapEntity ? MG_GET_COMPONENT(mapEntity, GameMapRenderComponent) : nullptr;
+    if (!mapRender || !mapRender->entityNode)
+    {
+        AXLOGW("TownView: entityNode missing, cannot spawn portals");
+        return;
+    }
+
+    ax::Node* entityNode = mapRender->entityNode;
+
+    for (const auto& entry : town->portals)
+    {
+        if (entry.portalId <= 0 || entry.slot <= 0)
+            continue;
+
+        const std::string markerName = fmt::format("POR_{}", entry.slot);
+        ax::Node* marker             = findChildByNameRecursive(entityNode, markerName);
+        if (!marker)
+        {
+            AXLOGW("TownView: portal marker '{}' not found in entity layer", markerName);
+            continue;
+        }
+
+        // 取相对 entityNode 的坐标（entity 层无视差，即地图逻辑坐标）
+        const ax::Vec2 worldPos = marker->convertToWorldSpaceAR(ax::Vec2::ZERO);
+        const ax::Vec2 localPos = entityNode->convertToNodeSpace(worldPos);
+
+        TownPortal portal;
+        portal.portalId = entry.portalId;
+        portal.slot     = entry.slot;
+        portal.destType = entry.destType;
+        portal.posX     = localPos.x;
+        portal.posY     = localPos.y;
+
+        const auto* portalCfg = Config::getInstance()->getPortalConfigById(entry.portalId);
+        portal.radius         = portalCfg && portalCfg->radius > 0 ? static_cast<float>(portalCfg->radius) : 80.0f;
+
+        // 外观：优先 Spine，失败则画调试圆
+        ax::Node* visual = nullptr;
+        if (portalCfg && portalCfg->resSpineId > 0)
+        {
+            const auto* spineCfg = Config::getInstance()->getResSpineConfigById(portalCfg->resSpineId);
+            if (spineCfg && !spineCfg->spine.empty() && !spineCfg->atlas.empty())
+            {
+                const float scale = spineCfg->scale > 0.0f ? spineCfg->scale : 1.0f;
+                auto* skeleton =
+                    SpineSkeletonLoader::createSkeletonAnimation(spineCfg->spine, spineCfg->atlas, scale);
+                if (skeleton)
+                {
+                    if (!spineCfg->defaultSkin.empty())
+                        skeleton->setSkin(spineCfg->defaultSkin);
+
+                    // 播放第一个可用动画作占位
+                    if (skeleton->getSkeleton() && skeleton->getSkeleton()->getData())
+                    {
+                        auto& anims = skeleton->getSkeleton()->getData()->getAnimations();
+                        if (anims.size() > 0)
+                        {
+                            const char* animName = anims[0]->getName().buffer();
+                            if (animName && animName[0] != '\0')
+                                skeleton->setAnimation(0, animName, true);
+                        }
+                    }
+                    visual = skeleton;
+                }
+            }
+        }
+
+        if (!visual)
+        {
+            auto* draw = ax::DrawNode::create();
+            draw->drawCircle(ax::Vec2::ZERO, portal.radius, 0.0f, 32, false, ax::Color4F(0.2f, 0.8f, 1.0f, 0.8f));
+            draw->drawSolidCircle(ax::Vec2::ZERO, 12.0f, 0.0f, 16, ax::Color4F(0.2f, 0.8f, 1.0f, 0.5f));
+            visual = draw;
+        }
+
+        visual->setPosition(portal.posX, portal.posY);
+        visual->setName(fmt::format("portal_runtime_{}", entry.slot));
+        entityNode->addChild(visual, 10);
+        portal.visual = visual;
+
+        AXLOGI("TownView: portal id={} slot={} destType={} at ({:.1f},{:.1f}) radius={}", portal.portalId, portal.slot,
+               portal.destType, portal.posX, portal.posY, portal.radius);
+        m_portals.push_back(portal);
+    }
+}
+
+void TownView::updatePortals()
+{
+    if (m_portals.empty())
+        return;
+
+    auto player = getLocalPlayer();
+    if (!player)
+        return;
+
+    auto* physics = MG_GET_COMPONENT(player, PhysicsComponent);
+    if (!physics)
+        return;
+
+    const float px = physics->position.x;
+    const float py = physics->position.y;
+
+    for (auto& portal : m_portals)
+    {
+        const float dx   = px - portal.posX;
+        const float dy   = py - portal.posY;
+        const float dist = std::sqrt(dx * dx + dy * dy);
+
+        if (!portal.playerInside)
+        {
+            if (dist <= portal.radius)
+            {
+                portal.playerInside = true;
+                onPortalTriggered(portal);
+            }
+        }
+        else
+        {
+            // 滞回：离开 1.2 倍半径后才重置，避免原地反复触发
+            if (dist > portal.radius * 1.2f)
+                portal.playerInside = false;
+        }
+    }
+}
+
+void TownView::onPortalTriggered(const TownPortal& portal)
+{
+    // 对齐黑月 PortalTransferType：1=Function（功能 UI），5=City
+    constexpr int32_t kDestTypeFunction = 1;
+    constexpr int32_t kDestTypeCity     = 5;
+
+    AXLOGI("TownView: portal triggered id={} slot={} destType={}", portal.portalId, portal.slot, portal.destType);
+
+    if (portal.destType == kDestTypeFunction)
+    {
+        getViewManager()->pushView<DungeonSelectView>();
+        return;
+    }
+
+    if (portal.destType == kDestTypeCity)
+    {
+        AXLOGI("TownView: city portal not implemented yet (portalId={})", portal.portalId);
+        return;
+    }
+
+    AXLOGI("TownView: unsupported portal destType={}", portal.destType);
 }
 
 mugen::Entity* TownView::getLocalPlayer() const
