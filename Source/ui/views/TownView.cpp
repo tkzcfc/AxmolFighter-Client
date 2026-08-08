@@ -10,6 +10,7 @@
 #include "mugen/conf/TableConfig.h"
 #include "mugen/render/SpineSkeletonLoader.h"
 #include "ui/battle/BattleBootParams.h"
+#include "ui/input/DefaultInputSlotMap.h"
 #include "ui/widgets/common/MessagePopup.h"
 
 #include "2d/DrawNode.h"
@@ -149,10 +150,7 @@ void TownView::onEnter()
     addMessagePushReceiver();
 
     // 城镇只响应移动输入
-    m_slotMap[ax::EventKeyboard::KeyCode::KEY_LEFT_ARROW]  = INPUT_SLOT_MOVE_LEFT;
-    m_slotMap[ax::EventKeyboard::KeyCode::KEY_RIGHT_ARROW] = INPUT_SLOT_MOVE_RIGHT;
-    m_slotMap[ax::EventKeyboard::KeyCode::KEY_UP_ARROW]    = INPUT_SLOT_MOVE_UP;
-    m_slotMap[ax::EventKeyboard::KeyCode::KEY_DOWN_ARROW]  = INPUT_SLOT_MOVE_DOWN;
+    fillTownInputSlotMap(m_slotMap);
 
     sendEnterScene();
 }

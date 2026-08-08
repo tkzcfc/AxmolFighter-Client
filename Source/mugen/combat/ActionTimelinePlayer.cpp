@@ -36,6 +36,7 @@ bool ActionTimelinePlayer::start(int32_t skillAttackId, AvatarComponent* avatar)
     m_actionIndex   = -1;
     m_status        = Status::Playing;
     m_interruptOpen = false;
+    m_interruptExtraOpen = false;
 
     return enterAction(m_actionIds.front(), avatar);
 }
@@ -54,6 +55,7 @@ void ActionTimelinePlayer::stop(AvatarComponent* avatar)
     m_actionDelayMs       = 0;
     m_frameIntervalMs     = kLogicFrameMs;
     m_interruptOpen       = false;
+    m_interruptExtraOpen  = false;
     m_actionIds.clear();
     m_skillCfg = nullptr;
 }
@@ -72,6 +74,7 @@ bool ActionTimelinePlayer::enterAction(int32_t actionId, AvatarComponent* avatar
     m_currentActionId = actionId;
     m_elapsedMs       = 0;
     m_interruptOpen   = false;
+    m_interruptExtraOpen = false;
     m_actionDelayMs   = std::max(0, actionCfg->actionDelayTime);
 
     const float scale     = actionCfg->actionScaleTime > 0.0f ? actionCfg->actionScaleTime : 1.0f;
@@ -137,14 +140,16 @@ bool ActionTimelinePlayer::tick(int32_t dtMs, AvatarComponent* avatar)
     m_elapsedMs += dtMs;
 
     auto* actionCfg = Config::getInstance()->getActionAttackConfigById(m_currentActionId);
-    if (actionCfg && actionCfg->interruptFrame >= 0 && m_frameIntervalMs > 0.0f)
+    if (actionCfg && m_frameIntervalMs > 0.0f)
     {
         const float frame = static_cast<float>(m_elapsedMs) / m_frameIntervalMs;
-        if (frame >= static_cast<float>(actionCfg->interruptFrame))
+        if (actionCfg->interruptFrame >= 0 && frame >= static_cast<float>(actionCfg->interruptFrame))
             m_interruptOpen = true;
+        if (actionCfg->interruptExtraFrame >= 0 && frame >= static_cast<float>(actionCfg->interruptExtraFrame))
+            m_interruptExtraOpen = true;
     }
 
-    // effectFrames 触发放后置（阶段 D）
+    // TODO: effectFrames / soundId / camera 触发放后置
 
     const bool animFinished = avatar && avatar->animationFinished;
     const bool delayMet     = m_elapsedMs >= m_actionDelayMs;

@@ -207,6 +207,27 @@ void CombatSystem::update()
                     hitstun = hitTable->hitRigidity > 0 ? hitTable->hitRigidity : 250;
                 hurtRate       = hitTable->hurtRate > 0 ? hitTable->hurtRate : 1.0f;
                 displacementId = hitTable->displacementId;
+
+                // 有空中位移 → 击飞
+                if (hitTable->airDisplacementId > 0)
+                {
+                    displacementId = hitTable->airDisplacementId;
+                    hitType        = static_cast<int32_t>(HitType::kHitLaunch);
+                }
+
+                if (displacementId > 0)
+                {
+                    if (const auto* d = Config::getInstance()->getDisplacementConfigById(displacementId))
+                    {
+                        auto* atf = MG_GET_COMPONENT(entityA, TransformComponent);
+                        const float facing =
+                            (atf && atf->facingDirection == FacingDirection::kFacingLeft) ? -1.0f : 1.0f;
+                        impulseX = d->velocity.x * facing;
+                        impulseZ = d->velocity.z;
+                        if (impulseZ > 0.0f && hitType < static_cast<int32_t>(HitType::kHitLaunch))
+                            hitType = static_cast<int32_t>(HitType::kHitLaunch);
+                    }
+                }
             }
 
             applyBehaviorHit(entityA, entityB, skillId, hurtRate, displacementId, hitType, hitstun, impulseX, impulseZ);

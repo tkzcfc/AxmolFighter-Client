@@ -3,12 +3,16 @@
 #include "TownView.h"
 #include "mugen/Components.h"
 #include "mugen/GameWord.h"
+#include "mugen/conf/Config.h"
 #include "mugen/conf/GameDef.h"
 #include "ui/battle/LocalBattleMode.h"
 #include "ui/battle/OnlineBattleMode.h"
 #include "ui/core/ViewManager.h"
+#include "ui/input/DefaultInputSlotMap.h"
 
 #include "imgui.h"
+
+#include <cstdio>
 
 using namespace mugen;
 
@@ -27,14 +31,7 @@ void GameView::onEnter()
 {
     Super::onEnter();
 
-    m_slotMap[ax::EventKeyboard::KeyCode::KEY_LEFT_ARROW]  = INPUT_SLOT_MOVE_LEFT;
-    m_slotMap[ax::EventKeyboard::KeyCode::KEY_RIGHT_ARROW] = INPUT_SLOT_MOVE_RIGHT;
-    m_slotMap[ax::EventKeyboard::KeyCode::KEY_UP_ARROW]    = INPUT_SLOT_MOVE_UP;
-    m_slotMap[ax::EventKeyboard::KeyCode::KEY_DOWN_ARROW]  = INPUT_SLOT_MOVE_DOWN;
-    m_slotMap[ax::EventKeyboard::KeyCode::KEY_A]           = INPUT_SLOT_0;
-    m_slotMap[ax::EventKeyboard::KeyCode::KEY_C]           = INPUT_SLOT_C;
-    m_slotMap[ax::EventKeyboard::KeyCode::KEY_Z]           = INPUT_SLOT_Z;
-    m_slotMap[ax::EventKeyboard::KeyCode::KEY_X]           = INPUT_SLOT_X;
+    fillCombatInputSlotMap(m_slotMap);
 
     if (!initGameWord())
     {
@@ -158,6 +155,96 @@ void GameView::onImGUIRender()
     if (ImGui::Button("返回城镇", ImVec2(-1, 0)))
     {
         getViewManager()->switchView<TownView>();
+    }
+
+    ImGui::End();
+
+    // 技能调试面板
+    Entity* localPlayer = nullptr;
+    if (m_gameWord && m_gameWord->getDirector())
+    {
+        if (auto* director = MG_GET_COMPONENT(m_gameWord->getDirector(), DirectorComponent))
+        {
+            if (director->localPlayerEntityId != INVALID_ENTITY_ID)
+                localPlayer = m_gameWord->ecsManager.getEntity(director->localPlayerEntityId);
+        }
+    }
+
+    ImGui::SetNextWindowPos(ImVec2(20.0f, 120.0f), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(360.0f, 320.0f), ImGuiCond_FirstUseEver);
+    ImGui::Begin("技能调试");
+
+    if (!localPlayer)
+    {
+        ImGui::TextUnformatted("无本地玩家");
+        ImGui::End();
+        return;
+    }
+
+    auto* attr     = MG_GET_COMPONENT(localPlayer, AttributeComponent);
+    auto* behavior = MG_GET_COMPONENT(localPlayer, BehaviorComponent);
+    auto* deck     = MG_GET_COMPONENT(localPlayer, SkillDeckComponent);
+    auto* skillBar = MG_GET_COMPONENT(localPlayer, SkillBarComponent);
+
+    if (attr)
+    {
+        ImGui::Text("HP %.0f / %.0f", attr->currentAttribute.hp, static_cast<float>(attr->currentAttribute.hpMax));
+        ImGui::Text("MP %.0f / %.0f", attr->currentAttribute.mp, static_cast<float>(attr->currentAttribute.mpMax));
+        ImGui::Text("EP %.0f / %.0f", attr->ep, attr->epMax);
+    }
+
+    if (behavior)
+    {
+        ImGui::Separator();
+        ImGui::Text("active=%d pending=%d", behavior->activeSkillAttackId, behavior->pendingSkillAttackId);
+        ImGui::Text("interrupt=%d extra=%d dash=%d", behavior->interruptOpen ? 1 : 0,
+                    behavior->interruptExtraOpen ? 1 : 0,
+                    (behavior->statusTags & StateTag::kTagDashState) ? 1 : 0);
+        ImGui::Text("thrust=%d", behavior->thrustSkillAttackId);
+    }
+
+    if (deck)
+    {
+        ImGui::Separator();
+        if (ImGui::Button("清空 CD"))
+        {
+            for (auto& e : deck->skills)
+            {
+                e.coolDownMs   = 0;
+                e.releaseCount = e.releaseMax > 0 ? e.releaseMax : 1;
+            }
+        }
+
+        ImGui::TextUnformatted("键位: A=SLOT0, 1-9=SLOT1-9, 0=SLOT10");
+        ImGui::BeginChild("skill_list", ImVec2(0, 0), true);
+        for (size_t i = 0; i < deck->skills.size(); ++i)
+        {
+            const auto& e = deck->skills[i];
+            const auto* cfg = Config::getInstance()->getSkillAttackConfigById(e.skillAttackId);
+            const int32_t mpCost = cfg ? cfg->mp : 0;
+            const int32_t epCost = cfg ? cfg->ep : 0;
+            const int32_t sorder = cfg ? cfg->sorder : 0;
+
+            char keyLabel[8] = "?";
+            int32_t slotIndex = -1;
+            if (skillBar && i < skillBar->skillSlots.size())
+                slotIndex = skillBar->skillSlots[i].slotIndex;
+            const int32_t slotOffset = slotIndex >= static_cast<int32_t>(INPUT_SLOT_0)
+                                           ? slotIndex - static_cast<int32_t>(INPUT_SLOT_0)
+                                           : static_cast<int32_t>(i);
+            if (slotOffset == 0)
+                std::snprintf(keyLabel, sizeof(keyLabel), "A");
+            else if (slotOffset >= 1 && slotOffset <= 9)
+                std::snprintf(keyLabel, sizeof(keyLabel), "%d", slotOffset);
+            else if (slotOffset == 10)
+                std::snprintf(keyLabel, sizeof(keyLabel), "0");
+            else
+                std::snprintf(keyLabel, sizeof(keyLabel), "S%d", slotOffset);
+
+            ImGui::Text("[%s] id %d | CD %d/%d | mp %d ep %d | sorder %d | next %d", keyLabel, e.skillAttackId,
+                        e.coolDownMs, e.coolDownMaxMs, mpCost, epCost, sorder, e.nextSkillAttackId);
+        }
+        ImGui::EndChild();
     }
 
     ImGui::End();

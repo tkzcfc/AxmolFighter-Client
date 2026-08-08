@@ -6,6 +6,7 @@
 #include "mugen/core/io/FileUtils.h"
 
 #include <algorithm>
+#include <unordered_set>
 
 NS_MG_BEGIN
 
@@ -41,6 +42,26 @@ std::string toCitySpinePath(const std::string& spinePath)
     if (dot == std::string::npos || (slash != std::string::npos && dot < slash))
         return spinePath + "_city";
     return spinePath.substr(0, dot) + "_city" + spinePath.substr(dot);
+}
+
+// 将 root 的 nextSkill 链展开为有序 skillAttackId 列表（去重，便于绑到 INPUT_SLOT_0..N）
+void appendSkillChain(Config* config,
+                      int32_t rootId,
+                      std::vector<int32_t>& out,
+                      std::unordered_set<int32_t>& seen,
+                      int32_t maxCount)
+{
+    int32_t id = rootId;
+    while (id > 0 && static_cast<int32_t>(out.size()) < maxCount)
+    {
+        if (!seen.insert(id).second)
+            break;
+        const auto* atk = config->getSkillAttackConfigById(id);
+        if (!atk)
+            break;
+        out.push_back(id);
+        id = atk->nextSkill > 0 ? atk->nextSkill : 0;
+    }
 }
 
 void applyIdentity(IdentityComponent* identityComp, JobType job, const ActorSpawnParams& params)
@@ -157,6 +178,8 @@ Entity* spawnRoleFullActorImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32
 
     attributeComp->baseAttribute    = role->attribute;
     attributeComp->currentAttribute = role->attribute;
+    attributeComp->epMax            = 100.0f;
+    attributeComp->ep               = attributeComp->epMax;
     if (attributeComp->currentAttribute.hp <= 0)
         attributeComp->currentAttribute.hp = static_cast<float>(attributeComp->currentAttribute.hpMax);
     if (attributeComp->currentAttribute.mp <= 0)
@@ -185,35 +208,86 @@ Entity* spawnRoleFullActorImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32
     transformComp->scale.x    = 1.0f;
     transformComp->scale.y    = 1.0f;
 
-    std::vector<int32_t> skillIds = role->defaultSkillIds;
-    if (skillIds.empty() && (roleId == 1 || roleId == 101))
-        skillIds.push_back(920000);
+    std::vector<int32_t> roots = role->defaultSkillIds;
+    if (roots.empty() && (roleId == 1 || roleId == 101 || roleId == 102 || roleId == 103))
+        roots.push_back(920000);
 
-    SkillSlotItem slot;
-    slot.slotIndex = static_cast<int32_t>(INPUT_SLOT_0);
+    constexpr int32_t kMaxSkillSlots = static_cast<int32_t>(INPUT_SLOT_10) - static_cast<int32_t>(INPUT_SLOT_0) + 1;
+
+    // 按 nextSkill 链展开，再追加高 sorder 技能便于打断测试：A/1/2… 各绑一个
+    std::vector<int32_t> skillIds;
+    std::unordered_set<int32_t> seen;
+    skillIds.reserve(static_cast<size_t>(kMaxSkillSlots));
+    for (int32_t root : roots)
+        appendSkillChain(config, root, skillIds, seen, kMaxSkillSlots);
+
+    // 额外根技能：920041(sorder80) / 920050 / 920080（含 ignore-order）
+    static constexpr int32_t kExtraTestRoots[] = {920041, 920050, 920080};
+    for (int32_t extra : kExtraTestRoots)
+    {
+        if (static_cast<int32_t>(skillIds.size()) >= kMaxSkillSlots)
+            break;
+        appendSkillChain(config, extra, skillIds, seen, kMaxSkillSlots);
+    }
+
+    skillDeckComp->slotSkillIndices.clear();
+    skillBarComp->skillSlots.clear();
+
+    int32_t boundCount = 0;
     for (int32_t skillId : skillIds)
     {
+        if (boundCount >= kMaxSkillSlots)
+        {
+            MG_LOG_W("spawnRole: role={} skill overflow, drop skillAttack {}", roleId, skillId);
+            break;
+        }
         if (!config->getSkillAttackConfigById(skillId))
         {
             MG_LOG_E("spawnRole: skillAttack {} missing", skillId);
             continue;
         }
+
+        const auto* skillAtk = config->getSkillAttackConfigById(skillId);
         SkillDeckEntry entry;
-        entry.skillAttackId = skillId;
-        entry.level         = 1;
+        entry.skillAttackId     = skillId;
+        entry.nextSkillAttackId = skillAtk ? skillAtk->nextSkill : -1;
+        entry.level             = 1;
+        entry.coolDownMaxMs     = skillAtk && skillAtk->cd > 0 ? skillAtk->cd : 0;
+        entry.coolDownMs        = 0;
+        entry.releaseMax        = skillAtk && skillAtk->cdCount > 0 ? skillAtk->cdCount : 1;
+        entry.releaseCount      = entry.releaseMax;
         skillDeckComp->skills.push_back(entry);
+        const int32_t deckIndex = static_cast<int32_t>(skillDeckComp->skills.size() - 1);
 
         SkillInstanceData data;
         data.level = 1;
         data.buildFromSkillAttack(skillId);
         actorDataComp->skills.push_back(data);
-        slot.skillIndexs.push_back(static_cast<int32_t>(actorDataComp->skills.size() - 1));
-        skillDeckComp->slotSkillIndices.push_back({static_cast<int32_t>(skillDeckComp->skills.size() - 1)});
-    }
-    if (!slot.skillIndexs.empty())
-        skillBarComp->skillSlots.push_back(slot);
+        const int32_t actorSkillIndex = static_cast<int32_t>(actorDataComp->skills.size() - 1);
 
-    MG_LOG_W("spawnRole: role={} skills={}", roleId, actorDataComp->skills.size());
+        // 顺序：INPUT_SLOT_0(A), INPUT_SLOT_1(1), … INPUT_SLOT_10(0)
+        SkillSlotItem slot;
+        slot.slotIndex = static_cast<int32_t>(INPUT_SLOT_0) + boundCount;
+        slot.skillIndexs.push_back(actorSkillIndex);
+        skillBarComp->skillSlots.push_back(slot);
+        skillDeckComp->slotSkillIndices.push_back({deckIndex});
+        ++boundCount;
+    }
+
+    // 跑中突刺：默认取第二个绑定技能
+    if (skillDeckComp->skills.size() >= 2)
+        behaviorComp->thrustSkillAttackId = skillDeckComp->skills[1].skillAttackId;
+    else
+        behaviorComp->thrustSkillAttackId = 0;
+
+    MG_LOG_W("spawnRole: role={} skills={} slots={} thrust={}", roleId, actorDataComp->skills.size(),
+             skillBarComp->skillSlots.size(), behaviorComp->thrustSkillAttackId);
+    for (int32_t i = 0; i < boundCount; ++i)
+    {
+        const int32_t slot = static_cast<int32_t>(INPUT_SLOT_0) + i;
+        const int32_t sid  = skillDeckComp->skills[static_cast<size_t>(i)].skillAttackId;
+        MG_LOG_W("  bind INPUT_SLOT_{}({}) -> skill {}", i, slot, sid);
+    }
     return actor;
 }
 

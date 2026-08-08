@@ -38,6 +38,8 @@ public:
     int32_t getCurrentActionId() const { return m_currentActionId; }
     int32_t getActionIndex() const { return m_actionIndex; }
     bool isInterruptOpen() const { return m_interruptOpen; }
+    bool isInterruptExtraOpen() const { return m_interruptExtraOpen; }
+    int32_t getElapsedMs() const { return m_elapsedMs; }
 
     // 动画名解析：action 数字 → Spine 动画名（目前为十进制字符串）
     static std::string resolveAnimationName(int32_t actionAnimId);
@@ -56,6 +58,7 @@ private:
     int32_t m_actionDelayMs       = 0;
     float m_frameIntervalMs       = 16.666f;
     bool m_interruptOpen          = false;
+    bool m_interruptExtraOpen     = false;
 
     std::vector<int32_t> m_actionIds;
     const SkillAttackConfig* m_skillCfg = nullptr;

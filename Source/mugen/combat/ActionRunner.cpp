@@ -4,6 +4,7 @@
 #include "mugen/conf/Config.h"
 #include "mugen/core/ecs/ECSManager.h"
 #include "mugen/core/ecs/Entity.h"
+#include "mugen/system/SoundSystem.h"
 
 #include <algorithm>
 
@@ -48,6 +49,30 @@ void spawnEffectEntity(Entity* owner, int32_t effectId, int32_t fallbackSkillHit
     effect->notifyEntityReady();
     MG_LOG_D("ActionRunner: spawned effect {} skillHit={} owner={}", effectId, fx->skillHitId, fx->ownerId);
 }
+
+void playActionSounds(Entity* owner, const ActionAttackConfig& cfg, std::vector<bool>& soundsPlayed)
+{
+    if (!owner)
+        return;
+    if (soundsPlayed.size() != cfg.soundId.size())
+        soundsPlayed.assign(cfg.soundId.size(), false);
+
+    auto* ecs = owner->getECSManager();
+    if (!ecs)
+        return;
+    auto* soundSys = MG_GET_SYSTEM(ecs, SoundSystem);
+    if (!soundSys)
+        return;
+
+    for (size_t i = 0; i < cfg.soundId.size(); ++i)
+    {
+        if (soundsPlayed[i])
+            continue;
+        soundsPlayed[i] = true;
+        if (cfg.soundId[i] > 0)
+            soundSys->play(cfg.soundId[i], owner);
+    }
+}
 }  // namespace
 
 bool ActionRunner::start(int32_t skillAttackId,
@@ -60,17 +85,18 @@ bool ActionRunner::start(int32_t skillAttackId,
     if (!m_timeline.start(skillAttackId, avatar))
         return false;
 
-    m_owner              = owner;
-    m_skillAttackId      = skillAttackId;
-    m_status             = Status::Playing;
-    m_interruptExtraOpen = false;
+    m_owner         = owner;
+    m_skillAttackId = skillAttackId;
+    m_status        = Status::Playing;
     m_effectSpawned.clear();
+    m_soundsPlayed.clear();
     m_elapsedMs = 0;
 
     auto* actionCfg = Config::getInstance()->getActionAttackConfigById(m_timeline.getCurrentActionId());
     if (actionCfg)
     {
         m_effectSpawned.assign(actionCfg->effectIds.size(), false);
+        playActionSounds(owner, *actionCfg, m_soundsPlayed);
         if (displacement && actionCfg->displacementId > 0)
         {
             if (auto* d = Config::getInstance()->getDisplacementConfigById(actionCfg->displacementId))
@@ -92,12 +118,12 @@ void ActionRunner::stop(Entity* /*owner*/,
     m_timeline.stop(avatar);
     if (displacement)
         displacement->reset();
-    m_status             = Status::Idle;
-    m_skillAttackId      = 0;
-    m_owner              = nullptr;
-    m_interruptExtraOpen = false;
-    m_elapsedMs          = 0;
+    m_status        = Status::Idle;
+    m_skillAttackId = 0;
+    m_owner         = nullptr;
+    m_elapsedMs     = 0;
     m_effectSpawned.clear();
+    m_soundsPlayed.clear();
 }
 
 bool ActionRunner::tick(int32_t dtMs,
@@ -123,8 +149,9 @@ bool ActionRunner::tick(int32_t dtMs,
             if (auto* prev = Config::getInstance()->getActionAttackConfigById(prevActionId))
                 applyBuffs(*prev, buffs, false);
             m_effectSpawned.assign(actionCfg->effectIds.size(), false);
-            m_interruptExtraOpen = false;
-            m_elapsedMs          = 0;
+            m_soundsPlayed.clear();
+            playActionSounds(owner, *actionCfg, m_soundsPlayed);
+            m_elapsedMs = 0;
             if (displacement)
             {
                 displacement->reset();
@@ -137,9 +164,7 @@ bool ActionRunner::tick(int32_t dtMs,
             applyBuffs(*actionCfg, buffs, true);
         }
 
-        if (actionCfg->interruptExtraFrame >= 0 && m_timeline.isInterruptOpen())
-            m_interruptExtraOpen = true;
-
+        // TODO: cameraFrame / cameraId / displaySpine 触发放后置
         const float scale         = actionCfg->actionScaleTime > 0.0f ? actionCfg->actionScaleTime : 1.0f;
         const float frameInterval = (1000.0f / 30.0f) / scale;
         const float curFrame      = frameInterval > 0.0f ? static_cast<float>(m_elapsedMs) / frameInterval : 0.0f;

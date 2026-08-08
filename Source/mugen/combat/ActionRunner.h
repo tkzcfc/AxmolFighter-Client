@@ -40,7 +40,7 @@ public:
     Status getStatus() const { return m_status; }
     int32_t getSkillAttackId() const { return m_skillAttackId; }
     bool isInterruptOpen() const { return m_timeline.isInterruptOpen(); }
-    bool isInterruptExtraOpen() const { return m_interruptExtraOpen; }
+    bool isInterruptExtraOpen() const { return m_timeline.isInterruptExtraOpen(); }
     int32_t getCurrentActionId() const { return m_timeline.getCurrentActionId(); }
 
 private:
@@ -50,9 +50,9 @@ private:
     Status m_status           = Status::Idle;
     int32_t m_skillAttackId   = 0;
     Entity* m_owner           = nullptr;
-    bool m_interruptExtraOpen = false;
     int32_t m_elapsedMs       = 0;
     std::vector<bool> m_effectSpawned;
+    std::vector<bool> m_soundsPlayed;
 };
 
 NS_MG_END

@@ -25,7 +25,11 @@ public:
     RoleAttributeConfig baseAttribute;
     RoleAttributeConfig currentAttribute;
 
-    MG_DEFINE_SERIALIZABLE(baseAttribute, currentAttribute)
+    // 运行时怒气/EP（表里 SkillAttack.ep；RoleAttribute 无对应字段）
+    float ep    = 0.0f;
+    float epMax = 100.0f;
+
+    MG_DEFINE_SERIALIZABLE(baseAttribute, currentAttribute, ep, epMax)
 
     ExprEval exprEval;
 };
