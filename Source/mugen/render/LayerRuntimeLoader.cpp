@@ -248,8 +248,25 @@ ax::Node* createLabelNode(const JsonValue& node)
     return label;
 }
 
-ax::Node* createObjectNode(const JsonValue& /*node*/)
+ax::Node* createObjectNode(const JsonValue& node)
 {
+    // 编辑器 Object 占位：传送门/NPC 槽位在运行时画半透明色块，避免纯空节点完全不可见
+    const std::string kind = propertyString(node, "kind");
+    if (kind == "portal" || kind == "npc")
+    {
+        auto* draw            = ax::DrawNode::create();
+        const ax::Size size   = sizeOr(node, "size", {80.0f, 120.0f});
+        const float halfW     = std::max(8.0f, size.width * 0.5f);
+        const float height    = std::max(16.0f, size.height);
+        const ax::Color3B rgb = color3Or(node, "color", kind == "portal" ? ax::Color3B(250, 153, 66) : ax::Color3B(80, 200, 120));
+        const ax::Color4F fill(rgb.r / 255.0f, rgb.g / 255.0f, rgb.b / 255.0f, kind == "portal" ? 0.28f : 0.18f);
+        const ax::Color4F border(rgb.r / 255.0f, rgb.g / 255.0f, rgb.b / 255.0f, 0.85f);
+        // 与 POR_* 锚点 (0.5, 0) 对齐：底边中心为原点
+        draw->drawSolidRect(ax::Vec2(-halfW, 0.0f), ax::Vec2(halfW, height), fill);
+        draw->drawRect(ax::Vec2(-halfW, 0.0f), ax::Vec2(halfW, height), border);
+        return draw;
+    }
+
     return ax::Node::create();
 }
 

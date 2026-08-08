@@ -37,6 +37,66 @@ constexpr float REPORT_INTERVAL = 0.2f;
 constexpr float REPORT_POS_EPSILON = 4.0f;
 // 远程玩家位置偏差超过该值直接瞬移（像素）
 constexpr float REMOTE_SNAP_DISTANCE = 300.0f;
+// 对齐黑月 EntityPortalParamMap（1-based）：Transfer=1, Active=2, ..., Close=5, Idle=6
+// C++ spineAnimations 为 0-based：Active=1, Close=4（常为 0，关闭态不可见）
+constexpr size_t kPortalAnimActive = 1;
+constexpr size_t kPortalAnimTransfer = 0;
+constexpr size_t kPortalAnimIdle = 5;
+
+int32_t resolvePortalSpineAnimIndex(const PortalConfig* portalCfg)
+{
+    if (!portalCfg || portalCfg->spineAnimations.empty())
+        return -1;
+
+    const auto& anims = portalCfg->spineAnimations;
+    auto pick         = [&](size_t i) -> int32_t { return i < anims.size() ? anims[i] : 0; };
+
+    if (pick(kPortalAnimActive) > 0)
+        return pick(kPortalAnimActive);
+    if (pick(kPortalAnimTransfer) > 0)
+        return pick(kPortalAnimTransfer);
+    if (pick(kPortalAnimIdle) > 0)
+        return pick(kPortalAnimIdle);
+
+    for (const int32_t idx : anims)
+    {
+        if (idx > 0)
+            return idx;
+    }
+    return -1;
+}
+
+void playPortalSpineAnimation(spine::SkeletonAnimation* skeleton, const PortalConfig* portalCfg)
+{
+    if (!skeleton || !skeleton->getSkeleton() || !skeleton->getSkeleton()->getData())
+        return;
+
+    auto& anims = skeleton->getSkeleton()->getData()->getAnimations();
+    if (anims.size() <= 0)
+        return;
+
+    int32_t animIndex = resolvePortalSpineAnimIndex(portalCfg);
+    // 索引 0 在传送门 Spine 上通常是关闭态，尽量避开
+    if (animIndex < 0 || animIndex >= static_cast<int32_t>(anims.size()))
+        animIndex = anims.size() > 1 ? 1 : 0;
+
+    const char* animName = anims[animIndex]->getName().buffer();
+    if (animName && animName[0] != '\0')
+        skeleton->setAnimation(0, animName, true);
+}
+
+ax::Node* createPortalVisualMarker(float radius)
+{
+    auto* draw     = ax::DrawNode::create();
+    const float r  = std::max(radius, 48.0f);
+    const auto ring = ax::Color4F(0.15f, 0.95f, 1.0f, 0.9f);
+    const auto fill = ax::Color4F(0.15f, 0.85f, 1.0f, 0.35f);
+    draw->drawCircle(ax::Vec2::ZERO, r, 0.0f, 48, false, ring);
+    draw->drawCircle(ax::Vec2::ZERO, r * 0.55f, 0.0f, 32, false, ring);
+    draw->drawSolidCircle(ax::Vec2::ZERO, 16.0f, 0.0f, 20, fill);
+    return draw;
+}
+
 // 视为"已到达目标"的距离阈值（像素），到达后才应用暂缓的动作切换
 constexpr float REMOTE_ARRIVE_EPSILON = 3.0f;
 // 追赶速度上浮系数：略快于本体移动速度，保证滞后距离逐渐收敛而不会越拉越远
@@ -921,9 +981,13 @@ void TownView::initPortals()
 
         const auto* portalCfg = Config::getInstance()->getPortalConfigById(entry.portalId);
         portal.radius         = portalCfg && portalCfg->radius > 0 ? static_cast<float>(portalCfg->radius) : 80.0f;
+        // 配置里部分城门半径只有 10，过小难触发；交互至少保留可走入范围
+        portal.radius = std::max(portal.radius, 60.0f);
 
-        // 外观：优先 Spine，失败则画调试圆
-        ax::Node* visual = nullptr;
+        // 根节点：始终带可见环，Spine 作子节点（避免播到关闭态时完全看不见）
+        auto* visualRoot = ax::Node::create();
+        visualRoot->addChild(createPortalVisualMarker(portal.radius), 0);
+
         if (portalCfg && portalCfg->resSpineId > 0)
         {
             const auto* spineCfg = Config::getInstance()->getResSpineConfigById(portalCfg->resSpineId);
@@ -937,37 +1001,31 @@ void TownView::initPortals()
                     if (!spineCfg->defaultSkin.empty())
                         skeleton->setSkin(spineCfg->defaultSkin);
 
-                    // 播放第一个可用动画作占位
-                    if (skeleton->getSkeleton() && skeleton->getSkeleton()->getData())
+                    playPortalSpineAnimation(skeleton, portalCfg);
+
+                    if (portalCfg->spineRelativePosition.x != 0 || portalCfg->spineRelativePosition.y != 0)
                     {
-                        auto& anims = skeleton->getSkeleton()->getData()->getAnimations();
-                        if (anims.size() > 0)
-                        {
-                            const char* animName = anims[0]->getName().buffer();
-                            if (animName && animName[0] != '\0')
-                                skeleton->setAnimation(0, animName, true);
-                        }
+                        skeleton->setPosition(static_cast<float>(portalCfg->spineRelativePosition.x),
+                                              static_cast<float>(portalCfg->spineRelativePosition.y));
                     }
-                    visual = skeleton;
+                    visualRoot->addChild(skeleton, 1);
+                }
+                else
+                {
+                    AXLOGW("TownView: portal spine load failed id={} resSpineId={} spine={}", entry.portalId,
+                           portalCfg->resSpineId, spineCfg->spine);
                 }
             }
         }
 
-        if (!visual)
-        {
-            auto* draw = ax::DrawNode::create();
-            draw->drawCircle(ax::Vec2::ZERO, portal.radius, 0.0f, 32, false, ax::Color4F(0.2f, 0.8f, 1.0f, 0.8f));
-            draw->drawSolidCircle(ax::Vec2::ZERO, 12.0f, 0.0f, 16, ax::Color4F(0.2f, 0.8f, 1.0f, 0.5f));
-            visual = draw;
-        }
+        visualRoot->setPosition(portal.posX, portal.posY);
+        visualRoot->setName(fmt::format("portal_runtime_{}", entry.slot));
+        entityNode->addChild(visualRoot, 10);
+        portal.visual = visualRoot;
 
-        visual->setPosition(portal.posX, portal.posY);
-        visual->setName(fmt::format("portal_runtime_{}", entry.slot));
-        entityNode->addChild(visual, 10);
-        portal.visual = visual;
-
-        AXLOGI("TownView: portal id={} slot={} destType={} at ({:.1f},{:.1f}) radius={}", portal.portalId, portal.slot,
-               portal.destType, portal.posX, portal.posY, portal.radius);
+        AXLOGI("TownView: portal id={} slot={} destType={} at ({:.1f},{:.1f}) radius={} animIndex={}", portal.portalId,
+               portal.slot, portal.destType, portal.posX, portal.posY, portal.radius,
+               resolvePortalSpineAnimIndex(portalCfg));
         m_portals.push_back(portal);
     }
 }
@@ -1111,6 +1169,18 @@ void TownView::onImGUIRender()
             ImGui::CloseCurrentPopup();
         }
         ImGui::EndPopup();
+    }
+
+    ImGui::Separator();
+    ImGui::Text("传送门: %d", static_cast<int>(m_portals.size()));
+    for (const auto& portal : m_portals)
+    {
+        ImGui::Text("  slot=%d id=%d dest=%d (%.0f,%.0f) r=%.0f", portal.slot, portal.portalId, portal.destType,
+                    portal.posX, portal.posY, portal.radius);
+    }
+    if (ImGui::Button("打开副本选择", ImVec2(-1, 0)))
+    {
+        getViewManager()->pushView<DungeonSelectView>();
     }
 
     ImGui::Separator();
