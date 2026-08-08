@@ -1,0 +1,47 @@
+#pragma once
+
+#include "mugen/core/ecs/ECSManager.h"
+#include "mugen/conf/GameDef.h"
+
+#include <cstdint>
+#include <string>
+
+NS_MG_BEGIN
+
+namespace actor_spawner
+{
+
+struct ActorSpawnParams
+{
+    EntityCategory category = EntityCategory::kPlayer;
+    int32_t playerId        = 0;
+    std::string name;
+};
+
+// 兼容旧调用点
+struct PlayerSpawnParams
+{
+    int32_t playerId = 0;
+    std::string name;
+
+    ActorSpawnParams toActorParams(EntityCategory category = EntityCategory::kPlayer) const
+    {
+        ActorSpawnParams p;
+        p.category = category;
+        p.playerId = playerId;
+        p.name     = name;
+        return p;
+    }
+};
+
+Entity* spawnRolePlayerActor(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y);
+Entity* spawnRolePlayerActor(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y, const ActorSpawnParams& params);
+Entity* spawnRolePlayerActor(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y, const PlayerSpawnParams& params);
+
+Entity* spawnRoleActor(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y, const ActorSpawnParams& params);
+
+Entity* spawnRemoteRoleActor(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y, const ActorSpawnParams& params);
+
+}  // namespace actor_spawner
+
+NS_MG_END
