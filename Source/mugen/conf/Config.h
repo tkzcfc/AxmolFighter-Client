@@ -50,7 +50,9 @@ public:
     const CameraConfig* getCameraConfigById(int32_t id) const;
     const EffectConfig* getEffectConfigById(int32_t id) const;
     const BuffConfig* getBuffConfigById(int32_t id) const;
+    const BuffRuleConfig* getBuffRuleConfigById(int32_t id) const;
     const AiConfig* getAiConfigById(int32_t id) const;
+    const SkillAiConfig* getSkillAiConfigById(int32_t id) const;
     const SkillHurtConfig* getSkillHurtConfigById(int32_t id) const;
     const SkillActivationOverlayConfig* getSkillActivationOverlayById(int32_t skillId) const;
     const AttributeTemplateConfig* getAttributeTemplateConfigById(int32_t id) const;
@@ -96,7 +98,9 @@ public:
     std::unordered_map<int32_t, CameraConfig> cameraConfigs;
     std::unordered_map<int32_t, EffectConfig> effectConfigs;
     std::unordered_map<int32_t, BuffConfig> buffConfigs;
+    std::unordered_map<int32_t, BuffRuleConfig> buffRuleConfigs;
     std::unordered_map<int32_t, AiConfig> aiConfigs;
+    std::unordered_map<int32_t, SkillAiConfig> skillAiConfigs;
     std::unordered_map<int32_t, SkillHurtConfig> skillHurtConfigs;
     std::unordered_map<int32_t, SkillActivationOverlayConfig> skillActivationOverlayConfigs;
 
@@ -135,7 +139,9 @@ public:
                            cameraConfigs,
                            effectConfigs,
                            buffConfigs,
+                           buffRuleConfigs,
                            aiConfigs,
+                           skillAiConfigs,
                            skillHurtConfigs,
                            skillActivationOverlayConfigs,
                            resSoundConfigs,

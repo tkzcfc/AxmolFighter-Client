@@ -954,6 +954,20 @@ public:
 
 // ========== 战斗时间轴 / 角色 ==========
 
+// 嵌套 int 数组的一行（skill.actionIds / buff.conditionParam / skill_ai.composition 等）
+class IntListRow : public Object
+{
+public:
+    typedef Object Super;
+
+    IntListRow() {}
+    virtual ~IntListRow() {}
+
+    std::vector<int32_t> values;
+
+    MG_DEFINE_SERIALIZABLE(values);
+};
+
 // 角色成品属性（转换器烘培）
 class RoleAttributeConfig : public Object
 {
@@ -1099,6 +1113,13 @@ public:
     int32_t staticStartFrame  = -1;
     int32_t staticTime        = 0;
     int32_t staticResetTime   = 0;
+    // UI / 障碍 / 落地 / 阴影（黑月 action_attack）
+    int32_t dialogShow = -1;
+    int32_t nameShow   = 0;
+    int32_t tipsShow   = -1;
+    int32_t obstruct   = 0;
+    int32_t floor      = -1;
+    float shadow       = 0.0f;
 
     MG_DEFINE_SERIALIZABLE(id,
                            action,
@@ -1128,7 +1149,13 @@ public:
                            staticTarget,
                            staticStartFrame,
                            staticTime,
-                           staticResetTime);
+                           staticResetTime,
+                           dialogShow,
+                           nameShow,
+                           tipsShow,
+                           obstruct,
+                           floor,
+                           shadow);
 };
 
 // 技能攻击配置
@@ -1143,6 +1170,9 @@ public:
     virtual ~SkillAttackConfig() {}
 
     int32_t id = 0;
+    // 完整二维动作表 [toward][段]（黑月 action_ids）
+    std::vector<IntListRow> actionIds;
+    // 兼容：第一组扁平（可由 actionIds[0] 派生）
     std::vector<int32_t> primaryActionIds;
     int32_t nextSkill = -1;
     int32_t cd        = 0;
@@ -1159,6 +1189,7 @@ public:
     std::vector<int32_t> sorderControlType;
 
     MG_DEFINE_SERIALIZABLE(id,
+                           actionIds,
                            primaryActionIds,
                            nextSkill,
                            cd,
@@ -1346,6 +1377,28 @@ public:
     int32_t effectOrientation = -1;
     int32_t skillHitId        = -1;
     float radius              = 20.0f;
+    // 命中链路 / 表现（黑月 entity_effect）
+    std::vector<int32_t> actionIds;
+    std::vector<int32_t> buffId;
+    std::vector<int32_t> debuffId;
+    int32_t buffAllId = -1;
+    int32_t collision = 0;
+    int32_t comboExp  = 0;
+    int32_t control   = 0;
+    int32_t effectType = -1;
+    int32_t energy     = 0;
+    std::vector<int32_t> hitEffectIds;
+    std::vector<int32_t> hitExtraControl;
+    int32_t hitTarget     = -1;
+    int32_t nextEffectId  = -1;
+    int32_t preloadCount  = 0;
+    int32_t shadow        = 0;
+    int32_t tier          = 0;
+    float velocity        = 0.0f;
+    Vector3f spineRelativePosition;
+    // 特殊能力预留（Phase 2）
+    int32_t specialabilityAllId = -1;
+    int32_t specialabilityId    = -1;
 
     MG_DEFINE_SERIALIZABLE(id,
                            resSpineId,
@@ -1355,10 +1408,47 @@ public:
                            autoRelease,
                            effectOrientation,
                            skillHitId,
-                           radius);
+                           radius,
+                           actionIds,
+                           buffId,
+                           debuffId,
+                           buffAllId,
+                           collision,
+                           comboExp,
+                           control,
+                           effectType,
+                           energy,
+                           hitEffectIds,
+                           hitExtraControl,
+                           hitTarget,
+                           nextEffectId,
+                           preloadCount,
+                           shadow,
+                           tier,
+                           velocity,
+                           spineRelativePosition,
+                           specialabilityAllId,
+                           specialabilityId);
 };
 
-// Buff
+// Buff 规则（黑月 buff_rule → className）
+class BuffRuleConfig : public Object
+{
+public:
+    typedef Object Super;
+
+    BuffRuleConfig() {}
+    virtual ~BuffRuleConfig() {}
+
+    int32_t id             = 0;
+    int32_t buffType       = 0;
+    std::string className;
+    int32_t fashionShowText = 0;
+
+    MG_DEFINE_SERIALIZABLE(id, buffType, className, fashionShowText);
+};
+
+// Buff（黑月 buff_base 全量）
 class BuffConfig : public Object
 {
 public:
@@ -1371,13 +1461,84 @@ public:
     int32_t ruleId   = 0;
     int32_t interval = 0;
     int32_t times    = 0;
-    float paramValue = 0;
+    std::vector<float> paramValue;
     std::string className;
+    int32_t addType = 0;
+    std::vector<int32_t> artifactSkillIds;
+    int32_t audioId              = -1;
+    int32_t began                = -1;
+    int32_t bindSpecialAbilityId = -1;
+    int32_t binding              = 0;
+    int32_t buffType             = 0;
+    int32_t cd                   = 0;
+    int32_t cdPvp                = 0;
+    std::vector<int32_t> condition;
+    std::vector<IntListRow> conditionParam;
+    int32_t descId = 0;
+    int32_t ended  = -1;
+    std::vector<int32_t> eventParam;
+    int32_t executeType = 0;
+    int32_t hurtType    = 0;
+    int32_t icon        = -1;
+    int32_t iconDescId  = 0;
+    int32_t inherit     = 0;
+    int32_t innerCd     = 0;
+    int32_t nameId      = 0;
+    int32_t priority    = 0;
+    int32_t probability = 100;
+    int32_t probabilityRepeat = 0;
+    int32_t removeRepeatAll   = 0;
+    int32_t repeatMax         = 1;
+    int32_t resetType         = 0;
+    int32_t showTips          = 0;
+    int32_t spineId           = -1;
+    std::vector<float> spineOffsets;
+    std::vector<int32_t> spineStep;
+    int32_t subType = -1;
+    int32_t target  = 0;
 
-    MG_DEFINE_SERIALIZABLE(id, ruleId, interval, times, paramValue, className);
+    MG_DEFINE_SERIALIZABLE(id,
+                           ruleId,
+                           interval,
+                           times,
+                           paramValue,
+                           className,
+                           addType,
+                           artifactSkillIds,
+                           audioId,
+                           began,
+                           bindSpecialAbilityId,
+                           binding,
+                           buffType,
+                           cd,
+                           cdPvp,
+                           condition,
+                           conditionParam,
+                           descId,
+                           ended,
+                           eventParam,
+                           executeType,
+                           hurtType,
+                           icon,
+                           iconDescId,
+                           inherit,
+                           innerCd,
+                           nameId,
+                           priority,
+                           probability,
+                           probabilityRepeat,
+                           removeRepeatAll,
+                           repeatMax,
+                           resetType,
+                           showTips,
+                           spineId,
+                           spineOffsets,
+                           spineStep,
+                           subType,
+                           target);
 };
 
-// AI
+// AI（entity_ai；skillAiIds 本阶段补齐）
 class AiConfig : public Object
 {
 public:
@@ -1394,6 +1555,7 @@ public:
     std::vector<int32_t> skillIds;
     int32_t skillInterval      = 0;
     int32_t skillPriorityLevel = 0;
+    std::vector<int32_t> skillAiIds;
 
     MG_DEFINE_SERIALIZABLE(id,
                            chaseScopeX,
@@ -1402,7 +1564,46 @@ public:
                            targetScopeZ,
                            skillIds,
                            skillInterval,
-                           skillPriorityLevel);
+                           skillPriorityLevel,
+                           skillAiIds);
+};
+
+// 技能 AI 条件（黑月 skill_ai）
+class SkillAiConfig : public Object
+{
+public:
+    typedef Object Super;
+
+    SkillAiConfig() {}
+    virtual ~SkillAiConfig() {}
+
+    int32_t id      = 0;
+    int32_t checkCd = 0;
+    std::vector<IntListRow> composition;
+    int32_t loadCd   = 0;
+    int32_t oppCombo = -1;
+    Vector2i oppDisX;
+    Vector2i oppDisZ;
+    int32_t oppSkillId = -1;
+    int32_t oppStatus  = -1;
+    int32_t prob       = 100;
+    Vector2i selfHp;
+    int32_t selfStatus = -1;
+    int32_t useCount   = -1;
+
+    MG_DEFINE_SERIALIZABLE(id,
+                           checkCd,
+                           composition,
+                           loadCd,
+                           oppCombo,
+                           oppDisX,
+                           oppDisZ,
+                           oppSkillId,
+                           oppStatus,
+                           prob,
+                           selfHp,
+                           selfStatus,
+                           useCount);
 };
 
 // 伤害标准

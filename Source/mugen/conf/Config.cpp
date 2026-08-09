@@ -77,7 +77,9 @@ void Config::clearConfig()
     cameraConfigs.clear();
     effectConfigs.clear();
     buffConfigs.clear();
+    buffRuleConfigs.clear();
     aiConfigs.clear();
+    skillAiConfigs.clear();
     skillHurtConfigs.clear();
     skillActivationOverlayConfigs.clear();
     resSoundConfigs.clear();
@@ -251,9 +253,19 @@ const BuffConfig* Config::getBuffConfigById(int32_t id) const
     return findById(buffConfigs, id, "BuffConfig");
 }
 
+const BuffRuleConfig* Config::getBuffRuleConfigById(int32_t id) const
+{
+    return findById(buffRuleConfigs, id, "BuffRuleConfig");
+}
+
 const AiConfig* Config::getAiConfigById(int32_t id) const
 {
     return findById(aiConfigs, id, "AiConfig");
+}
+
+const SkillAiConfig* Config::getSkillAiConfigById(int32_t id) const
+{
+    return findById(skillAiConfigs, id, "SkillAiConfig");
 }
 
 const SkillHurtConfig* Config::getSkillHurtConfigById(int32_t id) const
