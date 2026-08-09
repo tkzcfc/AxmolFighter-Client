@@ -6,21 +6,8 @@
 #    include "mugen/render/RenderUtils.h"
 #    include "mugen/render/SpineSkeletonLoader.h"
 
-#    include "2d/DrawNode.h"
-#    include "2d/Label.h"
-#    include "2d/Node.h"
-#    include "2d/ParallaxNode.h"
-#    include "2d/Sprite.h"
-#    include "2d/SpriteFrameCache.h"
-#    include "base/Director.h"
 #    include "rapidjson/document.h"
 #    include "rapidjson/error/en.h"
-#    include "renderer/Texture2D.h"
-#    include "renderer/TextureCache.h"
-
-#    include <algorithm>
-#    include <cmath>
-#    include <cstring>
 
 NS_MG_BEGIN
 
@@ -505,11 +492,6 @@ LayerLoadResult LayerRuntimeLoader::load(const std::string& layerFile, const Map
     if (result.rootSize.width <= 1.0f || result.rootSize.height <= 1.0f)
         result.rootSize = mapRoot->getContentSize();
     return result;
-}
-
-ax::Node* LayerRuntimeLoader::createNodeTree(const std::string& layerFile)
-{
-    return load(layerFile, nullptr).root;
 }
 
 NS_MG_END
