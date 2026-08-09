@@ -15,6 +15,18 @@ void DisplacementSystem::init(ECSManager* ecs)
     MG_SYSTEM_ADD_REQUIRED_COMPONENT(this, ecs, PhysicsComponent);
 }
 
+namespace
+{
+void restoreGravity(DisplacementComponent* disp, PhysicsComponent* physics)
+{
+    if (disp && physics && disp->hasSavedGravity)
+    {
+        physics->gravityScale = disp->savedGravityScale;
+        disp->hasSavedGravity = false;
+    }
+}
+}  // namespace
+
 void DisplacementSystem::update()
 {
     const int32_t dtMs = getECSManager()->getLastUpdateTimeMs();
@@ -24,8 +36,22 @@ void DisplacementSystem::update()
         auto* disp      = MG_GET_COMPONENT(entity, DisplacementComponent);
         auto* physics   = MG_GET_COMPONENT(entity, PhysicsComponent);
         auto* transform = MG_GET_COMPONENT(entity, TransformComponent);
-        if (!disp || disp->finished || !disp->activeConfig)
+        if (!disp || !physics)
             continue;
+        if (auto* attr = MG_GET_COMPONENT(entity, AttributeComponent))
+        {
+            if (attr->freezeRemainingMs > 0 && attr->freezeDelayMs <= 0)
+                continue;
+        }
+
+        if (disp->finished || !disp->activeConfig)
+            continue;
+
+        if (!disp->hasSavedGravity)
+        {
+            disp->savedGravityScale = physics->gravityScale;
+            disp->hasSavedGravity   = true;
+        }
 
         disp->elapsedMs += dtMs;
         const auto* cfg = disp->activeConfig;
@@ -34,14 +60,16 @@ void DisplacementSystem::update()
                                        cfg->accelerationTime.x, cfg->accelerationTime.y, cfg->accelerationTime.z});
         if (maxT > 0 && disp->elapsedMs >= maxT)
         {
-            disp->finished      = true;
-            physics->velocity.x = 0;
+            disp->finished        = true;
+            physics->velocity.x   = 0;
+            physics->velocity.y   = 0;
+            // z 留给落地物理；还原重力缩放
+            restoreGravity(disp, physics);
             continue;
         }
 
         const float facing = transform && transform->facingDirection == FacingDirection::kFacingLeft ? -1.0f : 1.0f;
 
-        // 分轴速度窗
         if (cfg->velocityTime.x <= 0 || disp->elapsedMs <= cfg->velocityTime.x)
             disp->velocity.x = cfg->velocity.x;
         if (cfg->velocityTime.y <= 0 || disp->elapsedMs <= cfg->velocityTime.y)
@@ -49,7 +77,6 @@ void DisplacementSystem::update()
         if (cfg->velocityTime.z <= 0 || disp->elapsedMs <= cfg->velocityTime.z)
             disp->velocity.z = cfg->velocity.z;
 
-        // 分轴加速度窗
         if (cfg->accelerationTime.x <= 0 || disp->elapsedMs <= cfg->accelerationTime.x)
             disp->acceleration.x = cfg->acceleration.x;
         if (cfg->accelerationTime.y <= 0 || disp->elapsedMs <= cfg->accelerationTime.y)
@@ -67,7 +94,6 @@ void DisplacementSystem::update()
         if (cfg->gravity != 0.0f)
             physics->gravityScale = cfg->gravity;
 
-        // 简化弹跳：落地且仍有剩余时间则反转 z 速
         if (cfg->bounces > 0 && physics->onGround && disp->velocity.z < 0)
             disp->velocity.z = std::abs(disp->velocity.z) * 0.6f;
     }

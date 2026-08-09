@@ -183,6 +183,7 @@ void GameView::onImGUIRender()
 
     auto* attr     = MG_GET_COMPONENT(localPlayer, AttributeComponent);
     auto* behavior = MG_GET_COMPONENT(localPlayer, BehaviorComponent);
+    auto* cast     = MG_GET_COMPONENT(localPlayer, SkillCastComponent);
     auto* deck     = MG_GET_COMPONENT(localPlayer, SkillDeckComponent);
     auto* skillBar = MG_GET_COMPONENT(localPlayer, SkillBarComponent);
 
@@ -193,14 +194,13 @@ void GameView::onImGUIRender()
         ImGui::Text("EP %.0f / %.0f", attr->ep, attr->epMax);
     }
 
-    if (behavior)
+    if (cast)
     {
         ImGui::Separator();
-        ImGui::Text("active=%d pending=%d", behavior->activeSkillAttackId, behavior->pendingSkillAttackId);
-        ImGui::Text("interrupt=%d extra=%d dash=%d", behavior->interruptOpen ? 1 : 0,
-                    behavior->interruptExtraOpen ? 1 : 0,
-                    (behavior->statusTags & StateTag::kTagDashState) ? 1 : 0);
-        ImGui::Text("thrust=%d", behavior->thrustSkillAttackId);
+        ImGui::Text("active=%d pending=%d", cast->activeSkillAttackId, cast->pendingSkillAttackId);
+        ImGui::Text("interrupt=%d extra=%d dash=%d", cast->interruptOpen ? 1 : 0, cast->interruptExtraOpen ? 1 : 0,
+                    (behavior && (behavior->statusTags & StateTag::kTagDashState)) ? 1 : 0);
+        ImGui::Text("thrust=%d", cast->thrustSkillAttackId);
     }
 
     if (deck)

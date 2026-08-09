@@ -4,6 +4,8 @@
 #include "mugen/core/ecs/Types.h"
 #include "mugen/core/math/Vec3.h"
 
+#include <vector>
+
 NS_MG_BEGIN
 
 // 运行时特效实体：携带攻击盒与 skill_hit 引用
@@ -24,7 +26,22 @@ public:
     float radius       = 40.0f;
     Vector3f relativePosition;
 
-    MG_DEFINE_SERIALIZABLE(effectId, skillHitId, ownerId, lifetimeMs, elapsedMs, follow, radius, relativePosition);
+    // Phase 1.4：多段打击
+    int32_t hitCount    = 0;
+    int32_t hitCooldownMs = 0;
+    std::vector<uint32_t> hitEntityIds;
+
+    MG_DEFINE_SERIALIZABLE(effectId,
+                           skillHitId,
+                           ownerId,
+                           lifetimeMs,
+                           elapsedMs,
+                           follow,
+                           radius,
+                           relativePosition,
+                           hitCount,
+                           hitCooldownMs,
+                           hitEntityIds);
 };
 
 NS_MG_END

@@ -20,6 +20,9 @@ public:
     Vector3f velocity;
     Vector3f acceleration;
     bool finished = true;
+    // start 前缓存，reset 时还原 PhysicsComponent::gravityScale
+    float savedGravityScale = 1.0f;
+    bool hasSavedGravity    = false;
 
     void reset()
     {
@@ -29,6 +32,9 @@ public:
         velocity     = Vector3f{};
         acceleration = Vector3f{};
         finished     = true;
+        // gravityScale 由 DisplacementSystem 在 reset 前还原
+        hasSavedGravity    = false;
+        savedGravityScale  = 1.0f;
     }
 
     void start(const DisplacementConfig* cfg)

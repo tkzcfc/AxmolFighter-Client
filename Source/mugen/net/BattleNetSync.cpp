@@ -94,6 +94,8 @@ void BattleNetSync::applySnapshot(const std::string& worldDump,
         MG_LOG_E("BattleNetSync: deserialize snapshot failed");
         return;
     }
+    // GameWord::deserialize → postDeserializeInit → BehaviorTreeSystem::onEntityAdded
+    // 对无 root 的实体重建 BT；SkillCast/BT 组件态保留，AttackAction enter 幂等续跑
     m_lastServerFrame = serverFrame;
 
     m_world->bindLocalPlayer(static_cast<mugen::EntityId>(m_localActorId));

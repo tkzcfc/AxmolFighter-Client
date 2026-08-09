@@ -65,7 +65,7 @@ bool GameWord::init(uint64_t randomSeed)
     ecsManager.addSystem("BuffSystem");
     ecsManager.addSystem("EffectLifetimeSystem");
     ecsManager.addSystem("CombatSystem");
-    ecsManager.addSystem("BehaviorSystem");
+    ecsManager.addSystem("BehaviorTreeSystem");
     ecsManager.addSystem("DisplacementSystem");
     ecsManager.addSystem("SoundSystem");
 

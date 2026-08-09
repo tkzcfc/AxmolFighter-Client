@@ -34,7 +34,9 @@ void BuffSystem::update()
                 if (it->tickAccumMs >= cfg->interval)
                 {
                     it->tickAccumMs           = 0;
-                    attr->currentAttribute.hp = std::max(0.0f, attr->currentAttribute.hp + cfg->paramValue);
+                    const float delta =
+                        cfg->paramValue.empty() ? 0.0f : cfg->paramValue[0];
+                    attr->currentAttribute.hp = std::max(0.0f, attr->currentAttribute.hp + delta);
                 }
             }
 

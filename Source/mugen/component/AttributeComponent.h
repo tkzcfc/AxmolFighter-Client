@@ -29,7 +29,11 @@ public:
     float ep    = 0.0f;
     float epMax = 100.0f;
 
-    MG_DEFINE_SERIALIZABLE(baseAttribute, currentAttribute, ep, epMax)
+    // Phase 1.4：顿帧剩余（ms，可序列化）
+    int32_t freezeRemainingMs = 0;
+    int32_t freezeDelayMs     = 0;  // >0 时先延迟再进入 freezeRemainingMs
+
+    MG_DEFINE_SERIALIZABLE(baseAttribute, currentAttribute, ep, epMax, freezeRemainingMs, freezeDelayMs)
 
     ExprEval exprEval;
 };

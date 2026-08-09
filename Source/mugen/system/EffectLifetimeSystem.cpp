@@ -24,6 +24,12 @@ void EffectLifetimeSystem::update()
         if (!fx || !tf)
             continue;
 
+        if (auto* attr = MG_GET_COMPONENT(entity, AttributeComponent))
+        {
+            if (attr->freezeRemainingMs > 0 && attr->freezeDelayMs <= 0)
+                continue;
+        }
+
         if (fx->follow && fx->ownerId != INVALID_ENTITY_ID)
         {
             if (auto* owner = getECSManager()->getEntity(fx->ownerId))

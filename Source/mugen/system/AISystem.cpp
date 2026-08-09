@@ -1,5 +1,6 @@
 #include "AISystem.h"
 #include "mugen/Components.h"
+#include "mugen/bt/SkillCastRules.h"
 #include "mugen/conf/Config.h"
 #include "mugen/conf/GameDef.h"
 
@@ -47,6 +48,7 @@ void AISystem::init(ECSManager* ecs)
 {
     Super::init(ecs);
     MG_SYSTEM_ADD_REQUIRED_COMPONENT(this, ecs, BehaviorComponent);
+    MG_SYSTEM_ADD_REQUIRED_COMPONENT(this, ecs, SkillCastComponent);
     MG_SYSTEM_ADD_REQUIRED_COMPONENT(this, ecs, SkillDeckComponent);
     MG_SYSTEM_ADD_REQUIRED_COMPONENT(this, ecs, IdentityComponent);
 }
@@ -59,12 +61,13 @@ void AISystem::update()
     {
         auto* identity = MG_GET_COMPONENT(entity, IdentityComponent);
         auto* behavior = MG_GET_COMPONENT(entity, BehaviorComponent);
+        auto* cast     = MG_GET_COMPONENT(entity, SkillCastComponent);
         auto* deck     = MG_GET_COMPONENT(entity, SkillDeckComponent);
-        if (!identity || !behavior || !deck)
+        if (!identity || !behavior || !cast || !deck)
             continue;
         if (identity->category != EntityCategory::kMonster)
             continue;
-        if (behavior->activeSkillAttackId > 0 || behavior->pendingSkillAttackId > 0)
+        if (cast->activeSkillAttackId > 0 || cast->pendingSkillAttackId > 0)
             continue;
         if (deck->skills.empty())
             continue;
@@ -76,7 +79,7 @@ void AISystem::update()
         int32_t& cd = s_aiCooldownMs[entity->getId()];
         if (cd > 0)
         {
-            cd = std::max(0, cd - dtMs);
+            cd = (std::max)(0, cd - dtMs);
             continue;
         }
 
@@ -117,8 +120,8 @@ void AISystem::update()
 
         if (skillId > 0)
         {
-            behavior->pendingSkillAttackId = skillId;
-            cd                             = ai && ai->skillInterval > 0 ? ai->skillInterval : 1200;
+            SkillCastRules::presetSkill(entity, skillId, static_cast<int32_t>(INPUT_SLOT_0), 0);
+            cd = ai && ai->skillInterval > 0 ? ai->skillInterval : 1200;
         }
     }
 }

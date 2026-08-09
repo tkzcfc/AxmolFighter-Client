@@ -47,6 +47,13 @@ void PhysicsSystem::update()
         if (physicsComp->isStaticBody)
             continue;
 
+        // 顿帧：跳过积分
+        if (auto* attr = MG_GET_COMPONENT(entity, AttributeComponent))
+        {
+            if (attr->freezeRemainingMs > 0 && attr->freezeDelayMs <= 0)
+                continue;
+        }
+
         auto transformComp = MG_GET_COMPONENT(entity, TransformComponent);
 
         // 1. 记录上一帧位置（碰撞回退时使用）

@@ -44,22 +44,20 @@ std::string toCitySpinePath(const std::string& spinePath)
     return spinePath.substr(0, dot) + "_city" + spinePath.substr(dot);
 }
 
-// 将 root 的 nextSkill 链展开为有序 skillAttackId 列表（去重，便于绑到 INPUT_SLOT_0..N）
-void appendSkillChain(Config* config,
-                      int32_t rootId,
-                      std::vector<int32_t>& out,
-                      std::unordered_set<int32_t>& seen,
-                      int32_t maxCount)
+// 收集 root 的 nextSkill 链（同槽多段），不去重进全局槽列表
+void collectSkillChain(Config* config, int32_t rootId, std::vector<int32_t>& chainOut)
 {
+    chainOut.clear();
+    std::unordered_set<int32_t> seen;
     int32_t id = rootId;
-    while (id > 0 && static_cast<int32_t>(out.size()) < maxCount)
+    while (id > 0)
     {
         if (!seen.insert(id).second)
             break;
         const auto* atk = config->getSkillAttackConfigById(id);
         if (!atk)
             break;
-        out.push_back(id);
+        chainOut.push_back(id);
         id = atk->nextSkill > 0 ? atk->nextSkill : 0;
     }
 }
@@ -154,20 +152,24 @@ Entity* spawnRoleFullActorImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32
     auto transformComp    = MG_ADD_COMPONENT(actor, TransformComponent);
     auto identityComp     = MG_ADD_COMPONENT(actor, IdentityComponent);
     auto skillBarComp     = MG_ADD_COMPONENT(actor, SkillBarComponent);
-    auto skillStateComp   = MG_ADD_COMPONENT(actor, SkillStateComponent);
+    auto hitReactComp     = MG_ADD_COMPONENT(actor, HitReactComponent);
     auto attributeComp    = MG_ADD_COMPONENT(actor, AttributeComponent);
     auto actorDataComp    = MG_ADD_COMPONENT(actor, ActorDataComponent);
     auto soundComp        = MG_ADD_COMPONENT(actor, SoundComponent);
     auto behaviorComp     = MG_ADD_COMPONENT(actor, BehaviorComponent);
+    auto skillCastComp    = MG_ADD_COMPONENT(actor, SkillCastComponent);
+    auto btComp           = MG_ADD_COMPONENT(actor, BehaviorTreeComponent);
     auto skillDeckComp    = MG_ADD_COMPONENT(actor, SkillDeckComponent);
     auto displacementComp = MG_ADD_COMPONENT(actor, DisplacementComponent);
     auto buffComp         = MG_ADD_COMPONENT(actor, BuffComponent);
     (void)avatarRenderComp;
     (void)inputComp;
-    (void)skillStateComp;
+    (void)hitReactComp;
     (void)soundComp;
     (void)displacementComp;
     (void)buffComp;
+    (void)skillCastComp;
+    (void)btComp;
 
     fillAvatarFromRole(avatarComp, role, spine, preferCity);
 
@@ -214,80 +216,83 @@ Entity* spawnRoleFullActorImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32
 
     constexpr int32_t kMaxSkillSlots = static_cast<int32_t>(INPUT_SLOT_10) - static_cast<int32_t>(INPUT_SLOT_0) + 1;
 
-    // 按 nextSkill 链展开，再追加高 sorder 技能便于打断测试：A/1/2… 各绑一个
-    std::vector<int32_t> skillIds;
-    std::unordered_set<int32_t> seen;
-    skillIds.reserve(static_cast<size_t>(kMaxSkillSlots));
-    for (int32_t root : roots)
-        appendSkillChain(config, root, skillIds, seen, kMaxSkillSlots);
-
-    // 额外根技能：920041(sorder80) / 920050 / 920080（含 ignore-order）
-    static constexpr int32_t kExtraTestRoots[] = {920041, 920050, 920080};
-    for (int32_t extra : kExtraTestRoots)
-    {
-        if (static_cast<int32_t>(skillIds.size()) >= kMaxSkillSlots)
-            break;
-        appendSkillChain(config, extra, skillIds, seen, kMaxSkillSlots);
-    }
-
     skillDeckComp->slotSkillIndices.clear();
     skillBarComp->skillSlots.clear();
+    skillDeckComp->skills.clear();
+    actorDataComp->skills.clear();
 
+    // 每个根技能占一槽；nextSkill 链写入同槽（对齐黑月同槽连段）
     int32_t boundCount = 0;
-    for (int32_t skillId : skillIds)
+    std::vector<int32_t> rootFirstSkillIds;
+    for (int32_t rootId : roots)
     {
         if (boundCount >= kMaxSkillSlots)
         {
-            MG_LOG_W("spawnRole: role={} skill overflow, drop skillAttack {}", roleId, skillId);
+            MG_LOG_W("spawnRole: role={} skill slot overflow, drop root {}", roleId, rootId);
             break;
         }
-        if (!config->getSkillAttackConfigById(skillId))
+        if (!config->getSkillAttackConfigById(rootId))
         {
-            MG_LOG_E("spawnRole: skillAttack {} missing", skillId);
+            MG_LOG_E("spawnRole: skillAttack {} missing", rootId);
             continue;
         }
 
-        const auto* skillAtk = config->getSkillAttackConfigById(skillId);
-        SkillDeckEntry entry;
-        entry.skillAttackId     = skillId;
-        entry.nextSkillAttackId = skillAtk ? skillAtk->nextSkill : -1;
-        entry.level             = 1;
-        entry.coolDownMaxMs     = skillAtk && skillAtk->cd > 0 ? skillAtk->cd : 0;
-        entry.coolDownMs        = 0;
-        entry.releaseMax        = skillAtk && skillAtk->cdCount > 0 ? skillAtk->cdCount : 1;
-        entry.releaseCount      = entry.releaseMax;
-        skillDeckComp->skills.push_back(entry);
-        const int32_t deckIndex = static_cast<int32_t>(skillDeckComp->skills.size() - 1);
+        std::vector<int32_t> chain;
+        collectSkillChain(config, rootId, chain);
+        if (chain.empty())
+            continue;
 
-        SkillInstanceData data;
-        data.level = 1;
-        data.buildFromSkillAttack(skillId);
-        actorDataComp->skills.push_back(data);
-        const int32_t actorSkillIndex = static_cast<int32_t>(actorDataComp->skills.size() - 1);
+        std::vector<int32_t> deckIndices;
+        std::vector<int32_t> actorSkillIndices;
+        deckIndices.reserve(chain.size());
+        actorSkillIndices.reserve(chain.size());
 
-        // 顺序：INPUT_SLOT_0(A), INPUT_SLOT_1(1), … INPUT_SLOT_10(0)
+        for (int32_t skillId : chain)
+        {
+            const auto* skillAtk = config->getSkillAttackConfigById(skillId);
+            if (!skillAtk)
+            {
+                MG_LOG_E("spawnRole: skillAttack {} missing in chain of {}", skillId, rootId);
+                continue;
+            }
+
+            SkillDeckEntry entry;
+            entry.skillAttackId     = skillId;
+            entry.nextSkillAttackId = skillAtk->nextSkill > 0 ? skillAtk->nextSkill : -1;
+            entry.level             = 1;
+            entry.coolDownMaxMs     = skillAtk->cd > 0 ? skillAtk->cd : 0;
+            entry.coolDownMs        = 0;
+            entry.releaseMax        = skillAtk->cdCount > 0 ? skillAtk->cdCount : 1;
+            entry.releaseCount      = entry.releaseMax;
+            skillDeckComp->skills.push_back(entry);
+            deckIndices.push_back(static_cast<int32_t>(skillDeckComp->skills.size() - 1));
+
+            SkillInstanceData data;
+            data.level = 1;
+            data.buildFromSkillAttack(skillId);
+            actorDataComp->skills.push_back(data);
+            actorSkillIndices.push_back(static_cast<int32_t>(actorDataComp->skills.size() - 1));
+        }
+
+        if (deckIndices.empty())
+            continue;
+
         SkillSlotItem slot;
-        slot.slotIndex = static_cast<int32_t>(INPUT_SLOT_0) + boundCount;
-        slot.skillIndexs.push_back(actorSkillIndex);
+        slot.slotIndex   = static_cast<int32_t>(INPUT_SLOT_0) + boundCount;
+        slot.skillIndexs = actorSkillIndices;
         skillBarComp->skillSlots.push_back(slot);
-        skillDeckComp->slotSkillIndices.push_back({deckIndex});
+        skillDeckComp->slotSkillIndices.push_back(deckIndices);
+        rootFirstSkillIds.push_back(chain.front());
         ++boundCount;
+
+        MG_LOG_W("spawnRole: bind INPUT_SLOT_{} -> root {} chainLen={}", boundCount - 1, rootId, deckIndices.size());
     }
 
-    // 跑中突刺：默认取第二个绑定技能
-    if (skillDeckComp->skills.size() >= 2)
-        behaviorComp->thrustSkillAttackId = skillDeckComp->skills[1].skillAttackId;
-    else
-        behaviorComp->thrustSkillAttackId = 0;
+    // 跑中突刺：第二个根技能（黑月 Y / Sprint）；仅一根则 0（Dash+A 仍用槽 0）
+    skillCastComp->thrustSkillAttackId = rootFirstSkillIds.size() >= 2 ? rootFirstSkillIds[1] : 0;
 
     MG_LOG_W("spawnRole: role={} skills={} slots={} thrust={}", roleId, actorDataComp->skills.size(),
-             skillBarComp->skillSlots.size(), behaviorComp->thrustSkillAttackId);
-    for (int32_t i = 0; i < boundCount; ++i)
-    {
-        const int32_t slot = static_cast<int32_t>(INPUT_SLOT_0) + i;
-        const int32_t sid  = skillDeckComp->skills[static_cast<size_t>(i)].skillAttackId;
-        MG_LOG_W("  bind INPUT_SLOT_{}({}) -> skill {}", i, slot, sid);
-    }
+             skillBarComp->skillSlots.size(), skillCastComp->thrustSkillAttackId);
     return actor;
 }
 

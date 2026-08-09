@@ -118,10 +118,18 @@ void AvatarSystem::update()
 
         auto& playback = avatarComp->playback;
 
-        const int dtMs = static_cast<int>(lastUpdateTimeMs * avatarComp->animationSpeed);
-        std::vector<const CombatEvent*> events;
-        playback.step(dtMs, &events);
-        dispatchCombatEvents(getECSManager(), entity, events);
+        // 顿帧：停动画推进（表现停帧）
+        bool frozen = false;
+        if (auto* attr = MG_GET_COMPONENT(entity, AttributeComponent))
+            frozen = attr->freezeRemainingMs > 0 && attr->freezeDelayMs <= 0;
+
+        if (!frozen)
+        {
+            const int dtMs = static_cast<int>(lastUpdateTimeMs * avatarComp->animationSpeed);
+            std::vector<const CombatEvent*> events;
+            playback.step(dtMs, &events);
+            dispatchCombatEvents(getECSManager(), entity, events);
+        }
 
         updateHitboxesFromPlayback(avatarComp, transformComp);
         avatarComp->animationFinished = playback.isFinished();
