@@ -29,7 +29,7 @@ void DungeonSelectView::rebuildChapterList()
     m_selectedCopyId       = 0;
 
     auto* config = Config::getInstance();
-    for (const auto& [id, chapter] : config->chapterConfigs)
+    for (const auto& [id, chapter] : config->getChapterConfigs())
     {
         if (chapter.isHide != 0)
             continue;

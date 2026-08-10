@@ -150,6 +150,11 @@ const ChapterConfig* Config::getChapterConfigById(int32_t id) const
     return findById(chapterConfigs, id, "ChapterConfig");
 }
 
+const std::unordered_map<int32_t, ChapterConfig>& Config::getChapterConfigs() const
+{
+    return chapterConfigs;
+}
+
 const NpcConfig* Config::getNpcConfigById(int32_t id) const
 {
     return findById(npcConfigs, id, "NpcConfig");

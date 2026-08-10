@@ -99,27 +99,30 @@ bool GameWord::loadMap(int32_t mapId)
     const RoomConfig* roomConfig = nullptr;
     const CampConfig* campConfig = nullptr;
 
-    auto townIt = config->townConfigs.find(mapId);
-    if (townIt != config->townConfigs.end() && !townIt->second.mapKey.empty())
+    townConfig = config->getTownConfigById(mapId);
+    if (townConfig && !townConfig->mapKey.empty())
     {
-        townConfig = &townIt->second;
-        mapKey     = townConfig->mapKey;
+        mapKey = townConfig->mapKey;
     }
     else
     {
-        auto roomIt = config->roomConfigs.find(mapId);
-        if (roomIt != config->roomConfigs.end() && !roomIt->second.mapKey.empty())
+        townConfig = nullptr;
+        roomConfig = config->getRoomConfigById(mapId);
+        if (roomConfig && !roomConfig->mapKey.empty())
         {
-            roomConfig = &roomIt->second;
-            mapKey     = roomConfig->mapKey;
+            mapKey = roomConfig->mapKey;
         }
         else
         {
-            auto campIt = config->campConfigs.find(mapId);
-            if (campIt != config->campConfigs.end() && !campIt->second.mapKey.empty())
+            roomConfig = nullptr;
+            campConfig = config->getCampConfigById(mapId);
+            if (campConfig && !campConfig->mapKey.empty())
             {
-                campConfig = &campIt->second;
-                mapKey     = campConfig->mapKey;
+                mapKey = campConfig->mapKey;
+            }
+            else
+            {
+                campConfig = nullptr;
             }
         }
     }
