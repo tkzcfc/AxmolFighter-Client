@@ -272,10 +272,10 @@ bool TownView::createLocalPlayer()
                  MG_GET_COMPONENT(m_gameWord->getDirector(), DirectorComponent)->mapEntityId))
     {
         auto* mapComp = MG_GET_COMPONENT(mapCompEntity, GameMapComponent);
-        if (mapComp && mapComp->mapConfig)
+        if (mapComp)
         {
-            spawnX = mapComp->mapConfig->scope.x + mapComp->mapConfig->scope.width / 2;
-            spawnY = mapComp->mapConfig->scope.y + mapComp->mapConfig->scope.height / 2;
+            spawnX = mapComp->scope.x + mapComp->scope.width / 2;
+            spawnY = mapComp->scope.y + mapComp->scope.height / 2;
         }
     }
 

@@ -20,9 +20,10 @@
 #include "component/SkillBarComponent.h"
 #include "component/SkillCastComponent.h"
 #include "component/SkillDeckComponent.h"
+#include "component/SkillStateComponent.h"
 #include "component/SoundComponent.h"
 #include "component/TransformComponent.h"
 
 // clang-format off
-#define COMPONENT_LIST X(ActorDataComponent) X(AIComponent) X(AttributeComponent) X(AvatarComponent) X(AvatarRenderComponent) X(BehaviorComponent) X(BehaviorTreeComponent) X(BuffComponent) X(DirectorComponent) X(DisplacementComponent) X(EffectLifetimeComponent) X(GameMapComponent) X(GameMapRenderComponent) X(HitReactComponent) X(IdentityComponent) X(InputComponent) X(PhysicsComponent) X(SkillBarComponent) X(SkillCastComponent) X(SkillDeckComponent) X(SoundComponent) X(TransformComponent)
+#define COMPONENT_LIST X(ActorDataComponent) X(AIComponent) X(AttributeComponent) X(AvatarComponent) X(AvatarRenderComponent) X(BehaviorComponent) X(BehaviorTreeComponent) X(BuffComponent) X(DirectorComponent) X(DisplacementComponent) X(EffectLifetimeComponent) X(GameMapComponent) X(GameMapRenderComponent) X(HitReactComponent) X(IdentityComponent) X(InputComponent) X(PhysicsComponent) X(SkillBarComponent) X(SkillCastComponent) X(SkillDeckComponent) X(SkillStateComponent) X(SoundComponent) X(TransformComponent)
 // clang-format on

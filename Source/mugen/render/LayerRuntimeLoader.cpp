@@ -5,10 +5,12 @@
 #    include "mugen/render/RenderUtils.h"
 #    include "mugen/render/SpineSkeletonLoader.h"
 
-#    include "mugen/conf/TableConfig.h"
 #    include "mugen/core/io/FileUtils.h"
 #    include "rapidjson/document.h"
 #    include "rapidjson/error/en.h"
+
+#    include <algorithm>
+#    include <cmath>
 
 NS_MG_BEGIN
 
@@ -272,23 +274,77 @@ ax::Node* createSpineNode(const JsonValue& node)
     return skeleton;
 }
 
-// map_data offset → ParallaxNode ratio（等价于层位移 -viewPos*offset）
-ax::Vec2 parallaxRatioForLayer(const std::string& layerName, const MapDataConfig* mapData)
+struct ParallaxOffsets
+{
+    ax::Vec2 distant;
+    ax::Vec2 middle;
+    ax::Vec2 nearby;
+    ax::Vec2 caseLayer;
+    ax::Vec2 light;
+};
+
+float propertyNumber(const JsonValue& objectNode, const char* key, float fallback)
+{
+    const JsonValue* objectData = member(objectNode, "object");
+    if (!objectData || !objectData->IsObject())
+        return fallback;
+    const JsonValue* props = member(*objectData, "properties");
+    if (!props || !props->IsArray())
+        return fallback;
+    for (const JsonValue& prop : props->GetArray())
+    {
+        if (!prop.IsObject())
+            continue;
+        if (stringOr(prop, "key") != key)
+            continue;
+        if (prop.HasMember("value") && prop["value"].IsNumber())
+            return prop["value"].GetFloat();
+    }
+    return fallback;
+}
+
+ParallaxOffsets parseRootParallaxOffsets(const JsonValue& root)
+{
+    ParallaxOffsets offsets;
+    const JsonValue* children = member(root, "children");
+    if (!children || !children->IsArray())
+        return offsets;
+
+    for (const JsonValue& child : children->GetArray())
+    {
+        if (!child.IsObject())
+            continue;
+        if (stringOr(child, "type") != "Object")
+            continue;
+
+        const std::string name = stringOr(child, "name");
+        const std::string kind = propertyString(child, "kind");
+        if (name != "meta" && kind != "meta")
+            continue;
+
+        offsets.distant   = {propertyNumber(child, "distantOffsetX", 0.0f), propertyNumber(child, "distantOffsetY", 0.0f)};
+        offsets.middle    = {propertyNumber(child, "middleOffsetX", 0.0f), propertyNumber(child, "middleOffsetY", 0.0f)};
+        offsets.nearby    = {propertyNumber(child, "nearbyOffsetX", 0.0f), propertyNumber(child, "nearbyOffsetY", 0.0f)};
+        offsets.caseLayer = {propertyNumber(child, "caseOffsetX", 0.0f), propertyNumber(child, "caseOffsetY", 0.0f)};
+        offsets.light     = {propertyNumber(child, "lightOffsetX", 0.0f), propertyNumber(child, "lightOffsetY", 0.0f)};
+        break;
+    }
+    return offsets;
+}
+
+ax::Vec2 parallaxRatioForLayer(const std::string& layerName, const ParallaxOffsets& offsets)
 {
     ax::Vec2 offset(0.0f, 0.0f);
-    if (!mapData)
-        return {1.0f, 1.0f};
-
     if (layerName == "distant")
-        offset = {mapData->distantOffset.x, mapData->distantOffset.y};
+        offset = offsets.distant;
     else if (layerName == "middle")
-        offset = {mapData->middleOffset.x, mapData->middleOffset.y};
+        offset = offsets.middle;
     else if (layerName == "nearby")
-        offset = {mapData->nearbyOffset.x, mapData->nearbyOffset.y};
+        offset = offsets.nearby;
     else if (layerName == "case")
-        offset = {mapData->caseOffset.x, mapData->caseOffset.y};
+        offset = offsets.caseLayer;
     else if (layerName == "light")
-        offset = {mapData->lightOffset.x, mapData->lightOffset.y};
+        offset = offsets.light;
     else
         return {1.0f, 1.0f};  // ground/region/trigger/entity
 
@@ -359,7 +415,7 @@ ax::Node* createNode(const JsonValue& node)
 }
 }  // namespace
 
-ax::ParallaxNode* LayerRuntimeLoader::loadNode(const std::string& layerFile, const MapDataConfig* mapData)
+ax::ParallaxNode* LayerRuntimeLoader::loadNode(const std::string& layerFile)
 {
     const std::vector<uint8_t> data = io::getDataFromFile(layerFile);
     if (data.empty())
@@ -385,6 +441,8 @@ ax::ParallaxNode* LayerRuntimeLoader::loadNode(const std::string& layerFile, con
         return nullptr;
     }
 
+    const ParallaxOffsets offsets = parseRootParallaxOffsets(*root);
+
     auto* mapRoot = ax::ParallaxNode::create();
     mapRoot->setName("mapRoot");
     applyTransform(*mapRoot, *root);
@@ -402,7 +460,7 @@ ax::ParallaxNode* LayerRuntimeLoader::loadNode(const std::string& layerFile, con
                 continue;
 
             const std::string layerName(layerNode->getName());
-            const ax::Vec2 ratio = parallaxRatioForLayer(layerName, mapData);
+            const ax::Vec2 ratio = parallaxRatioForLayer(layerName, offsets);
             mapRoot->addChild(layerNode, index++, ratio, ax::Vec2::ZERO);
             MG_LOG_I("LayerRuntimeLoader: layer '{}' parallaxRatio=({}, {})", layerName, ratio.x, ratio.y);
         }

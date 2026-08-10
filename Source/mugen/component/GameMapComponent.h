@@ -1,11 +1,25 @@
 #pragma once
 
 #include "mugen/core/ecs/Component.h"
-#include "mugen/conf/Config.h"
+#include "mugen/core/math/Vec2.h"
 
 NS_MG_BEGIN
 
-// 游戏地图组件
+// 可行走/物理范围（由 .layer moveRange 汇总）
+class MapScope : public Object
+{
+public:
+    typedef Object Super;
+
+public:
+    int32_t x      = 0;
+    int32_t y      = 0;
+    int32_t width  = 0;
+    int32_t height = 0;
+    MG_DEFINE_SERIALIZABLE(x, y, width, height)
+};
+
+// 游戏地图组件（原 MapConfig 运行时字段内联于此）
 class GameMapComponent : public Component
 {
 public:
@@ -15,36 +29,23 @@ public:
     GameMapComponent() {}
     virtual ~GameMapComponent() {}
 
-    int32_t mapId              = 0;
-    int32_t mapDataId          = 0;  // MapDataConfig id（视差/BGM）
-    const MapConfig* mapConfig = nullptr;
+    // 逻辑 id（town/room 等，刷怪查表用）
+    int32_t mapId = 0;
 
-    MG_DEFINE_SERIALIZABLE_CUSTOM(serializeCustomImpl, deserializeCustomImpl, mapId, mapDataId)
+    // 场景 key → mugen/map/<mapKey>.layer
+    std::string mapKey;
+    std::string layerFile;
 
-private:
-    void serializeCustomImpl(ByteBuffer& byteBuffer) const
-    {
-        byteBuffer.writeString(mapConfig ? mapConfig->sourcePath : "");
-    }
+    int32_t mapWidth  = 0;
+    int32_t mapHeight = 0;
+    MapScope scope;
 
-    bool deserializeCustomImpl(ByteBuffer& byteBuffer)
-    {
-        std::string mapConfigSourcePath = byteBuffer.readString();
-        if (mapConfigSourcePath.empty())
-        {
-            mapConfig = nullptr;
-        }
-        else
-        {
-            mapConfig = Config::getInstance()->getMapConfig(mapConfigSourcePath);
-            if (!mapConfig)
-            {
-                MG_LOG_E("Failed to load map config: {}", mapConfigSourcePath);
-                return false;
-            }
-        }
-        return true;
-    }
+    // .layer Root/meta.soundId
+    int32_t soundId = 0;
+
+    std::vector<Vector2i> spawnPoints;
+
+    MG_DEFINE_SERIALIZABLE(mapId, mapKey, layerFile, mapWidth, mapHeight, scope, soundId, spawnPoints)
 };
 
 NS_MG_END

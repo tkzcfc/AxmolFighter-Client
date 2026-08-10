@@ -2,7 +2,6 @@
 #include "mugen/Components.h"
 #include "mugen/GameWord.h"
 #include "mugen/conf/Config.h"
-#include "mugen/conf/TableConfig.h"
 
 #ifdef RUNTIME_IN_AXMOL
 #    include "mugen/render/LayerRuntimeLoader.h"
@@ -76,7 +75,7 @@ void GameMapRenderSystem::onEntityAdded(Entity* entity)
     auto gameMapComp       = MG_GET_COMPONENT(entity, GameMapComponent);
     auto gameMapRenderComp = MG_GET_COMPONENT(entity, GameMapRenderComponent);
 
-    MG_ASSERT(gameMapComp->mapConfig != nullptr);
+    MG_ASSERT(!gameMapComp->layerFile.empty());
     MG_ASSERT(gameMapRenderComp->mapRootNode == nullptr && "Render node already exists!");
 
     ax::ParallaxNode* mapRootNode         = nullptr;
@@ -99,12 +98,8 @@ void GameMapRenderSystem::onEntityAdded(Entity* entity)
         MG_LOG_W("Failed to bind mapRootNode from RenderObjectPool to GameMapRenderComponent!");
     }
 
-    const MapDataConfig* mapData = nullptr;
-    if (gameMapComp->mapDataId != 0)
-        mapData = Config::getInstance()->getMapDataConfigById(gameMapComp->mapDataId);
-
-    // 视觉树：仅客户端（size/scope 已由 GameMapSystem + LayerLoader 填充）
-    ax::ParallaxNode* root = LayerRuntimeLoader::loadNode(gameMapComp->mapConfig->layerFile, mapData);
+    // 视觉树：仅客户端（size/scope/soundId 已由 GameMapSystem + LayerLoader 填充；视差在 loadNode 内解析 meta）
+    ax::ParallaxNode* root = LayerRuntimeLoader::loadNode(gameMapComp->layerFile);
     MG_ASSERT(root != nullptr && "Failed to load map layer file!");
 
     if (!bindToGameMapRenderComponent(entity, root, std::move(camera)))
@@ -225,8 +220,8 @@ bool GameMapRenderSystem::bindToGameMapRenderComponent(Entity* entity,
 
     this->getGameWord()->getWordRootNode()->addChild(parallaxNode);
 
-    const float mapW = static_cast<float>(gameMapComp->mapConfig->mapWidth);
-    const float mapH = static_cast<float>(gameMapComp->mapConfig->mapHeight);
+    const float mapW = static_cast<float>(gameMapComp->mapWidth);
+    const float mapH = static_cast<float>(gameMapComp->mapHeight);
 
     if (!camera)
     {
@@ -236,10 +231,10 @@ bool GameMapRenderSystem::bindToGameMapRenderComponent(Entity* entity,
         camera->setEnableCollision(true);
 
         ax::Vec2 focus(mapW * 0.5f, mapH * 0.5f);
-        if (!gameMapComp->mapConfig->spawnPoints.empty())
+        if (!gameMapComp->spawnPoints.empty())
         {
-            focus.x = static_cast<float>(gameMapComp->mapConfig->spawnPoints.front().x);
-            focus.y = static_cast<float>(gameMapComp->mapConfig->spawnPoints.front().y);
+            focus.x = static_cast<float>(gameMapComp->spawnPoints.front().x);
+            focus.y = static_cast<float>(gameMapComp->spawnPoints.front().y);
         }
         camera->setFocusPosition(focus);
     }

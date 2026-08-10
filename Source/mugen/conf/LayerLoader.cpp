@@ -104,6 +104,74 @@ void parseMoveRanges(const JsonValue& document, std::vector<LayerMoveRange>& out
         out.push_back(range);
     }
 }
+
+float propNumber(const JsonValue& objectNode, const char* key, float fallback)
+{
+    const JsonValue* objectData = member(objectNode, "object");
+    if (!objectData || !objectData->IsObject())
+        return fallback;
+    const JsonValue* props = member(*objectData, "properties");
+    if (!props || !props->IsArray())
+        return fallback;
+    for (const JsonValue& prop : props->GetArray())
+    {
+        if (!prop.IsObject())
+            continue;
+        if (stringOr(prop, "key") != key)
+            continue;
+        if (prop.HasMember("value") && prop["value"].IsNumber())
+            return prop["value"].GetFloat();
+    }
+    return fallback;
+}
+
+int propInt(const JsonValue& objectNode, const char* key, int fallback)
+{
+    return static_cast<int>(std::round(propNumber(objectNode, key, static_cast<float>(fallback))));
+}
+
+std::string propString(const JsonValue& objectNode, const char* key, const std::string& fallback = {})
+{
+    const JsonValue* objectData = member(objectNode, "object");
+    if (!objectData || !objectData->IsObject())
+        return fallback;
+    const JsonValue* props = member(*objectData, "properties");
+    if (!props || !props->IsArray())
+        return fallback;
+    for (const JsonValue& prop : props->GetArray())
+    {
+        if (!prop.IsObject())
+            continue;
+        if (stringOr(prop, "key") != key)
+            continue;
+        if (prop.HasMember("value") && prop["value"].IsString())
+            return prop["value"].GetString();
+    }
+    return fallback;
+}
+
+void parseRootMeta(const JsonValue& root, LayerLoadResult& result)
+{
+    const JsonValue* children = member(root, "children");
+    if (!children || !children->IsArray())
+        return;
+
+    for (const JsonValue& child : children->GetArray())
+    {
+        if (!child.IsObject())
+            continue;
+        if (stringOr(child, "type") != "Object")
+            continue;
+
+        const std::string name = stringOr(child, "name");
+        const std::string kind = propString(child, "kind");
+        if (name != "meta" && kind != "meta")
+            continue;
+
+        result.soundId = propInt(child, "soundId", 0);
+        return;
+    }
+}
 }  // namespace
 
 LayerLoadResult LayerLoader::load(const std::string& layerFile)
@@ -153,6 +221,7 @@ LayerLoadResult LayerLoader::load(const std::string& layerFile)
     }
 
     parseMoveRanges(document, result.moveRanges);
+    parseRootMeta(*root, result);
     return result;
 }
 

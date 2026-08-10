@@ -260,44 +260,6 @@ public:
     MG_DEFINE_SERIALIZABLE(goal, rewardId, rewardCount);
 };
 
-// 地图元数据配置（原 map_data）
-class MapDataConfig : public Object
-{
-public:
-    typedef Object Super;
-
-public:
-    MapDataConfig() {}
-
-    virtual ~MapDataConfig() {}
-
-    // map_data id
-    int32_t id = 0;
-
-    // 场景 key
-    std::string mapKey;
-
-    // BGM/音效 id
-    int32_t soundId = 0;
-
-    // 远景视差
-    Vector2f distantOffset;
-
-    // 中景视差
-    Vector2f middleOffset;
-
-    // 近景视差
-    Vector2f nearbyOffset;
-
-    // 遮罩视差
-    Vector2f caseOffset;
-
-    // 灯光视差
-    Vector2f lightOffset;
-
-    MG_DEFINE_SERIALIZABLE(id, mapKey, soundId, distantOffset, middleOffset, nearbyOffset, caseOffset, lightOffset);
-};
-
 // 城镇配置
 class TownConfig : public Object
 {
@@ -314,9 +276,6 @@ public:
 
     // 场景 mapKey
     std::string mapKey;
-
-    // map_data id
-    int32_t mapDataId = 0;
 
     // 名称文本 id
     int32_t nameId = 0;
@@ -347,7 +306,6 @@ public:
 
     MG_DEFINE_SERIALIZABLE(id,
                            mapKey,
-                           mapDataId,
                            nameId,
                            actorPosX,
                            actorPosZ,
@@ -375,9 +333,6 @@ public:
 
     // 场景 mapKey
     std::string mapKey;
-
-    // map_data id
-    int32_t mapDataId = 0;
 
     // 名称文本 id
     int32_t nameId = 0;
@@ -408,7 +363,6 @@ public:
 
     MG_DEFINE_SERIALIZABLE(id,
                            mapKey,
-                           mapDataId,
                            nameId,
                            minimapSlot,
                            containIndex,
@@ -871,9 +825,6 @@ public:
     // 房间 id
     int32_t id = 0;
 
-    // map_data id
-    int32_t mapDataId = 0;
-
     // 场景 mapKey
     std::string mapKey;
 
@@ -934,7 +885,6 @@ public:
     std::vector<int32_t> storyId;
 
     MG_DEFINE_SERIALIZABLE(id,
-                           mapDataId,
                            mapKey,
                            nameId,
                            roomType,

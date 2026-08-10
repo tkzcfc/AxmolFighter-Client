@@ -93,27 +93,20 @@ bool LocalBattleMode::spawnLocalPlayer()
         return false;
     }
 
-    auto* mapEntity            = m_gameWord->ecsManager.getEntity(directorComp->mapEntityId);
-    auto* mapComp              = mapEntity ? MG_GET_COMPONENT(mapEntity, GameMapComponent) : nullptr;
-    const MapConfig* mapConfig = mapComp ? mapComp->mapConfig : nullptr;
-    if (!mapConfig)
+    auto* mapEntity = m_gameWord->ecsManager.getEntity(directorComp->mapEntityId);
+    auto* mapComp   = mapEntity ? MG_GET_COMPONENT(mapEntity, GameMapComponent) : nullptr;
+    if (!mapComp)
     {
-        // 回退：按 town mapKey
-        if (auto* town = config->getTownConfigById(LOCAL_MAP_ID))
-            mapConfig = config->getOrCreateMapConfigByKey(town->mapKey);
-    }
-    if (!mapConfig)
-    {
-        MG_LOG_E("LocalBattleMode: runtime mapConfig missing");
+        MG_LOG_E("LocalBattleMode: GameMapComponent missing");
         return false;
     }
 
-    int32_t spawnX = mapConfig->scope.x + mapConfig->scope.width / 2;
-    int32_t spawnY = mapConfig->scope.y + mapConfig->scope.height / 2;
-    if (!mapConfig->spawnPoints.empty())
+    int32_t spawnX = mapComp->scope.x + mapComp->scope.width / 2;
+    int32_t spawnY = mapComp->scope.y + mapComp->scope.height / 2;
+    if (!mapComp->spawnPoints.empty())
     {
-        spawnX = mapConfig->spawnPoints.front().x;
-        spawnY = mapConfig->spawnPoints.front().y;
+        spawnX = mapComp->spawnPoints.front().x;
+        spawnY = mapComp->spawnPoints.front().y;
     }
 
     int64_t playerId      = 0;

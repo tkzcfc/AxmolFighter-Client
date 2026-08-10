@@ -2,8 +2,10 @@
 
 #include "mugen/core/ecs/ECSManager.h"
 #include "mugen/core/math/Random.h"
+#include "mugen/core/math/Vec2.h"
 
 #include <string>
+#include <vector>
 
 #if RUNTIME_IN_AXMOL
 #    include <axmol.h>
@@ -36,10 +38,8 @@ public:
 
     bool loadMap(int32_t mapId);
 
-    // 按 mapKey 加载（mugen/map/<key>.layer），供城镇/副本进图。
-    // logicalId 写入 mapComp->mapId（刷怪/逻辑查表用）；mapDataId 写入 mapComp->mapDataId（视差/BGM）。
-    // mapDataId < 0 时回退为 logicalId。
-    bool loadMapByKey(const std::string& mapKey, int32_t logicalId = 0, int32_t mapDataId = -1);
+    // 按 mapKey 加载（mugen/map/<key>.layer）。logicalId → mapComp->mapId；spawnPoints 可空（由 LayerLoader 填中心点）。
+    bool loadMapByKey(const std::string& mapKey, int32_t logicalId = 0, std::vector<Vector2i> spawnPoints = {});
 
     // 绑定本机操控角色
     void bindLocalPlayer(EntityId actorEntityId);

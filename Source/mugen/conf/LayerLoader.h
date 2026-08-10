@@ -15,8 +15,12 @@ struct LayerMoveRange
 
 struct LayerLoadResult
 {
+    // 地图的大小
     Vector2i size;
+    // 移动范围
     std::vector<LayerMoveRange> moveRanges;
+    // 音效id
+    int32_t soundId = 0;
 };
 
 class LayerLoader

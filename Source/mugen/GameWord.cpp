@@ -54,8 +54,8 @@ bool GameWord::init(uint64_t randomSeed)
 #undef X
 
     // 此处服务端也需要添加上渲染系统,客户端才能完全反序列化出来
-    ecsManager.addSystem("GameMapRenderSystem");
     ecsManager.addSystem("GameMapSystem");
+    ecsManager.addSystem("GameMapRenderSystem");
     ecsManager.addSystem("AvatarSystem");
     ecsManager.addSystem("AvatarRenderSystem");
     ecsManager.addSystem("AttributeSystem");
@@ -92,19 +92,18 @@ bool GameWord::loadMap(int32_t mapId)
 {
     auto* config = Config::getInstance();
 
-    // 优先：town id / room id / mapData id → mapKey → 运行时 MapConfig
+    // town / room / camp id → mapKey
     std::string mapKey;
-    int32_t logicalId            = mapId;  // 写入 mapComp->mapId（刷怪查表用）
-    int32_t mapDataId            = mapId;  // 写入 mapComp->mapDataId（视差/BGM）
+    int32_t logicalId            = mapId;
     const TownConfig* townConfig = nullptr;
     const RoomConfig* roomConfig = nullptr;
+    const CampConfig* campConfig = nullptr;
 
     auto townIt = config->townConfigs.find(mapId);
     if (townIt != config->townConfigs.end() && !townIt->second.mapKey.empty())
     {
         townConfig = &townIt->second;
         mapKey     = townConfig->mapKey;
-        mapDataId  = townConfig->mapDataId > 0 ? townConfig->mapDataId : mapId;
     }
     else
     {
@@ -113,86 +112,46 @@ bool GameWord::loadMap(int32_t mapId)
         {
             roomConfig = &roomIt->second;
             mapKey     = roomConfig->mapKey;
-            mapDataId  = roomConfig->mapDataId > 0 ? roomConfig->mapDataId : mapId;
-            // logicalId 保持 roomId，GameMapSystem 用它查 RoomConfig 刷怪
         }
         else
         {
-            auto mapDataIt = config->mapDataConfigs.find(mapId);
-            if (mapDataIt != config->mapDataConfigs.end() && !mapDataIt->second.mapKey.empty())
+            auto campIt = config->campConfigs.find(mapId);
+            if (campIt != config->campConfigs.end() && !campIt->second.mapKey.empty())
             {
-                mapKey    = mapDataIt->second.mapKey;
-                mapDataId = mapId;
+                campConfig = &campIt->second;
+                mapKey     = campConfig->mapKey;
             }
         }
     }
 
-    if (!mapKey.empty())
+    if (mapKey.empty())
     {
-        auto* mapConfig = const_cast<MapConfig*>(config->getOrCreateMapConfigByKey(mapKey));
-        if (!mapConfig)
-        {
-            MG_LOG_E("GameWord::loadMap: getOrCreateMapConfigByKey failed key={}", mapKey);
-            return false;
-        }
-
-        // 城镇出生点优先
-        if (townConfig && (townConfig->actorPosX != 0 || townConfig->actorPosZ != 0))
-        {
-            mapConfig->spawnPoints.clear();
-            mapConfig->spawnPoints.push_back(Vector2i{townConfig->actorPosX, townConfig->actorPosZ});
-        }
-        // 副本房间出生点
-        else if (roomConfig && !roomConfig->actorSpawns.empty())
-        {
-            mapConfig->spawnPoints.clear();
-            mapConfig->spawnPoints.push_back(
-                Vector2i{roomConfig->actorSpawns.front().posX, roomConfig->actorSpawns.front().posZ});
-        }
-
-        return loadMapByKey(mapKey, logicalId, mapDataId);
-    }
-
-    auto mapConfig = config->getMapConfigById(mapId);
-    if (!mapConfig)
-    {
-        MG_LOG_E("GameWord::loadMap: no Town/Room/MapData/MapConfig for id={}", mapId);
+        MG_LOG_E("GameWord::loadMap: no Town/Room/Camp mapKey for id={}", mapId);
         return false;
     }
 
-    auto directorComp = MG_GET_COMPONENT(m_director, DirectorComponent);
-    if (directorComp->mapEntityId != 0)
+    std::vector<Vector2i> spawnPoints;
+    if (townConfig && (townConfig->actorPosX != 0 || townConfig->actorPosZ != 0))
     {
-        auto oldMapEntity = ecsManager.getEntity(directorComp->mapEntityId);
-        if (oldMapEntity)
-        {
-            oldMapEntity->destroy();
-        }
+        spawnPoints.push_back(Vector2i{townConfig->actorPosX, townConfig->actorPosZ});
     }
-    directorComp->localPlayerEntityId = INVALID_ENTITY_ID;
-    directorComp->cameraFollowTarget  = INVALID_ENTITY_ID;
+    else if (roomConfig && !roomConfig->actorSpawns.empty())
+    {
+        spawnPoints.push_back(Vector2i{roomConfig->actorSpawns.front().posX, roomConfig->actorSpawns.front().posZ});
+    }
+    else if (campConfig && !campConfig->actorSpawns.empty())
+    {
+        spawnPoints.push_back(Vector2i{campConfig->actorSpawns.front().posX, campConfig->actorSpawns.front().posZ});
+    }
 
-    auto map                  = ecsManager.newEntity();
-    directorComp->mapEntityId = map->getId();
-
-    auto mapRenderComp = MG_ADD_COMPONENT(map, GameMapRenderComponent);
-    auto mapComp       = MG_ADD_COMPONENT(map, GameMapComponent);
-    mapComp->mapId     = mapId;
-    mapComp->mapDataId = mapId;
-    mapComp->mapConfig = mapConfig;
-    (void)mapRenderComp;
-
-    map->notifyEntityReady();
-    return true;
+    return loadMapByKey(mapKey, logicalId, std::move(spawnPoints));
 }
 
-bool GameWord::loadMapByKey(const std::string& mapKey, int32_t logicalId, int32_t mapDataId)
+bool GameWord::loadMapByKey(const std::string& mapKey, int32_t logicalId, std::vector<Vector2i> spawnPoints)
 {
-    auto* config   = Config::getInstance();
-    auto mapConfig = config->getOrCreateMapConfigByKey(mapKey);
-    if (!mapConfig)
+    if (mapKey.empty())
     {
-        MG_LOG_E("GameWord::loadMapByKey: failed for mapKey={}", mapKey);
+        MG_LOG_E("GameWord::loadMapByKey: empty mapKey");
         return false;
     }
 
@@ -210,14 +169,23 @@ bool GameWord::loadMapByKey(const std::string& mapKey, int32_t logicalId, int32_
 
     auto map                  = ecsManager.newEntity();
     directorComp->mapEntityId = map->getId();
-
-    const int32_t resolvedMapDataId = mapDataId >= 0 ? mapDataId : logicalId;
 
     auto mapRenderComp = MG_ADD_COMPONENT(map, GameMapRenderComponent);
     auto mapComp       = MG_ADD_COMPONENT(map, GameMapComponent);
     mapComp->mapId     = logicalId > 0 ? logicalId : 0;
-    mapComp->mapDataId = resolvedMapDataId > 0 ? resolvedMapDataId : 0;
-    mapComp->mapConfig = mapConfig;
+    mapComp->mapKey    = mapKey;
+    mapComp->layerFile = std::string("mugen/map/") + mapKey + ".layer";
+    mapComp->mapWidth  = 1920;
+    mapComp->mapHeight = 1080;
+    mapComp->scope.x      = 0;
+    mapComp->scope.y      = 0;
+    mapComp->scope.width  = mapComp->mapWidth;
+    mapComp->scope.height = mapComp->mapHeight;
+    mapComp->spawnPoints  = std::move(spawnPoints);
+    if (mapComp->spawnPoints.empty())
+    {
+        mapComp->spawnPoints.push_back(Vector2i{mapComp->mapWidth / 2, mapComp->mapHeight / 2});
+    }
     (void)mapRenderComp;
 
     map->notifyEntityReady();

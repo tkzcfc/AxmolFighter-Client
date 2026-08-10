@@ -1,5 +1,4 @@
 #pragma once
-#include "MapConfig.h"
 #include "mugen/conf/TableConfig.h"
 
 NS_MG_BEGIN
@@ -22,8 +21,6 @@ public:
 
     bool saveToFile(const std::string& path) const;
 
-    const MapConfig* getMapConfig(const std::string& path) const;
-    const MapConfig* getMapConfigById(int32_t id) const;
     const TownConfig* getTownConfigById(int32_t id) const;
     const CampConfig* getCampConfigById(int32_t id) const;
     const StageConfig* getStageConfigById(int32_t id) const;
@@ -32,7 +29,6 @@ public:
     const NpcConfig* getNpcConfigById(int32_t id) const;
     const PortalConfig* getPortalConfigById(int32_t id) const;
     const RoomConfig* getRoomConfigById(int32_t id) const;
-    const MapDataConfig* getMapDataConfigById(int32_t id) const;
 
     const SkillAttackConfig* getSkillAttackConfigById(int32_t id) const;
     const ActionAttackConfig* getActionAttackConfigById(int32_t id) const;
@@ -65,12 +61,6 @@ public:
     const SoundSendMessageConfig* getSoundSendMessageById(int32_t id) const;
     const SoundTalkConfig* getSoundTalkById(int32_t id) const;
 
-    // 按 mapKey 取或创建运行时 MapConfig（layerFile=mugen/map/<key>.layer）
-    const MapConfig* getOrCreateMapConfigByKey(const std::string& mapKey);
-
-    std::unordered_map<std::string, MapConfig> mapConfigs;
-    std::unordered_map<int32_t, std::string> mapIdMap;
-
     std::unordered_map<int32_t, TownConfig> townConfigs;
     std::unordered_map<int32_t, CampConfig> campConfigs;
     std::unordered_map<int32_t, StageConfig> stageConfigs;
@@ -79,7 +69,6 @@ public:
     std::unordered_map<int32_t, NpcConfig> npcConfigs;
     std::unordered_map<int32_t, PortalConfig> portalConfigs;
     std::unordered_map<int32_t, RoomConfig> roomConfigs;
-    std::unordered_map<int32_t, MapDataConfig> mapDataConfigs;
 
     std::unordered_map<int32_t, SkillAttackConfig> skillAttackConfigs;
     std::unordered_map<int32_t, ActionAttackConfig> actionAttackConfigs;
@@ -112,9 +101,9 @@ public:
     std::unordered_map<int32_t, SoundSendMessageConfig> soundSendMessageConfigs;
     std::unordered_map<int32_t, SoundTalkConfig> soundTalkConfigs;
 
-    MG_DEFINE_SERIALIZABLE(mapConfigs,
-                           mapIdMap,
-                           townConfigs,
+public:
+
+    MG_DEFINE_SERIALIZABLE(townConfigs,
                            campConfigs,
                            stageConfigs,
                            copyConfigs,
@@ -122,7 +111,6 @@ public:
                            npcConfigs,
                            portalConfigs,
                            roomConfigs,
-                           mapDataConfigs,
                            skillAttackConfigs,
                            actionAttackConfigs,
                            skillHitTableConfigs,
