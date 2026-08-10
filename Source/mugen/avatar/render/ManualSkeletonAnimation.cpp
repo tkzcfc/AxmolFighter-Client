@@ -2,7 +2,7 @@
 
 #ifdef RUNTIME_IN_AXMOL
 
-#    include "mugen/render/SpineSkeletonLoader.h"
+#    include "mugen/render/SpineSkeletonCache.h"
 
 NS_MG_BEGIN
 
@@ -11,29 +11,20 @@ ManualSkeletonAnimation* ManualSkeletonAnimation::createWithFile(const std::stri
                                                                  const std::string& atlasFile,
                                                                  float scale)
 {
-    SpineSkeletonAssets assets = SpineSkeletonLoader::loadFromFile(skeletonFile, atlasFile, scale);
-    if (!assets.valid())
+    auto* data = SpineSkeletonCache::getInstance()->getOrCreate(skeletonFile, atlasFile, scale);
+    if (!data)
         return nullptr;
 
     ManualSkeletonAnimation* node = new (std::nothrow) ManualSkeletonAnimation();
     if (!node)
         return nullptr;
 
-    // Shared cache owns atlas + attachment loader + skeleton data
-    node->_atlas            = assets.atlas;
-    node->_attachmentLoader = assets.attachmentLoader;
-    node->_ownsAtlas        = false;
-    node->initWithData(assets.skeletonData, false);
+    node->initWithData(data, false);
     node->autorelease();
     return node;
 }
 
-ManualSkeletonAnimation::~ManualSkeletonAnimation()
-{
-    // SpineSkeletonCache owns these; clear before SkeletonRenderer dtor deletes them.
-    _attachmentLoader = nullptr;
-    _atlas            = nullptr;
-}
+ManualSkeletonAnimation::~ManualSkeletonAnimation() = default;
 
 void ManualSkeletonAnimation::onEnter()
 {

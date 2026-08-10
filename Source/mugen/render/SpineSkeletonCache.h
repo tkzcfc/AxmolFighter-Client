@@ -8,15 +8,6 @@
 
 NS_MG_BEGIN
 
-struct SpineSkeletonAssets
-{
-    spine::SkeletonData* skeletonData         = nullptr;
-    spine::Atlas* atlas                       = nullptr;
-    spine::AttachmentLoader* attachmentLoader = nullptr;
-
-    bool valid() const { return skeletonData != nullptr && atlas != nullptr && attachmentLoader != nullptr; }
-};
-
 class SpineSkeletonCache
 {
 public:
@@ -24,7 +15,8 @@ public:
 
     static void destroy();
 
-    SpineSkeletonAssets getOrCreate(std::string_view skeletonFile, std::string_view atlasFile, float scale = 1.0f);
+    // 返回缓存的 SkeletonData（非拥有）；失败返回 nullptr。atlas/loader 仅内部持有。
+    spine::SkeletonData* getOrCreate(std::string_view skeletonFile, std::string_view atlasFile, float scale = 1.0f);
 
     // 预加载
     void preload(std::string_view skeletonFile, std::string_view atlasFile, float scale = 1.0f);
@@ -39,15 +31,24 @@ public:
     void remove(std::string_view skeletonFile, std::string_view atlasFile, float scale = 1.0f);
 
 private:
+    struct CacheEntry
+    {
+        spine::SkeletonData* skeletonData         = nullptr;
+        spine::Atlas* atlas                       = nullptr;
+        spine::AttachmentLoader* attachmentLoader = nullptr;
+
+        bool valid() const { return skeletonData != nullptr && atlas != nullptr && attachmentLoader != nullptr; }
+    };
+
     SpineSkeletonCache() = default;
     ~SpineSkeletonCache();
 
     SpineSkeletonCache(const SpineSkeletonCache&)            = delete;
     SpineSkeletonCache& operator=(const SpineSkeletonCache&) = delete;
 
-    SpineSkeletonAssets load(std::string_view skeletonFile, std::string_view atlasFile, float scale);
+    CacheEntry load(std::string_view skeletonFile, std::string_view atlasFile, float scale);
 
-    std::unordered_map<uint64_t, SpineSkeletonAssets> m_map;
+    std::unordered_map<uint64_t, CacheEntry> m_map;
 
     static SpineSkeletonCache* s_instance;
 };

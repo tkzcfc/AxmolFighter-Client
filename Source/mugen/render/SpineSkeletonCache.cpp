@@ -68,21 +68,21 @@ SpineSkeletonCache::~SpineSkeletonCache()
     clear();
 }
 
-SpineSkeletonAssets SpineSkeletonCache::getOrCreate(std::string_view skeletonFile,
-                                                    std::string_view atlasFile,
-                                                    float scale)
+spine::SkeletonData* SpineSkeletonCache::getOrCreate(std::string_view skeletonFile,
+                                                     std::string_view atlasFile,
+                                                     float scale)
 {
     const uint64_t key = makeKey(skeletonFile, atlasFile, scale);
     auto it            = m_map.find(key);
     if (it != m_map.end())
-        return it->second;
+        return it->second.skeletonData;
 
-    SpineSkeletonAssets loaded = load(skeletonFile, atlasFile, scale);
+    CacheEntry loaded = load(skeletonFile, atlasFile, scale);
     if (!loaded.valid())
-        return {};
+        return nullptr;
 
     m_map[key] = loaded;
-    return loaded;
+    return loaded.skeletonData;
 }
 
 void SpineSkeletonCache::preload(std::string_view skeletonFile, std::string_view atlasFile, float scale)
@@ -107,7 +107,7 @@ bool SpineSkeletonCache::preloadResSpine(int32_t resSpineId)
     }
     const float scale = cfg->scale > 0.0f ? cfg->scale : 1.0f;
     preload(cfg->spine, cfg->atlas, scale);
-    return getOrCreate(cfg->spine, cfg->atlas, scale).valid();
+    return getOrCreate(cfg->spine, cfg->atlas, scale) != nullptr;
 }
 
 void SpineSkeletonCache::clear()
@@ -134,9 +134,11 @@ void SpineSkeletonCache::remove(std::string_view skeletonFile, std::string_view 
     m_map.erase(it);
 }
 
-SpineSkeletonAssets SpineSkeletonCache::load(std::string_view skeletonFile, std::string_view atlasFile, float scale)
+SpineSkeletonCache::CacheEntry SpineSkeletonCache::load(std::string_view skeletonFile,
+                                                        std::string_view atlasFile,
+                                                        float scale)
 {
-    SpineSkeletonAssets out;
+    CacheEntry out;
     if (skeletonFile.empty() || atlasFile.empty())
     {
         MG_LOG_E("SpineSkeletonCache: empty skeleton/atlas path");
