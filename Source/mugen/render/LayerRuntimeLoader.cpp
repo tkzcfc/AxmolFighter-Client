@@ -1,11 +1,12 @@
 #include "LayerRuntimeLoader.h"
 
 #ifdef RUNTIME_IN_AXMOL
-#    include "mugen/conf/TableConfig.h"
-#    include "mugen/core/io/FileUtils.h"
+
 #    include "mugen/render/RenderUtils.h"
 #    include "mugen/render/SpineSkeletonLoader.h"
 
+#    include "mugen/conf/TableConfig.h"
+#    include "mugen/core/io/FileUtils.h"
 #    include "rapidjson/document.h"
 #    include "rapidjson/error/en.h"
 
@@ -107,15 +108,6 @@ std::string propertyString(const JsonValue& objectNode, const char* key, const s
             return std::to_string(prop["value"].GetFloat());
     }
     return fallback;
-}
-
-bool isEditorParallaxObject(const JsonValue& node)
-{
-    if (stringOr(node, "type") != "Object")
-        return false;
-    if (stringOr(node, "name") == "Parallax")
-        return true;
-    return propertyString(node, "kind") == "parallax";
 }
 
 void applyPreviewVisual(ax::Node& previewNode, const JsonValue& node)
@@ -235,28 +227,6 @@ ax::Node* createLabelNode(const JsonValue& node)
     return label;
 }
 
-ax::Node* createObjectNode(const JsonValue& node)
-{
-    // 编辑器 Object 占位：传送门/NPC 槽位在运行时画半透明色块，避免纯空节点完全不可见
-    const std::string kind = propertyString(node, "kind");
-    if (kind == "portal" || kind == "npc")
-    {
-        auto* draw            = ax::DrawNode::create();
-        const ax::Size size   = sizeOr(node, "size", {80.0f, 120.0f});
-        const float halfW     = std::max(8.0f, size.width * 0.5f);
-        const float height    = std::max(16.0f, size.height);
-        const ax::Color3B rgb = color3Or(node, "color", kind == "portal" ? ax::Color3B(250, 153, 66) : ax::Color3B(80, 200, 120));
-        const ax::Color4F fill(rgb.r / 255.0f, rgb.g / 255.0f, rgb.b / 255.0f, kind == "portal" ? 0.28f : 0.18f);
-        const ax::Color4F border(rgb.r / 255.0f, rgb.g / 255.0f, rgb.b / 255.0f, 0.85f);
-        // 与 POR_* 锚点 (0.5, 0) 对齐：底边中心为原点
-        draw->drawSolidRect(ax::Vec2(-halfW, 0.0f), ax::Vec2(halfW, height), fill);
-        draw->drawRect(ax::Vec2(-halfW, 0.0f), ax::Vec2(halfW, height), border);
-        return draw;
-    }
-
-    return ax::Node::create();
-}
-
 ax::Node* createSpineNode(const JsonValue& node)
 {
     const JsonValue* spineData = member(node, "spine");
@@ -320,14 +290,17 @@ ax::Vec2 parallaxRatioForLayer(const std::string& layerName, const MapDataConfig
 
 void applyTransform(ax::Node& runtimeNode, const JsonValue& node)
 {
+    const std::string type = stringOr(node, "type", "Node");
+    // Label/Spine 这儿不设置 contentSize，避免覆盖其内部尺寸（Label/Spine 内部会根据文本/骨骼自动计算尺寸）
+    if (type != "Label" && type != "Spine")
+    {
+        runtimeNode.setContentSize(sizeOr(node, "size", {100.0f, 100.0f}));
+    }
+
     runtimeNode.setName(stringOr(node, "name", "Node"));
-    runtimeNode.setVisible(boolOr(node, "visible", true));
+    runtimeNode.setAnchorPoint(vec2Or(node, "anchor", {0.5f, 0.5f}));
     runtimeNode.setPosition(vec2Or(node, "position", ax::Vec2::ZERO));
     runtimeNode.setPositionZ(numberOr(node, "positionZ", 0.0f));
-    // Label / Spine 自有尺寸；layer 里的 size 多为编辑器占位，勿覆盖
-    if (!dynamic_cast<ax::Label*>(&runtimeNode) && !dynamic_cast<spine::SkeletonAnimation*>(&runtimeNode))
-        runtimeNode.setContentSize(sizeOr(node, "size", {100.0f, 100.0f}));
-    runtimeNode.setAnchorPoint(vec2Or(node, "anchor", {0.5f, 0.5f}));
     const ax::Vec2 scale = vec2Or(node, "scale", {1.0f, 1.0f});
     runtimeNode.setScale(scale.x, scale.y);
     runtimeNode.setRotation(numberOr(node, "rotation", 0.0f));
@@ -336,12 +309,15 @@ void applyTransform(ax::Node& runtimeNode, const JsonValue& node)
     runtimeNode.setSkewY(skew.y);
     runtimeNode.setColor(color3Or(node, "color", ax::Color3B::WHITE));
     runtimeNode.setOpacity(static_cast<uint8_t>(std::clamp(intOr(node, "opacity", 255), 0, 255)));
+    runtimeNode.setVisible(boolOr(node, "visible", true));
 }
 
 ax::Node* createNode(const JsonValue& node)
 {
-    if (isEditorParallaxObject(node))
+    if (stringOr(node, "type") == "Object")
+    {
         return nullptr;
+    }
 
     const std::string type = stringOr(node, "type", "Node");
     ax::Node* runtimeNode  = nullptr;
@@ -349,8 +325,6 @@ ax::Node* createNode(const JsonValue& node)
         runtimeNode = createSpriteNode(node);
     else if (type == "Label")
         runtimeNode = createLabelNode(node);
-    else if (type == "Object")
-        runtimeNode = createObjectNode(node);
     else if (type == "Spine")
         runtimeNode = createSpineNode(node);
     else
@@ -376,70 +350,15 @@ ax::Node* createNode(const JsonValue& node)
     }
     return runtimeNode;
 }
-
-bool shapeKindIs(const JsonValue& shape, const char* kind)
-{
-    const JsonValue* props = member(shape, "properties");
-    if (!props || !props->IsArray())
-        return false;
-    for (const JsonValue& prop : props->GetArray())
-    {
-        if (!prop.IsObject())
-            continue;
-        if (stringOr(prop, "key") != "kind")
-            continue;
-        if (prop.HasMember("value") && prop["value"].IsString())
-            return std::strcmp(prop["value"].GetString(), kind) == 0;
-    }
-    return false;
-}
-
-void parseMoveRanges(const JsonValue& document, std::vector<LayerMoveRange>& out)
-{
-    const JsonValue* plugins = member(document, "plugins");
-    if (!plugins || !plugins->IsObject())
-        return;
-    const JsonValue* shapePlugin = member(*plugins, "shape");
-    if (!shapePlugin || !shapePlugin->IsObject())
-        return;
-    const JsonValue* shapes = member(*shapePlugin, "shapes");
-    if (!shapes || !shapes->IsArray())
-        return;
-
-    for (const JsonValue& shape : shapes->GetArray())
-    {
-        if (!shape.IsObject())
-            continue;
-        const std::string shapeName = stringOr(shape, "name");
-        const bool nameLooksRange   = shapeName.rfind("range", 0) == 0;
-        if (!shapeKindIs(shape, "moveRange") && !nameLooksRange)
-            continue;
-
-        const ax::Vec2 center = vec2Or(shape, "position", ax::Vec2::ZERO);
-        const ax::Size size   = sizeOr(shape, "size", {0.0f, 0.0f});
-        if (size.width <= 0.0f || size.height <= 0.0f)
-            continue;
-
-        LayerMoveRange range;
-        range.width  = size.width;
-        range.height = size.height;
-        range.x      = center.x - size.width * 0.5f;
-        range.y      = center.y - size.height * 0.5f;
-        out.push_back(range);
-    }
-}
-
 }  // namespace
 
-LayerLoadResult LayerRuntimeLoader::load(const std::string& layerFile, const MapDataConfig* mapData)
+ax::ParallaxNode* LayerRuntimeLoader::loadNode(const std::string& layerFile, const MapDataConfig* mapData)
 {
-    LayerLoadResult result;
-
     const std::vector<uint8_t> data = io::getDataFromFile(layerFile);
     if (data.empty())
     {
         MG_LOG_E("LayerRuntimeLoader: failed to read layer file '{}'", layerFile);
-        return result;
+        return nullptr;
     }
 
     const std::string json(reinterpret_cast<const char*>(data.data()), data.size());
@@ -449,25 +368,19 @@ LayerLoadResult LayerRuntimeLoader::load(const std::string& layerFile, const Map
     {
         MG_LOG_E("LayerRuntimeLoader: failed to parse '{}': {}", layerFile,
                  rapidjson::GetParseError_En(document.GetParseError()));
-        return result;
+        return nullptr;
     }
 
     const JsonValue* root = member(document, "root");
     if (!root || !root->IsObject())
     {
         MG_LOG_E("LayerRuntimeLoader: '{}' does not contain root object", layerFile);
-        return result;
+        return nullptr;
     }
-
-    result.rootSize = sizeOr(*root, "size", {0.0f, 0.0f});
-    parseMoveRanges(document, result.moveRanges);
 
     auto* mapRoot = ax::ParallaxNode::create();
     mapRoot->setName("mapRoot");
     applyTransform(*mapRoot, *root);
-    // ParallaxNode 不依赖 contentSize 做视差；仍保留地图尺寸元数据
-    if (result.rootSize.width > 1.0f && result.rootSize.height > 1.0f)
-        mapRoot->setContentSize(result.rootSize);
 
     const JsonValue* children = member(*root, "children");
     if (children && children->IsArray())
@@ -488,11 +401,9 @@ LayerLoadResult LayerRuntimeLoader::load(const std::string& layerFile, const Map
         }
     }
 
-    result.root = mapRoot;
-    if (result.rootSize.width <= 1.0f || result.rootSize.height <= 1.0f)
-        result.rootSize = mapRoot->getContentSize();
-    return result;
+    return mapRoot;
 }
 
 NS_MG_END
+
 #endif
