@@ -38,7 +38,7 @@ constexpr float REPORT_INTERVAL = 0.2f;
 constexpr float REPORT_POS_EPSILON = 4.0f;
 // 远程玩家位置偏差超过该值直接瞬移（像素）
 constexpr float REMOTE_SNAP_DISTANCE = 300.0f;
-// 对齐黑月 EntityPortalParamMap（1-based）：Transfer=1, Active=2, ..., Close=5, Idle=6
+// EntityPortalParamMap（1-based）：Transfer=1, Active=2, ..., Close=5, Idle=6
 // C++ spineAnimations 为 0-based：Active=1, Close=4（常为 0，关闭态不可见）
 constexpr size_t kPortalAnimActive = 1;
 constexpr size_t kPortalAnimTransfer = 0;
@@ -980,24 +980,19 @@ void TownView::initPortals()
         if (entry.portalId <= 0 || entry.slot <= 0)
             continue;
 
-        const std::string markerName = fmt::format("POR_{}", entry.slot);
-        ax::Node* marker             = findChildByNameRecursive(entityNode, markerName);
-        if (!marker)
+        // 传送门坐标以 table 为准（由场景 POR_slot 回填）
+        if (entry.posX == 0 && entry.posZ == 0)
         {
-            AXLOGW("TownView: portal marker '{}' not found in entity layer", markerName);
+            AXLOGW("TownView: portal slot={} id={} missing pos in TownConfig", entry.slot, entry.portalId);
             continue;
         }
-
-        // 取相对 entityNode 的坐标（entity 层无视差，即地图逻辑坐标）
-        const ax::Vec2 worldPos = marker->convertToWorldSpaceAR(ax::Vec2::ZERO);
-        const ax::Vec2 localPos = entityNode->convertToNodeSpace(worldPos);
 
         TownPortal portal;
         portal.portalId = entry.portalId;
         portal.slot     = entry.slot;
         portal.destType = entry.destType;
-        portal.posX     = localPos.x;
-        portal.posY     = localPos.y;
+        portal.posX     = static_cast<float>(entry.posX);
+        portal.posY     = static_cast<float>(entry.posZ);
         if (!entry.dests.empty())
         {
             const auto& dest   = entry.dests.front();
@@ -1100,7 +1095,7 @@ void TownView::updatePortals()
 
 void TownView::onPortalTriggered(const TownPortal& portal)
 {
-    // 对齐黑月 PortalTransferType：1=Function（功能 UI），5=City
+    // PortalTransferType：1=Function（功能 UI），5=City
     constexpr int32_t kDestTypeFunction = 1;
     constexpr int32_t kDestTypeCity     = 5;
 

@@ -2,10 +2,12 @@
 
 #include "mugen/GameWord.h"
 #include "mugen/Components.h"
+#include "mugen/buff/BuffApi.h"
 #include "mugen/combat/DamageCalculator.h"
 #include "mugen/conf/Config.h"
 #include "mugen/conf/GameDef.h"
 #include "mugen/core/ecs/Entity.h"
+#include "mugen/system/EffectLifeSystem.h"
 
 #include <algorithm>
 #include <cmath>
@@ -94,7 +96,8 @@ bool passHitCondition(Entity* defender, int32_t hitCondition)
 
     const bool down = (behavior->statusTags & StateTag::kTagDownState) != 0;
     const bool air  = (behavior->statusTags & StateTag::kTagAirborne) != 0 ||
-                     (behavior->currentKind == static_cast<int32_t>(BehaviorKind::kHitUp));
+                     (behavior->currentKind == static_cast<int32_t>(BehaviorKind::kHitUp)) ||
+                     (behavior->currentKind == static_cast<int32_t>(BehaviorKind::kHitDown));
     const bool onGround = physics && physics->onGround;
 
     // 0 无法命中倒地；1 无法命中浮空；2 两者都不行
@@ -216,6 +219,9 @@ void queueHit(Entity* attacker,
     if (hitTable && !passHitCondition(defender, hitTable->hitCondition))
         return;
 
+    BuffApi::trigger(attacker, BFEvent::BeforeHit, defender, skillHitLookupId);
+    BuffApi::trigger(defender, BFEvent::BeforeToBeHit, attacker, skillHitLookupId);
+
     auto* attrA = MG_GET_COMPONENT(attacker, AttributeComponent);
     auto* attrB = MG_GET_COMPONENT(defender, AttributeComponent);
     if (!attrB)
@@ -257,21 +263,24 @@ void queueHit(Entity* attacker,
     if (dmg.isDodge)
         return;
 
-    int32_t hitstun = 250;
-    int32_t hitType = static_cast<int32_t>(HitType::kHitLight);
+    int32_t hitstun        = 250;
+    int32_t tableHitType   = 0;  // skill_hit.hit_type 原值 0/1/2
+    HitType runtimeHitType = HitType::kHitLight;
     int32_t displacementId = -1;
-    float impulseX = 0.0f;
-    float impulseZ = 0.0f;
-    int32_t freezeMs = 0;
-    int32_t freezeDelay = 0;
-    int32_t freezeRole = 0;
-    int32_t freezeFx = 0;
-    int32_t hitRigidity = 0;
+    int32_t hitId          = 0;
+    float impulseX         = 0.0f;
+    float impulseZ         = 0.0f;
+    int32_t freezeMs       = 0;
+    int32_t freezeDelay    = 0;
+    int32_t freezeRole     = 0;
+    int32_t freezeFx       = 0;
+    int32_t hitRigidity    = 0;
 
     if (hitTable)
     {
-        hitType = hitTable->hitType <= 0 ? static_cast<int32_t>(HitType::kHitLight) : hitTable->hitType;
-        hitstun = hitTable->stiffTime > 0 ? hitTable->stiffTime : 0;
+        tableHitType = hitTable->hitType;  // 保留表原值，勿直接塞进 HitType 枚举
+        hitId        = hitTable->id;
+        hitstun      = hitTable->stiffTime > 0 ? hitTable->stiffTime : 0;
         if (hitstun <= 0)
             hitstun = hitTable->hitRigidity > 0 ? hitTable->hitRigidity : 250;
         hitRigidity    = hitTable->hitRigidity;
@@ -281,10 +290,16 @@ void queueHit(Entity* attacker,
         freezeRole     = hitTable->freezeTimeControlRole;
         freezeFx       = hitTable->freezeTimeControlEffect;
 
+        // 角色表 hitDisplacementId 可覆盖动作位移
+        if (auto* behaviorDef = MG_GET_COMPONENT(defender, BehaviorComponent))
+        {
+            if (behaviorDef->roleConfig && behaviorDef->roleConfig->hitDisplacementId > 0)
+                displacementId = behaviorDef->roleConfig->hitDisplacementId;
+        }
+
         if (hitTable->airDisplacementId > 0 && isAirborneDefender(defender))
         {
             displacementId = hitTable->airDisplacementId;
-            hitType        = static_cast<int32_t>(HitType::kHitLaunch);
         }
         else if (hitTable->floorDisplacementId > 0 &&
                  MG_GET_COMPONENT(defender, BehaviorComponent) &&
@@ -302,10 +317,18 @@ void queueHit(Entity* attacker,
                     (atf && atf->facingDirection == FacingDirection::kFacingLeft) ? -1.0f : 1.0f;
                 impulseX = d->velocity.x * facing;
                 impulseZ = d->velocity.z;
-                if (impulseZ > 0.0f && hitType < static_cast<int32_t>(HitType::kHitLaunch))
-                    hitType = static_cast<int32_t>(HitType::kHitLaunch);
             }
         }
+
+        // 运行时严重度：由 tableHitType + 位移推导，供优先级比较
+        if (impulseZ > 0.0f || (hitTable->airDisplacementId > 0 && isAirborneDefender(defender)))
+            runtimeHitType = HitType::kHitLaunch;
+        else if (tableHitType >= 2)
+            runtimeHitType = HitType::kHitLaunch;
+        else if (tableHitType == 1)
+            runtimeHitType = HitType::kHitHeavy;
+        else
+            runtimeHitType = HitType::kHitLight;
     }
 
     // 硬直抗性
@@ -319,6 +342,13 @@ void queueHit(Entity* attacker,
     // 扣血（非霸体也扣；霸体只跳过硬直/顿帧）
     attrB->currentAttribute.hp = std::max(0.0f, attrB->currentAttribute.hp - dmg.damage);
 
+    // 受击回 EP（按伤害比例，上限 epMax）
+    if (dmg.damage > 0.0f && attrB->epMax > 0.0f)
+    {
+        const float gain = std::min(attrB->epMax * 0.05f, dmg.damage * 0.02f);
+        attrB->ep        = std::min(attrB->epMax, attrB->ep + gain);
+    }
+
     const bool superArmor = DamageCalculator::isSuperArmor(defender);
     if (!superArmor)
     {
@@ -329,7 +359,7 @@ void queueHit(Entity* attacker,
                     disp->start(d);
         }
 
-        // 顿帧：受击方始终（可带 delay）；攻击方/特效立即冻（黑月 delay 仅受击）
+        // 顿帧：受击方始终（可带 delay）；攻击方/特效立即冻（delay 仅作用于受击方）
         applyFreeze(defender, freezeMs, freezeDelay);
         if (freezeRole == 0)
             applyFreeze(attacker, freezeMs, 0);
@@ -340,7 +370,10 @@ void queueHit(Entity* attacker,
         {
             PendingHitInfo hitInfo;
             hitInfo.attackerId          = attacker->getId();
-            hitInfo.hitType             = static_cast<HitType>(hitType);
+            hitInfo.hitType             = runtimeHitType;
+            hitInfo.tableHitType        = tableHitType;
+            hitInfo.hitId               = hitId;
+            hitInfo.displacementId      = displacementId;
             hitInfo.hitState            = "Stun";
             hitInfo.hitstunMs           = hitstun;
             hitInfo.impulseX            = impulseX;
@@ -361,7 +394,11 @@ void queueHit(Entity* attacker,
         }
     }
 
-    (void)skillHitLookupId;
+    BuffApi::trigger(attacker, BFEvent::AfterHit, defender, skillHitLookupId, dmg.damage);
+    BuffApi::trigger(defender, BFEvent::AfterToBeHit, attacker, skillHitLookupId, dmg.damage);
+
+    if (effectEntity)
+        EffectLifeSystem::spawnHitEffects(effectEntity, defender);
 }
 }  // namespace
 
@@ -562,6 +599,21 @@ void CombatSystem::update()
 
             if (!boxesOverlap(attackBoxes, avatarB->getDamageBoxes()))
                 continue;
+
+            // hitExtraControl：[0]=无敌可命中？ [1]=起身可命中？ 0/false 则拒绝
+            if (effectCfg && !effectCfg->hitExtraControl.empty())
+            {
+                const bool hitMustFx = hitTable && hitTable->hitMust == 1;
+                if (!hitMustFx)
+                {
+                    if (effectCfg->hitExtraControl.size() > 1 && effectCfg->hitExtraControl[1] == 0)
+                    {
+                        auto* beh = MG_GET_COMPONENT(defender, BehaviorComponent);
+                        if (beh && beh->currentKind == static_cast<int32_t>(BehaviorKind::kGetUp))
+                            continue;
+                    }
+                }
+            }
 
             ++fx->hitCount;
             if (hitInterval < 0)

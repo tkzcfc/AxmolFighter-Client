@@ -7,7 +7,7 @@
 NS_MG_BEGIN
 
 /**
- * 单段 action_attack 叶节点（对齐黑月 AttackRole）。
+ * 单段 action_attack 叶节点（对应 AttackRole 生命周期）。
  * 运行时状态写 BehaviorTreeComponent / SkillCastComponent。
  */
 class AttackAction : public BTAction
@@ -29,6 +29,11 @@ private:
     void resetDisplacement(BTContext& ctx);
     void spawnEffect(BTContext& ctx, int32_t effectId);
     void playSounds(BTContext& ctx);
+    void dealWithPresentation(BTContext& ctx, float frame);
+    void triggerShake(BTContext& ctx);
+    void triggerDisplaySpine(BTContext& ctx);
+    void triggerTransform(BTContext& ctx);
+    void triggerStatic(BTContext& ctx);
 
     int32_t actionId         = 0;
     int32_t actionIndex      = 0;

@@ -3,14 +3,19 @@
 #include "mugen/Components.h"
 #include "mugen/bt/BtLocomotionUtils.h"
 #include "mugen/bt/SkillCastRules.h"
+#include "mugen/buff/BuffApi.h"
 #include "mugen/conf/Config.h"
 #include "mugen/core/bt/BTContext.h"
 #include "mugen/core/ecs/ECSManager.h"
 #include "mugen/core/ecs/Entity.h"
+#include "mugen/core/math/Random.h"
+#include "mugen/render/VirtualCamera.h"
+#include "mugen/system/EffectLifeSystem.h"
 #include "mugen/system/SoundSystem.h"
 
 #include <algorithm>
 #include <cmath>
+#include <vector>
 
 NS_MG_BEGIN
 
@@ -18,6 +23,11 @@ namespace
 {
 constexpr int32_t kSafetyActionDurationMs = 5000;
 constexpr float kLogicFrameMs             = 1000.0f / 30.0f;
+constexpr uint32_t kPresShake             = 1u << 0;
+constexpr uint32_t kPresDisplaySpine      = 1u << 1;
+constexpr uint32_t kPresTransform         = 1u << 2;
+constexpr uint32_t kPresStatic            = 1u << 3;
+constexpr int32_t kGhostIntervalMs        = 80;
 
 std::string replaceExtension(const std::string& path, const std::string& newExt)
 {
@@ -27,6 +37,28 @@ std::string replaceExtension(const std::string& path, const std::string& newExt)
         return path + newExt;
     return path.substr(0, dot) + newExt;
 }
+
+VirtualCamera* findMapCamera(ECSManager* ecs)
+{
+#ifdef RUNTIME_IN_AXMOL
+    if (!ecs)
+        return nullptr;
+    Signature sig;
+    sig.set(ecs->getComponentTypeId("GameMapRenderComponent"));
+    for (Entity* e : ecs->getEntitiesBySignature(sig))
+    {
+        if (auto* mapRender = MG_GET_COMPONENT(e, GameMapRenderComponent))
+        {
+            if (mapRender->camera)
+                return mapRender->camera.get();
+        }
+    }
+#else
+    (void)ecs;
+#endif
+    return nullptr;
+}
+
 }  // namespace
 
 void AttackAction::resetDisplacement(BTContext& ctx)
@@ -47,8 +79,7 @@ void AttackAction::resetDisplacement(BTContext& ctx)
 
 void AttackAction::applyBuffs(BTContext& ctx, bool add)
 {
-    auto* buffs = ctx.buff;
-    if (!buffs)
+    if (!ctx.entity)
         return;
     auto* actionCfg = Config::getInstance()->getActionAttackConfigById(actionId);
     if (!actionCfg)
@@ -59,21 +90,9 @@ void AttackAction::applyBuffs(BTContext& ctx, bool add)
         if (bid <= 0)
             continue;
         if (add)
-        {
-            BuffInstance inst;
-            inst.buffId        = bid;
-            inst.sourceSkillId = skillAttackId;
-            const auto* buffCfg = Config::getInstance()->getBuffConfigById(bid);
-            // BuffConfig.times：毫秒；缺省兜底 3000
-            inst.remainingMs = (buffCfg && buffCfg->times > 0) ? buffCfg->times : 3000;
-            buffs->buffs.push_back(inst);
-        }
+            BuffApi::addBuff(ctx.entity, bid, skillAttackId, 1);
         else
-        {
-            buffs->buffs.erase(std::remove_if(buffs->buffs.begin(), buffs->buffs.end(),
-                                              [bid](const BuffInstance& b) { return b.buffId == bid; }),
-                               buffs->buffs.end());
-        }
+            BuffApi::removeBuff(ctx.entity, bid);
     }
 }
 
@@ -98,7 +117,8 @@ void AttackAction::spawnEffect(BTContext& ctx, int32_t effectId)
     fx->effectId         = effectId;
     fx->skillHitId       = cfg->skillHitId > 0 ? cfg->skillHitId : skillAttackId;
     fx->ownerId          = ctx.entity->getId();
-    fx->lifetimeMs       = cfg->autoRelease > 0 ? cfg->autoRelease : 450;
+    // autoRelease==0：由动作 exit 销毁，寿命给一个大值避免提前超时
+    fx->lifetimeMs       = cfg->autoRelease > 0 ? cfg->autoRelease : 60000;
     fx->follow           = cfg->follow != 0;
     fx->radius           = cfg->radius > 0 ? cfg->radius : 40.0f;
     fx->relativePosition = cfg->relativePosition;
@@ -134,6 +154,9 @@ void AttackAction::spawnEffect(BTContext& ctx, int32_t effectId)
     }
 
     effect->notifyEntityReady();
+
+    if (ctx.skillCast)
+        ctx.skillCast->spawnedEffectIds.push_back(effect->getId());
 }
 
 void AttackAction::playSounds(BTContext& ctx)
@@ -152,13 +175,22 @@ void AttackAction::playSounds(BTContext& ctx)
         return;
 
     for (size_t i = 0; i < actionCfg->soundId.size(); ++i)
-    {
-        if (soundsPlayed[i])
-            continue;
         soundsPlayed[i] = true;
-        if (actionCfg->soundId[i] > 0)
-            soundSys->play(actionCfg->soundId[i], ctx.entity);
+
+    // 随机播放一条音效
+    std::vector<int32_t> valid;
+    valid.reserve(actionCfg->soundId.size());
+    for (int32_t sid : actionCfg->soundId)
+    {
+        if (sid > 0)
+            valid.push_back(sid);
     }
+    if (valid.empty())
+        return;
+
+    Random rng(static_cast<uint64_t>(actionId) ^ static_cast<uint64_t>(ctx.bt ? ctx.bt->actionElapsedMs : 0));
+    const int32_t pick = valid[static_cast<size_t>(rng.nextInt(0, static_cast<int32_t>(valid.size()) - 1))];
+    soundSys->play(pick, ctx.entity);
 }
 
 void AttackAction::onActionEnter(BTContext& ctx)
@@ -177,6 +209,7 @@ void AttackAction::onActionEnter(BTContext& ctx)
     {
         ctx.skillCast->interruptOpen      = false;
         ctx.skillCast->interruptExtraOpen = false;
+        ctx.skillCast->spawnedEffectIds.clear();
     }
     if (ctx.behavior)
     {
@@ -250,6 +283,10 @@ void AttackAction::onActionEnter(BTContext& ctx)
                 ctx.displacement->start(d);
         }
         applyBuffs(ctx, true);
+        if (actionCfg->ghost >= 0 && ctx.avatar)
+            ++ctx.avatar->ghostRefCount;
+        if (actionCfg->shadow > 0.0f && ctx.avatar)
+            ctx.avatar->shadowScale = actionCfg->shadow;
     }
 
     MG_LOG_D("AttackAction enter skill={} action[{}]={} delay={} resume={}", skillAttackId, actionIndex, actionId,
@@ -258,16 +295,42 @@ void AttackAction::onActionEnter(BTContext& ctx)
 
 void AttackAction::onActionExit(BTContext& ctx)
 {
+    auto* actionCfg = Config::getInstance()->getActionAttackConfigById(actionId);
+    if (actionCfg && actionCfg->ghost >= 0 && ctx.avatar)
+        ctx.avatar->ghostRefCount = (std::max)(0, ctx.avatar->ghostRefCount - 1);
+    if (ctx.avatar)
+        ctx.avatar->shadowScale = 0.0f;
+
     applyBuffs(ctx, false);
     resetDisplacement(ctx);
+
+    // autoRelease==0 的特效在动作结束时销毁
+    if (ctx.skillCast && ctx.ecs)
+    {
+        for (uint32_t eid : ctx.skillCast->spawnedEffectIds)
+        {
+            Entity* fxEnt = ctx.ecs->getEntity(static_cast<EntityId>(eid));
+            if (!fxEnt)
+                continue;
+            auto* life = MG_GET_COMPONENT(fxEnt, EffectLifetimeComponent);
+            if (!life)
+                continue;
+            const auto* cfg = Config::getInstance()->getEffectConfigById(life->effectId);
+            if (cfg && cfg->autoRelease == 0)
+                ctx.ecs->destroyEntity(fxEnt);
+        }
+        ctx.skillCast->spawnedEffectIds.clear();
+    }
+
     if (ctx.avatar)
         ctx.avatar->animationSpeed = 1.0f;
     if (ctx.bt)
     {
-        ctx.bt->currentActionId = 0;
-        ctx.bt->actionElapsedMs = 0;
-        ctx.bt->effectSpawnMask = 0;
-        ctx.bt->animationEnd    = false;
+        ctx.bt->currentActionId  = 0;
+        ctx.bt->actionElapsedMs  = 0;
+        ctx.bt->effectSpawnMask  = 0;
+        ctx.bt->presentationMask = 0;
+        ctx.bt->animationEnd     = false;
     }
     effectSpawned.clear();
     soundsPlayed.clear();
@@ -291,6 +354,16 @@ BTStatus AttackAction::onActionTick(BTContext& ctx, int32_t dtMs)
     const float frame =
         frameIntervalMs > 0.0f ? static_cast<float>(elapsedMs) / frameIntervalMs : 0.0f;
 
+    // —— obstruct / floor（对齐 ActionAttack onDisplacementEvent）——
+    // obstruct==1：碰边界结束动作；floor==0：落地结束动作
+    if (ctx.physics)
+    {
+        if (actionCfg->obstruct == 1 && ctx.physics->boundaryHitFlags != 0)
+            return BTStatus::Success;
+        if (actionCfg->floor == 0 && ctx.physics->justLanded)
+            return BTStatus::Success;
+    }
+
     // —— dealWithInterrupt ——
     if (actionCfg->interruptFrame >= 0 && frame >= static_cast<float>(actionCfg->interruptFrame))
     {
@@ -299,13 +372,12 @@ BTStatus AttackAction::onActionTick(BTContext& ctx, int32_t dtMs)
 
         if (SkillCastRules::canConsumePendingOnInterrupt(ctx.entity))
         {
-            // Failure：中止当前 Toward 序列，由父 Selector 按新施法上下文重选（勿 Success 推进旧动作链）
             if (SkillCastRules::dealWithNextSkillBase(ctx.entity))
                 return BTStatus::Failure;
         }
-        else if (ctx.skillCast && ctx.skillCast->wantRunCancel)
+        else if (SkillCastRules::dealWithRun(ctx.entity))
         {
-            // B7：跑取消仅至尊窗；普通窗不消费 wantRunCancel
+            return BTStatus::Failure;
         }
     }
 
@@ -320,42 +392,26 @@ BTStatus AttackAction::onActionTick(BTContext& ctx, int32_t dtMs)
             if (SkillCastRules::dealWithNextSkillBase(ctx.entity))
                 return BTStatus::Failure;
         }
-        else if (ctx.skillCast && ctx.skillCast->pendingSkillAttackId == 0)
+        else if (SkillCastRules::dealWithRun(ctx.entity))
         {
-            // 无预输入：Dash 输入 → 跑取消（仅至尊窗）
-            const bool wantRun = ctx.behavior &&
-                                 (ctx.behavior->statusTags & StateTag::kTagDashState) != 0 &&
-                                 bt_util::anyMoveKeyDown(ctx.input);
-            if (wantRun || (ctx.skillCast && ctx.skillCast->wantRunCancel))
-            {
-                ctx.skillCast->wantRunCancel        = false;
-                ctx.skillCast->activeSkillAttackId  = 0;
-                ctx.skillCast->pendingSkillAttackId = 0;
-                ctx.skillCast->interruptOpen        = false;
-                ctx.skillCast->interruptExtraOpen   = false;
-                SkillCastRules::syncBehaviorMirror(ctx.entity);
-                if (ctx.behavior)
-                {
-                    ctx.behavior->statusTags |=
-                        StateTag::kTagMovable | StateTag::kTagAttackAllowed | StateTag::kTagFacingAllowed |
-                        StateTag::kTagDashState;
-                    ctx.behavior->currentKind = static_cast<int32_t>(BehaviorKind::kDash);
-                }
-                return BTStatus::Failure;
-            }
+            return BTStatus::Failure;
         }
     }
 
     // —— dealWithControl：攻击中移动 ——
+    // 0=全向移动+朝向；2=仅朝向；3=移动不改朝向
     if (ctx.physics && ctx.input)
     {
         const bool dispActive =
             ctx.displacement && !ctx.displacement->finished && ctx.displacement->activeConfig;
         if (!dispActive)
         {
-            if (actionCfg->control != 0 && actionCfg->controlVelocity > 0.0f)
+            const int32_t ctrl = actionCfg->control;
+            const bool allowMove = (ctrl == 0 || ctrl == 3) && actionCfg->controlVelocity > 0.0f;
+            const bool allowFace = (ctrl == 0 || ctrl == 2);
+
+            if (allowMove || allowFace)
             {
-                const float speed = actionCfg->controlVelocity;
                 float vx = 0.0f, vy = 0.0f;
                 if (ctx.input->isKeyDown(static_cast<int32_t>(INPUT_SLOT_MOVE_LEFT)))
                     vx -= 1.0f;
@@ -365,21 +421,32 @@ BTStatus AttackAction::onActionTick(BTContext& ctx, int32_t dtMs)
                     vy += 1.0f;
                 if (ctx.input->isKeyDown(static_cast<int32_t>(INPUT_SLOT_MOVE_DOWN)))
                     vy -= 1.0f;
-                if (vx != 0.0f || vy != 0.0f)
+
+                if (allowMove)
                 {
-                    const float len         = std::sqrt(vx * vx + vy * vy);
-                    ctx.physics->velocity.x = vx / len * speed;
-                    ctx.physics->velocity.y = vy / len * speed;
-                    if (ctx.transform && vx != 0.0f)
+                    if (vx != 0.0f || vy != 0.0f)
                     {
-                        ctx.transform->facingDirection =
-                            vx > 0 ? FacingDirection::kFacingRight : FacingDirection::kFacingLeft;
+                        const float speed = actionCfg->controlVelocity;
+                        const float len   = std::sqrt(vx * vx + vy * vy);
+                        ctx.physics->velocity.x = vx / len * speed;
+                        ctx.physics->velocity.y = vy / len * speed;
+                    }
+                    else
+                    {
+                        ctx.physics->velocity.x = 0;
+                        ctx.physics->velocity.y = 0;
                     }
                 }
                 else
                 {
                     ctx.physics->velocity.x = 0;
                     ctx.physics->velocity.y = 0;
+                }
+
+                if (allowFace && ctx.transform && vx != 0.0f)
+                {
+                    ctx.transform->facingDirection =
+                        vx > 0 ? FacingDirection::kFacingRight : FacingDirection::kFacingLeft;
                 }
             }
             else
@@ -409,6 +476,8 @@ BTStatus AttackAction::onActionTick(BTContext& ctx, int32_t dtMs)
         }
     }
 
+    dealWithPresentation(ctx, frame);
+
     bool animDone = false;
     if (ctx.avatar && ctx.avatar->animationFinished)
         animDone = true;
@@ -436,6 +505,177 @@ BTStatus AttackAction::onActionTick(BTContext& ctx, int32_t dtMs)
     }
 
     return BTStatus::Running;
+}
+
+void AttackAction::triggerShake(BTContext& ctx)
+{
+    auto* actionCfg = Config::getInstance()->getActionAttackConfigById(actionId);
+    if (!actionCfg || actionCfg->cameraId < 0)
+        return;
+    const auto* camCfg = Config::getInstance()->getCameraConfigById(actionCfg->cameraId);
+    if (!camCfg)
+        return;
+#ifdef RUNTIME_IN_AXMOL
+    if (auto* cam = findMapCamera(ctx.ecs))
+    {
+        float amp = camCfg->amplitude;
+        if (amp <= 0.0f)
+            amp = (std::max)(camCfg->amplitudeX, camCfg->amplitudeY);
+        cam->shake(amp, camCfg->duration, camCfg->freezeTime);
+    }
+#endif
+    if (camCfg->freezeTime > 0 && ctx.attribute)
+    {
+        if (ctx.attribute->freezeRemainingMs < camCfg->freezeTime)
+            ctx.attribute->freezeRemainingMs = camCfg->freezeTime;
+    }
+}
+
+void AttackAction::triggerDisplaySpine(BTContext& ctx)
+{
+    auto* actionCfg = Config::getInstance()->getActionAttackConfigById(actionId);
+    if (!actionCfg || actionCfg->displaySpineIds.empty())
+        return;
+    for (int32_t spineId : actionCfg->displaySpineIds)
+    {
+        if (spineId <= 0)
+            continue;
+        // 最小可用：按 ResSpine 生成短寿命跟随特效实体（居中由渲染层定位）
+        if (!ctx.ecs || !ctx.entity)
+            continue;
+        const auto* spine = Config::getInstance()->getResSpineConfigById(spineId);
+        if (!spine)
+            continue;
+        auto* vfx = ctx.ecs->newEntity();
+        auto* tf  = MG_ADD_COMPONENT(vfx, TransformComponent);
+        auto* fx  = MG_ADD_COMPONENT(vfx, EffectLifetimeComponent);
+        fx->ownerId    = ctx.entity->getId();
+        fx->follow     = false;
+        fx->lifetimeMs = 3000;
+        if (ctx.transform)
+            tf->position = ctx.transform->position;
+        auto* avatar = MG_ADD_COMPONENT(vfx, AvatarComponent);
+        MG_ADD_COMPONENT(vfx, AvatarRenderComponent);
+        avatar->resSpine = spine;
+        if (!spine->spine.empty())
+        {
+            avatar->spineSkeleton = spine->spine;
+            avatar->spineAtlas =
+                !spine->atlas.empty() ? spine->atlas : replaceExtension(spine->spine, ".atlas");
+            avatar->defaultSkin = spine->defaultSkin;
+            avatar->spineScale  = spine->scale > 0.0f ? spine->scale : 1.0f;
+        }
+        vfx->notifyEntityReady();
+        if (ctx.skillCast)
+            ctx.skillCast->spawnedEffectIds.push_back(vfx->getId());
+    }
+}
+
+void AttackAction::triggerTransform(BTContext& ctx)
+{
+    auto* actionCfg = Config::getInstance()->getActionAttackConfigById(actionId);
+    if (!actionCfg || actionCfg->transformId <= 0 || !ctx.avatar)
+        return;
+    // 最小可用：transformId 视为 ResSpineId，切换当前 Avatar 资源
+    if (const auto* spine = Config::getInstance()->getResSpineConfigById(actionCfg->transformId))
+    {
+        ctx.avatar->resSpine      = spine;
+        ctx.avatar->spineSkeleton = spine->spine;
+        ctx.avatar->spineAtlas =
+            !spine->atlas.empty() ? spine->atlas : replaceExtension(spine->spine, ".atlas");
+        ctx.avatar->defaultSkin = spine->defaultSkin;
+        ctx.avatar->spineScale  = spine->scale > 0.0f ? spine->scale : ctx.avatar->spineScale;
+        if (auto* render = MG_GET_COMPONENT(ctx.entity, AvatarRenderComponent))
+        {
+            render->syncedMotion.clear();
+            render->syncedEntry.clear();
+        }
+    }
+}
+
+void AttackAction::triggerStatic(BTContext& ctx)
+{
+    auto* actionCfg = Config::getInstance()->getActionAttackConfigById(actionId);
+    if (!actionCfg || actionCfg->staticTarget < 0 || !ctx.ecs)
+        return;
+    if (ctx.bt && ctx.bt->staticResetRemainMs > 0)
+        return;
+
+    const int32_t staticMs = actionCfg->staticTime;
+    if (staticMs <= 0)
+        return;
+
+    auto applyStatic = [staticMs](Entity* e) {
+        if (auto* b = MG_GET_COMPONENT(e, BehaviorComponent))
+        {
+            if (b->staticRemainMs < staticMs)
+                b->staticRemainMs = staticMs;
+            b->statusTags &= ~(StateTag::kTagMovable | StateTag::kTagAttackAllowed);
+        }
+    };
+
+    // 0=仅敌方；1=自己+敌方。简化：非自身一律视为敌方目标池中有 Behavior 的实体
+    if (actionCfg->staticTarget == 1 && ctx.entity)
+        applyStatic(ctx.entity);
+
+    Signature sig;
+    sig.set(ctx.ecs->getComponentTypeId("BehaviorComponent"));
+    sig.set(ctx.ecs->getComponentTypeId("IdentityComponent"));
+    for (Entity* e : ctx.ecs->getEntitiesBySignature(sig))
+    {
+        if (e == ctx.entity)
+            continue;
+        auto* selfId = MG_GET_COMPONENT(ctx.entity, IdentityComponent);
+        auto* otherId = MG_GET_COMPONENT(e, IdentityComponent);
+        if (!selfId || !otherId)
+            continue;
+        // 友军：同 category 且 monsterCamps 有交集
+        if (selfId->category == otherId->category && selfId->monsterCamps != 0 && otherId->monsterCamps != 0 &&
+            (selfId->monsterCamps & otherId->monsterCamps) != 0)
+            continue;
+        applyStatic(e);
+    }
+
+    if (ctx.bt)
+        ctx.bt->staticResetRemainMs = (std::max)(0, actionCfg->staticResetTime);
+}
+
+void AttackAction::dealWithPresentation(BTContext& ctx, float frame)
+{
+    auto* actionCfg = Config::getInstance()->getActionAttackConfigById(actionId);
+    if (!actionCfg || !ctx.bt)
+        return;
+
+    if (actionCfg->cameraId >= 0 && actionCfg->cameraFrame >= 0 &&
+        !(ctx.bt->presentationMask & kPresShake) && frame >= static_cast<float>(actionCfg->cameraFrame))
+    {
+        ctx.bt->presentationMask |= kPresShake;
+        triggerShake(ctx);
+    }
+
+    if (!actionCfg->displaySpineIds.empty() && actionCfg->displaySpineFrame >= 0 &&
+        !(ctx.bt->presentationMask & kPresDisplaySpine) &&
+        frame >= static_cast<float>(actionCfg->displaySpineFrame))
+    {
+        ctx.bt->presentationMask |= kPresDisplaySpine;
+        triggerDisplaySpine(ctx);
+    }
+
+    if (actionCfg->transformId > 0 && actionCfg->transformFrame >= 0 &&
+        !(ctx.bt->presentationMask & kPresTransform) &&
+        frame >= static_cast<float>(actionCfg->transformFrame))
+    {
+        ctx.bt->presentationMask |= kPresTransform;
+        triggerTransform(ctx);
+    }
+
+    if (actionCfg->staticTarget >= 0 && actionCfg->staticStartFrame >= 0 &&
+        !(ctx.bt->presentationMask & kPresStatic) &&
+        frame >= static_cast<float>(actionCfg->staticStartFrame))
+    {
+        ctx.bt->presentationMask |= kPresStatic;
+        triggerStatic(ctx);
+    }
 }
 
 NS_MG_END

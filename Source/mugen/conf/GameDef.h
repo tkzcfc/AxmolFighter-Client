@@ -87,21 +87,23 @@ enum StateTag : uint32_t
 };
 
 // 行为分支类型
-enum class BehaviorKind : int32_t
+    enum class BehaviorKind : int32_t
 {
-    kIdle     = 0,
-    kWalk     = 1,
-    kDash     = 2,
-    kAttack   = 3,
-    kStun     = 4,
-    kHitUp    = 5,
-    kHitDown  = 6,
-    kHitFloor = 7,
-    kGetUp    = 8,
-    kDeath    = 9,
-    kChase    = 10,
-    kPatrol   = 11,
-    kAlert    = 12,
+    kIdle      = 0,
+    kWalk      = 1,
+    kDash      = 2,
+    kAttack    = 3,
+    kStun      = 4,   // Hit（轻受击）
+    kHitUp     = 5,
+    kHitDown   = 6,   // 空中击倒
+    kHitFloor  = 7,
+    kGetUp     = 8,
+    kDeath     = 9,
+    kChase     = 10,
+    kPatrol    = 11,
+    kAlert     = 12,
+    kHitSwitch = 13,  // 受击结束过渡
+    kJostled   = 14,  // 实体重叠推开
 };
 
 NS_MG_END

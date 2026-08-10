@@ -1,10 +1,13 @@
 #include "mugen/bt/SkillCastRules.h"
 
+#include "mugen/bt/BtLocomotionUtils.h"
+#include "mugen/buff/BuffApi.h"
 #include "mugen/Components.h"
 #include "mugen/conf/Config.h"
 #include "mugen/conf/GameDef.h"
 #include "mugen/core/ecs/Entity.h"
 
+#include <algorithm>
 #include <cmath>
 
 NS_MG_BEGIN
@@ -48,13 +51,34 @@ bool passesSkillActivationTags(Entity* entity, int32_t skillAttackId)
     const SkillInstanceData* inst = findSkillInstance(actorData, skillAttackId);
     const uint32_t allow = inst ? inst->allowTags : (StateTag::kTagGrounded | StateTag::kTagAttackAllowed);
     const uint32_t deny  = inst ? inst->denyTags : StateTag::kTagHitState;
-    // TODO(Phase2): slotTriggerFlags / comboWindowMs / inputBuffer* 尚未消费，仅 allow/denyTags 生效
 
     if (allow && (behavior->statusTags & allow) != allow)
         return false;
     if (deny && (behavior->statusTags & deny) != 0)
         return false;
     return true;
+}
+
+void clearInputBuffer(SkillCastComponent* cast)
+{
+    if (!cast)
+        return;
+    cast->bufferSkillAttackId = 0;
+    cast->bufferInputSlot     = 0;
+    cast->bufferStepInSlot    = 0;
+    cast->bufferRemainMs      = 0;
+    cast->bufferReleaseTags   = 0;
+}
+
+bool canConsumeInputBuffer(Entity* entity)
+{
+    auto* cast     = MG_GET_COMPONENT(entity, SkillCastComponent);
+    auto* behavior = MG_GET_COMPONENT(entity, BehaviorComponent);
+    if (!cast || !behavior || cast->bufferSkillAttackId <= 0 || cast->bufferRemainMs <= 0)
+        return false;
+    if (cast->bufferReleaseTags && (behavior->statusTags & cast->bufferReleaseTags) != 0)
+        return false;
+    return passesSkillActivationTags(entity, cast->bufferSkillAttackId);
 }
 
 void clearActiveSkillFields(SkillCastComponent* cast, BehaviorComponent* behavior)
@@ -198,7 +222,7 @@ bool isPriority(const SkillAttackConfig* nextCfg, const SkillAttackConfig* curCf
         return false;
     const int32_t nextOrder = nextCfg->sorder;
     const int32_t curOrder  = curCfg ? curCfg->sorder : 0;
-    // 对齐黑月：任一方 sorder==-1 或 next >= cur
+    // 任一方 sorder==-1 或 next >= cur
     if (nextOrder == -1 || curOrder == -1)
         return true;
     return nextOrder >= curOrder;
@@ -209,7 +233,7 @@ bool isSuperPriority(const SkillAttackConfig* nextCfg,
                      bool interruptOpen,
                      bool interruptExtraOpen)
 {
-    // 黑月 SkillBase:isSuperPriority(self=next, skillBase=cur)：
+    // isSuperPriority(self=next, skillBase=cur)：
     // cur 带 IgnoreOrder_InterruptFrame 且普通窗开；或 next 带 Extra 忽略且至尊窗开
     if (interruptOpen && hasOrderControl(curCfg, kIgnoreOrderInterruptFrame))
         return true;
@@ -277,6 +301,7 @@ bool isAllowCast(Entity* entity, int32_t skillAttackId, bool /*isAutoCast*/)
     auto* behavior = MG_GET_COMPONENT(entity, BehaviorComponent);
     auto* deck     = MG_GET_COMPONENT(entity, SkillDeckComponent);
     auto* attr     = MG_GET_COMPONENT(entity, AttributeComponent);
+    auto* cast     = MG_GET_COMPONENT(entity, SkillCastComponent);
     if (!behavior || skillAttackId <= 0)
         return false;
 
@@ -299,11 +324,34 @@ bool isAllowCast(Entity* entity, int32_t skillAttackId, bool /*isAutoCast*/)
 
     if (attr)
     {
-        if (skillAtk->mp > 0 && attr->currentAttribute.mp < static_cast<float>(skillAtk->mp))
+        // 爆气技：需 EP 满（对齐 E 槽 isEnoughEp）
+        if (cast && cast->crazySkillAttackId > 0 && skillAttackId == cast->crazySkillAttackId)
+        {
+            if (attr->ep < attr->epMax)
+                return false;
+        }
+
+        // MP：表值 * (1 + 实体缩放-1 + 技能缩放-1 + 连段倍率-1)
+        float mpCost = static_cast<float>(skillAtk->mp);
+        if (mpCost > 0.0f)
+        {
+            float skillMpScale = entry ? entry->mpConsumeScale : 1.0f;
+            float rate = attr->mpConsumeScale - 1.0f + skillMpScale - 1.0f;
+            if (cast && cast->activeStepInSlot > 1)
+                rate += kLinkSkillMpRate - 1.0f;
+            mpCost *= (1.0f + rate);
+            if (attr->currentAttribute.mp < mpCost)
+                return false;
+        }
+        float epCost = static_cast<float>(skillAtk->ep);
+        if (epCost > 0.0f)
+        {
+            epCost = epCost * attr->epConsumeScale + attr->epPlus;
+            if (attr->ep < epCost)
+                return false;
+        }
+        if (skillAtk->crystal > 0 && attr->crystal < skillAtk->crystal)
             return false;
-        if (skillAtk->ep > 0 && attr->ep < static_cast<float>(skillAtk->ep))
-            return false;
-        // crystal：一期无资源字段，仅表校验跳过扣减
     }
     return true;
 }
@@ -328,10 +376,26 @@ bool castBegan(Entity* entity)
 
     if (attr)
     {
-        if (skillAtk->mp > 0)
-            attr->currentAttribute.mp -= static_cast<float>(skillAtk->mp);
-        if (skillAtk->ep > 0)
-            attr->ep = (std::max)(0.0f, attr->ep - static_cast<float>(skillAtk->ep));
+        float mpCost = static_cast<float>(skillAtk->mp);
+        if (mpCost > 0.0f)
+        {
+            float skillMpScale = entry ? entry->mpConsumeScale : 1.0f;
+            float rate = attr->mpConsumeScale - 1.0f + skillMpScale - 1.0f;
+            if (cast->activeStepInSlot > 1)
+                rate += kLinkSkillMpRate - 1.0f;
+            mpCost *= (1.0f + rate);
+            attr->currentAttribute.mp -= mpCost;
+            BuffApi::trigger(entity, BFEvent::UseTp, nullptr, cast->activeSkillAttackId, mpCost);
+        }
+        float epCost = static_cast<float>(skillAtk->ep);
+        if (epCost > 0.0f)
+        {
+            epCost = epCost * attr->epConsumeScale + attr->epPlus;
+            attr->ep = (std::max)(0.0f, attr->ep - epCost);
+            BuffApi::trigger(entity, BFEvent::UseEp, nullptr, cast->activeSkillAttackId, epCost);
+        }
+        if (skillAtk->crystal > 0)
+            attr->crystal = (std::max)(0, attr->crystal - skillAtk->crystal);
     }
 
     cast->towardIndex = dealWithDirection(entity, skillAtk);
@@ -345,24 +409,29 @@ bool castBegan(Entity* entity)
             entry->releaseCount = (std::max)(0, entry->releaseCount - 1);
         cast->releaseCount = entry->releaseCount;
 
-        // dealWithCoolDown：开计时；次数用尽后 isCooling 才拦
+        // dealWithCoolDown：coldMax = 表cd * coldTimeScale；多充能且已在 CD 保留余量
         if (entry->coolDownMaxMs > 0)
         {
-            if (entry->releaseMax > 1)
-            {
-                // 多段：保持/启动 CD 计时（黑月累加余量简化为未在 CD 则开满）
-                if (entry->coolDownMs <= 0)
-                    entry->coolDownMs = entry->coolDownMaxMs;
-            }
-            else
-            {
-                entry->coolDownMs = entry->coolDownMaxMs;
-            }
+            const int32_t scaledMax =
+                static_cast<int32_t>(static_cast<float>(entry->coolDownMaxMs) * entry->coldTimeScale);
+            if (!(entry->coolDownMs > 0 && entry->releaseMax > 1))
+                entry->coolDownMs = (std::max)(0, scaledMax);
+            BuffApi::trigger(entity, BFEvent::SkillColdStart, nullptr, cast->activeSkillAttackId,
+                             static_cast<float>(entry->coolDownMs));
         }
     }
 
     cast->costPaid          = true;
     cast->costPaidPipeIndex = cast->pipeIndex;
+
+    // 爆气：开表技能进入 crazy 态（modeIndex=1，持续窗口可序列化）
+    if (cast->crazySkillAttackId > 0 && cast->activeSkillAttackId == cast->crazySkillAttackId)
+    {
+        cast->crazyActive  = true;
+        cast->crazyRemainMs = 8000;
+        cast->modeIndex     = 1;
+    }
+
     syncBehaviorMirror(entity);
     return true;
 }
@@ -373,7 +442,7 @@ bool castEnded(Entity* entity)
     if (!cast)
         return false;
 
-    // 对齐黑月：仅当当前仍是同一技能上下文时尝试衔接预输入
+    // 仅当当前仍是同一技能上下文时尝试衔接预输入
     if (cast->pendingSkillAttackId > 0)
         return dealWithNextSkillBase(entity);
     return false;
@@ -459,6 +528,43 @@ bool presetSkill(Entity* entity, int32_t skillAttackId, int32_t inputSlot, int32
     cast->pendingInputSlot     = inputSlot;
     cast->pendingStepInSlot    = stepInSlot;
     return true;
+}
+
+void queueInputBuffer(Entity* entity, int32_t skillAttackId, int32_t inputSlot, int32_t stepInSlot)
+{
+    auto* cast      = MG_GET_COMPONENT(entity, SkillCastComponent);
+    auto* actorData = MG_GET_COMPONENT(entity, ActorDataComponent);
+    if (!cast || skillAttackId <= 0)
+        return;
+    const SkillInstanceData* inst = findSkillInstance(actorData, skillAttackId);
+    cast->bufferSkillAttackId = skillAttackId;
+    cast->bufferInputSlot     = inputSlot;
+    cast->bufferStepInSlot    = stepInSlot;
+    cast->bufferRemainMs =
+        inst && inst->inputBufferTimeoutMs > 0 ? inst->inputBufferTimeoutMs : 500;
+    cast->bufferReleaseTags = inst ? inst->inputBufferReleaseTags : 0;
+}
+
+void tickInputBuffer(Entity* entity, int32_t dtMs)
+{
+    auto* cast = MG_GET_COMPONENT(entity, SkillCastComponent);
+    if (!cast || cast->bufferSkillAttackId <= 0)
+        return;
+    if (dtMs > 0)
+        cast->bufferRemainMs = (std::max)(0, cast->bufferRemainMs - dtMs);
+    if (cast->bufferRemainMs <= 0)
+    {
+        clearInputBuffer(cast);
+        return;
+    }
+    if (!canConsumeInputBuffer(entity))
+        return;
+
+    const int32_t skillId = cast->bufferSkillAttackId;
+    const int32_t slot    = cast->bufferInputSlot;
+    const int32_t step    = cast->bufferStepInSlot;
+    clearInputBuffer(cast);
+    presetSkill(entity, skillId, slot, step);
 }
 
 int32_t resolveFightSkill(Entity* entity, int32_t inputSlot, int32_t* outStep)
@@ -564,32 +670,43 @@ void syncBehaviorMirror(Entity* entity)
 
 void onSlotEnded(Entity* entity, int32_t slot)
 {
-    auto* cast  = MG_GET_COMPONENT(entity, SkillCastComponent);
-    auto* input = MG_GET_COMPONENT(entity, InputComponent);
+    auto* cast = MG_GET_COMPONENT(entity, SkillCastComponent);
     if (!cast || cast->activeInputSlot != slot)
         return;
-    // 有预输入则先尝试衔接；否则清技能
+    // 有预输入则先尝试衔接
     if (cast->pendingSkillAttackId > 0)
     {
         dealWithNextSkillBase(entity);
         return;
     }
-    // B3：技能结束仍按住同槽 → 自动接 next_skill
-    if (input && input->isKeyDown(slot) && cast->activeSkillAttackId > 0)
+
+    // KeepPress：槽结束时仍按住 → 同槽 next（resolveFightSkill 推进 step）
+    auto* input     = MG_GET_COMPONENT(entity, InputComponent);
+    auto* actorData = MG_GET_COMPONENT(entity, ActorDataComponent);
+    const SkillInstanceData* inst = findSkillInstance(actorData, cast->activeSkillAttackId);
+    const uint32_t flags =
+        inst ? inst->slotTriggerFlags : SlotTriggerFlag::kSlotTriggerPress;
+    if (input && input->isKeyDown(slot) &&
+        (flags & SlotTriggerFlag::kSlotTriggerKeepPress) != 0)
     {
-        auto* deck = MG_GET_COMPONENT(entity, SkillDeckComponent);
-        if (auto* entry = findDeckEntry(deck, cast->activeSkillAttackId))
+        int32_t step      = 0;
+        const int32_t nextId = resolveFightSkill(entity, slot, &step);
+        if (nextId > 0 && nextId != cast->activeSkillAttackId)
         {
-            if (entry->nextSkillAttackId > 0)
-            {
-                const int32_t nextId   = entry->nextSkillAttackId;
-                const int32_t nextStep = cast->activeStepInSlot + 1;
-                clearActiveSkillFields(cast, MG_GET_COMPONENT(entity, BehaviorComponent));
-                presetSkill(entity, nextId, slot, nextStep);
-                return;
-            }
+            // 清当前再 preset，避免同技能卡住
+            clearActiveSkillFields(cast, MG_GET_COMPONENT(entity, BehaviorComponent));
+            presetSkill(entity, nextId, slot, step);
+            return;
+        }
+        if (nextId > 0)
+        {
+            // 同技能多段充能：仍可再 preset
+            clearActiveSkillFields(cast, MG_GET_COMPONENT(entity, BehaviorComponent));
+            presetSkill(entity, nextId, slot, step);
+            return;
         }
     }
+
     clearActiveSkillFields(cast, MG_GET_COMPONENT(entity, BehaviorComponent));
 }
 
@@ -605,13 +722,67 @@ void onStepBegan(Entity* entity)
 
 void onStepEnded(Entity* entity)
 {
-    onStepBegan(entity);  // 黑月 Step.exit 同样 reset+expect
+    onStepBegan(entity);  // Step.exit 同样 reset+expect
 }
 
 void forceInterruptCast(Entity* entity)
 {
     clearActiveSkillFields(MG_GET_COMPONENT(entity, SkillCastComponent),
                            MG_GET_COMPONENT(entity, BehaviorComponent));
+}
+
+bool canRunCancel(Entity* entity)
+{
+    auto* cast = MG_GET_COMPONENT(entity, SkillCastComponent);
+    if (!cast || cast->activeSkillAttackId <= 0)
+        return false;
+    const auto* cfg = Config::getInstance()->getSkillAttackConfigById(cast->activeSkillAttackId);
+    if (!cfg)
+        return false;
+    if (kRunSorder < 0 || kRunSorder >= cfg->sorder)
+        return true;
+    if (cast->interruptOpen && hasOrderControl(cfg, kIgnoreOrderInterruptFrame))
+        return true;
+    return false;
+}
+
+void requestRunCancel(Entity* entity)
+{
+    auto* cast = MG_GET_COMPONENT(entity, SkillCastComponent);
+    if (!cast || cast->activeSkillAttackId <= 0)
+        return;
+    if (canRunCancel(entity))
+        cast->wantRunCancel = true;
+}
+
+bool dealWithRun(Entity* entity)
+{
+    auto* cast     = MG_GET_COMPONENT(entity, SkillCastComponent);
+    auto* behavior = MG_GET_COMPONENT(entity, BehaviorComponent);
+    auto* input    = MG_GET_COMPONENT(entity, InputComponent);
+    if (!cast || cast->pendingSkillAttackId > 0)
+        return false;
+
+    const bool wantRun = cast->wantRunCancel ||
+                         (behavior && (behavior->statusTags & StateTag::kTagDashState) != 0 &&
+                          bt_util::anyMoveKeyDown(input));
+    if (!wantRun || !canRunCancel(entity))
+        return false;
+
+    cast->wantRunCancel        = false;
+    cast->activeSkillAttackId  = 0;
+    cast->pendingSkillAttackId = 0;
+    cast->interruptOpen        = false;
+    cast->interruptExtraOpen   = false;
+    syncBehaviorMirror(entity);
+    if (behavior)
+    {
+        behavior->statusTags |=
+            StateTag::kTagMovable | StateTag::kTagAttackAllowed | StateTag::kTagFacingAllowed |
+            StateTag::kTagDashState;
+        behavior->currentKind = static_cast<int32_t>(BehaviorKind::kDash);
+    }
+    return true;
 }
 
 }  // namespace SkillCastRules

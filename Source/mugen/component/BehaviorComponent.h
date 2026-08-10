@@ -27,7 +27,7 @@ public:
     int32_t hitStunRemainingMs = 0;
 
     // —— 移动 / 跳跃 / 跑 ——
-    // true=需双击同向才跑（对齐黑月默认）；false=按住即跑
+    // true=需双击同向才跑（默认）；false=按住即跑
     bool clickToWalk = true;
     // 上次按下移动方向的象限：1=右 2=上 3=左 4=下；0=无
     int32_t lastMoveQuadrant = 0;
@@ -35,9 +35,13 @@ public:
     int64_t lastMovePressMs = 0;
     // 落地锁输入剩余时间
     int32_t landLockMs = 0;
-    // 倒地躺地 / 起身剩余时间
-    int32_t downRemainMs  = 0;
-    int32_t getUpRemainMs = 0;
+    // 倒地躺地 / 起身 / 受击过渡剩余时间
+    int32_t downRemainMs      = 0;
+    int32_t getUpRemainMs     = 0;
+    int32_t hitSwitchRemainMs = 0;
+
+    // 定身剩余（ms）：>0 禁移动/禁技能输入消费
+    int32_t staticRemainMs = 0;
 
     MG_DEFINE_SERIALIZABLE(statusTags,
                            currentBranchIndex,
@@ -48,7 +52,9 @@ public:
                            lastMovePressMs,
                            landLockMs,
                            downRemainMs,
-                           getUpRemainMs);
+                           getUpRemainMs,
+                           hitSwitchRemainMs,
+                           staticRemainMs);
 };
 
 NS_MG_END

@@ -32,7 +32,14 @@ float numberOr(const JsonValue& object, const char* key, float fallback)
 int intOr(const JsonValue& object, const char* key, int fallback)
 {
     const JsonValue* value = member(object, key);
-    return value && value->IsInt() ? value->GetInt() : fallback;
+    if (value)
+    {
+        if (value->IsInt())
+            return value->GetInt();
+        if (value->IsNumber())
+            return static_cast<int>(std::round(value->GetDouble()));
+    }
+    return fallback;
 }
 
 bool boolOr(const JsonValue& object, const char* key, bool fallback)

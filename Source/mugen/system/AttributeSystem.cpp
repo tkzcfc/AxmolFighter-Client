@@ -42,7 +42,7 @@ void AttributeSystem::update()
 
         attributeComp->bindVariable();
 
-        // 对齐黑月：按 mpRegenSpeed 回复 MP（单位：点/秒）
+        // 按 mpRegenSpeed 回复 MP（单位：点/秒）
         if (dtSec > 0.0f)
         {
             const float regen = attributeComp->currentAttribute.mpRegenSpeed;

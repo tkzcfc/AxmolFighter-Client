@@ -162,6 +162,7 @@ Entity* spawnRoleFullActorImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32
     auto skillDeckComp    = MG_ADD_COMPONENT(actor, SkillDeckComponent);
     auto displacementComp = MG_ADD_COMPONENT(actor, DisplacementComponent);
     auto buffComp         = MG_ADD_COMPONENT(actor, BuffComponent);
+    auto aiComp           = MG_ADD_COMPONENT(actor, AIComponent);
     (void)avatarRenderComp;
     (void)inputComp;
     (void)hitReactComp;
@@ -169,7 +170,29 @@ Entity* spawnRoleFullActorImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32
     (void)displacementComp;
     (void)buffComp;
     (void)skillCastComp;
-    (void)btComp;
+
+    btComp->cityMode = preferCity || params.cityMode;
+
+    // 出生点 + 巡逻半径；怪物按住即跑，避免双击语义
+    aiComp->spawnPosition.x = static_cast<float>(x);
+    aiComp->spawnPosition.y = static_cast<float>(y);
+    aiComp->spawnPosition.z = 0.0f;
+    if (params.category == EntityCategory::kMonster)
+    {
+        behaviorComp->clickToWalk = false;
+        int32_t scope            = 200;
+        if (!role->aiIds.empty())
+        {
+            if (const auto* ai = config->getAiConfigById(role->aiIds.front()))
+            {
+                if (ai->patrolScope > 0)
+                    scope = ai->patrolScope;
+                else if (ai->chaseScopeX.y > 0)
+                    scope = (std::max)(150, ai->chaseScopeX.y / 4);
+            }
+        }
+        aiComp->patrolScope = scope;
+    }
 
     fillAvatarFromRole(avatarComp, role, spine, preferCity);
 
@@ -210,9 +233,27 @@ Entity* spawnRoleFullActorImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32
     transformComp->scale.x    = 1.0f;
     transformComp->scale.y    = 1.0f;
 
+    // 新手默认槽：A=普攻920000, B=920100, C=920120, D=920150；另绑 Y 突刺 / F 闪避 / E 爆气
     std::vector<int32_t> roots = role->defaultSkillIds;
     if (roots.empty() && (roleId == 1 || roleId == 101 || roleId == 102 || roleId == 103))
-        roots.push_back(920000);
+    {
+        roots.push_back(920000);  // 普攻 -> SLOT_0 (A/1)
+        roots.push_back(920100);  // 技能A -> SLOT_1 (2)
+        roots.push_back(920120);  // 技能B -> SLOT_2 (3)
+        roots.push_back(920150);  // 技能C -> SLOT_3 (4)
+    }
+    // 英雄补齐闪避/爆气/突刺根（已在 roots 中则跳过）
+    if (roleId == 1 || roleId == 101 || roleId == 102 || roleId == 103)
+    {
+        const int32_t extras[] = {920090, 920080, 920280};
+        for (int32_t extra : extras)
+        {
+            if (!config->getSkillAttackConfigById(extra))
+                continue;
+            if (std::find(roots.begin(), roots.end(), extra) == roots.end())
+                roots.push_back(extra);
+        }
+    }
 
     constexpr int32_t kMaxSkillSlots = static_cast<int32_t>(INPUT_SLOT_10) - static_cast<int32_t>(INPUT_SLOT_0) + 1;
 
@@ -221,9 +262,8 @@ Entity* spawnRoleFullActorImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32
     skillDeckComp->skills.clear();
     actorDataComp->skills.clear();
 
-    // 每个根技能占一槽；nextSkill 链写入同槽（对齐黑月同槽连段）
+    // 每个根技能占一槽；nextSkill 链写入同槽（同槽连段）
     int32_t boundCount = 0;
-    std::vector<int32_t> rootFirstSkillIds;
     for (int32_t rootId : roots)
     {
         if (boundCount >= kMaxSkillSlots)
@@ -277,22 +317,36 @@ Entity* spawnRoleFullActorImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32
         if (deckIndices.empty())
             continue;
 
+        // 突刺(Y) / 闪避(F) / 爆气(E)：专用键触发，不占数字键槽
+        if (rootId == 920090)
+        {
+            skillCastComp->thrustSkillAttackId = chain.front();
+            continue;
+        }
+        if (rootId == 920080)
+        {
+            skillCastComp->dodgeSkillAttackId = chain.front();
+            continue;
+        }
+        if (rootId == 920280)
+        {
+            skillCastComp->crazySkillAttackId = chain.front();
+            continue;
+        }
+
         SkillSlotItem slot;
         slot.slotIndex   = static_cast<int32_t>(INPUT_SLOT_0) + boundCount;
         slot.skillIndexs = actorSkillIndices;
         skillBarComp->skillSlots.push_back(slot);
         skillDeckComp->slotSkillIndices.push_back(deckIndices);
-        rootFirstSkillIds.push_back(chain.front());
         ++boundCount;
 
         MG_LOG_W("spawnRole: bind INPUT_SLOT_{} -> root {} chainLen={}", boundCount - 1, rootId, deckIndices.size());
     }
 
-    // 跑中突刺：第二个根技能（黑月 Y / Sprint）；仅一根则 0（Dash+A 仍用槽 0）
-    skillCastComp->thrustSkillAttackId = rootFirstSkillIds.size() >= 2 ? rootFirstSkillIds[1] : 0;
-
-    MG_LOG_W("spawnRole: role={} skills={} slots={} thrust={}", roleId, actorDataComp->skills.size(),
-             skillBarComp->skillSlots.size(), skillCastComp->thrustSkillAttackId);
+    MG_LOG_W("spawnRole: role={} skills={} slots={} thrust={} dodge={} crazy={}", roleId,
+             actorDataComp->skills.size(), skillBarComp->skillSlots.size(), skillCastComp->thrustSkillAttackId,
+             skillCastComp->dodgeSkillAttackId, skillCastComp->crazySkillAttackId);
     return actor;
 }
 

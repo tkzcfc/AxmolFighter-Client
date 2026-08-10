@@ -1,6 +1,7 @@
 #pragma once
 
 #include "component/ActorDataComponent.h"
+#include "component/AIComponent.h"
 #include "component/AttributeComponent.h"
 #include "component/AvatarComponent.h"
 #include "component/AvatarRenderComponent.h"
@@ -23,5 +24,5 @@
 #include "component/TransformComponent.h"
 
 // clang-format off
-#define COMPONENT_LIST X(ActorDataComponent) X(AttributeComponent) X(AvatarComponent) X(AvatarRenderComponent) X(BehaviorComponent) X(BehaviorTreeComponent) X(BuffComponent) X(DirectorComponent) X(DisplacementComponent) X(EffectLifetimeComponent) X(GameMapComponent) X(GameMapRenderComponent) X(HitReactComponent) X(IdentityComponent) X(InputComponent) X(PhysicsComponent) X(SkillBarComponent) X(SkillCastComponent) X(SkillDeckComponent) X(SoundComponent) X(TransformComponent)
+#define COMPONENT_LIST X(ActorDataComponent) X(AIComponent) X(AttributeComponent) X(AvatarComponent) X(AvatarRenderComponent) X(BehaviorComponent) X(BehaviorTreeComponent) X(BuffComponent) X(DirectorComponent) X(DisplacementComponent) X(EffectLifetimeComponent) X(GameMapComponent) X(GameMapRenderComponent) X(HitReactComponent) X(IdentityComponent) X(InputComponent) X(PhysicsComponent) X(SkillBarComponent) X(SkillCastComponent) X(SkillDeckComponent) X(SoundComponent) X(TransformComponent)
 // clang-format on

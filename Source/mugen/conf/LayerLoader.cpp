@@ -1,9 +1,11 @@
 #include "LayerLoader.h"
 
-#    include "mugen/conf/TableConfig.h"
-#    include "mugen/core/io/FileUtils.h"
-#    include "rapidjson/document.h"
-#    include "rapidjson/error/en.h"
+#include "mugen/core/io/FileUtils.h"
+#include "rapidjson/document.h"
+#include "rapidjson/error/en.h"
+
+#include <cmath>
+#include <cstring>
 
 NS_MG_BEGIN
 
@@ -30,23 +32,11 @@ int intOr(const JsonValue& object, const char* key, int fallback)
     if (value)
     {
         if (value->IsInt())
-        {
             return value->GetInt();
-        }
-        // 兼容浮点数
-        else if (value->IsNumber())
-        {
-            auto num = value->GetDouble();
-            return static_cast<int>(std::round(num));
-        }
+        if (value->IsNumber())
+            return static_cast<int>(std::round(value->GetDouble()));
     }
     return fallback;
-}
-
-bool boolOr(const JsonValue& object, const char* key, bool fallback)
-{
-    const JsonValue* value = member(object, key);
-    return value && value->IsBool() ? value->GetBool() : fallback;
 }
 
 std::string stringOr(const JsonValue& object, const char* key, const std::string& fallback = {})
@@ -54,14 +44,6 @@ std::string stringOr(const JsonValue& object, const char* key, const std::string
     const JsonValue* value = member(object, key);
     return value && value->IsString() ? value->GetString() : fallback;
 }
-
-//Vector2f vec2fOr(const JsonValue& object, const char* key, const Vector2f& fallback)
-//{
-//    const JsonValue* value = member(object, key);
-//    if (!value || !value->IsObject())
-//        return fallback;
-//    return {numberOr(*value, "x", fallback.x), numberOr(*value, "y", fallback.y)};
-//}
 
 Vector2i vec2iOr(const JsonValue& object, const char* key, const Vector2i& fallback)
 {
@@ -115,14 +97,13 @@ void parseMoveRanges(const JsonValue& document, std::vector<LayerMoveRange>& out
             continue;
 
         LayerMoveRange range;
-        range.width  = size.x;
-        range.height = size.y;
-        range.x      = center.x - size.x * 0.5f;
-        range.y      = center.y - size.y * 0.5f;
+        range.width  = static_cast<float>(size.x);
+        range.height = static_cast<float>(size.y);
+        range.x      = static_cast<float>(center.x) - range.width * 0.5f;
+        range.y      = static_cast<float>(center.y) - range.height * 0.5f;
         out.push_back(range);
     }
 }
-
 }  // namespace
 
 LayerLoadResult LayerLoader::load(const std::string& layerFile)
@@ -153,9 +134,25 @@ LayerLoadResult LayerLoader::load(const std::string& layerFile)
         return result;
     }
 
-    result.size = vec2iOr(*root, "size", {0, 0});
-    parseMoveRanges(document, result.moveRanges);
+    const JsonValue* sizeObj = member(*root, "size");
+    if (sizeObj && sizeObj->IsObject())
+    {
+        if (sizeObj->HasMember("width") || sizeObj->HasMember("height"))
+        {
+            result.size.x = intOr(*sizeObj, "width", 0);
+            result.size.y = intOr(*sizeObj, "height", 0);
+        }
+        else
+        {
+            MG_LOG_W("LayerLoader: '{}' root.size object does not contain width/height", layerFile);
+        }
+    }
+    else
+    {
+        MG_LOG_W("LayerLoader: '{}' root object does not contain size object", layerFile);
+    }
 
+    parseMoveRanges(document, result.moveRanges);
     return result;
 }
 

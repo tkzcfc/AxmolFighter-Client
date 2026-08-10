@@ -29,7 +29,7 @@ struct DamageInput
     bool isHeroDefender                = true;
 };
 
-/** 对齐黑月 SkillHurt 伤害公式 */
+/** SkillHurt 伤害公式 */
 namespace DamageCalculator
 {
 
@@ -43,11 +43,11 @@ float calculateDodgeRate(float dodge, float hit, float dodgeStandard);
 
 /**
  * 先闪避（hitMust 跳过），再算伤。
- * ExtendAttribute 一期置 0。
+ * hurtScale = 1 + ADD_HURT(攻) - AVOID_HURT(防)。
  */
 DamageResult calculate(const DamageInput& in, Random& rng);
 
-/** Phase 2 Buff 引用计数接入；一期恒 false */
+/** Buff 引用计数：无敌 / 霸体 */
 bool isInvincible(const Entity* entity);
 bool isSuperArmor(const Entity* entity);
 

@@ -23,8 +23,12 @@ public:
 
     void snapToFocus();
 
+    /** 震屏：amplitude 像素振幅，durationMs 时长，freezeTimeMs 预留（逻辑顿帧由调用方处理） */
+    void shake(float amplitude, float durationMs, int32_t freezeTimeMs = 0);
+
     const ax::Vec2& getViewPosition() const { return m_glPosition; }
     const ax::Vec2& getFocusPosition() const { return m_focusPosition; }
+    const ax::Vec2& getShakeOffset() const { return m_shakeOffset; }
 
     void setCall(const std::function<void(float, float, float)>& call) { m_call = call; }
 
@@ -41,6 +45,7 @@ private:
     ax::Vec2 computeIdealViewPosition() const;
     void clampViewPosition(ax::Vec2& viewPos) const;
     void applyCall();
+    void updateShake(float deltaSec);
 
 private:
     ax::Size m_viewSize;
@@ -52,6 +57,14 @@ private:
     bool m_hasFocus = false;
     ax::Vec2 m_cachePos;
     float m_cacheScale = 0.0f;
+
+    // 震屏
+    bool m_shaking           = false;
+    float m_shakeAmplitude   = 0.0f;
+    float m_shakeDurationMs  = 0.0f;
+    float m_shakeElapsedMs   = 0.0f;
+    float m_shakeCycles      = 2.0f;
+    ax::Vec2 m_shakeOffset;
 
     std::function<void(float, float, float)> m_call;
 };

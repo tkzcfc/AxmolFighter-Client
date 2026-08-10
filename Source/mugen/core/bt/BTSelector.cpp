@@ -41,7 +41,7 @@ BTStatus BTSelector::tick(BTContext& ctx, int32_t dtMs)
 
     int8_t& mem = memoryAt(ctx, memorySlot);
 
-    // 粘滞：当前子节点条件仍通过则继续（对齐黑月 AEBTSelector）
+    // 粘滞：当前子节点条件仍通过则继续（AEBTSelector 语义）
     if (mem >= 0 && mem < static_cast<int8_t>(children.size()))
     {
         auto* child = children[static_cast<size_t>(mem)].get();

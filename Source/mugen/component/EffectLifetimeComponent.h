@@ -26,8 +26,13 @@ public:
     float radius       = 40.0f;
     Vector3f relativePosition;
 
-    // Phase 1.4：多段打击
-    int32_t hitCount    = 0;
+    // 弹道（由 EffectConfig.velocity 在生成时推导）
+    float moveVx      = 0.0f;
+    float moveVy      = 0.0f;
+    bool chainSpawned = false;
+
+    // 多段打击
+    int32_t hitCount     = 0;
     int32_t hitCooldownMs = 0;
     std::vector<uint32_t> hitEntityIds;
 
@@ -39,6 +44,9 @@ public:
                            follow,
                            radius,
                            relativePosition,
+                           moveVx,
+                           moveVy,
+                           chainSpawned,
                            hitCount,
                            hitCooldownMs,
                            hitEntityIds);

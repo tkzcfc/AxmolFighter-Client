@@ -6,6 +6,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 NS_MG_BEGIN
 
@@ -24,6 +25,9 @@ public:
     int32_t comboInputsMatchedCount = 0;
     // 最后匹配成功时间
     uint64_t lastComboInputMatchedTime = 0;
+
+    // 搓招序列：输入槽位 id 列表（空=无搓招，走普通槽触发）
+    std::vector<int32_t> comboInputs;
 
     // 技能等级,如果为0表示未学会，1表示初级，以此类推
     int32_t level = 0;
@@ -48,6 +52,9 @@ public:
         comboWindowMs          = 500;
         inputBufferReleaseTags = 0;
         inputBufferTimeoutMs   = 500;
+        comboInputs.clear();
+        comboInputsMatchedCount    = 0;
+        lastComboInputMatchedTime  = 0;
 
         if (const auto* overlay = Config::getInstance()->getSkillActivationOverlayById(attackId))
         {
@@ -57,6 +64,7 @@ public:
             comboWindowMs          = overlay->comboWindowMs;
             inputBufferReleaseTags = overlay->inputBufferReleaseTags;
             inputBufferTimeoutMs   = overlay->inputBufferTimeoutMs;
+            comboInputs            = overlay->comboInputs;
         }
     }
 
@@ -70,6 +78,7 @@ public:
                                   deserializeCustomImpl,
                                   comboInputsMatchedCount,
                                   lastComboInputMatchedTime,
+                                  comboInputs,
                                   level,
                                   skillAttackId)
 

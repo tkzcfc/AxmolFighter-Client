@@ -40,11 +40,18 @@ public:
 class CondAttackPipe : public BTCondition
 {
 public:
-    explicit CondAttackPipe(int32_t pipeIndex) : pipeIndex(pipeIndex) { debugName = "CondAttackPipe"; }
+    CondAttackPipe(int32_t slot, int32_t stepIndex, int32_t pipeIndex, int32_t modeIndex = 0)
+        : slot(slot), stepIndex(stepIndex), pipeIndex(pipeIndex), modeIndex(modeIndex)
+    {
+        debugName = "CondAttackPipe";
+    }
     bool check(BTContext& ctx) override;
     void onEnter(BTContext& ctx) override;
     void onExit(BTContext& ctx) override;
+    int32_t slot      = 0;
+    int32_t stepIndex = 0;
     int32_t pipeIndex = 0;
+    int32_t modeIndex = 0;
 };
 
 class CondAttackToward : public BTCondition

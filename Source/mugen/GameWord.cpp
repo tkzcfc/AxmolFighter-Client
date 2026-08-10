@@ -63,7 +63,7 @@ bool GameWord::init(uint64_t randomSeed)
     ecsManager.addSystem("PhysicsSystem");
     ecsManager.addSystem("AISystem");
     ecsManager.addSystem("BuffSystem");
-    ecsManager.addSystem("EffectLifetimeSystem");
+    ecsManager.addSystem("EffectLifeSystem");
     ecsManager.addSystem("CombatSystem");
     ecsManager.addSystem("BehaviorTreeSystem");
     ecsManager.addSystem("DisplacementSystem");
@@ -283,6 +283,23 @@ bool GameWord::deserialize(ByteBuffer& byteBuffer)
     ecsManager.postDeserializeInit();
 
     return true;
+}
+
+std::string GameWord::serializeToString() const
+{
+    ByteBuffer byteBuffer(1024 * 1024 * 2);
+    serialize(byteBuffer);
+    byteBuffer.writeFinish();
+    return std::string(reinterpret_cast<const char*>(byteBuffer.data()), byteBuffer.len());
+}
+
+bool GameWord::deserializeFromString(const std::string& data)
+{
+    if (data.empty())
+        return false;
+    ByteBuffer byteBuffer(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(data.data())),
+                          static_cast<uint32_t>(data.size()));
+    return deserialize(byteBuffer);
 }
 
 NS_MG_END

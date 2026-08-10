@@ -1,5 +1,6 @@
 #include "mugen/combat/DamageCalculator.h"
 
+#include "mugen/buff/ExtendAttribute.h"
 #include "mugen/Components.h"
 #include "mugen/conf/Config.h"
 #include "mugen/conf/TableConfig.h"
@@ -115,7 +116,10 @@ DamageResult calculate(const DamageInput& in, Random& rng)
         const float dodgeStd =
             in.hurtStd && in.hurtStd->dodgeStandard > 0 ? static_cast<float>(in.hurtStd->dodgeStandard) : 1.0f;
         float dodgeRate = calculateDodgeRate(defAttr.dodge, atkAttr.hit, dodgeStd);
-        // ExtendAttribute 一期 0
+        dodgeRate += in.defender->extendAttribute.get(ExtendAttributeType::AddDodge) -
+                     in.attacker->extendAttribute.get(ExtendAttributeType::AvoidDodge);
+        dodgeRate -= in.defender->extendAttribute.get(ExtendAttributeType::AddHit) -
+                     in.attacker->extendAttribute.get(ExtendAttributeType::AvoidHit);
         if (dodgeRate * 100.0f > rng.nextFloat(0.0f, 100.0f))
         {
             out.isDodge = true;
@@ -158,7 +162,7 @@ DamageResult calculate(const DamageInput& in, Random& rng)
 
     const float basicHurt = atkAttr.baseDamage;
     float standHurt       = basicHurt;
-    // 黑月 getStandardHurt(attacker)：仅英雄用攻击方等级 hurt；怪/召唤无主人时为 0（不用 monsterHurt）
+    // getStandardHurt(attacker)：仅英雄用攻击方等级 hurt；怪/召唤无主人时为 0（不用 monsterHurt）
     if (in.attackerHurtStd)
         standHurt += static_cast<float>(in.attackerHurtStd->hurt);
 
@@ -168,8 +172,10 @@ DamageResult calculate(const DamageInput& in, Random& rng)
     hurtAddition *= (1.0f + addition);
     hurt *= hurtAddition;
 
-    // hurtScale：ExtendAttribute 一期 0 → 1
-    float hurtScale = 1.0f;
+    // hurtScale = 1 + ADD_HURT(攻) - AVOID_HURT(防)
+    float hurtScale = 1.0f + in.attacker->extendAttribute.get(ExtendAttributeType::AddHurt) -
+                      in.defender->extendAttribute.get(ExtendAttributeType::AvoidHurt);
+    hurtScale += in.attacker->extendAttribute.get(ExtendAttributeType::AddArtifactHit);
 
     // —— 暴击 ——
     const float critStd =
@@ -178,6 +184,15 @@ DamageResult calculate(const DamageInput& in, Random& rng)
                                  ? static_cast<float>(in.hurtStd->critDamageStandard)
                                  : 1.0f;
     float critRate = 100.0f * calculateCritRate(atkAttr.crit, defAttr.critResist, critStd);
+    const float addCrit   = in.attacker->extendAttribute.get(ExtendAttributeType::AddCrit);
+    const float avoidCrit = in.defender->extendAttribute.get(ExtendAttributeType::AvoidCrit);
+    if (avoidCrit >= 1.0f)
+        critRate = 0.0f;
+    else if (addCrit >= 1.0f)
+        critRate = 100.0f;
+    else
+        critRate += 100.0f * (addCrit - avoidCrit);
+
     float critDamageRate =
         calculateCritDamageRate(atkAttr.critDamage, 0.0f /*critDamageResist 一期*/, critDmgStd);
 
@@ -197,13 +212,21 @@ DamageResult calculate(const DamageInput& in, Random& rng)
     return out;
 }
 
-bool isInvincible(const Entity* /*entity*/)
+bool isInvincible(const Entity* entity)
 {
+    if (!entity)
+        return false;
+    if (auto* buff = MG_GET_COMPONENT(const_cast<Entity*>(entity), BuffComponent))
+        return buff->invincibleRef > 0;
     return false;
 }
 
-bool isSuperArmor(const Entity* /*entity*/)
+bool isSuperArmor(const Entity* entity)
 {
+    if (!entity)
+        return false;
+    if (auto* buff = MG_GET_COMPONENT(const_cast<Entity*>(entity), BuffComponent))
+        return buff->superArmorRef > 0;
     return false;
 }
 

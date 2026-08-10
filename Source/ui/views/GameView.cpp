@@ -12,6 +12,7 @@
 
 #include "imgui.h"
 
+#include <algorithm>
 #include <cstdio>
 
 using namespace mugen;
@@ -225,13 +226,21 @@ void GameView::onImGUIRender()
             const int32_t epCost = cfg ? cfg->ep : 0;
             const int32_t sorder = cfg ? cfg->sorder : 0;
 
+            // 按 skillBar 真实槽位反查热键（skillIndexs 存的是 actorDataComp->skills 下标，与 deck 下标一致）
             char keyLabel[8] = "?";
-            int32_t slotIndex = -1;
-            if (skillBar && i < skillBar->skillSlots.size())
-                slotIndex = skillBar->skillSlots[i].slotIndex;
-            const int32_t slotOffset = slotIndex >= static_cast<int32_t>(INPUT_SLOT_0)
-                                           ? slotIndex - static_cast<int32_t>(INPUT_SLOT_0)
-                                           : static_cast<int32_t>(i);
+            int32_t slotOffset = -1;
+            if (skillBar)
+            {
+                for (const auto& slot : skillBar->skillSlots)
+                {
+                    if (std::find(slot.skillIndexs.begin(), slot.skillIndexs.end(), static_cast<int32_t>(i)) !=
+                        slot.skillIndexs.end())
+                    {
+                        slotOffset = slot.slotIndex - static_cast<int32_t>(INPUT_SLOT_0);
+                        break;
+                    }
+                }
+            }
             if (slotOffset == 0)
                 std::snprintf(keyLabel, sizeof(keyLabel), "A");
             else if (slotOffset >= 1 && slotOffset <= 9)
@@ -239,7 +248,7 @@ void GameView::onImGUIRender()
             else if (slotOffset == 10)
                 std::snprintf(keyLabel, sizeof(keyLabel), "0");
             else
-                std::snprintf(keyLabel, sizeof(keyLabel), "S%d", slotOffset);
+                std::snprintf(keyLabel, sizeof(keyLabel), "-");
 
             ImGui::Text("[%s] id %d | CD %d/%d | mp %d ep %d | sorder %d | next %d", keyLabel, e.skillAttackId,
                         e.coolDownMs, e.coolDownMaxMs, mpCost, epCost, sorder, e.nextSkillAttackId);

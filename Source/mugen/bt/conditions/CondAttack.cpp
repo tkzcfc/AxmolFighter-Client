@@ -1,6 +1,7 @@
 #include "mugen/bt/conditions/CondAttack.h"
 
 #include "mugen/bt/SkillCastRules.h"
+#include "mugen/buff/BuffApi.h"
 #include "mugen/core/bt/BTContext.h"
 #include "mugen/Components.h"
 #include "mugen/conf/GameDef.h"
@@ -63,16 +64,21 @@ bool CondAttackPipe::check(BTContext& ctx)
 {
     if (!ctx.skillCast)
         return false;
-    return ctx.skillCast->pipeIndex == pipeIndex;
+    return ctx.skillCast->activeInputSlot == slot && ctx.skillCast->activeStepInSlot == stepIndex &&
+           ctx.skillCast->modeIndex == modeIndex && ctx.skillCast->pipeIndex == pipeIndex;
 }
 
 void CondAttackPipe::onEnter(BTContext& ctx)
 {
+    BuffApi::trigger(ctx.entity, BFEvent::BeforeCastSkill, nullptr,
+                     ctx.skillCast ? ctx.skillCast->activeSkillAttackId : 0);
     SkillCastRules::castBegan(ctx.entity);
 }
 
 void CondAttackPipe::onExit(BTContext& ctx)
 {
+    BuffApi::trigger(ctx.entity, BFEvent::AfterCastSkill, nullptr,
+                     ctx.skillCast ? ctx.skillCast->activeSkillAttackId : 0);
     SkillCastRules::castEnded(ctx.entity);
 }
 

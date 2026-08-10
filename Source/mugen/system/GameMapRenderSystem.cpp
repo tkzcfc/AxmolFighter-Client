@@ -4,8 +4,6 @@
 #include "mugen/conf/Config.h"
 #include "mugen/conf/TableConfig.h"
 
-#include <algorithm>
-
 #ifdef RUNTIME_IN_AXMOL
 #    include "mugen/render/LayerRuntimeLoader.h"
 #    include "mugen/render/RenderObjectPool.h"
@@ -37,50 +35,6 @@ void GameMapRenderSystem::init(ECSManager* ecs)
 }
 
 #ifdef RUNTIME_IN_AXMOL
-
-namespace
-{
-void applyLayerMetaToMapConfig(MapConfig& cfg, const LayerLoadResult& loaded)
-{
-    if (loaded.rootSize.width > 1.0f && loaded.rootSize.height > 1.0f)
-    {
-        cfg.mapWidth  = static_cast<int32_t>(loaded.rootSize.width);
-        cfg.mapHeight = static_cast<int32_t>(loaded.rootSize.height);
-    }
-
-    if (!loaded.moveRanges.empty())
-    {
-        float minX = loaded.moveRanges[0].x;
-        float minY = loaded.moveRanges[0].y;
-        float maxX = minX + loaded.moveRanges[0].width;
-        float maxY = minY + loaded.moveRanges[0].height;
-        for (size_t i = 1; i < loaded.moveRanges.size(); ++i)
-        {
-            const auto& r = loaded.moveRanges[i];
-            minX          = std::min(minX, r.x);
-            minY          = std::min(minY, r.y);
-            maxX          = std::max(maxX, r.x + r.width);
-            maxY          = std::max(maxY, r.y + r.height);
-        }
-        cfg.scope.x      = static_cast<int32_t>(minX);
-        cfg.scope.y      = static_cast<int32_t>(minY);
-        cfg.scope.width  = static_cast<int32_t>(maxX - minX);
-        cfg.scope.height = static_cast<int32_t>(maxY - minY);
-    }
-    else if (cfg.mapWidth > 0 && cfg.mapHeight > 0)
-    {
-        cfg.scope.x      = 0;
-        cfg.scope.y      = 0;
-        cfg.scope.width  = cfg.mapWidth;
-        cfg.scope.height = cfg.mapHeight;
-    }
-
-    if (cfg.spawnPoints.empty() && cfg.scope.width > 0 && cfg.scope.height > 0)
-    {
-        cfg.spawnPoints.push_back(Vector2i{cfg.scope.x + cfg.scope.width / 2, cfg.scope.y + cfg.scope.height / 2});
-    }
-}
-}  // namespace
 
 void GameMapRenderSystem::update()
 {
@@ -149,13 +103,11 @@ void GameMapRenderSystem::onEntityAdded(Entity* entity)
     if (gameMapComp->mapDataId != 0)
         mapData = Config::getInstance()->getMapDataConfigById(gameMapComp->mapDataId);
 
-    auto loaded = LayerRuntimeLoader::load(gameMapComp->mapConfig->layerFile, mapData);
-    MG_ASSERT(loaded.root != nullptr && "Failed to load map layer file!");
+    // 视觉树：仅客户端（size/scope 已由 GameMapSystem + LayerLoader 填充）
+    ax::ParallaxNode* root = LayerRuntimeLoader::loadNode(gameMapComp->mapConfig->layerFile, mapData);
+    MG_ASSERT(root != nullptr && "Failed to load map layer file!");
 
-    auto* mutableCfg = const_cast<MapConfig*>(gameMapComp->mapConfig);
-    applyLayerMetaToMapConfig(*mutableCfg, loaded);
-
-    if (!bindToGameMapRenderComponent(entity, loaded.root, std::move(camera)))
+    if (!bindToGameMapRenderComponent(entity, root, std::move(camera)))
     {
         MG_LOG_E("Failed to bind mapRootNode: need all 9 layers");
     }

@@ -20,16 +20,25 @@ bool CondStatus::check(BTContext& ctx)
         return (b->statusTags & StateTag::kTagDownState) && b->getUpRemainMs > 0;
 
     case BehaviorKind::kHitFloor:
-        return (b->statusTags & StateTag::kTagDownState) && b->getUpRemainMs <= 0;
+        return (b->statusTags & StateTag::kTagDownState) && b->getUpRemainMs <= 0 &&
+               b->currentKind == static_cast<int32_t>(BehaviorKind::kHitFloor);
+
+    case BehaviorKind::kHitDown:
+        return (b->statusTags & StateTag::kTagHitState) &&
+               b->currentKind == static_cast<int32_t>(BehaviorKind::kHitDown);
 
     case BehaviorKind::kHitUp:
         return (b->statusTags & StateTag::kTagHitState) &&
                b->currentKind == static_cast<int32_t>(BehaviorKind::kHitUp);
 
+    case BehaviorKind::kHitSwitch:
+        return (b->statusTags & StateTag::kTagHitState) &&
+               b->currentKind == static_cast<int32_t>(BehaviorKind::kHitSwitch);
+
     case BehaviorKind::kStun:
         return (b->statusTags & StateTag::kTagHitState) &&
                !(b->statusTags & StateTag::kTagDownState) &&
-               b->currentKind != static_cast<int32_t>(BehaviorKind::kHitUp);
+               b->currentKind == static_cast<int32_t>(BehaviorKind::kStun);
 
     case BehaviorKind::kAttack:
         return ctx.skillCast && ctx.skillCast->activeSkillAttackId > 0;
@@ -47,8 +56,9 @@ bool CondStatus::check(BTContext& ctx)
                !(b->statusTags & (StateTag::kTagHitState | StateTag::kTagDownState));
 
     case BehaviorKind::kIdle:
-        // 兜底：非死亡即可
-        return !(ctx.attribute && ctx.attribute->currentAttribute.hp <= 0.0f);
+        // Idle 条件：存活且非移动中；受击/倒地由更高优先级枝接管
+        return !(ctx.attribute && ctx.attribute->currentAttribute.hp <= 0.0f) &&
+               !bt_util::anyMoveKeyDown(ctx.input);
 
     default:
         return false;

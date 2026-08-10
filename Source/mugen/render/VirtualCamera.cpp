@@ -36,7 +36,6 @@ void VirtualCamera::setRegion(const ax::Size& regionSize)
 
 ax::Vec2 VirtualCamera::computeIdealViewPosition() const
 {
-    // 锚点居中：地图根位移使焦点落在视口锚点
     ax::Vec2 viewPos;
     viewPos.x = m_viewSize.width * m_anchorPoint.x - m_focusPosition.x * m_zoom;
     viewPos.y = m_viewSize.height * m_anchorPoint.y - m_focusPosition.y * m_zoom;
@@ -60,13 +59,47 @@ void VirtualCamera::snapToFocus()
     applyCall();
 }
 
+void VirtualCamera::shake(float amplitude, float durationMs, int32_t /*freezeTimeMs*/)
+{
+    if (amplitude <= 0.0f || durationMs <= 0.0f)
+        return;
+    m_shaking          = true;
+    m_shakeAmplitude   = amplitude;
+    m_shakeDurationMs  = durationMs;
+    m_shakeElapsedMs   = 0.0f;
+    m_shakeCycles      = 2.0f;
+    m_shakeOffset      = ax::Vec2::ZERO;
+}
+
+void VirtualCamera::updateShake(float deltaSec)
+{
+    if (!m_shaking)
+    {
+        m_shakeOffset = ax::Vec2::ZERO;
+        return;
+    }
+
+    m_shakeElapsedMs += deltaSec * 1000.0f;
+    if (m_shakeElapsedMs >= m_shakeDurationMs)
+    {
+        m_shaking     = false;
+        m_shakeOffset = ax::Vec2::ZERO;
+        return;
+    }
+
+    const float percent = m_shakeElapsedMs / m_shakeDurationMs;
+    const float angle   = m_shakeCycles * 2.0f * 3.14159265f * percent;
+    // 衰减：后半段减弱
+    const float factor = 1.0f - percent;
+    m_shakeOffset.x    = m_shakeAmplitude * std::cos(angle) * factor;
+    m_shakeOffset.y    = m_shakeAmplitude * std::sin(angle) * factor;
+}
+
 void VirtualCamera::clampViewPosition(ax::Vec2& viewPos) const
 {
     if (!m_enableCollision)
         return;
 
-    // viewPos 语义：地图根 setPosition(viewPos)。地图比视口大时夹在 [view-map, 0]；
-    // 地图比视口小时该区间倒置，改为居中锁定，避免每帧两端跳闪。
     const float minOffsetX = m_viewSize.width - m_regionSize.width * m_zoom;
     const float minOffsetY = m_viewSize.height - m_regionSize.height * m_zoom;
 
@@ -85,13 +118,15 @@ void VirtualCamera::applyCall()
 {
     if (!m_call)
         return;
-    if (FLOAT_EQUAL(m_glPosition.x, m_cachePos.x) && FLOAT_EQUAL(m_glPosition.y, m_cachePos.y) &&
-        FLOAT_EQUAL(m_cacheScale, m_zoom))
+    const float ox = m_glPosition.x + m_shakeOffset.x;
+    const float oy = m_glPosition.y + m_shakeOffset.y;
+    if (FLOAT_EQUAL(ox, m_cachePos.x) && FLOAT_EQUAL(oy, m_cachePos.y) && FLOAT_EQUAL(m_cacheScale, m_zoom))
         return;
 
-    m_cachePos   = m_glPosition;
+    m_cachePos.x = ox;
+    m_cachePos.y = oy;
     m_cacheScale = m_zoom;
-    m_call(m_glPosition.x, m_glPosition.y, m_zoom);
+    m_call(ox, oy, m_zoom);
 }
 
 void VirtualCamera::doUpdate(float delta)
@@ -99,9 +134,10 @@ void VirtualCamera::doUpdate(float delta)
     if (!m_hasFocus)
         return;
 
+    updateShake(delta);
+
     const ax::Vec2 targetView = computeIdealViewPosition();
 
-    // 与旧版一致：指数衰减平滑拉近（帧率无关）
     if (m_smoothSpeed > 0.0f && delta > 0.0f)
     {
         const float t = 1.0f - std::exp(-m_smoothSpeed * delta);

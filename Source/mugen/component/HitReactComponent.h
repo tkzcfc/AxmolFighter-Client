@@ -17,7 +17,10 @@ public:
     virtual ~PendingHitInfo() {}
 
     EntityId attackerId = INVALID_ENTITY_ID;
-    HitType hitType     = HitType::kHitNone;
+    HitType hitType     = HitType::kHitNone;  // 运行时严重度（用于优先级）
+    int32_t tableHitType = 0;                 // skill_hit.hit_type 原值 0/1/2
+    int32_t hitId        = 0;
+    int32_t displacementId = -1;
     std::string hitState;
     int32_t hitstunMs = 0;
     float impulseX    = 0.0f;
@@ -38,6 +41,9 @@ public:
 
     MG_DEFINE_SERIALIZABLE(attackerId,
                            hitType,
+                           tableHitType,
+                           hitId,
+                           displacementId,
                            hitState,
                            hitstunMs,
                            impulseX,
@@ -66,10 +72,11 @@ public:
 
 public:
     std::vector<PendingHitInfo> pendingHits;
-    int32_t activeHitstunMs = 0;
-    HitType activeHitType   = HitType::kHitNone;
+    int32_t activeHitstunMs     = 0;
+    HitType activeHitType       = HitType::kHitNone;
+    int32_t activeTableHitType  = 0;
 
-    MG_DEFINE_SERIALIZABLE(pendingHits, activeHitstunMs, activeHitType)
+    MG_DEFINE_SERIALIZABLE(pendingHits, activeHitstunMs, activeHitType, activeTableHitType)
 };
 
 NS_MG_END

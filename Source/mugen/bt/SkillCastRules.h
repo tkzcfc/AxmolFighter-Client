@@ -12,15 +12,20 @@ class BehaviorComponent;
 class InputComponent;
 class SkillAttackConfig;
 
-/** 对齐黑月 SkillBase / SkillPool 的施法规则（静态函数，状态写组件） */
+/** 施法规则（静态函数，状态写组件；对应 SkillBase / SkillPool） */
 namespace SkillCastRules
 {
 
-// 对齐黑月 SkillOrderControlType
+// SkillOrderControlType
 constexpr int32_t kIgnoreOrderInterruptFrame      = 1;
 constexpr int32_t kIgnoreOrderInterruptExtraFrame = 2;
 
-// 对齐黑月 SkillVector（用于朝向折叠）
+// 跑取消 sorder 门槛（-1=始终允许；否则 cur.sorder 须 <= 此值）
+constexpr int32_t kRunSorder = 30;
+// 连段（slotIndex>1）MP 倍率
+constexpr float kLinkSkillMpRate = 0.8f;
+
+// SkillVector（用于朝向折叠）
 enum class SkillVector : int32_t
 {
     None      = 0,
@@ -61,7 +66,7 @@ bool castEnded(Entity* entity);
 bool dealWithNextSkillBase(Entity* entity);
 
 /**
- * 输入入口（对齐 SkillPool:presetSkill）。
+ * 输入入口（presetSkill）。
  * @return true 已激活或已写入预输入
  */
 bool presetSkill(Entity* entity, int32_t skillAttackId, int32_t inputSlot, int32_t stepInSlot);
@@ -74,6 +79,21 @@ bool canConsumePendingOnInterrupt(Entity* entity);
 
 /** 至尊取消窗是否可切 */
 bool canConsumePendingOnExtraInterrupt(Entity* entity);
+
+/** 跑取消门控：RUN_SORDER / IgnoreOrder+interruptOpen */
+bool canRunCancel(Entity* entity);
+
+/** 写入输入缓冲（tags 未过时） */
+void queueInputBuffer(Entity* entity, int32_t skillAttackId, int32_t inputSlot, int32_t stepInSlot);
+
+/** 推进并尝试消费输入缓冲 */
+void tickInputBuffer(Entity* entity, int32_t dtMs);
+
+/** 请求跑取消（Dash 意图时置 wantRunCancel） */
+void requestRunCancel(Entity* entity);
+
+/** 消费跑取消：清技能并切 Dash；成功返回 true */
+bool dealWithRun(Entity* entity);
 
 /** 同步 BehaviorComponent.currentKind（施法态已迁出到 SkillCastComponent） */
 void syncBehaviorMirror(Entity* entity);

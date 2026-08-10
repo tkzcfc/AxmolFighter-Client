@@ -58,6 +58,9 @@ void PhysicsSystem::update()
 
         // 1. 记录上一帧位置（碰撞回退时使用）
         physicsComp->lastPosition = physicsComp->position;
+        physicsComp->boundaryHitFlags = 0;
+        const bool wasOnGround        = physicsComp->onGround != 0;
+        physicsComp->justLanded       = false;
 
         // 2. 重力（仅空中施加，受 gravityScale 缩放）
         if (!physicsComp->onGround)
@@ -96,6 +99,8 @@ void PhysicsSystem::update()
             physicsComp->velocity.z        = 0.0f;
             physicsComp->impulseVelocity.z = 0.0f;
             physicsComp->onGround          = 1;
+            if (!wasOnGround)
+                physicsComp->justLanded = true;
         }
         else
         {
@@ -109,14 +114,26 @@ void PhysicsSystem::update()
         float mapMaxY = mapMax.y - physicsComp->size.y * 0.5f;
 
         if (physicsComp->position.x < mapMinX)
+        {
             physicsComp->position.x = mapMinX;
+            physicsComp->boundaryHitFlags |= 1u;
+        }
         else if (physicsComp->position.x > mapMaxX)
+        {
             physicsComp->position.x = mapMaxX;
+            physicsComp->boundaryHitFlags |= 2u;
+        }
 
         if (physicsComp->position.y < mapMinY)
+        {
             physicsComp->position.y = mapMinY;
+            physicsComp->boundaryHitFlags |= 4u;
+        }
         else if (physicsComp->position.y > mapMaxY)
+        {
             physicsComp->position.y = mapMaxY;
+            physicsComp->boundaryHitFlags |= 8u;
+        }
 
         // 8. 同步回TransformComponent的整数坐标
         transformComp->position.x = static_cast<int32_t>(physicsComp->position.x);

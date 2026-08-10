@@ -71,6 +71,12 @@ public:
     bool animationFinished = true;
     float animationSpeed   = 1.0f;
 
+    // 残影引用计数（>0 时 AvatarRenderSystem 按间隔甩半透明残影）
+    int32_t ghostRefCount = 0;
+    int32_t ghostAccumMs  = 0;
+    // 阴影缩放覆盖（0=用默认）
+    float shadowScale = 0.0f;
+
     std::vector<DamageBox> attackBoxes;
     std::vector<DamageBox> damageBoxes;
 
@@ -86,6 +92,9 @@ public:
                                   playback,
                                   animationFinished,
                                   animationSpeed,
+                                  ghostRefCount,
+                                  ghostAccumMs,
+                                  shadowScale,
                                   attackBoxes,
                                   damageBoxes)
 

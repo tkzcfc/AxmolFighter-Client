@@ -16,6 +16,7 @@ struct ActorSpawnParams
     EntityCategory category = EntityCategory::kPlayer;
     int32_t playerId        = 0;
     std::string name;
+    bool cityMode = false;  // 城镇精简行为树
 };
 
 // 兼容旧调用点

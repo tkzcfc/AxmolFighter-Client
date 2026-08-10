@@ -60,7 +60,36 @@ void AvatarRenderSystem::update()
         // 逻辑 Transform 是节点变换的唯一权威：scale.x 为负即水平镜像
         avatar->setScaleX(transformComp->scale.x);
         avatar->setScaleY(transformComp->scale.y);
+        if (avatarComp->shadowScale > 0.0f)
+            avatar->setScaleY(transformComp->scale.y * avatarComp->shadowScale);
         avatar->setLocalZOrder(static_cast<int>(-transformComp->position.y));
+
+        // 残影：引用计数 >0 时按间隔复制半透明节点
+        if (avatarComp->ghostRefCount > 0 && mapRenderComp->entityNode)
+        {
+            avatarComp->ghostAccumMs += lastUpdateTimeMs;
+            if (avatarComp->ghostAccumMs >= 80)
+            {
+                avatarComp->ghostAccumMs = 0;
+                auto* ghost = ax::Node::create();
+                ghost->setPosition(avatar->getPosition());
+                ghost->setScaleX(avatar->getScaleX());
+                ghost->setScaleY(avatar->getScaleY());
+                ghost->setLocalZOrder(avatar->getLocalZOrder() - 1);
+                ghost->setOpacity(120);
+                // 占位：用半透明色块近似残影轮廓（完整 RenderTexture 后续）
+                auto* mark = ax::DrawNode::create();
+                mark->drawSolidCircle(ax::Vec2::ZERO, 28.0f, 0.0f, 12,
+                                      ax::Color4F(0.4f, 0.7f, 1.0f, 0.35f));
+                ghost->addChild(mark);
+                mapRenderComp->entityNode->addChild(ghost);
+                ghost->runAction(ax::Sequence::create(ax::FadeOut::create(0.25f), ax::RemoveSelf::create(), nullptr));
+            }
+        }
+        else
+        {
+            avatarComp->ghostAccumMs = 0;
+        }
 
         auto& playback = avatarComp->playback;
         if (!playback.getCurrentMotionName().empty())

@@ -14,6 +14,29 @@ bool justPressed(const InputComponent* input, int32_t slot)
     return input && input->isKeyDown(slot) && input->queryKeyPressedDurationMs(slot) == 0;
 }
 
+bool justReleased(const InputComponent* input, int32_t slot)
+{
+    return input && input->isLastKeyDown(slot) && !input->isKeyDown(slot);
+}
+
+bool slotTriggered(const InputComponent* input, int32_t slot, uint32_t slotTriggerFlags)
+{
+    if (!input || slot <= 0)
+        return false;
+    uint32_t flags = slotTriggerFlags;
+    if (flags == SlotTriggerFlag::kSlotTriggerNone)
+        flags = SlotTriggerFlag::kSlotTriggerPress;
+
+    if ((flags & SlotTriggerFlag::kSlotTriggerPress) && justPressed(input, slot))
+        return true;
+    if ((flags & SlotTriggerFlag::kSlotTriggerKeepPress) && input->isKeyDown(slot) &&
+        !justPressed(input, slot))
+        return true;
+    if ((flags & SlotTriggerFlag::kSlotTriggerRelease) && justReleased(input, slot))
+        return true;
+    return false;
+}
+
 int32_t moveQuadrantFromInput(const InputComponent* input)
 {
     if (!input)

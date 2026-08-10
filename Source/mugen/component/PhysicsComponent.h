@@ -57,6 +57,11 @@ public:
     // 上一帧位置，由 PhysicsSystem 每帧自动更新，不参与序列化。
     Vector3f lastPosition;
 
+    // 本帧瞬时标志（PhysicsSystem 写入；不序列化）
+    // bit0=left, bit1=right, bit2=minY, bit3=maxY
+    uint8_t boundaryHitFlags = 0;
+    bool justLanded          = false;
+
     MG_DEFINE_SERIALIZABLE(isStaticBody,
                            size,
                            position,

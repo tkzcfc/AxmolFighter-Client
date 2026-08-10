@@ -55,6 +55,10 @@ public:
     // 场景槽位
     int32_t slot = 0;
 
+    // 门在地图中的坐标（由场景 POR_slot 回填，table 权威）
+    int32_t posX = 0;
+    int32_t posZ = 0;
+
     // 目的地类型
     int32_t destType = 0;
 
@@ -67,7 +71,7 @@ public:
     // 目的地候选
     std::vector<PortalDestEntry> dests;
 
-    MG_DEFINE_SERIALIZABLE(portalId, slot, destType, limitType, limitValue, dests);
+    MG_DEFINE_SERIALIZABLE(portalId, slot, posX, posZ, destType, limitType, limitValue, dests);
 };
 
 // NPC 槽位
@@ -87,7 +91,11 @@ public:
     // 场景槽位
     int32_t slot = 0;
 
-    MG_DEFINE_SERIALIZABLE(npcId, slot);
+    // NPC 在地图中的坐标（由场景 NPC_slot 回填，table 权威）
+    int32_t posX = 0;
+    int32_t posZ = 0;
+
+    MG_DEFINE_SERIALIZABLE(npcId, slot, posX, posZ);
 };
 
 // 掉落物/交互物
@@ -1113,7 +1121,7 @@ public:
     int32_t staticStartFrame  = -1;
     int32_t staticTime        = 0;
     int32_t staticResetTime   = 0;
-    // UI / 障碍 / 落地 / 阴影（黑月 action_attack）
+    // UI / 障碍 / 落地 / 阴影（action_attack）
     int32_t dialogShow = -1;
     int32_t nameShow   = 0;
     int32_t tipsShow   = -1;
@@ -1170,7 +1178,7 @@ public:
     virtual ~SkillAttackConfig() {}
 
     int32_t id = 0;
-    // 完整二维动作表 [toward][段]（黑月 action_ids）
+    // 完整二维动作表 [toward][段]（action_ids）
     std::vector<IntListRow> actionIds;
     // 兼容：第一组扁平（可由 actionIds[0] 派生）
     std::vector<int32_t> primaryActionIds;
@@ -1353,10 +1361,15 @@ public:
 
     int32_t id         = 0;
     float amplitude    = 0;
+    float amplitudeX   = 0;
+    float amplitudeY   = 0;
     float duration     = 0;
     int32_t freezeTime = 0;
+    int32_t times      = 1;
+    int32_t level      = 0;
+    std::string modifier;
 
-    MG_DEFINE_SERIALIZABLE(id, amplitude, duration, freezeTime);
+    MG_DEFINE_SERIALIZABLE(id, amplitude, amplitudeX, amplitudeY, duration, freezeTime, times, level, modifier);
 };
 
 // 特效实体
@@ -1377,7 +1390,7 @@ public:
     int32_t effectOrientation = -1;
     int32_t skillHitId        = -1;
     float radius              = 20.0f;
-    // 命中链路 / 表现（黑月 entity_effect）
+    // 命中链路 / 表现（entity_effect）
     std::vector<int32_t> actionIds;
     std::vector<int32_t> buffId;
     std::vector<int32_t> debuffId;
@@ -1431,7 +1444,7 @@ public:
                            specialabilityId);
 };
 
-// Buff 规则（黑月 buff_rule → className）
+// Buff 规则（buff_rule → className）
 class BuffRuleConfig : public Object
 {
 public:
@@ -1448,7 +1461,7 @@ public:
     MG_DEFINE_SERIALIZABLE(id, buffType, className, fashionShowText);
 };
 
-// Buff（黑月 buff_base 全量）
+// Buff（buff_base 全量）
 class BuffConfig : public Object
 {
 public:
@@ -1556,6 +1569,8 @@ public:
     int32_t skillInterval      = 0;
     int32_t skillPriorityLevel = 0;
     std::vector<int32_t> skillAiIds;
+    /** 巡逻半径（出生点为心；0=运行时用 chaseScope 推导默认） */
+    int32_t patrolScope = 0;
 
     MG_DEFINE_SERIALIZABLE(id,
                            chaseScopeX,
@@ -1565,10 +1580,11 @@ public:
                            skillIds,
                            skillInterval,
                            skillPriorityLevel,
-                           skillAiIds);
+                           skillAiIds,
+                           patrolScope);
 };
 
-// 技能 AI 条件（黑月 skill_ai）
+// 技能 AI 条件（skill_ai）
 class SkillAiConfig : public Object
 {
 public:
@@ -1642,6 +1658,7 @@ public:
     int32_t comboWindowMs           = 500;
     uint32_t inputBufferReleaseTags = 0;
     int32_t inputBufferTimeoutMs    = 500;
+    std::vector<int32_t> comboInputs;
 
     MG_DEFINE_SERIALIZABLE(skillId,
                            slotTriggerFlags,
@@ -1649,7 +1666,8 @@ public:
                            denyTags,
                            comboWindowMs,
                            inputBufferReleaseTags,
-                           inputBufferTimeoutMs);
+                           inputBufferTimeoutMs,
+                           comboInputs);
 };
 
 // 角色实体

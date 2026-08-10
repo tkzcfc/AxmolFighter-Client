@@ -13,9 +13,11 @@ struct SkillDeckEntry
     int32_t nextSkillAttackId = -1;
     int32_t level             = 1;
     int32_t coolDownMs        = 0;
-    int32_t coolDownMaxMs     = 0;
+    int32_t coolDownMaxMs     = 0;  // 表 cd 基准；开 CD 时 × coldTimeScale
     int32_t releaseCount      = 1;
     int32_t releaseMax        = 1;
+    float coldTimeScale       = 1.0f;
+    float mpConsumeScale      = 1.0f;
 };
 
 class SkillDeckComponent : public Component

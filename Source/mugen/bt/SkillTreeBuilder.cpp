@@ -59,6 +59,8 @@ std::unique_ptr<BTNode> buildToward(BehaviorTreeComponent* bt,
 }
 
 std::unique_ptr<BTNode> buildPipe(BehaviorTreeComponent* bt,
+                                  int32_t slot,
+                                  int32_t stepIndex,
                                   int32_t skillAttackId,
                                   int32_t pipeIndex,
                                   const SkillAttackConfig& skillAtk)
@@ -66,7 +68,7 @@ std::unique_ptr<BTNode> buildPipe(BehaviorTreeComponent* bt,
     auto pipeSel           = std::make_unique<BTSelector>();
     pipeSel->memorySlot    = bt->allocMemorySlot();
     pipeSel->debugName     = "Pipe";
-    pipeSel->addCondition(std::make_unique<CondAttackPipe>(pipeIndex));
+    pipeSel->addCondition(std::make_unique<CondAttackPipe>(slot, stepIndex, pipeIndex, 0));
 
     // towardIndex 1-based，对应 actionIds 行下标 0
     for (size_t j = 0; j < skillAtk.actionIds.size(); ++j)
@@ -110,7 +112,7 @@ std::unique_ptr<BTNode> buildStep(BehaviorTreeComponent* bt,
     // 倒序挂载 Max..1
     for (int32_t p = pipeMax; p >= 1; --p)
     {
-        if (auto pipe = buildPipe(bt, skillAttackId, p, *skillAtk))
+        if (auto pipe = buildPipe(bt, slot, stepIndex, skillAttackId, p, *skillAtk))
             stepSel->addChild(std::move(pipe));
     }
 

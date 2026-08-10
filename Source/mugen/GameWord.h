@@ -3,6 +3,8 @@
 #include "mugen/core/ecs/ECSManager.h"
 #include "mugen/core/math/Random.h"
 
+#include <string>
+
 #if RUNTIME_IN_AXMOL
 #    include <axmol.h>
 #endif  // RUNTIME_IN_AXMOL
@@ -60,6 +62,12 @@ public:
     void serialize(ByteBuffer& byteBuffer) const;
 
     bool deserialize(ByteBuffer& byteBuffer);
+
+    /** 序列化为字节串（快照回归 / 网络 dump） */
+    std::string serializeToString() const;
+
+    /** 从字节串反序列化；失败返回 false */
+    bool deserializeFromString(const std::string& data);
 };
 
 NS_MG_END

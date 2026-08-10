@@ -20,7 +20,7 @@ inline void fillTownInputSlotMap(std::map<ax::EventKeyboard::KeyCode, uint32_t>&
 }
 
 // 战斗：移动 + Z/X/C + 技能栏 A / 1-9 / 0
-// X 不是冲刺（黑月冲刺=双击同向方向键）；X/C 为技能/特殊槽位输入
+// X 不是冲刺（冲刺=双击同向方向键）；X/C 为技能/特殊槽位输入
 inline void fillCombatInputSlotMap(std::map<ax::EventKeyboard::KeyCode, uint32_t>& out)
 {
     fillTownInputSlotMap(out);
@@ -28,6 +28,9 @@ inline void fillCombatInputSlotMap(std::map<ax::EventKeyboard::KeyCode, uint32_t
     out[ax::EventKeyboard::KeyCode::KEY_Z] = mugen::INPUT_SLOT_Z;
     out[ax::EventKeyboard::KeyCode::KEY_X] = mugen::INPUT_SLOT_X;
     out[ax::EventKeyboard::KeyCode::KEY_C] = mugen::INPUT_SLOT_C;
+    // E=爆气、F=闪避（映射到专用输入槽，由 SkillCastComponent 持有技能 id）
+    out[ax::EventKeyboard::KeyCode::KEY_E] = mugen::INPUT_SLOT_C;
+    out[ax::EventKeyboard::KeyCode::KEY_F] = mugen::INPUT_SLOT_X;
 
     out[ax::EventKeyboard::KeyCode::KEY_A] = mugen::INPUT_SLOT_0;
     out[ax::EventKeyboard::KeyCode::KEY_1] = mugen::INPUT_SLOT_1;
