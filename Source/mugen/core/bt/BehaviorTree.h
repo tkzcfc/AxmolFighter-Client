@@ -25,8 +25,10 @@ public:
 
     void setRoot(BTNode* node);
 
-public:
+private:
+    void destroyRoot();
 
+public:
     MG_SYNTHESIZE_READONLY(BTNode*, m_root, Root)
 
 public:
