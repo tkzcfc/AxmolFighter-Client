@@ -15,13 +15,13 @@ BTComposite::~BTComposite()
 
 void BTComposite::addCondition(BTCondition* cond)
 {
-    cond->parent = this;
+    cond->m_parent = this;
     m_conditions.push_back(cond);
 }
 
 void BTComposite::addChild(BTNode* child)
 {
-    child->parent = this;
+    child->m_parent = this;
     m_children.push_back(child);
 }
 

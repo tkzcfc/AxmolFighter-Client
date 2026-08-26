@@ -3,7 +3,7 @@
 
 NS_MG_BEGIN
 
-BTNode::BTNode() : m_status(BTStatus::Readied) {}
+BTNode::BTNode() : m_status(BTStatus::Readied), m_parent(nullptr) {}
 
 BTNode::~BTNode() {}
 

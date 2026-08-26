@@ -10,8 +10,7 @@ BehaviorTree::BehaviorTree() : m_root(nullptr) {}
 
 BehaviorTree::~BehaviorTree()
 {
-    delete m_root;
-    m_root = nullptr;
+    destroyRoot();
 }
 
 bool BehaviorTree::enter(BTContext& ctx)
@@ -37,12 +36,13 @@ void BehaviorTree::exit(BTContext& ctx)
 
 void BehaviorTree::setRoot(BTNode* node)
 {
-    if (m_root == node)
-        return;
-    delete m_root;
-    m_root = node;
-    if (m_root)
-        m_root->parent = nullptr;
+    if (m_root != node)
+    {
+        destroyRoot();
+        m_root = node;
+        if (m_root)
+            m_root->m_parent = nullptr;
+    }
 }
 
 void BehaviorTree::serializeCustomImpl(ByteBuffer& byteBuffer) const
@@ -58,11 +58,7 @@ void BehaviorTree::serializeCustomImpl(ByteBuffer& byteBuffer) const
 
 bool BehaviorTree::deserializeCustomImpl(ByteBuffer& byteBuffer)
 {
-    if (m_root)
-    {
-        delete m_root;
-        m_root = nullptr;
-    }
+    destroyRoot();
 
     std::string name;
     if (!byteBuffer.getString(name))
@@ -72,12 +68,19 @@ bool BehaviorTree::deserializeCustomImpl(ByteBuffer& byteBuffer)
     m_root = BTFactory::getInstance()->spawnNode(name);
     if (!m_root || !m_root->deserialize(byteBuffer))
     {
-        delete m_root;
-        m_root = nullptr;
+        destroyRoot();
         return false;
     }
-    m_root->parent = nullptr;
     return true;
+}
+
+void BehaviorTree::destroyRoot()
+{
+    if (m_root)
+    {
+        delete m_root;
+        m_root = nullptr;
+    }
 }
 
 NS_MG_END
