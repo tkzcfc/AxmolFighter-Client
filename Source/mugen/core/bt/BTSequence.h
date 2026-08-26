@@ -4,18 +4,31 @@
 
 NS_MG_BEGIN
 
-/** 顺序 Sequence：子节点依次 Success；条件复检失败则整体 Failure */
 class BTSequence : public BTComposite
 {
 public:
     typedef BTComposite Super;
 
-    BTSequence() { debugName = "Sequence"; }
-    virtual ~BTSequence() {}
+public:
+    BTSequence();
 
-    void onEnter(BTContext& ctx) override;
-    void onExit(BTContext& ctx) override;
-    BTStatus tick(BTContext& ctx, int32_t dtMs) override;
+    virtual ~BTSequence();
+
+    const char* typeName() const override { return "BTSequence"; }
+
+    void enter(BTContext& ctx) override;
+
+    void exit(BTContext& ctx) override;
+
+    void update(BTContext& ctx, int32_t dtMs) override;
+
+private:
+    void updateSequence(BTContext& ctx, int32_t dtMs);
+
+    int8_t m_currentIndex = -1;
+
+public:
+    MG_DEFINE_SERIALIZABLE(m_currentIndex)
 };
 
 NS_MG_END

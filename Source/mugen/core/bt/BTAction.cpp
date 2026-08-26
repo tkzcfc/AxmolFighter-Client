@@ -3,24 +3,27 @@
 
 NS_MG_BEGIN
 
-void BTAction::onEnter(BTContext& ctx)
+BTAction::BTAction() {}
+
+BTAction::~BTAction() {}
+
+void BTAction::enter(BTContext& ctx)
 {
-    entered = true;
+    status = BTStatus::Running;
     onActionEnter(ctx);
 }
 
-void BTAction::onExit(BTContext& ctx)
+void BTAction::exit(BTContext& ctx)
 {
-    if (entered)
-        onActionExit(ctx);
-    entered = false;
+    onActionExit(ctx);
+    status = BTStatus::Readied;
 }
 
-BTStatus BTAction::tick(BTContext& ctx, int32_t dtMs)
+void BTAction::update(BTContext& ctx, int32_t dtMs)
 {
-    if (!entered)
-        onEnter(ctx);
-    return onActionTick(ctx, dtMs);
+    if (status != BTStatus::Running)
+        return;
+    onActionUpdate(ctx, dtMs);
 }
 
 NS_MG_END

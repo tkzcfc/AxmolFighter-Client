@@ -3,7 +3,6 @@
 #include "mugen/core/bt/BTCondition.h"
 #include "mugen/core/bt/BTNode.h"
 
-#include <memory>
 #include <vector>
 
 NS_MG_BEGIN
@@ -13,26 +12,43 @@ class BTComposite : public BTNode
 public:
     typedef BTNode Super;
 
-    BTComposite() {}
-    virtual ~BTComposite() {}
+public:
+    BTComposite();
 
-    void addCondition(std::unique_ptr<BTCondition> cond);
-    void addChild(std::unique_ptr<BTNode> child);
+    virtual ~BTComposite();
+
+    BTComposite(const BTComposite&)            = delete;
+    BTComposite& operator=(const BTComposite&) = delete;
+
+    void addCondition(BTCondition* cond);
+
+    void addChild(BTNode* child);
+
+    void clearConditions();
+
     void clearChildren();
-    size_t childCount() const { return children.size(); }
 
-    bool checkAll(BTContext& ctx) override;
+    BTNode* getChild(int32_t childIndex) { return m_children[childIndex]; }
 
-    /** 在 BehaviorTreeComponent.selectorMemory 中的槽位（建树时分配） */
-    int32_t memorySlot = -1;
+    size_t childCount() const { return m_children.size(); }
+
+    bool check(BTContext& ctx);
+
+    void exit(BTContext& ctx) override;
 
 protected:
-    void enterConditions(BTContext& ctx);
-    void exitConditions(BTContext& ctx);
+    bool conditionsHold(BTContext& ctx);
 
-    std::vector<std::unique_ptr<BTCondition>> conditions;
-    std::vector<std::unique_ptr<BTNode>> children;
-    bool conditionsEntered = false;
+    MG_SYNTHESIZE_READONLY_BY_REF(std::vector<BTCondition*>, m_conditions, Conditions)
+    MG_SYNTHESIZE_READONLY_BY_REF(std::vector<BTNode*>, m_children, Children)
+
+public:
+    MG_DEFINE_SERIALIZABLE_CUSTOM(serializeCustomImpl, deserializeCustomImpl)
+
+private:
+    void serializeCustomImpl(ByteBuffer& byteBuffer) const;
+
+    bool deserializeCustomImpl(ByteBuffer& byteBuffer);
 };
 
 NS_MG_END

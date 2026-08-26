@@ -4,6 +4,8 @@
 
 NS_MG_BEGIN
 
+inline void serialize_impl(ByteBuffer&) {}
+
 template <typename T>
 void serialize_impl(ByteBuffer& buf, const T& value)
 {
@@ -15,6 +17,11 @@ void serialize_impl(ByteBuffer& buf, const T& value, const Args&... args)
 {
     buf.writeValue(value);
     serialize_impl(buf, args...);
+}
+
+inline bool deserialize_impl(ByteBuffer&)
+{
+    return true;
 }
 
 template <typename T>
@@ -48,14 +55,14 @@ bool deserialize_impl(ByteBuffer& buf, T& value, Args&... args)
     virtual void serialize(ByteBuffer& byteBuffer) const override                \
     {                                                                            \
         Super::serialize(byteBuffer);                                            \
-        serialize_impl(byteBuffer, __VA_ARGS__);                                 \
+        serialize_impl(byteBuffer, ##__VA_ARGS__);                               \
         serialize_custom(byteBuffer);                                            \
     }                                                                            \
     virtual bool deserialize(ByteBuffer& byteBuffer) override                    \
     {                                                                            \
         if (!Super::deserialize(byteBuffer))                                     \
             return false;                                                        \
-        if (!deserialize_impl(byteBuffer, __VA_ARGS__))                          \
+        if (!deserialize_impl(byteBuffer, ##__VA_ARGS__))                        \
             return false;                                                        \
         return deserialize_custom(byteBuffer);                                   \
     }

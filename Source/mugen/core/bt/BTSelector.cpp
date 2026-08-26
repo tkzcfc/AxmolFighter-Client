@@ -1,101 +1,104 @@
 #include "mugen/core/bt/BTSelector.h"
 #include "mugen/core/bt/BTContext.h"
-#include "mugen/component/BehaviorTreeComponent.h"
 
 NS_MG_BEGIN
 
-namespace
-{
-int8_t& memoryAt(BTContext& ctx, int32_t slot)
-{
-    static int8_t s_dummy = -1;
-    if (!ctx.bt || slot < 0)
-        return s_dummy;
-    if (static_cast<int32_t>(ctx.bt->selectorMemory.size()) <= slot)
-        ctx.bt->selectorMemory.resize(static_cast<size_t>(slot) + 1, -1);
-    return ctx.bt->selectorMemory[static_cast<size_t>(slot)];
-}
-}  // namespace
+BTSelector::BTSelector() : m_currentIndex(-1) {}
 
-void BTSelector::onEnter(BTContext& ctx)
-{
-    enterConditions(ctx);
-    memoryAt(ctx, memorySlot) = -1;
-}
+BTSelector::~BTSelector() {}
 
-void BTSelector::onExit(BTContext& ctx)
+void BTSelector::enter(BTContext& ctx)
 {
-    int8_t& mem = memoryAt(ctx, memorySlot);
-    if (mem >= 0 && mem < static_cast<int8_t>(children.size()))
+    if (!check(ctx))
     {
-        children[static_cast<size_t>(mem)]->onExit(ctx);
-        mem = -1;
+        status = BTStatus::Failure;
+        return;
     }
-    exitConditions(ctx);
-}
 
-BTStatus BTSelector::tick(BTContext& ctx, int32_t dtMs)
-{
-    if (children.empty())
-        return BTStatus::Failure;
-
-    int8_t& mem = memoryAt(ctx, memorySlot);
-
-    // 粘滞：当前子节点条件仍通过则继续（AEBTSelector 语义）
-    if (mem >= 0 && mem < static_cast<int8_t>(children.size()))
+    const uint32_t count = static_cast<uint32_t>(m_children.size());
+    for (uint32_t index = 0; index < count; ++index)
     {
-        auto* child = children[static_cast<size_t>(mem)].get();
-        if (!child->checkAll(ctx))
+        BTNode* child = m_children[index];
+        child->enter(ctx);
+        MG_ASSERT(child->status != BTStatus::Readied);
+        MG_ASSERT(child->status != BTStatus::Success);
+
+        // 如果子节点返回 Running，则表示成功进入该节点，Selector 状态也设置为 Running
+        if (child->status == BTStatus::Running)
         {
-            // 条件失败：exit 当前，本节点 Success，由父级重选
-            child->onExit(ctx);
-            mem = -1;
-            return BTStatus::Success;
+            m_currentIndex = static_cast<int32_t>(index);
+            status         = BTStatus::Running;
+            return;
         }
-
-        const BTStatus st = child->tick(ctx, dtMs);
-        if (st == BTStatus::Running)
-            return BTStatus::Running;
-
-        // Success/Failure：exit 后环形尝试后续兄弟；皆非 Running → 本节点 Success
-        child->onExit(ctx);
-        const size_t start = static_cast<size_t>(mem) + 1;
-        mem                = -1;
-        const size_t n     = children.size();
-        for (size_t k = 0; k < n; ++k)
-        {
-            const size_t i = (start + k) % n;
-            auto* sib      = children[i].get();
-            if (!sib->checkAll(ctx))
-                continue;
-            sib->onEnter(ctx);
-            const BTStatus st2 = sib->tick(ctx, dtMs);
-            if (st2 == BTStatus::Running)
-            {
-                mem = static_cast<int8_t>(i);
-                return BTStatus::Running;
-            }
-            sib->onExit(ctx);
-        }
-        return BTStatus::Success;
+        // 节点进入失败，退出该节点
+        child->exit(ctx);
     }
 
-    // 无粘滞：按优先级扫描
-    for (size_t i = 0; i < children.size(); ++i)
+    status = BTStatus::Failure;
+}
+
+void BTSelector::exit(BTContext& ctx)
+{
+    if (status == BTStatus::Running)
     {
-        auto* child = children[i].get();
-        if (!child->checkAll(ctx))
-            continue;
-        child->onEnter(ctx);
-        mem               = static_cast<int8_t>(i);
-        const BTStatus st = child->tick(ctx, dtMs);
-        if (st == BTStatus::Running)
-            return BTStatus::Running;
-        child->onExit(ctx);
-        mem = -1;
-        // 同帧继续找下一个 Running（简化环形首扫）
+        BTNode* child = m_children[m_currentIndex];
+        if (child->status == BTStatus::Running)
+            child->exit(ctx);
     }
-    return BTStatus::Failure;
+
+    m_currentIndex = -1;
+    status         = BTStatus::Readied;
+    Super::exit(ctx);
+}
+
+void BTSelector::update(BTContext& ctx, int32_t dtMs)
+{
+    if (status != BTStatus::Running)
+        return;
+
+    // 如果条件不成立，则退出当前正在运行的子节点，并将 Selector 状态设置为 Success (即选择器认为任务已成功完成)
+    if (!conditionsHold(ctx))
+    {
+        BTNode* child = m_children[m_currentIndex];
+        if (child->status == BTStatus::Running)
+            child->exit(ctx);
+        status = BTStatus::Success;
+        return;
+    }
+
+    updateSelector(ctx, dtMs);
+}
+
+void BTSelector::updateSelector(BTContext& ctx, int32_t dtMs)
+{
+    BTNode* child = m_children[m_currentIndex];
+    child->update(ctx, dtMs);
+
+    // 如果当前子节点返回 Running，则表示当前节点还在执行中，Selector 也保持 Running 状态
+    if (child->status != BTStatus::Success)
+        return;
+
+    // 当前子节点执行成功，退出该子节点，并尝试执行下一个子节点
+    child->exit(ctx);
+
+    const uint32_t count  = static_cast<uint32_t>(m_children.size());
+    const uint32_t length = static_cast<uint32_t>(m_currentIndex) + count;
+    for (uint32_t index = static_cast<uint32_t>(m_currentIndex) + 1; index < length; ++index)
+    {
+        // 计算下一个子节点的索引，使用取模运算确保索引在有效范围内循环
+        m_currentIndex       = static_cast<int32_t>(index % count);
+        BTNode* childBrother = m_children[m_currentIndex];
+        childBrother->enter(ctx);
+        MG_ASSERT(childBrother->status != BTStatus::Readied);
+        MG_ASSERT(childBrother->status != BTStatus::Success);
+        // 如果下一个子节点返回 Running，则表示成功进入该节点，Selector 状态也设置为 Running
+        if (childBrother->status == BTStatus::Running)
+            return;
+        childBrother->exit(ctx);
+    }
+
+    // 如果没有成功进入其他任何子节点，则将 Selector 状态设置为 Success，表示选择器任务已成功完成
+    status = BTStatus::Success;
 }
 
 NS_MG_END

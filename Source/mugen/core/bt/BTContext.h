@@ -1,43 +1,23 @@
 #pragma once
 
-#include "mugen/core/bt/BTNode.h"
+#include "mugen/core/StdC.h"
 
 NS_MG_BEGIN
 
 class Entity;
 class ECSManager;
-class BehaviorTreeComponent;
-class BehaviorComponent;
-class SkillCastComponent;
-class HitReactComponent;
-class AvatarComponent;
-class TransformComponent;
-class AttributeComponent;
-class DisplacementComponent;
-class BuffComponent;
-class InputComponent;
-class PhysicsComponent;
-class SkillDeckComponent;
 
+// 每 tick 传入的瘦上下文。节点不持有 Entity*，业务叶子自行取组件。
 struct BTContext
 {
-    Entity* entity     = nullptr;
-    ECSManager* ecs    = nullptr;
-    int32_t dtMs       = 0;
+    // 当前行为树所属实体
+    Entity* entity        = nullptr;
+    // 所属 ECS（特效生成、空间查询）
+    ECSManager* ecs       = nullptr;
+    // 本帧间隔（毫秒）
+    int32_t dtMs          = 0;
+    // 世界累计运行时间（毫秒）
     int64_t runningTimeMs = 0;
-
-    BehaviorTreeComponent* bt = nullptr;
-    BehaviorComponent* behavior = nullptr;
-    SkillCastComponent* skillCast = nullptr;
-    HitReactComponent* hitReact = nullptr;
-    AvatarComponent* avatar = nullptr;
-    TransformComponent* transform = nullptr;
-    AttributeComponent* attribute = nullptr;
-    DisplacementComponent* displacement = nullptr;
-    BuffComponent* buff = nullptr;
-    InputComponent* input = nullptr;
-    PhysicsComponent* physics = nullptr;
-    SkillDeckComponent* skillDeck = nullptr;
 };
 
 NS_MG_END

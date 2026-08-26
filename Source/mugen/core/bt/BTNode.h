@@ -2,36 +2,48 @@
 
 #include "mugen/core/Object.h"
 
-#include <string>
-
 NS_MG_BEGIN
 
+// 行为树节点状态
 enum class BTStatus : int8_t
 {
+    // 节点已就绪，尚未进入
     Readied  = 0,
+    // 节点正在运行中
     Running  = 1,
+    // 节点运行成功
     Success  = 2,
+    // 节点运行失败
     Failure  = 3,
 };
 
 struct BTContext;
 
+// 行为树节点基类
 class BTNode : public Object
 {
 public:
     typedef Object Super;
 
-    BTNode() {}
-    virtual ~BTNode() {}
+public:
+    BTNode();
 
-    virtual void onEnter(BTContext& /*ctx*/) {}
-    virtual void onExit(BTContext& /*ctx*/) {}
-    virtual BTStatus tick(BTContext& ctx, int32_t dtMs) = 0;
+    virtual ~BTNode();
 
-    /** 组合节点：条件复检；叶节点默认 true */
-    virtual bool checkAll(BTContext& /*ctx*/) { return true; }
+    virtual const char* typeName() const = 0;
 
-    std::string debugName;
+    virtual void enter(BTContext& /*ctx*/) {}
+
+    virtual void exit(BTContext& /*ctx*/) {}
+
+    virtual void update(BTContext& /*ctx*/, int32_t /*dtMs*/) {}
+
+public:
+    BTNode* parent  = nullptr;
+    BTStatus status = BTStatus::Readied;
+
+public:
+    MG_DEFINE_SERIALIZABLE(status)
 };
 
 NS_MG_END

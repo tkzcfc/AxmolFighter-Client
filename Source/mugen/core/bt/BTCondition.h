@@ -2,23 +2,28 @@
 
 #include "mugen/core/bt/BTNode.h"
 
-#include <string>
-
 NS_MG_BEGIN
 
-class BTCondition : public Object
+class BTCondition : public BTNode
 {
 public:
-    typedef Object Super;
+    typedef BTNode Super;
 
-    BTCondition() {}
-    virtual ~BTCondition() {}
+public:
+    BTCondition();
+
+    virtual ~BTCondition();
 
     virtual bool check(BTContext& ctx) = 0;
-    virtual void onEnter(BTContext& /*ctx*/) {}
-    virtual void onExit(BTContext& /*ctx*/) {}
 
-    std::string debugName;
+    void enter(BTContext& ctx) override;
+
+    void exit(BTContext& ctx) override;
+
+protected:
+    virtual void onEnter(BTContext& /*ctx*/) {}
+
+    virtual void onExit(BTContext& /*ctx*/) {}
 };
 
 NS_MG_END
