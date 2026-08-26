@@ -49,9 +49,7 @@ protected:
     virtual void onExit(BTContext& /*ctx*/) {}
 
 public:
-    BTNode* parent = nullptr;
-
-    MG_SYNTHESIZE_READONLY(BTNode*, m_status, Status)
+    MG_SYNTHESIZE_READONLY(BTNode*, m_parent, Parent)
     MG_SYNTHESIZE_READONLY(BTStatus, m_status, Status)
 
     bool isRunning() const { return m_status == BTStatus::Running; }
