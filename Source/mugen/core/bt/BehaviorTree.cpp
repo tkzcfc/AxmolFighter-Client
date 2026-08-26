@@ -1,96 +1,83 @@
 #include "mugen/core/bt/BehaviorTree.h"
 
-#include "mugen/component/BehaviorTreeComponent.h"
-#include "mugen/core/bt/BTComposite.h"
 #include "mugen/core/bt/BTContext.h"
-#include "mugen/core/ecs/Entity.h"
+#include "mugen/core/bt/BTFactory.h"
 #include "mugen/core/serialize/ByteBuffer.h"
-
-#include <cstring>
 
 NS_MG_BEGIN
 
-BehaviorTree::BehaviorTree() {}
+BehaviorTree::BehaviorTree() : m_root(nullptr) {}
 
-BehaviorTree::~BehaviorTree() {}
-
-BehaviorTree* BehaviorTree::of(Entity* entity)
+BehaviorTree::~BehaviorTree()
 {
-    if (!entity)
-        return nullptr;
-    auto* comp = MG_GET_COMPONENT(entity, BehaviorTreeComponent);
-    return comp ? comp->ensureTree() : nullptr;
+    delete m_root;
+    m_root = nullptr;
 }
 
-void BehaviorTree::update(BTContext& ctx, int32_t dtMs)
+bool BehaviorTree::enter(BTContext& ctx)
 {
-    if (!root)
+    if (!m_root)
+        return false;
+    return m_root->enter(ctx);
+}
+
+bool BehaviorTree::update(BTContext& ctx, int32_t dtMs)
+{
+    if (!m_root)
+        return false;
+    m_root->update(ctx, dtMs);
+    return m_root->isRunning();
+}
+
+void BehaviorTree::exit(BTContext& ctx)
+{
+    if (m_root)
+        m_root->exit(ctx);
+}
+
+void BehaviorTree::setRoot(BTNode* node)
+{
+    if (m_root == node)
         return;
-    if (root->status == BTStatus::Running)
-        root->update(ctx, dtMs);
-    if (root->status == BTStatus::Running)
-        return;
-    root->enter(ctx);
-}
-
-void BehaviorTree::forceExit(BTContext& ctx)
-{
-    if (root)
-        root->exit(ctx);
-}
-
-void BehaviorTree::setRoot(std::unique_ptr<BTNode> node)
-{
-    root = std::move(node);
-    if (root)
-        root->parent = nullptr;
-}
-
-void BehaviorTree::restoreRuntimeData()
-{
-    if (!root || m_pendingRuntime.empty())
-    {
-        m_pendingRuntime.clear();
-        return;
-    }
-    ByteBuffer inner(m_pendingRuntime.data(), static_cast<uint32_t>(m_pendingRuntime.size()));
-    root->deserialize(inner);
-    root->parent = nullptr;
-    m_pendingRuntime.clear();
-
-    attackSelector = nullptr;
-    auto* rootComp = dynamic_cast<BTComposite*>(root.get());
-    for (BTNode* child : rootComp->getChildren())
-    {
-        auto* comp = dynamic_cast<BTComposite*>(child);
-        if (!comp)
-            continue;
-        for (BTCondition* cond : comp->getConditions())
-        {
-            if (std::strcmp(cond->typeName(), "CondRoleAttack") != 0)
-                continue;
-            attackSelector = child;
-            return;
-        }
-    }
+    delete m_root;
+    m_root = node;
+    if (m_root)
+        m_root->parent = nullptr;
 }
 
 void BehaviorTree::serializeCustomImpl(ByteBuffer& byteBuffer) const
 {
-    ByteBuffer inner;
-    if (root)
-        root->serialize(inner);
-    inner.writeFinish();
-    std::vector<uint8_t> blob;
-    if (inner.data() && inner.len() > 0)
-        blob.assign(inner.data(), inner.data() + inner.len());
-    byteBuffer.writeValue(blob);
+    if (!m_root)
+    {
+        byteBuffer.writeString(std::string());
+        return;
+    }
+    byteBuffer.writeString(std::string(m_root->typeName()));
+    m_root->serialize(byteBuffer);
 }
 
 bool BehaviorTree::deserializeCustomImpl(ByteBuffer& byteBuffer)
 {
-    m_pendingRuntime.clear();
-    return byteBuffer.getValue(m_pendingRuntime);
+    if (m_root)
+    {
+        delete m_root;
+        m_root = nullptr;
+    }
+
+    std::string name;
+    if (!byteBuffer.getString(name))
+        return false;
+    if (name.empty())
+        return true;
+    m_root = BTFactory::getInstance()->spawnNode(name);
+    if (!m_root || !m_root->deserialize(byteBuffer))
+    {
+        delete m_root;
+        m_root = nullptr;
+        return false;
+    }
+    m_root->parent = nullptr;
+    return true;
 }
 
 NS_MG_END

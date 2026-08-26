@@ -7,23 +7,20 @@ BTAction::BTAction() {}
 
 BTAction::~BTAction() {}
 
-void BTAction::enter(BTContext& ctx)
+bool BTAction::onEnter(BTContext& ctx)
 {
-    status = BTStatus::Running;
     onActionEnter(ctx);
+    return true;
 }
 
-void BTAction::exit(BTContext& ctx)
+void BTAction::onExit(BTContext& ctx)
 {
     onActionExit(ctx);
-    status = BTStatus::Readied;
 }
 
-void BTAction::update(BTContext& ctx, int32_t dtMs)
+BTStatus BTAction::onUpdate(BTContext& ctx, int32_t dtMs)
 {
-    if (status != BTStatus::Running)
-        return;
-    onActionUpdate(ctx, dtMs);
+    return onActionUpdate(ctx, dtMs);
 }
 
 NS_MG_END

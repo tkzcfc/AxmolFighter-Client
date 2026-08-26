@@ -16,14 +16,10 @@ public:
 
     virtual bool check(BTContext& ctx) = 0;
 
-    void enter(BTContext& ctx) override;
-
-    void exit(BTContext& ctx) override;
-
 protected:
-    virtual void onEnter(BTContext& /*ctx*/) {}
+    bool onEnter(BTContext& /*ctx*/) override { return true; }
 
-    virtual void onExit(BTContext& /*ctx*/) {}
+    BTStatus onUpdate(BTContext& /*ctx*/, int32_t /*dtMs*/) override { return BTStatus::Running; }
 };
 
 NS_MG_END

@@ -60,11 +60,11 @@ bool BTComposite::conditionsHold(BTContext& ctx)
     return true;
 }
 
-void BTComposite::exit(BTContext& ctx)
+void BTComposite::onExit(BTContext& ctx)
 {
     for (auto it = m_conditions.rbegin(); it != m_conditions.rend(); ++it)
     {
-        if ((*it)->status == BTStatus::Running)
+        if ((*it)->isRunning())
             (*it)->exit(ctx);
     }
 }

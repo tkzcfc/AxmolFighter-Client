@@ -6,6 +6,8 @@
 
 NS_MG_BEGIN
 
+// 并行节点
+// 所有子节点同时执行，直到所有子节点都执行完毕
 class BTParallel : public BTComposite
 {
 public:
@@ -18,14 +20,15 @@ public:
 
     const char* typeName() const override { return "BTParallel"; }
 
-    void enter(BTContext& ctx) override;
+protected:
+    bool onEnter(BTContext& ctx) override;
 
-    void exit(BTContext& ctx) override;
+    void onExit(BTContext& ctx) override;
 
-    void update(BTContext& ctx, int32_t dtMs) override;
+    BTStatus onUpdate(BTContext& ctx, int32_t dtMs) override;
 
 private:
-    void updateParallel(BTContext& ctx, int32_t dtMs);
+    BTStatus updateParallel(BTContext& ctx, int32_t dtMs);
 
     std::vector<uint32_t> m_running;
 

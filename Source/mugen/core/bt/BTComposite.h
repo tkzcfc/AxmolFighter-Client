@@ -34,9 +34,9 @@ public:
 
     bool check(BTContext& ctx);
 
-    void exit(BTContext& ctx) override;
-
 protected:
+    void onExit(BTContext& ctx) override;
+
     bool conditionsHold(BTContext& ctx);
 
     MG_SYNTHESIZE_READONLY_BY_REF(std::vector<BTCondition*>, m_conditions, Conditions)

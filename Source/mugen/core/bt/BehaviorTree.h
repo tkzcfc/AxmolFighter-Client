@@ -3,15 +3,10 @@
 #include "mugen/core/Object.h"
 #include "mugen/core/bt/BTNode.h"
 
-#include <memory>
-#include <vector>
-
 NS_MG_BEGIN
 
 struct BTContext;
-class Entity;
 
-// 行为树壳：拥有 root、驱动 update / forceExit，并序列化运行时 blob。
 class BehaviorTree : public Object
 {
 public:
@@ -22,29 +17,20 @@ public:
 
     virtual ~BehaviorTree();
 
-    const char* typeName() const { return "BehaviorTree"; }
+    bool enter(BTContext& ctx);
 
-    static BehaviorTree* of(Entity* entity);
+    bool update(BTContext& ctx, int32_t dtMs);
 
-    void update(BTContext& ctx, int32_t dtMs);
+    void exit(BTContext& ctx);
 
-    void forceExit(BTContext& ctx);
-
-    void restoreRuntimeData();
-
-    void setRoot(std::unique_ptr<BTNode> node);
-
-private:
-    std::vector<uint8_t> m_pendingRuntime;
+    void setRoot(BTNode* node);
 
 public:
-    std::unique_ptr<BTNode> root;
-    BTNode* attackSelector = nullptr;
-    bool cityMode          = false;
-    int32_t treeKind       = 0;
+
+    MG_SYNTHESIZE_READONLY(BTNode*, m_root, Root)
 
 public:
-    MG_DEFINE_SERIALIZABLE_CUSTOM(serializeCustomImpl, deserializeCustomImpl, cityMode, treeKind)
+    MG_DEFINE_SERIALIZABLE_CUSTOM(serializeCustomImpl, deserializeCustomImpl)
 
 private:
     void serializeCustomImpl(ByteBuffer& byteBuffer) const;

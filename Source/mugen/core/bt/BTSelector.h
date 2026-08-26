@@ -10,7 +10,7 @@ NS_MG_BEGIN
 // 如果成立,则继续执行当前节点直到他完成,再从当前索引开始遍历子节点(调用enter尝试进入节点)
 // 只有 A：A 成功结束，自己也成功结束，不会再进 A。
 // 有 A、B、C：A 成功后试 B、C（不试 A）；B 能跑就换成 B。B 再成功则试 C、A（不试 B）。
-// 只要其中两个都能反复 enter 跑起来，就会一直轮换，自己不会结束。失败不换人。
+// 如果有两个子节点一直enter成功则会一直轮流执行
 class BTSelector : public BTComposite
 {
 public:
@@ -23,14 +23,15 @@ public:
 
     const char* typeName() const override { return "BTSelector"; }
 
-    void enter(BTContext& ctx) override;
+protected:
+    bool onEnter(BTContext& ctx) override;
 
-    void exit(BTContext& ctx) override;
+    void onExit(BTContext& ctx) override;
 
-    void update(BTContext& ctx, int32_t dtMs) override;
+    BTStatus onUpdate(BTContext& ctx, int32_t dtMs) override;
 
 private:
-    void updateSelector(BTContext& ctx, int32_t dtMs);
+    BTStatus updateSelector(BTContext& ctx, int32_t dtMs);
 
     MG_SYNTHESIZE_READONLY(int32_t, m_currentIndex, CurrentIndex);
 

@@ -32,18 +32,30 @@ public:
 
     virtual const char* typeName() const = 0;
 
-    virtual void enter(BTContext& /*ctx*/) {}
+    bool enter(BTContext& ctx);
 
-    virtual void exit(BTContext& /*ctx*/) {}
+    void exit(BTContext& ctx);
 
-    virtual void update(BTContext& /*ctx*/, int32_t /*dtMs*/) {}
+    void update(BTContext& ctx, int32_t dtMs);
+
+protected:
+    virtual bool onEnter(BTContext& ctx) = 0;
+
+    virtual BTStatus onUpdate(BTContext& ctx, int32_t dtMs) = 0;
+
+    virtual void onExit(BTContext& /*ctx*/) {}
 
 public:
-    BTNode* parent  = nullptr;
-    BTStatus status = BTStatus::Readied;
+    BTNode* parent = nullptr;
+
+    MG_SYNTHESIZE_READONLY(BTStatus, m_status, Status)
+
+    bool isRunning() const { return m_status == BTStatus::Running; }
+    bool isSuccess() const { return m_status == BTStatus::Success; }
+    bool isFailure() const { return m_status == BTStatus::Failure; }
 
 public:
-    MG_DEFINE_SERIALIZABLE(status)
+    MG_DEFINE_SERIALIZABLE(m_status)
 };
 
 NS_MG_END

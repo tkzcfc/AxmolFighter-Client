@@ -3,87 +3,77 @@
 
 NS_MG_BEGIN
 
-BTSequence::BTSequence() {}
+BTSequence::BTSequence() : m_currentIndex(-1) {}
 
 BTSequence::~BTSequence() {}
 
-void BTSequence::enter(BTContext& ctx)
+bool BTSequence::onEnter(BTContext& ctx)
 {
     if (!check(ctx))
-    {
-        status = BTStatus::Failure;
-        return;
-    }
+        return false;
 
     if (childCount() == 0)
     {
-        status = BTStatus::Failure;
-        return;
+        // 不应该存在没有子节点的 Sequence，至少应该有一个子节点
+        MG_ASSERT(false);
+        return false;
     }
 
     BTNode* child = getChild(0);
-    child->enter(ctx);
-    if (child->status == BTStatus::Running)
+    if (child->enter(ctx))
     {
         m_currentIndex = 0;
-        status         = BTStatus::Running;
-        return;
+        return true;
     }
 
     child->exit(ctx);
-    status = BTStatus::Failure;
+    return false;
 }
 
-void BTSequence::exit(BTContext& ctx)
+void BTSequence::onExit(BTContext& ctx)
 {
-    if (status == BTStatus::Running)
+    if (isRunning())
     {
         BTNode* child = getChild(m_currentIndex);
-        if (child->status == BTStatus::Running)
+        if (child->isRunning())
             child->exit(ctx);
     }
 
     m_currentIndex = -1;
-    status         = BTStatus::Readied;
-    Super::exit(ctx);
+    Super::onExit(ctx);
 }
 
-void BTSequence::update(BTContext& ctx, int32_t dtMs)
+BTStatus BTSequence::onUpdate(BTContext& ctx, int32_t dtMs)
 {
-    if (status != BTStatus::Running)
-        return;
-
     if (!conditionsHold(ctx))
     {
         BTNode* child = getChild(m_currentIndex);
-        if (child->status == BTStatus::Running)
+        if (child->isRunning())
             child->exit(ctx);
-        status = BTStatus::Success;
-        return;
+        return BTStatus::Success;
     }
 
-    updateSequence(ctx, dtMs);
+    return updateSequence(ctx, dtMs);
 }
 
-void BTSequence::updateSequence(BTContext& ctx, int32_t dtMs)
+BTStatus BTSequence::updateSequence(BTContext& ctx, int32_t dtMs)
 {
     BTNode* child = getChild(m_currentIndex);
     child->update(ctx, dtMs);
 
-    if (child->status != BTStatus::Success)
-        return;
+    if (!child->isSuccess())
+        return BTStatus::Running;
 
     child->exit(ctx);
-    if (static_cast<size_t>(m_currentIndex) != childCount() - 1)
+    if (static_cast<size_t>(m_currentIndex) < childCount() - 1)
     {
         ++m_currentIndex;
         BTNode* childBrother = getChild(m_currentIndex);
-        childBrother->enter(ctx);
-        if (childBrother->status == BTStatus::Running)
-            return;
+        if (childBrother->enter(ctx))
+            return BTStatus::Running;
         childBrother->exit(ctx);
     }
-    status = BTStatus::Success;
+    return BTStatus::Success;
 }
 
 NS_MG_END

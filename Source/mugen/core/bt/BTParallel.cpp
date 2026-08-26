@@ -7,76 +7,68 @@ BTParallel::BTParallel() {}
 
 BTParallel::~BTParallel() {}
 
-void BTParallel::enter(BTContext& ctx)
+bool BTParallel::onEnter(BTContext& ctx)
 {
     if (!check(ctx))
-    {
-        status = BTStatus::Failure;
-        return;
-    }
+        return false;
 
     m_running.clear();
     const uint32_t count = static_cast<uint32_t>(childCount());
     for (uint32_t index = 0; index < count; ++index)
     {
         BTNode* child = getChild(static_cast<int32_t>(index));
-        child->enter(ctx);
-        if (child->status == BTStatus::Running)
+        if (child->enter(ctx))
             m_running.push_back(index);
         else
             child->exit(ctx);
     }
 
-    status = m_running.empty() ? BTStatus::Failure : BTStatus::Running;
+    return !m_running.empty();
 }
 
-void BTParallel::exit(BTContext& ctx)
+void BTParallel::onExit(BTContext& ctx)
 {
-    if (status == BTStatus::Running)
+    if (isRunning())
     {
         for (uint32_t index : m_running)
         {
             BTNode* child = getChild(static_cast<int32_t>(index));
-            if (child->status == BTStatus::Running)
+            if (child->isRunning())
                 child->exit(ctx);
         }
     }
 
     m_running.clear();
-    status = BTStatus::Readied;
-    Super::exit(ctx);
+    Super::onExit(ctx);
 }
 
-void BTParallel::update(BTContext& ctx, int32_t dtMs)
+BTStatus BTParallel::onUpdate(BTContext& ctx, int32_t dtMs)
 {
-    if (status != BTStatus::Running)
-        return;
-
     if (!conditionsHold(ctx))
     {
         for (uint32_t index : m_running)
         {
             BTNode* child = getChild(static_cast<int32_t>(index));
-            if (child->status == BTStatus::Running)
+            if (child->isRunning())
                 child->exit(ctx);
         }
-        status = BTStatus::Success;
-        return;
+        m_running.clear();
+        return BTStatus::Success;
     }
 
-    updateParallel(ctx, dtMs);
+    return updateParallel(ctx, dtMs);
 }
 
-void BTParallel::updateParallel(BTContext& ctx, int32_t dtMs)
+BTStatus BTParallel::updateParallel(BTContext& ctx, int32_t dtMs)
 {
-    status = BTStatus::Success;
+    BTStatus next = BTStatus::Success;
     for (auto it = m_running.begin(); it != m_running.end();)
     {
         BTNode* child = getChild(static_cast<int32_t>(*it));
         child->update(ctx, dtMs);
-        if (child->status == BTStatus::Running)
+        if (child->isRunning())
         {
-            status = BTStatus::Running;
+            next = BTStatus::Running;
             ++it;
         }
         else
@@ -85,6 +77,7 @@ void BTParallel::updateParallel(BTContext& ctx, int32_t dtMs)
             it = m_running.erase(it);
         }
     }
+    return next;
 }
 
 NS_MG_END

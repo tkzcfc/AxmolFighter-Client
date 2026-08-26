@@ -4,6 +4,8 @@
 
 NS_MG_BEGIN
 
+// 顺序节点
+// 按顺序执行子节点，直到某个子节点失败或运行中
 class BTSequence : public BTComposite
 {
 public:
@@ -16,16 +18,17 @@ public:
 
     const char* typeName() const override { return "BTSequence"; }
 
-    void enter(BTContext& ctx) override;
+protected:
+    bool onEnter(BTContext& ctx) override;
 
-    void exit(BTContext& ctx) override;
+    void onExit(BTContext& ctx) override;
 
-    void update(BTContext& ctx, int32_t dtMs) override;
+    BTStatus onUpdate(BTContext& ctx, int32_t dtMs) override;
 
 private:
-    void updateSequence(BTContext& ctx, int32_t dtMs);
+    BTStatus updateSequence(BTContext& ctx, int32_t dtMs);
 
-    int8_t m_currentIndex = -1;
+    MG_SYNTHESIZE_READONLY(int32_t, m_currentIndex, CurrentIndex);
 
 public:
     MG_DEFINE_SERIALIZABLE(m_currentIndex)
