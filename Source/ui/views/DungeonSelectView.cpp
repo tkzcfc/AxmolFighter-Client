@@ -37,8 +37,8 @@ void DungeonSelectView::rebuildChapterList()
             continue;
 
         ChapterItem item;
-        item.id       = chapter.id;
-        item.nameId   = chapter.nameId;
+        item.id        = chapter.id;
+        item.nameId    = chapter.nameId;
         item.mainCopys = chapter.mainCopys;
         m_chapters.push_back(std::move(item));
     }
@@ -66,7 +66,7 @@ void DungeonSelectView::requestClose()
 
 void DungeonSelectView::enterCopy(int32_t copyId)
 {
-    auto* config = Config::getInstance();
+    auto* config     = Config::getInstance();
     const auto* copy = config->getCopyConfigById(copyId);
     if (!copy)
     {
@@ -125,7 +125,7 @@ void DungeonSelectView::onImGUIRender()
     ImGui::Separator();
     for (int i = 0; i < static_cast<int>(m_chapters.size()); ++i)
     {
-        const auto& chapter = m_chapters[static_cast<size_t>(i)];
+        const auto& chapter     = m_chapters[static_cast<size_t>(i)];
         const std::string label = fmt::format("章节 {} (nameId:{})##ch_{}", chapter.id, chapter.nameId, chapter.id);
         if (ImGui::Selectable(label.c_str(), m_selectedChapterIndex == i))
         {
@@ -147,8 +147,8 @@ void DungeonSelectView::onImGUIRender()
 
     if (m_selectedChapterIndex >= 0 && m_selectedChapterIndex < static_cast<int>(m_chapters.size()))
     {
-        auto* config              = Config::getInstance();
-        const auto& chapter       = m_chapters[static_cast<size_t>(m_selectedChapterIndex)];
+        auto* config        = Config::getInstance();
+        const auto& chapter = m_chapters[static_cast<size_t>(m_selectedChapterIndex)];
         for (int32_t copyId : chapter.mainCopys)
         {
             const auto* copy = config->getCopyConfigById(copyId);

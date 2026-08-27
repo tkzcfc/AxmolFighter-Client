@@ -28,7 +28,7 @@ public:
 
     virtual void onEnter() override;
     virtual void onExit() override;
-    virtual void onUpdate(float delta) override;
+    void onUpdate(float delta) override;
     virtual void onImGUIRender() override;
 
     // Keyboard
@@ -39,6 +39,7 @@ private:
     bool initGameWord();
     std::unique_ptr<IBattleMode> createBattleMode();
     void setInputFromKey(ax::EventKeyboard::KeyCode code, bool pressed);
+    void tickLocalRevive(float delta);
 
 private:
     std::optional<BattleBootParams> m_boot;
@@ -47,6 +48,7 @@ private:
     std::unique_ptr<IBattleMode> m_battleMode;
     std::map<ax::EventKeyboard::KeyCode, uint32_t> m_slotMap;
     ax::EventListenerKeyboard* m_keyboardListener = nullptr;
+    float m_reviveDelaySec                        = 0.0f;
 };
 
 }  // namespace gameui

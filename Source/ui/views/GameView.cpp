@@ -5,6 +5,7 @@
 #include "mugen/GameWord.h"
 #include "mugen/conf/Config.h"
 #include "mugen/conf/GameDef.h"
+#include "mugen/skill/SkillManager.h"
 #include "ui/battle/LocalBattleMode.h"
 #include "ui/battle/OnlineBattleMode.h"
 #include "ui/core/ViewManager.h"
@@ -81,6 +82,33 @@ void GameView::onUpdate(float delta)
 {
     if (m_battleMode)
         m_battleMode->onUpdate(delta);
+    tickLocalRevive(delta);
+}
+
+void GameView::tickLocalRevive(float delta)
+{
+    if (!m_gameWord || !m_gameWord->getDirector())
+        return;
+    auto* director = MG_GET_COMPONENT(m_gameWord->getDirector(), DirectorComponent);
+    if (!director || director->localPlayerEntityId == INVALID_ENTITY_ID)
+        return;
+    Entity* player = m_gameWord->ecsManager.getEntity(director->localPlayerEntityId);
+    if (!player)
+        return;
+    auto* attr     = MG_GET_COMPONENT(player, AttributeComponent);
+    auto* behavior = MG_GET_COMPONENT(player, BehaviorComponent);
+    if (!attr || !behavior)
+        return;
+    if (attr->hp > 0.0f || behavior->reviveRequested)
+    {
+        m_reviveDelaySec = 0.0f;
+        return;
+    }
+    if (behavior->currentKind != static_cast<int32_t>(BehaviorKind::kDeath))
+        return;
+    m_reviveDelaySec += delta;
+    if (m_reviveDelaySec >= 1.5f)
+        behavior->reviveRequested = true;
 }
 
 void GameView::onKeyPressed(ax::EventKeyboard::KeyCode code, ax::Event* event)
@@ -184,24 +212,29 @@ void GameView::onImGUIRender()
 
     auto* attr     = MG_GET_COMPONENT(localPlayer, AttributeComponent);
     auto* behavior = MG_GET_COMPONENT(localPlayer, BehaviorComponent);
-    auto* cast     = MG_GET_COMPONENT(localPlayer, SkillCastComponent);
+    auto* mgr      = SkillManager::of(localPlayer);
     auto* deck     = MG_GET_COMPONENT(localPlayer, SkillDeckComponent);
     auto* skillBar = MG_GET_COMPONENT(localPlayer, SkillBarComponent);
 
     if (attr)
     {
-        ImGui::Text("HP %.0f / %.0f", attr->currentAttribute.hp, static_cast<float>(attr->currentAttribute.hpMax));
-        ImGui::Text("MP %.0f / %.0f", attr->currentAttribute.mp, static_cast<float>(attr->currentAttribute.mpMax));
+        ImGui::Text("HP %.0f / %.0f", attr->hp, attr->basic.hpMax);
+        ImGui::Text("MP %.0f / %.0f", attr->mp, attr->mpMax);
         ImGui::Text("EP %.0f / %.0f", attr->ep, attr->epMax);
+        if (attr->hp <= 0.0f && ImGui::Button("复活"))
+        {
+            if (behavior)
+                behavior->reviveRequested = true;
+        }
     }
 
-    if (cast)
+    if (mgr)
     {
         ImGui::Separator();
-        ImGui::Text("active=%d pending=%d", cast->activeSkillAttackId, cast->pendingSkillAttackId);
-        ImGui::Text("interrupt=%d extra=%d dash=%d", cast->interruptOpen ? 1 : 0, cast->interruptExtraOpen ? 1 : 0,
+        ImGui::Text("active=%d pending=%d", mgr->activeSkillAttackId, mgr->pendingSkillAttackId);
+        ImGui::Text("interrupt=%d extra=%d dash=%d", mgr->interruptOpen ? 1 : 0, mgr->interruptExtraOpen ? 1 : 0,
                     (behavior && (behavior->statusTags & StateTag::kTagDashState)) ? 1 : 0);
-        ImGui::Text("thrust=%d", cast->thrustSkillAttackId);
+        ImGui::Text("thrust=%d", mgr->thrustSkillAttackId);
     }
 
     if (deck)
@@ -209,10 +242,15 @@ void GameView::onImGUIRender()
         ImGui::Separator();
         if (ImGui::Button("清空 CD"))
         {
-            for (auto& e : deck->skills)
+            if (mgr)
             {
-                e.coolDownMs   = 0;
-                e.releaseCount = e.releaseMax > 0 ? e.releaseMax : 1;
+                for (auto& s : mgr->skills)
+                {
+                    if (!s)
+                        continue;
+                    s->coolDownMs   = 0;
+                    s->releaseCount = s->releaseMax > 0 ? s->releaseMax : 1;
+                }
             }
         }
 
@@ -220,14 +258,15 @@ void GameView::onImGUIRender()
         ImGui::BeginChild("skill_list", ImVec2(0, 0), true);
         for (size_t i = 0; i < deck->skills.size(); ++i)
         {
-            const auto& e = deck->skills[i];
-            const auto* cfg = Config::getInstance()->getSkillAttackConfigById(e.skillAttackId);
+            const auto& e        = deck->skills[i];
+            const auto* cfg      = Config::getInstance()->getSkillAttackConfigById(e.skillAttackId);
             const int32_t mpCost = cfg ? cfg->mp : 0;
             const int32_t epCost = cfg ? cfg->ep : 0;
             const int32_t sorder = cfg ? cfg->sorder : 0;
+            const Skill* sk      = mgr ? mgr->findSkill(e.skillAttackId) : nullptr;
 
             // 按 skillBar 真实槽位反查热键（skillIndexs 存的是 actorDataComp->skills 下标，与 deck 下标一致）
-            char keyLabel[8] = "?";
+            char keyLabel[8]   = "?";
             int32_t slotOffset = -1;
             if (skillBar)
             {
@@ -251,7 +290,8 @@ void GameView::onImGUIRender()
                 std::snprintf(keyLabel, sizeof(keyLabel), "-");
 
             ImGui::Text("[%s] id %d | CD %d/%d | mp %d ep %d | sorder %d | next %d", keyLabel, e.skillAttackId,
-                        e.coolDownMs, e.coolDownMaxMs, mpCost, epCost, sorder, e.nextSkillAttackId);
+                        sk ? sk->coolDownMs : 0, sk ? sk->coolDownMaxMs : 0, mpCost, epCost, sorder,
+                        e.nextSkillAttackId);
         }
         ImGui::EndChild();
     }

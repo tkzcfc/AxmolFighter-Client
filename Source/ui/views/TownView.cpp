@@ -40,9 +40,18 @@ constexpr float REPORT_POS_EPSILON = 4.0f;
 constexpr float REMOTE_SNAP_DISTANCE = 300.0f;
 // EntityPortalParamMap（1-based）：Transfer=1, Active=2, ..., Close=5, Idle=6
 // C++ spineAnimations 为 0-based：Active=1, Close=4（常为 0，关闭态不可见）
-constexpr size_t kPortalAnimActive = 1;
+constexpr size_t kPortalAnimActive   = 1;
 constexpr size_t kPortalAnimTransfer = 0;
-constexpr size_t kPortalAnimIdle = 5;
+constexpr size_t kPortalAnimIdle     = 5;
+
+std::string replaceExtension(const std::string& path, const std::string& newExt)
+{
+    const auto slash = path.find_last_of("/\\");
+    const auto dot   = path.find_last_of('.');
+    if (dot == std::string::npos || (slash != std::string::npos && dot < slash))
+        return path + newExt;
+    return path.substr(0, dot) + newExt;
+}
 
 int32_t resolvePortalSpineAnimIndex(const PortalConfig* portalCfg)
 {
@@ -88,8 +97,8 @@ void playPortalSpineAnimation(spine::SkeletonAnimation* skeleton, const PortalCo
 
 ax::Node* createPortalVisualMarker(float radius)
 {
-    auto* draw     = ax::DrawNode::create();
-    const float r  = std::max(radius, 48.0f);
+    auto* draw      = ax::DrawNode::create();
+    const float r   = std::max(radius, 48.0f);
     const auto ring = ax::Color4F(0.15f, 0.95f, 1.0f, 0.9f);
     const auto fill = ax::Color4F(0.15f, 0.85f, 1.0f, 0.35f);
     draw->drawCircle(ax::Vec2::ZERO, r, 0.0f, 48, false, ring);
@@ -296,8 +305,7 @@ bool TownView::createLocalPlayer()
 
     if (auto* transform = MG_GET_COMPONENT(player, TransformComponent))
     {
-        transform->facingDirection =
-            m_boot.facing < 0 ? FacingDirection::kFacingLeft : FacingDirection::kFacingRight;
+        transform->facingDirection = m_boot.facing < 0 ? FacingDirection::kFacingLeft : FacingDirection::kFacingRight;
     }
 
     return true;
@@ -379,7 +387,7 @@ void TownView::fillLocalState(PB::Types::PlayerState* state) const
     }
     if (attributeComp)
     {
-        state->set_hp(attributeComp->currentAttribute.hpMax);
+        state->set_hp(attributeComp->basic.hpMax);
     }
 
     // 仅以移动输入为准，不用速度兜底，避免按键与 FSM 时序造成抖动
@@ -524,7 +532,7 @@ void TownView::addOrUpdateRemotePlayer(const PB::Types::PlayerState& state, bool
 
     if (const auto* role = Config::getInstance()->getRoleConfigById(roleId))
     {
-        remote.moveSpeed  = role->attribute.moveSpeed > 0 ? role->attribute.moveSpeed : 300.0f;
+        remote.moveSpeed  = role->velocity > 0.0f ? role->velocity * 1000.0f : 300.0f;
         remote.idleMotion = "stand";
         remote.walkMotion = "running";
     }
@@ -995,11 +1003,11 @@ void TownView::initPortals()
         portal.posY     = static_cast<float>(entry.posZ);
         if (!entry.dests.empty())
         {
-            const auto& dest   = entry.dests.front();
-            portal.destTownId  = dest.realRoomId > 0 ? dest.realRoomId : dest.roomId;
-            portal.destPosX    = dest.posX;
-            portal.destPosZ    = dest.posZ;
-            portal.destFacing  = dest.vectorX != 0 ? dest.vectorX : 1;
+            const auto& dest  = entry.dests.front();
+            portal.destTownId = dest.realRoomId > 0 ? dest.realRoomId : dest.roomId;
+            portal.destPosX   = dest.posX;
+            portal.destPosZ   = dest.posZ;
+            portal.destFacing = dest.vectorX != 0 ? dest.vectorX : 1;
         }
 
         const auto* portalCfg = Config::getInstance()->getPortalConfigById(entry.portalId);
@@ -1014,16 +1022,13 @@ void TownView::initPortals()
         if (portalCfg && portalCfg->resSpineId > 0)
         {
             const auto* spineCfg = Config::getInstance()->getResSpineConfigById(portalCfg->resSpineId);
-            if (spineCfg && !spineCfg->spine.empty() && !spineCfg->atlas.empty())
+            if (spineCfg && !spineCfg->spine.empty())
             {
-                const float scale = spineCfg->scale > 0.0f ? spineCfg->scale : 1.0f;
-                auto* skeleton =
-                    SpineSkeletonLoader::createSkeletonAnimation(spineCfg->spine, spineCfg->atlas, scale);
+                const float scale            = spineCfg->scale > 0.0f ? spineCfg->scale : 1.0f;
+                const std::string atlasPath  = replaceExtension(spineCfg->spine, ".atlas");
+                auto* skeleton = SpineSkeletonLoader::createSkeletonAnimation(spineCfg->spine, atlasPath, scale);
                 if (skeleton)
                 {
-                    if (!spineCfg->defaultSkin.empty())
-                        skeleton->setSkin(spineCfg->defaultSkin);
-
                     playPortalSpineAnimation(skeleton, portalCfg);
 
                     if (portalCfg->spineRelativePosition.x != 0 || portalCfg->spineRelativePosition.y != 0)
@@ -1046,10 +1051,11 @@ void TownView::initPortals()
         entityNode->addChild(visualRoot, 10);
         portal.visual = visualRoot;
 
-        AXLOGI("TownView: portal id={} slot={} destType={} destTown={} destPos=({},{}) at ({:.1f},{:.1f}) radius={} "
-               "animIndex={}",
-               portal.portalId, portal.slot, portal.destType, portal.destTownId, portal.destPosX, portal.destPosZ,
-               portal.posX, portal.posY, portal.radius, resolvePortalSpineAnimIndex(portalCfg));
+        AXLOGI(
+            "TownView: portal id={} slot={} destType={} destTown={} destPos=({},{}) at ({:.1f},{:.1f}) radius={} "
+            "animIndex={}",
+            portal.portalId, portal.slot, portal.destType, portal.destTownId, portal.destPosX, portal.destPosZ,
+            portal.posX, portal.posY, portal.radius, resolvePortalSpineAnimIndex(portalCfg));
         m_portals.push_back(portal);
     }
 }

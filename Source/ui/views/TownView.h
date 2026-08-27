@@ -27,9 +27,9 @@ struct TownBootParams
 {
     int32_t townId = 41;
     // <0 表示使用 TownConfig.actorPos
-    int32_t spawnX  = -1;
-    int32_t spawnZ  = -1;
-    int32_t facing  = 1;
+    int32_t spawnX = -1;
+    int32_t spawnZ = -1;
+    int32_t facing = 1;
 };
 
 // 城镇视图：本地玩家使用完整 Mugen 逻辑移动，通过 town 服状态同步

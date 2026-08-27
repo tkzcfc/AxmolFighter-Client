@@ -1,6 +1,8 @@
 #include "GameWord.h"
+#include "mugen/ActorSpawner.h"
 #include "mugen/Components.h"
 #include "mugen/Systems.h"
+#include "mugen/bt/BTTypeRegistry.h"
 #include "mugen/conf/Config.h"
 #include "mugen/core/io/FileUtils.h"
 
@@ -38,12 +40,12 @@ bool GameWord::init(uint64_t randomSeed)
 
     ecsManager.setUserdata(this);
 
-    // register components
+    // 组件注册
 #define X(COMPONENT_TYPE) ecsManager.registerComponent(#COMPONENT_TYPE, []() { return new COMPONENT_TYPE(); });
     COMPONENT_LIST
 #undef X
 
-    // register systems
+    // 系统注册
 #define X(SYSTEM_TYPE)                                     \
     ecsManager.registerSystem(#SYSTEM_TYPE, [](auto ecs) { \
         auto system = new SYSTEM_TYPE();                   \
@@ -53,6 +55,10 @@ bool GameWord::init(uint64_t randomSeed)
     SYSTEM_LIST
 #undef X
 
+    // 注册行为树节点与条件类型
+    BTTypeRegistry::registerAll();
+
+    // 添加系统到 ECSManager
     // 此处服务端也需要添加上渲染系统,客户端才能完全反序列化出来
     ecsManager.addSystem("GameMapSystem");
     ecsManager.addSystem("GameMapRenderSystem");
@@ -71,6 +77,9 @@ bool GameWord::init(uint64_t randomSeed)
 
     MG_GET_SYSTEM((&ecsManager), SoundSystem)->setRandomSeed(random.next());
 
+    // 创建 Director 实体,并添加 DirectorComponent,用于管理全局游戏状态
+    // 这儿使用 Director 实体来管理全局游戏状态,而不是使用全局对象是因为在服务器中
+    // 一个服务器可能会同时运行多个游戏世界,每个游戏世界都有自己的状态,所以需要使用实体来管理全局游戏状态
     m_director                          = ecsManager.newEntity();
     auto directorComp                   = MG_ADD_COMPONENT(m_director, DirectorComponent);
     directorComp->debugDrawCollisionBox = true;
@@ -147,7 +156,25 @@ bool GameWord::loadMap(int32_t mapId)
         spawnPoints.push_back(Vector2i{campConfig->actorSpawns.front().posX, campConfig->actorSpawns.front().posZ});
     }
 
-    return loadMapByKey(mapKey, logicalId, std::move(spawnPoints));
+    if (!loadMapByKey(mapKey, logicalId, std::move(spawnPoints)))
+        return false;
+
+    // 必须在 map->notifyEntityReady之后再刷怪，
+    // 否则 Avatar 挂 entity 层时 entityNode 仍为空。
+    if (roomConfig)
+    {
+        for (const auto& monster : roomConfig->monsters)
+        {
+            actor_spawner::ActorSpawnParams params;
+            params.category = EntityCategory::kMonster;
+            params.level    = monster.level > 0 ? monster.level : 1;
+            auto* monsterActor =
+                actor_spawner::spawnRoleActor(&ecsManager, monster.monsterId, monster.posX, monster.posZ, params);
+            if (monsterActor)
+                monsterActor->notifyEntityReady();
+        }
+    }
+    return true;
 }
 
 bool GameWord::loadMapByKey(const std::string& mapKey, int32_t logicalId, std::vector<Vector2i> spawnPoints)
@@ -159,7 +186,7 @@ bool GameWord::loadMapByKey(const std::string& mapKey, int32_t logicalId, std::v
     }
 
     auto directorComp = MG_GET_COMPONENT(m_director, DirectorComponent);
-    if (directorComp->mapEntityId != 0)
+    if (directorComp->mapEntityId != INVALID_ENTITY_ID)
     {
         auto oldMapEntity = ecsManager.getEntity(directorComp->mapEntityId);
         if (oldMapEntity)
@@ -173,25 +200,24 @@ bool GameWord::loadMapByKey(const std::string& mapKey, int32_t logicalId, std::v
     auto map                  = ecsManager.newEntity();
     directorComp->mapEntityId = map->getId();
 
-    auto mapRenderComp = MG_ADD_COMPONENT(map, GameMapRenderComponent);
-    auto mapComp       = MG_ADD_COMPONENT(map, GameMapComponent);
-    mapComp->mapId     = logicalId > 0 ? logicalId : 0;
-    mapComp->mapKey    = mapKey;
-    mapComp->layerFile = std::string("mugen/map/") + mapKey + ".layer";
-    mapComp->mapWidth  = 1920;
-    mapComp->mapHeight = 1080;
-    mapComp->scope.x      = 0;
-    mapComp->scope.y      = 0;
-    mapComp->scope.width  = mapComp->mapWidth;
-    mapComp->scope.height = mapComp->mapHeight;
-    mapComp->spawnPoints  = std::move(spawnPoints);
-    if (mapComp->spawnPoints.empty())
-    {
-        mapComp->spawnPoints.push_back(Vector2i{mapComp->mapWidth / 2, mapComp->mapHeight / 2});
-    }
+    auto mapRenderComp   = MG_ADD_COMPONENT(map, GameMapRenderComponent);
+    auto mapComp         = MG_ADD_COMPONENT(map, GameMapComponent);
+    mapComp->mapId       = logicalId > 0 ? logicalId : 0;
+    mapComp->mapKey      = mapKey;
+    mapComp->layerFile   = std::string("mugen/map/") + mapKey + ".layer";
+    mapComp->spawnPoints = std::move(spawnPoints);
     (void)mapRenderComp;
 
     map->notifyEntityReady();
+
+    if (mapComp->mapWidth <= 0 || mapComp->mapHeight <= 0 || mapComp->scope.width <= 0 || mapComp->scope.height <= 0)
+    {
+        MG_LOG_E("GameWord::loadMapByKey: layer '{}' missing map size/scope ({}x{}, scope {}x{})", mapComp->layerFile,
+                 mapComp->mapWidth, mapComp->mapHeight, mapComp->scope.width, mapComp->scope.height);
+        directorComp->mapEntityId = INVALID_ENTITY_ID;
+        map->destroy();
+        return false;
+    }
     return true;
 }
 
@@ -254,23 +280,6 @@ bool GameWord::deserialize(ByteBuffer& byteBuffer)
     ecsManager.postDeserializeInit();
 
     return true;
-}
-
-std::string GameWord::serializeToString() const
-{
-    ByteBuffer byteBuffer(1024 * 1024 * 2);
-    serialize(byteBuffer);
-    byteBuffer.writeFinish();
-    return std::string(reinterpret_cast<const char*>(byteBuffer.data()), byteBuffer.len());
-}
-
-bool GameWord::deserializeFromString(const std::string& data)
-{
-    if (data.empty())
-        return false;
-    ByteBuffer byteBuffer(const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(data.data())),
-                          static_cast<uint32_t>(data.size()));
-    return deserialize(byteBuffer);
 }
 
 NS_MG_END

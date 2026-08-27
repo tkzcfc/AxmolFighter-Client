@@ -41,8 +41,8 @@ enum EntityCategory : int8_t
     kSkillEffect,  // 技能创建的效果（投射物、AOE等）
 };
 
-// 可创建职业与装备 occupation
-enum JobType : int8_t
+// 角色职业类型
+enum CharacterClass : int8_t
 {
     kUnknown  = 0,
     kSwordman = 1,  // 剑士
@@ -84,26 +84,40 @@ enum StateTag : uint32_t
     kTagFacingAllowed = 1 << 6,  // 可转向
     kTagDashState     = 1 << 7,  // 冲刺状态
     kTagFalling       = 1 << 8,  // 下落状态
+    kTagAttackState   = 1 << 9,  // 正在施法（Idle/Walk/Dash 必须失败）
 };
 
 // 行为分支类型
-    enum class BehaviorKind : int32_t
+enum class BehaviorKind : int32_t
 {
-    kIdle      = 0,
-    kWalk      = 1,
-    kDash      = 2,
-    kAttack    = 3,
-    kStun      = 4,   // Hit（轻受击）
-    kHitUp     = 5,
-    kHitDown   = 6,   // 空中击倒
-    kHitFloor  = 7,
-    kGetUp     = 8,
-    kDeath     = 9,
-    kChase     = 10,
-    kPatrol    = 11,
-    kAlert     = 12,
-    kHitSwitch = 13,  // 受击结束过渡
-    kJostled   = 14,  // 实体重叠推开
+    kIdle        = 0,
+    kWalk        = 1,
+    kDash        = 2,
+    kAttack      = 3,
+    kStun        = 4,  // Hit（轻受击）
+    kHitUp       = 5,
+    kHitDown     = 6,  // 空中击倒
+    kHitFloor    = 7,
+    kGetUp       = 8,
+    kDeath       = 9,
+    kChase       = 10,
+    kPatrol      = 11,
+    kAlert       = 12,
+    kHitSwitch   = 13,  // 受击结束过渡
+    kJostled     = 14,  // 实体重叠推开
+    kRevive      = 15,
+    kWake        = 16,
+    kPathFinding = 17,
 };
+
+// 纵深相对水平的缩放（对照位移 Z）
+static constexpr float kZRate = 0.55f;
+// 爆气每毫秒 EP 衰减
+static constexpr float kCrazyDecayPerMs = 0.0666f;
+// 受击回 EP：min(100*hurt/maxHp, 100) * 该值
+static constexpr float kCrazyFromHurtValue = 10.0f;
+// 苏醒无敌 / 复活无敌
+static constexpr int32_t kHeroWakeBuffId = 201;
+static constexpr int32_t kReviveBuffId   = 202;
 
 NS_MG_END

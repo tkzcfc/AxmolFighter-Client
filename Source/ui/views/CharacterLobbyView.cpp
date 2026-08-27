@@ -13,6 +13,20 @@
 #include "fairygui/GLoader3D.h"
 #include <net/client_game.pb.h>
 
+namespace
+{
+
+std::string replaceExtension(const std::string& path, const std::string& newExt)
+{
+    const auto slash = path.find_last_of("/\\");
+    const auto dot   = path.find_last_of('.');
+    if (dot == std::string::npos || (slash != std::string::npos && dot < slash))
+        return path + newExt;
+    return path.substr(0, dot) + newExt;
+}
+
+}  // namespace
+
 namespace gameui
 {
 
@@ -93,20 +107,20 @@ void CharacterLobbyView::updateCharacterList()
         item->setSelected(i == currentSelectedIndex);
 
         nameText->setText(fmt::format("Lv{} {}", c.level, c.name));
-        professionText->setText("鬼剑士");
+        professionText->setText("剑士");
 
         // classID 是服务器 JobType（1/2/4），需映射到英雄 RoleConfig id（101/...）
         const int32_t roleId = mugen::actor_spawner::resolvePlayableRoleId(c.classID);
         auto* config         = mugen::Config::getInstance();
         auto* role           = config->getRoleConfigById(roleId);
-        const auto* spine = role && role->resSpineId > 0 ? config->getResSpineConfigById(role->resSpineId) : nullptr;
+        const auto* spine    = role && role->resSpineId > 0 ? config->getResSpineConfigById(role->resSpineId) : nullptr;
         mugen::SpineAvatarDesc desc;
-        if (spine && !spine->spine.empty() && !spine->atlas.empty())
+        if (spine && !spine->spine.empty())
         {
-            desc.skeleton    = spine->spine;
-            desc.atlas       = spine->atlas;
-            desc.defaultSkin = spine->defaultSkin;
-            desc.scale       = spine->scale;
+            desc.skeleton = spine->spine;
+            desc.atlas    = replaceExtension(spine->spine, ".atlas");
+            desc.defaultSkin.clear();
+            desc.scale = spine->scale;
         }
         auto* previewAvatar =
             (!desc.skeleton.empty() && !desc.atlas.empty()) ? mugen::AvatarBuilder::createAvatar(desc) : nullptr;

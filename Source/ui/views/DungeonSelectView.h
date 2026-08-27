@@ -27,7 +27,7 @@ private:
 private:
     struct ChapterItem
     {
-        int32_t id = 0;
+        int32_t id     = 0;
         int32_t nameId = 0;
         std::vector<int32_t> mainCopys;
     };
