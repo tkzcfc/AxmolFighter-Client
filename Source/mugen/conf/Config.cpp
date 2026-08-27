@@ -40,6 +40,7 @@ void Config::clearConfig()
     roomConfigs.clear();
     skillAttackConfigs.clear();
     actionAttackConfigs.clear();
+    actionAttackEffectConfigs.clear();
     skillHitTableConfigs.clear();
     attributeTemplateConfigs.clear();
     resSpineConfigs.clear();
@@ -58,7 +59,6 @@ void Config::clearConfig()
     aiConfigs.clear();
     skillAiConfigs.clear();
     skillHurtConfigs.clear();
-    skillActivationOverlayConfigs.clear();
     resSoundConfigs.clear();
     soundUiConfigs.clear();
     soundSpineConfigs.clear();
@@ -92,13 +92,13 @@ bool Config::loadConfig(const std::string& path)
     MG_LOG_I(
         "Loaded config: "
         "town={} camp={} stage={} copy={} chapter={} npc={} portal={} room={} "
-        "skillAtk={} actionAtk={} roles={} resSpine={} behavior={} displace={} effect={} buff={} ai={} "
-        "resSound={} soundUi={}",
+        "skillAtk={} actionAtk={} actionAtkFx={} roles={} resSpine={} behavior={} displace={} effect={} "
+        "buff={} ai={} resSound={} soundUi={}",
         townConfigs.size(), campConfigs.size(), stageConfigs.size(), copyConfigs.size(), chapterConfigs.size(),
         npcConfigs.size(), portalConfigs.size(), roomConfigs.size(), skillAttackConfigs.size(),
-        actionAttackConfigs.size(), roleConfigs.size(), resSpineConfigs.size(), behaviorTemplateConfigs.size(),
-        displacementConfigs.size(), effectConfigs.size(), buffConfigs.size(), aiConfigs.size(),
-        resSoundConfigs.size(), soundUiConfigs.size());
+        actionAttackConfigs.size(), actionAttackEffectConfigs.size(), roleConfigs.size(), resSpineConfigs.size(),
+        behaviorTemplateConfigs.size(), displacementConfigs.size(), effectConfigs.size(), buffConfigs.size(),
+        aiConfigs.size(), resSoundConfigs.size(), soundUiConfigs.size());
     return true;
 }
 
@@ -180,6 +180,11 @@ const ActionAttackConfig* Config::getActionAttackConfigById(int32_t id) const
     return findById(actionAttackConfigs, id, "ActionAttackConfig");
 }
 
+const ActionAttackConfig* Config::getActionAttackEffectConfigById(int32_t id) const
+{
+    return findById(actionAttackEffectConfigs, id, "ActionAttackEffectConfig");
+}
+
 const SkillHitTableConfig* Config::getSkillHitTableConfigById(int32_t id) const
 {
     return findById(skillHitTableConfigs, id, "SkillHitTableConfig");
@@ -233,14 +238,6 @@ const SkillAiConfig* Config::getSkillAiConfigById(int32_t id) const
 const SkillHurtConfig* Config::getSkillHurtConfigById(int32_t id) const
 {
     return findById(skillHurtConfigs, id, "SkillHurtConfig");
-}
-
-const SkillActivationOverlayConfig* Config::getSkillActivationOverlayById(int32_t skillId) const
-{
-    auto it = skillActivationOverlayConfigs.find(skillId);
-    if (it == skillActivationOverlayConfigs.end())
-        return nullptr;
-    return &it->second;
 }
 
 const AttributeTemplateConfig* Config::getAttributeTemplateConfigById(int32_t id) const

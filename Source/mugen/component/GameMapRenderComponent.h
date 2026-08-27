@@ -27,6 +27,7 @@ public:
     ax::Node* entityNode  = nullptr;  // 实体（角色/NPC/传送门挂点）
     ax::Node* caseNode    = nullptr;  // 遮罩/前景物件
     ax::Node* lightNode   = nullptr;  // 灯光/特效
+    ax::Node* overlayNode = nullptr;  // 屏幕覆盖（必杀 Spine，不受镜头平移）
 
     std::unique_ptr<VirtualCamera> camera;
 

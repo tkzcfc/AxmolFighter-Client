@@ -5,15 +5,30 @@
 
 NS_MG_BEGIN
 
-/** 按 BehaviorKind / 状态位判断是否进入该枝 */
 class CondStatus : public BTCondition
 {
 public:
-    explicit CondStatus(BehaviorKind kind) : kind(kind) { debugName = "CondStatus"; }
+    typedef BTCondition Super;
+
+public:
+    CondStatus();
+    explicit CondStatus(BehaviorKind kind);
+    virtual ~CondStatus();
+
+    const char* typeName() const override { return "CondStatus"; }
 
     bool check(BTContext& ctx) override;
 
-    BehaviorKind kind;
+public:
+    BehaviorKind kind = BehaviorKind::kIdle;
+
+public:
+    MG_DEFINE_SERIALIZABLE_CUSTOM(serializeCustomImpl, deserializeCustomImpl)
+
+private:
+    void serializeCustomImpl(ByteBuffer& byteBuffer) const;
+
+    bool deserializeCustomImpl(ByteBuffer& byteBuffer);
 };
 
 NS_MG_END

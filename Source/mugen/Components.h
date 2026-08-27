@@ -10,7 +10,7 @@
 #include "component/BuffComponent.h"
 #include "component/DirectorComponent.h"
 #include "component/DisplacementComponent.h"
-#include "component/EffectLifetimeComponent.h"
+#include "component/EffectComponent.h"
 #include "component/GameMapComponent.h"
 #include "component/GameMapRenderComponent.h"
 #include "component/HitReactComponent.h"
@@ -24,5 +24,5 @@
 #include "component/TransformComponent.h"
 
 // clang-format off
-#define COMPONENT_LIST X(ActorDataComponent) X(AIComponent) X(AttributeComponent) X(AvatarComponent) X(AvatarRenderComponent) X(BehaviorComponent) X(BehaviorTreeComponent) X(BuffComponent) X(DirectorComponent) X(DisplacementComponent) X(EffectLifetimeComponent) X(GameMapComponent) X(GameMapRenderComponent) X(HitReactComponent) X(IdentityComponent) X(InputComponent) X(PhysicsComponent) X(SkillBarComponent) X(SkillCastComponent) X(SkillDeckComponent) X(SoundComponent) X(TransformComponent)
+#define COMPONENT_LIST X(ActorDataComponent) X(AIComponent) X(AttributeComponent) X(AvatarComponent) X(AvatarRenderComponent) X(BehaviorComponent) X(BehaviorTreeComponent) X(BuffComponent) X(DirectorComponent) X(DisplacementComponent) X(EffectComponent) X(GameMapComponent) X(GameMapRenderComponent) X(HitReactComponent) X(IdentityComponent) X(InputComponent) X(PhysicsComponent) X(SkillBarComponent) X(SkillCastComponent) X(SkillDeckComponent) X(SoundComponent) X(TransformComponent)
 // clang-format on

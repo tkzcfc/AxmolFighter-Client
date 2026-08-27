@@ -1,7 +1,6 @@
 #pragma once
 
 #include "mugen/core/ecs/Component.h"
-#include "mugen/conf/Config.h"
 #include "mugen/conf/GameDef.h"
 
 #include <string>
@@ -53,19 +52,8 @@ public:
         inputBufferReleaseTags = 0;
         inputBufferTimeoutMs   = 500;
         comboInputs.clear();
-        comboInputsMatchedCount    = 0;
-        lastComboInputMatchedTime  = 0;
-
-        if (const auto* overlay = Config::getInstance()->getSkillActivationOverlayById(attackId))
-        {
-            slotTriggerFlags       = overlay->slotTriggerFlags;
-            allowTags              = overlay->allowTags;
-            denyTags               = overlay->denyTags;
-            comboWindowMs          = overlay->comboWindowMs;
-            inputBufferReleaseTags = overlay->inputBufferReleaseTags;
-            inputBufferTimeoutMs   = overlay->inputBufferTimeoutMs;
-            comboInputs            = overlay->comboInputs;
-        }
+        comboInputsMatchedCount   = 0;
+        lastComboInputMatchedTime = 0;
     }
 
     // 判断技能是否相同

@@ -16,14 +16,17 @@ public:
     virtual ~IdentityComponent() {}
 
     EntityCategory category = kMonster;  // 实体类别（玩家/怪物/技能效果）
-    JobType job = JobType::kUnknown;
-    int64_t playerId = 0;
+    CharacterClass characterClass = CharacterClass::kUnknown;
+    int64_t playerId        = 0;
     std::string name;
 
     // 运行时怪物阵营属性（不进序列化）
     int32_t monsterCamps = 0;
 
-    MG_DEFINE_SERIALIZABLE(category, job, playerId, name);
+    // 召唤物主人；0 表示无。标准伤沿主人链取英雄 hurt。
+    EntityId belongEntityId = INVALID_ENTITY_ID;
+
+    MG_DEFINE_SERIALIZABLE(category, characterClass, playerId, name, belongEntityId);
 };
 
 NS_MG_END

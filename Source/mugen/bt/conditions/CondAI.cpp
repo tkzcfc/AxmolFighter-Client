@@ -1,74 +1,50 @@
 #include "mugen/bt/conditions/CondAI.h"
 
 #include "mugen/Components.h"
-#include "mugen/GameWord.h"
+#include "mugen/ai/AiAgent.h"
 #include "mugen/conf/Config.h"
 #include "mugen/conf/GameDef.h"
 #include "mugen/core/bt/BTContext.h"
 #include "mugen/core/ecs/ECSManager.h"
 #include "mugen/core/ecs/Entity.h"
+#include "mugen/skill/SkillManager.h"
 
 #include <cmath>
 
 NS_MG_BEGIN
+
+CondPatrol::CondPatrol() {}
+
+CondPatrol::~CondPatrol() {}
+
+CondAlert::CondAlert() {}
+
+CondAlert::~CondAlert() {}
+
+CondChase::CondChase() {}
+
+CondChase::~CondChase() {}
+
+CondJostled::CondJostled() {}
+
+CondJostled::~CondJostled() {}
+
+CondPathFinding::CondPathFinding() {}
+
+CondPathFinding::~CondPathFinding() {}
 
 namespace
 {
 
 bool isCombatBlocked(const BehaviorComponent* b, const AttributeComponent* attr)
 {
-    if (attr && attr->currentAttribute.hp <= 0.0f)
+    if (attr && attr->hp <= 0.0f)
         return true;
     if (!b)
         return true;
     if (b->statusTags & (StateTag::kTagHitState | StateTag::kTagDownState))
         return true;
     return false;
-}
-
-Entity* findNearestPlayerEntity(ECSManager* ecs, const TransformComponent* selfTf)
-{
-    if (!ecs || !selfTf)
-        return nullptr;
-    Entity* best     = nullptr;
-    int64_t bestDist = 0;
-    Signature sig;
-    sig.set(ecs->getComponentTypeId("IdentityComponent"));
-    sig.set(ecs->getComponentTypeId("TransformComponent"));
-    for (Entity* e : ecs->getEntitiesBySignature(sig))
-    {
-        auto* id = MG_GET_COMPONENT(e, IdentityComponent);
-        auto* tf = MG_GET_COMPONENT(e, TransformComponent);
-        if (!id || !tf || id->category != EntityCategory::kPlayer)
-            continue;
-        if (auto* attr = MG_GET_COMPONENT(e, AttributeComponent))
-        {
-            if (attr->currentAttribute.hp <= 0.0f)
-                continue;
-        }
-        const int64_t dx   = static_cast<int64_t>(tf->position.x) - selfTf->position.x;
-        const int64_t dy   = static_cast<int64_t>(tf->position.y) - selfTf->position.y;
-        const int64_t dist = dx * dx + dy * dy;
-        if (!best || dist < bestDist)
-        {
-            best     = e;
-            bestDist = dist;
-        }
-    }
-    return best;
-}
-
-const AiConfig* resolveAiConfig(Entity* entity)
-{
-    auto* behavior = MG_GET_COMPONENT(entity, BehaviorComponent);
-    if (!behavior || !behavior->roleConfig || behavior->roleConfig->aiIds.empty())
-        return nullptr;
-    return Config::getInstance()->getAiConfigById(behavior->roleConfig->aiIds.front());
-}
-
-AIComponent* ensureAi(Entity* entity)
-{
-    return entity ? MG_GET_COMPONENT(entity, AIComponent) : nullptr;
 }
 
 bool inScopeXZ(const TransformComponent* self,
@@ -78,8 +54,8 @@ bool inScopeXZ(const TransformComponent* self,
 {
     if (!self || !other)
         return false;
-    const int dx = std::abs(self->position.x - other->position.x);
-    const int dz = std::abs(self->position.y - other->position.y);
+    const int dx   = std::abs(self->position.x - other->position.x);
+    const int dz   = std::abs(self->position.y - other->position.y);
     const int minX = scopeX.x;
     const int maxX = scopeX.y > 0 ? scopeX.y : 2000;
     const int minZ = scopeZ.x;
@@ -96,12 +72,13 @@ bool inMaxScope(const TransformComponent* self, const TransformComponent* other,
     return dx <= maxX && dz <= maxZ;
 }
 
+// 取 skill_ai 的 oppDisX 上界作为停追距离；没有则 200
 int32_t attackRangeX(Entity* self)
 {
-    auto* aiComp = MG_GET_COMPONENT(self, AIComponent);
-    if (aiComp && aiComp->aiConfigId > 0)
+    auto* agent = AiAgent::of(self);
+    if (agent && agent->aiConfigId > 0)
     {
-        const auto* ai = Config::getInstance()->getAiConfigById(aiComp->aiConfigId);
+        const auto* ai = Config::getInstance()->getAiConfigById(agent->aiConfigId);
         if (ai && !ai->skillAiIds.empty())
         {
             for (int32_t sid : ai->skillAiIds)
@@ -132,37 +109,44 @@ bool aabbOverlap(const PhysicsComponent* a, const PhysicsComponent* b)
     return ax0 < bx1 && ax1 > bx0 && ay0 < by1 && ay1 > by0;
 }
 
+bool isCasting(Entity* entity)
+{
+    auto* mgr = SkillManager::of(entity);
+    return mgr && mgr->activeSkillAttackId > 0;
+}
+
 }  // namespace
 
 bool CondPatrol::check(BTContext& ctx)
 {
-    if (!ctx.entity || isCombatBlocked(ctx.behavior, ctx.attribute))
+    auto* behavior  = MG_GET_COMPONENT(ctx.entity, BehaviorComponent);
+    auto* attribute = MG_GET_COMPONENT(ctx.entity, AttributeComponent);
+    auto* transform = MG_GET_COMPONENT(ctx.entity, TransformComponent);
+    if (isCombatBlocked(behavior, attribute))
         return false;
-    if (ctx.skillCast && ctx.skillCast->activeSkillAttackId > 0)
+    if (isCasting(ctx.entity))
         return false;
 
-    auto* ai = ensureAi(ctx.entity);
-    if (!ai || ai->patrolScope <= 0)
+    auto* agent = AiAgent::of(ctx.entity);
+    if (!agent || agent->patrolScope <= 0)
         return false;
 
     auto* identity = MG_GET_COMPONENT(ctx.entity, IdentityComponent);
     if (!identity || identity->category != EntityCategory::kMonster)
         return false;
 
-    const AiConfig* cfg = resolveAiConfig(ctx.entity);
-    Entity* player      = findNearestPlayerEntity(ctx.ecs, ctx.transform);
+    const AiConfig* cfg = AiAgent::resolveConfig(ctx.entity);
+    Entity* player      = AiAgent::findNearestPlayer(ctx.entity->getECSManager(), transform, true);
     if (player && cfg)
     {
         auto* ptf = MG_GET_COMPONENT(player, TransformComponent);
-        // 玩家进入目标范围则不再巡逻
-        if (ptf && inScopeXZ(ctx.transform, ptf, cfg->targetScopeX, cfg->targetScopeZ))
+        if (ptf && inScopeXZ(transform, ptf, cfg->targetScopeX, cfg->targetScopeZ))
             return false;
-        // 或已在追击范围内
         if (ptf)
         {
             const int maxX = cfg->chaseScopeX.y > 0 ? cfg->chaseScopeX.y : 2000;
             const int maxZ = cfg->chaseScopeZ.y > 0 ? cfg->chaseScopeZ.y : 2000;
-            if (inMaxScope(ctx.transform, ptf, maxX, maxZ))
+            if (inMaxScope(transform, ptf, maxX, maxZ))
                 return false;
         }
     }
@@ -171,27 +155,30 @@ bool CondPatrol::check(BTContext& ctx)
 
 bool CondAlert::check(BTContext& ctx)
 {
-    if (!ctx.entity || isCombatBlocked(ctx.behavior, ctx.attribute))
+    auto* behavior  = MG_GET_COMPONENT(ctx.entity, BehaviorComponent);
+    auto* attribute = MG_GET_COMPONENT(ctx.entity, AttributeComponent);
+    auto* transform = MG_GET_COMPONENT(ctx.entity, TransformComponent);
+    if (isCombatBlocked(behavior, attribute))
         return false;
-    if (ctx.skillCast && ctx.skillCast->activeSkillAttackId > 0)
+    if (isCasting(ctx.entity))
         return false;
 
     auto* identity = MG_GET_COMPONENT(ctx.entity, IdentityComponent);
     if (!identity || identity->category != EntityCategory::kMonster)
         return false;
 
-    const AiConfig* cfg = resolveAiConfig(ctx.entity);
+    const AiConfig* cfg = AiAgent::resolveConfig(ctx.entity);
     if (!cfg)
         return false;
 
-    Entity* player = findNearestPlayerEntity(ctx.ecs, ctx.transform);
-    auto* ai       = ensureAi(ctx.entity);
+    Entity* player = AiAgent::findNearestPlayer(ctx.entity->getECSManager(), transform, true);
+    auto* agent    = AiAgent::of(ctx.entity);
     if (!player)
     {
-        if (ai)
+        if (agent)
         {
-            ai->alertDone     = false;
-            ai->alertRemainMs = 0;
+            agent->alertDone     = false;
+            agent->alertRemainMs = 0;
         }
         return false;
     }
@@ -199,55 +186,57 @@ bool CondAlert::check(BTContext& ctx)
     if (!ptf)
         return false;
 
-    if (!inScopeXZ(ctx.transform, ptf, cfg->targetScopeX, cfg->targetScopeZ))
+    if (!inScopeXZ(transform, ptf, cfg->targetScopeX, cfg->targetScopeZ))
     {
-        if (ai)
+        if (agent)
         {
-            ai->alertDone     = false;
-            ai->alertRemainMs = 0;
+            agent->alertDone     = false;
+            agent->alertRemainMs = 0;
         }
         return false;
     }
 
-    if (!ai || ai->alertDone)
+    if (!agent || agent->alertDone)
         return false;
     return true;
 }
 
 bool CondChase::check(BTContext& ctx)
 {
-    if (!ctx.entity || isCombatBlocked(ctx.behavior, ctx.attribute))
+    auto* behavior  = MG_GET_COMPONENT(ctx.entity, BehaviorComponent);
+    auto* attribute = MG_GET_COMPONENT(ctx.entity, AttributeComponent);
+    auto* transform = MG_GET_COMPONENT(ctx.entity, TransformComponent);
+    if (isCombatBlocked(behavior, attribute))
         return false;
-    if (ctx.skillCast && ctx.skillCast->activeSkillAttackId > 0)
+    if (isCasting(ctx.entity))
         return false;
 
     auto* identity = MG_GET_COMPONENT(ctx.entity, IdentityComponent);
     if (!identity || identity->category != EntityCategory::kMonster)
         return false;
 
-    const AiConfig* cfg = resolveAiConfig(ctx.entity);
+    const AiConfig* cfg = AiAgent::resolveConfig(ctx.entity);
     if (!cfg)
         return false;
 
-    Entity* player = findNearestPlayerEntity(ctx.ecs, ctx.transform);
+    Entity* player = AiAgent::findNearestPlayer(ctx.entity->getECSManager(), transform, true);
     if (!player)
         return false;
     auto* ptf = MG_GET_COMPONENT(player, TransformComponent);
     if (!ptf)
         return false;
 
-    auto* ai = ensureAi(ctx.entity);
-    const int maxX = cfg->chaseScopeX.y > 0 ? cfg->chaseScopeX.y : 2000;
-    const int maxZ = cfg->chaseScopeZ.y > 0 ? cfg->chaseScopeZ.y : 2000;
-    const bool inChase  = inMaxScope(ctx.transform, ptf, maxX, maxZ);
-    const bool inTarget = inScopeXZ(ctx.transform, ptf, cfg->targetScopeX, cfg->targetScopeZ);
-    // 警觉完成后，目标范围内也可追击；否则需在 chaseScope 内
-    if (!(inChase || (ai && ai->alertDone && inTarget)))
+    auto* agent         = AiAgent::of(ctx.entity);
+    const int maxX      = cfg->chaseScopeX.y > 0 ? cfg->chaseScopeX.y : 2000;
+    const int maxZ      = cfg->chaseScopeZ.y > 0 ? cfg->chaseScopeZ.y : 2000;
+    const bool inChase  = inMaxScope(transform, ptf, maxX, maxZ);
+    const bool inTarget = inScopeXZ(transform, ptf, cfg->targetScopeX, cfg->targetScopeZ);
+    if (!(inChase || (agent && agent->alertDone && inTarget)))
         return false;
 
     const int atkR = attackRangeX(ctx.entity);
-    const int dx   = std::abs(ctx.transform->position.x - ptf->position.x);
-    const int dz   = std::abs(ctx.transform->position.y - ptf->position.y);
+    const int dx   = std::abs(transform->position.x - ptf->position.x);
+    const int dz   = std::abs(transform->position.y - ptf->position.y);
     if (dx <= atkR && dz <= atkR)
         return false;
 
@@ -256,17 +245,21 @@ bool CondChase::check(BTContext& ctx)
 
 bool CondJostled::check(BTContext& ctx)
 {
-    if (!ctx.entity || !ctx.physics || isCombatBlocked(ctx.behavior, ctx.attribute))
+    auto* behavior  = MG_GET_COMPONENT(ctx.entity, BehaviorComponent);
+    auto* attribute = MG_GET_COMPONENT(ctx.entity, AttributeComponent);
+    auto* physics   = MG_GET_COMPONENT(ctx.entity, PhysicsComponent);
+    if (!physics || isCombatBlocked(behavior, attribute))
         return false;
-    if (ctx.skillCast && ctx.skillCast->activeSkillAttackId > 0)
+    if (isCasting(ctx.entity))
         return false;
-    if (ctx.physics->isStaticBody)
+    if (physics->isStaticBody)
         return false;
 
+    auto* ecs = ctx.entity->getECSManager();
     Signature sig;
-    sig.set(ctx.ecs->getComponentTypeId("PhysicsComponent"));
-    sig.set(ctx.ecs->getComponentTypeId("IdentityComponent"));
-    for (Entity* other : ctx.ecs->getEntitiesBySignature(sig))
+    sig.set(ecs->getComponentTypeId("PhysicsComponent"));
+    sig.set(ecs->getComponentTypeId("IdentityComponent"));
+    for (Entity* other : ecs->getEntitiesBySignature(sig))
     {
         if (!other || other == ctx.entity)
             continue;
@@ -274,10 +267,37 @@ bool CondJostled::check(BTContext& ctx)
         if (!oid || (oid->category != EntityCategory::kPlayer && oid->category != EntityCategory::kMonster))
             continue;
         auto* op = MG_GET_COMPONENT(other, PhysicsComponent);
-        if (aabbOverlap(ctx.physics, op))
+        if (aabbOverlap(physics, op))
             return true;
     }
     return false;
+}
+
+bool CondPathFinding::check(BTContext& ctx)
+{
+    auto* behavior  = MG_GET_COMPONENT(ctx.entity, BehaviorComponent);
+    auto* attribute = MG_GET_COMPONENT(ctx.entity, AttributeComponent);
+    auto* transform = MG_GET_COMPONENT(ctx.entity, TransformComponent);
+    if (isCombatBlocked(behavior, attribute))
+        return false;
+    if (isCasting(ctx.entity))
+        return false;
+
+    auto* identity = MG_GET_COMPONENT(ctx.entity, IdentityComponent);
+    if (!identity || identity->category != EntityCategory::kMonster)
+        return false;
+
+    auto* agent = AiAgent::of(ctx.entity);
+    if (!agent || agent->patrolScope <= 0 || !transform)
+        return false;
+
+    const int dx    = std::abs(transform->position.x - static_cast<int>(agent->spawnPosition.x));
+    const int dy    = std::abs(transform->position.y - static_cast<int>(agent->spawnPosition.y));
+    const int enter = agent->patrolScope * 2;
+    const int leave = agent->patrolScope;
+    if (dx > enter || dy > enter)
+        return true;
+    return agent->pathFindingActive && (dx > leave || dy > leave);
 }
 
 NS_MG_END

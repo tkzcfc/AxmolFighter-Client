@@ -1,17 +1,21 @@
 #include "mugen/bt/RoleTreeBuilder.h"
 
+#include "mugen/bt/EffectTreeBuilder.h"
 #include "mugen/bt/SkillTreeBuilder.h"
 #include "mugen/bt/actions/AIActions.h"
 #include "mugen/bt/actions/RoleActions.h"
 #include "mugen/bt/conditions/CondAI.h"
 #include "mugen/bt/conditions/CondAttack.h"
 #include "mugen/bt/conditions/CondStatus.h"
+#include "mugen/component/BehaviorTreeComponent.h"
+#include "mugen/core/bt/BTComposite.h"
+#include "mugen/core/bt/BTParallel.h"
 #include "mugen/core/bt/BTSelector.h"
 #include "mugen/core/bt/BTSequence.h"
 #include "mugen/core/ecs/Entity.h"
 #include "mugen/Components.h"
 
-#include <algorithm>
+#include <cstring>
 
 NS_MG_BEGIN
 
@@ -21,90 +25,105 @@ namespace RoleTreeBuilder
 namespace
 {
 
-std::unique_ptr<BTSelector> makeBranch(BehaviorTreeComponent* bt,
-                                       BehaviorKind kind,
-                                       std::unique_ptr<BTAction> action)
+BTSequence* makeDeathBranch()
 {
-    auto sel = std::make_unique<BTSelector>();
-    sel->memorySlot = bt->allocMemorySlot();
-    sel->debugName  = "Branch";
-    sel->addCondition(std::make_unique<CondStatus>(kind));
-    sel->addChild(std::move(action));
-    return sel;
+    auto* seq = new BTSequence();
+    seq->addCondition(new CondStatus(BehaviorKind::kDeath));
+    seq->addChild(new DeathAction());
+    return seq;
 }
 
-std::unique_ptr<BTSelector> makeCondBranch(BehaviorTreeComponent* bt,
-                                           std::unique_ptr<BTCondition> cond,
-                                           std::unique_ptr<BTAction> action,
-                                           const char* name)
+BTParallel* makeBranch(BehaviorKind kind, BTAction* action)
 {
-    auto sel = std::make_unique<BTSelector>();
-    sel->memorySlot = bt->allocMemorySlot();
-    sel->debugName  = name ? name : "AIBranch";
-    sel->addCondition(std::move(cond));
-    sel->addChild(std::move(action));
-    return sel;
+    auto* par = new BTParallel();
+    par->addCondition(new CondStatus(kind));
+    par->addChild(action);
+    return par;
+}
+
+BTParallel* makeCondBranch(BTCondition* cond, BTAction* action)
+{
+    auto* par = new BTParallel();
+    par->addCondition(cond);
+    par->addChild(action);
+    return par;
 }
 
 }  // namespace
 
-std::unique_ptr<BTNode> build(BehaviorTreeComponent* btComp)
+void rebindAttackSelector(BehaviorTreeComponent* bt)
 {
-    if (!btComp)
+    bt->attackSelector = nullptr;
+    auto* tree         = bt->ensureTree();
+    if (!tree->getRoot())
+        return;
+    auto* rootComp = static_cast<BTComposite*>(tree->getRoot());
+    for (BTNode* child : rootComp->getChildren())
+    {
+        auto* branch = dynamic_cast<BTComposite*>(child);
+        if (!branch)
+            continue;
+        for (BTCondition* cond : branch->getConditions())
+        {
+            if (std::strcmp(cond->typeName(), "CondRoleAttack") != 0)
+                continue;
+            bt->attackSelector = child;
+            return;
+        }
+    }
+}
+
+BTNode* build(BehaviorTreeComponent* bt)
+{
+    if (!bt)
         return nullptr;
 
-    btComp->nextMemorySlot = 0;
-    btComp->selectorMemory.clear();
-    btComp->attackSelector = nullptr;
+    bt->attackSelector = nullptr;
+    bt->treeKind       = 0;
 
-    auto root           = std::make_unique<BTSelector>();
-    root->memorySlot    = btComp->allocMemorySlot();
-    root->debugName     = "RoleRoot";
+    auto* root = new BTSelector();
 
-    // Death > GetUp > Hit* > Attack > Jostled > Alert > Chase > Patrol > Dash > Walk > Idle
-    root->addChild(makeBranch(btComp, BehaviorKind::kDeath, std::make_unique<DeathAction>()));
-    root->addChild(makeBranch(btComp, BehaviorKind::kGetUp, std::make_unique<HitReactAction>()));
-    root->addChild(makeBranch(btComp, BehaviorKind::kHitFloor, std::make_unique<HitReactAction>()));
-    root->addChild(makeBranch(btComp, BehaviorKind::kHitDown, std::make_unique<HitReactAction>()));
-    root->addChild(makeBranch(btComp, BehaviorKind::kHitUp, std::make_unique<HitReactAction>()));
-    root->addChild(makeBranch(btComp, BehaviorKind::kHitSwitch, std::make_unique<HitReactAction>()));
-    root->addChild(makeBranch(btComp, BehaviorKind::kStun, std::make_unique<HitReactAction>()));
+    root->addChild(makeDeathBranch());
+    root->addChild(makeBranch(BehaviorKind::kRevive, new ReviveAction()));
+    root->addChild(makeBranch(BehaviorKind::kWake, new WakeAction()));
+    root->addChild(makeBranch(BehaviorKind::kGetUp, new HitKindAction(BehaviorKind::kGetUp)));
+    root->addChild(makeBranch(BehaviorKind::kHitFloor, new HitKindAction(BehaviorKind::kHitFloor)));
+    root->addChild(makeBranch(BehaviorKind::kHitDown, new HitKindAction(BehaviorKind::kHitDown)));
+    root->addChild(makeBranch(BehaviorKind::kHitUp, new HitKindAction(BehaviorKind::kHitUp)));
+    root->addChild(makeBranch(BehaviorKind::kHitSwitch, new HitKindAction(BehaviorKind::kHitSwitch)));
+    root->addChild(makeBranch(BehaviorKind::kStun, new HitKindAction(BehaviorKind::kStun)));
 
-    auto attackSel           = std::make_unique<BTSelector>();
-    attackSel->memorySlot    = btComp->allocMemorySlot();
-    attackSel->debugName     = "Attack";
-    attackSel->addCondition(std::make_unique<CondRoleAttack>());
-    btComp->attackSelector = attackSel.get();
-    root->addChild(std::move(attackSel));
+    auto* attackSel = new BTSelector();
+    attackSel->addCondition(new CondRoleAttack());
+    bt->attackSelector = attackSel;
+    root->addChild(attackSel);
 
-    root->addChild(makeCondBranch(btComp, std::make_unique<CondJostled>(), std::make_unique<JostledAction>(), "Jostled"));
-    root->addChild(makeCondBranch(btComp, std::make_unique<CondAlert>(), std::make_unique<AlertAction>(), "Alert"));
-    root->addChild(makeCondBranch(btComp, std::make_unique<CondChase>(), std::make_unique<ChaseAction>(), "Chase"));
-    root->addChild(makeCondBranch(btComp, std::make_unique<CondPatrol>(), std::make_unique<PatrolAction>(), "Patrol"));
+    root->addChild(makeCondBranch(new CondJostled(), new JostledAction()));
+    root->addChild(makeCondBranch(new CondPatrol(), new PatrolAction()));
+    root->addChild(makeCondBranch(new CondChase(), new ChaseAction()));
+    root->addChild(makeCondBranch(new CondAlert(), new AlertAction()));
+    root->addChild(makeCondBranch(new CondPathFinding(), new PathFindingAction()));
 
-    root->addChild(makeBranch(btComp, BehaviorKind::kDash, std::make_unique<LocomoAction>(BehaviorKind::kDash)));
-    root->addChild(makeBranch(btComp, BehaviorKind::kWalk, std::make_unique<LocomoAction>(BehaviorKind::kWalk)));
-    root->addChild(makeBranch(btComp, BehaviorKind::kIdle, std::make_unique<LocomoAction>(BehaviorKind::kIdle)));
+    root->addChild(makeBranch(BehaviorKind::kDash, new LocomoAction(BehaviorKind::kDash)));
+    root->addChild(makeBranch(BehaviorKind::kWalk, new LocomoAction(BehaviorKind::kWalk)));
+    root->addChild(makeBranch(BehaviorKind::kIdle, new LocomoAction(BehaviorKind::kIdle)));
 
     return root;
 }
 
-std::unique_ptr<BTNode> buildCity(BehaviorTreeComponent* btComp)
+BTNode* buildCity(BehaviorTreeComponent* bt)
 {
-    if (!btComp)
+    if (!bt)
         return nullptr;
 
-    btComp->nextMemorySlot = 0;
-    btComp->selectorMemory.clear();
-    btComp->attackSelector = nullptr;
+    bt->attackSelector = nullptr;
+    bt->treeKind       = 1;
 
-    auto root        = std::make_unique<BTSelector>();
-    root->memorySlot = btComp->allocMemorySlot();
-    root->debugName  = "CityRoleRoot";
+    auto* root = new BTSelector();
 
-    root->addChild(makeBranch(btComp, BehaviorKind::kDash, std::make_unique<LocomoAction>(BehaviorKind::kDash)));
-    root->addChild(makeBranch(btComp, BehaviorKind::kWalk, std::make_unique<LocomoAction>(BehaviorKind::kWalk)));
-    root->addChild(makeBranch(btComp, BehaviorKind::kIdle, std::make_unique<LocomoAction>(BehaviorKind::kIdle)));
+    root->addChild(makeBranch(BehaviorKind::kDash, new LocomoAction(BehaviorKind::kDash)));
+    root->addChild(makeBranch(BehaviorKind::kWalk, new LocomoAction(BehaviorKind::kWalk)));
+    root->addChild(makeBranch(BehaviorKind::kIdle, new LocomoAction(BehaviorKind::kIdle)));
 
     return root;
 }
@@ -113,17 +132,19 @@ void attachToEntity(Entity* entity)
 {
     if (!entity)
         return;
-    auto* bt = MG_GET_COMPONENT(entity, BehaviorTreeComponent);
+    auto* bt = BehaviorTreeComponent::of(entity);
     if (!bt)
         return;
-    bt->root = bt->cityMode ? buildCity(bt) : build(bt);
-    if (bt->root)
+    if (bt->treeKind == 2)
     {
-        const int32_t slots = (std::max)(bt->nextMemorySlot, 1);
-        bt->selectorMemory.assign(static_cast<size_t>(slots), static_cast<int8_t>(-1));
-        if (!bt->cityMode)
-            SkillTreeBuilder::fill(entity);
+        EffectTreeBuilder::attachToEntity(entity);
+        return;
     }
+    auto* tree = bt->ensureTree();
+    tree->setRoot(bt->cityMode ? buildCity(bt) : build(bt));
+    if (tree->getRoot() && !bt->cityMode)
+        SkillTreeBuilder::fill(entity);
+    rebindAttackSelector(bt);
 }
 
 }  // namespace RoleTreeBuilder

@@ -2,6 +2,7 @@
 #include "mugen/Components.h"
 
 #include <algorithm>
+#include <cmath>
 
 NS_MG_BEGIN
 
@@ -17,20 +18,37 @@ void DisplacementSystem::init(ECSManager* ecs)
 
 namespace
 {
-void restoreGravity(DisplacementComponent* disp, PhysicsComponent* physics)
+// 表空间高度重力（每毫秒）
+constexpr float kLuaGravityPerMs = -0.0022f;
+
+int accelApplyMs(int elapsedMs, int dtMs, int accelTime)
 {
-    if (disp && physics && disp->hasSavedGravity)
-    {
-        physics->gravityScale = disp->savedGravityScale;
-        disp->hasSavedGravity = false;
-    }
+    if (accelTime < 0)
+        return dtMs;
+    if (accelTime <= 0)
+        return 0;
+    if (elapsedMs <= accelTime)
+        return dtMs;
+    const int prev = elapsedMs - dtMs;
+    if (prev < accelTime)
+        return accelTime - prev;
+    return 0;
+}
+
+void integrateAxis(float& vel, float accel, int accelTime, int velTime, int elapsedMs, int dtMs)
+{
+    vel += accel * static_cast<float>(accelApplyMs(elapsedMs, dtMs, accelTime));
+    if (velTime > 0 && elapsedMs > velTime)
+        vel = 0.0f;
 }
 }  // namespace
 
 void DisplacementSystem::update()
 {
     const int32_t dtMs = getECSManager()->getLastUpdateTimeMs();
-    const float dt     = dtMs / 1000.0f;
+    if (dtMs <= 0)
+        return;
+
     for (Entity* entity : entities)
     {
         auto* disp      = MG_GET_COMPONENT(entity, DisplacementComponent);
@@ -52,50 +70,57 @@ void DisplacementSystem::update()
             disp->savedGravityScale = physics->gravityScale;
             disp->hasSavedGravity   = true;
         }
+        // 位移期间由本系统积分高度重力，避免与物理重力叠两次
+        physics->gravityScale = 0.0f;
 
-        disp->elapsedMs += dtMs;
         const auto* cfg = disp->activeConfig;
+        disp->elapsedMs += dtMs;
 
-        const int32_t maxT = std::max({cfg->velocityTime.x, cfg->velocityTime.y, cfg->velocityTime.z,
-                                       cfg->accelerationTime.x, cfg->accelerationTime.y, cfg->accelerationTime.z});
-        if (maxT > 0 && disp->elapsedMs >= maxT)
+        integrateAxis(disp->velocity.x, cfg->acceleration.x, cfg->accelerationTime.x, cfg->velocityTime.x,
+                      disp->elapsedMs, dtMs);
+        integrateAxis(disp->velocity.z, cfg->acceleration.z, cfg->accelerationTime.z, cfg->velocityTime.z,
+                      disp->elapsedMs, dtMs);
+
+        const int heightAccelMs = accelApplyMs(disp->elapsedMs, dtMs, cfg->accelerationTime.y);
+        disp->velocity.y += cfg->acceleration.y * static_cast<float>(heightAccelMs);
+        if (cfg->velocityTime.y > 0 && disp->elapsedMs > cfg->velocityTime.y && cfg->gravity == 0.0f)
+            disp->velocity.y = 0.0f;
+
+        const bool grounded = physics->onGround != 0 && physics->position.z <= physics->groundLevel + 0.01f;
+        if (cfg->gravity != 0.0f)
         {
-            disp->finished        = true;
-            physics->velocity.x   = 0;
-            physics->velocity.y   = 0;
-            // z 留给落地物理；还原重力缩放
-            restoreGravity(disp, physics);
-            continue;
+            if (grounded && disp->velocity.y <= 0.0f)
+                disp->velocity.y = 0.0f;
+            else
+                disp->velocity.y += cfg->gravity * kLuaGravityPerMs * static_cast<float>(dtMs);
         }
 
-        const float facing = transform && transform->facingDirection == FacingDirection::kFacingLeft ? -1.0f : 1.0f;
+        const float facing = disp->facingSign;
+        disp->writePhysicsVelocity(physics, facing);
 
-        if (cfg->velocityTime.x <= 0 || disp->elapsedMs <= cfg->velocityTime.x)
-            disp->velocity.x = cfg->velocity.x;
-        if (cfg->velocityTime.y <= 0 || disp->elapsedMs <= cfg->velocityTime.y)
-            disp->velocity.y = cfg->velocity.y;
-        if (cfg->velocityTime.z <= 0 || disp->elapsedMs <= cfg->velocityTime.z)
-            disp->velocity.z = cfg->velocity.z;
+        // 物理已在本帧积分过：起跳当帧把高度写进位置，否则要等下一帧才离地
+        if (physics->onGround && disp->velocity.y > 0.0f)
+        {
+            const float dtSec = static_cast<float>(dtMs) / 1000.0f;
+            physics->position.z =
+                physics->groundLevel + disp->velocity.y * DisplacementComponent::kLuaVelToPhysics * dtSec;
+            physics->onGround   = 0;
+            physics->justLanded = false;
+            if (transform)
+                transform->position.z = static_cast<int32_t>(physics->position.z);
+            disp->airEvent = true;
+        }
 
-        if (cfg->accelerationTime.x <= 0 || disp->elapsedMs <= cfg->accelerationTime.x)
-            disp->acceleration.x = cfg->acceleration.x;
-        if (cfg->accelerationTime.y <= 0 || disp->elapsedMs <= cfg->accelerationTime.y)
-            disp->acceleration.y = cfg->acceleration.y;
-        if (cfg->accelerationTime.z <= 0 || disp->elapsedMs <= cfg->accelerationTime.z)
-            disp->acceleration.z = cfg->acceleration.z;
+        if (!grounded)
+            disp->airEvent = true;
+        if (grounded && disp->elapsedMs > 0)
+            disp->lieEvent = true;
 
-        disp->velocity.x += disp->acceleration.x * dt;
-        disp->velocity.y += disp->acceleration.y * dt;
-        disp->velocity.z += disp->acceleration.z * dt;
+        disp->braked = std::abs(disp->velocity.x) < 1e-6f && std::abs(disp->velocity.y) < 1e-6f &&
+                       std::abs(disp->velocity.z) < 1e-6f;
 
-        physics->velocity.x = disp->velocity.x * facing * 1000.0f;
-        physics->velocity.y = disp->velocity.y * 1000.0f;
-        physics->velocity.z = disp->velocity.z * 1000.0f;
-        if (cfg->gravity != 0.0f)
-            physics->gravityScale = cfg->gravity;
-
-        if (cfg->bounces > 0 && physics->onGround && disp->velocity.z < 0)
-            disp->velocity.z = std::abs(disp->velocity.z) * 0.6f;
+        if (cfg->bounces > 0 && grounded && disp->velocity.y < 0.0f)
+            disp->velocity.y = std::abs(disp->velocity.y) * cfg->bounces;
     }
 }
 

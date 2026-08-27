@@ -53,6 +53,14 @@ Vector2i vec2iOr(const JsonValue& object, const char* key, const Vector2i& fallb
     return {intOr(*value, "x", fallback.x), intOr(*value, "y", fallback.y)};
 }
 
+Vector2i size2iOr(const JsonValue& object, const char* key, const Vector2i& fallback)
+{
+    const JsonValue* value = member(object, key);
+    if (!value || !value->IsObject())
+        return fallback;
+    return {intOr(*value, "width", fallback.x), intOr(*value, "height", fallback.y)};
+}
+
 bool shapeKindIs(const JsonValue& shape, const char* kind)
 {
     const JsonValue* props = member(shape, "properties");
@@ -92,7 +100,7 @@ void parseMoveRanges(const JsonValue& document, std::vector<LayerMoveRange>& out
             continue;
 
         const Vector2i center = vec2iOr(shape, "position", {0, 0});
-        const Vector2i size   = vec2iOr(shape, "size", {0, 0});
+        const Vector2i size   = size2iOr(shape, "size", {0, 0});
         if (size.x <= 0 || size.y <= 0)
             continue;
 

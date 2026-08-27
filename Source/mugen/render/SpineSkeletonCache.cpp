@@ -11,6 +11,16 @@ namespace
 {
 static spine::AxmolTextureLoader s_textureLoader;
 
+std::string atlasFromSpine(std::string_view spine)
+{
+    const std::string path(spine);
+    const auto slash = path.find_last_of("/\\");
+    const auto dot   = path.find_last_of('.');
+    if (dot == std::string::npos || (slash != std::string::npos && dot < slash))
+        return path + ".atlas";
+    return path.substr(0, dot) + ".atlas";
+}
+
 // Skip UTF-8 BOM and ASCII whitespace; return first payload byte or 0 if empty.
 static unsigned char firstPayloadByte(const ax::Data& data)
 {
@@ -100,14 +110,15 @@ void SpineSkeletonCache::preload(std::string_view skeletonFile, std::string_view
 bool SpineSkeletonCache::preloadResSpine(int32_t resSpineId)
 {
     auto* cfg = Config::getInstance()->getResSpineConfigById(resSpineId);
-    if (!cfg || cfg->spine.empty() || cfg->atlas.empty())
+    if (!cfg || cfg->spine.empty())
     {
-        MG_LOG_E("SpineSkeletonCache::preloadResSpine: ResSpine {} missing or atlas empty", resSpineId);
+        MG_LOG_E("SpineSkeletonCache::preloadResSpine: ResSpine {} missing or spine empty", resSpineId);
         return false;
     }
-    const float scale = cfg->scale > 0.0f ? cfg->scale : 1.0f;
-    preload(cfg->spine, cfg->atlas, scale);
-    return getOrCreate(cfg->spine, cfg->atlas, scale) != nullptr;
+    const float scale       = cfg->scale > 0.0f ? cfg->scale : 1.0f;
+    const std::string atlas = atlasFromSpine(cfg->spine);
+    preload(cfg->spine, atlas, scale);
+    return getOrCreate(cfg->spine, atlas, scale) != nullptr;
 }
 
 void SpineSkeletonCache::clear()

@@ -23,6 +23,7 @@ enum class ExtendAttributeType : int32_t
     AddHit         = 111,
     AvoidHit       = 112,
     AddArtifactHit = 113,
+    SkillAddition  = 114,
 };
 
 class ExtendAttribute : public Object

@@ -59,11 +59,11 @@ private:
     float m_cacheScale = 0.0f;
 
     // 震屏
-    bool m_shaking           = false;
-    float m_shakeAmplitude   = 0.0f;
-    float m_shakeDurationMs  = 0.0f;
-    float m_shakeElapsedMs   = 0.0f;
-    float m_shakeCycles      = 2.0f;
+    bool m_shaking          = false;
+    float m_shakeAmplitude  = 0.0f;
+    float m_shakeDurationMs = 0.0f;
+    float m_shakeElapsedMs  = 0.0f;
+    float m_shakeCycles     = 2.0f;
     ax::Vec2 m_shakeOffset;
 
     std::function<void(float, float, float)> m_call;

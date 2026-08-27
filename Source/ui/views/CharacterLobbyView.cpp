@@ -2,6 +2,7 @@
 
 #include "AppContext.h"
 #include "TownView.h"
+#include "mugen/common/TypeConversions.h"
 #include "mugen/ActorSpawner.h"
 #include "mugen/avatar/render/Avatar.h"
 #include "mugen/avatar/render/AvatarBuilder.h"
@@ -109,8 +110,8 @@ void CharacterLobbyView::updateCharacterList()
         nameText->setText(fmt::format("Lv{} {}", c.level, c.name));
         professionText->setText("剑士");
 
-        // classID 是服务器 JobType（1/2/4），需映射到英雄 RoleConfig id（101/...）
-        const int32_t roleId = mugen::actor_spawner::resolvePlayableRoleId(c.classID);
+        // classID 是服务器 characterClass，需映射到英雄 RoleConfig id（101/...）
+        const int32_t roleId = mugen::type_conversions::toRoleConfigId(static_cast<mugen::CharacterClass>(c.classID));
         auto* config         = mugen::Config::getInstance();
         auto* role           = config->getRoleConfigById(roleId);
         const auto* spine    = role && role->resSpineId > 0 ? config->getResSpineConfigById(role->resSpineId) : nullptr;

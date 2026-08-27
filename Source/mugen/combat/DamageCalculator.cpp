@@ -1,5 +1,6 @@
 #include "mugen/combat/DamageCalculator.h"
 
+#include "mugen/buff/BuffManager.h"
 #include "mugen/buff/ExtendAttribute.h"
 #include "mugen/Components.h"
 #include "mugen/conf/Config.h"
@@ -17,21 +18,21 @@ namespace DamageCalculator
 
 namespace
 {
-float atkOf(const RoleAttributeConfig& a)
+float atkOf(const CombatStats& a)
 {
-    return a.atk > 0.0f ? a.atk : a.physicalAttack;
+    return a.atk;
 }
-float defOf(const RoleAttributeConfig& a)
+float defOf(const CombatStats& a)
 {
-    return a.def > 0.0f ? a.def : a.physicalDefense;
+    return a.def;
 }
-float matkOf(const RoleAttributeConfig& a)
+float matkOf(const CombatStats& a)
 {
-    return a.matk > 0.0f ? a.matk : a.magicAttack;
+    return a.matk;
 }
-float mdefOf(const RoleAttributeConfig& a)
+float mdefOf(const CombatStats& a)
 {
-    return a.mdef > 0.0f ? a.mdef : a.magicDefense;
+    return a.mdef;
 }
 }  // namespace
 
@@ -46,7 +47,7 @@ int32_t hurtStandardId(int32_t level, bool isHero)
 
 float calculateDamageRate(float atk, float def, float atkStandard)
 {
-    float rate = 1.0f;
+    float rate      = 1.0f;
     const float gap = atkStandard > 0.0f ? atkStandard : 1.0f;
     if (atk > def)
     {
@@ -64,7 +65,7 @@ float calculateDamageRate(float atk, float def, float atkStandard)
 
 float calculateCritRate(float crit, float critResist, float critStandard)
 {
-    float rate = 0.01f;
+    float rate      = 0.01f;
     const float gap = critStandard > 0.0f ? critStandard : 1.0f;
     if (crit > critResist)
     {
@@ -81,7 +82,7 @@ float calculateCritRate(float crit, float critResist, float critStandard)
 
 float calculateCritDamageRate(float critDamage, float critDamageResist, float critDamageStandard)
 {
-    float rate = 1.5f;
+    float rate      = 1.5f;
     const float gap = critDamageStandard > 0.0f ? critDamageStandard : 1.0f;
     if (critDamage > critDamageResist)
     {
@@ -94,7 +95,7 @@ float calculateCritDamageRate(float critDamage, float critDamageResist, float cr
 
 float calculateDodgeRate(float dodge, float hit, float dodgeStandard)
 {
-    float rate = 0.0f;
+    float rate      = 0.0f;
     const float gap = dodgeStandard > 0.0f ? dodgeStandard : 1.0f;
     if (dodge > hit)
         rate = 0.01f + std::pow((dodge - hit) / gap / 10.0f, 2.0f) * 0.74f;
@@ -107,8 +108,8 @@ DamageResult calculate(const DamageInput& in, Random& rng)
     if (!in.attacker || !in.defender || !in.hitCfg)
         return out;
 
-    const auto& atkAttr = in.attacker->currentAttribute;
-    const auto& defAttr = in.defender->currentAttribute;
+    const auto& atkAttr = in.attacker->basic;
+    const auto& defAttr = in.defender->basic;
 
     // —— 闪避（hit_must 跳过）——
     if (!in.hitMust)
@@ -129,7 +130,7 @@ DamageResult calculate(const DamageInput& in, Random& rng)
     }
 
     // —— hurt_type → atk/def ——
-    int32_t flag = 1;
+    int32_t flag           = 1;
     const int32_t hurtType = in.hitCfg->hurtType;
     if (hurtType == 1)
         flag = 2;
@@ -149,15 +150,13 @@ DamageResult calculate(const DamageInput& in, Random& rng)
     {
         atk  = matkOf(atkAttr);
         def  = mdefOf(defAttr);
-        rate = calculateDamageRate(atk, def,
-                                   in.hurtStd ? static_cast<float>(in.hurtStd->atkStandard) : 1.0f);
+        rate = calculateDamageRate(atk, def, in.hurtStd ? static_cast<float>(in.hurtStd->atkStandard) : 1.0f);
     }
     else
     {
         atk  = atkOf(atkAttr);
         def  = defOf(defAttr);
-        rate = calculateDamageRate(atk, def,
-                                   in.hurtStd ? static_cast<float>(in.hurtStd->atkStandard) : 1.0f);
+        rate = calculateDamageRate(atk, def, in.hurtStd ? static_cast<float>(in.hurtStd->atkStandard) : 1.0f);
     }
 
     const float basicHurt = atkAttr.baseDamage;
@@ -166,8 +165,8 @@ DamageResult calculate(const DamageInput& in, Random& rng)
     if (in.attackerHurtStd)
         standHurt += static_cast<float>(in.attackerHurtStd->hurt);
 
-    float hurt = standHurt * rate;
-    float hurtAddition = in.hitCfg->hurtRate > 0.0f ? in.hitCfg->hurtRate : 1.0f;
+    float hurt           = standHurt * rate;
+    float hurtAddition   = in.hitCfg->hurtRate > 0.0f ? in.hitCfg->hurtRate : 1.0f;
     const float addition = in.skillAddition >= 0.0f ? in.skillAddition : 0.0f;
     hurtAddition *= (1.0f + addition);
     hurt *= hurtAddition;
@@ -180,10 +179,9 @@ DamageResult calculate(const DamageInput& in, Random& rng)
     // —— 暴击 ——
     const float critStd =
         in.hurtStd && in.hurtStd->critStandard > 0 ? static_cast<float>(in.hurtStd->critStandard) : 1.0f;
-    const float critDmgStd = in.hurtStd && in.hurtStd->critDamageStandard > 0
-                                 ? static_cast<float>(in.hurtStd->critDamageStandard)
-                                 : 1.0f;
-    float critRate = 100.0f * calculateCritRate(atkAttr.crit, defAttr.critResist, critStd);
+    const float critDmgStd =
+        in.hurtStd && in.hurtStd->critDamageStandard > 0 ? static_cast<float>(in.hurtStd->critDamageStandard) : 1.0f;
+    float critRate        = 100.0f * calculateCritRate(atkAttr.crit, defAttr.critResist, critStd);
     const float addCrit   = in.attacker->extendAttribute.get(ExtendAttributeType::AddCrit);
     const float avoidCrit = in.defender->extendAttribute.get(ExtendAttributeType::AvoidCrit);
     if (avoidCrit >= 1.0f)
@@ -193,8 +191,7 @@ DamageResult calculate(const DamageInput& in, Random& rng)
     else
         critRate += 100.0f * (addCrit - avoidCrit);
 
-    float critDamageRate =
-        calculateCritDamageRate(atkAttr.critDamage, 0.0f /*critDamageResist 一期*/, critDmgStd);
+    float critDamageRate = calculateCritDamageRate(atkAttr.critDamage, defAttr.critDamageResist, critDmgStd);
 
     if (critRate > rng.nextFloat(0.0f, 100.0f) || critRate > 100.0f)
     {
@@ -216,8 +213,8 @@ bool isInvincible(const Entity* entity)
 {
     if (!entity)
         return false;
-    if (auto* buff = MG_GET_COMPONENT(const_cast<Entity*>(entity), BuffComponent))
-        return buff->invincibleRef > 0;
+    if (auto* mgr = BuffManager::of(const_cast<Entity*>(entity)))
+        return mgr->invincibleRef > 0;
     return false;
 }
 
@@ -225,8 +222,8 @@ bool isSuperArmor(const Entity* entity)
 {
     if (!entity)
         return false;
-    if (auto* buff = MG_GET_COMPONENT(const_cast<Entity*>(entity), BuffComponent))
-        return buff->superArmorRef > 0;
+    if (auto* mgr = BuffManager::of(const_cast<Entity*>(entity)))
+        return mgr->superArmorRef > 0;
     return false;
 }
 

@@ -24,8 +24,8 @@ bool AvatarComponent::deserializeCustomImpl(ByteBuffer& byteBuffer)
         }
         if (roleConfig->resSpineId > 0)
             resSpine = Config::getInstance()->getResSpineConfigById(roleConfig->resSpineId);
-        if (roleConfig->behaviorTemplateId > 0)
-            behaviorTemplate = Config::getInstance()->getBehaviorTemplateConfigById(roleConfig->behaviorTemplateId);
+        const int32_t tmplId = (roleConfig->roleType != 1 && roleConfig->roleType != 0) ? 2 : 1;
+        behaviorTemplate     = Config::getInstance()->getBehaviorTemplateConfigById(tmplId);
     }
     return true;
 }

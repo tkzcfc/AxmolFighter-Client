@@ -3,6 +3,7 @@
 #include "AppContext.h"
 #include "DungeonSelectView.h"
 #include "GameView.h"
+#include "mugen/common/TypeConversions.h"
 #include "mugen/ActorSpawner.h"
 #include "mugen/Components.h"
 #include "mugen/conf/Config.h"
@@ -288,13 +289,16 @@ bool TownView::createLocalPlayer()
         }
     }
 
-    // classID 是 JobType，映射到可玩英雄 RoleConfig
-    const int32_t roleId = actor_spawner::resolvePlayableRoleId(session->selectedCharacter.classID);
+    // classID 是 CharacterClass，映射到可玩英雄 RoleConfig
+    const int32_t roleId = type_conversions::toRoleConfigId(static_cast<CharacterClass>(session->selectedCharacter.classID));
+    mugen::actor_spawner::ActorSpawnParams params;
+    params.category = EntityCategory::kPlayer;
+    params.playerId = static_cast<int32_t>(session->account.playerID);
+    params.name     = std::string(session->selectedCharacter.name);
+
     auto player          = actor_spawner::spawnRolePlayerActor(
         &m_gameWord->ecsManager, roleId, spawnX, spawnY,
-        actor_spawner::PlayerSpawnParams{static_cast<int32_t>(session->account.playerID),
-                                         std::string(session->selectedCharacter.name)}
-            .toActorParams());
+        params);
     if (!player)
     {
         return false;
@@ -514,11 +518,16 @@ void TownView::addOrUpdateRemotePlayer(const PB::Types::PlayerState& state, bool
         return;
     }
 
-    // 新的远程玩家：创建展示实体（class_id 同样是 JobType）
-    const int32_t roleId = actor_spawner::resolvePlayableRoleId(state.class_id());
+    // 新的远程玩家：创建展示实体（class_id 同样是 CharacterClass）
+    const int32_t roleId = type_conversions::toRoleConfigId(static_cast<CharacterClass>(state.class_id()));
+    mugen::actor_spawner::ActorSpawnParams params;
+    params.category = EntityCategory::kPlayer;
+    params.playerId = static_cast<int32_t>(playerId);
+    params.name     = state.name();
+
     auto entity          = actor_spawner::spawnRemoteRoleActor(
         &m_gameWord->ecsManager, roleId, static_cast<int32_t>(state.pos_x()), static_cast<int32_t>(state.pos_y()),
-        actor_spawner::PlayerSpawnParams{static_cast<int32_t>(playerId), state.name()}.toActorParams());
+        params);
     if (!entity)
     {
         return;

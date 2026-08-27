@@ -34,6 +34,9 @@ public:
     // 自动播放时转 step
     void update(float delta) override;
 
+    // 骨骼包围盒（Avatar 本地，脚底原点）；空则宽高为 0
+    ax::Rect localSkeletonBounds() const;
+
     // 各层时长最大值
     int durationMs() const;
 

@@ -1,6 +1,7 @@
 #include "ui/battle/LocalBattleMode.h"
 
 #include "AppContext.h"
+#include "mugen/common/TypeConversions.h"
 #include "mugen/ActorSpawner.h"
 #include "mugen/Components.h"
 #include "mugen/GameWord.h"
@@ -117,7 +118,7 @@ bool LocalBattleMode::spawnLocalPlayer()
     {
         if (session->selectedCharacter.characterID != 0)
         {
-            roleId   = actor_spawner::resolvePlayableRoleId(session->selectedCharacter.classID);
+            roleId   = mugen::type_conversions::toRoleConfigId(static_cast<mugen::CharacterClass>(session->selectedCharacter.classID));
             playerId = session->account.playerID;
             name     = session->selectedCharacter.name;
             if (!config->getRoleConfigById(roleId))
@@ -128,9 +129,14 @@ bool LocalBattleMode::spawnLocalPlayer()
         }
     }
 
+    actor_spawner::ActorSpawnParams params;
+    params.category = EntityCategory::kPlayer;
+    params.playerId = static_cast<int32_t>(playerId);
+    params.name     = std::string(name);
+
     auto player = actor_spawner::spawnRolePlayerActor(
         &m_gameWord->ecsManager, roleId, spawnX, spawnY,
-        actor_spawner::PlayerSpawnParams{static_cast<int32_t>(playerId), std::string(name)});
+        params);
     if (!player)
     {
         MG_LOG_E("LocalBattleMode: spawnRolePlayerActor failed role={}", roleId);

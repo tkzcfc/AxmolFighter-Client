@@ -4,6 +4,10 @@
 #include "mugen/core/math/Vec2.h"
 #include "mugen/core/math/Vec3.h"
 
+// 本文件只放「有 AxmolFighter-Config/table 对应行」的配置结构，以及表行内嵌套辅助类型。
+// 运行时状态（如 AttributeComponent / CombatStats）放 component/，勿再塞进此处。
+// kind → 黑月源表对照见 AxmolFighter-Tools/config_converter/docs/table-kind-mapping.md
+
 NS_MG_BEGIN
 
 // 传送目的地（权重候选之一）
@@ -418,8 +422,11 @@ public:
     // 开放时间
     int32_t openTime = 0;
 
-    // skill_p
+    // skill_p 技能点
     int32_t skillP = 0;
+
+    // show_hidden 是否显示隐藏
+    int32_t showHidden = 0;
 
     // 下一节点索引
     std::vector<int32_t> nextNode;
@@ -451,6 +458,7 @@ public:
                            exploreSchedule,
                            openTime,
                            skillP,
+                           showHidden,
                            nextNode,
                            containIndex,
                            indexVisible,
@@ -825,7 +833,7 @@ public:
     // 房间 id
     int32_t id = 0;
 
-    // 场景 mapKey
+    // 场景 mapKey（转换器从 map_data_id → map_data.map_key 烘培）
     std::string mapKey;
 
     // 名称文本 id
@@ -926,71 +934,6 @@ public:
     MG_DEFINE_SERIALIZABLE(values);
 };
 
-// 角色成品属性（转换器烘培）
-class RoleAttributeConfig : public Object
-{
-public:
-    typedef Object Super;
-
-    RoleAttributeConfig() {}
-    virtual ~RoleAttributeConfig() {}
-
-    int32_t hpMax         = 180;
-    int32_t mpMax         = 140;
-    float physicalAttack  = 7.5f;
-    float physicalDefense = 7.5f;
-    float magicAttack     = 4.5f;
-    float magicDefense    = 4.5f;
-    float darkResistance  = 20.0f;
-    float lightResistance = -20.0f;
-    float mpRegenSpeed    = 50.0f;
-    float moveSpeed       = 850.0f;
-    float attackSpeed     = 850.0f;
-    float castSpeed       = 700.0f;
-    float hitRecovery     = 0;
-    float jumpSpeed       = 200.0f;
-    // 扩展属性字段
-    float atk        = 0;
-    float def        = 0;
-    float matk       = 0;
-    float mdef       = 0;
-    float hp         = 0;
-    float crit       = 0;
-    float critDamage = 0;
-    float critResist = 0;
-    float dodge      = 0;
-    float hit        = 0;
-    float baseDamage = 0;
-    float mp         = 0;
-
-    MG_DEFINE_SERIALIZABLE(hpMax,
-                           mpMax,
-                           physicalAttack,
-                           physicalDefense,
-                           magicAttack,
-                           magicDefense,
-                           darkResistance,
-                           lightResistance,
-                           mpRegenSpeed,
-                           moveSpeed,
-                           attackSpeed,
-                           castSpeed,
-                           hitRecovery,
-                           jumpSpeed,
-                           atk,
-                           def,
-                           matk,
-                           mdef,
-                           hp,
-                           crit,
-                           critDamage,
-                           critResist,
-                           dodge,
-                           hit,
-                           baseDamage,
-                           mp);
-};
-
 // 行为分支一条（状态位条件 + 行为类型 + 动画）
 class BehaviorBranchConfig : public Object
 {
@@ -1030,7 +973,7 @@ public:
     MG_DEFINE_SERIALIZABLE(id, branches);
 };
 
-// 动作攻击段
+// 动作攻击段（action_attack；特效动作 action_attack_effect* 共用，多召唤/双音效/数组镜头）
 class ActionAttackConfig : public Object
 {
 public:
@@ -1041,82 +984,126 @@ public:
 
     virtual ~ActionAttackConfig() {}
 
-    int32_t id                  = 0;
-    int32_t action              = 0;
-    float actionScaleTime       = 1.0f;
-    int32_t loop                = 0;
-    int32_t interruptFrame      = -1;
-    int32_t interruptExtraFrame = -1;
-    std::vector<int32_t> effectIds;
-    std::vector<int32_t> effectFrames;
-    std::vector<int32_t> displaySpineIds;
-    int32_t displaySpineFrame = 0;
-    int32_t displacementId    = -1;
-    int32_t control           = 0;
-    float controlVelocity     = 0.0f;
-    std::vector<int32_t> soundId;
-    std::vector<int32_t> buffIds;
-    int32_t cameraFrame     = -1;
-    int32_t cameraId        = -1;
+    int32_t id = 0;
+    // action spine 动画下标
+    int32_t action = 2;
+    // aciton_scale_time（表字段少一个 t）播放速率
+    float actionScaleTime = 1.0f;
+    // action_delay_time 延迟开播
     int32_t actionDelayTime = 0;
-    // 扩展：定位 / 朝向 / 变身 / 定身 / 残影
+    // loop <=1 播一次；>1 或 -1 循环
+    int32_t loop = 1;
+    // control 1 本段跟摇杆转向
+    int32_t control = -1;
+    // control_velocity 可控移动速度
+    float controlVelocity = 0.0f;
+    // custom_vec 自定义方向
+    Vector2f customVec;
+    // extend_role_vec 1 时特效继承 custom_vec 朝向
+    int32_t extendRoleVec = -1;
+    // displacement_id 自身位移（特效表则是飞出）
+    int32_t displacementId = -1;
+    // effect_ids 要刷的 entity_effect id，与 effect_frames 等长
+    std::vector<int32_t> effectIds;
+    // effect_frames 第几动作帧刷特效
+    std::vector<int32_t> effectFrames;
+    // buff_ids 本段开始时给自己加的 buff，[1]==-1 不加
+    std::vector<int32_t> buffIds;
+    // camera_id / camera_frame 震屏（角色表是标量；特效表是数组，同时写入 cameraIds/cameraFrames）
+    int32_t cameraId    = -1;
+    int32_t cameraFrame = -1;
+    std::vector<int32_t> cameraIds;
+    std::vector<int32_t> cameraFrames;
+    // interrupt_frame 普通打断开放帧
+    int32_t interruptFrame = -1;
+    // interrupt_extra_frame 至尊打断开放帧（特效表仅有 interrupt_frame）
+    int32_t interruptExtraFrame = -1;
+    // sound_id 音效
+    std::vector<int32_t> soundId;
+    // sound_id2 特效动作第二音效
+    std::vector<int32_t> soundId2;
+    // shadow 影子缩放
+    float shadow = 2.0f;
+    // floor 贴地
+    int32_t floor = -1;
+    // obstruct 遇障处理
+    int32_t obstruct = -1;
+    // ghost -1 无残影
+    int32_t ghost = -1;
+    // action_orientation 强制朝向
+    int32_t actionOrientation = -1;
+    // action_pos_type / relative_action_pos 相对落点
     int32_t actionPosType = -1;
     Vector3f relativeActionPos;
-    int32_t actionOrientation = -1;
-    int32_t transformFrame    = -1;
-    int32_t transformId       = -1;
-    int32_t transformType     = -1;
-    int32_t ghost             = -1;
-    int32_t staticTarget      = -1;
-    int32_t staticStartFrame  = -1;
-    int32_t staticTime        = 0;
-    int32_t staticResetTime   = 0;
-    // UI / 障碍 / 落地 / 阴影（action_attack）
+    // display_spine_ids / _frame / _frame_count 额外展示 spine
+    std::vector<int32_t> displaySpineIds;
+    int32_t displaySpineFrame      = 0;
+    int32_t displaySpineFrameCount = 0;
+    // dialog_show / name_show / tips_show 气泡 / 名字 / 横条
     int32_t dialogShow = -1;
     int32_t nameShow   = 0;
     int32_t tipsShow   = -1;
-    int32_t obstruct   = 0;
-    int32_t floor      = -1;
-    float shadow       = 0.0f;
+    // static_target / static_time / static_start_frame / static_reset_time 定身镜头
+    int32_t staticTarget     = -1;
+    int32_t staticTime       = 0;
+    int32_t staticStartFrame = 0;
+    int32_t staticResetTime  = 0;
+    // transform_id / transform_frame / transform_type 变身
+    int32_t transformId    = -1;
+    int32_t transformFrame = -1;
+    int32_t transformType  = -1;
+    // summon_id / summon_frame / summon_time 特效动作：到帧召唤角色，存活时间
+    int32_t summonId    = -1;
+    int32_t summonFrame = -1;
+    int32_t summonTime  = 0;
 
     MG_DEFINE_SERIALIZABLE(id,
                            action,
                            actionScaleTime,
+                           actionDelayTime,
                            loop,
-                           interruptFrame,
-                           interruptExtraFrame,
-                           effectIds,
-                           effectFrames,
-                           displaySpineIds,
-                           displaySpineFrame,
-                           displacementId,
                            control,
                            controlVelocity,
-                           soundId,
+                           customVec,
+                           extendRoleVec,
+                           displacementId,
+                           effectIds,
+                           effectFrames,
                            buffIds,
-                           cameraFrame,
                            cameraId,
-                           actionDelayTime,
+                           cameraFrame,
+                           cameraIds,
+                           cameraFrames,
+                           interruptFrame,
+                           interruptExtraFrame,
+                           soundId,
+                           soundId2,
+                           shadow,
+                           floor,
+                           obstruct,
+                           ghost,
+                           actionOrientation,
                            actionPosType,
                            relativeActionPos,
-                           actionOrientation,
-                           transformFrame,
-                           transformId,
-                           transformType,
-                           ghost,
-                           staticTarget,
-                           staticStartFrame,
-                           staticTime,
-                           staticResetTime,
+                           displaySpineIds,
+                           displaySpineFrame,
+                           displaySpineFrameCount,
                            dialogShow,
                            nameShow,
                            tipsShow,
-                           obstruct,
-                           floor,
-                           shadow);
+                           staticTarget,
+                           staticTime,
+                           staticStartFrame,
+                           staticResetTime,
+                           transformId,
+                           transformFrame,
+                           transformType,
+                           summonId,
+                           summonFrame,
+                           summonTime);
 };
 
-// 技能攻击配置
+// 技能定义 skill_attack（施法核心：CD、消耗、动作行、连携、打断优先级）
 class SkillAttackConfig : public Object
 {
 public:
@@ -1128,42 +1115,55 @@ public:
     virtual ~SkillAttackConfig() {}
 
     int32_t id = 0;
-    // 完整二维动作表 [toward][段]（action_ids）
+    // action_ids 方向 × 动作序列。外层摇杆象限，内层 action_attack id 列表
     std::vector<IntListRow> actionIds;
-    // 兼容：第一组扁平（可由 actionIds[0] 派生）
-    std::vector<int32_t> primaryActionIds;
-    int32_t nextSkill = -1;
-    int32_t cd        = 0;
-    int32_t mp        = 0;
-    int32_t ep        = 0;
-    int32_t icon      = 0;
-    int32_t nameId    = 0;
-    int32_t descId    = 0;
-    int32_t sorder    = 0;
-    // 扩展
+    // cd 冷却毫秒
+    int32_t cd = 0;
+    // pvp_cd PVP 冷却（公平 CD 开关打开时用）
+    int32_t pvpCd = 0;
+    // cd_count -1 不启用多段充能；>0 为管道数 / 可释放次数
     int32_t cdCount = -1;
+    // mp 蓝耗
+    int32_t mp = 0;
+    // ep EP/TP 耗
+    int32_t ep = 0;
+    // crystal 晶体耗
     int32_t crystal = 0;
-    int32_t type    = -1;
+    // sorder 打断优先级。-1 可打断任意技能
+    int32_t sorder = 0;
+    // sorder_control_type 0 普通打断；1 允许被低优先在 interrupt_frame 后打断；2 无视优先、看 interrupt_extra_frame
     std::vector<int32_t> sorderControlType;
+    // skill_ai_id 关联 skill_ai（部分调用仍用 entity_ai.skill_ai_ids 覆盖）
+    int32_t skillAiId = 201;
+    // next_skill 同槽下一步技能 id，-1 无
+    int32_t nextSkill = -1;
+    // name_id / desc_id 文本表
+    int32_t nameId = 1;
+    int32_t descId = 1;
+    // icon 战斗 HUD 图标（表里可能是资源 id 或路径；路径在转换时变成 0）
+    int32_t icon = -1;
+    // type -1 普通（受击中只能放挣脱）；0 反击；1 表注释写暂时无效
+    int32_t type = -1;
 
     MG_DEFINE_SERIALIZABLE(id,
                            actionIds,
-                           primaryActionIds,
-                           nextSkill,
                            cd,
+                           pvpCd,
+                           cdCount,
                            mp,
                            ep,
-                           icon,
+                           crystal,
+                           sorder,
+                           sorderControlType,
+                           skillAiId,
+                           nextSkill,
                            nameId,
                            descId,
-                           sorder,
-                           cdCount,
-                           crystal,
-                           type,
-                           sorderControlType);
+                           icon,
+                           type);
 };
 
-// 受击配置
+// 命中结果 skill_hit（伤害系数 + 受击反应）
 class SkillHitTableConfig : public Object
 {
 public:
@@ -1174,44 +1174,63 @@ public:
 
     virtual ~SkillHitTableConfig() {}
 
-    int32_t id                      = 0;
-    int32_t displacementId          = -1;
-    int32_t airDisplacementId       = -1;
-    int32_t floorDisplacementId     = -1;
-    int32_t freezeTime              = 0;
-    int32_t freezeTimeDelay         = 0;
+    int32_t id = 0;
+    // hurt_type 0 物理 1 魔法 2 自适应 3 真伤
+    int32_t hurtType = 0;
+    // hurt_rate PVE 伤害系数，乘在标准伤害上
+    float hurtRate = 1.0f;
+    // pvp_hurt_rate PVP 系数
+    float pvpHurtRate = 1.0f;
+    // hit_type -1 碰到但不掉血不硬直；0 击退；1 击倒；2 击飞
+    int32_t hitType = 2;
+    // hit_condition -1 任意状态；0 不打倒地；1 不打浮空；2 倒地和浮空都不打
+    int32_t hitCondition = -1;
+    // hit_must 0 可被属性闪避；1 必中
+    int32_t hitMust = 0;
+    // hit_rigidity 破霸体/削韧相关计数
+    int32_t hitRigidity = 0;
+    // hit_counts 该特效最多命中次数；-1 不限
+    int32_t hitCounts = -1;
+    // hit_interval -1 同一目标只中一次；>0 为对同一目标再命中的毫秒间隔
+    int32_t hitInterval = -1;
+    // stiff_time 硬直毫秒
+    int32_t stiffTime = 800;
+    // freeze_time 命中冻结（逻辑停）
+    int32_t freezeTime = 1;
+    // freeze_time_delay 延迟再冻
+    int32_t freezeTimeDelay = 0;
+    // freeze_time_control_role 0 连攻击者也冻
+    int32_t freezeTimeControlRole = 0;
+    // freeze_time_control_effect 0 连特效也冻
     int32_t freezeTimeControlEffect = 0;
-    int32_t freezeTimeControlRole   = 0;
-    int32_t hitCondition            = 0;
-    int32_t hitCounts               = -1;
-    int32_t hitInterval             = -1;
-    int32_t hitMust                 = 0;
-    int32_t hitRigidity             = 0;
-    int32_t hitType                 = 0;
-    float hurtRate                  = 1.0f;
-    int32_t hurtType                = 0;
-    int32_t stiffTime               = 0;
+    // displacement_id 地面击退 → action_displacement
+    int32_t displacementId = -1;
+    // air_displacement_id 浮空时
+    int32_t airDisplacementId = -1;
+    // floor_displacement_id 倒地时
+    int32_t floorDisplacementId = -1;
 
     MG_DEFINE_SERIALIZABLE(id,
-                           displacementId,
-                           airDisplacementId,
-                           floorDisplacementId,
-                           freezeTime,
-                           freezeTimeDelay,
-                           freezeTimeControlEffect,
-                           freezeTimeControlRole,
+                           hurtType,
+                           hurtRate,
+                           pvpHurtRate,
+                           hitType,
                            hitCondition,
-                           hitCounts,
-                           hitInterval,
                            hitMust,
                            hitRigidity,
-                           hitType,
-                           hurtRate,
-                           hurtType,
-                           stiffTime);
+                           hitCounts,
+                           hitInterval,
+                           stiffTime,
+                           freezeTime,
+                           freezeTimeDelay,
+                           freezeTimeControlRole,
+                           freezeTimeControlEffect,
+                           displacementId,
+                           airDisplacementId,
+                           floorDisplacementId);
 };
 
-// 属性模板
+// 属性曲线 entity_attribute
 class AttributeTemplateConfig : public Object
 {
 public:
@@ -1222,41 +1241,61 @@ public:
 
     virtual ~AttributeTemplateConfig() {}
 
-    int32_t id             = 0;
-    float atk              = 0;
-    float def              = 0;
-    float matk             = 0;
-    float mdef             = 0;
-    float hp               = 0;
+    int32_t id = 0;
+    // source_force / agility / habitus / spirit 四维主属性
+    float sourceForce = 0;
+    float agility     = 0;
+    float habitus     = 0;
+    float spirit      = 0;
+    // hp / atk / def / matk / mdef 战斗属性
+    float hp   = 0;
+    float atk  = 0;
+    float def  = 0;
+    float matk = 0;
+    float mdef = 0;
+    // crit / crit_resist / crit_damage / crit_damage_resist
     float crit             = 0;
+    float critResist       = 0;
     float critDamage       = 0;
     float critDamageResist = 0;
-    float critResist       = 0;
-    float dodge            = 0;
-    float hit              = 0;
-    float baseDamage       = 0;
-    float agility          = 0;
-    float habitus          = 0;
-    float spirit           = 0;
-    float sourceForce      = 0;
+    // dodge / hit 闪避/命中
+    float dodge = 0;
+    float hit   = 0;
+    // base_damage 怪物标准伤害底
+    float baseDamage = 0;
+    // monster_hit_number / player_hit_number 期望受击次数，拉 HP/伤害
+    float monsterHitNumber = 0;
+    float playerHitNumber  = 0;
+    // elite_hp_rate / elite_hurt_rate 精英
+    float eliteHpRate   = 1.6f;
+    float eliteHurtRate = 1.2f;
+    // boss_hp_rate / boss_hurt_rate Boss
+    float bossHpRate   = 0;
+    float bossHurtRate = 1.6f;
 
     MG_DEFINE_SERIALIZABLE(id,
+                           sourceForce,
+                           agility,
+                           habitus,
+                           spirit,
+                           hp,
                            atk,
                            def,
                            matk,
                            mdef,
-                           hp,
                            crit,
+                           critResist,
                            critDamage,
                            critDamageResist,
-                           critResist,
                            dodge,
                            hit,
                            baseDamage,
-                           agility,
-                           habitus,
-                           spirit,
-                           sourceForce);
+                           monsterHitNumber,
+                           playerHitNumber,
+                           eliteHpRate,
+                           eliteHurtRate,
+                           bossHpRate,
+                           bossHurtRate);
 };
 
 // Spine 资源
@@ -1273,14 +1312,11 @@ public:
     int32_t id = 0;
     std::string spine;
     float scale = 0.0f;
-    // 转换器烘培
-    std::string atlas;
-    std::string defaultSkin;
 
-    MG_DEFINE_SERIALIZABLE(id, spine, scale, atlas, defaultSkin);
+    MG_DEFINE_SERIALIZABLE(id, spine, scale);
 };
 
-// 位移表
+// 位移曲线 action_displacement（速度/加速度都是三维向量，时间毫秒）
 class DisplacementConfig : public Object
 {
 public:
@@ -1290,17 +1326,39 @@ public:
     virtual ~DisplacementConfig() {}
 
     int32_t id = 0;
+    // velocity 初速 [x,y,z]
     Vector3f velocity;
+    // velocity_time 该速度持续
     Vector3i velocityTime;
+    // acceleration 加速度
     Vector3f acceleration;
+    // acceleration_time 加速持续
     Vector3i accelerationTime;
-    float gravity   = 0;
-    int32_t bounces = 0;
+    // gravity 重力开关/系数
+    float gravity = 1.0f;
+    // bounces 落地弹跳衰减
+    float bounces = 0.5f;
+    // is_trace >0 追踪
+    int32_t isTrace = 0;
+    // trace_angle / trace_radius / trace_velocity 扇形寻敌再改速度
+    float traceAngle    = 0;
+    float traceRadius   = 0;
+    float traceVelocity = 0;
 
-    MG_DEFINE_SERIALIZABLE(id, velocity, velocityTime, acceleration, accelerationTime, gravity, bounces);
+    MG_DEFINE_SERIALIZABLE(id,
+                           velocity,
+                           velocityTime,
+                           acceleration,
+                           accelerationTime,
+                           gravity,
+                           bounces,
+                           isTrace,
+                           traceAngle,
+                           traceRadius,
+                           traceVelocity);
 };
 
-// 镜头表
+// 震屏 action_camera
 class CameraConfig : public Object
 {
 public:
@@ -1309,20 +1367,23 @@ public:
     CameraConfig() {}
     virtual ~CameraConfig() {}
 
-    int32_t id         = 0;
-    float amplitude    = 0;
-    float amplitudeX   = 0;
-    float amplitudeY   = 0;
-    float duration     = 0;
-    int32_t freezeTime = 0;
-    int32_t times      = 1;
-    int32_t level      = 0;
-    std::string modifier;
+    int32_t id = 0;
+    // amplitude_x / amplitude_y 振幅
+    float amplitudeX = 0;
+    float amplitudeY = 0;
+    // duration 时长毫秒
+    float duration = 100;
+    // times 震荡次数
+    int32_t times = 10;
+    // level 优先级，高的盖低的
+    int32_t level = 10;
+    // modifier 衰减曲线标记
+    std::string modifier = "i";
 
-    MG_DEFINE_SERIALIZABLE(id, amplitude, amplitudeX, amplitudeY, duration, freezeTime, times, level, modifier);
+    MG_DEFINE_SERIALIZABLE(id, amplitudeX, amplitudeY, duration, times, level, modifier);
 };
 
-// 特效实体
+// 技能特效 entity_effect / entity_effect2（id≥2000000 走 effect2）
 class EffectConfig : public Object
 {
 public:
@@ -1331,70 +1392,92 @@ public:
     EffectConfig() {}
     virtual ~EffectConfig() {}
 
-    int32_t id           = 0;
-    int32_t resSpineId   = 0;
-    int32_t positionType = -1;
-    Vector3f relativePosition;
-    int32_t follow            = 0;
-    int32_t autoRelease       = 0;
-    int32_t effectOrientation = -1;
-    int32_t skillHitId        = -1;
-    float radius              = 20.0f;
-    // 命中链路 / 表现（entity_effect）
+    int32_t id = 0;
+    // action_ids → action_attack_effect*，EFFECT 树按序播
     std::vector<int32_t> actionIds;
+    // hit_id → skill_hit；-1 不造成伤害
+    int32_t hitId = -1;
+    // hit_effect_ids 打中后的受击特效
+    std::vector<int32_t> hitEffectIds;
+    // hit_target -1 双方 0 敌 1 友
+    int32_t hitTarget = -1;
+    // hit_extra_control 能否打无敌/起身
+    std::vector<int32_t> hitExtraControl;
+    // res_spine_id 外观
+    int32_t resSpineId = 1702;
+    // relative_position / spine_relative_position 相对施法者
+    Vector3f relativePosition;
+    Vector3f spineRelativePosition;
+    // radius 碰撞半径
+    float radius = 20.0f;
+    // velocity 初速（可被位移表覆盖）
+    float velocity = 0.0f;
+    // collision 是否注册碰撞
+    int32_t collision = 1;
+    // follow 0 不跟随；1/2 跟随且可随技能打断回收
+    int32_t follow = 0;
+    // control 是否可被操作
+    int32_t control = 0;
+    // auto_release 0 动作结束就销毁；1 常与 follow 一起在技能打断时回收；2/3 命中次数到了销毁
+    int32_t autoRelease = 1;
+    // effect_type / position_type 生成位置规则
+    int32_t effectType   = -1;
+    int32_t positionType = -1;
+    // effect_oriebtation_X/Z 朝向（表字段拼写 oriebtation）
+    int32_t effectOriebtationX = -1;
+    int32_t effectOriebtationZ = -1;
+    // buff_id / debuff_id / buff_all_id 命中友/敌/全体 Buff
     std::vector<int32_t> buffId;
     std::vector<int32_t> debuffId;
     int32_t buffAllId = -1;
-    int32_t collision = 0;
-    int32_t comboExp  = 0;
-    int32_t control   = 0;
-    int32_t effectType = -1;
-    int32_t energy     = 0;
-    std::vector<int32_t> hitEffectIds;
-    std::vector<int32_t> hitExtraControl;
-    int32_t hitTarget     = -1;
-    int32_t nextEffectId  = -1;
-    int32_t preloadCount  = 0;
-    int32_t shadow        = 0;
-    int32_t tier          = 0;
-    float velocity        = 0.0f;
-    Vector3f spineRelativePosition;
-    // 特殊能力预留（Phase 2）
-    int32_t specialabilityAllId = -1;
+    // specialability_id / specialability_all_id 命中触发 SA
     int32_t specialabilityId    = -1;
+    int32_t specialabilityAllId = -1;
+    // next_effect_id 销毁后再刷一个
+    int32_t nextEffectId = -1;
+    // combo_exp 连击经验
+    int32_t comboExp = 10;
+    // energy 命中回 EP
+    int32_t energy = 0;
+    // shadow / tier
+    int32_t shadow = 0;
+    int32_t tier   = 2;
+    // preload_count 预加载池大小
+    int32_t preloadCount = 1;
 
     MG_DEFINE_SERIALIZABLE(id,
-                           resSpineId,
-                           positionType,
-                           relativePosition,
-                           follow,
-                           autoRelease,
-                           effectOrientation,
-                           skillHitId,
-                           radius,
                            actionIds,
+                           hitId,
+                           hitEffectIds,
+                           hitTarget,
+                           hitExtraControl,
+                           resSpineId,
+                           relativePosition,
+                           spineRelativePosition,
+                           radius,
+                           velocity,
+                           collision,
+                           follow,
+                           control,
+                           autoRelease,
+                           effectType,
+                           positionType,
+                           effectOriebtationX,
+                           effectOriebtationZ,
                            buffId,
                            debuffId,
                            buffAllId,
-                           collision,
-                           comboExp,
-                           control,
-                           effectType,
-                           energy,
-                           hitEffectIds,
-                           hitExtraControl,
-                           hitTarget,
+                           specialabilityId,
+                           specialabilityAllId,
                            nextEffectId,
-                           preloadCount,
+                           comboExp,
+                           energy,
                            shadow,
                            tier,
-                           velocity,
-                           spineRelativePosition,
-                           specialabilityAllId,
-                           specialabilityId);
+                           preloadCount);
 };
 
-// Buff 规则（buff_rule → className）
+// Buff 规则 buff_rule：rule_id → class_name
 class BuffRuleConfig : public Object
 {
 public:
@@ -1403,15 +1486,18 @@ public:
     BuffRuleConfig() {}
     virtual ~BuffRuleConfig() {}
 
-    int32_t id             = 0;
-    int32_t buffType       = 0;
+    int32_t id = 0;
+    // buff_type 1 在表里标 DoT 类状态
+    int32_t buffType = 0;
+    // class_name BuffPool:addBuff new(class_name)；默认 BuffAddByApplicator
     std::string className;
-    int32_t fashionShowText = 0;
+    // fashion_show_text
+    int32_t fashionShowText = 1;
 
     MG_DEFINE_SERIALIZABLE(id, buffType, className, fashionShowText);
 };
 
-// Buff（buff_base 全量）
+// Buff 实例 buff_base
 class BuffConfig : public Object
 {
 public:
@@ -1420,88 +1506,125 @@ public:
     BuffConfig() {}
     virtual ~BuffConfig() {}
 
-    int32_t id       = 0;
-    int32_t ruleId   = 0;
-    int32_t interval = 0;
-    int32_t times    = 0;
-    std::vector<float> paramValue;
-    std::string className;
+    int32_t id = 0;
+    // rule_id → buff_rule，决定逻辑类
+    int32_t ruleId = 100;
+    // buff_type 大类（0 通常增益/功能，DoT 行常为 1）
+    int32_t buffType = 0;
+    // sub_type 与 rule_id 一起当叠加 key；-1 每次都新建
+    int32_t subType = -1;
+    // add_type 叠加策略（0 挂起 1 续 2 删）
     int32_t addType = 0;
-    std::vector<int32_t> artifactSkillIds;
-    int32_t audioId              = -1;
-    int32_t began                = -1;
-    int32_t bindSpecialAbilityId = -1;
-    int32_t binding              = 0;
-    int32_t buffType             = 0;
-    int32_t cd                   = 0;
-    int32_t cdPvp                = 0;
+    // target 1 自己 2 敌 3 友 4 队员 5 敌营 6 Boss 7 精英 8 事件目标自己 9 全营 10 敌营除自己
+    int32_t target = 1;
+    // began / ended 监听的 BFEvent id，-1 不靠事件
+    int32_t began = -1;
+    int32_t ended = -1;
+    // event_param 事件过滤参数
+    std::vector<int32_t> eventParam;
+    // condition / condition_param EnumBuffCondition + 参数
     std::vector<int32_t> condition;
     std::vector<IntListRow> conditionParam;
-    int32_t descId = 0;
-    int32_t ended  = -1;
-    std::vector<int32_t> eventParam;
-    int32_t executeType = 0;
-    int32_t hurtType    = 0;
-    int32_t icon        = -1;
-    int32_t iconDescId  = 0;
-    int32_t inherit     = 0;
-    int32_t innerCd     = 0;
-    int32_t nameId      = 0;
-    int32_t priority    = 0;
+    // execute_type 1 加载即 ENTER；2 激活等间隔/事件；3 等事件才激活
+    int32_t executeType = 1;
+    // param_value / param_value2 规则专用数值
+    std::vector<float> paramValue;
+    std::vector<float> paramValue2;
+    // interval 周期毫秒
+    int32_t interval = 0;
+    // times 可触发次数；-1 常见于无限
+    int32_t times = 0;
+    // repeat_max 层数上限
+    int32_t repeatMax = 1;
+    // remove_repeat_all 移除时是否清全部层
+    int32_t removeRepeatAll = 1;
+    // probability 添加成功率
     int32_t probability = 100;
+    // probability_repeat 1 时成功率随层数乘
     int32_t probabilityRepeat = 0;
-    int32_t removeRepeatAll   = 0;
-    int32_t repeatMax         = 1;
-    int32_t resetType         = 0;
-    int32_t showTips          = 0;
-    int32_t spineId           = -1;
+    // priority 同 rule+sub 替换门槛
+    int32_t priority = 1;
+    // cd / cd_pvp 添加后的 Buff CD
+    int32_t cd    = 0;
+    int32_t cdPvp = 0;
+    // inner_cd 内部触发 CD
+    int32_t innerCd = 0;
+    // binding 1 绑定技能，技能卸下带走
+    int32_t binding = 0;
+    // bind_special_ability_id 挂上时绑定 SA
+    int32_t bindSpecialAbilityId = -1;
+    // inherit 召唤物/变身继承
+    int32_t inherit = 0;
+    // reset_type / destroy_type 重置与销毁时机
+    int32_t resetType   = 0;
+    int32_t destroyType = 0;
+    // area_setting 允许生效的战斗区域
+    std::vector<int32_t> areaSetting;
+    // buff_direction 朝向相关
+    int32_t buffDirection = 0;
+    // buff_partner 是否给伙伴
+    int32_t buffPartner = 0;
+    // hurt_type Buff 伤类型（部分 DoT）
+    int32_t hurtType = 2;
+    // spine_id / spine_offsets / spine_step 身上特效
+    int32_t spineId = -1;
     std::vector<float> spineOffsets;
     std::vector<int32_t> spineStep;
-    int32_t subType = -1;
-    int32_t target  = 0;
+    // icon / icon_desc_id / name_id / desc_id UI
+    int32_t icon       = -1;
+    int32_t iconDescId = 0;
+    int32_t nameId     = 1;
+    int32_t descId     = 1;
+    // show_tips 1 出图标提示
+    int32_t showTips = 0;
+    // audio_id 音效
+    int32_t audioId = -1;
 
     MG_DEFINE_SERIALIZABLE(id,
                            ruleId,
-                           interval,
-                           times,
-                           paramValue,
-                           className,
-                           addType,
-                           artifactSkillIds,
-                           audioId,
-                           began,
-                           bindSpecialAbilityId,
-                           binding,
                            buffType,
-                           cd,
-                           cdPvp,
-                           condition,
-                           conditionParam,
-                           descId,
+                           subType,
+                           addType,
+                           target,
+                           began,
                            ended,
                            eventParam,
+                           condition,
+                           conditionParam,
                            executeType,
-                           hurtType,
-                           icon,
-                           iconDescId,
-                           inherit,
-                           innerCd,
-                           nameId,
-                           priority,
+                           paramValue,
+                           paramValue2,
+                           interval,
+                           times,
+                           repeatMax,
+                           removeRepeatAll,
                            probability,
                            probabilityRepeat,
-                           removeRepeatAll,
-                           repeatMax,
+                           priority,
+                           cd,
+                           cdPvp,
+                           innerCd,
+                           binding,
+                           bindSpecialAbilityId,
+                           inherit,
                            resetType,
-                           showTips,
+                           destroyType,
+                           areaSetting,
+                           buffDirection,
+                           buffPartner,
+                           hurtType,
                            spineId,
                            spineOffsets,
                            spineStep,
-                           subType,
-                           target);
+                           icon,
+                           iconDescId,
+                           nameId,
+                           descId,
+                           showTips,
+                           audioId);
 };
 
-// AI（entity_ai；skillAiIds 本阶段补齐）
+// 角色 AI 参数 entity_ai
 class AiConfig : public Object
 {
 public:
@@ -1511,30 +1634,59 @@ public:
     virtual ~AiConfig() {}
 
     int32_t id = 0;
-    Vector2i chaseScopeX;
-    Vector2i chaseScopeZ;
+    // target_scope_x/z 索敌范围
     Vector2i targetScopeX;
     Vector2i targetScopeZ;
+    // chase_scope_x/z 追击范围
+    Vector2i chaseScopeX;
+    Vector2i chaseScopeZ;
+    // patrol_scope_x/z 巡逻范围
+    Vector2i patrolScopeX;
+    Vector2i patrolScopeZ;
+    // alert_delay_time / chase_delay_time / patrol_delay_time 状态切换延迟
+    Vector2i alertDelayTime;
+    Vector2i chaseDelayTime;
+    Vector2i patrolDelayTime;
+    // skill_ids Normal 组（转换器按槽取每组第一个 skill_id，供当前 AI 使用）
     std::vector<int32_t> skillIds;
-    int32_t skillInterval      = 0;
-    int32_t skillPriorityLevel = 0;
+    // skill_ai_ids 与 skill_ids 对齐的 skill_ai
     std::vector<int32_t> skillAiIds;
-    /** 巡逻半径（出生点为心；0=运行时用 chaseScope 推导默认） */
-    int32_t patrolScope = 0;
+    // crazy_skill_ids / crazy_skill_ai_ids 爆气组
+    std::vector<int32_t> crazySkillIds;
+    std::vector<int32_t> crazySkillAiIds;
+    // joystick_skill_ids 搓招组
+    std::vector<int32_t> joystickSkillIds;
+    // other_skill_ids Special 组
+    std::vector<int32_t> otherSkillIds;
+    // skill_interval 全局放技能间隔
+    int32_t skillInterval = 0;
+    // skill_priority_level 每槽优先级
+    std::vector<int32_t> skillPriorityLevel;
+    // skill_priority_level_cd 该槽 AI 间隔
+    std::vector<int32_t> skillPriorityLevelCd;
 
     MG_DEFINE_SERIALIZABLE(id,
-                           chaseScopeX,
-                           chaseScopeZ,
                            targetScopeX,
                            targetScopeZ,
+                           chaseScopeX,
+                           chaseScopeZ,
+                           patrolScopeX,
+                           patrolScopeZ,
+                           alertDelayTime,
+                           chaseDelayTime,
+                           patrolDelayTime,
                            skillIds,
+                           skillAiIds,
+                           crazySkillIds,
+                           crazySkillAiIds,
+                           joystickSkillIds,
+                           otherSkillIds,
                            skillInterval,
                            skillPriorityLevel,
-                           skillAiIds,
-                           patrolScope);
+                           skillPriorityLevelCd);
 };
 
-// 技能 AI 条件（skill_ai）
+// 自动释放条件 skill_ai
 class SkillAiConfig : public Object
 {
 public:
@@ -1543,36 +1695,47 @@ public:
     SkillAiConfig() {}
     virtual ~SkillAiConfig() {}
 
-    int32_t id      = 0;
+    int32_t id = 0;
+    // load_cd 进场后多久才允许第一次判定（毫秒）
+    int32_t loadCd = 0;
+    // check_cd 两次判定间隔
     int32_t checkCd = 0;
+    // prob 通过其它条件后的成功率 0–100
+    int32_t prob = 100;
+    // use_count -1 无限；>0 用一次减一
+    int32_t useCount = -1;
+    // composition [1] AND 组，[2] OR 组。元素是检查函数下标
     std::vector<IntListRow> composition;
-    int32_t loadCd   = 0;
-    int32_t oppCombo = -1;
+    // opp_dis_x / opp_dis_z 与目标轴距区间
     Vector2i oppDisX;
     Vector2i oppDisZ;
-    int32_t oppSkillId = -1;
-    int32_t oppStatus  = -1;
-    int32_t prob       = 100;
-    Vector2i selfHp;
+    // opp_status 目标状态，-1 任意
+    int32_t oppStatus = 6;
+    // self_status 自身状态
     int32_t selfStatus = -1;
-    int32_t useCount   = -1;
+    // opp_combo -1 不检查；否则要求目标正在连携
+    int32_t oppCombo = 0;
+    // opp_skill_id 目标当前技能 id
+    int32_t oppSkillId = -1;
+    // self_hp 自身 HP 百分比
+    Vector2i selfHp;
 
     MG_DEFINE_SERIALIZABLE(id,
-                           checkCd,
-                           composition,
                            loadCd,
-                           oppCombo,
+                           checkCd,
+                           prob,
+                           useCount,
+                           composition,
                            oppDisX,
                            oppDisZ,
-                           oppSkillId,
                            oppStatus,
-                           prob,
-                           selfHp,
                            selfStatus,
-                           useCount);
+                           oppCombo,
+                           oppSkillId,
+                           selfHp);
 };
 
-// 伤害标准
+// 等级标准伤害 skill_hurt（按人物等级取平坦伤害加数，不是每条技能独立表）
 class SkillHurtConfig : public Object
 {
 public:
@@ -1581,46 +1744,22 @@ public:
     SkillHurtConfig() {}
     virtual ~SkillHurtConfig() {}
 
-    int32_t id                 = 0;
+    // id 等级（或等级带）
+    int32_t id = 0;
+    // hurt 英雄标准伤害加数（加在 ATK 上）
+    int32_t hurt = 800;
+    // monster_hurt 怪物标准伤害加数（加在 base_damage 上）
+    int32_t monsterHurt = 0;
+    // atk_standard / crit_standard / crit_damage_standard / dodge_standard 平衡曲线，现伤害公式未用
     int32_t atkStandard        = 0;
     int32_t critStandard       = 0;
     int32_t critDamageStandard = 0;
     int32_t dodgeStandard      = 0;
-    int32_t hurt               = 0;
-    int32_t monsterHurt        = 0;
 
-    MG_DEFINE_SERIALIZABLE(id, atkStandard, critStandard, critDamageStandard, dodgeStandard, hurt, monsterHurt);
+    MG_DEFINE_SERIALIZABLE(id, hurt, monsterHurt, atkStandard, critStandard, critDamageStandard, dodgeStandard);
 };
 
-// 触发规则 overlay（手工；按技能 id 键控）
-class SkillActivationOverlayConfig : public Object
-{
-public:
-    typedef Object Super;
-
-    SkillActivationOverlayConfig() {}
-    virtual ~SkillActivationOverlayConfig() {}
-
-    int32_t skillId                 = 0;
-    uint32_t slotTriggerFlags       = 0;
-    uint32_t allowTags              = 0;
-    uint32_t denyTags               = 0;
-    int32_t comboWindowMs           = 500;
-    uint32_t inputBufferReleaseTags = 0;
-    int32_t inputBufferTimeoutMs    = 500;
-    std::vector<int32_t> comboInputs;
-
-    MG_DEFINE_SERIALIZABLE(skillId,
-                           slotTriggerFlags,
-                           allowTags,
-                           denyTags,
-                           comboWindowMs,
-                           inputBufferReleaseTags,
-                           inputBufferTimeoutMs,
-                           comboInputs);
-};
-
-// 角色实体
+// 英雄 / 怪物模板 entity_role
 class RoleConfig : public Object
 {
 public:
@@ -1631,61 +1770,116 @@ public:
 
     virtual ~RoleConfig() {}
 
-    int32_t id         = 0;
-    int32_t roleType   = 0;
-    int32_t resSpineId = 0;
+    // id 角色配置 id（英雄常用 0 号模板再被运行时数据覆盖）
+    int32_t id = 0;
+    // role_type EntityRoleType（英雄/怪/Boss/召唤/水晶…）
+    int32_t roleType = 4;
+    // role_type_sign 子类型标记
+    std::vector<int32_t> roleTypeSign;
+    // name_id / desc_id
+    int32_t nameId = 117;
+    int32_t descId = 1;
+    // res_spine_id / res_spine_id_ext 身体 / 额外 spine
+    int32_t resSpineId    = 0;
+    int32_t resSpineIdExt = -1;
+    // res_fashion 时装
+    std::vector<int32_t> resFashion;
+    // ai_id 按难度选 entity_ai
     std::vector<int32_t> aiIds;
+    // attribute_rate 乘在属性上的系数
     std::vector<float> attributeRate;
+    // velocity 移速
+    float velocity = 0.25f;
+    // radius 逻辑半径
+    int32_t radius = 30;
+    // weight 重量
+    float weight = 0.05f;
+    // rigidity 韧性；连打计数
+    int32_t rigidity = 24;
+    // hit_stiff_time 覆盖 skill_hit.stiff_time；非 NIL 则用这个
+    int32_t hitStiffTime = -1;
+    // hit_displacement_id -1 用 hit 表；0 不击退；>0 用本 id
+    int32_t hitDisplacementId = -1;
+    // hit_restrain 受击抑制
+    std::vector<int32_t> hitRestrain;
+    // hit_count 可被连打次数类限制
+    int32_t hitCount = -1;
+    // death_displacement_id / death_effect_id 死亡
+    int32_t deathDisplacementId = 133;
+    int32_t deathEffectId       = 8;
+    // ko_effect_id KO 特效
+    int32_t koEffectId = -1;
+    // buff_ids / buff_pos / buff_scale 进场自带 Buff 及图标位置
     std::vector<int32_t> buffIds;
-    int32_t nameId = 0;
-    std::string headImage;
-    float velocity   = 0.0f;
-    int32_t rigidity = 0;
-    std::vector<int32_t> defaultSkillIds;
-    // 角色运行时属性
-    int32_t radius       = 20;
-    int32_t monsterCamps = 0;
+    std::vector<int32_t> buffPos;
+    float buffScale = 1.35f;
+    // hp_bar_count 血条管数
+    int32_t hpBarCount = 1;
+    // monster_camps 默认阵营
+    int32_t monsterCamps = 8;
+    // shadow / tier / tier_ext 影子与层级
+    int32_t shadow  = 2;
+    int32_t tier    = 2;
+    int32_t tierExt = 2;
+    // sound_id / sound_type 语音
     std::vector<int32_t> soundId;
-    int32_t soundType           = 0;
-    int32_t deathDisplacementId = -1;
-    int32_t deathEffectId       = -1;
-    int32_t hitDisplacementId   = -1;
-    int32_t hitStiffTime        = -1;
-    int32_t hpBarCount          = 1;
-    int32_t shadow              = 0;
-    int32_t tier                = 0;
+    int32_t soundType = 1;
+    // head_image 头像
+    std::string headImage;
+    // dialog_pos / hurt_num_pos / vertex_pos UI 锚点
+    Vector2i dialogPos;
+    Vector2i hurtNumPos;
     Vector2i vertexPos;
-    Vector2i size{40, 40};
-    int32_t behaviorTemplateId = 1;
-    // 转换器烘培成品属性
-    RoleAttributeConfig attribute;
+    // relative_position / spine_relative_position
+    Vector3f relativePosition;
+    Vector3f spineRelativePosition;
+    // time_rage 狂暴：时间 + Buff 列表
+    std::vector<int32_t> timeRage;
+    // fatigue 疲劳
+    int32_t fatigue = 200;
+    // is_pass_room 是否算过房
+    int32_t isPassRoom = -1;
 
     MG_DEFINE_SERIALIZABLE(id,
                            roleType,
+                           roleTypeSign,
+                           nameId,
+                           descId,
                            resSpineId,
+                           resSpineIdExt,
+                           resFashion,
                            aiIds,
                            attributeRate,
-                           buffIds,
-                           nameId,
-                           headImage,
                            velocity,
-                           rigidity,
-                           defaultSkillIds,
                            radius,
-                           monsterCamps,
-                           soundId,
-                           soundType,
+                           weight,
+                           rigidity,
+                           hitStiffTime,
+                           hitDisplacementId,
+                           hitRestrain,
+                           hitCount,
                            deathDisplacementId,
                            deathEffectId,
-                           hitDisplacementId,
-                           hitStiffTime,
+                           koEffectId,
+                           buffIds,
+                           buffPos,
+                           buffScale,
                            hpBarCount,
+                           monsterCamps,
                            shadow,
                            tier,
+                           tierExt,
+                           soundId,
+                           soundType,
+                           headImage,
+                           dialogPos,
+                           hurtNumPos,
                            vertexPos,
-                           size,
-                           behaviorTemplateId,
-                           attribute);
+                           relativePosition,
+                           spineRelativePosition,
+                           timeRage,
+                           fatigue,
+                           isPassRoom);
 };
 
 // 音效资源

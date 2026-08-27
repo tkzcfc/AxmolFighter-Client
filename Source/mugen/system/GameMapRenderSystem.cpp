@@ -18,6 +18,7 @@ const std::string_view kCaseLayerName           = "case";
 const std::string_view kLightLayerName          = "light";
 const std::string_view kGroundDebugDrawNodeName = "__groundDebugDrawNode__";
 const std::string_view kActorDebugDrawNodeName  = "__actorDebugDrawNode__";
+const std::string_view kOverlayNodeName         = "__overlayNode__";
 
 #endif
 
@@ -105,6 +106,8 @@ void GameMapRenderSystem::onEntityAdded(Entity* entity)
     if (!bindToGameMapRenderComponent(entity, root, std::move(camera)))
     {
         MG_LOG_E("Failed to bind mapRootNode: need all 9 layers");
+        MG_ASSERT(false &&
+                  "map .layer missing required layers (distant/middle/nearby/ground/region/trigger/entity/case/light)");
     }
 }
 
@@ -132,6 +135,7 @@ void GameMapRenderSystem::onEntityRemoved(Entity* entity)
         gameMapRenderComp->entityNode          = nullptr;
         gameMapRenderComp->caseNode            = nullptr;
         gameMapRenderComp->lightNode           = nullptr;
+        gameMapRenderComp->overlayNode         = nullptr;
         gameMapRenderComp->groundDebugDrawNode = nullptr;
         gameMapRenderComp->actorDebugDrawNode  = nullptr;
         return;
@@ -156,6 +160,11 @@ void GameMapRenderSystem::onEntityRemoved(Entity* entity)
     gameMapRenderComp->entityNode  = nullptr;
     gameMapRenderComp->caseNode    = nullptr;
     gameMapRenderComp->lightNode   = nullptr;
+    if (gameMapRenderComp->overlayNode)
+    {
+        gameMapRenderComp->overlayNode->removeFromParent();
+        gameMapRenderComp->overlayNode = nullptr;
+    }
     gameMapRenderComp->camera.reset();
 }
 
@@ -188,12 +197,12 @@ bool GameMapRenderSystem::bindToGameMapRenderComponent(Entity* entity,
     {
         MG_LOG_E(
             "GameMapRenderSystem: missing layers distant={} middle={} nearby={} ground={} region={} trigger={} "
-            "entity={} case={} light={}",
+            "entity={} case={} light={} file={}",
             gameMapRenderComp->distantNode != nullptr, gameMapRenderComp->middleNode != nullptr,
             gameMapRenderComp->nearbyNode != nullptr, gameMapRenderComp->groundNode != nullptr,
             gameMapRenderComp->regionNode != nullptr, gameMapRenderComp->triggerNode != nullptr,
             gameMapRenderComp->entityNode != nullptr, gameMapRenderComp->caseNode != nullptr,
-            gameMapRenderComp->lightNode != nullptr);
+            gameMapRenderComp->lightNode != nullptr, gameMapComp ? gameMapComp->layerFile.c_str() : "");
         return false;
     }
 
@@ -218,7 +227,17 @@ bool GameMapRenderSystem::bindToGameMapRenderComponent(Entity* entity,
     }
     gameMapRenderComp->actorDebugDrawNode = drawNode;
 
-    this->getGameWord()->getWordRootNode()->addChild(parallaxNode);
+    ax::Node* wordRoot = this->getGameWord()->getWordRootNode();
+    wordRoot->addChild(parallaxNode);
+
+    ax::Node* overlay = wordRoot->getChildByName(kOverlayNodeName);
+    if (!overlay)
+    {
+        overlay = ax::Node::create();
+        overlay->setName(kOverlayNodeName);
+        wordRoot->addChild(overlay, 1000);
+    }
+    gameMapRenderComp->overlayNode = overlay;
 
     const float mapW = static_cast<float>(gameMapComp->mapWidth);
     const float mapH = static_cast<float>(gameMapComp->mapHeight);

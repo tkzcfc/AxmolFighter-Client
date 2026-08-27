@@ -1,12 +1,12 @@
 #include "ActorSpawner.h"
 #include "mugen/Components.h"
 #include "mugen/GameWord.h"
+#include "mugen/ai/AiAgent.h"
 #include "mugen/conf/Config.h"
 #include "mugen/conf/GameDef.h"
 #include "mugen/core/io/FileUtils.h"
-
-#include <algorithm>
-#include <unordered_set>
+#include "mugen/skill/SkillManager.h"
+#include "mugen/common/TypeConversions.h"
 
 NS_MG_BEGIN
 
@@ -62,10 +62,10 @@ void collectSkillChain(Config* config, int32_t rootId, std::vector<int32_t>& cha
     }
 }
 
-void applyIdentity(IdentityComponent* identityComp, JobType job, const ActorSpawnParams& params)
+void applyIdentity(IdentityComponent* identityComp, CharacterClass characterClass, const ActorSpawnParams& params)
 {
     identityComp->category = params.category;
-    identityComp->job      = job;
+    identityComp->characterClass = characterClass;
     identityComp->playerId = params.playerId;
     identityComp->name     = std::string(params.name);
 }
@@ -78,16 +78,16 @@ void fillAvatarFromRole(AvatarComponent* avatarComp,
     avatarComp->roleConfig = role;
     avatarComp->roleId     = role ? role->id : 0;
     avatarComp->resSpine   = spine;
-    if (role && role->behaviorTemplateId > 0)
-        avatarComp->behaviorTemplate = Config::getInstance()->getBehaviorTemplateConfigById(role->behaviorTemplateId);
-    else
-        avatarComp->behaviorTemplate = Config::getInstance()->getBehaviorTemplateConfigById(1);
+    {
+        const int32_t tmplId         = (role && role->roleType != 1 && role->roleType != 0) ? 2 : 1;
+        avatarComp->behaviorTemplate = Config::getInstance()->getBehaviorTemplateConfigById(tmplId);
+    }
 
     if (spine && !spine->spine.empty())
     {
         avatarComp->spineSkeleton = spine->spine;
-        avatarComp->spineAtlas    = !spine->atlas.empty() ? spine->atlas : replaceExtension(spine->spine, ".atlas");
-        avatarComp->defaultSkin   = spine->defaultSkin;
+        avatarComp->spineAtlas    = replaceExtension(spine->spine, ".atlas");
+        avatarComp->defaultSkin.clear();
         avatarComp->defaultAnimationPath = parentDir(spine->spine);
         if (spine->scale > 0.0f)
             avatarComp->spineScale = spine->scale;
@@ -111,19 +111,204 @@ void fillAvatarFromRole(AvatarComponent* avatarComp,
     avatarComp->motionFile.clear();
 }
 
-JobType jobFromOccupation(int32_t occupationOrRoleId)
+
+// 参照 EntityTypeIndex[Role]：roleType → 属性模板虚拟基址（Elite/Boss 不是真实表行）。
+int32_t attributeBaseIndexForRoleType(int32_t roleType)
 {
-    switch (occupationOrRoleId)
+    switch (roleType)
     {
     case 1:
-        return JobType::kSwordman;
+        return 10000;  // Hero
     case 2:
-        return JobType::kRanger;
+        return 140000;  // Monster
+    case 3:
+        return 150000;  // Elite（虚拟，曲线仍走 140000）
     case 4:
-        return JobType::kMage;
+        return 160000;  // Boss（虚拟）
+    case 5:
+        return 70000;  // Summon
     default:
-        return JobType::kUnknown;
+        return 140000;
     }
+}
+
+float templateColumn(const AttributeTemplateConfig* t, int nameIndex)
+{
+    // getAttributeData 读列时 hp↔base_damage 互换
+    switch (nameIndex)
+    {
+    case 0:
+        return t->sourceForce;
+    case 1:
+        return t->agility;
+    case 2:
+        return t->habitus;
+    case 3:
+        return t->spirit;
+    case 4:
+        return t->baseDamage;  // AttributeName "hp" ← 列 base_damage
+    case 5:
+        return t->atk;
+    case 6:
+        return t->def;
+    case 7:
+        return t->matk;
+    case 8:
+        return t->mdef;
+    case 9:
+        return t->crit;
+    case 10:
+        return t->critResist;
+    case 11:
+        return t->critDamage;
+    case 12:
+        return t->critDamageResist;
+    case 13:
+        return t->dodge;
+    case 14:
+        return t->hit;
+    case 15:
+        return t->hp;  // AttributeName "base_damage" ← 列 hp
+    default:
+        return 0.0f;
+    }
+}
+
+// 对齐 DBEntity:getAttributeData：始终从 140000 曲线插值；Elite/Boss 只加 rate。
+bool bakeMonsterAttributeCurve(float outAttrs[16], int32_t attrKey)
+{
+    auto* config                         = Config::getInstance();
+    constexpr int32_t kInitDataId        = 140000;
+    const AttributeTemplateConfig* initT = config->getAttributeTemplateConfigById(kInitDataId);
+    if (!initT)
+        return false;
+
+    const int32_t monsterLv = attrKey % 10000;
+    const int32_t lv        = (monsterLv + 9) / 10;
+    const int32_t tenDigit  = monsterLv / 100;
+    const int32_t unitDigit = monsterLv % 100;
+    const int32_t curId    = kInitDataId + tenDigit;
+    const int32_t nextId    = kInitDataId + tenDigit + 1;
+
+    const AttributeTemplateConfig* curT = config->getAttributeTemplateConfigById(curId);
+    if (!curT)
+        return false;
+    const AttributeTemplateConfig* nextT =
+        unitDigit != 0 ? config->getAttributeTemplateConfigById(nextId) : nullptr;
+
+    const SkillHurtConfig* hurtCfg = config->getSkillHurtConfigById((std::max)(1, lv));
+
+    for (int i = 0; i < 16; ++i)
+    {
+        float value = templateColumn(initT, i);
+        if (curId == kInitDataId)
+        {
+            if (nextT)
+                value = value + templateColumn(nextT, i) / 100.0f * static_cast<float>(unitDigit);
+        }
+        else
+        {
+            value = value + templateColumn(curT, i);
+            if (nextT)
+                value = value + (templateColumn(nextT, i) - templateColumn(curT, i)) / 100.0f *
+                                    static_cast<float>(unitDigit);
+        }
+
+        const AttributeTemplateConfig* rateSrc = nextT ? nextT : curT;
+        if (i == 4)  // hp
+        {
+            if (hurtCfg)
+                value = value + static_cast<float>(hurtCfg->hurt);
+            if (rateSrc->monsterHitNumber > 0.0f)
+                value = value * rateSrc->monsterHitNumber;
+            if (attrKey > 160000)
+                value = value * rateSrc->bossHpRate;
+            else if (attrKey > 150000)
+                value = value * rateSrc->eliteHpRate;
+            value = std::floor(value);
+        }
+        else if (i == 15)  // base_damage
+        {
+            if (rateSrc->playerHitNumber > 0.0f)
+                value = value / rateSrc->playerHitNumber;
+            if (attrKey > 160000)
+                value = value * rateSrc->bossHurtRate;
+            else if (attrKey > 150000)
+                value = value * rateSrc->eliteHurtRate;
+        }
+        outAttrs[i] = value;
+    }
+    return true;
+}
+
+// 按「属性模板 × 等级 × attributeRate」烘焙 basic（参照 EntityAttribute:loadAttribute）。
+// rate 顺序对齐 AttributeName：source_force, agility, habitus, spirit, hp, atk, def, matk, mdef,
+// crit, crit_resist, crit_damage, crit_damage_resist, dodge, hit, base_damage（16 个，0-indexed）。
+void applyAttributeTemplate(AttributeComponent* attrComp, const RoleConfig* role, int32_t level)
+{
+    if (!attrComp || !role)
+        return;
+
+    const int32_t baseIdx = attributeBaseIndexForRoleType(role->roleType);
+    const int32_t attrKey = baseIdx + (std::max)(1, level);  // 对齐：base + level（不是 level-1）
+
+    float baked[16] = {};
+    bool ok         = false;
+    if (baseIdx == 10000)
+    {
+        // Hero：表内有 10000 段；优先直接取行，缺行再走怪物曲线
+        const int32_t heroId = baseIdx + (std::max)(1, level) - 1;
+        if (const auto* tmpl = Config::getInstance()->getAttributeTemplateConfigById(heroId))
+        {
+            baked[0]  = tmpl->sourceForce;
+            baked[1]  = tmpl->agility;
+            baked[2]  = tmpl->habitus;
+            baked[3]  = tmpl->spirit;
+            baked[4]  = tmpl->hp;
+            baked[5]  = tmpl->atk;
+            baked[6]  = tmpl->def;
+            baked[7]  = tmpl->matk;
+            baked[8]  = tmpl->mdef;
+            baked[9]  = tmpl->crit;
+            baked[10] = tmpl->critResist;
+            baked[11] = tmpl->critDamage;
+            baked[12] = tmpl->critDamageResist;
+            baked[13] = tmpl->dodge;
+            baked[14] = tmpl->hit;
+            baked[15] = tmpl->baseDamage;
+            ok        = true;
+        }
+    }
+    if (!ok)
+        ok = bakeMonsterAttributeCurve(baked, attrKey);
+    if (!ok)
+        return;
+
+    auto& a           = attrComp->basic;
+    const auto& r     = role->attributeRate;
+    const auto rateAt = [&](size_t i) { return i < r.size() ? r[i] : 0.0f; };
+
+    a.sourceForce      = baked[0] * rateAt(0);
+    a.agility          = baked[1] * rateAt(1);
+    a.habitus          = baked[2] * rateAt(2);
+    a.spirit           = baked[3] * rateAt(3);
+    a.hpMax            = baked[4] * rateAt(4);
+    a.atk              = baked[5] * rateAt(5);
+    a.def              = baked[6] * rateAt(6);
+    a.matk             = baked[7] * rateAt(7);
+    a.mdef             = baked[8] * rateAt(8);
+    a.crit             = baked[9] * rateAt(9);
+    a.critResist       = baked[10] * rateAt(10);
+    a.critDamage       = baked[11] * rateAt(11);
+    a.critDamageResist = baked[12] * rateAt(12);
+    a.dodge            = baked[13] * rateAt(13);
+    a.hit              = baked[14] * rateAt(14);
+    a.baseDamage       = baked[15] * rateAt(15);
+
+    if (attrComp->hp <= 0.0f)
+        attrComp->hp = a.hpMax;
+    if (attrComp->mp <= 0.0f)
+        attrComp->mp = attrComp->mpMax;
 }
 
 Entity* spawnRoleFullActorImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y, const ActorSpawnParams& params)
@@ -169,82 +354,104 @@ Entity* spawnRoleFullActorImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32
     (void)soundComp;
     (void)displacementComp;
     (void)buffComp;
-    (void)skillCastComp;
 
+    auto* skillMgr = skillCastComp->ensureManager();
+
+    btComp->ensureTree();
     btComp->cityMode = preferCity || params.cityMode;
+    btComp->treeKind = btComp->cityMode ? 1 : 0;
 
     // 出生点 + 巡逻半径；怪物按住即跑，避免双击语义
-    aiComp->spawnPosition.x = static_cast<float>(x);
-    aiComp->spawnPosition.y = static_cast<float>(y);
-    aiComp->spawnPosition.z = 0.0f;
+    auto* agent            = aiComp->ensureAgent();
+    agent->spawnPosition.x = static_cast<float>(x);
+    agent->spawnPosition.y = static_cast<float>(y);
+    agent->spawnPosition.z = 0.0f;
     if (params.category == EntityCategory::kMonster)
     {
         behaviorComp->clickToWalk = false;
-        int32_t scope            = 200;
+        int32_t scope             = 200;
         if (!role->aiIds.empty())
         {
             if (const auto* ai = config->getAiConfigById(role->aiIds.front()))
             {
-                if (ai->patrolScope > 0)
-                    scope = ai->patrolScope;
+                const int32_t px = (std::max)(std::abs(ai->patrolScopeX.x), std::abs(ai->patrolScopeX.y));
+                if (px > 0)
+                    scope = px;
                 else if (ai->chaseScopeX.y > 0)
                     scope = (std::max)(150, ai->chaseScopeX.y / 4);
             }
         }
-        aiComp->patrolScope = scope;
+        agent->patrolScope = scope;
     }
 
     fillAvatarFromRole(avatarComp, role, spine, preferCity);
 
     behaviorComp->roleConfig       = role;
     behaviorComp->behaviorTemplate = avatarComp->behaviorTemplate;
+    behaviorComp->rigidityMax      = role->rigidity;
+    behaviorComp->rigidityRemain   = role->rigidity;
+    behaviorComp->weight           = role->weight;
+    behaviorComp->fatigue          = role->fatigue;
     behaviorComp->statusTags =
         StateTag::kTagGrounded | StateTag::kTagMovable | StateTag::kTagAttackAllowed | StateTag::kTagFacingAllowed;
 
-    attributeComp->baseAttribute    = role->attribute;
-    attributeComp->currentAttribute = role->attribute;
-    attributeComp->epMax            = 100.0f;
-    attributeComp->ep               = attributeComp->epMax;
-    if (attributeComp->currentAttribute.hp <= 0)
-        attributeComp->currentAttribute.hp = static_cast<float>(attributeComp->currentAttribute.hpMax);
-    if (attributeComp->currentAttribute.mp <= 0)
-        attributeComp->currentAttribute.mp = static_cast<float>(attributeComp->currentAttribute.mpMax);
-    if (role->attribute.moveSpeed <= 0.0f && role->velocity > 0.0f)
-    {
-        attributeComp->baseAttribute.moveSpeed    = role->velocity * 1000.0f;
-        attributeComp->currentAttribute.moveSpeed = role->velocity * 1000.0f;
-    }
-    attributeComp->bindVariable();
+    applyAttributeTemplate(attributeComp, role, params.level);
+    attributeComp->epMax = 100.0f;
+    attributeComp->ep    = attributeComp->epMax;
+    if (attributeComp->hp <= 0.0f)
+        attributeComp->hp = attributeComp->basic.hpMax;
+    if (attributeComp->mp <= 0.0f)
+        attributeComp->mp = attributeComp->mpMax;
+    if (attributeComp->moveSpeed <= 0.0f && role->velocity > 0.0f)
+        attributeComp->moveSpeed = role->velocity * 1000.0f;
 
     physicsComp->isStaticBody = false;
-    physicsComp->size.x       = static_cast<float>(role->size.x);
-    physicsComp->size.y       = static_cast<float>(role->size.y);
     {
-        const float moveSpeed      = attributeComp->currentAttribute.moveSpeed;
+        const float box     = static_cast<float>((std::max)(1, role->radius) * 2);
+        physicsComp->size.x = box;
+        physicsComp->size.y = box;
+    }
+    {
+        const float moveSpeed      = attributeComp->moveSpeed;
         physicsComp->maxVelocity.x = std::max(physicsComp->maxVelocity.x, moveSpeed);
         physicsComp->maxVelocity.y = std::max(physicsComp->maxVelocity.y, moveSpeed);
     }
 
     identityComp->monsterCamps = role->monsterCamps;
-    applyIdentity(identityComp, jobFromOccupation(role->id), params);
+    applyIdentity(identityComp, type_conversions::toCharacterClass(role->id), params);
 
     transformComp->position.x = x;
     transformComp->position.y = y;
     transformComp->scale.x    = 1.0f;
     transformComp->scale.y    = 1.0f;
 
-    // 新手默认槽：A=普攻920000, B=920100, C=920120, D=920150；另绑 Y 突刺 / F 闪避 / E 爆气
-    std::vector<int32_t> roots = role->defaultSkillIds;
-    if (roots.empty() && (roleId == 1 || roleId == 101 || roleId == 102 || roleId == 103))
+    // 英雄用默认链 + 闪避/爆气/突刺；怪物从 AI 配置绑技能。
+    // 本工程可玩角色是 101/102/103，表里 roleType 不是 1，按玩家实体走英雄链。
+    const bool isHero = (params.category == EntityCategory::kPlayer) || (role->roleType == 1);
+    std::vector<int32_t> roots;
+    if (params.category == EntityCategory::kMonster && !isHero && !role->aiIds.empty())
     {
-        roots.push_back(920000);  // 普攻 -> SLOT_0 (A/1)
-        roots.push_back(920100);  // 技能A -> SLOT_1 (2)
-        roots.push_back(920120);  // 技能B -> SLOT_2 (3)
-        roots.push_back(920150);  // 技能C -> SLOT_3 (4)
+        if (const auto* ai = config->getAiConfigById(role->aiIds.front()))
+        {
+            for (int32_t sid : ai->skillIds)
+            {
+                if (sid <= 0)
+                    continue;
+                if (std::find(roots.begin(), roots.end(), sid) == roots.end())
+                    roots.push_back(sid);
+            }
+        }
     }
-    // 英雄补齐闪避/爆气/突刺根（已在 roots 中则跳过）
-    if (roleId == 1 || roleId == 101 || roleId == 102 || roleId == 103)
+    if (isHero)
     {
+        if (roots.empty())
+        {
+            roots.push_back(920000);  // 普攻 -> SLOT_0 (A/1)
+            roots.push_back(920100);  // 技能A -> SLOT_1 (2)
+            roots.push_back(920120);  // 技能B -> SLOT_2 (3)
+            roots.push_back(920150);  // 技能C -> SLOT_3 (4)
+        }
+        // 补齐闪避/爆气/突刺根（已在 roots 中则跳过）
         const int32_t extras[] = {920090, 920080, 920280};
         for (int32_t extra : extras)
         {
@@ -300,10 +507,6 @@ Entity* spawnRoleFullActorImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32
             entry.skillAttackId     = skillId;
             entry.nextSkillAttackId = skillAtk->nextSkill > 0 ? skillAtk->nextSkill : -1;
             entry.level             = 1;
-            entry.coolDownMaxMs     = skillAtk->cd > 0 ? skillAtk->cd : 0;
-            entry.coolDownMs        = 0;
-            entry.releaseMax        = skillAtk->cdCount > 0 ? skillAtk->cdCount : 1;
-            entry.releaseCount      = entry.releaseMax;
             skillDeckComp->skills.push_back(entry);
             deckIndices.push_back(static_cast<int32_t>(skillDeckComp->skills.size() - 1));
 
@@ -320,17 +523,17 @@ Entity* spawnRoleFullActorImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32
         // 突刺(Y) / 闪避(F) / 爆气(E)：专用键触发，不占数字键槽
         if (rootId == 920090)
         {
-            skillCastComp->thrustSkillAttackId = chain.front();
+            skillMgr->thrustSkillAttackId = chain.front();
             continue;
         }
         if (rootId == 920080)
         {
-            skillCastComp->dodgeSkillAttackId = chain.front();
+            skillMgr->dodgeSkillAttackId = chain.front();
             continue;
         }
         if (rootId == 920280)
         {
-            skillCastComp->crazySkillAttackId = chain.front();
+            skillMgr->crazySkillAttackId = chain.front();
             continue;
         }
 
@@ -344,9 +547,11 @@ Entity* spawnRoleFullActorImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32
         MG_LOG_W("spawnRole: bind INPUT_SLOT_{} -> root {} chainLen={}", boundCount - 1, rootId, deckIndices.size());
     }
 
-    MG_LOG_W("spawnRole: role={} skills={} slots={} thrust={} dodge={} crazy={}", roleId,
-             actorDataComp->skills.size(), skillBarComp->skillSlots.size(), skillCastComp->thrustSkillAttackId,
-             skillCastComp->dodgeSkillAttackId, skillCastComp->crazySkillAttackId);
+    skillMgr->bindConfig(actor);
+
+    MG_LOG_W("spawnRole: role={} skills={} slots={} thrust={} dodge={} crazy={}", roleId, actorDataComp->skills.size(),
+             skillBarComp->skillSlots.size(), skillMgr->thrustSkillAttackId, skillMgr->dodgeSkillAttackId,
+             skillMgr->crazySkillAttackId);
     return actor;
 }
 
@@ -366,6 +571,7 @@ Entity* spawnRemoteRoleImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32_t 
     auto avatarRenderComp = MG_ADD_COMPONENT(remote, AvatarRenderComponent);
     auto transformComp    = MG_ADD_COMPONENT(remote, TransformComponent);
     auto identityComp     = MG_ADD_COMPONENT(remote, IdentityComponent);
+    MG_ADD_COMPONENT(remote, SoundComponent);
     (void)avatarRenderComp;
 
     fillAvatarFromRole(avatarComp, role, spine, false);
@@ -374,46 +580,11 @@ Entity* spawnRemoteRoleImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32_t 
     transformComp->scale.x     = 1.0f;
     transformComp->scale.y     = 1.0f;
     identityComp->monsterCamps = role->monsterCamps;
-    applyIdentity(identityComp, jobFromOccupation(role->id), params);
+    applyIdentity(identityComp, type_conversions::toCharacterClass(role->id), params);
     return remote;
 }
 
 }  // namespace
-
-int32_t resolvePlayableRoleId(int32_t classOrRoleId)
-{
-    // 服务器 class_id 是 JobType，不是 RoleConfig id
-    constexpr int32_t kDefaultHeroRoleId = 101;
-    switch (classOrRoleId)
-    {
-    case static_cast<int32_t>(JobType::kSwordman):
-        return 101;
-    case static_cast<int32_t>(JobType::kRanger):
-        return 102;
-    case static_cast<int32_t>(JobType::kMage):
-        return 103;
-    default:
-        break;
-    }
-
-    if (classOrRoleId <= 0)
-        return kDefaultHeroRoleId;
-
-    auto* config = Config::getInstance();
-    const auto* role = config->getRoleConfigById(classOrRoleId);
-    if (!role || role->resSpineId <= 0)
-        return kDefaultHeroRoleId;
-
-    const auto* spine = config->getResSpineConfigById(role->resSpineId);
-    if (!spine || spine->spine.empty())
-        return kDefaultHeroRoleId;
-
-    // 英雄资源路径约定：mugen/spine/hero/...
-    if (spine->spine.find("/hero/") == std::string::npos)
-        return kDefaultHeroRoleId;
-
-    return classOrRoleId;
-}
 
 Entity* spawnRoleActor(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y, const ActorSpawnParams& params)
 {
@@ -433,11 +604,6 @@ Entity* spawnRolePlayerActor(ECSManager* ecs, int32_t roleId, int32_t x, int32_t
     ActorSpawnParams p = params;
     p.category         = EntityCategory::kPlayer;
     return spawnRoleFullActorImpl(ecs, roleId, x, y, p);
-}
-
-Entity* spawnRolePlayerActor(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y, const PlayerSpawnParams& params)
-{
-    return spawnRolePlayerActor(ecs, roleId, x, y, params.toActorParams());
 }
 
 Entity* spawnRemoteRoleActor(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y, const ActorSpawnParams& params)

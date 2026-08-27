@@ -2,6 +2,7 @@
 
 #include "mugen/avatar/AvatarLayerUtils.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
+#include "mugen/core/io/FileUtils.h"
 
 #include <algorithm>
 
@@ -16,7 +17,7 @@ bool tryLoadAutoBox(const std::string& baseDir,
     if (baseDir.empty() || animName.empty())
         return false;
     const std::string autoBox = AvatarLayerUtils::resolveAssetPath(baseDir, animName + ".box");
-    if (autoBox.empty())
+    if (autoBox.empty() || !io::isFileExist(autoBox))
         return false;
     outBox = AvatarAssetCache::getInstance()->getCombatTimeline(autoBox);
     return outBox != nullptr;

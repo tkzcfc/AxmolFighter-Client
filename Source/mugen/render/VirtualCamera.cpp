@@ -63,12 +63,12 @@ void VirtualCamera::shake(float amplitude, float durationMs, int32_t /*freezeTim
 {
     if (amplitude <= 0.0f || durationMs <= 0.0f)
         return;
-    m_shaking          = true;
-    m_shakeAmplitude   = amplitude;
-    m_shakeDurationMs  = durationMs;
-    m_shakeElapsedMs   = 0.0f;
-    m_shakeCycles      = 2.0f;
-    m_shakeOffset      = ax::Vec2::ZERO;
+    m_shaking         = true;
+    m_shakeAmplitude  = amplitude;
+    m_shakeDurationMs = durationMs;
+    m_shakeElapsedMs  = 0.0f;
+    m_shakeCycles     = 2.0f;
+    m_shakeOffset     = ax::Vec2::ZERO;
 }
 
 void VirtualCamera::updateShake(float deltaSec)

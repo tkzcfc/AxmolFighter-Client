@@ -33,6 +33,8 @@ public:
 
     bool setSkin(const std::string& skinName);
 
+    ax::Rect skeletonBoundingBox() const;
+
 private:
     bool initWithDesc(const SpineAvatarDesc& desc);
     void initMotionMap(const SpineAvatarDesc& desc);

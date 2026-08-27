@@ -12,21 +12,21 @@ class Entity;
 
 struct DamageResult
 {
-    float damage  = 0.0f;
-    bool isCrit   = false;
-    bool isDodge  = false;
+    float damage = 0.0f;
+    bool isCrit  = false;
+    bool isDodge = false;
 };
 
 struct DamageInput
 {
-    const AttributeComponent* attacker = nullptr;
-    const AttributeComponent* defender = nullptr;
-    const SkillHitTableConfig* hitCfg  = nullptr;
-    const SkillHurtConfig* hurtStd     = nullptr;  // 受击方等级：攻防/暴击/闪避标准
+    const AttributeComponent* attacker     = nullptr;
+    const AttributeComponent* defender     = nullptr;
+    const SkillHitTableConfig* hitCfg      = nullptr;
+    const SkillHurtConfig* hurtStd         = nullptr;  // 受击方等级：攻防/暴击/闪避标准
     const SkillHurtConfig* attackerHurtStd = nullptr;  // 攻击方等级：standHurt（仅英雄 hurt）
-    float skillAddition                = 0.0f;     // 技能等级加成，一期恒 0
-    bool hitMust                       = false;
-    bool isHeroDefender                = true;
+    float skillAddition                    = 0.0f;
+    bool hitMust                           = false;
+    bool isHeroDefender                    = true;
 };
 
 /** SkillHurt 伤害公式 */

@@ -4,11 +4,15 @@
 #include "mugen/bt/actions/AttackAction.h"
 #include "mugen/bt/actions/RoleActions.h"
 #include "mugen/bt/conditions/CondAttack.h"
+#include "mugen/component/BehaviorTreeComponent.h"
 #include "mugen/conf/Config.h"
+#include "mugen/conf/GameDef.h"
 #include "mugen/core/bt/BTSelector.h"
 #include "mugen/core/bt/BTSequence.h"
+#include "mugen/core/ecs/Entity.h"
+#include "mugen/core/StdC.h"
+#include "mugen/skill/SkillManager.h"
 
-#include <algorithm>
 #include <unordered_set>
 
 NS_MG_BEGIN
@@ -19,6 +23,7 @@ namespace SkillTreeBuilder
 namespace
 {
 
+// 沿 nextSkill 收集连段 id，环则停
 void collectSkillChain(Config* config, int32_t rootId, std::vector<int32_t>& chainOut)
 {
     chainOut.clear();
@@ -36,109 +41,147 @@ void collectSkillChain(Config* config, int32_t rootId, std::vector<int32_t>& cha
     }
 }
 
-std::unique_ptr<BTNode> buildToward(BehaviorTreeComponent* bt,
-                                    int32_t skillAttackId,
-                                    int32_t towardIndex,
-                                    const IntListRow& row)
+// Toward 序列：CondAttackToward + 若干 AttackAction
+BTNode* buildToward(int32_t skillAttackId, int32_t towardIndex, const IntListRow& row)
 {
-    auto seq           = std::make_unique<BTSequence>();
-    seq->memorySlot    = bt->allocMemorySlot();
-    seq->debugName     = "Toward";
-    seq->addCondition(std::make_unique<CondAttackToward>(towardIndex));
+    auto* seq = new BTSequence();
+    seq->addCondition(new CondAttackToward(towardIndex));
 
     int32_t actionIndex = 0;
     for (int32_t aid : row.values)
     {
         if (aid <= 0)
             continue;
-        seq->addChild(std::make_unique<AttackAction>(aid, actionIndex++, skillAttackId));
+        seq->addChild(new AttackAction(aid, actionIndex++, skillAttackId));
     }
     if (seq->childCount() == 0)
+    {
+        delete seq;
         return nullptr;
+    }
     return seq;
 }
 
-std::unique_ptr<BTNode> buildPipe(BehaviorTreeComponent* bt,
-                                  int32_t slot,
-                                  int32_t stepIndex,
-                                  int32_t skillAttackId,
-                                  int32_t pipeIndex,
-                                  const SkillAttackConfig& skillAtk)
+// Pipe：多朝向 Toward 的 Selector；条件 onEnter 扣费、onExit 只清朝向
+BTNode* buildPipe(int32_t slot,
+                  int32_t stepIndex,
+                  int32_t skillAttackId,
+                  int32_t pipeIndex,
+                  int32_t modeIndex,
+                  const SkillAttackConfig& skillAtk)
 {
-    auto pipeSel           = std::make_unique<BTSelector>();
-    pipeSel->memorySlot    = bt->allocMemorySlot();
-    pipeSel->debugName     = "Pipe";
-    pipeSel->addCondition(std::make_unique<CondAttackPipe>(slot, stepIndex, pipeIndex, 0));
+    auto* pipeSel = new BTSelector();
+    pipeSel->addCondition(new CondAttackPipe(slot, stepIndex, pipeIndex, modeIndex));
 
-    // towardIndex 1-based，对应 actionIds 行下标 0
     for (size_t j = 0; j < skillAtk.actionIds.size(); ++j)
     {
         const auto& row = skillAtk.actionIds[j];
         if (row.values.empty() || row.values.front() == -1)
             continue;
-        if (auto toward = buildToward(bt, skillAttackId, static_cast<int32_t>(j + 1), row))
-            pipeSel->addChild(std::move(toward));
-    }
-
-    // 兼容扁平 primaryActionIds
-    if (pipeSel->childCount() == 0 && !skillAtk.primaryActionIds.empty())
-    {
-        IntListRow row;
-        row.values = skillAtk.primaryActionIds;
-        if (auto toward = buildToward(bt, skillAttackId, 1, row))
-            pipeSel->addChild(std::move(toward));
+        if (BTNode* toward = buildToward(skillAttackId, static_cast<int32_t>(j + 1), row))
+            pipeSel->addChild(toward);
     }
 
     if (pipeSel->childCount() == 0)
+    {
+        delete pipeSel;
         return nullptr;
+    }
     return pipeSel;
 }
 
-std::unique_ptr<BTNode> buildStep(BehaviorTreeComponent* bt,
-                                  int32_t slot,
-                                  int32_t stepIndex,
-                                  int32_t skillAttackId)
+// Step：按 cdCount 从高到低挂 Pipe
+BTNode* buildStep(int32_t slot, int32_t stepIndex, int32_t skillAttackId, int32_t modeIndex)
 {
     const auto* skillAtk = Config::getInstance()->getSkillAttackConfigById(skillAttackId);
     if (!skillAtk)
         return nullptr;
 
-    auto stepSel           = std::make_unique<BTSelector>();
-    stepSel->memorySlot    = bt->allocMemorySlot();
-    stepSel->debugName     = "Step";
-    stepSel->addCondition(std::make_unique<CondAttackStep>(slot, stepIndex));
+    auto* stepSel = new BTSelector();
+    stepSel->addCondition(new CondAttackStep(slot, stepIndex));
 
     int32_t pipeMax = skillAtk->cdCount > 0 ? skillAtk->cdCount : 1;
-    // 倒序挂载 Max..1
     for (int32_t p = pipeMax; p >= 1; --p)
     {
-        if (auto pipe = buildPipe(bt, slot, stepIndex, skillAttackId, p, *skillAtk))
-            stepSel->addChild(std::move(pipe));
+        if (BTNode* pipe = buildPipe(slot, stepIndex, skillAttackId, p, modeIndex, *skillAtk))
+            stepSel->addChild(pipe);
     }
 
     if (stepSel->childCount() == 0)
+    {
+        delete stepSel;
         return nullptr;
+    }
     return stepSel;
 }
 
-std::unique_ptr<BTNode> buildSlot(BehaviorTreeComponent* bt,
-                                  int32_t slot,
-                                  const std::vector<int32_t>& chain)
+// Mode：普通(0) / 爆气(1)，子节点为连段各 Step
+BTNode* buildMode(int32_t slot, int32_t slotIndex, int32_t modeIndex, const std::vector<int32_t>& chain)
 {
-    auto slotSel           = std::make_unique<BTSelector>();
-    slotSel->memorySlot    = bt->allocMemorySlot();
-    slotSel->debugName     = "Slot";
-    slotSel->addCondition(std::make_unique<CondAttackSlot>(slot));
+    auto* modeSel = new BTSelector();
+    modeSel->addCondition(new CondAttackMode(slot, slotIndex, modeIndex));
 
     for (size_t step = 0; step < chain.size(); ++step)
     {
-        if (auto stepNode = buildStep(bt, slot, static_cast<int32_t>(step), chain[step]))
-            slotSel->addChild(std::move(stepNode));
+        if (BTNode* stepNode = buildStep(slot, static_cast<int32_t>(step), chain[step], modeIndex))
+            modeSel->addChild(stepNode);
+    }
+    if (modeSel->childCount() == 0)
+    {
+        delete modeSel;
+        return nullptr;
+    }
+    return modeSel;
+}
+
+// Slot：Sequence(CondAttackSlot → SlotIndex Selector)
+BTNode* buildSlot(int32_t slot, const std::vector<int32_t>& chain)
+{
+    constexpr int32_t kSlotIndex = 1;
+
+    auto* slotSeq = new BTSequence();
+    slotSeq->addCondition(new CondAttackSlot(slot));
+
+    auto* indexSel = new BTSelector();
+    indexSel->addCondition(new CondAttackSlotIndex(slot, kSlotIndex));
+
+    for (int32_t mode = 0; mode <= 1; ++mode)
+    {
+        if (BTNode* modeNode = buildMode(slot, kSlotIndex, mode, chain))
+            indexSel->addChild(modeNode);
+    }
+    if (indexSel->childCount() == 0)
+    {
+        delete indexSel;
+        delete slotSeq;
+        return nullptr;
     }
 
-    if (slotSel->childCount() == 0)
-        return nullptr;
-    return slotSel;
+    slotSeq->addChild(indexSel);
+    return slotSeq;
+}
+
+// 突刺/闪避/爆气等专用槽：按技能根 id 灌一条 Slot
+bool addSlotFromRoot(BTSelector* attackSel,
+                     Config* config,
+                     int32_t slot,
+                     int32_t rootId,
+                     std::unordered_set<int32_t>& filledSlots)
+{
+    if (!attackSel || rootId <= 0 || !filledSlots.insert(slot).second)
+        return false;
+
+    std::vector<int32_t> chain;
+    collectSkillChain(config, rootId, chain);
+    if (chain.empty())
+        chain.push_back(rootId);
+
+    if (BTNode* slotNode = buildSlot(slot, chain))
+    {
+        attackSel->addChild(slotNode);
+        return true;
+    }
+    return false;
 }
 
 }  // namespace
@@ -147,9 +190,10 @@ void fill(Entity* entity)
 {
     if (!entity)
         return;
-    auto* bt       = MG_GET_COMPONENT(entity, BehaviorTreeComponent);
+    auto* bt       = BehaviorTreeComponent::of(entity);
     auto* skillBar = MG_GET_COMPONENT(entity, SkillBarComponent);
     auto* deck     = MG_GET_COMPONENT(entity, SkillDeckComponent);
+    auto* mgr      = SkillManager::of(entity);
     if (!bt || !bt->attackSelector || !skillBar || !deck)
         return;
 
@@ -160,6 +204,7 @@ void fill(Entity* entity)
     attackSel->clearChildren();
 
     auto* config = Config::getInstance();
+    std::unordered_set<int32_t> filledSlots;
     int32_t filled = 0;
 
     for (size_t i = 0; i < skillBar->skillSlots.size(); ++i)
@@ -171,7 +216,6 @@ void fill(Entity* entity)
         if (indices.empty())
             continue;
 
-        // 链：用槽内第一个 deck 技能作根展开（与 ActorSpawner 同槽链一致）
         const int32_t firstDeck = indices.front();
         if (firstDeck < 0 || firstDeck >= static_cast<int32_t>(deck->skills.size()))
             continue;
@@ -181,7 +225,6 @@ void fill(Entity* entity)
         collectSkillChain(config, rootId, chain);
         if (chain.empty())
         {
-            // 回退：按 deck 槽索引顺序
             for (int32_t di : indices)
             {
                 if (di >= 0 && di < static_cast<int32_t>(deck->skills.size()))
@@ -189,25 +232,34 @@ void fill(Entity* entity)
             }
         }
 
-        if (auto slotNode = buildSlot(bt, barSlot.slotIndex, chain))
+        if (BTNode* slotNode = buildSlot(barSlot.slotIndex, chain))
         {
-            attackSel->addChild(std::move(slotNode));
+            filledSlots.insert(barSlot.slotIndex);
+            attackSel->addChild(slotNode);
             ++filled;
         }
     }
 
+    if (mgr)
+    {
+        if (addSlotFromRoot(attackSel, config, static_cast<int32_t>(INPUT_SLOT_Z), mgr->thrustSkillAttackId,
+                            filledSlots))
+            ++filled;
+        if (addSlotFromRoot(attackSel, config, static_cast<int32_t>(INPUT_SLOT_X), mgr->dodgeSkillAttackId,
+                            filledSlots))
+            ++filled;
+        if (addSlotFromRoot(attackSel, config, static_cast<int32_t>(INPUT_SLOT_C), mgr->crazySkillAttackId,
+                            filledSlots))
+            ++filled;
+    }
+
     if (filled == 0)
     {
-        // 无技能时保留占位，避免 Attack 条件通过却无子节点
-        attackSel->addChild(std::make_unique<HoldAttackAction>());
+        attackSel->addChild(new HoldAttackAction());
         MG_LOG_W("SkillTreeBuilder: no skill slots filled, HoldAttack placeholder");
     }
     else
     {
-        // 灌树后可能新增 memory 槽，扩容
-        const int32_t slots = (std::max)(bt->nextMemorySlot, 1);
-        if (static_cast<int32_t>(bt->selectorMemory.size()) < slots)
-            bt->selectorMemory.resize(static_cast<size_t>(slots), static_cast<int8_t>(-1));
         MG_LOG_W("SkillTreeBuilder: filled {} attack slots", filled);
     }
 }

@@ -71,6 +71,13 @@ bool SpineLayer::initSkeleton(const SpineAvatarDesc& desc)
     return true;
 }
 
+ax::Rect SpineLayer::skeletonBoundingBox() const
+{
+    if (!m_skeleton)
+        return ax::Rect::ZERO;
+    return m_skeleton->getBoundingBox();
+}
+
 bool SpineLayer::setSkin(const std::string& skinName)
 {
     if (!m_skeleton || skinName.empty())

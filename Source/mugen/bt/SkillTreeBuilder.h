@@ -4,13 +4,14 @@
 
 NS_MG_BEGIN
 
+// 按 SkillBar + SkillDeck 向 Attack Selector 灌入技能图。拓扑不进快照。
 namespace SkillTreeBuilder
 {
 
-/** 向 RoleTreeBuilder 创建的 Attack Selector 灌入 Slot→Step→Pipe→Toward→AttackAction 子树 */
+// 向 Attack Selector 灌入 Slot→SlotIndex→Mode→Step→Pipe→Toward→AttackAction
 void fill(Entity* entity);
 
-/** 清空并重建技能子树（换装/学技能时调用；一期通常只 fill 一次） */
+// 清空并重建技能子树（换装/学技能）
 void rebuild(Entity* entity);
 
 }  // namespace SkillTreeBuilder

@@ -1,25 +1,28 @@
 #pragma once
 
 #include "mugen/core/ecs/Component.h"
-#include "mugen/conf/TableConfig.h"
 
 #include <vector>
 
 NS_MG_BEGIN
 
-struct SkillDeckEntry
+// 卡组一条：只存拓扑。CD / 次数 / 消耗缩放在 Skill 上。
+class SkillDeckEntry : public Object
 {
+public:
+    typedef Object Super;
+
+    SkillDeckEntry() {}
+    virtual ~SkillDeckEntry() {}
+
     int32_t skillAttackId     = 0;
     int32_t nextSkillAttackId = -1;
     int32_t level             = 1;
-    int32_t coolDownMs        = 0;
-    int32_t coolDownMaxMs     = 0;  // 表 cd 基准；开 CD 时 × coldTimeScale
-    int32_t releaseCount      = 1;
-    int32_t releaseMax        = 1;
-    float coldTimeScale       = 1.0f;
-    float mpConsumeScale      = 1.0f;
+
+    MG_DEFINE_SERIALIZABLE(skillAttackId, nextSkillAttackId, level);
 };
 
+// 卡组拓扑：技能 id 与槽下标。运行时 CD 不在这里。
 class SkillDeckComponent : public Component
 {
 public:
@@ -33,7 +36,7 @@ public:
     std::vector<std::vector<int32_t>> slotSkillIndices;
     int32_t nextSkillAttackId = 0;
 
-    MG_DEFINE_SERIALIZABLE(nextSkillAttackId);
+    MG_DEFINE_SERIALIZABLE(skills, slotSkillIndices, nextSkillAttackId);
 };
 
 NS_MG_END

@@ -28,7 +28,7 @@ inline void fillCombatInputSlotMap(std::map<ax::EventKeyboard::KeyCode, uint32_t
     out[ax::EventKeyboard::KeyCode::KEY_Z] = mugen::INPUT_SLOT_Z;
     out[ax::EventKeyboard::KeyCode::KEY_X] = mugen::INPUT_SLOT_X;
     out[ax::EventKeyboard::KeyCode::KEY_C] = mugen::INPUT_SLOT_C;
-    // E=爆气、F=闪避（映射到专用输入槽，由 SkillCastComponent 持有技能 id）
+    // E=爆气、F=闪避（映射到专用输入槽，技能 id 在 SkillManager）
     out[ax::EventKeyboard::KeyCode::KEY_E] = mugen::INPUT_SLOT_C;
     out[ax::EventKeyboard::KeyCode::KEY_F] = mugen::INPUT_SLOT_X;
 

@@ -25,9 +25,9 @@ public:
     Vector3f position;
 
     // 当前速度：
-    // x = 水平移动/击退速度
-    // y = 预留（目前未启用）
-    // z = 跳跃/击飞速度
+    // x = 水平
+    // y = 纵深（表空间 z）
+    // z = 高度（表空间 y）
     Vector3f velocity;
 
     // 重力加速度。

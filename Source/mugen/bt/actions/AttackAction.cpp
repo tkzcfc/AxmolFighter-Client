@@ -1,23 +1,40 @@
 #include "mugen/bt/actions/AttackAction.h"
 
 #include "mugen/Components.h"
-#include "mugen/bt/BtLocomotionUtils.h"
-#include "mugen/bt/SkillCastRules.h"
-#include "mugen/buff/BuffApi.h"
+#include "mugen/GameWord.h"
+#include "mugen/buff/BuffManager.h"
 #include "mugen/conf/Config.h"
 #include "mugen/core/bt/BTContext.h"
 #include "mugen/core/ecs/ECSManager.h"
 #include "mugen/core/ecs/Entity.h"
 #include "mugen/core/math/Random.h"
+#include "mugen/core/StdC.h"
 #include "mugen/render/VirtualCamera.h"
+#include "mugen/effect/Effect.h"
+#include "mugen/skill/SkillManager.h"
 #include "mugen/system/EffectLifeSystem.h"
 #include "mugen/system/SoundSystem.h"
+
+#ifdef RUNTIME_IN_AXMOL
+#    include "mugen/avatar/render/Avatar.h"
+#    include "mugen/avatar/render/AvatarBuilder.h"
+#    include "mugen/render/SpineSkeletonCache.h"
+#    include "spine/Animation.h"
+#endif
 
 #include <algorithm>
 #include <cmath>
 #include <vector>
 
 NS_MG_BEGIN
+
+AttackAction::AttackAction() {}
+
+AttackAction::AttackAction(int32_t actionId, int32_t actionIndex, int32_t skillAttackId, bool effectTable)
+    : actionId(actionId), actionIndex(actionIndex), skillAttackId(skillAttackId), effectTable(effectTable)
+{}
+
+AttackAction::~AttackAction() {}
 
 namespace
 {
@@ -27,7 +44,6 @@ constexpr uint32_t kPresShake             = 1u << 0;
 constexpr uint32_t kPresDisplaySpine      = 1u << 1;
 constexpr uint32_t kPresTransform         = 1u << 2;
 constexpr uint32_t kPresStatic            = 1u << 3;
-constexpr int32_t kGhostIntervalMs        = 80;
 
 std::string replaceExtension(const std::string& path, const std::string& newExt)
 {
@@ -38,20 +54,17 @@ std::string replaceExtension(const std::string& path, const std::string& newExt)
     return path.substr(0, dot) + newExt;
 }
 
+#ifdef RUNTIME_IN_AXMOL
+GameMapRenderComponent* findMapRender(ECSManager* ecs);
+#endif
+
 VirtualCamera* findMapCamera(ECSManager* ecs)
 {
 #ifdef RUNTIME_IN_AXMOL
-    if (!ecs)
-        return nullptr;
-    Signature sig;
-    sig.set(ecs->getComponentTypeId("GameMapRenderComponent"));
-    for (Entity* e : ecs->getEntitiesBySignature(sig))
+    if (auto* mapRender = findMapRender(ecs))
     {
-        if (auto* mapRender = MG_GET_COMPONENT(e, GameMapRenderComponent))
-        {
-            if (mapRender->camera)
-                return mapRender->camera.get();
-        }
+        if (mapRender->camera)
+            return mapRender->camera.get();
     }
 #else
     (void)ecs;
@@ -59,29 +72,146 @@ VirtualCamera* findMapCamera(ECSManager* ecs)
     return nullptr;
 }
 
+#ifdef RUNTIME_IN_AXMOL
+GameMapRenderComponent* findMapRender(ECSManager* ecs)
+{
+    if (!ecs)
+        return nullptr;
+    auto* word = reinterpret_cast<GameWord*>(ecs->getUserdata());
+    if (!word)
+        return nullptr;
+    auto* directorComp = MG_GET_COMPONENT(word->getDirector(), DirectorComponent);
+    auto* mapEntity    = ecs->getEntity(directorComp->mapEntityId);
+    if (!mapEntity)
+        return nullptr;
+    return MG_GET_COMPONENT(mapEntity, GameMapRenderComponent);
+}
+
+int32_t spineClipDurationMs(const AvatarComponent* avatar, const std::string& animName)
+{
+    if (!avatar || animName.empty())
+        return 0;
+    const std::string& skel = avatar->getSpineSkeleton();
+    if (skel.empty())
+        return 0;
+    const std::string atlas =
+        !avatar->getSpineAtlas().empty() ? avatar->getSpineAtlas() : replaceExtension(skel, ".atlas");
+    auto* data = SpineSkeletonCache::getInstance()->getOrCreate(skel, atlas, avatar->getSpineScale());
+    if (!data)
+        return 0;
+    spine::Animation* anim = data->findAnimation(animName.c_str());
+    if (!anim)
+        return 0;
+    return static_cast<int32_t>(std::lround(anim->getDuration() * 1000.0f));
+}
+
+std::string pickDisplaySpineAnim(const ResSpineConfig* spine)
+{
+    if (!spine || spine->spine.empty())
+        return "animation";
+    const std::string atlas = replaceExtension(spine->spine, ".atlas");
+    const float scale       = spine->scale > 0.0f ? spine->scale : 1.0f;
+    auto* data              = SpineSkeletonCache::getInstance()->getOrCreate(spine->spine, atlas, scale);
+    if (!data)
+        return "animation";
+    if (data->findAnimation("animation"))
+        return "animation";
+    auto& anims = data->getAnimations();
+    if (anims.size() > 0 && anims[0])
+        return anims[0]->getName().buffer();
+    return "animation";
+}
+
+void spawnDisplaySpineOverlay(GameMapRenderComponent* mapRender, const ResSpineConfig* spine)
+{
+    if (!mapRender || !mapRender->overlayNode || !spine)
+        return;
+
+    SpineAvatarDesc desc;
+    desc.skeleton = spine->spine;
+    desc.atlas    = replaceExtension(spine->spine, ".atlas");
+    desc.defaultSkin.clear();
+    desc.scale     = spine->scale > 0.0f ? spine->scale : 1.0f;
+    Avatar* avatar = AvatarBuilder::createAvatar(desc);
+    if (!avatar)
+        return;
+
+    const std::string anim = pickDisplaySpineAnim(spine);
+    avatar->setMotion(anim, "", false);
+    avatar->setAutoPlay(true);
+
+    const ax::Size vis = ax::Director::getInstance()->getVisibleSize();
+    avatar->setPosition(vis.width * 0.5f, vis.height * 0.5f);
+    mapRender->overlayNode->addChild(avatar);
+
+    const int durMs    = avatar->durationMs();
+    const float durSec = durMs > 0 ? (static_cast<float>(durMs) / 1000.0f) : 3.0f;
+    avatar->runAction(ax::Sequence::create(ax::DelayTime::create(durSec), ax::RemoveSelf::create(), nullptr));
+}
+#endif
+
 }  // namespace
+
+const ActionAttackConfig* AttackAction::lookupActionCfg() const
+{
+    auto* config = Config::getInstance();
+    if (effectTable)
+        return config->getActionAttackEffectConfigById(actionId);
+    return config->getActionAttackConfigById(actionId);
+}
+
+bool AttackAction::roleCastGone(BTContext& ctx) const
+{
+    if (effectTable)
+        return false;
+    auto* mgr = SkillManager::of(ctx.entity);
+    return !mgr || mgr->activeSkillAttackId != skillAttackId;
+}
+
+void AttackAction::syncDerivedFromConfig(BTContext& ctx)
+{
+    auto* actionCfg = lookupActionCfg();
+    if (!actionCfg)
+        return;
+
+    const float scale = actionCfg->actionScaleTime > 0.0f ? actionCfg->actionScaleTime : 1.0f;
+    frameIntervalMs   = kLogicFrameMs / scale;
+    actionDelayMs     = std::max(0, actionCfg->actionDelayTime);
+
+    if (auto* avatar = MG_GET_COMPONENT(ctx.entity, AvatarComponent))
+        avatar->animationSpeed = scale;
+
+    if (effectSpawned.size() != actionCfg->effectIds.size())
+    {
+        effectSpawned.assign(actionCfg->effectIds.size(), false);
+        for (size_t i = 0; i < effectSpawned.size() && i < 32; ++i)
+        {
+            if (effectSpawnMask & (1u << i))
+                effectSpawned[i] = true;
+        }
+    }
+}
 
 void AttackAction::resetDisplacement(BTContext& ctx)
 {
-    auto* displacement = ctx.displacement;
-    if (!displacement)
-        return;
-    if (ctx.entity)
+    auto* physics      = MG_GET_COMPONENT(ctx.entity, PhysicsComponent);
+    auto* displacement = MG_GET_COMPONENT(ctx.entity, DisplacementComponent);
+    if (displacement)
     {
-        if (auto* physics = MG_GET_COMPONENT(ctx.entity, PhysicsComponent))
-        {
-            if (displacement->hasSavedGravity)
-                physics->gravityScale = displacement->savedGravityScale;
-        }
+        displacement->restoreGravity(physics);
+        displacement->reset();
     }
-    displacement->reset();
+    if (physics)
+    {
+        physics->velocity.x = 0;
+        physics->velocity.y = 0;
+        physics->velocity.z = 0;
+    }
 }
 
 void AttackAction::applyBuffs(BTContext& ctx, bool add)
 {
-    if (!ctx.entity)
-        return;
-    auto* actionCfg = Config::getInstance()->getActionAttackConfigById(actionId);
+    auto* actionCfg = lookupActionCfg();
     if (!actionCfg)
         return;
 
@@ -90,86 +220,48 @@ void AttackAction::applyBuffs(BTContext& ctx, bool add)
         if (bid <= 0)
             continue;
         if (add)
-            BuffApi::addBuff(ctx.entity, bid, skillAttackId, 1);
+        {
+            if (auto* mgr = BuffManager::of(ctx.entity))
+                mgr->addBuff(ctx.entity, bid, skillAttackId, 1);
+        }
         else
-            BuffApi::removeBuff(ctx.entity, bid);
+        {
+            if (auto* mgr = BuffManager::of(ctx.entity))
+                mgr->removeBuff(ctx.entity, bid);
+        }
     }
 }
 
 void AttackAction::spawnEffect(BTContext& ctx, int32_t effectId)
 {
-    if (!ctx.entity || effectId <= 0)
+    if (effectId <= 0)
         return;
-    auto* cfg = Config::getInstance()->getEffectConfigById(effectId);
-    if (!cfg)
-        return;
-    auto* ecs = ctx.ecs ? ctx.ecs : ctx.entity->getECSManager();
-    if (!ecs)
-        return;
-
-    auto* ownerTf = ctx.transform;
-    auto* effect  = ecs->newEntity();
-    auto* tf      = MG_ADD_COMPONENT(effect, TransformComponent);
-    auto* fx      = MG_ADD_COMPONENT(effect, EffectLifetimeComponent);
-    auto* fxAttr  = MG_ADD_COMPONENT(effect, AttributeComponent);  // 顿帧挂点
-    (void)fxAttr;
-
-    fx->effectId         = effectId;
-    fx->skillHitId       = cfg->skillHitId > 0 ? cfg->skillHitId : skillAttackId;
-    fx->ownerId          = ctx.entity->getId();
-    // autoRelease==0：由动作 exit 销毁，寿命给一个大值避免提前超时
-    fx->lifetimeMs       = cfg->autoRelease > 0 ? cfg->autoRelease : 60000;
-    fx->follow           = cfg->follow != 0;
-    fx->radius           = cfg->radius > 0 ? cfg->radius : 40.0f;
-    fx->relativePosition = cfg->relativePosition;
-
-    if (ownerTf)
+    auto* ecs         = ctx.entity->getECSManager();
+    EntityId ownerId  = ctx.entity->getId();
+    int32_t hitLookup = skillAttackId;
+    if (auto* selfFx = Effect::of(ctx.entity))
     {
-        const float facing  = ownerTf->facingDirection == FacingDirection::kFacingLeft ? -1.0f : 1.0f;
-        tf->position.x      = ownerTf->position.x + static_cast<int32_t>(cfg->relativePosition.x * facing);
-        tf->position.y      = ownerTf->position.y + static_cast<int32_t>(cfg->relativePosition.y);
-        tf->position.z      = ownerTf->position.z + static_cast<int32_t>(cfg->relativePosition.z);
-        tf->facingDirection = ownerTf->facingDirection;
+        if (selfFx->ownerId != INVALID_ENTITY_ID)
+            ownerId = selfFx->ownerId;
+        if (hitLookup <= 0)
+            hitLookup = selfFx->skillHitId;
     }
-
-    if (cfg->resSpineId > 0)
-    {
-        if (const auto* spine = Config::getInstance()->getResSpineConfigById(cfg->resSpineId))
-        {
-            auto* avatar = MG_ADD_COMPONENT(effect, AvatarComponent);
-            MG_ADD_COMPONENT(effect, AvatarRenderComponent);
-            avatar->resSpine = spine;
-            if (!spine->spine.empty())
-            {
-                avatar->spineSkeleton = spine->spine;
-                avatar->spineAtlas =
-                    !spine->atlas.empty() ? spine->atlas : replaceExtension(spine->spine, ".atlas");
-                avatar->defaultSkin = spine->defaultSkin;
-                avatar->spineScale  = spine->scale > 0.0f ? spine->scale : 1.0f;
-                const auto slash    = spine->spine.find_last_of("/\\");
-                avatar->defaultAnimationPath =
-                    slash == std::string::npos ? std::string{} : spine->spine.substr(0, slash);
-            }
-        }
-    }
-
-    effect->notifyEntityReady();
-
-    if (ctx.skillCast)
-        ctx.skillCast->spawnedEffectIds.push_back(effect->getId());
+    Entity* effect = EffectLifeSystem::spawnEffect(ecs, effectId, ownerId,
+                                                   MG_GET_COMPONENT(ctx.entity, TransformComponent), hitLookup, false);
+    auto* skillMgr = SkillManager::of(ctx.entity);
+    if (effect && skillMgr)
+        skillMgr->spawnedEffectIds.push_back(effect->getId());
 }
 
 void AttackAction::playSounds(BTContext& ctx)
 {
-    auto* actionCfg = Config::getInstance()->getActionAttackConfigById(actionId);
-    if (!actionCfg || !ctx.entity)
+    auto* actionCfg = lookupActionCfg();
+    if (!actionCfg)
         return;
     if (soundsPlayed.size() != actionCfg->soundId.size())
         soundsPlayed.assign(actionCfg->soundId.size(), false);
 
-    auto* ecs = ctx.ecs ? ctx.ecs : ctx.entity->getECSManager();
-    if (!ecs)
-        return;
+    auto* ecs      = ctx.entity->getECSManager();
     auto* soundSys = MG_GET_SYSTEM(ecs, SoundSystem);
     if (!soundSys)
         return;
@@ -177,7 +269,6 @@ void AttackAction::playSounds(BTContext& ctx)
     for (size_t i = 0; i < actionCfg->soundId.size(); ++i)
         soundsPlayed[i] = true;
 
-    // 随机播放一条音效
     std::vector<int32_t> valid;
     valid.reserve(actionCfg->soundId.size());
     for (int32_t sid : actionCfg->soundId)
@@ -188,74 +279,83 @@ void AttackAction::playSounds(BTContext& ctx)
     if (valid.empty())
         return;
 
-    Random rng(static_cast<uint64_t>(actionId) ^ static_cast<uint64_t>(ctx.bt ? ctx.bt->actionElapsedMs : 0));
+    Random rng(static_cast<uint64_t>(actionId) ^ static_cast<uint64_t>(elapsedMs));
     const int32_t pick = valid[static_cast<size_t>(rng.nextInt(0, static_cast<int32_t>(valid.size()) - 1))];
     soundSys->play(pick, ctx.entity);
 }
 
 void AttackAction::onActionEnter(BTContext& ctx)
 {
-    auto* actionCfg = Config::getInstance()->getActionAttackConfigById(actionId);
+    sessionOpen = false;
+    if (roleCastGone(ctx))
+        return;
+
+    auto* actionCfg = lookupActionCfg();
     if (!actionCfg)
     {
-        MG_LOG_E("AttackAction: actionAttack {} not found", actionId);
+        MG_LOG_E("AttackAction: {} {} not found", effectTable ? "actionAttackEffect" : "actionAttack", actionId);
         return;
     }
 
-    // 快照恢复后树重建会重入 enter：用组件态续跑，避免重复扣副作用/特效
-    const bool resume = ctx.bt && ctx.bt->currentActionId == actionId && ctx.bt->actionElapsedMs > 0;
+    auto* skillMgr  = SkillManager::of(ctx.entity);
+    auto* behavior  = MG_GET_COMPONENT(ctx.entity, BehaviorComponent);
+    auto* physics   = MG_GET_COMPONENT(ctx.entity, PhysicsComponent);
+    auto* input     = MG_GET_COMPONENT(ctx.entity, InputComponent);
+    auto* transform = MG_GET_COMPONENT(ctx.entity, TransformComponent);
+    auto* avatar    = MG_GET_COMPONENT(ctx.entity, AvatarComponent);
 
-    if (ctx.skillCast && !resume)
+    if (skillMgr)
     {
-        ctx.skillCast->interruptOpen      = false;
-        ctx.skillCast->interruptExtraOpen = false;
-        ctx.skillCast->spawnedEffectIds.clear();
+        skillMgr->interruptOpen      = false;
+        skillMgr->interruptExtraOpen = false;
+        skillMgr->spawnedEffectIds.clear();
     }
-    if (ctx.behavior)
+    if (!effectTable && behavior)
     {
-        ctx.behavior->currentKind = static_cast<int32_t>(BehaviorKind::kAttack);
-        ctx.behavior->statusTags &= ~StateTag::kTagMovable;
-    }
-
-    if (ctx.bt)
-    {
-        ctx.bt->currentActionId  = actionId;
-        ctx.bt->activeBranchKind = static_cast<int32_t>(BehaviorKind::kAttack);
-        if (!resume)
-        {
-            ctx.bt->actionElapsedMs = 0;
-            ctx.bt->effectSpawnMask = 0;
-            ctx.bt->animationEnd    = false;
-        }
+        behavior->currentKind = static_cast<int32_t>(BehaviorKind::kAttack);
+        behavior->statusTags &= ~StateTag::kTagMovable;
     }
 
     animFinishedAtMs = -1;
+    airborneOnce     = false;
+    elapsedMs        = 0;
+    effectSpawnMask  = 0;
+    presentationMask = 0;
+    animationEnd     = false;
+    effectSpawned.clear();
+    soundsPlayed.clear();
+
     const float scale = actionCfg->actionScaleTime > 0.0f ? actionCfg->actionScaleTime : 1.0f;
     frameIntervalMs   = kLogicFrameMs / scale;
     actionDelayMs     = std::max(0, actionCfg->actionDelayTime);
-    elapsedMs         = resume && ctx.bt ? ctx.bt->actionElapsedMs : 0;
-    if (resume && ctx.bt && ctx.bt->animationEnd)
-        animFinishedAtMs = (std::max)(0, elapsedMs - actionDelayMs);
 
-    // control==1：按输入改朝向（简化：左右键）
-    if (!resume && actionCfg->control == 1 && ctx.input && ctx.transform)
+    if (actionCfg->control == 1 && input && transform)
     {
-        if (ctx.input->isKeyDown(static_cast<int32_t>(INPUT_SLOT_MOVE_LEFT)))
-            ctx.transform->facingDirection = FacingDirection::kFacingLeft;
-        else if (ctx.input->isKeyDown(static_cast<int32_t>(INPUT_SLOT_MOVE_RIGHT)))
-            ctx.transform->facingDirection = FacingDirection::kFacingRight;
+        if (input->isKeyDown(static_cast<int32_t>(INPUT_SLOT_MOVE_LEFT)))
+            transform->facingDirection = FacingDirection::kFacingLeft;
+        else if (input->isKeyDown(static_cast<int32_t>(INPUT_SLOT_MOVE_RIGHT)))
+            transform->facingDirection = FacingDirection::kFacingRight;
     }
 
-    if (ctx.avatar)
+    if (avatar)
     {
         const std::string animName = std::to_string(actionCfg->action);
-        const bool loop            = (actionCfg->loop == 0 || actionCfg->loop > 1);
-        ctx.avatar->animationSpeed = scale;
-        if (!resume)
-            ctx.avatar->play(animName, loop ? -1 : 1, true);
-        estimatedDurMs = ctx.avatar->playback.getDurationMs();
+        const bool looping         = actionCfg->loop < 0 || actionCfg->loop > 1;
+        avatar->animationSpeed     = scale;
+        avatar->play(animName, looping ? -1 : 1, true);
+        estimatedDurMs = avatar->playback.getDurationMs();
+#ifdef RUNTIME_IN_AXMOL
+        const int32_t spineDur = spineClipDurationMs(avatar, animName);
+        if (spineDur > estimatedDurMs)
+        {
+            avatar->playback.setDurationMs(spineDur);
+            estimatedDurMs = spineDur;
+        }
+#else
         if (estimatedDurMs <= 0)
             estimatedDurMs = kSafetyActionDurationMs;
+#endif
+        // 骨骼时长未知时保持 0，完成事件不会触发
     }
     else
     {
@@ -263,201 +363,199 @@ void AttackAction::onActionEnter(BTContext& ctx)
     }
 
     effectSpawned.assign(actionCfg->effectIds.size(), false);
-    if (resume && ctx.bt)
-    {
-        for (size_t i = 0; i < effectSpawned.size() && i < 32; ++i)
-        {
-            if (ctx.bt->effectSpawnMask & (1u << i))
-                effectSpawned[i] = true;
-        }
-    }
 
-    if (!resume)
+    playSounds(ctx);
+    resetDisplacement(ctx);
+    if (auto* displacement = MG_GET_COMPONENT(ctx.entity, DisplacementComponent))
     {
-        soundsPlayed.clear();
-        playSounds(ctx);
-        resetDisplacement(ctx);
-        if (ctx.displacement && actionCfg->displacementId > 0)
+        if (actionCfg->displacementId > 0)
         {
             if (auto* d = Config::getInstance()->getDisplacementConfigById(actionCfg->displacementId))
-                ctx.displacement->start(d);
+            {
+                float facing = 1.0f;
+                if (transform)
+                    facing = transform->facingDirection == FacingDirection::kFacingLeft ? -1.0f : 1.0f;
+                displacement->start(d, facing);
+                if (physics)
+                    displacement->writePhysicsVelocity(physics, facing);
+            }
         }
-        applyBuffs(ctx, true);
-        if (actionCfg->ghost >= 0 && ctx.avatar)
-            ++ctx.avatar->ghostRefCount;
-        if (actionCfg->shadow > 0.0f && ctx.avatar)
-            ctx.avatar->shadowScale = actionCfg->shadow;
     }
+    applyBuffs(ctx, true);
+    if (actionCfg->ghost >= 0 && avatar)
+        ++avatar->ghostRefCount;
+    if (actionCfg->shadow > 0.0f && avatar)
+        avatar->shadowScale = actionCfg->shadow;
 
-    MG_LOG_D("AttackAction enter skill={} action[{}]={} delay={} resume={}", skillAttackId, actionIndex, actionId,
-             actionDelayMs, resume ? 1 : 0);
+    sessionOpen = true;
+    MG_LOG_D("AttackAction enter skill={} action[{}]={} delay={}", skillAttackId, actionIndex, actionId, actionDelayMs);
 }
 
 void AttackAction::onActionExit(BTContext& ctx)
 {
-    auto* actionCfg = Config::getInstance()->getActionAttackConfigById(actionId);
-    if (actionCfg && actionCfg->ghost >= 0 && ctx.avatar)
-        ctx.avatar->ghostRefCount = (std::max)(0, ctx.avatar->ghostRefCount - 1);
-    if (ctx.avatar)
-        ctx.avatar->shadowScale = 0.0f;
+    if (!sessionOpen)
+        return;
+    sessionOpen = false;
+
+    if (effectTable)
+    {
+        if (auto* fx = Effect::of(ctx.entity))
+        {
+            const auto* cfg = fx->effectId > 0 ? Config::getInstance()->getEffectConfigById(fx->effectId) : nullptr;
+            if (cfg)
+            {
+                int32_t n = 0;
+                for (int32_t aid : cfg->actionIds)
+                {
+                    if (aid > 0)
+                        ++n;
+                }
+                if (n > 0 && actionIndex == n - 1)
+                    fx->destroyRequested = true;
+            }
+        }
+    }
+
+    auto* actionCfg = lookupActionCfg();
+    auto* avatar    = MG_GET_COMPONENT(ctx.entity, AvatarComponent);
+    if (actionCfg && actionCfg->ghost >= 0 && avatar)
+        avatar->ghostRefCount = (std::max)(0, avatar->ghostRefCount - 1);
+    if (avatar)
+        avatar->shadowScale = 0.0f;
 
     applyBuffs(ctx, false);
     resetDisplacement(ctx);
 
-    // autoRelease==0 的特效在动作结束时销毁
-    if (ctx.skillCast && ctx.ecs)
+    auto* skillMgr = SkillManager::of(ctx.entity);
+    if (skillMgr)
     {
-        for (uint32_t eid : ctx.skillCast->spawnedEffectIds)
+        auto* ecs = ctx.entity->getECSManager();
+        for (uint32_t eid : skillMgr->spawnedEffectIds)
         {
-            Entity* fxEnt = ctx.ecs->getEntity(static_cast<EntityId>(eid));
+            Entity* fxEnt = ecs->getEntity(static_cast<EntityId>(eid));
             if (!fxEnt)
                 continue;
-            auto* life = MG_GET_COMPONENT(fxEnt, EffectLifetimeComponent);
-            if (!life)
+            auto* life = Effect::of(fxEnt);
+            if (!life || life->effectId <= 0)
                 continue;
             const auto* cfg = Config::getInstance()->getEffectConfigById(life->effectId);
             if (cfg && cfg->autoRelease == 0)
-                ctx.ecs->destroyEntity(fxEnt);
+                ecs->destroyEntity(fxEnt);
         }
-        ctx.skillCast->spawnedEffectIds.clear();
+        skillMgr->spawnedEffectIds.clear();
     }
 
-    if (ctx.avatar)
-        ctx.avatar->animationSpeed = 1.0f;
-    if (ctx.bt)
-    {
-        ctx.bt->currentActionId  = 0;
-        ctx.bt->actionElapsedMs  = 0;
-        ctx.bt->effectSpawnMask  = 0;
-        ctx.bt->presentationMask = 0;
-        ctx.bt->animationEnd     = false;
-    }
+    if (avatar)
+        avatar->animationSpeed = 1.0f;
+
     effectSpawned.clear();
     soundsPlayed.clear();
     animFinishedAtMs = -1;
     elapsedMs        = 0;
+    airborneOnce     = false;
+    effectSpawnMask  = 0;
+    presentationMask = 0;
+    animationEnd     = false;
 }
 
-BTStatus AttackAction::onActionTick(BTContext& ctx, int32_t dtMs)
+BTStatus AttackAction::onActionUpdate(BTContext& ctx, int32_t dtMs)
 {
-    auto* actionCfg = Config::getInstance()->getActionAttackConfigById(actionId);
+    if (!sessionOpen || roleCastGone(ctx))
+    {
+        return BTStatus::Success;
+    }
+
+    auto* actionCfg = lookupActionCfg();
     if (!actionCfg)
+    {
         return BTStatus::Failure;
+    }
+
+    syncDerivedFromConfig(ctx);
 
     if (dtMs < 0)
         dtMs = 0;
 
     elapsedMs += dtMs;
-    if (ctx.bt)
-        ctx.bt->actionElapsedMs = elapsedMs;
 
-    const float frame =
-        frameIntervalMs > 0.0f ? static_cast<float>(elapsedMs) / frameIntervalMs : 0.0f;
+    auto* physics      = MG_GET_COMPONENT(ctx.entity, PhysicsComponent);
+    auto* skillMgr     = SkillManager::of(ctx.entity);
+    auto* avatar       = MG_GET_COMPONENT(ctx.entity, AvatarComponent);
+    auto* displacement = MG_GET_COMPONENT(ctx.entity, DisplacementComponent);
 
-    // —— obstruct / floor（对齐 ActionAttack onDisplacementEvent）——
-    // obstruct==1：碰边界结束动作；floor==0：落地结束动作
-    if (ctx.physics)
+    if (avatar && estimatedDurMs <= 0 && avatar->playback.getDurationMs() > 0)
+        estimatedDurMs = avatar->playback.getDurationMs();
+
+    if (displacement && displacement->braked && actionCfg->loop == -1 && actionCfg->displacementId > 0)
     {
-        if (actionCfg->obstruct == 1 && ctx.physics->boundaryHitFlags != 0)
+        return BTStatus::Success;
+    }
+    if (physics)
+    {
+        if (actionCfg->obstruct == 1 && physics->boundaryHitFlags != 0)
+        {
             return BTStatus::Success;
-        if (actionCfg->floor == 0 && ctx.physics->justLanded)
-            return BTStatus::Success;
+        }
+        if (!physics->onGround || physics->position.z > physics->groundLevel + 0.01f)
+            airborneOnce = true;
+        if (actionCfg->floor == 0)
+        {
+            if (physics->justLanded || (airborneOnce && physics->onGround))
+            {
+                return BTStatus::Success;
+            }
+        }
     }
 
-    // —— dealWithInterrupt ——
+    const bool looping = actionCfg->loop < 0 || actionCfg->loop > 1;
+    if (!animationEnd && !looping && estimatedDurMs > 0)
+    {
+        const int32_t playedMs = avatar ? avatar->playback.getCurrentTimeMs() : elapsedMs;
+        if (playedMs >= estimatedDurMs)
+        {
+            animationEnd     = true;
+            animFinishedAtMs = elapsedMs;
+            elapsedMs        = 0;
+        }
+    }
+
+    const float frame = frameIntervalMs > 0.0f ? static_cast<float>(elapsedMs) / frameIntervalMs : 0.0f;
+
+    if (animationEnd && elapsedMs >= actionDelayMs)
+    {
+        return BTStatus::Success;
+    }
+
     if (actionCfg->interruptFrame >= 0 && frame >= static_cast<float>(actionCfg->interruptFrame))
     {
-        if (ctx.skillCast)
-            ctx.skillCast->interruptOpen = true;
+        if (skillMgr)
+            skillMgr->interruptOpen = true;
 
-        if (SkillCastRules::canConsumePendingOnInterrupt(ctx.entity))
+        if (skillMgr && skillMgr->canConsumePendingOnInterrupt(ctx.entity) &&
+            skillMgr->dealWithNextSkillBase(ctx.entity))
         {
-            if (SkillCastRules::dealWithNextSkillBase(ctx.entity))
-                return BTStatus::Failure;
-        }
-        else if (SkillCastRules::dealWithRun(ctx.entity))
-        {
-            return BTStatus::Failure;
+            return BTStatus::Success;
         }
     }
 
-    // —— dealWithExtraInterrupt ——
     if (actionCfg->interruptExtraFrame >= 0 && frame >= static_cast<float>(actionCfg->interruptExtraFrame))
     {
-        if (ctx.skillCast)
-            ctx.skillCast->interruptExtraOpen = true;
+        if (skillMgr)
+            skillMgr->interruptExtraOpen = true;
 
-        if (SkillCastRules::canConsumePendingOnExtraInterrupt(ctx.entity))
+        if (skillMgr && skillMgr->canConsumePendingOnExtraInterrupt(ctx.entity) &&
+            skillMgr->dealWithNextSkillBase(ctx.entity))
         {
-            if (SkillCastRules::dealWithNextSkillBase(ctx.entity))
-                return BTStatus::Failure;
+            return BTStatus::Success;
         }
-        else if (SkillCastRules::dealWithRun(ctx.entity))
+        if (skillMgr && skillMgr->dealWithRun(ctx.entity))
         {
-            return BTStatus::Failure;
-        }
-    }
-
-    // —— dealWithControl：攻击中移动 ——
-    // 0=全向移动+朝向；2=仅朝向；3=移动不改朝向
-    if (ctx.physics && ctx.input)
-    {
-        const bool dispActive =
-            ctx.displacement && !ctx.displacement->finished && ctx.displacement->activeConfig;
-        if (!dispActive)
-        {
-            const int32_t ctrl = actionCfg->control;
-            const bool allowMove = (ctrl == 0 || ctrl == 3) && actionCfg->controlVelocity > 0.0f;
-            const bool allowFace = (ctrl == 0 || ctrl == 2);
-
-            if (allowMove || allowFace)
-            {
-                float vx = 0.0f, vy = 0.0f;
-                if (ctx.input->isKeyDown(static_cast<int32_t>(INPUT_SLOT_MOVE_LEFT)))
-                    vx -= 1.0f;
-                if (ctx.input->isKeyDown(static_cast<int32_t>(INPUT_SLOT_MOVE_RIGHT)))
-                    vx += 1.0f;
-                if (ctx.input->isKeyDown(static_cast<int32_t>(INPUT_SLOT_MOVE_UP)))
-                    vy += 1.0f;
-                if (ctx.input->isKeyDown(static_cast<int32_t>(INPUT_SLOT_MOVE_DOWN)))
-                    vy -= 1.0f;
-
-                if (allowMove)
-                {
-                    if (vx != 0.0f || vy != 0.0f)
-                    {
-                        const float speed = actionCfg->controlVelocity;
-                        const float len   = std::sqrt(vx * vx + vy * vy);
-                        ctx.physics->velocity.x = vx / len * speed;
-                        ctx.physics->velocity.y = vy / len * speed;
-                    }
-                    else
-                    {
-                        ctx.physics->velocity.x = 0;
-                        ctx.physics->velocity.y = 0;
-                    }
-                }
-                else
-                {
-                    ctx.physics->velocity.x = 0;
-                    ctx.physics->velocity.y = 0;
-                }
-
-                if (allowFace && ctx.transform && vx != 0.0f)
-                {
-                    ctx.transform->facingDirection =
-                        vx > 0 ? FacingDirection::kFacingRight : FacingDirection::kFacingLeft;
-                }
-            }
-            else
-            {
-                ctx.physics->velocity.x = 0;
-                ctx.physics->velocity.y = 0;
-            }
+            return BTStatus::Success;
         }
     }
 
-    // —— dealWithEffect ——
+    dealWithControl(ctx);
+
     if (frameIntervalMs > 0.0f)
     {
         for (size_t i = 0; i < actionCfg->effectIds.size() && i < effectSpawned.size(); ++i)
@@ -468,8 +566,8 @@ BTStatus AttackAction::onActionTick(BTContext& ctx, int32_t dtMs)
             if (ef <= 0 || frame >= static_cast<float>(ef))
             {
                 effectSpawned[i] = true;
-                if (ctx.bt && i < 32)
-                    ctx.bt->effectSpawnMask |= (1u << i);
+                if (i < 32)
+                    effectSpawnMask |= (1u << i);
                 if (actionCfg->effectIds[i] > 0)
                     spawnEffect(ctx, actionCfg->effectIds[i]);
             }
@@ -477,114 +575,121 @@ BTStatus AttackAction::onActionTick(BTContext& ctx, int32_t dtMs)
     }
 
     dealWithPresentation(ctx, frame);
-
-    bool animDone = false;
-    if (ctx.avatar && ctx.avatar->animationFinished)
-        animDone = true;
-    else if (ctx.avatar)
-    {
-        const int32_t animDur = ctx.avatar->playback.getDurationMs();
-        if (animDur > 0 && elapsedMs >= animDur)
-            animDone = true;
-        else if (animDur <= 0 && elapsedMs >= estimatedDurMs)
-            animDone = true;
-    }
-    else if (elapsedMs >= estimatedDurMs)
-    {
-        animDone = true;
-    }
-
-    if (animDone)
-    {
-        if (ctx.bt)
-            ctx.bt->animationEnd = true;
-        if (animFinishedAtMs < 0)
-            animFinishedAtMs = elapsedMs;
-        if (elapsedMs - animFinishedAtMs >= actionDelayMs)
-            return BTStatus::Success;
-    }
-
     return BTStatus::Running;
+}
+
+void AttackAction::dealWithControl(BTContext& ctx)
+{
+    auto* actionCfg = lookupActionCfg();
+    if (!actionCfg)
+        return;
+
+    auto* physics   = MG_GET_COMPONENT(ctx.entity, PhysicsComponent);
+    auto* input     = MG_GET_COMPONENT(ctx.entity, InputComponent);
+    auto* transform = MG_GET_COMPONENT(ctx.entity, TransformComponent);
+    if (!physics || !input)
+        return;
+
+    const int32_t ctrl = actionCfg->control;
+    const bool hasDisp = actionCfg->displacementId > 0;
+
+    float vx = 0.0f, vy = 0.0f;
+    if (input->isKeyDown(static_cast<int32_t>(INPUT_SLOT_MOVE_LEFT)))
+        vx -= 1.0f;
+    if (input->isKeyDown(static_cast<int32_t>(INPUT_SLOT_MOVE_RIGHT)))
+        vx += 1.0f;
+    if (input->isKeyDown(static_cast<int32_t>(INPUT_SLOT_MOVE_UP)))
+        vy += 1.0f;
+    if (input->isKeyDown(static_cast<int32_t>(INPUT_SLOT_MOVE_DOWN)))
+        vy -= 1.0f;
+
+    auto applyMove = [&]() {
+        if (vx == 0.0f && vy == 0.0f)
+        {
+            physics->velocity.x = 0;
+            physics->velocity.y = 0;
+            return;
+        }
+        const float speed   = actionCfg->controlVelocity;
+        const float len     = std::sqrt(vx * vx + vy * vy);
+        physics->velocity.x = vx / len * speed;
+        physics->velocity.y = vy / len * speed;
+    };
+    auto applyFace = [&]() {
+        if (transform && vx != 0.0f)
+        {
+            transform->facingDirection = vx > 0 ? FacingDirection::kFacingRight : FacingDirection::kFacingLeft;
+        }
+    };
+
+    if (ctrl == 0 && !hasDisp)
+    {
+        applyMove();
+        applyFace();
+    }
+    else if (ctrl == 2 && hasDisp)
+    {
+        applyFace();
+    }
+    else if (ctrl == 3 && !hasDisp)
+    {
+        applyMove();
+    }
 }
 
 void AttackAction::triggerShake(BTContext& ctx)
 {
-    auto* actionCfg = Config::getInstance()->getActionAttackConfigById(actionId);
+    auto* actionCfg = lookupActionCfg();
     if (!actionCfg || actionCfg->cameraId < 0)
         return;
     const auto* camCfg = Config::getInstance()->getCameraConfigById(actionCfg->cameraId);
     if (!camCfg)
         return;
 #ifdef RUNTIME_IN_AXMOL
-    if (auto* cam = findMapCamera(ctx.ecs))
+    if (auto* cam = findMapCamera(ctx.entity->getECSManager()))
     {
-        float amp = camCfg->amplitude;
-        if (amp <= 0.0f)
-            amp = (std::max)(camCfg->amplitudeX, camCfg->amplitudeY);
-        cam->shake(amp, camCfg->duration, camCfg->freezeTime);
+        float amp = (std::max)(camCfg->amplitudeX, camCfg->amplitudeY);
+        cam->shake(amp, camCfg->duration);
     }
 #endif
-    if (camCfg->freezeTime > 0 && ctx.attribute)
-    {
-        if (ctx.attribute->freezeRemainingMs < camCfg->freezeTime)
-            ctx.attribute->freezeRemainingMs = camCfg->freezeTime;
-    }
 }
 
 void AttackAction::triggerDisplaySpine(BTContext& ctx)
 {
-    auto* actionCfg = Config::getInstance()->getActionAttackConfigById(actionId);
+#ifdef RUNTIME_IN_AXMOL
+    auto* actionCfg = lookupActionCfg();
     if (!actionCfg || actionCfg->displaySpineIds.empty())
+        return;
+    auto* mapRender = findMapRender(ctx.entity->getECSManager());
+    if (!mapRender || !mapRender->overlayNode)
         return;
     for (int32_t spineId : actionCfg->displaySpineIds)
     {
         if (spineId <= 0)
             continue;
-        // 最小可用：按 ResSpine 生成短寿命跟随特效实体（居中由渲染层定位）
-        if (!ctx.ecs || !ctx.entity)
-            continue;
         const auto* spine = Config::getInstance()->getResSpineConfigById(spineId);
         if (!spine)
             continue;
-        auto* vfx = ctx.ecs->newEntity();
-        auto* tf  = MG_ADD_COMPONENT(vfx, TransformComponent);
-        auto* fx  = MG_ADD_COMPONENT(vfx, EffectLifetimeComponent);
-        fx->ownerId    = ctx.entity->getId();
-        fx->follow     = false;
-        fx->lifetimeMs = 3000;
-        if (ctx.transform)
-            tf->position = ctx.transform->position;
-        auto* avatar = MG_ADD_COMPONENT(vfx, AvatarComponent);
-        MG_ADD_COMPONENT(vfx, AvatarRenderComponent);
-        avatar->resSpine = spine;
-        if (!spine->spine.empty())
-        {
-            avatar->spineSkeleton = spine->spine;
-            avatar->spineAtlas =
-                !spine->atlas.empty() ? spine->atlas : replaceExtension(spine->spine, ".atlas");
-            avatar->defaultSkin = spine->defaultSkin;
-            avatar->spineScale  = spine->scale > 0.0f ? spine->scale : 1.0f;
-        }
-        vfx->notifyEntityReady();
-        if (ctx.skillCast)
-            ctx.skillCast->spawnedEffectIds.push_back(vfx->getId());
+        spawnDisplaySpineOverlay(mapRender, spine);
     }
+#else
+    (void)ctx;
+#endif
 }
 
 void AttackAction::triggerTransform(BTContext& ctx)
 {
-    auto* actionCfg = Config::getInstance()->getActionAttackConfigById(actionId);
-    if (!actionCfg || actionCfg->transformId <= 0 || !ctx.avatar)
+    auto* actionCfg = lookupActionCfg();
+    auto* avatar    = MG_GET_COMPONENT(ctx.entity, AvatarComponent);
+    if (!actionCfg || actionCfg->transformId <= 0 || !avatar)
         return;
-    // 最小可用：transformId 视为 ResSpineId，切换当前 Avatar 资源
     if (const auto* spine = Config::getInstance()->getResSpineConfigById(actionCfg->transformId))
     {
-        ctx.avatar->resSpine      = spine;
-        ctx.avatar->spineSkeleton = spine->spine;
-        ctx.avatar->spineAtlas =
-            !spine->atlas.empty() ? spine->atlas : replaceExtension(spine->spine, ".atlas");
-        ctx.avatar->defaultSkin = spine->defaultSkin;
-        ctx.avatar->spineScale  = spine->scale > 0.0f ? spine->scale : ctx.avatar->spineScale;
+        avatar->resSpine      = spine;
+        avatar->spineSkeleton = spine->spine;
+        avatar->spineAtlas    = replaceExtension(spine->spine, ".atlas");
+        avatar->defaultSkin.clear();
+        avatar->spineScale = spine->scale > 0.0f ? spine->scale : avatar->spineScale;
         if (auto* render = MG_GET_COMPONENT(ctx.entity, AvatarRenderComponent))
         {
             render->syncedMotion.clear();
@@ -595,10 +700,11 @@ void AttackAction::triggerTransform(BTContext& ctx)
 
 void AttackAction::triggerStatic(BTContext& ctx)
 {
-    auto* actionCfg = Config::getInstance()->getActionAttackConfigById(actionId);
-    if (!actionCfg || actionCfg->staticTarget < 0 || !ctx.ecs)
+    auto* actionCfg = lookupActionCfg();
+    if (!actionCfg || actionCfg->staticTarget < 0)
         return;
-    if (ctx.bt && ctx.bt->staticResetRemainMs > 0)
+    auto* skillMgr = SkillManager::of(ctx.entity);
+    if (skillMgr && skillMgr->staticResetRemainMs > 0)
         return;
 
     const int32_t staticMs = actionCfg->staticTime;
@@ -614,68 +720,78 @@ void AttackAction::triggerStatic(BTContext& ctx)
         }
     };
 
-    // 0=仅敌方；1=自己+敌方。简化：非自身一律视为敌方目标池中有 Behavior 的实体
-    if (actionCfg->staticTarget == 1 && ctx.entity)
+    if (actionCfg->staticTarget == 1)
         applyStatic(ctx.entity);
 
+    auto* ecs = ctx.entity->getECSManager();
     Signature sig;
-    sig.set(ctx.ecs->getComponentTypeId("BehaviorComponent"));
-    sig.set(ctx.ecs->getComponentTypeId("IdentityComponent"));
-    for (Entity* e : ctx.ecs->getEntitiesBySignature(sig))
+    sig.set(ecs->getComponentTypeId("BehaviorComponent"));
+    sig.set(ecs->getComponentTypeId("IdentityComponent"));
+    for (Entity* e : ecs->getEntitiesBySignature(sig))
     {
         if (e == ctx.entity)
             continue;
-        auto* selfId = MG_GET_COMPONENT(ctx.entity, IdentityComponent);
+        auto* selfId  = MG_GET_COMPONENT(ctx.entity, IdentityComponent);
         auto* otherId = MG_GET_COMPONENT(e, IdentityComponent);
         if (!selfId || !otherId)
             continue;
-        // 友军：同 category 且 monsterCamps 有交集
         if (selfId->category == otherId->category && selfId->monsterCamps != 0 && otherId->monsterCamps != 0 &&
             (selfId->monsterCamps & otherId->monsterCamps) != 0)
             continue;
         applyStatic(e);
     }
 
-    if (ctx.bt)
-        ctx.bt->staticResetRemainMs = (std::max)(0, actionCfg->staticResetTime);
+    if (skillMgr)
+        skillMgr->staticResetRemainMs = (std::max)(0, actionCfg->staticResetTime);
 }
 
 void AttackAction::dealWithPresentation(BTContext& ctx, float frame)
 {
-    auto* actionCfg = Config::getInstance()->getActionAttackConfigById(actionId);
-    if (!actionCfg || !ctx.bt)
+    auto* actionCfg = lookupActionCfg();
+    if (!actionCfg)
         return;
 
-    if (actionCfg->cameraId >= 0 && actionCfg->cameraFrame >= 0 &&
-        !(ctx.bt->presentationMask & kPresShake) && frame >= static_cast<float>(actionCfg->cameraFrame))
+    if (actionCfg->cameraId >= 0 && actionCfg->cameraFrame >= 0 && !(presentationMask & kPresShake) &&
+        frame >= static_cast<float>(actionCfg->cameraFrame))
     {
-        ctx.bt->presentationMask |= kPresShake;
+        presentationMask |= kPresShake;
         triggerShake(ctx);
     }
 
     if (!actionCfg->displaySpineIds.empty() && actionCfg->displaySpineFrame >= 0 &&
-        !(ctx.bt->presentationMask & kPresDisplaySpine) &&
-        frame >= static_cast<float>(actionCfg->displaySpineFrame))
+        !(presentationMask & kPresDisplaySpine) && frame >= static_cast<float>(actionCfg->displaySpineFrame))
     {
-        ctx.bt->presentationMask |= kPresDisplaySpine;
+        presentationMask |= kPresDisplaySpine;
         triggerDisplaySpine(ctx);
     }
 
-    if (actionCfg->transformId > 0 && actionCfg->transformFrame >= 0 &&
-        !(ctx.bt->presentationMask & kPresTransform) &&
+    if (actionCfg->transformId > 0 && actionCfg->transformFrame >= 0 && !(presentationMask & kPresTransform) &&
         frame >= static_cast<float>(actionCfg->transformFrame))
     {
-        ctx.bt->presentationMask |= kPresTransform;
+        presentationMask |= kPresTransform;
         triggerTransform(ctx);
     }
 
-    if (actionCfg->staticTarget >= 0 && actionCfg->staticStartFrame >= 0 &&
-        !(ctx.bt->presentationMask & kPresStatic) &&
+    if (actionCfg->staticTarget >= 0 && actionCfg->staticStartFrame >= 0 && !(presentationMask & kPresStatic) &&
         frame >= static_cast<float>(actionCfg->staticStartFrame))
     {
-        ctx.bt->presentationMask |= kPresStatic;
+        presentationMask |= kPresStatic;
         triggerStatic(ctx);
     }
+}
+
+void AttackAction::serializeCustomImpl(ByteBuffer& byteBuffer) const
+{
+    byteBuffer.writeInt32(actionId);
+    byteBuffer.writeInt32(actionIndex);
+    byteBuffer.writeInt32(skillAttackId);
+    byteBuffer.writeBool(effectTable);
+}
+
+bool AttackAction::deserializeCustomImpl(ByteBuffer& byteBuffer)
+{
+    return byteBuffer.getInt32(actionId) && byteBuffer.getInt32(actionIndex) && byteBuffer.getInt32(skillAttackId) &&
+           byteBuffer.getBool(effectTable);
 }
 
 NS_MG_END

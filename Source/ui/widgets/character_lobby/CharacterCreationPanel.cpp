@@ -32,11 +32,11 @@ void CharacterCreationPanel::onClickCreateButton(EventContext* context)
         return;
     }
 
-    // professionList 三项对应开放职业 1/2/4（不含未开放的职业 3）
+    // professionList 三项对应开放职业
     static constexpr int32_t kProfessionListToClassId[] = {
-        static_cast<int32_t>(mugen::JobType::kSwordman),
-        static_cast<int32_t>(mugen::JobType::kRanger),
-        static_cast<int32_t>(mugen::JobType::kMage),
+        static_cast<int32_t>(mugen::CharacterClass::kSwordman),
+        static_cast<int32_t>(mugen::CharacterClass::kRanger),
+        static_cast<int32_t>(mugen::CharacterClass::kMage),
     };
     const auto listCount = static_cast<int>(std::size(kProfessionListToClassId));
     if (selectedIndex >= listCount)
@@ -46,7 +46,7 @@ void CharacterCreationPanel::onClickCreateButton(EventContext* context)
     }
 
     const int32_t classId = kProfessionListToClassId[selectedIndex];
-    if (classId != static_cast<int32_t>(mugen::JobType::kSwordman))
+    if (classId != static_cast<int32_t>(mugen::CharacterClass::kSwordman))
     {
         MessagePopup::show("职业暂未开放");
         return;

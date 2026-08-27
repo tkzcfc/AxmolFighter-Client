@@ -57,7 +57,7 @@ void PhysicsSystem::update()
         auto transformComp = MG_GET_COMPONENT(entity, TransformComponent);
 
         // 1. 记录上一帧位置（碰撞回退时使用）
-        physicsComp->lastPosition = physicsComp->position;
+        physicsComp->lastPosition     = physicsComp->position;
         physicsComp->boundaryHitFlags = 0;
         const bool wasOnGround        = physicsComp->onGround != 0;
         physicsComp->justLanded       = false;
@@ -78,11 +78,19 @@ void PhysicsSystem::update()
             physicsComp->impulseVelocity.y *= decay;
         }
 
-        // 4. 限制主动移动速度（velocity）大小
-        auto clampF = [](float v, float maxAbs) { return v > maxAbs ? maxAbs : (v < -maxAbs ? -maxAbs : v); };
-        physicsComp->velocity.x = clampF(physicsComp->velocity.x, physicsComp->maxVelocity.x);
-        physicsComp->velocity.y = clampF(physicsComp->velocity.y, physicsComp->maxVelocity.y);
-        physicsComp->velocity.z = clampF(physicsComp->velocity.z, physicsComp->maxVelocity.z);
+        // 4. 限制主动移动速度；位移表驱动期间不夹，否则跳/冲的表速度会被走速上限削掉
+        const bool dispOwns = [&]() {
+            if (auto* disp = MG_GET_COMPONENT(entity, DisplacementComponent))
+                return disp->isActive();
+            return false;
+        }();
+        if (!dispOwns)
+        {
+            auto clampF = [](float v, float maxAbs) { return v > maxAbs ? maxAbs : (v < -maxAbs ? -maxAbs : v); };
+            physicsComp->velocity.x = clampF(physicsComp->velocity.x, physicsComp->maxVelocity.x);
+            physicsComp->velocity.y = clampF(physicsComp->velocity.y, physicsComp->maxVelocity.y);
+            physicsComp->velocity.z = clampF(physicsComp->velocity.z, physicsComp->maxVelocity.z);
+        }
 
         // 5. 位置积分（主动移动 + 冲量叠加）
         float vx = physicsComp->velocity.x + physicsComp->impulseVelocity.x;

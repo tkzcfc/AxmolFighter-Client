@@ -1,7 +1,14 @@
 #include "mugen/bt/BtLocomotionUtils.h"
 
 #include "mugen/Components.h"
+#include "mugen/buff/BuffManager.h"
+#include "mugen/buff/BuffRuleUtil.h"
+#include "mugen/conf/Config.h"
+#include "mugen/conf/GameDef.h"
+#include "mugen/core/ecs/Entity.h"
+#include "mugen/skill/SkillManager.h"
 
+#include <algorithm>
 #include <cmath>
 
 NS_MG_BEGIN
@@ -29,8 +36,7 @@ bool slotTriggered(const InputComponent* input, int32_t slot, uint32_t slotTrigg
 
     if ((flags & SlotTriggerFlag::kSlotTriggerPress) && justPressed(input, slot))
         return true;
-    if ((flags & SlotTriggerFlag::kSlotTriggerKeepPress) && input->isKeyDown(slot) &&
-        !justPressed(input, slot))
+    if ((flags & SlotTriggerFlag::kSlotTriggerKeepPress) && input->isKeyDown(slot) && !justPressed(input, slot))
         return true;
     if ((flags & SlotTriggerFlag::kSlotTriggerRelease) && justReleased(input, slot))
         return true;
@@ -97,7 +103,25 @@ bool isSameSide(int32_t a, int32_t b)
     return a != 0 && a == b;
 }
 
-bool playBranchAnim(BehaviorComponent* behavior, AvatarComponent* avatar)
+int32_t locomotionAnimKind(int32_t kind)
+{
+    switch (static_cast<BehaviorKind>(kind))
+    {
+    case BehaviorKind::kPatrol:
+    case BehaviorKind::kChase:
+    case BehaviorKind::kAlert:
+    case BehaviorKind::kPathFinding:
+    case BehaviorKind::kJostled:
+        return static_cast<int32_t>(BehaviorKind::kWalk);
+    case BehaviorKind::kRevive:
+    case BehaviorKind::kWake:
+        return static_cast<int32_t>(BehaviorKind::kIdle);
+    default:
+        return kind;
+    }
+}
+
+bool playBranchAnimForKind(BehaviorComponent* behavior, AvatarComponent* avatar, int32_t kind)
 {
     if (!behavior || !behavior->behaviorTemplate || !avatar)
         return false;
@@ -105,7 +129,7 @@ bool playBranchAnim(BehaviorComponent* behavior, AvatarComponent* avatar)
     for (size_t i = 0; i < branches.size(); ++i)
     {
         const auto& b = branches[i];
-        if (b.kind != behavior->currentKind)
+        if (b.kind != kind)
             continue;
         if (b.requireTags && (behavior->statusTags & b.requireTags) != b.requireTags)
             continue;
@@ -119,6 +143,18 @@ bool playBranchAnim(BehaviorComponent* behavior, AvatarComponent* avatar)
     return false;
 }
 
+bool playBranchAnim(BehaviorComponent* behavior, AvatarComponent* avatar)
+{
+    if (!behavior)
+        return false;
+    if (playBranchAnimForKind(behavior, avatar, behavior->currentKind))
+        return true;
+    const int32_t fallback = locomotionAnimKind(behavior->currentKind);
+    if (fallback != behavior->currentKind)
+        return playBranchAnimForKind(behavior, avatar, fallback);
+    return false;
+}
+
 void invalidateBranchAndPlay(BehaviorComponent* behavior, AvatarComponent* avatar)
 {
     if (!behavior)
@@ -129,41 +165,32 @@ void invalidateBranchAndPlay(BehaviorComponent* behavior, AvatarComponent* avata
 
 void setBranchKind(BTContext& ctx, BehaviorKind kind)
 {
-    if (!ctx.behavior)
+    auto* behavior = MG_GET_COMPONENT(ctx.entity, BehaviorComponent);
+    if (!behavior)
         return;
     const int32_t k = static_cast<int32_t>(kind);
-    if (ctx.behavior->currentKind != k)
+    if (behavior->currentKind != k)
     {
-        ctx.behavior->currentKind        = k;
-        ctx.behavior->currentBranchIndex = -1;
+        behavior->currentKind        = k;
+        behavior->currentBranchIndex = -1;
     }
-    if (ctx.bt)
-        ctx.bt->activeBranchKind = k;
-    playBranchAnim(ctx.behavior, ctx.avatar);
+    auto* avatar = MG_GET_COMPONENT(ctx.entity, AvatarComponent);
+    playBranchAnim(behavior, avatar);
 }
 
 void applyLocomotionVelocity(BTContext& ctx)
 {
-    auto* behavior  = ctx.behavior;
-    auto* physics   = ctx.physics;
-    auto* input     = ctx.input;
-    auto* attribute = ctx.attribute;
-    auto* transform = ctx.transform;
+    auto* behavior  = MG_GET_COMPONENT(ctx.entity, BehaviorComponent);
+    auto* physics   = MG_GET_COMPONENT(ctx.entity, PhysicsComponent);
+    auto* input     = MG_GET_COMPONENT(ctx.entity, InputComponent);
+    auto* attribute = MG_GET_COMPONENT(ctx.entity, AttributeComponent);
+    auto* transform = MG_GET_COMPONENT(ctx.entity, TransformComponent);
     if (!behavior || !physics || !input)
         return;
 
-    if ((behavior->statusTags & StateTag::kTagMovable) == 0 || behavior->landLockMs > 0)
-    {
-        physics->velocity.x = 0;
-        physics->velocity.y = 0;
-        return;
-    }
-
     float speed = 300.0f;
     if (attribute)
-        speed = attribute->currentAttribute.moveSpeed;
-    else if (behavior->roleConfig)
-        speed = behavior->roleConfig->attribute.moveSpeed;
+        speed = attribute->moveSpeed;
 
     if (behavior->statusTags & StateTag::kTagDashState)
         speed *= kRunRate;
@@ -206,6 +233,156 @@ void applyLocomotionVelocity(BTContext& ctx)
     }
     physics->velocity.x = vx;
     physics->velocity.y = vy;
+}
+
+bool isDeadHp(Entity* entity)
+{
+    auto* attr = MG_GET_COMPONENT(entity, AttributeComponent);
+    return attr && attr->hp <= 0.0f;
+}
+
+bool isRigidity(const BehaviorComponent* behavior)
+{
+    return behavior && behavior->rigidityRemain <= 0 && behavior->rigidityMax > 0;
+}
+
+void dealWithWeight(Entity* entity, int32_t hitRigidity)
+{
+    auto* behavior = MG_GET_COMPONENT(entity, BehaviorComponent);
+    if (!behavior)
+        return;
+    behavior->rigidityRemain = (std::max)(0, behavior->rigidityRemain - hitRigidity);
+    if (isDeadHp(entity) || !isRigidity(behavior))
+        return;
+    const float dump = behavior->weight * static_cast<float>(behavior->hitCounts);
+    if (auto* disp = MG_GET_COMPONENT(entity, DisplacementComponent))
+        disp->velocity.y -= dump;
+    if (auto* physics = MG_GET_COMPONENT(entity, PhysicsComponent))
+        physics->velocity.z -= dump * DisplacementComponent::kLuaVelToPhysics;
+}
+
+void enterDeath(Entity* entity)
+{
+    if (auto* mgr = SkillManager::of(entity))
+        mgr->forceInterruptCast(entity);
+    auto* behavior = MG_GET_COMPONENT(entity, BehaviorComponent);
+    auto* hitReact = MG_GET_COMPONENT(entity, HitReactComponent);
+    if (hitReact)
+        hitReact->pendingHits.clear();
+    if (behavior)
+    {
+        behavior->statusTags &= ~(StateTag::kTagHitState | StateTag::kTagDownState | StateTag::kTagAttackState |
+                                  StateTag::kTagMovable | StateTag::kTagAttackAllowed | StateTag::kTagDashState);
+        behavior->hitStunRemainingMs = 0;
+        behavior->downRemainMs       = 0;
+        behavior->getUpRemainMs      = 0;
+        behavior->hitSwitchRemainMs  = 0;
+        behavior->wakeRemainMs       = 0;
+        if (behavior->currentKind != static_cast<int32_t>(BehaviorKind::kDeath))
+        {
+            if (auto* buffMgr = BuffManager::of(entity))
+                buffMgr->trigger(entity, BFEvent::BeforeDeath, nullptr, 0);
+            const int32_t oldKind        = behavior->currentKind;
+            behavior->currentKind        = static_cast<int32_t>(BehaviorKind::kDeath);
+            behavior->currentBranchIndex = -1;
+            BuffRuleUtil::notifyBehaviorKindChange(entity, oldKind, behavior->currentKind);
+        }
+    }
+    if (auto* hr = MG_GET_COMPONENT(entity, HitReactComponent))
+    {
+        hr->activeHitType        = HitType::kHitNone;
+        hr->activeTableHitType   = 0;
+        hr->activeHitstunMs      = 0;
+        hr->doubleHitPending     = false;
+        hr->activeDisplacementId = -1;
+    }
+}
+
+void mixHitKind(Entity* entity, BehaviorKind kind, bool playAnim)
+{
+    auto* behavior = MG_GET_COMPONENT(entity, BehaviorComponent);
+    auto* physics  = MG_GET_COMPONENT(entity, PhysicsComponent);
+    auto* avatar   = MG_GET_COMPONENT(entity, AvatarComponent);
+    if (!behavior)
+        return;
+
+    const int32_t oldKind        = behavior->currentKind;
+    behavior->currentKind        = static_cast<int32_t>(kind);
+    behavior->currentBranchIndex = -1;
+    behavior->downRemainMs       = 0;
+    behavior->getUpRemainMs      = 0;
+    behavior->hitSwitchRemainMs  = 0;
+
+    if (kind == BehaviorKind::kHitUp || kind == BehaviorKind::kHitDown)
+    {
+        behavior->statusTags |= StateTag::kTagAirborne | StateTag::kTagHitState;
+        behavior->statusTags &= ~(StateTag::kTagGrounded | StateTag::kTagDownState);
+        if (physics && kind == BehaviorKind::kHitUp)
+            physics->onGround = 0;
+    }
+    else if (kind == BehaviorKind::kHitFloor)
+    {
+        behavior->statusTags |= StateTag::kTagDownState | StateTag::kTagHitState | StateTag::kTagGrounded;
+        behavior->statusTags &= ~(StateTag::kTagAirborne | StateTag::kTagFalling);
+    }
+    else if (kind == BehaviorKind::kGetUp)
+    {
+        behavior->statusTags |= StateTag::kTagDownState | StateTag::kTagHitState | StateTag::kTagGrounded;
+        behavior->statusTags &= ~(StateTag::kTagAirborne | StateTag::kTagFalling);
+        behavior->getUpRemainMs = 1;
+    }
+    else if (kind == BehaviorKind::kWake)
+    {
+        behavior->statusTags &= ~(StateTag::kTagHitState | StateTag::kTagDownState | StateTag::kTagAirborne);
+        behavior->statusTags |= StateTag::kTagGrounded;
+        behavior->wakeRemainMs = 1;
+    }
+    else if (kind == BehaviorKind::kHitSwitch || kind == BehaviorKind::kStun)
+    {
+        behavior->statusTags |= StateTag::kTagHitState;
+        behavior->statusTags &= ~StateTag::kTagDownState;
+    }
+
+    BuffRuleUtil::notifyBehaviorKindChange(entity, oldKind, behavior->currentKind);
+    if (playAnim)
+        playBranchAnim(behavior, avatar);
+}
+
+void restoreControlFromHit(Entity* entity)
+{
+    auto* behavior = MG_GET_COMPONENT(entity, BehaviorComponent);
+    if (!behavior)
+        return;
+    behavior->statusTags &= ~(StateTag::kTagHitState | StateTag::kTagDownState);
+    behavior->statusTags |=
+        StateTag::kTagMovable | StateTag::kTagAttackAllowed | StateTag::kTagFacingAllowed | StateTag::kTagGrounded;
+    if (auto* hr = MG_GET_COMPONENT(entity, HitReactComponent))
+    {
+        hr->activeHitType        = HitType::kHitNone;
+        hr->activeTableHitType   = 0;
+        hr->doubleHitPending     = false;
+        hr->activeDisplacementId = -1;
+    }
+    behavior->hitStunRemainingMs = 0;
+    behavior->wakeRemainMs       = 0;
+    behavior->getUpRemainMs      = 0;
+    behavior->hitCounts          = 0;
+}
+
+void startDisplacementId(Entity* entity, int32_t displacementId, float facingSign, bool applyZRate)
+{
+    auto* disp = MG_GET_COMPONENT(entity, DisplacementComponent);
+    if (!disp || displacementId <= 0)
+        return;
+    const auto* cfg = Config::getInstance()->getDisplacementConfigById(displacementId);
+    if (!cfg)
+        return;
+    auto* physics = MG_GET_COMPONENT(entity, PhysicsComponent);
+    disp->restoreGravity(physics);
+    disp->start(cfg, facingSign);
+    if (applyZRate)
+        disp->velocity.z *= kZRate;
+    disp->writePhysicsVelocity(physics, facingSign);
 }
 
 }  // namespace bt_util

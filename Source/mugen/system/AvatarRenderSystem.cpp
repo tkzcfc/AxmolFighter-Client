@@ -6,6 +6,11 @@
 #    include "mugen/avatar/AvatarLayerUtils.h"
 #    include "mugen/avatar/render/AvatarBuilder.h"
 #    include "mugen/render/RenderObjectPool.h"
+
+#    include "2d/RenderTexture.h"
+
+#    include <algorithm>
+#    include <cmath>
 #endif
 
 NS_MG_BEGIN
@@ -14,6 +19,12 @@ namespace
 {
 #ifdef RUNTIME_IN_AXMOL
 constexpr int kAvatarMaxDriftMs = 100;
+constexpr int kGhostIntervalMs  = 120;
+constexpr float kGhostFadeSec   = 0.5f;
+
+const ax::Color3B kGhostColors[] = {
+    {255, 255, 255}, {0, 47, 127}, {102, 51, 204}, {216, 116, 16}, {160, 20, 255},
+};
 
 int modularDistance(int a, int b, int duration)
 {
@@ -21,6 +32,53 @@ int modularDistance(int a, int b, int duration)
         return std::abs(a - b);
     int d = std::abs(a - b) % duration;
     return std::min(d, duration - d);
+}
+
+void spawnGhostTrail(Avatar* avatar, ax::Node* entityNode, EntityId entityId)
+{
+    if (!avatar || !entityNode)
+        return;
+
+    const ax::Rect box = avatar->localSkeletonBounds();
+    int width          = static_cast<int>(std::ceil(box.size.width));
+    int height         = static_cast<int>(std::ceil(box.size.height));
+    if (width < 2 || height < 2)
+        return;
+    width  = std::min(width, 512);
+    height = std::min(height, 512);
+
+    const ax::Vec2 savedPos = avatar->getPosition();
+    const float savedSx     = avatar->getScaleX();
+    const float savedSy     = avatar->getScaleY();
+
+    auto* rt = ax::RenderTexture::create(width, height, ax::backend::PixelFormat::RGBA8);
+    if (!rt)
+        return;
+    rt->setCascadeOpacityEnabled(true);
+
+    avatar->setScale(1.0f, 1.0f);
+    avatar->setPosition(-box.origin.x, -box.origin.y);
+
+    ax::Director* director = ax::Director::getInstance();
+    rt->beginWithClear(0.0f, 0.0f, 0.0f, 0.0f);
+    avatar->visit(director->getRenderer(), ax::Mat4::IDENTITY, ax::Node::FLAGS_TRANSFORM_DIRTY);
+    rt->end();
+
+    avatar->setPosition(savedPos);
+    avatar->setScaleX(savedSx);
+    avatar->setScaleY(savedSy);
+
+    ax::Sprite* sprite = rt->getSprite();
+    sprite->setAnchorPoint(ax::Vec2(0.5f, 0.0f));
+    sprite->setPosition(savedPos);
+    sprite->setScaleX(savedSx >= 0.0f ? 1.0f : -1.0f);
+    sprite->setBlendFunc(ax::BlendFunc::ADDITIVE);
+    sprite->setOpacityModifyRGB(false);
+    sprite->setColor(kGhostColors[static_cast<size_t>(entityId) % (sizeof(kGhostColors) / sizeof(kGhostColors[0]))]);
+
+    rt->setPosition(ax::Vec2::ZERO);
+    entityNode->addChild(rt, avatar->getLocalZOrder() - 1);
+    rt->runAction(ax::Sequence::create(ax::FadeTo::create(kGhostFadeSec, 0), ax::RemoveSelf::create(), nullptr));
 }
 #endif
 }  // namespace
@@ -58,32 +116,19 @@ void AvatarRenderSystem::update()
         avatar->setPosition(static_cast<float>(transformComp->position.x),
                             static_cast<float>(transformComp->position.y + transformComp->position.z));
         // 逻辑 Transform 是节点变换的唯一权威：scale.x 为负即水平镜像
+        // spine 缩放在 Skeleton 上，这里只镜像/逻辑缩放，不要把影子系数套到角色身上
         avatar->setScaleX(transformComp->scale.x);
         avatar->setScaleY(transformComp->scale.y);
-        if (avatarComp->shadowScale > 0.0f)
-            avatar->setScaleY(transformComp->scale.y * avatarComp->shadowScale);
         avatar->setLocalZOrder(static_cast<int>(-transformComp->position.y));
 
-        // 残影：引用计数 >0 时按间隔复制半透明节点
+        // 残影：引用计数 >0 时按间隔抓当前骨骼剪影
         if (avatarComp->ghostRefCount > 0 && mapRenderComp->entityNode)
         {
             avatarComp->ghostAccumMs += lastUpdateTimeMs;
-            if (avatarComp->ghostAccumMs >= 80)
+            if (avatarComp->ghostAccumMs >= kGhostIntervalMs)
             {
                 avatarComp->ghostAccumMs = 0;
-                auto* ghost = ax::Node::create();
-                ghost->setPosition(avatar->getPosition());
-                ghost->setScaleX(avatar->getScaleX());
-                ghost->setScaleY(avatar->getScaleY());
-                ghost->setLocalZOrder(avatar->getLocalZOrder() - 1);
-                ghost->setOpacity(120);
-                // 占位：用半透明色块近似残影轮廓（完整 RenderTexture 后续）
-                auto* mark = ax::DrawNode::create();
-                mark->drawSolidCircle(ax::Vec2::ZERO, 28.0f, 0.0f, 12,
-                                      ax::Color4F(0.4f, 0.7f, 1.0f, 0.35f));
-                ghost->addChild(mark);
-                mapRenderComp->entityNode->addChild(ghost);
-                ghost->runAction(ax::Sequence::create(ax::FadeOut::create(0.25f), ax::RemoveSelf::create(), nullptr));
+                spawnGhostTrail(avatar, mapRenderComp->entityNode, entity->getId());
             }
         }
         else
@@ -101,6 +146,11 @@ void AvatarRenderSystem::update()
                 avatar->seek(playback.getCurrentTimeMs());
                 avatarRenderComp->syncedMotion = playback.getCurrentMotionName();
                 avatarRenderComp->syncedEntry  = playback.getCurrentEntryId();
+                // 完成事件以骨骼时长为准；.box 往往只覆盖攻击盒区间，过短会冻在最高点
+                const int spineDur = avatar->durationMs();
+                if (spineDur > playback.getDurationMs())
+                    playback.setDurationMs(spineDur);
+                avatarComp->animationFinished = playback.isFinished();
             }
             else
             {

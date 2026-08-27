@@ -2,404 +2,102 @@
 
 #include "mugen/GameWord.h"
 #include "mugen/Components.h"
-#include "mugen/buff/BuffApi.h"
-#include "mugen/combat/DamageCalculator.h"
+#include "mugen/combat/CombatHit.h"
 #include "mugen/conf/Config.h"
 #include "mugen/conf/GameDef.h"
 #include "mugen/core/ecs/Entity.h"
-#include "mugen/system/EffectLifeSystem.h"
+#include "mugen/core/ecs/ECSManager.h"
+#include "mugen/core/math/Random.h"
+#include "mugen/effect/Effect.h"
+#include "mugen/skill/SkillManager.h"
 
 #include <algorithm>
 #include <cmath>
-#include <unordered_set>
 #include <vector>
 
 NS_MG_BEGIN
 
 namespace
 {
-DamageBox makeRadiusAttackBox(const TransformComponent* tf, float radius)
+
+// 近战 hitTarget：当前技能第一段特效的 hitTarget；无特效则敌方。
+int32_t resolveMeleeHitTarget(Entity* attacker)
 {
-    DamageBox box;
-    const int32_t r = static_cast<int32_t>(std::max(20.0f, radius));
-    const int32_t w = r * 2;
-    const int32_t d = r;
-    const int32_t h = r * 2;
-    if (tf && tf->facingDirection == FacingDirection::kFacingLeft)
-        box.pos.x = tf->position.x - w;
-    else
-        box.pos.x = tf ? tf->position.x : 0;
-    box.pos.y  = tf ? tf->position.y - d / 2 : 0;
-    box.pos.z  = tf ? tf->position.z : 0;
-    box.size.x = w;
-    box.size.y = d;
-    box.size.z = h;
-    return box;
+    auto* mgr = SkillManager::of(attacker);
+    if (!mgr || mgr->activeSkillAttackId <= 0)
+        return 0;
+    const auto* skill = Config::getInstance()->getSkillAttackConfigById(mgr->activeSkillAttackId);
+    if (!skill || skill->actionIds.empty())
+        return 0;
+    int32_t toward = mgr->towardIndex > 0 ? mgr->towardIndex : 1;
+    size_t row     = static_cast<size_t>(toward - 1);
+    if (row >= skill->actionIds.size())
+        row = 0;
+    const auto& ids = skill->actionIds[row].values;
+    if (ids.empty())
+        return 0;
+    const auto* action = Config::getInstance()->getActionAttackConfigById(ids.front());
+    if (!action || action->effectIds.empty() || action->effectIds.front() <= 0)
+        return 0;
+    const auto* fx = Config::getInstance()->getEffectConfigById(action->effectIds.front());
+    return fx ? fx->hitTarget : 0;
 }
 
-bool boxesOverlap(const std::vector<DamageBox>& attackBoxes, const std::vector<DamageBox>& damageBoxes)
+const std::vector<int32_t>* resolveMeleeExtraControl(Entity* attacker)
 {
-    for (const auto& attackBox : attackBoxes)
-        for (const auto& damageBox : damageBoxes)
-            if (attackBox.overlaps(damageBox))
-                return true;
-    return false;
+    auto* mgr = SkillManager::of(attacker);
+    if (!mgr || mgr->activeSkillAttackId <= 0)
+        return nullptr;
+    const auto* skill = Config::getInstance()->getSkillAttackConfigById(mgr->activeSkillAttackId);
+    if (!skill || skill->actionIds.empty())
+        return nullptr;
+    int32_t toward = mgr->towardIndex > 0 ? mgr->towardIndex : 1;
+    size_t row     = static_cast<size_t>(toward - 1);
+    if (row >= skill->actionIds.size())
+        row = 0;
+    const auto& ids = skill->actionIds[row].values;
+    if (ids.empty())
+        return nullptr;
+    const auto* action = Config::getInstance()->getActionAttackConfigById(ids.front());
+    if (!action || action->effectIds.empty() || action->effectIds.front() <= 0)
+        return nullptr;
+    const auto* fx = Config::getInstance()->getEffectConfigById(action->effectIds.front());
+    return fx && !fx->hitExtraControl.empty() ? &fx->hitExtraControl : nullptr;
 }
 
-bool isHostile(Entity* a, Entity* b)
+void resetMeleeHits(SkillManager* mgr, int32_t skillId)
 {
-    if (!a || !b)
-        return false;
-    auto* ia = MG_GET_COMPONENT(a, IdentityComponent);
-    auto* ib = MG_GET_COMPONENT(b, IdentityComponent);
-    if (!ia || !ib)
-        return true;  // 缺标识默认可打
-
-    // 玩家 vs 怪物
-    if (ia->category != ib->category)
-    {
-        const bool aCombatant = (ia->category == EntityCategory::kPlayer || ia->category == EntityCategory::kMonster);
-        const bool bCombatant = (ib->category == EntityCategory::kPlayer || ib->category == EntityCategory::kMonster);
-        if (aCombatant && bCombatant)
-            return true;
-    }
-
-    // 同类别：monsterCamps 位有交集视为友军
-    if (ia->monsterCamps != 0 && ib->monsterCamps != 0)
-        return (ia->monsterCamps & ib->monsterCamps) == 0;
-
-    // 同为玩家：友军
-    if (ia->category == EntityCategory::kPlayer && ib->category == EntityCategory::kPlayer)
-        return false;
-
-    return ia->category != ib->category;
-}
-
-/** hitTarget: -1 Both, 0 Enemy, 1 Friend */
-bool passHitTarget(int32_t hitTarget, bool hostile)
-{
-    if (hitTarget == 0)
-        return hostile;
-    if (hitTarget == 1)
-        return !hostile;
-    return true;
-}
-
-bool passHitCondition(Entity* defender, int32_t hitCondition)
-{
-    if (!defender || hitCondition < 0)
-        return true;
-    auto* behavior = MG_GET_COMPONENT(defender, BehaviorComponent);
-    auto* physics  = MG_GET_COMPONENT(defender, PhysicsComponent);
-    if (!behavior)
-        return true;
-
-    const bool down = (behavior->statusTags & StateTag::kTagDownState) != 0;
-    const bool air  = (behavior->statusTags & StateTag::kTagAirborne) != 0 ||
-                     (behavior->currentKind == static_cast<int32_t>(BehaviorKind::kHitUp)) ||
-                     (behavior->currentKind == static_cast<int32_t>(BehaviorKind::kHitDown));
-    const bool onGround = physics && physics->onGround;
-
-    // 0 无法命中倒地；1 无法命中浮空；2 两者都不行
-    if (hitCondition == 0)
-        return !(down && onGround);
-    if (hitCondition == 1)
-        return !air;
-    if (hitCondition == 2)
-        return !(down && onGround) && !air;
-    return true;
-}
-
-int32_t resolveLevel(Entity* entity)
-{
-    if (auto* data = MG_GET_COMPONENT(entity, ActorDataComponent))
-        if (data->characterLevel > 0)
-            return data->characterLevel;
-    return 1;
-}
-
-bool isHeroEntity(Entity* entity)
-{
-    auto* id = MG_GET_COMPONENT(entity, IdentityComponent);
-    return id && id->category == EntityCategory::kPlayer;
-}
-
-void applyFreeze(Entity* entity, int32_t freezeMs, int32_t delayMs)
-{
-    if (!entity || freezeMs <= 0)
-        return;
-    auto* attr = MG_GET_COMPONENT(entity, AttributeComponent);
-    if (!attr)
-        return;
-    // 已在顿帧中：叠时长，不重新武装 delay（避免中途解冻）
-    if (attr->freezeRemainingMs > 0 && attr->freezeDelayMs <= 0)
-    {
-        attr->freezeRemainingMs = (std::max)(attr->freezeRemainingMs, freezeMs);
-        return;
-    }
-    if (delayMs > 0)
-    {
-        attr->freezeDelayMs     = delayMs;
-        attr->freezeRemainingMs = freezeMs;
-    }
-    else
-    {
-        attr->freezeDelayMs     = 0;
-        attr->freezeRemainingMs = (std::max)(attr->freezeRemainingMs, freezeMs);
-    }
-}
-
-bool isAirborneDefender(Entity* defender)
-{
-    if (!defender)
-        return false;
-    auto* behavior = MG_GET_COMPONENT(defender, BehaviorComponent);
-    auto* physics  = MG_GET_COMPONENT(defender, PhysicsComponent);
-    if (behavior && (behavior->statusTags & StateTag::kTagAirborne))
-        return true;
-    if (behavior && behavior->currentKind == static_cast<int32_t>(BehaviorKind::kHitUp))
-        return true;
-    if (physics && !physics->onGround)
-        return true;
-    return false;
-}
-
-void resetMeleeHits(SkillCastComponent* cast, int32_t skillId)
-{
-    if (!cast)
+    if (!mgr)
         return;
     if (skillId <= 0)
     {
-        cast->meleeHitSkillId = 0;
-        cast->meleeHitTargetIds.clear();
-        cast->meleeHitCounts.clear();
-        cast->meleeHitCooldowns.clear();
+        mgr->meleeHitSkillId = 0;
+        mgr->meleeHitTargetIds.clear();
+        mgr->meleeHitCounts.clear();
+        mgr->meleeHitCooldowns.clear();
         return;
     }
-    if (cast->meleeHitSkillId != skillId)
+    if (mgr->meleeHitSkillId != skillId)
     {
-        cast->meleeHitSkillId = skillId;
-        cast->meleeHitTargetIds.clear();
-        cast->meleeHitCounts.clear();
-        cast->meleeHitCooldowns.clear();
+        mgr->meleeHitSkillId = skillId;
+        mgr->meleeHitTargetIds.clear();
+        mgr->meleeHitCounts.clear();
+        mgr->meleeHitCooldowns.clear();
     }
 }
 
-int findMeleeHitIndex(SkillCastComponent* cast, EntityId targetId)
+int findMeleeHitIndex(SkillManager* mgr, EntityId targetId)
 {
-    if (!cast)
+    if (!mgr)
         return -1;
-    for (size_t i = 0; i < cast->meleeHitTargetIds.size(); ++i)
+    for (size_t i = 0; i < mgr->meleeHitTargetIds.size(); ++i)
     {
-        if (cast->meleeHitTargetIds[i] == static_cast<uint32_t>(targetId))
+        if (mgr->meleeHitTargetIds[i] == static_cast<uint32_t>(targetId))
             return static_cast<int>(i);
     }
     return -1;
 }
 
-void queueHit(Entity* attacker,
-             Entity* defender,
-             Entity* effectEntity,
-             const SkillHitTableConfig* hitTable,
-             int32_t skillHitLookupId,
-             Random& rng)
-{
-    if (!attacker || !defender)
-        return;
-
-    if (auto* attrDead = MG_GET_COMPONENT(defender, AttributeComponent))
-    {
-        if (attrDead->currentAttribute.hp <= 0.0f)
-            return;
-    }
-
-    if (DamageCalculator::isInvincible(defender))
-        return;
-
-    if (hitTable && !passHitCondition(defender, hitTable->hitCondition))
-        return;
-
-    BuffApi::trigger(attacker, BFEvent::BeforeHit, defender, skillHitLookupId);
-    BuffApi::trigger(defender, BFEvent::BeforeToBeHit, attacker, skillHitLookupId);
-
-    auto* attrA = MG_GET_COMPONENT(attacker, AttributeComponent);
-    auto* attrB = MG_GET_COMPONENT(defender, AttributeComponent);
-    if (!attrB)
-        return;
-
-    const bool hitMust = hitTable && hitTable->hitMust == 1;
-    const int32_t defLv = resolveLevel(defender);
-    const int32_t atkLv = resolveLevel(attacker);
-    const bool heroDef  = isHeroEntity(defender);
-    const bool heroAtk  = isHeroEntity(attacker);
-    const auto* hurtStd =
-        Config::getInstance()->getSkillHurtConfigById(DamageCalculator::hurtStandardId(defLv, heroDef));
-    const auto* atkHurtStd = heroAtk ? Config::getInstance()->getSkillHurtConfigById(
-                                           DamageCalculator::hurtStandardId(atkLv, true))
-                                     : nullptr;
-
-    DamageInput din;
-    din.attacker         = attrA;
-    din.defender         = attrB;
-    din.hitCfg           = hitTable;
-    din.hurtStd          = hurtStd;
-    din.attackerHurtStd  = atkHurtStd;
-    din.skillAddition    = 0.0f;
-    din.hitMust          = hitMust;
-    din.isHeroDefender   = heroDef;
-
-    // 无 hit 表时用默认轻击倍率
-    SkillHitTableConfig fallbackHit;
-    if (!hitTable)
-    {
-        fallbackHit.hurtRate = 1.0f;
-        fallbackHit.hurtType = 0;
-        fallbackHit.hitType  = static_cast<int32_t>(HitType::kHitLight);
-        fallbackHit.stiffTime = 250;
-        din.hitCfg           = &fallbackHit;
-    }
-
-    DamageResult dmg = DamageCalculator::calculate(din, rng);
-    if (dmg.isDodge)
-        return;
-
-    int32_t hitstun        = 250;
-    int32_t tableHitType   = 0;  // skill_hit.hit_type 原值 0/1/2
-    HitType runtimeHitType = HitType::kHitLight;
-    int32_t displacementId = -1;
-    int32_t hitId          = 0;
-    float impulseX         = 0.0f;
-    float impulseZ         = 0.0f;
-    int32_t freezeMs       = 0;
-    int32_t freezeDelay    = 0;
-    int32_t freezeRole     = 0;
-    int32_t freezeFx       = 0;
-    int32_t hitRigidity    = 0;
-
-    if (hitTable)
-    {
-        tableHitType = hitTable->hitType;  // 保留表原值，勿直接塞进 HitType 枚举
-        hitId        = hitTable->id;
-        hitstun      = hitTable->stiffTime > 0 ? hitTable->stiffTime : 0;
-        if (hitstun <= 0)
-            hitstun = hitTable->hitRigidity > 0 ? hitTable->hitRigidity : 250;
-        hitRigidity    = hitTable->hitRigidity;
-        displacementId = hitTable->displacementId;
-        freezeMs       = hitTable->freezeTime;
-        freezeDelay    = hitTable->freezeTimeDelay;
-        freezeRole     = hitTable->freezeTimeControlRole;
-        freezeFx       = hitTable->freezeTimeControlEffect;
-
-        // 角色表 hitDisplacementId 可覆盖动作位移
-        if (auto* behaviorDef = MG_GET_COMPONENT(defender, BehaviorComponent))
-        {
-            if (behaviorDef->roleConfig && behaviorDef->roleConfig->hitDisplacementId > 0)
-                displacementId = behaviorDef->roleConfig->hitDisplacementId;
-        }
-
-        if (hitTable->airDisplacementId > 0 && isAirborneDefender(defender))
-        {
-            displacementId = hitTable->airDisplacementId;
-        }
-        else if (hitTable->floorDisplacementId > 0 &&
-                 MG_GET_COMPONENT(defender, BehaviorComponent) &&
-                 (MG_GET_COMPONENT(defender, BehaviorComponent)->statusTags & StateTag::kTagDownState))
-        {
-            displacementId = hitTable->floorDisplacementId;
-        }
-
-        if (displacementId > 0)
-        {
-            if (const auto* d = Config::getInstance()->getDisplacementConfigById(displacementId))
-            {
-                auto* atf = MG_GET_COMPONENT(attacker, TransformComponent);
-                const float facing =
-                    (atf && atf->facingDirection == FacingDirection::kFacingLeft) ? -1.0f : 1.0f;
-                impulseX = d->velocity.x * facing;
-                impulseZ = d->velocity.z;
-            }
-        }
-
-        // 运行时严重度：由 tableHitType + 位移推导，供优先级比较
-        if (impulseZ > 0.0f || (hitTable->airDisplacementId > 0 && isAirborneDefender(defender)))
-            runtimeHitType = HitType::kHitLaunch;
-        else if (tableHitType >= 2)
-            runtimeHitType = HitType::kHitLaunch;
-        else if (tableHitType == 1)
-            runtimeHitType = HitType::kHitHeavy;
-        else
-            runtimeHitType = HitType::kHitLight;
-    }
-
-    // 硬直抗性
-    if (hitstun > 0)
-    {
-        const float resistRatio =
-            std::max(0.0f, std::min(100.0f, attrB->currentAttribute.hitRecovery)) / 100.0f;
-        hitstun = std::max(HITSTUN_MIN_MS, static_cast<int32_t>(hitstun * (1.0f - resistRatio)));
-    }
-
-    // 扣血（非霸体也扣；霸体只跳过硬直/顿帧）
-    attrB->currentAttribute.hp = std::max(0.0f, attrB->currentAttribute.hp - dmg.damage);
-
-    // 受击回 EP（按伤害比例，上限 epMax）
-    if (dmg.damage > 0.0f && attrB->epMax > 0.0f)
-    {
-        const float gain = std::min(attrB->epMax * 0.05f, dmg.damage * 0.02f);
-        attrB->ep        = std::min(attrB->epMax, attrB->ep + gain);
-    }
-
-    const bool superArmor = DamageCalculator::isSuperArmor(defender);
-    if (!superArmor)
-    {
-        if (displacementId > 0)
-        {
-            if (auto* disp = MG_GET_COMPONENT(defender, DisplacementComponent))
-                if (auto* d = Config::getInstance()->getDisplacementConfigById(displacementId))
-                    disp->start(d);
-        }
-
-        // 顿帧：受击方始终（可带 delay）；攻击方/特效立即冻（delay 仅作用于受击方）
-        applyFreeze(defender, freezeMs, freezeDelay);
-        if (freezeRole == 0)
-            applyFreeze(attacker, freezeMs, 0);
-        if (effectEntity && freezeFx == 0)
-            applyFreeze(effectEntity, freezeMs, 0);
-
-        if (auto* hitReact = MG_GET_COMPONENT(defender, HitReactComponent))
-        {
-            PendingHitInfo hitInfo;
-            hitInfo.attackerId          = attacker->getId();
-            hitInfo.hitType             = runtimeHitType;
-            hitInfo.tableHitType        = tableHitType;
-            hitInfo.hitId               = hitId;
-            hitInfo.displacementId      = displacementId;
-            hitInfo.hitState            = "Stun";
-            hitInfo.hitstunMs           = hitstun;
-            hitInfo.impulseX            = impulseX;
-            hitInfo.impulseZ            = impulseZ;
-            hitInfo.damage              = dmg.damage;
-            hitInfo.isCrit              = dmg.isCrit;
-            hitInfo.isDodge             = false;
-            hitInfo.hitMust             = hitMust;
-            hitInfo.hurtType            = hitTable ? hitTable->hurtType : 0;
-            hitInfo.hitRigidity         = hitRigidity;
-            hitInfo.freezeTimeMs        = freezeMs;
-            hitInfo.freezeDelayMs       = freezeDelay;
-            hitInfo.freezeControlRole   = freezeRole;
-            hitInfo.freezeControlEffect = freezeFx;
-            hitInfo.effectEntityId =
-                effectEntity ? effectEntity->getId() : INVALID_ENTITY_ID;
-            hitReact->pendingHits.emplace_back(hitInfo);
-        }
-    }
-
-    BuffApi::trigger(attacker, BFEvent::AfterHit, defender, skillHitLookupId, dmg.damage);
-    BuffApi::trigger(defender, BFEvent::AfterToBeHit, attacker, skillHitLookupId, dmg.damage);
-
-    if (effectEntity)
-        EffectLifeSystem::spawnHitEffects(effectEntity, defender);
-}
 }  // namespace
 
 CombatSystem::CombatSystem() {}
@@ -425,7 +123,6 @@ void CombatSystem::update()
     Random localRng;
     Random& rng = word ? word->random : localRng;
 
-    // 冻结倒计时（全实体属性）
     Signature attrSig;
     attrSig.set(ecs->getComponentTypeId("AttributeComponent"));
     for (Entity* e : ecs->getEntitiesBySignature(attrSig))
@@ -436,7 +133,7 @@ void CombatSystem::update()
         if (attr->freezeDelayMs > 0)
         {
             attr->freezeDelayMs = std::max(0, attr->freezeDelayMs - dtMs);
-            continue;  // 延迟期间尚未冻结，逻辑照常；到达 0 后下帧开始冻
+            continue;
         }
         if (attr->freezeRemainingMs > 0)
             attr->freezeRemainingMs = std::max(0, attr->freezeRemainingMs - dtMs);
@@ -444,26 +141,25 @@ void CombatSystem::update()
 
     for (size_t i = 0; i < entities.size(); ++i)
     {
-        auto* entityA    = entities[i];
+        auto* entityA     = entities[i];
         auto* avatarCompA = MG_GET_COMPONENT(entityA, AvatarComponent);
-        auto* behaviorA  = MG_GET_COMPONENT(entityA, BehaviorComponent);
-        auto* castA      = MG_GET_COMPONENT(entityA, SkillCastComponent);
-        auto* attrA      = MG_GET_COMPONENT(entityA, AttributeComponent);
+        auto* behaviorA   = MG_GET_COMPONENT(entityA, BehaviorComponent);
+        auto* mgrA        = SkillManager::of(entityA);
+        auto* attrA       = MG_GET_COMPONENT(entityA, AttributeComponent);
         if (attrA && attrA->freezeRemainingMs > 0 && attrA->freezeDelayMs <= 0)
             continue;
 
-        const int32_t skillId = castA ? castA->activeSkillAttackId : 0;
+        const int32_t skillId = mgrA ? mgrA->activeSkillAttackId : 0;
 
         if (skillId <= 0)
         {
-            if (castA)
-                resetMeleeHits(castA, 0);
+            if (mgrA)
+                resetMeleeHits(mgrA, 0);
             continue;
         }
 
-        resetMeleeHits(castA, skillId);
-        // 冷却倒计时
-        for (int32_t& cd : castA->meleeHitCooldowns)
+        resetMeleeHits(mgrA, skillId);
+        for (int32_t& cd : mgrA->meleeHitCooldowns)
             if (cd > 0)
                 cd = (std::max)(0, cd - dtMs);
 
@@ -473,7 +169,8 @@ void CombatSystem::update()
             float radius = 40.0f;
             if (behaviorA && behaviorA->roleConfig && behaviorA->roleConfig->radius > 0)
                 radius = behaviorA->roleConfig->radius;
-            attackBoxes.push_back(makeRadiusAttackBox(MG_GET_COMPONENT(entityA, TransformComponent), radius));
+            attackBoxes.push_back(
+                CombatHit::makeRadiusAttackBox(MG_GET_COMPONENT(entityA, TransformComponent), radius));
         }
         if (attackBoxes.empty())
             continue;
@@ -489,18 +186,16 @@ void CombatSystem::update()
             if (attrB && attrB->freezeRemainingMs > 0 && attrB->freezeDelayMs <= 0)
                 continue;
 
-            if (!passHitTarget(-1, isHostile(entityA, entityB)))
-                continue;
-            if (!isHostile(entityA, entityB))
+            if (!CombatHit::passHitTarget(resolveMeleeHitTarget(entityA), CombatHit::isHostile(entityA, entityB)))
                 continue;
 
-            int idx = findMeleeHitIndex(castA, entityB->getId());
-            if (idx >= 0 && castA->meleeHitCooldowns[static_cast<size_t>(idx)] > 0)
+            int idx = findMeleeHitIndex(mgrA, entityB->getId());
+            if (idx >= 0 && mgrA->meleeHitCooldowns[static_cast<size_t>(idx)] > 0)
                 continue;
 
             const int32_t hitInterval = hitTable ? hitTable->hitInterval : 0;
             const int32_t maxHits     = hitTable && hitTable->hitCounts > 0 ? hitTable->hitCounts : 1;
-            const int32_t curCount    = idx >= 0 ? castA->meleeHitCounts[static_cast<size_t>(idx)] : 0;
+            const int32_t curCount    = idx >= 0 ? mgrA->meleeHitCounts[static_cast<size_t>(idx)] : 0;
             if (hitInterval < 0)
             {
                 if (curCount >= 1)
@@ -514,118 +209,33 @@ void CombatSystem::update()
             auto* avatarCompB = MG_GET_COMPONENT(entityB, AvatarComponent);
             if (!avatarCompB || avatarCompB->getDamageBoxes().empty())
                 continue;
-            if (!boxesOverlap(attackBoxes, avatarCompB->getDamageBoxes()))
+            if (!CombatHit::boxesOverlap(attackBoxes, avatarCompB->getDamageBoxes()))
                 continue;
 
             if (idx < 0)
             {
-                castA->meleeHitTargetIds.push_back(static_cast<uint32_t>(entityB->getId()));
-                castA->meleeHitCounts.push_back(1);
-                castA->meleeHitCooldowns.push_back(hitInterval < 0 ? 0 : (hitInterval > 0 ? hitInterval : 0));
+                mgrA->meleeHitTargetIds.push_back(static_cast<uint32_t>(entityB->getId()));
+                mgrA->meleeHitCounts.push_back(1);
+                mgrA->meleeHitCooldowns.push_back(hitInterval < 0 ? 0 : (hitInterval > 0 ? hitInterval : 0));
             }
             else
             {
-                ++castA->meleeHitCounts[static_cast<size_t>(idx)];
-                castA->meleeHitCooldowns[static_cast<size_t>(idx)] =
+                ++mgrA->meleeHitCounts[static_cast<size_t>(idx)];
+                mgrA->meleeHitCooldowns[static_cast<size_t>(idx)] =
                     hitInterval < 0 ? 0 : (hitInterval > 0 ? hitInterval : 0);
             }
 
-            queueHit(entityA, entityB, nullptr, hitTable, skillId, rng);
+            CombatHit::applyHit(entityA, entityB, nullptr, hitTable, skillId, rng, ecs,
+                                resolveMeleeExtraControl(entityA));
         }
     }
 
-    // 特效攻击
     Signature effectSig;
-    effectSig.set(ecs->getComponentTypeId("EffectLifetimeComponent"));
-    auto effectEntities = ecs->getEntitiesBySignature(effectSig);
-    for (Entity* effectEntity : effectEntities)
+    effectSig.set(ecs->getComponentTypeId("EffectComponent"));
+    for (Entity* effectEntity : ecs->getEntitiesBySignature(effectSig))
     {
-        auto* fx = MG_GET_COMPONENT(effectEntity, EffectLifetimeComponent);
-        auto* tf = MG_GET_COMPONENT(effectEntity, TransformComponent);
-        auto* fxAttr = MG_GET_COMPONENT(effectEntity, AttributeComponent);
-        if (!fx || !tf || fx->skillHitId <= 0)
-            continue;
-        if (fxAttr && fxAttr->freezeRemainingMs > 0 && fxAttr->freezeDelayMs <= 0)
-            continue;
-        if (fx->hitCooldownMs > 0)
-        {
-            fx->hitCooldownMs = (std::max)(0, fx->hitCooldownMs - dtMs);
-            continue;
-        }
-
-        Entity* owner = fx->ownerId != INVALID_ENTITY_ID ? ecs->getEntity(fx->ownerId) : effectEntity;
-        if (!owner)
-            owner = effectEntity;
-
-        const auto* hitTable = Config::getInstance()->getSkillHitTableConfigById(fx->skillHitId);
-        const auto* effectCfg =
-            fx->effectId > 0 ? Config::getInstance()->getEffectConfigById(fx->effectId) : nullptr;
-        const int32_t hitTarget = effectCfg ? effectCfg->hitTarget : 0;  // 默认敌方
-
-        std::vector<DamageBox> attackBoxes{makeRadiusAttackBox(tf, fx->radius)};
-        const int32_t maxHits     = hitTable && hitTable->hitCounts > 0 ? hitTable->hitCounts : 1;
-        const int32_t hitInterval = hitTable ? hitTable->hitInterval : 80;
-
-        if (hitInterval >= 0 && fx->hitCount >= maxHits)
-            continue;
-
-        for (Entity* defender : entities)
-        {
-            if (defender == owner || defender == effectEntity)
-                continue;
-
-            const bool hostile = isHostile(owner, defender);
-            if (!passHitTarget(hitTarget, hostile))
-                continue;
-
-            auto* avatarB = MG_GET_COMPONENT(defender, AvatarComponent);
-            if (!avatarB || avatarB->getDamageBoxes().empty())
-                continue;
-
-            if (hitInterval < 0)
-            {
-                bool seen = false;
-                for (uint32_t id : fx->hitEntityIds)
-                {
-                    if (id == defender->getId())
-                    {
-                        seen = true;
-                        break;
-                    }
-                }
-                if (seen)
-                    continue;
-            }
-
-            if (!boxesOverlap(attackBoxes, avatarB->getDamageBoxes()))
-                continue;
-
-            // hitExtraControl：[0]=无敌可命中？ [1]=起身可命中？ 0/false 则拒绝
-            if (effectCfg && !effectCfg->hitExtraControl.empty())
-            {
-                const bool hitMustFx = hitTable && hitTable->hitMust == 1;
-                if (!hitMustFx)
-                {
-                    if (effectCfg->hitExtraControl.size() > 1 && effectCfg->hitExtraControl[1] == 0)
-                    {
-                        auto* beh = MG_GET_COMPONENT(defender, BehaviorComponent);
-                        if (beh && beh->currentKind == static_cast<int32_t>(BehaviorKind::kGetUp))
-                            continue;
-                    }
-                }
-            }
-
-            ++fx->hitCount;
-            if (hitInterval < 0)
-                fx->hitEntityIds.push_back(defender->getId());
-            else
-                fx->hitCooldownMs = hitInterval > 0 ? hitInterval : 80;
-
-            queueHit(owner, defender, effectEntity, hitTable, fx->skillHitId, rng);
-
-            if (hitInterval >= 0 && fx->hitCount >= maxHits)
-                break;
-        }
+        if (auto* fx = Effect::of(effectEntity))
+            fx->tryHit(effectEntity, dtMs, rng, entities);
     }
 }
 

@@ -43,6 +43,19 @@ public:
     // 定身剩余（ms）：>0 禁移动/禁技能输入消费
     int32_t staticRemainMs = 0;
 
+    int32_t reviveRemainMs = 0;
+    int32_t wakeRemainMs   = 0;
+
+    // 浮空保护：从表 rigidity 拷入，受击扣减，Wake 回置
+    int32_t rigidityMax    = 0;
+    int32_t rigidityRemain = 0;
+    // 浮空下压：weight 在 rigidity 耗尽后扣 velocityY；fatigue 削僵直（参照 entity_role）
+    float weight         = 0.0f;
+    int32_t fatigue      = 0;
+    int32_t hitCounts    = 0;  // 浮空连段计数（rigid 期间累加，Wake/落地回置）
+    bool reviveRequested = false;
+    bool pendingDestroy  = false;
+
     MG_DEFINE_SERIALIZABLE(statusTags,
                            currentBranchIndex,
                            currentKind,
@@ -54,7 +67,16 @@ public:
                            downRemainMs,
                            getUpRemainMs,
                            hitSwitchRemainMs,
-                           staticRemainMs);
+                           staticRemainMs,
+                           reviveRemainMs,
+                           wakeRemainMs,
+                           rigidityMax,
+                           rigidityRemain,
+                           weight,
+                           fatigue,
+                           hitCounts,
+                           reviveRequested,
+                           pendingDestroy);
 };
 
 NS_MG_END

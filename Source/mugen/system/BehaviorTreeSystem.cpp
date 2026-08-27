@@ -1,16 +1,76 @@
 #include "BehaviorTreeSystem.h"
 
 #include "mugen/Components.h"
+#include "mugen/ai/AiAgent.h"
 #include "mugen/bt/BtLocomotionUtils.h"
 #include "mugen/bt/RoleTreeBuilder.h"
-#include "mugen/bt/SkillCastRules.h"
+#include "mugen/buff/BuffManager.h"
+#include "mugen/buff/BuffRuleUtil.h"
 #include "mugen/conf/Config.h"
 #include "mugen/conf/GameDef.h"
 #include "mugen/core/bt/BTContext.h"
+#include "mugen/core/bt/BehaviorTree.h"
+#include "mugen/skill/SkillManager.h"
 
 #include <algorithm>
+#include <vector>
+#include <vector>
 
 NS_MG_BEGIN
+
+namespace
+{
+
+// 有 SkillCastComponent 则 ensure；按卡组建 Skill 列表，再填快照
+void prepareSkillManager(Entity* entity)
+{
+    auto* cast = MG_GET_COMPONENT(entity, SkillCastComponent);
+    if (!cast)
+        return;
+    auto* mgr = cast->ensureManager();
+    mgr->bindConfig(entity);
+    cast->restoreRuntimeData();
+}
+
+bool isDeadHp(Entity* entity)
+{
+    return bt_util::isDeadHp(entity);
+}
+
+void interruptCast(Entity* entity)
+{
+    if (auto* mgr = SkillManager::of(entity))
+        mgr->forceInterruptCast(entity);
+}
+
+BehaviorKind remixHitKind(int32_t prevKind, const PendingHitInfo& hit, BehaviorComponent* behavior)
+{
+    const auto prev  = static_cast<BehaviorKind>(prevKind);
+    const bool rigid = bt_util::isRigidity(behavior);
+    if (prev == BehaviorKind::kHitUp)
+    {
+        if (hit.tableHitType == 1)
+            return BehaviorKind::kHitDown;
+        return BehaviorKind::kHitUp;
+    }
+    if (prev == BehaviorKind::kHitDown)
+    {
+        if ((hit.tableHitType == 0 || hit.tableHitType == 2) && !rigid)
+            return BehaviorKind::kHitUp;
+        return BehaviorKind::kHitDown;
+    }
+    if (prev == BehaviorKind::kHitFloor)
+    {
+        if (hit.tableHitType == 1)
+            return BehaviorKind::kHitDown;
+        if ((hit.tableHitType == 0 || hit.tableHitType == 2) && !rigid)
+            return BehaviorKind::kHitUp;
+        return BehaviorKind::kHitFloor;
+    }
+    return BehaviorKind::kStun;
+}
+
+}  // namespace
 
 BehaviorTreeSystem::BehaviorTreeSystem() {}
 BehaviorTreeSystem::~BehaviorTreeSystem() {}
@@ -24,9 +84,18 @@ void BehaviorTreeSystem::init(ECSManager* ecs)
 
 void BehaviorTreeSystem::onEntityAdded(Entity* entity)
 {
+    prepareSkillManager(entity);
+
     auto* bt = MG_GET_COMPONENT(entity, BehaviorTreeComponent);
-    if (bt && !bt->root)
-        RoleTreeBuilder::attachToEntity(entity);
+    if (bt)
+    {
+        bt->restoreRuntimeData();
+        auto* tree = bt->ensureTree();
+        if (!tree->getRoot())
+            RoleTreeBuilder::attachToEntity(entity);
+        else
+            RoleTreeBuilder::rebindAttackSelector(bt);
+    }
 
     auto* behavior = MG_GET_COMPONENT(entity, BehaviorComponent);
     if (behavior && behavior->statusTags == 0)
@@ -36,37 +105,22 @@ void BehaviorTreeSystem::onEntityAdded(Entity* entity)
 
 void BehaviorTreeSystem::fillContext(Entity* entity, BTContext& ctx)
 {
-    ctx.entity       = entity;
-    ctx.ecs          = getECSManager();
-    ctx.bt           = MG_GET_COMPONENT(entity, BehaviorTreeComponent);
-    ctx.behavior     = MG_GET_COMPONENT(entity, BehaviorComponent);
-    ctx.skillCast    = MG_GET_COMPONENT(entity, SkillCastComponent);
-    ctx.hitReact     = MG_GET_COMPONENT(entity, HitReactComponent);
-    ctx.avatar       = MG_GET_COMPONENT(entity, AvatarComponent);
-    ctx.transform    = MG_GET_COMPONENT(entity, TransformComponent);
-    ctx.attribute    = MG_GET_COMPONENT(entity, AttributeComponent);
-    ctx.displacement = MG_GET_COMPONENT(entity, DisplacementComponent);
-    ctx.buff         = MG_GET_COMPONENT(entity, BuffComponent);
-    ctx.input        = MG_GET_COMPONENT(entity, InputComponent);
-    ctx.physics      = MG_GET_COMPONENT(entity, PhysicsComponent);
-    ctx.skillDeck    = MG_GET_COMPONENT(entity, SkillDeckComponent);
+    ctx.entity = entity;
 }
 
 void BehaviorTreeSystem::tryCastFromInput(Entity* entity)
 {
     auto* behavior  = MG_GET_COMPONENT(entity, BehaviorComponent);
-    auto* cast      = MG_GET_COMPONENT(entity, SkillCastComponent);
+    auto* mgr       = SkillManager::of(entity);
     auto* input     = MG_GET_COMPONENT(entity, InputComponent);
     auto* deck      = MG_GET_COMPONENT(entity, SkillDeckComponent);
     auto* skillBar  = MG_GET_COMPONENT(entity, SkillBarComponent);
     auto* actorData = MG_GET_COMPONENT(entity, ActorDataComponent);
-    if (!behavior || !cast || !input || !deck || deck->skills.empty())
+    if (!behavior || !mgr || !input || !deck || deck->skills.empty())
         return;
     if ((behavior->statusTags & StateTag::kTagAttackAllowed) == 0)
         return;
     if (behavior->statusTags & (StateTag::kTagHitState | StateTag::kTagDownState))
-        return;
-    if (behavior->landLockMs > 0)
         return;
     if (behavior->staticRemainMs > 0)
         return;
@@ -124,7 +178,7 @@ void BehaviorTreeSystem::tryCastFromInput(Entity* entity)
                     if (!inSlot)
                         continue;
                     int32_t s = 0;
-                    SkillCastRules::resolveFightSkill(entity, slot.slotIndex, &s);
+                    mgr->resolveFightSkill(entity, slot.slotIndex, &s);
                     inputSlot = slot.slotIndex;
                     step      = s;
                     break;
@@ -132,6 +186,15 @@ void BehaviorTreeSystem::tryCastFromInput(Entity* entity)
             }
             break;
         }
+    }
+
+    const int32_t thrustId = mgr->thrustSkillAttackId;
+    if (skillId <= 0 && (behavior->statusTags & StateTag::kTagDashState) != 0 && thrustId > 0 &&
+        bt_util::justPressed(input, static_cast<int32_t>(INPUT_SLOT_0)))
+    {
+        skillId   = thrustId;
+        inputSlot = static_cast<int32_t>(INPUT_SLOT_Z);
+        step      = 0;
     }
 
     if (skillId <= 0 && skillBar)
@@ -142,7 +205,7 @@ void BehaviorTreeSystem::tryCastFromInput(Entity* entity)
                 continue;
 
             int32_t s        = 0;
-            const int32_t id = SkillCastRules::resolveFightSkill(entity, slot.slotIndex, &s);
+            const int32_t id = mgr->resolveFightSkill(entity, slot.slotIndex, &s);
             if (id <= 0)
                 continue;
 
@@ -176,43 +239,16 @@ void BehaviorTreeSystem::tryCastFromInput(Entity* entity)
         }
     }
 
-    const int32_t thrustId = cast->thrustSkillAttackId;
-    const bool dashThrust =
-        skillId <= 0 && (behavior->statusTags & StateTag::kTagDashState) != 0 && thrustId > 0 &&
-        bt_util::justPressed(input, static_cast<int32_t>(INPUT_SLOT_0));
-
-    if (dashThrust)
+    if (skillId <= 0 && mgr->crazySkillAttackId > 0 && bt_util::justPressed(input, static_cast<int32_t>(INPUT_SLOT_C)))
     {
-        skillId   = thrustId;
-        inputSlot = static_cast<int32_t>(INPUT_SLOT_0) + 1;
-        step      = 0;
-        if (skillBar)
-        {
-            for (const auto& slot : skillBar->skillSlots)
-            {
-                int32_t s = 0;
-                if (SkillCastRules::resolveFightSkill(entity, slot.slotIndex, &s) == thrustId)
-                {
-                    inputSlot = slot.slotIndex;
-                    step      = s;
-                    break;
-                }
-            }
-        }
-    }
-    else if (skillId <= 0 && cast->crazySkillAttackId > 0 &&
-             bt_util::justPressed(input, static_cast<int32_t>(INPUT_SLOT_C)))
-    {
-        // E/C：爆气技（要求 EP 满，见 isAllowCast）
-        skillId   = cast->crazySkillAttackId;
+        skillId   = mgr->crazySkillAttackId;
         inputSlot = static_cast<int32_t>(INPUT_SLOT_C);
         step      = 0;
     }
-    else if (skillId <= 0 && cast->dodgeSkillAttackId > 0 &&
+    else if (skillId <= 0 && mgr->dodgeSkillAttackId > 0 &&
              bt_util::justPressed(input, static_cast<int32_t>(INPUT_SLOT_X)))
     {
-        // F/X：闪避
-        skillId   = cast->dodgeSkillAttackId;
+        skillId   = mgr->dodgeSkillAttackId;
         inputSlot = static_cast<int32_t>(INPUT_SLOT_X);
         step      = 0;
     }
@@ -226,22 +262,27 @@ void BehaviorTreeSystem::tryCastFromInput(Entity* entity)
     if (skillId <= 0)
         return;
 
-    if (!SkillCastRules::isAllowCast(entity, skillId, false))
+    if (!mgr->isAllowCast(entity, skillId, false))
     {
-        SkillCastRules::queueInputBuffer(entity, skillId, inputSlot, step);
+        mgr->queueInputBuffer(entity, skillId, inputSlot, step);
         return;
     }
 
-    SkillCastRules::presetSkill(entity, skillId, inputSlot, step);
+    mgr->presetSkill(entity, skillId, inputSlot, step);
 }
 
 void BehaviorTreeSystem::update()
 {
     const int32_t dtMs          = getECSManager()->getLastUpdateTimeMs();
     const int64_t runningTimeMs = getECSManager()->getRunningTimeMs();
+    std::vector<Entity*> toDestroy;
+    // 施法会 spawn 特效并 notifyEntityReady，不能边遍历边改 entities
+    const std::vector<Entity*> ticking = entities;
 
-    for (Entity* entity : entities)
+    for (Entity* entity : ticking)
     {
+        if (!entity || entity->isPendingRemoval())
+            continue;
         // 顿帧中：跳过硬直倒计时 / 输入 / BT（整段冻结）
         const bool frozen = [&]() {
             if (auto* attr = MG_GET_COMPONENT(entity, AttributeComponent))
@@ -249,20 +290,24 @@ void BehaviorTreeSystem::update()
             return false;
         }();
 
+        prepareSkillManager(entity);
+        if (isDeadHp(entity))
+            interruptCast(entity);
         processPendingHits(entity);
         if (!frozen)
         {
             tickHitRecovery(entity, dtMs);
-            tickSkillCooldowns(entity, dtMs);
+            if (auto* mgr = SkillManager::of(entity))
+                mgr->update(entity, dtMs);
             updateAirborneTags(entity);
             // 怪物：注入 AI 移动意图到 Input，再跑双击跑/技能输入
             if (auto* identity = MG_GET_COMPONENT(entity, IdentityComponent))
             {
                 if (identity->category == EntityCategory::kMonster)
                 {
-                    auto* aiComp = MG_GET_COMPONENT(entity, AIComponent);
-                    auto* input  = MG_GET_COMPONENT(entity, InputComponent);
-                    if (aiComp && input)
+                    auto* agent = AiAgent::of(entity);
+                    auto* input = MG_GET_COMPONENT(entity, InputComponent);
+                    if (agent && input)
                     {
                         auto setMove = [&](int32_t slot, bool down) {
                             if (down)
@@ -270,29 +315,16 @@ void BehaviorTreeSystem::update()
                             else
                                 MG_BIT_REMOVE(input->keyDown, 1u << slot);
                         };
-                        setMove(static_cast<int32_t>(INPUT_SLOT_MOVE_LEFT), aiComp->moveDirX < 0);
-                        setMove(static_cast<int32_t>(INPUT_SLOT_MOVE_RIGHT), aiComp->moveDirX > 0);
-                        setMove(static_cast<int32_t>(INPUT_SLOT_MOVE_UP), aiComp->moveDirY > 0);
-                        setMove(static_cast<int32_t>(INPUT_SLOT_MOVE_DOWN), aiComp->moveDirY < 0);
-                        aiComp->moveDirX = 0;
-                        aiComp->moveDirY = 0;
+                        setMove(static_cast<int32_t>(INPUT_SLOT_MOVE_LEFT), agent->moveDirX < 0);
+                        setMove(static_cast<int32_t>(INPUT_SLOT_MOVE_RIGHT), agent->moveDirX > 0);
+                        setMove(static_cast<int32_t>(INPUT_SLOT_MOVE_UP), agent->moveDirY > 0);
+                        setMove(static_cast<int32_t>(INPUT_SLOT_MOVE_DOWN), agent->moveDirY < 0);
+                        agent->moveDirX = 0;
+                        agent->moveDirY = 0;
                     }
                 }
             }
             updateDoubleTapRun(entity, runningTimeMs);
-            if (auto* cast = MG_GET_COMPONENT(entity, SkillCastComponent))
-            {
-                if (cast->crazyActive && cast->crazyRemainMs > 0)
-                {
-                    cast->crazyRemainMs = (std::max)(0, cast->crazyRemainMs - dtMs);
-                    if (cast->crazyRemainMs <= 0)
-                    {
-                        cast->crazyActive = false;
-                        cast->modeIndex   = 0;
-                    }
-                }
-            }
-            SkillCastRules::tickInputBuffer(entity, dtMs);
             tryCastFromInput(entity);
         }
         else
@@ -302,19 +334,30 @@ void BehaviorTreeSystem::update()
 
         BTContext ctx;
         fillContext(entity, ctx);
-        ctx.dtMs          = dtMs;
-        ctx.runningTimeMs = runningTimeMs;
 
-        auto* bt = ctx.bt;
+        auto* bt = MG_GET_COMPONENT(entity, BehaviorTreeComponent);
         if (!bt)
             continue;
-        if (!bt->root)
+        auto* tree = bt->ensureTree();
+        if (!tree->getRoot())
             RoleTreeBuilder::attachToEntity(entity);
-        if (!bt->root)
+        if (!tree->getRoot())
             continue;
 
-        bt->root->tick(ctx, dtMs);
+        if (!tree->update(ctx, dtMs))
+            tree->enter(ctx);
+
+        if (auto* behavior = MG_GET_COMPONENT(entity, BehaviorComponent))
+        {
+            if (behavior->pendingDestroy)
+            {
+                behavior->pendingDestroy = false;
+                toDestroy.push_back(entity);
+            }
+        }
     }
+    for (Entity* e : toDestroy)
+        getECSManager()->destroyEntity(e);
 }
 
 void BehaviorTreeSystem::processPendingHits(Entity* entity)
@@ -324,11 +367,15 @@ void BehaviorTreeSystem::processPendingHits(Entity* entity)
     if (!hitReact || !behavior || hitReact->pendingHits.empty())
         return;
 
-    if (auto* attr = MG_GET_COMPONENT(entity, AttributeComponent))
+    const bool alreadyHit = (behavior->statusTags & StateTag::kTagHitState) != 0;
+
+    if (isDeadHp(entity))
     {
-        if (attr->currentAttribute.hp <= 0.0f)
+        interruptCast(entity);
+        if (!alreadyHit)
         {
             hitReact->pendingHits.clear();
+            bt_util::enterDeath(entity);
             return;
         }
     }
@@ -342,40 +389,32 @@ void BehaviorTreeSystem::processPendingHits(Entity* entity)
     const PendingHitInfo hit = *bestIt;
     hitReact->pendingHits.clear();
 
-    // 已在受击中：允许 remix（连段受击），不再因严重度较低而丢弃
-    const bool alreadyHit = (behavior->statusTags & StateTag::kTagHitState) != 0;
-
-    hitReact->activeHitType      = hit.hitType;
-    hitReact->activeTableHitType = hit.tableHitType;
-    hitReact->activeHitstunMs    = hit.hitstunMs;
+    hitReact->activeHitType        = hit.hitType;
+    hitReact->activeTableHitType   = hit.tableHitType;
+    hitReact->activeHitstunMs      = hit.hitstunMs;
+    hitReact->activeDisplacementId = hit.displacementId;
+    hitReact->activeHitRigidity    = hit.hitRigidity;
+    hitReact->knockbackFacing      = hit.knockbackFacing != 0.0f ? hit.knockbackFacing : 1.0f;
 
     behavior->statusTags |= StateTag::kTagHitState;
     behavior->statusTags &=
         ~(StateTag::kTagMovable | StateTag::kTagAttackAllowed | StateTag::kTagFacingAllowed | StateTag::kTagDashState);
     behavior->hitStunRemainingMs = std::max(0, hit.hitstunMs);
-    behavior->downRemainMs       = 0;
-    behavior->getUpRemainMs      = 0;
-    behavior->hitSwitchRemainMs  = 0;
 
-    // 首次受击：abort BT；remix 时不清树记忆也可，但需打断施法
     if (!alreadyHit)
     {
-        if (auto* bt = MG_GET_COMPONENT(entity, BehaviorTreeComponent))
+        if (auto* bt = BehaviorTreeComponent::of(entity))
         {
-            if (bt->root)
+            auto* tree = bt->ensureTree();
+            if (tree->getRoot())
             {
                 BTContext ctx;
                 fillContext(entity, ctx);
-                bt->root->onExit(ctx);
+                tree->exit(ctx);
             }
-            bt->currentActionId = 0;
-            bt->actionElapsedMs = 0;
-            bt->effectSpawnMask = 0;
-            bt->animationEnd    = false;
-            std::fill(bt->selectorMemory.begin(), bt->selectorMemory.end(), static_cast<int8_t>(-1));
         }
     }
-    SkillCastRules::forceInterruptCast(entity);
+    interruptCast(entity);
 
     if (auto* attacker = getECSManager()->getEntity(hit.attackerId))
     {
@@ -389,63 +428,41 @@ void BehaviorTreeSystem::processPendingHits(Entity* entity)
     }
 
     auto* physics = MG_GET_COMPONENT(entity, PhysicsComponent);
-    auto* avatar  = MG_GET_COMPONENT(entity, AvatarComponent);
-
-    const bool airborne = physics && !physics->onGround;
-    const bool isLaunch = hit.hitType == HitType::kHitLaunch || hit.impulseZ > 0.0f;
-    const bool isDown   = hit.hitType == HitType::kHitDown;
-
     if (physics)
     {
         physics->impulseVelocity.x = hit.impulseX;
         physics->impulseVelocity.z = hit.impulseZ;
-        if (isLaunch && hit.impulseZ > 0.0f)
-            physics->onGround = 0;
     }
 
-    // 表 hit_type 0/1/2 → 受击枝：
-    // 空中 + type>=1 → HitDown；击飞 → HitUp；直接倒地 → HitFloor；其余 → Stun(Hit)
-    if (airborne && hit.tableHitType >= 1 && !isLaunch)
+    const bool airborne = physics && !physics->onGround;
+    (void)airborne;
+    if (!alreadyHit)
     {
-        behavior->currentKind = static_cast<int32_t>(BehaviorKind::kHitDown);
-        behavior->statusTags |= StateTag::kTagAirborne;
-        behavior->statusTags &= ~StateTag::kTagGrounded;
-        if (avatar)
-            avatar->play("hit", 1, false);
+        behavior->hitCounts = 1;
+        bt_util::mixHitKind(entity, BehaviorKind::kStun, true);
+        return;
     }
-    else if (isLaunch)
+
+    if (bt_util::isRigidity(behavior))
+        behavior->hitCounts += 1;
+
+    const BehaviorKind next = remixHitKind(behavior->currentKind, hit, behavior);
+    if (next != static_cast<BehaviorKind>(behavior->currentKind))
     {
-        behavior->currentKind = static_cast<int32_t>(BehaviorKind::kHitUp);
-        behavior->statusTags |= StateTag::kTagAirborne;
-        behavior->statusTags &= ~StateTag::kTagGrounded;
-        if (avatar)
-            avatar->play("hit", 1, false);
-    }
-    else if (isDown)
-    {
-        behavior->currentKind  = static_cast<int32_t>(BehaviorKind::kHitFloor);
-        behavior->statusTags |= StateTag::kTagDownState;
-        behavior->downRemainMs = bt_util::kDownMs;
-        behavior->hitStunRemainingMs = 0;
-        if (avatar)
-            avatar->play("hit", 1, false);
+        if (next == BehaviorKind::kHitUp || next == BehaviorKind::kHitDown || next == BehaviorKind::kHitFloor)
+        {
+            if (hit.tableHitType != 1)
+                bt_util::dealWithWeight(entity, hit.hitRigidity);
+        }
+        bt_util::mixHitKind(entity, next, true);
     }
     else
-    {
-        // tableHitType 0（及地面轻击）：Stun；type>=1 无击飞位移时也先 Stun，硬直结束进 HitSwitch
-        behavior->currentKind = static_cast<int32_t>(BehaviorKind::kStun);
-        if (avatar)
-            avatar->play("hit", 1, false);
-    }
-    behavior->currentBranchIndex = -1;
+        hitReact->doubleHitPending = true;
 }
 
 void BehaviorTreeSystem::tickHitRecovery(Entity* entity, int32_t dtMs)
 {
     auto* behavior = MG_GET_COMPONENT(entity, BehaviorComponent);
-    auto* bt       = MG_GET_COMPONENT(entity, BehaviorTreeComponent);
-    auto* physics  = MG_GET_COMPONENT(entity, PhysicsComponent);
-    auto* avatar   = MG_GET_COMPONENT(entity, AvatarComponent);
     if (!behavior)
         return;
 
@@ -458,114 +475,7 @@ void BehaviorTreeSystem::tickHitRecovery(Entity* entity, int32_t dtMs)
         behavior->statusTags &= ~(StateTag::kTagMovable | StateTag::kTagAttackAllowed);
         if (behavior->staticRemainMs == 0)
         {
-            behavior->statusTags |=
-                StateTag::kTagMovable | StateTag::kTagAttackAllowed | StateTag::kTagFacingAllowed;
-        }
-    }
-    if (bt && bt->staticResetRemainMs > 0)
-        bt->staticResetRemainMs = std::max(0, bt->staticResetRemainMs - dtMs);
-
-    // HitUp / HitDown 落地 → HitFloor
-    if ((behavior->statusTags & StateTag::kTagHitState) && physics && physics->onGround &&
-        (behavior->currentKind == static_cast<int32_t>(BehaviorKind::kHitUp) ||
-         behavior->currentKind == static_cast<int32_t>(BehaviorKind::kHitDown)))
-    {
-        behavior->currentKind        = static_cast<int32_t>(BehaviorKind::kHitFloor);
-        behavior->statusTags |= StateTag::kTagDownState;
-        behavior->statusTags &= ~(StateTag::kTagAirborne | StateTag::kTagFalling);
-        behavior->statusTags |= StateTag::kTagGrounded;
-        behavior->downRemainMs       = bt_util::kDownMs;
-        behavior->hitStunRemainingMs = 0;
-        behavior->currentBranchIndex = -1;
-        bt_util::playBranchAnim(behavior, avatar);
-        return;
-    }
-
-    // HitSwitch 过渡结束 → Idle
-    if (behavior->hitSwitchRemainMs > 0)
-    {
-        behavior->hitSwitchRemainMs = std::max(0, behavior->hitSwitchRemainMs - dtMs);
-        if (behavior->hitSwitchRemainMs == 0 &&
-            behavior->currentKind == static_cast<int32_t>(BehaviorKind::kHitSwitch))
-        {
-            behavior->statusTags &= ~StateTag::kTagHitState;
-            behavior->statusTags |=
-                StateTag::kTagMovable | StateTag::kTagAttackAllowed | StateTag::kTagFacingAllowed;
-            behavior->currentKind = static_cast<int32_t>(BehaviorKind::kIdle);
-            if (auto* hr = MG_GET_COMPONENT(entity, HitReactComponent))
-            {
-                hr->activeHitType      = HitType::kHitNone;
-                hr->activeTableHitType = 0;
-            }
-            bt_util::invalidateBranchAndPlay(behavior, avatar);
-        }
-        return;
-    }
-
-    if (behavior->hitStunRemainingMs > 0)
-    {
-        behavior->hitStunRemainingMs = std::max(0, behavior->hitStunRemainingMs - dtMs);
-        if (behavior->hitStunRemainingMs == 0 &&
-            behavior->currentKind == static_cast<int32_t>(BehaviorKind::kStun))
-        {
-            // Stun 结束 → HitSwitch 过渡，再回 Idle
-            behavior->currentKind       = static_cast<int32_t>(BehaviorKind::kHitSwitch);
-            behavior->hitSwitchRemainMs = bt_util::kHitSwitchMs;
-            behavior->currentBranchIndex = -1;
-            bt_util::playBranchAnim(behavior, avatar);
-        }
-        return;
-    }
-
-    if (behavior->downRemainMs > 0)
-    {
-        behavior->downRemainMs = std::max(0, behavior->downRemainMs - dtMs);
-        if (behavior->downRemainMs == 0)
-        {
-            behavior->currentKind        = static_cast<int32_t>(BehaviorKind::kGetUp);
-            behavior->getUpRemainMs      = bt_util::kGetUpMs;
-            behavior->currentBranchIndex = -1;
-            bt_util::playBranchAnim(behavior, avatar);
-        }
-        return;
-    }
-
-    if (behavior->getUpRemainMs > 0)
-    {
-        behavior->getUpRemainMs = std::max(0, behavior->getUpRemainMs - dtMs);
-        if (behavior->getUpRemainMs == 0)
-        {
-            behavior->statusTags &= ~(StateTag::kTagHitState | StateTag::kTagDownState);
-            behavior->statusTags |= StateTag::kTagMovable | StateTag::kTagAttackAllowed |
-                                    StateTag::kTagFacingAllowed | StateTag::kTagGrounded;
-            behavior->currentKind = static_cast<int32_t>(BehaviorKind::kIdle);
-            if (auto* hr = MG_GET_COMPONENT(entity, HitReactComponent))
-            {
-                hr->activeHitType      = HitType::kHitNone;
-                hr->activeTableHitType = 0;
-            }
-            bt_util::invalidateBranchAndPlay(behavior, avatar);
-        }
-    }
-}
-
-void BehaviorTreeSystem::tickSkillCooldowns(Entity* entity, int32_t dtMs)
-{
-    auto* deck = MG_GET_COMPONENT(entity, SkillDeckComponent);
-    if (!deck)
-        return;
-    for (auto& e : deck->skills)
-    {
-        if (e.coolDownMs <= 0)
-            continue;
-        e.coolDownMs = std::max(0, e.coolDownMs - dtMs);
-        if (e.coolDownMs == 0)
-        {
-            // addSkillReleaseCount：回满一段；未满 max 则继续下一轮 CD
-            if (e.releaseCount < e.releaseMax)
-                e.releaseCount = std::min(e.releaseMax, e.releaseCount + 1);
-            if (e.releaseCount < e.releaseMax && e.coolDownMaxMs > 0)
-                e.coolDownMs = static_cast<int32_t>(static_cast<float>(e.coolDownMaxMs) * e.coldTimeScale);
+            behavior->statusTags |= StateTag::kTagMovable | StateTag::kTagAttackAllowed | StateTag::kTagFacingAllowed;
         }
     }
 }
@@ -612,6 +522,29 @@ void BehaviorTreeSystem::updateDoubleTapRun(Entity* entity, int64_t runningTimeM
         return;
     }
 
+    const bool casting = [&]() {
+        if ((behavior->statusTags & StateTag::kTagAttackState) != 0)
+            return true;
+        if (auto* mgr = SkillManager::of(entity))
+            return mgr->activeSkillAttackId > 0;
+        return false;
+    }();
+
+    // 攻击中走/跑状态加不上（当前必须恰好是 Idle）；只通知额外中断窗。
+    // 已有的跑位保留，松杆也不在攻击中清掉。
+    if (casting)
+    {
+        if (bt_util::anyMoveKeyDown(input))
+        {
+            if (auto* mgr = SkillManager::of(entity))
+            {
+                if (mgr->activeSkillAttackId > 0)
+                    mgr->requestRunCancel(entity);
+            }
+        }
+        return;
+    }
+
     if (!behavior->clickToWalk)
     {
         if (bt_util::anyMoveKeyDown(input))
@@ -631,12 +564,6 @@ void BehaviorTreeSystem::updateDoubleTapRun(Entity* entity, int64_t runningTimeM
                 bt_util::isSameSide(q, behavior->lastMoveQuadrant))
             {
                 behavior->statusTags |= StateTag::kTagDashState;
-                // 攻击中进入 Dash → 请求跑取消
-                if (auto* cast = MG_GET_COMPONENT(entity, SkillCastComponent))
-                {
-                    if (cast->activeSkillAttackId > 0)
-                        SkillCastRules::requestRunCancel(entity);
-                }
             }
             behavior->lastMoveQuadrant = q;
             behavior->lastMovePressMs  = runningTimeMs;

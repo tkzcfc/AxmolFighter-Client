@@ -65,8 +65,7 @@ void MotionPlayer::recomputeDuration()
             m_motionName, m_durationMs, detail);
     }
 
-    if (m_durationMs <= 0)
-        MG_LOG_W("MotionPlayer: duration is 0 for motion='{}'", m_motionName);
+    // 无 .box 时时长为 0 是常态；AttackAction / 渲染层会用骨骼时长补上
 }
 
 void MotionPlayer::applyMotionToLayers()
@@ -233,8 +232,9 @@ bool MotionPlayer::isFinished() const
         return false;
     if (!m_playing)
         return true;
+    // 时长未知时不算播完（完成事件以骨骼时长为准；.box 经常没有）
     if (m_durationMs <= 0)
-        return true;
+        return false;
     return m_timeMs >= m_durationMs;
 }
 

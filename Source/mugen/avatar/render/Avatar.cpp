@@ -2,6 +2,8 @@
 
 #ifdef RUNTIME_IN_AXMOL
 
+#    include "SpineLayer.h"
+
 #    include <algorithm>
 #    include <string>
 
@@ -182,6 +184,29 @@ void Avatar::update(float delta)
     const int dtMs = static_cast<int>(delta * 1000.0f);
     if (dtMs > 0)
         step(dtMs);
+}
+
+ax::Rect Avatar::localSkeletonBounds() const
+{
+    ax::Rect merged;
+    bool any = false;
+    for (RenderLayer* layer : m_layers)
+    {
+        auto* spine = dynamic_cast<SpineLayer*>(layer);
+        if (!spine)
+            continue;
+        const ax::Rect box = spine->skeletonBoundingBox();
+        if (box.size.width < 1.0f && box.size.height < 1.0f)
+            continue;
+        if (!any)
+        {
+            merged = box;
+            any    = true;
+        }
+        else
+            merged.merge(box);
+    }
+    return merged;
 }
 
 // 返回各层时长最大值

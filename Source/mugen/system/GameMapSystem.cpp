@@ -1,10 +1,7 @@
 #include "GameMapSystem.h"
 #include "PhysicsSystem.h"
 #include "SoundSystem.h"
-#include "mugen/ActorSpawner.h"
 #include "mugen/Components.h"
-#include "mugen/GameWord.h"
-#include "mugen/conf/Config.h"
 #include "mugen/conf/LayerLoader.h"
 
 #include <algorithm>
@@ -95,25 +92,6 @@ void GameMapSystem::onEntityAdded(Entity* entity)
     if (soundSys && gameMapComp->soundId > 0)
     {
         soundSys->playBgmById(gameMapComp->soundId);
-    }
-
-    const auto* roomConfig = Config::getInstance()->getRoomConfigById(gameMapComp->mapId);
-    if (!roomConfig)
-    {
-        return;
-    }
-
-    for (const auto& monster : roomConfig->monsters)
-    {
-        actor_spawner::ActorSpawnParams params;
-        params.category = EntityCategory::kMonster;
-        auto monsterActor =
-            actor_spawner::spawnRoleActor(getECSManager(), monster.monsterId, monster.posX, monster.posZ, params);
-        if (!monsterActor)
-        {
-            continue;
-        }
-        monsterActor->notifyEntityReady();
     }
 }
 

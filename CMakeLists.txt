@@ -56,9 +56,13 @@ file(GLOB_RECURSE GAME_SOURCE
 # 排除 protobuf 源码目录（由 add_subdirectory 单独编译）
 list(FILTER GAME_HEADER EXCLUDE REGEX "Source/3rd/protobuf/")
 list(FILTER GAME_SOURCE EXCLUDE REGEX "Source/3rd/protobuf/")
+# behaviac 先入库对齐参照，尚未接入编译
+list(FILTER GAME_HEADER EXCLUDE REGEX "Source/3rd/behaviac/")
+list(FILTER GAME_SOURCE EXCLUDE REGEX "Source/3rd/behaviac/")
 
 set(GAME_INC_DIRS
   "${CMAKE_CURRENT_SOURCE_DIR}/Source"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd"
   "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd/protobuf/src"
 )
 

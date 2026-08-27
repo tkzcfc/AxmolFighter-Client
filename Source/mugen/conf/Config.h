@@ -44,6 +44,8 @@ public:
     const SkillAttackConfig* getSkillAttackConfigById(int32_t id) const;
     // 根据 id 获取动作攻击配置
     const ActionAttackConfig* getActionAttackConfigById(int32_t id) const;
+    // 根据 id 获取特效动作攻击配置（与角色动作表 id 可重合）
+    const ActionAttackConfig* getActionAttackEffectConfigById(int32_t id) const;
     // 根据 id 获取技能受击表配置
     const SkillHitTableConfig* getSkillHitTableConfigById(int32_t id) const;
     // 根据 id 获取角色配置
@@ -79,8 +81,6 @@ public:
     const SkillAiConfig* getSkillAiConfigById(int32_t id) const;
     // 根据 id 获取技能伤害配置
     const SkillHurtConfig* getSkillHurtConfigById(int32_t id) const;
-    // 根据 skillId 获取技能激活覆盖配置
-    const SkillActivationOverlayConfig* getSkillActivationOverlayById(int32_t skillId) const;
     // 根据 id 获取属性模板配置
     const AttributeTemplateConfig* getAttributeTemplateConfigById(int32_t id) const;
 
@@ -117,6 +117,7 @@ private:
 
     std::unordered_map<int32_t, SkillAttackConfig> skillAttackConfigs;
     std::unordered_map<int32_t, ActionAttackConfig> actionAttackConfigs;
+    std::unordered_map<int32_t, ActionAttackConfig> actionAttackEffectConfigs;
     std::unordered_map<int32_t, SkillHitTableConfig> skillHitTableConfigs;
     std::unordered_map<int32_t, AttributeTemplateConfig> attributeTemplateConfigs;
     std::unordered_map<int32_t, ResSpineConfig> resSpineConfigs;
@@ -136,7 +137,6 @@ private:
     std::unordered_map<int32_t, AiConfig> aiConfigs;
     std::unordered_map<int32_t, SkillAiConfig> skillAiConfigs;
     std::unordered_map<int32_t, SkillHurtConfig> skillHurtConfigs;
-    std::unordered_map<int32_t, SkillActivationOverlayConfig> skillActivationOverlayConfigs;
 
     std::unordered_map<int32_t, ResSoundConfig> resSoundConfigs;
     std::unordered_map<std::string, SoundUiConfig> soundUiConfigs;
@@ -147,7 +147,6 @@ private:
     std::unordered_map<int32_t, SoundTalkConfig> soundTalkConfigs;
 
 public:
-
     MG_DEFINE_SERIALIZABLE(townConfigs,
                            campConfigs,
                            stageConfigs,
@@ -176,14 +175,14 @@ public:
                            aiConfigs,
                            skillAiConfigs,
                            skillHurtConfigs,
-                           skillActivationOverlayConfigs,
                            resSoundConfigs,
                            soundUiConfigs,
                            soundSpineConfigs,
                            soundSpineBgmConfigs,
                            soundMapSpineConfigs,
                            soundSendMessageConfigs,
-                           soundTalkConfigs);
+                           soundTalkConfigs,
+                           actionAttackEffectConfigs);
 };
 
 NS_MG_END

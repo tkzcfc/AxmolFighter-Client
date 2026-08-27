@@ -322,9 +322,10 @@ ParallaxOffsets parseRootParallaxOffsets(const JsonValue& root)
         if (name != "meta" && kind != "meta")
             continue;
 
-        offsets.distant   = {propertyNumber(child, "distantOffsetX", 0.0f), propertyNumber(child, "distantOffsetY", 0.0f)};
-        offsets.middle    = {propertyNumber(child, "middleOffsetX", 0.0f), propertyNumber(child, "middleOffsetY", 0.0f)};
-        offsets.nearby    = {propertyNumber(child, "nearbyOffsetX", 0.0f), propertyNumber(child, "nearbyOffsetY", 0.0f)};
+        offsets.distant = {propertyNumber(child, "distantOffsetX", 0.0f),
+                           propertyNumber(child, "distantOffsetY", 0.0f)};
+        offsets.middle  = {propertyNumber(child, "middleOffsetX", 0.0f), propertyNumber(child, "middleOffsetY", 0.0f)};
+        offsets.nearby  = {propertyNumber(child, "nearbyOffsetX", 0.0f), propertyNumber(child, "nearbyOffsetY", 0.0f)};
         offsets.caseLayer = {propertyNumber(child, "caseOffsetX", 0.0f), propertyNumber(child, "caseOffsetY", 0.0f)};
         offsets.light     = {propertyNumber(child, "lightOffsetX", 0.0f), propertyNumber(child, "lightOffsetY", 0.0f)};
         break;

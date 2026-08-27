@@ -29,7 +29,7 @@ BuffRuleBase* BuffRuleFactory::get(const std::string& className)
     if (cit == creators_.end())
         return nullptr;
 
-    auto rule = cit->second();
+    auto rule         = cit->second();
     BuffRuleBase* raw = rule.get();
     cache_[className] = std::move(rule);
     return raw;
@@ -63,6 +63,17 @@ void BuffRuleFactory::registerBuiltinRules()
     registerRule("BuffCrit", []() { return std::make_unique<BuffRuleCrit>(); });
     registerRule("BuffHPMAX", []() { return std::make_unique<BuffRuleHPMAX>(); });
     registerRule("BuffHP", []() { return std::make_unique<BuffRuleHP>(); });
+    registerRule("BuffStun", []() { return std::make_unique<BuffRuleStun>(); });
+    registerRule("BuffSpeed", []() { return std::make_unique<BuffRuleSpeed>(); });
+    registerRule("BuffCrazy", []() { return std::make_unique<BuffRuleCrazy>(); });
+    registerRule("BuffHPLock", []() { return std::make_unique<BuffRuleHPLock>(); });
+    registerRule("BuffDurance", []() { return std::make_unique<BuffRuleDurance>(); });
+    registerRule("BuffSneer", []() { return std::make_unique<BuffRuleSneer>(); });
+    registerRule("BuffAddByApplicator", []() { return std::make_unique<BuffRuleAddByApplicator>(); });
+    registerRule("BuffAddByApplicator2", []() { return std::make_unique<BuffRuleAddByApplicator>(); });
+    registerRule("BuffAddByApplicator3", []() { return std::make_unique<BuffRuleAddByApplicator>(); });
+    registerRule("BuffAddByState", []() { return std::make_unique<BuffRuleAddByState>(); });
+    registerRule("BuffTP", []() { return std::make_unique<BuffRuleTP>(); });
 }
 
 NS_MG_END

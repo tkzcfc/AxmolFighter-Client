@@ -4,11 +4,12 @@
 
 NS_MG_BEGIN
 
-/** 攻击总条件：有当前技能且未受击 */
 class CondRoleAttack : public BTCondition
 {
 public:
-    CondRoleAttack() { debugName = "CondRoleAttack"; }
+    CondRoleAttack();
+    virtual ~CondRoleAttack();
+    const char* typeName() const override { return "CondRoleAttack"; }
     bool check(BTContext& ctx) override;
     void onExit(BTContext& ctx) override;
 };
@@ -16,53 +17,152 @@ public:
 class CondAttackSlot : public BTCondition
 {
 public:
-    explicit CondAttackSlot(int32_t slot) : slot(slot) { debugName = "CondAttackSlot"; }
+    typedef BTCondition Super;
+
+public:
+    CondAttackSlot();
+    explicit CondAttackSlot(int32_t slot);
+    virtual ~CondAttackSlot();
+    const char* typeName() const override { return "CondAttackSlot"; }
     bool check(BTContext& ctx) override;
-    void onEnter(BTContext& ctx) override;
+    bool onEnter(BTContext& ctx) override;
     void onExit(BTContext& ctx) override;
+
+public:
     int32_t slot = 0;
+
+public:
+    MG_DEFINE_SERIALIZABLE_CUSTOM(serializeCustomImpl, deserializeCustomImpl)
+
+private:
+    void serializeCustomImpl(ByteBuffer& byteBuffer) const;
+    bool deserializeCustomImpl(ByteBuffer& byteBuffer);
 };
 
 class CondAttackStep : public BTCondition
 {
 public:
-    CondAttackStep(int32_t slot, int32_t stepIndex) : slot(slot), stepIndex(stepIndex)
-    {
-        debugName = "CondAttackStep";
-    }
+    typedef BTCondition Super;
+
+public:
+    CondAttackStep();
+    CondAttackStep(int32_t slot, int32_t stepIndex);
+    virtual ~CondAttackStep();
+    const char* typeName() const override { return "CondAttackStep"; }
     bool check(BTContext& ctx) override;
-    void onEnter(BTContext& ctx) override;
+    bool onEnter(BTContext& ctx) override;
     void onExit(BTContext& ctx) override;
+
+public:
     int32_t slot      = 0;
     int32_t stepIndex = 0;
+
+public:
+    MG_DEFINE_SERIALIZABLE_CUSTOM(serializeCustomImpl, deserializeCustomImpl)
+
+private:
+    void serializeCustomImpl(ByteBuffer& byteBuffer) const;
+    bool deserializeCustomImpl(ByteBuffer& byteBuffer);
 };
 
 class CondAttackPipe : public BTCondition
 {
 public:
-    CondAttackPipe(int32_t slot, int32_t stepIndex, int32_t pipeIndex, int32_t modeIndex = 0)
-        : slot(slot), stepIndex(stepIndex), pipeIndex(pipeIndex), modeIndex(modeIndex)
-    {
-        debugName = "CondAttackPipe";
-    }
+    typedef BTCondition Super;
+
+public:
+    CondAttackPipe();
+    CondAttackPipe(int32_t slot, int32_t stepIndex, int32_t pipeIndex, int32_t modeIndex = 0);
+    virtual ~CondAttackPipe();
+    const char* typeName() const override { return "CondAttackPipe"; }
     bool check(BTContext& ctx) override;
-    void onEnter(BTContext& ctx) override;
+    bool onEnter(BTContext& ctx) override;
     void onExit(BTContext& ctx) override;
+
+public:
     int32_t slot      = 0;
     int32_t stepIndex = 0;
     int32_t pipeIndex = 0;
     int32_t modeIndex = 0;
+
+public:
+    MG_DEFINE_SERIALIZABLE_CUSTOM(serializeCustomImpl, deserializeCustomImpl)
+
+private:
+    void serializeCustomImpl(ByteBuffer& byteBuffer) const;
+    bool deserializeCustomImpl(ByteBuffer& byteBuffer);
+};
+
+class CondAttackSlotIndex : public BTCondition
+{
+public:
+    typedef BTCondition Super;
+
+public:
+    CondAttackSlotIndex();
+    CondAttackSlotIndex(int32_t slot, int32_t slotIndex);
+    virtual ~CondAttackSlotIndex();
+    const char* typeName() const override { return "CondAttackSlotIndex"; }
+    bool check(BTContext& ctx) override;
+
+public:
+    int32_t slot      = 0;
+    int32_t slotIndex = 1;
+
+public:
+    MG_DEFINE_SERIALIZABLE_CUSTOM(serializeCustomImpl, deserializeCustomImpl)
+
+private:
+    void serializeCustomImpl(ByteBuffer& byteBuffer) const;
+    bool deserializeCustomImpl(ByteBuffer& byteBuffer);
+};
+
+class CondAttackMode : public BTCondition
+{
+public:
+    typedef BTCondition Super;
+
+public:
+    CondAttackMode();
+    CondAttackMode(int32_t slot, int32_t slotIndex, int32_t modeIndex);
+    virtual ~CondAttackMode();
+    const char* typeName() const override { return "CondAttackMode"; }
+    bool check(BTContext& ctx) override;
+
+public:
+    int32_t slot      = 0;
+    int32_t slotIndex = 1;
+    int32_t modeIndex = 0;
+
+public:
+    MG_DEFINE_SERIALIZABLE_CUSTOM(serializeCustomImpl, deserializeCustomImpl)
+
+private:
+    void serializeCustomImpl(ByteBuffer& byteBuffer) const;
+    bool deserializeCustomImpl(ByteBuffer& byteBuffer);
 };
 
 class CondAttackToward : public BTCondition
 {
 public:
-    explicit CondAttackToward(int32_t towardIndex) : towardIndex(towardIndex)
-    {
-        debugName = "CondAttackToward";
-    }
+    typedef BTCondition Super;
+
+public:
+    CondAttackToward();
+    explicit CondAttackToward(int32_t towardIndex);
+    virtual ~CondAttackToward();
+    const char* typeName() const override { return "CondAttackToward"; }
     bool check(BTContext& ctx) override;
+
+public:
     int32_t towardIndex = 1;
+
+public:
+    MG_DEFINE_SERIALIZABLE_CUSTOM(serializeCustomImpl, deserializeCustomImpl)
+
+private:
+    void serializeCustomImpl(ByteBuffer& byteBuffer) const;
+    bool deserializeCustomImpl(ByteBuffer& byteBuffer);
 };
 
 NS_MG_END
