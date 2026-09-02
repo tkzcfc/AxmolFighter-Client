@@ -134,12 +134,12 @@ bool LocalBattleMode::spawnLocalPlayer()
     params.playerId = static_cast<int32_t>(playerId);
     params.name     = std::string(name);
 
-    auto player = actor_spawner::spawnRolePlayerActor(
+    auto player = actor_spawner::spawnRoleActor(
         &m_gameWord->ecsManager, roleId, spawnX, spawnY,
         params);
     if (!player)
     {
-        MG_LOG_E("LocalBattleMode: spawnRolePlayerActor failed role={}", roleId);
+        MG_LOG_E("LocalBattleMode: spawnRoleActor failed role={}", roleId);
         return false;
     }
     player->notifyEntityReady();

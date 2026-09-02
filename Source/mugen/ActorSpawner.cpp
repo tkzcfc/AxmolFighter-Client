@@ -62,14 +62,6 @@ void collectSkillChain(Config* config, int32_t rootId, std::vector<int32_t>& cha
     }
 }
 
-void applyIdentity(IdentityComponent* identityComp, CharacterClass characterClass, const ActorSpawnParams& params)
-{
-    identityComp->category = params.category;
-    identityComp->characterClass = characterClass;
-    identityComp->playerId = params.playerId;
-    identityComp->name     = std::string(params.name);
-}
-
 void fillAvatarFromRole(AvatarComponent* avatarComp,
                         const RoleConfig* role,
                         const ResSpineConfig* spine,
@@ -79,7 +71,8 @@ void fillAvatarFromRole(AvatarComponent* avatarComp,
     avatarComp->roleId     = role ? role->id : 0;
     avatarComp->resSpine   = spine;
     {
-        const int32_t tmplId         = (role && role->roleType != 1 && role->roleType != 0) ? 2 : 1;
+        const int32_t tmplId =
+            (role && role->roleType != EntityRoleType::kHero) ? 2 : 1;
         avatarComp->behaviorTemplate = Config::getInstance()->getBehaviorTemplateConfigById(tmplId);
     }
 
@@ -113,20 +106,25 @@ void fillAvatarFromRole(AvatarComponent* avatarComp,
 
 
 // 参照 EntityTypeIndex[Role]：roleType → 属性模板虚拟基址（Elite/Boss 不是真实表行）。
-int32_t attributeBaseIndexForRoleType(int32_t roleType)
+int32_t attributeBaseIndexForRoleType(EntityRoleType roleType)
 {
     switch (roleType)
     {
-    case 1:
-        return 10000;  // Hero
-    case 2:
-        return 140000;  // Monster
-    case 3:
-        return 150000;  // Elite（虚拟，曲线仍走 140000）
-    case 4:
-        return 160000;  // Boss（虚拟）
-    case 5:
-        return 70000;  // Summon
+    case EntityRoleType::kHero:
+        return 10000;
+    case EntityRoleType::kMonster:
+    case EntityRoleType::kMachine:
+    case EntityRoleType::kCopperOre:
+    case EntityRoleType::kSilverOre:
+    case EntityRoleType::kGoldOre:
+    case EntityRoleType::kAthena:
+        return 140000;
+    case EntityRoleType::kElite:
+        return 150000;  // 虚拟，曲线仍走 140000
+    case EntityRoleType::kBoss:
+        return 160000;  // 虚拟
+    case EntityRoleType::kSummon:
+        return 70000;
     default:
         return 140000;
     }
@@ -311,7 +309,9 @@ void applyAttributeTemplate(AttributeComponent* attrComp, const RoleConfig* role
         attrComp->mp = attrComp->mpMax;
 }
 
-Entity* spawnRoleFullActorImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y, const ActorSpawnParams& params)
+}  // namespace
+
+Entity* spawnRoleActor(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y, const ActorSpawnParams& params)
 {
     auto* config = Config::getInstance();
     auto* role   = config->getRoleConfigById(roleId);
@@ -348,12 +348,6 @@ Entity* spawnRoleFullActorImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32
     auto displacementComp = MG_ADD_COMPONENT(actor, DisplacementComponent);
     auto buffComp         = MG_ADD_COMPONENT(actor, BuffComponent);
     auto aiComp           = MG_ADD_COMPONENT(actor, AIComponent);
-    (void)avatarRenderComp;
-    (void)inputComp;
-    (void)hitReactComp;
-    (void)soundComp;
-    (void)displacementComp;
-    (void)buffComp;
 
     auto* skillMgr = skillCastComp->ensureManager();
 
@@ -417,8 +411,11 @@ Entity* spawnRoleFullActorImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32
         physicsComp->maxVelocity.y = std::max(physicsComp->maxVelocity.y, moveSpeed);
     }
 
-    identityComp->monsterCamps = role->monsterCamps;
-    applyIdentity(identityComp, type_conversions::toCharacterClass(role->id), params);
+    identityComp->monsterCamps   = role->monsterCamps;
+    identityComp->category       = params.category;
+    identityComp->characterClass = type_conversions::toCharacterClass(role->id);
+    identityComp->playerId       = params.playerId;
+    identityComp->name           = std::string(params.name);
 
     transformComp->position.x = x;
     transformComp->position.y = y;
@@ -426,8 +423,8 @@ Entity* spawnRoleFullActorImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32
     transformComp->scale.y    = 1.0f;
 
     // 英雄用默认链 + 闪避/爆气/突刺；怪物从 AI 配置绑技能。
-    // 本工程可玩角色是 101/102/103，表里 roleType 不是 1，按玩家实体走英雄链。
-    const bool isHero = (params.category == EntityCategory::kPlayer) || (role->roleType == 1);
+    // 本工程可玩角色是 101/102/103，表里 roleType 常为 Elite，按玩家实体走英雄链。
+    const bool isHero = (params.category == EntityCategory::kPlayer) || (role->roleType == EntityRoleType::kHero);
     std::vector<int32_t> roots;
     if (params.category == EntityCategory::kMonster && !isHero && !role->aiIds.empty())
     {
@@ -555,10 +552,11 @@ Entity* spawnRoleFullActorImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32
     return actor;
 }
 
-Entity* spawnRemoteRoleImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y, const ActorSpawnParams& params)
+Entity* spawnRemoteRoleActor(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y, const ActorSpawnParams& params)
 {
     auto* config = Config::getInstance();
-    auto* role   = config->getRoleConfigById(roleId);
+
+    auto* role = config->getRoleConfigById(roleId);
     if (!role)
         return nullptr;
 
@@ -572,43 +570,18 @@ Entity* spawnRemoteRoleImpl(ECSManager* ecs, int32_t roleId, int32_t x, int32_t 
     auto transformComp    = MG_ADD_COMPONENT(remote, TransformComponent);
     auto identityComp     = MG_ADD_COMPONENT(remote, IdentityComponent);
     MG_ADD_COMPONENT(remote, SoundComponent);
-    (void)avatarRenderComp;
 
     fillAvatarFromRole(avatarComp, role, spine, false);
-    transformComp->position.x  = x;
-    transformComp->position.y  = y;
-    transformComp->scale.x     = 1.0f;
-    transformComp->scale.y     = 1.0f;
-    identityComp->monsterCamps = role->monsterCamps;
-    applyIdentity(identityComp, type_conversions::toCharacterClass(role->id), params);
+    transformComp->position.x    = x;
+    transformComp->position.y    = y;
+    transformComp->scale.x       = 1.0f;
+    transformComp->scale.y       = 1.0f;
+    identityComp->monsterCamps   = role->monsterCamps;
+    identityComp->category       = params.category;
+    identityComp->characterClass = type_conversions::toCharacterClass(role->id);
+    identityComp->playerId       = params.playerId;
+    identityComp->name           = std::string(params.name);
     return remote;
-}
-
-}  // namespace
-
-Entity* spawnRoleActor(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y, const ActorSpawnParams& params)
-{
-    return spawnRoleFullActorImpl(ecs, roleId, x, y, params);
-}
-
-Entity* spawnRolePlayerActor(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y)
-{
-    ActorSpawnParams params;
-    params.category = EntityCategory::kPlayer;
-    params.name     = "Player";
-    return spawnRoleFullActorImpl(ecs, roleId, x, y, params);
-}
-
-Entity* spawnRolePlayerActor(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y, const ActorSpawnParams& params)
-{
-    ActorSpawnParams p = params;
-    p.category         = EntityCategory::kPlayer;
-    return spawnRoleFullActorImpl(ecs, roleId, x, y, p);
-}
-
-Entity* spawnRemoteRoleActor(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y, const ActorSpawnParams& params)
-{
-    return spawnRemoteRoleImpl(ecs, roleId, x, y, params);
 }
 
 }  // namespace actor_spawner

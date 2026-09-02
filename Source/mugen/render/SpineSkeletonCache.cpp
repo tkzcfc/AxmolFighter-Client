@@ -97,8 +97,11 @@ spine::SkeletonData* SpineSkeletonCache::getOrCreate(std::string_view skeletonFi
 
 void SpineSkeletonCache::preload(std::string_view skeletonFile, std::string_view atlasFile, float scale)
 {
-    if (skeletonFile.empty() || atlasFile.empty())
+    if (skeletonFile.empty())
+    {
+        MG_LOG_E("SpineSkeletonCache::preload: empty skeleton path");
         return;
+    }
     if (!ax::FileUtils::getInstance()->isFileExist(skeletonFile))
     {
         MG_LOG_E("SpineSkeletonCache::preload: skeleton missing '{}'", skeletonFile);
@@ -116,7 +119,7 @@ bool SpineSkeletonCache::preloadResSpine(int32_t resSpineId)
         return false;
     }
     const float scale       = cfg->scale > 0.0f ? cfg->scale : 1.0f;
-    const std::string atlas = atlasFromSpine(cfg->spine);
+    const std::string atlas = "";
     preload(cfg->spine, atlas, scale);
     return getOrCreate(cfg->spine, atlas, scale) != nullptr;
 }
@@ -150,9 +153,9 @@ SpineSkeletonCache::CacheEntry SpineSkeletonCache::load(std::string_view skeleto
                                                         float scale)
 {
     CacheEntry out;
-    if (skeletonFile.empty() || atlasFile.empty())
+    if (skeletonFile.empty())
     {
-        MG_LOG_E("SpineSkeletonCache: empty skeleton/atlas path");
+        MG_LOG_E("SpineSkeletonCache: empty skeleton path");
         return out;
     }
 
@@ -163,12 +166,16 @@ SpineSkeletonCache::CacheEntry SpineSkeletonCache::load(std::string_view skeleto
         return out;
     }
 
-    // Atlas 需要以 '\0' 结尾的 C 字符串；string_view 不保证终止符
-    const std::string atlasPath(atlasFile);
+    // 允许 atlasFile 为空，自动从 skeletonFile 推导
+    std::string atlasPath(atlasFile);
+    if (atlasPath.empty())
+    {
+        atlasPath = atlasFromSpine(skeletonFile);
+    }
     auto* atlas = new (__FILE__, __LINE__) spine::Atlas(atlasPath.c_str(), &s_textureLoader, true);
     if (!atlas || atlas->getPages().size() == 0)
     {
-        MG_LOG_E("SpineSkeletonCache: failed to read atlas '{}'", atlasFile);
+        MG_LOG_E("SpineSkeletonCache: failed to read atlas '{}'", atlasPath);
         delete atlas;
         return out;
     }
@@ -177,7 +184,8 @@ SpineSkeletonCache::CacheEntry SpineSkeletonCache::load(std::string_view skeleto
     spine::SkeletonData* skeletonData = nullptr;
     const unsigned char first         = firstPayloadByte(skelData);
     const bool isJson                 = (first == static_cast<unsigned char>('{'));
-
+    
+    // 允许 skeletonFile 为 JSON 或二进制格式, 通过首个非空白字节判断,不通过文件扩展名判断
     if (isJson)
     {
         std::string jsonText(reinterpret_cast<const char*>(skelData.getBytes()),

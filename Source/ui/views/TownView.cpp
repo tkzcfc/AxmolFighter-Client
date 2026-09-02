@@ -296,7 +296,7 @@ bool TownView::createLocalPlayer()
     params.playerId = static_cast<int32_t>(session->account.playerID);
     params.name     = std::string(session->selectedCharacter.name);
 
-    auto player          = actor_spawner::spawnRolePlayerActor(
+    auto player = actor_spawner::spawnRoleActor(
         &m_gameWord->ecsManager, roleId, spawnX, spawnY,
         params);
     if (!player)
@@ -525,7 +525,7 @@ void TownView::addOrUpdateRemotePlayer(const PB::Types::PlayerState& state, bool
     params.playerId = static_cast<int32_t>(playerId);
     params.name     = state.name();
 
-    auto entity          = actor_spawner::spawnRemoteRoleActor(
+    auto entity = actor_spawner::spawnRemoteRoleActor(
         &m_gameWord->ecsManager, roleId, static_cast<int32_t>(state.pos_x()), static_cast<int32_t>(state.pos_y()),
         params);
     if (!entity)

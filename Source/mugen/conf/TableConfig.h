@@ -1772,8 +1772,8 @@ public:
 
     // id 角色配置 id（英雄常用 0 号模板再被运行时数据覆盖）
     int32_t id = 0;
-    // role_type EntityRoleType（英雄/怪/Boss/召唤/水晶…）
-    int32_t roleType = 4;
+    // role_type EntityRoleType（英雄/怪/Boss/召唤…）
+    EntityRoleType roleType = EntityRoleType::kBoss;
     // role_type_sign 子类型标记
     std::vector<int32_t> roleTypeSign;
     // name_id / desc_id

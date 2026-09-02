@@ -41,6 +41,27 @@ enum EntityCategory : int8_t
     kSkillEffect,  // 技能创建的效果（投射物、AOE等）
 };
 
+enum class EntityRoleType : int32_t
+{
+    kHero      = 1,
+    kMonster   = 2,
+    kElite     = 3,
+    kBoss      = 4,
+    kSummon    = 5,
+    kMachine   = 6,
+    kCopperOre = 7,
+    kSilverOre = 8,
+    kGoldOre   = 9,
+    kAthena    = 10,
+    kMax       = 11,
+};
+
+inline bool isValidEntityRoleType(EntityRoleType t)
+{
+    const auto v = static_cast<int32_t>(t);
+    return v >= static_cast<int32_t>(EntityRoleType::kHero) && v < static_cast<int32_t>(EntityRoleType::kMax);
+}
+
 // 角色职业类型
 enum CharacterClass : int8_t
 {
