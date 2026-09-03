@@ -15,9 +15,9 @@ public:
     IdentityComponent() {}
     virtual ~IdentityComponent() {}
 
-    EntityCategory category = kMonster;  // 实体类别（玩家/怪物/技能效果）
+    EntityCategory category       = kMonster;  // 实体类别（玩家/怪物/技能效果）
     CharacterClass characterClass = CharacterClass::kUnknown;
-    int64_t playerId        = 0;
+    int64_t playerId              = 0;
     std::string name;
 
     // 运行时怪物阵营属性（不进序列化）

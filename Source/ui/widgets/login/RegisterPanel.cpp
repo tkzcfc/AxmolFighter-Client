@@ -1,6 +1,6 @@
 #include "RegisterPanel.h"
 #include "LoginPanel.h"
-#include "ui/widgets/common/MessagePopup.h"
+#include "ui/widgets/common/MessageDialog.h"
 #include <net/client_game.pb.h>
 
 namespace gameui
@@ -33,13 +33,13 @@ void RegisterPanel::onClickRegisterButton(EventContext* context)
 
     if (username.empty() || password.empty())
     {
-        MessagePopup::show("请输入账号和密码");
+        MessageDialog::show("请输入账号和密码");
         return;
     }
 
     if (password != confirmPassword)
     {
-        MessagePopup::show("两次密码输入不一致");
+        MessageDialog::show("两次密码输入不一致");
         return;
     }
 
@@ -53,21 +53,21 @@ void RegisterPanel::onClickRegisterButton(EventContext* context)
     this->call(req, [this](const PB::Game::RegisterResp* resp, std::string_view error) {
         if (!resp)
         {
-            MessagePopup::showNetErr(error);
+            MessageDialog::showNetErr(error);
             return;
         }
 
         if (resp->code() == 0)
         {
             AXLOGI("Register success, player_id={}", resp->player_id());
-            MessagePopup::show("注册成功，请登录");
+            MessageDialog::show("注册成功，请登录");
             getUIManager()->open<LoginPanel>();
             this->close();
         }
         else
         {
             AXLOGW("Register failed, code={}, message={}", resp->code(), resp->message());
-            MessagePopup::show(resp->message().empty() ? "注册失败" : resp->message());
+            MessageDialog::show(resp->message().empty() ? "注册失败" : resp->message());
         }
     });
 }

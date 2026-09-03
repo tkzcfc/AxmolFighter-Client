@@ -10,7 +10,7 @@
 #include "mugen/conf/Config.h"
 #include "mugen/conf/GameDef.h"
 #include "ui/widgets/character_lobby/CharacterCreationPanel.h"
-#include "ui/widgets/common/MessagePopup.h"
+#include "ui/widgets/common/MessageDialog.h"
 #include "fairygui/GLoader3D.h"
 #include <net/client_game.pb.h>
 
@@ -33,13 +33,11 @@ namespace gameui
 
 void CharacterLobbyView::onEnter()
 {
-    auto startGameBtn       = this->getChild<GButton>("startGameBtn");
-    auto createCharacterBtn = this->getChild<GButton>("createCharacterBtn");
-    auto gameoverBtn        = this->getChild<GButton>("gameoverBtn");
+    auto startGameBtn    = this->getChild<GButton>("startGameBtn");
+    auto createPlayerBtn = this->getChild<GButton>("createPlayerBtn");
 
     this->addClickListener(startGameBtn, AX_CALLBACK_1(CharacterLobbyView::onClickStartGameButton, this));
-    this->addClickListener(createCharacterBtn, AX_CALLBACK_1(CharacterLobbyView::onClickCharacterCreateItem, this));
-    this->addClickListener(gameoverBtn, AX_CALLBACK_1(CharacterLobbyView::onClickGameoverButton, this));
+    this->addClickListener(createPlayerBtn, AX_CALLBACK_1(CharacterLobbyView::onClickCreatePlayerButton, this));
 
     requestCharacterList();
 }
@@ -50,14 +48,14 @@ void CharacterLobbyView::requestCharacterList()
     this->call(req, [this](const PB::Game::FetchCharacterListResp* resp, std::string_view error) {
         if (!resp)
         {
-            MessagePopup::showNetErr(error, [this]() { requestCharacterList(); });
+            MessageDialog::showNetErr(error, [this]() { requestCharacterList(); });
             return;
         }
 
         if (resp->code() != 0)
         {
             const std::string msg = resp->message().empty() ? "获取角色列表失败" : resp->message();
-            MessagePopup::show(msg, []() { ax::Director::getInstance()->end(); });
+            MessageDialog::show(msg, []() { ax::Director::getInstance()->end(); });
             return;
         }
 
@@ -88,17 +86,15 @@ void CharacterLobbyView::updateCharacterList()
 
     for (int i = 0; i < characterCount; ++i)
     {
-        auto item           = charactorList->getChildAt(i)->as<GButton>();
-        auto nameText       = item->getChild("nameText")->as<GTextField>();
-        auto professionText = item->getChild("professionText")->as<GTextField>();
-        auto avatarLoader   = item->getChild("avatarLoader")->as<GLoader3D>();
+        auto item         = charactorList->getChildAt(i)->as<GButton>();
+        auto nameText     = item->getChild("nameText")->as<GTextField>();
+        auto avatarLoader = item->getChild("avatarLoader")->as<GLoader3D>();
 
         if (i >= static_cast<int>(session->characters.size()))
         {
             item->setTouchable(false);
             item->setSelected(false);
             nameText->setText("");
-            professionText->setText("");
             avatarLoader->setContent(nullptr);
             continue;
         }
@@ -108,7 +104,6 @@ void CharacterLobbyView::updateCharacterList()
         item->setSelected(i == currentSelectedIndex);
 
         nameText->setText(fmt::format("Lv{} {}", c.level, c.name));
-        professionText->setText("剑士");
 
         // classID 是服务器 characterClass，需映射到英雄 RoleConfig id（101/...）
         const int32_t roleId = mugen::type_conversions::toRoleConfigId(static_cast<mugen::CharacterClass>(c.classID));
@@ -148,7 +143,7 @@ void CharacterLobbyView::onClickStartGameButton(EventContext* context)
 
     if (!session || selectedIndex < 0 || selectedIndex >= static_cast<int>(session->characters.size()))
     {
-        MessagePopup::show("请先选择角色");
+        MessageDialog::show("请先选择角色");
         return;
     }
 
@@ -161,13 +156,13 @@ void CharacterLobbyView::onClickStartGameButton(EventContext* context)
     this->call(req, [this](const PB::Game::SelectCharacterResp* resp, std::string_view error) {
         if (!resp)
         {
-            MessagePopup::showNetErr(error);
+            MessageDialog::showNetErr(error);
             return;
         }
 
         if (resp->code() != 0)
         {
-            MessagePopup::show(resp->message().empty() ? "进入游戏失败" : resp->message());
+            MessageDialog::show(resp->message().empty() ? "进入游戏失败" : resp->message());
             return;
         }
 
@@ -180,14 +175,9 @@ void CharacterLobbyView::onClickStartGameButton(EventContext* context)
     });
 }
 
-void CharacterLobbyView::onClickCharacterCreateItem(EventContext* context)
+void CharacterLobbyView::onClickCreatePlayerButton(EventContext* context)
 {
     getViewManager()->getUIManager()->open<CharacterCreationPanel>();
-}
-
-void CharacterLobbyView::onClickGameoverButton(EventContext* context)
-{
-    ax::Director::getInstance()->end();
 }
 
 }  // namespace gameui

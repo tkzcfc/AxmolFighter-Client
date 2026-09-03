@@ -86,7 +86,7 @@ void MainScene::setupImGui()
 {
     auto* presenter = ax::extension::ImGuiPresenter::getInstance();
 
-    auto fontPath = ax::FileUtils::getInstance()->fullPathForFilename("fonts/Faint-DNF-Song-12px-Medium.ttf");
+    auto fontPath = ax::FileUtils::getInstance()->fullPathForFilename("fonts/fangzhengzhunyuan_GBK.ttf");
     if (!fontPath.empty())
     {
         presenter->addFont(fontPath, 16.0f);

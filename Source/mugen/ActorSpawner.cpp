@@ -71,8 +71,7 @@ void fillAvatarFromRole(AvatarComponent* avatarComp,
     avatarComp->roleId     = role ? role->id : 0;
     avatarComp->resSpine   = spine;
     {
-        const int32_t tmplId =
-            (role && role->roleType != EntityRoleType::kHero) ? 2 : 1;
+        const int32_t tmplId         = (role && role->roleType != EntityRoleType::kHero) ? 2 : 1;
         avatarComp->behaviorTemplate = Config::getInstance()->getBehaviorTemplateConfigById(tmplId);
     }
 
@@ -103,7 +102,6 @@ void fillAvatarFromRole(AvatarComponent* avatarComp,
     }
     avatarComp->motionFile.clear();
 }
-
 
 // 参照 EntityTypeIndex[Role]：roleType → 属性模板虚拟基址（Elite/Boss 不是真实表行）。
 int32_t attributeBaseIndexForRoleType(EntityRoleType roleType)
@@ -185,14 +183,13 @@ bool bakeMonsterAttributeCurve(float outAttrs[16], int32_t attrKey)
     const int32_t lv        = (monsterLv + 9) / 10;
     const int32_t tenDigit  = monsterLv / 100;
     const int32_t unitDigit = monsterLv % 100;
-    const int32_t curId    = kInitDataId + tenDigit;
+    const int32_t curId     = kInitDataId + tenDigit;
     const int32_t nextId    = kInitDataId + tenDigit + 1;
 
     const AttributeTemplateConfig* curT = config->getAttributeTemplateConfigById(curId);
     if (!curT)
         return false;
-    const AttributeTemplateConfig* nextT =
-        unitDigit != 0 ? config->getAttributeTemplateConfigById(nextId) : nullptr;
+    const AttributeTemplateConfig* nextT = unitDigit != 0 ? config->getAttributeTemplateConfigById(nextId) : nullptr;
 
     const SkillHurtConfig* hurtCfg = config->getSkillHurtConfigById((std::max)(1, lv));
 
@@ -208,8 +205,8 @@ bool bakeMonsterAttributeCurve(float outAttrs[16], int32_t attrKey)
         {
             value = value + templateColumn(curT, i);
             if (nextT)
-                value = value + (templateColumn(nextT, i) - templateColumn(curT, i)) / 100.0f *
-                                    static_cast<float>(unitDigit);
+                value = value +
+                        (templateColumn(nextT, i) - templateColumn(curT, i)) / 100.0f * static_cast<float>(unitDigit);
         }
 
         const AttributeTemplateConfig* rateSrc = nextT ? nextT : curT;

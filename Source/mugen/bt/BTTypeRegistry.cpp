@@ -34,7 +34,7 @@ void registerAll()
     REGISTER_NODE(BTParallel);
     REGISTER_NODE(BTSelector);
     REGISTER_NODE(BTSequence);
-    
+
     // 动作节点
     REGISTER_NODE(AttackAction);
     REGISTER_NODE(LocomoAction);

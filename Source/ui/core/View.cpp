@@ -43,6 +43,11 @@ void View::_destroy()
 
 void View::addClickListener(UIEventDispatcher* dispatcher, const std::function<void(EventContext*)>& callback)
 {
+    if (dispatcher == nullptr)
+    {
+        AXLOGW("View::addClickListener: dispatcher is null");
+        return;
+    }
     dispatcher->addEventListener(UIEventType::Click, callback);
 }
 

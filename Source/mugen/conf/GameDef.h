@@ -43,17 +43,19 @@ enum EntityCategory : int8_t
 
 enum class EntityRoleType : int32_t
 {
-    kHero      = 1,
-    kMonster   = 2,
-    kElite     = 3,
-    kBoss      = 4,
-    kSummon    = 5,
-    kMachine   = 6,
-    kCopperOre = 7,
-    kSilverOre = 8,
-    kGoldOre   = 9,
-    kAthena    = 10,
-    kMax       = 11,
+    kHero           = 1,   // 英雄
+    kMonster        = 2,   // 怪物
+    kElite          = 3,   // 精英
+    kBoss           = 4,   // Boss
+    kSummon         = 5,   // 召唤物
+    kMachine        = 6,   // 机器机械装置
+    kCopperOre      = 7,   // 铜矿石
+    kSilverOre      = 8,   // 银矿石
+    kGoldOre        = 9,   // 金矿石
+    kAthena         = 10,  // 防守关被守护的角色类型
+    kMonsterMachine = 11,  // 怪物类型机关
+    kCrystal        = 12,  // 水晶
+    kMax            = 13,  // 最大值
 };
 
 inline bool isValidEntityRoleType(EntityRoleType t)

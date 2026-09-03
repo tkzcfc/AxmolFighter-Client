@@ -38,6 +38,6 @@ CharacterClass toCharacterClass(int32_t roleConfigId)
     }
 }
 
-}
+}  // namespace type_conversions
 
 NS_MG_END

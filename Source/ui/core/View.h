@@ -5,6 +5,7 @@
 #include <vector>
 #include <functional>
 #include "FairyGUI.h"
+#include "GLoader3D.h"
 #include "ViewManager.h"
 #include "net/NetErr.h"
 #include "net/NetAgent.h"

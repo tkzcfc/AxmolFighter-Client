@@ -339,8 +339,7 @@ void applyHit(Entity* attacker,
     if (attrB->hp > 0.0f && attrB->hp != oldHp)
     {
         if (auto* buffMgr = BuffManager::of(defender))
-            buffMgr->trigger(defender, BFEvent::HpChange, attacker, skillHitLookupId,
-                             attrB->hp - oldHp);
+            buffMgr->trigger(defender, BFEvent::HpChange, attacker, skillHitLookupId, attrB->hp - oldHp);
     }
 
     if (dmg.damage > 0.0f && attrB->epMax > 0.0f)

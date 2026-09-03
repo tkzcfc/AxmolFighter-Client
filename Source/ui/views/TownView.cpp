@@ -12,7 +12,7 @@
 #include "mugen/render/SpineSkeletonLoader.h"
 #include "ui/battle/BattleBootParams.h"
 #include "ui/input/DefaultInputSlotMap.h"
-#include "ui/widgets/common/MessagePopup.h"
+#include "ui/widgets/common/MessageDialog.h"
 
 #include "2d/DrawNode.h"
 #include "imgui.h"
@@ -147,13 +147,13 @@ void TownView::onEnter()
     if (!initGameWord())
     {
         m_gameWord = nullptr;
-        MessagePopup::show("城镇初始化失败");
+        MessageDialog::show("城镇初始化失败");
         return;
     }
 
     if (!createLocalPlayer())
     {
-        MessagePopup::show("创建角色失败");
+        MessageDialog::show("创建角色失败");
         return;
     }
 
@@ -290,15 +290,14 @@ bool TownView::createLocalPlayer()
     }
 
     // classID 是 CharacterClass，映射到可玩英雄 RoleConfig
-    const int32_t roleId = type_conversions::toRoleConfigId(static_cast<CharacterClass>(session->selectedCharacter.classID));
+    const int32_t roleId =
+        type_conversions::toRoleConfigId(static_cast<CharacterClass>(session->selectedCharacter.classID));
     mugen::actor_spawner::ActorSpawnParams params;
     params.category = EntityCategory::kPlayer;
     params.playerId = static_cast<int32_t>(session->account.playerID);
     params.name     = std::string(session->selectedCharacter.name);
 
-    auto player = actor_spawner::spawnRoleActor(
-        &m_gameWord->ecsManager, roleId, spawnX, spawnY,
-        params);
+    auto player = actor_spawner::spawnRoleActor(&m_gameWord->ecsManager, roleId, spawnX, spawnY, params);
     if (!player)
     {
         return false;
@@ -325,13 +324,13 @@ void TownView::sendEnterScene()
     this->call(req, [this](const PB::Game::EnterSceneResp* resp, std::string_view error) {
         if (!resp)
         {
-            MessagePopup::showNetErr(error, [this]() { sendEnterScene(); });
+            MessageDialog::showNetErr(error, [this]() { sendEnterScene(); });
             return;
         }
 
         if (resp->code() != 0)
         {
-            MessagePopup::show(resp->message().empty() ? "进入城镇失败" : resp->message());
+            MessageDialog::show(resp->message().empty() ? "进入城镇失败" : resp->message());
             return;
         }
 
@@ -499,7 +498,7 @@ void TownView::addMessagePushReceiver()
     // 决斗结束/取消
     this->listenPush([this](PB::Game::DuelEndPush& push) {
         m_showDuelInvite = false;
-        MessagePopup::show(push.message().empty() ? "决斗已取消" : push.message());
+        MessageDialog::show(push.message().empty() ? "决斗已取消" : push.message());
     });
 }
 
@@ -525,9 +524,9 @@ void TownView::addOrUpdateRemotePlayer(const PB::Types::PlayerState& state, bool
     params.playerId = static_cast<int32_t>(playerId);
     params.name     = state.name();
 
-    auto entity = actor_spawner::spawnRemoteRoleActor(
-        &m_gameWord->ecsManager, roleId, static_cast<int32_t>(state.pos_x()), static_cast<int32_t>(state.pos_y()),
-        params);
+    auto entity =
+        actor_spawner::spawnRemoteRoleActor(&m_gameWord->ecsManager, roleId, static_cast<int32_t>(state.pos_x()),
+                                            static_cast<int32_t>(state.pos_y()), params);
     if (!entity)
     {
         return;
@@ -876,7 +875,7 @@ void TownView::requestSoloBattle()
     auto* session = AppContext::get().gameSession();
     if (!session || !session->account.isLoggedIn())
     {
-        MessagePopup::show("请先登录");
+        MessageDialog::show("请先登录");
         return;
     }
 
@@ -887,12 +886,12 @@ void TownView::requestSoloBattle()
     this->call(req, [this](const PB::Game::BattleJoinResp* resp, std::string_view err) {
         if (!resp)
         {
-            MessagePopup::showNetErr(err);
+            MessageDialog::showNetErr(err);
             return;
         }
         if (resp->code() != 0)
         {
-            MessagePopup::show(resp->message().empty() ? "进入战斗失败" : resp->message());
+            MessageDialog::show(resp->message().empty() ? "进入战斗失败" : resp->message());
             return;
         }
 
@@ -915,7 +914,7 @@ void TownView::sendDuelInvite(int64_t targetPlayerId)
     auto* session = AppContext::get().gameSession();
     if (session && targetPlayerId == session->account.playerID)
     {
-        MessagePopup::show("不能和自己决斗");
+        MessageDialog::show("不能和自己决斗");
         return;
     }
 
@@ -924,12 +923,12 @@ void TownView::sendDuelInvite(int64_t targetPlayerId)
     this->call(req, [this](const PB::Game::DuelInviteResp* resp, std::string_view err) {
         if (!resp)
         {
-            MessagePopup::showNetErr(err);
+            MessageDialog::showNetErr(err);
             return;
         }
         if (resp->code() != 0)
         {
-            MessagePopup::show(resp->message().empty() ? "决斗邀请失败" : resp->message());
+            MessageDialog::show(resp->message().empty() ? "决斗邀请失败" : resp->message());
         }
     });
 }
@@ -941,12 +940,12 @@ void TownView::respondDuelInvite(int32_t accept)
     this->call(req, [this](const PB::Game::DuelRespondResp* resp, std::string_view err) {
         if (!resp)
         {
-            MessagePopup::showNetErr(err);
+            MessageDialog::showNetErr(err);
             return;
         }
         if (resp->code() != 0)
         {
-            MessagePopup::show(resp->message().empty() ? "决斗回应失败" : resp->message());
+            MessageDialog::show(resp->message().empty() ? "决斗回应失败" : resp->message());
         }
     });
 }
@@ -1033,8 +1032,8 @@ void TownView::initPortals()
             const auto* spineCfg = Config::getInstance()->getResSpineConfigById(portalCfg->resSpineId);
             if (spineCfg && !spineCfg->spine.empty())
             {
-                const float scale            = spineCfg->scale > 0.0f ? spineCfg->scale : 1.0f;
-                const std::string atlasPath  = replaceExtension(spineCfg->spine, ".atlas");
+                const float scale           = spineCfg->scale > 0.0f ? spineCfg->scale : 1.0f;
+                const std::string atlasPath = replaceExtension(spineCfg->spine, ".atlas");
                 auto* skeleton = SpineSkeletonLoader::createSkeletonAnimation(spineCfg->spine, atlasPath, scale);
                 if (skeleton)
                 {
@@ -1128,14 +1127,14 @@ void TownView::onPortalTriggered(const TownPortal& portal)
         if (portal.destTownId <= 0)
         {
             AXLOGW("TownView: city portal missing destTownId (portalId={})", portal.portalId);
-            MessagePopup::show("传送目标无效");
+            MessageDialog::show("传送目标无效");
             return;
         }
 
         if (!Config::getInstance()->getTownConfigById(portal.destTownId))
         {
             AXLOGW("TownView: dest town {} not found (portalId={})", portal.destTownId, portal.portalId);
-            MessagePopup::show("目标城镇配置不存在");
+            MessageDialog::show("目标城镇配置不存在");
             return;
         }
 

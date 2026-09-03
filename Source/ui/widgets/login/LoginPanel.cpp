@@ -2,7 +2,7 @@
 #include "RegisterPanel.h"
 #include "AppContext.h"
 #include "ui/views/LaunchView.h"
-#include "ui/widgets/common/MessagePopup.h"
+#include "ui/widgets/common/MessageDialog.h"
 #include <net/client_game.pb.h>
 
 namespace gameui
@@ -33,7 +33,7 @@ void LoginPanel::onClickLoginButton(EventContext* context)
 
     if (username.empty() || password.empty())
     {
-        MessagePopup::show("请输入账号和密码");
+        MessageDialog::show("请输入账号和密码");
         return;
     }
 
@@ -46,7 +46,7 @@ void LoginPanel::onClickLoginButton(EventContext* context)
     this->call(req, [this](const PB::Game::LoginResp* resp, std::string_view error) {
         if (!resp)
         {
-            MessagePopup::showNetErr(error);
+            MessageDialog::showNetErr(error);
             return;
         }
 
@@ -63,7 +63,7 @@ void LoginPanel::onClickLoginButton(EventContext* context)
         else
         {
             AXLOGW("Login failed, code={}, message={}", resp->code(), resp->message());
-            MessagePopup::show(resp->message().empty() ? "登录失败" : resp->message());
+            MessageDialog::show(resp->message().empty() ? "登录失败" : resp->message());
         }
     });
 }

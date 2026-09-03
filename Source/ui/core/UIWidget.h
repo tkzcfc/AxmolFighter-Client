@@ -88,7 +88,7 @@ protected:
 
     UIWidgetOptions m_options;
 
-private:
+protected:
     friend class UIManager;
 
     void _create();

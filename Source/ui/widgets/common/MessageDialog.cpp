@@ -1,4 +1,4 @@
-#include "MessagePopup.h"
+#include "MessageDialog.h"
 #include "AppContext.h"
 #include "net/NetErr.h"
 
@@ -19,7 +19,7 @@ using net::NET_GATEWAY_ERR_SERVICE_NOT_BOUND;
 using net::NET_GATEWAY_ERR_SERVICE_UNAVAILABLE;
 using net::NET_GATEWAY_ERR_UNKNOWN_ROUTE;
 
-MessagePopup::MessagePopup()
+MessageDialog::MessageDialog()
 {
     m_options.draggable         = true;
     m_options.closeOnClickBg    = false;
@@ -27,9 +27,11 @@ MessagePopup::MessagePopup()
     m_options.backgroundOpacity = 0;
 }
 
-MessagePopup::~MessagePopup() {}
+MessageDialog::~MessageDialog() {}
 
-void MessagePopup::setMessage(std::string_view message, std::function<void()> onConfirm, std::function<void()> onCancel)
+void MessageDialog::setMessage(std::string_view message,
+                               std::function<void()> onConfirm,
+                               std::function<void()> onCancel)
 {
     m_onConfirm = onConfirm;
     m_onCancel  = onCancel;
@@ -37,40 +39,33 @@ void MessagePopup::setMessage(std::string_view message, std::function<void()> on
     auto content = this->getContent();
     content->getController("c1")->setSelectedPage(onCancel == nullptr ? "single" : "double");
 
-    auto textContent = content->getChild("textContent")->as<GBasicTextField>();
+    auto textContent = content->getChild("textContent")->as<GLabel>();
     std::string textStr(message.data(), message.size());
     textContent->setText(textStr);
 
-    constexpr float textContentMinWidth = 180.0f;
-    float textContentWidth              = textContent->getWidth();
-    float textContentMaxWidth           = this->getRoot()->getWidth() * 0.6f;
-    if (textContent->getWidth() > textContentMinWidth)
+    // 如果文字渲染高度小于 textContent 高度,则将 title 位置设置到中间
+    auto textRender        = textContent->getChild("title")->as<GTextField>();
+    auto textHeight        = textRender->getHeight();
+    auto textContentHeight = textContent->getHeight();
+
+    if (textHeight < textContentHeight)
     {
-        if (textContentWidth > textContentMaxWidth)
-        {
-            textContent->setText("");
-            textContent->setWidth(textContentMaxWidth);
-            textContent->setAutoSize(AutoSizeType::HEIGHT);
-            textContent->setText(textStr);
-        }
-        content->setWidth(textContent->getWidth() + 10.0f);
+        textRender->setX((textContentHeight - textHeight) * 0.5f);
     }
 }
 
-void MessagePopup::onCreate()
+void MessageDialog::onCreate()
 {
-    auto closeButton         = this->getChild<GButton>("closeButton");
     auto confirmButtonCenter = this->getChild<GButton>("confirmButtonCenter");
     auto confirmButton       = this->getChild<GButton>("confirmButton");
     auto cancelButton        = this->getChild<GButton>("cancelButton");
 
-    this->addClickListener(closeButton, AX_CALLBACK_1(MessagePopup::onClickCloseButton, this));
-    this->addClickListener(confirmButtonCenter, AX_CALLBACK_1(MessagePopup::onClickConfirmButton, this));
-    this->addClickListener(confirmButton, AX_CALLBACK_1(MessagePopup::onClickConfirmButton, this));
-    this->addClickListener(cancelButton, AX_CALLBACK_1(MessagePopup::onClickCancelButton, this));
+    this->addClickListener(confirmButtonCenter, AX_CALLBACK_1(MessageDialog::onClickConfirmButton, this));
+    this->addClickListener(confirmButton, AX_CALLBACK_1(MessageDialog::onClickConfirmButton, this));
+    this->addClickListener(cancelButton, AX_CALLBACK_1(MessageDialog::onClickCancelButton, this));
 }
 
-void MessagePopup::onClickCloseButton(EventContext* context)
+void MessageDialog::onClickCancelButton(EventContext* context)
 {
     if (m_onCancel)
     {
@@ -82,19 +77,7 @@ void MessagePopup::onClickCloseButton(EventContext* context)
     this->close();
 }
 
-void MessagePopup::onClickCancelButton(EventContext* context)
-{
-    if (m_onCancel)
-    {
-        auto onCancel = m_onCancel;
-        m_onConfirm   = nullptr;
-        m_onCancel    = nullptr;
-        onCancel();
-    }
-    this->close();
-}
-
-void MessagePopup::onClickConfirmButton(EventContext* context)
+void MessageDialog::onClickConfirmButton(EventContext* context)
 {
     if (m_onConfirm)
     {
@@ -106,14 +89,14 @@ void MessagePopup::onClickConfirmButton(EventContext* context)
     this->close();
 }
 
-std::weak_ptr<MessagePopup> MessagePopup::showGlobal(std::string_view message,
-                                                     std::function<void()> onConfirm,
-                                                     std::function<void()> onCancel)
+std::weak_ptr<MessageDialog> MessageDialog::showGlobal(std::string_view message,
+                                                       std::function<void()> onConfirm,
+                                                       std::function<void()> onCancel)
 {
     auto uiManager = AppContext::get().uiManager();
     if (uiManager)
     {
-        auto popupWeakPtr = uiManager->openWithOptions<MessagePopup>(
+        auto popupWeakPtr = uiManager->openWithOptions<MessageDialog>(
             UIOpenOptions{.layer = UI_OPTIONS_LAYER_MAXVALUE, .lifecycle = UIWidgetLifecycle::Independent});
         if (auto popup = popupWeakPtr.lock())
         {
@@ -124,15 +107,15 @@ std::weak_ptr<MessagePopup> MessagePopup::showGlobal(std::string_view message,
     return {};
 }
 
-std::weak_ptr<MessagePopup> MessagePopup::show(std::string_view message,
-                                               std::function<void()> onConfirm,
-                                               std::function<void()> onCancel)
+std::weak_ptr<MessageDialog> MessageDialog::show(std::string_view message,
+                                                 std::function<void()> onConfirm,
+                                                 std::function<void()> onCancel)
 {
     auto uiManager = AppContext::get().uiManager();
     if (uiManager)
     {
         auto popupWeakPtr =
-            uiManager->openWithOptions<MessagePopup>(UIOpenOptions{.layer = UI_OPTIONS_LAYER_MAXVALUE - 1});
+            uiManager->openWithOptions<MessageDialog>(UIOpenOptions{.layer = UI_OPTIONS_LAYER_MAXVALUE - 1});
         if (auto popup = popupWeakPtr.lock())
         {
             popup->setMessage(message, onConfirm, onCancel);
@@ -203,7 +186,7 @@ static std::tuple<std::string_view, bool> translateError(const std::string_view&
     }
 }
 
-std::weak_ptr<MessagePopup> MessagePopup::showNetErr(std::string_view error, std::function<void()> onRetry)
+std::weak_ptr<MessageDialog> MessageDialog::showNetErr(std::string_view error, std::function<void()> onRetry)
 {
     auto [message, canRetry] = translateError(error);
 

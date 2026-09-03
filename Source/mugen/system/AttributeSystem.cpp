@@ -13,14 +13,10 @@ void AttributeSystem::init(ECSManager* ecs)
     MG_SYSTEM_ADD_REQUIRED_COMPONENT(this, ecs, AttributeComponent);
 }
 
-void AttributeSystem::onEntityAdded(Entity* entity)
-{
-}
+void AttributeSystem::onEntityAdded(Entity* entity) {}
 
 void AttributeSystem::onEntityRemoved(Entity* entity) {}
 
-void AttributeSystem::update()
-{
-}
+void AttributeSystem::update() {}
 
 NS_MG_END

@@ -18,6 +18,8 @@ public:
     // 返回缓存的 SkeletonData（非拥有）；失败返回 nullptr。atlas/loader 仅内部持有。
     spine::SkeletonData* getOrCreate(std::string_view skeletonFile, std::string_view atlasFile, float scale = 1.0f);
 
+    spine::SkeletonData* getOrCreate(int32_t skeletonId);
+
     // 预加载
     void preload(std::string_view skeletonFile, std::string_view atlasFile, float scale = 1.0f);
 

@@ -21,18 +21,18 @@ public:
     float habitus     = 0;
     float spirit      = 0;
     // AttributeName "hp"：最大生命
-    float hpMax = 0;
-    float atk   = 0;
-    float def   = 0;
-    float matk  = 0;
-    float mdef  = 0;
+    float hpMax            = 0;
+    float atk              = 0;
+    float def              = 0;
+    float matk             = 0;
+    float mdef             = 0;
     float crit             = 0;
     float critResist       = 0;
     float critDamage       = 0;
     float critDamageResist = 0;
-    float dodge      = 0;
-    float hit        = 0;
-    float baseDamage = 0;
+    float dodge            = 0;
+    float hit              = 0;
+    float baseDamage       = 0;
 
     MG_DEFINE_SERIALIZABLE(sourceForce,
                            agility,

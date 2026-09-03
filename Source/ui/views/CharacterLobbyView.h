@@ -24,9 +24,7 @@ private:
 
     void onClickStartGameButton(EventContext* context);
 
-    void onClickCharacterCreateItem(EventContext* context);
-
-    void onClickGameoverButton(EventContext* context);
+    void onClickCreatePlayerButton(EventContext* context);
 
     long long m_selectedCharacterID = 0;
 };

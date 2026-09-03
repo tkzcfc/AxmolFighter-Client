@@ -5,7 +5,7 @@
 #include "mugen/conf/TableConfig.h"
 #include "ui/battle/BattleBootParams.h"
 #include "ui/core/ViewManager.h"
-#include "ui/widgets/common/MessagePopup.h"
+#include "ui/widgets/common/MessageDialog.h"
 
 #include "imgui.h"
 
@@ -70,27 +70,27 @@ void DungeonSelectView::enterCopy(int32_t copyId)
     const auto* copy = config->getCopyConfigById(copyId);
     if (!copy)
     {
-        MessagePopup::show(fmt::format("副本配置不存在: {}", copyId));
+        MessageDialog::show(fmt::format("副本配置不存在: {}", copyId));
         return;
     }
 
     const auto* stage = config->getStageConfigById(copy->stageId);
     if (!stage)
     {
-        MessagePopup::show(fmt::format("关卡配置不存在: stageId={}", copy->stageId));
+        MessageDialog::show(fmt::format("关卡配置不存在: stageId={}", copy->stageId));
         return;
     }
 
     if (stage->roomId <= 0)
     {
-        MessagePopup::show(fmt::format("关卡未配置房间: stageId={}", copy->stageId));
+        MessageDialog::show(fmt::format("关卡未配置房间: stageId={}", copy->stageId));
         return;
     }
 
     const auto* room = config->getRoomConfigById(stage->roomId);
     if (!room)
     {
-        MessagePopup::show(fmt::format("房间配置不存在: roomId={}", stage->roomId));
+        MessageDialog::show(fmt::format("房间配置不存在: roomId={}", stage->roomId));
         return;
     }
 
@@ -184,7 +184,7 @@ void DungeonSelectView::onImGUIRender()
         if (m_selectedCopyId > 0)
             enterCopy(m_selectedCopyId);
         else
-            MessagePopup::show("请先选择关卡");
+            MessageDialog::show("请先选择关卡");
     }
     ImGui::SameLine();
     if (ImGui::Button("返回", ImVec2(120.0f, 0.0f)))

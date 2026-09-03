@@ -1,7 +1,7 @@
 #include "AppContext.h"
 #include "ui/core/FGUIPackageManager.h"
-#include "audio/AudioEngine.h"
-#include "ui/widgets/common/MessagePopup.h"
+#include "ui/core/AudioManager.h"
+#include "ui/widgets/common/MessageDialog.h"
 #include "net/client_game.pb.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
 
@@ -17,10 +17,13 @@ AppContext& AppContext::get()
 
 void AppContext::create()
 {
-    fairygui::UIConfig::registerFont(fairygui::UIConfig::defaultFont, "fonts/Faint-DNF-Song-12px-Medium.ttf");
-    fairygui::UIConfig::registerFont("Faint-DNF-Song-12px-Medium", "fonts/Faint-DNF-Song-12px-Medium.ttf");
+    fairygui::UIConfig::defaultFont = "font-normal";
+    fairygui::UIConfig::buttonSound = "ui://Common/ui_click1";
+    fairygui::UIConfig::registerFont("font-normal", "fonts/font-normal.ttf");
+    fairygui::UIConfig::registerFont("font-title", "fonts/font-title.ttf");
+    fairygui::UIConfig::registerFont("fangzhengzhunyuan_GBK", "fonts/fangzhengzhunyuan_GBK.ttf");
     fairygui::UIConfig::onMusicCallback = [](const std::string& path, float volumnScale) {
-        ax::AudioEngine::play2d(path, false, 1.0f);
+        gameui::AudioManager::getInstance()->playUISFX(path, volumnScale);
     };
 
     gameui::FGUIPackageManager::getInstance().load({"UI/Common"});
@@ -79,7 +82,7 @@ void AppContext::init(ax::Scene* scene)
                     text = push.message();
                 }
 
-                gameui::MessagePopup::showGlobal(text, []() { ax::Director::getInstance()->end(); });
+                gameui::MessageDialog::showGlobal(text, []() { ax::Director::getInstance()->end(); });
             }
         }
     }, "AppContext");
@@ -87,7 +90,7 @@ void AppContext::init(ax::Scene* scene)
         if (!m_netClient->hasOnlineService(0))
         {
             m_serverHost.clear();
-            gameui::MessagePopup::showGlobal("服务器维护中", []() { ax::Director::getInstance()->end(); });
+            gameui::MessageDialog::showGlobal("服务器维护中", []() { ax::Director::getInstance()->end(); });
         }
     });
 }
@@ -168,7 +171,7 @@ void AppContext::onConnected()
         if (!success)
         {
             AXLOGE("request server status failed: {}", error);
-            gameui::MessagePopup::showGlobal("网关认证失败", []() { ax::Director::getInstance()->end(); });
+            gameui::MessageDialog::showGlobal("网关认证失败", []() { ax::Director::getInstance()->end(); });
         }
     }, this);
 }
@@ -204,7 +207,7 @@ void AppContext::showConnectMask(const std::string& text, bool showRetryButton)
 
     if (showRetryButton)
     {
-        gameui::MessagePopup::show(text, [this]() {
+        gameui::MessageDialog::show(text, [this]() {
             m_reconnectElapsed  = 0.0f;
             m_reconnectAttempts = 0;
             m_shouldReconnect   = true;

@@ -118,7 +118,8 @@ bool LocalBattleMode::spawnLocalPlayer()
     {
         if (session->selectedCharacter.characterID != 0)
         {
-            roleId   = mugen::type_conversions::toRoleConfigId(static_cast<mugen::CharacterClass>(session->selectedCharacter.classID));
+            roleId = mugen::type_conversions::toRoleConfigId(
+                static_cast<mugen::CharacterClass>(session->selectedCharacter.classID));
             playerId = session->account.playerID;
             name     = session->selectedCharacter.name;
             if (!config->getRoleConfigById(roleId))
@@ -134,9 +135,7 @@ bool LocalBattleMode::spawnLocalPlayer()
     params.playerId = static_cast<int32_t>(playerId);
     params.name     = std::string(name);
 
-    auto player = actor_spawner::spawnRoleActor(
-        &m_gameWord->ecsManager, roleId, spawnX, spawnY,
-        params);
+    auto player = actor_spawner::spawnRoleActor(&m_gameWord->ecsManager, roleId, spawnX, spawnY, params);
     if (!player)
     {
         MG_LOG_E("LocalBattleMode: spawnRoleActor failed role={}", roleId);

@@ -95,6 +95,19 @@ spine::SkeletonData* SpineSkeletonCache::getOrCreate(std::string_view skeletonFi
     return loaded.skeletonData;
 }
 
+spine::SkeletonData* SpineSkeletonCache::getOrCreate(int32_t skeletonId)
+{
+    auto* cfg = Config::getInstance()->getResSpineConfigById(skeletonId);
+    if (!cfg || cfg->spine.empty())
+    {
+        MG_LOG_E("SpineSkeletonCache::getOrCreate: ResSpine {} missing or spine empty", skeletonId);
+        return nullptr;
+    }
+    const float scale       = cfg->scale > 0.0f ? cfg->scale : 1.0f;
+    const std::string atlas = "";
+    return getOrCreate(cfg->spine, atlas, scale);
+}
+
 void SpineSkeletonCache::preload(std::string_view skeletonFile, std::string_view atlasFile, float scale)
 {
     if (skeletonFile.empty())
@@ -184,7 +197,7 @@ SpineSkeletonCache::CacheEntry SpineSkeletonCache::load(std::string_view skeleto
     spine::SkeletonData* skeletonData = nullptr;
     const unsigned char first         = firstPayloadByte(skelData);
     const bool isJson                 = (first == static_cast<unsigned char>('{'));
-    
+
     // 允许 skeletonFile 为 JSON 或二进制格式, 通过首个非空白字节判断,不通过文件扩展名判断
     if (isJson)
     {

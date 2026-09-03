@@ -557,7 +557,7 @@ void ReviveAction::onActionEnter(BTContext& ctx)
     {
         attr->hp = attr->basic.hpMax;
         attr->mp = attr->mpMax;
-        attr->ep                  = attr->epMax;
+        attr->ep = attr->epMax;
     }
     if (auto* mgr = SkillManager::of(ctx.entity))
     {

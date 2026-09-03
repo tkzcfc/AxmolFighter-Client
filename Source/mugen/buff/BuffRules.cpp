@@ -362,10 +362,9 @@ void BuffRuleHPMAX::onAdd(Entity* entity, Buff& inst)
     auto* attr = MG_GET_COMPONENT(entity, AttributeComponent);
     if (!attr)
         return;
-    const float rate = param0(entity, inst);
-    const float baseMax =
-        attr->basic.hpMax > 0.0f ? attr->basic.hpMax : attr->hp;
-    const float add = baseMax * rate;
+    const float rate    = param0(entity, inst);
+    const float baseMax = attr->basic.hpMax > 0.0f ? attr->basic.hpMax : attr->hp;
+    const float add     = baseMax * rate;
     BuffRuleUtil::modifyExtend(entity, ExtendAttributeType::AddMaxHp, add);
     attr->basic.hpMax = baseMax + add;
     attr->hp += attr->hp * rate;
