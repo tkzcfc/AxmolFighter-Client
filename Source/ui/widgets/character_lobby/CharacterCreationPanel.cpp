@@ -5,9 +5,12 @@
 #include "mugen/conf/GameDef.h"
 #include "ui/core/AudioManager.h"
 #include <net/client_game.pb.h>
+#include "CharacterCreationChooseClouthPanel.h"
 
 namespace gameui
 {
+
+constexpr int kProfessionCount = 3;
 
 // 角色spine动画偏移,缩放以及动画信息配置
 struct CharacterCreationSpineConfig
@@ -42,14 +45,14 @@ struct CharacterCreationProfession
 // 角色创建配置
 struct CharacterCreationRole
 {
-    CharacterCreationProfession professions[3];
+    CharacterCreationProfession professions[kProfessionCount];
     // 属性描述图片
     std::string attributeIcon;
 };
 
 struct CharacterCreationConfig
 {
-    CharacterCreationRole roles[3];
+    CharacterCreationRole roles[mugen::CharacterClass::kCount];
 };
 
 static const CharacterCreationConfig kCharacterCreationConfig = {
@@ -98,6 +101,28 @@ static const CharacterCreationConfig kCharacterCreationConfig = {
       "ui://CharacterLobby/ui_juesechuangjian_juexingfangxiang_jindutiao_shuxing_02"},
      { // roles[2]
       {// professions
+       {"未开放",
+        3,
+        "使用刺刃为武器，可以进行能量具现的暗器攻击，擅长隐身刺杀和造物穿刺。",
+        "ui://CharacterLobby/ui_juesechuangjian_zhujiemian_mingzi_ling",
+        {10063, {1.0f, 1.0f}, {-20.0f, 25.0f}, "0"},
+        "video/video_player/ui_zhiyejieshao_ling.mp4"},
+       {"逐影之心",
+        5,
+        "恪守使命的致命兵器，领悟影的含义，流血中毒，减速禁锢，化身折磨对手的暗影毒刺",
+        "ui://CharacterLobby/ui_juesechuangjian_zhujiemian_mingzi_zhuyingzhixin",
+        {10310, {1.0f, 1.0f}, {50.0f, 0.0f}, "0"},
+        "video/video_player/ui_zhiyejieshao_zhuyingzhixin.mp4"},
+       {"神兵之眼",
+        2,
+        "火力全开的最终堡垒，增强具现化的异能，圣矛穿刺，飞刃旋舞，成为横扫千军的毁灭重炮",
+        "ui://CharacterLobby/ui_juesechuangjian_zhujiemian_mingzi_shenbingzhiyan",
+        {10311, {1.0f, 1.0f}, {20.0f, 0.0f}, "0"},
+        "video/video_player/ui_zhiyejieshao_shenbingzhiyan.mp4"}},
+      "ui://CharacterLobby/ui_juesechuangjian_juexingfangxiang_jindutiao_shuxing_02"},
+     
+     { // roles[3]
+      {// professions
        {"莉莉姆",
         1,
         "使用魔杖为武器，可以进行召唤虚空，雷光之力的异能攻击，擅长能量控制与大范围魔法",
@@ -135,7 +160,7 @@ void CharacterCreationPanel::onCreate()
         this->addClickListener(btn, [this, i](EventContext* context) { this->onClickRoleTypeButton(context, i); });
     }
 
-    for (int32_t i = 0; i < 3; ++i)
+    for (int32_t i = 0; i < kProfessionCount; ++i)
     {
         auto professionButton = container->getChild("professionButton" + std::to_string(i))->as<GButton>();
         this->addClickListener(professionButton,
@@ -156,7 +181,7 @@ void CharacterCreationPanel::onDestroy()
 
 void CharacterCreationPanel::updateUI()
 {
-    for (int32_t i = 0; i < 4; ++i)
+    for (int32_t i = 0; i < mugen::CharacterClass::kCount; ++i)
     {
         auto btn = m_roleTypeSelector->getChild("n" + std::to_string(i))->as<GButton>();
         btn->setTouchable(i != m_curRoleTypeIndex);
@@ -233,72 +258,8 @@ void CharacterCreationPanel::updateUI()
 
 void CharacterCreationPanel::onClickCreateButton(EventContext* context)
 {
-    // 职业选择列表
-    auto professionList = this->getChild<GList>("professionList");
-    // 角色名称输入框
-    auto nameInput = this->getChild<GComponent>("nameInput")->getChild("input")->as<GTextInput>();
-
-    // 获取选中的职业索引
-    auto selectedIndex = professionList->getSelectedIndex();
-
-    if (selectedIndex < 0)
-    {
-        MessageDialog::show("请选择一个职业");
-        return;
-    }
-
-    // professionList 三项对应开放职业
-    static constexpr int32_t kProfessionListToClassId[] = {
-        static_cast<int32_t>(mugen::CharacterClass::kSwordman),
-        static_cast<int32_t>(mugen::CharacterClass::kRanger),
-        static_cast<int32_t>(mugen::CharacterClass::kMage),
-    };
-    const auto listCount = static_cast<int>(std::size(kProfessionListToClassId));
-    if (selectedIndex >= listCount)
-    {
-        MessageDialog::show("请选择一个职业");
-        return;
-    }
-
-    const int32_t classId = kProfessionListToClassId[selectedIndex];
-    if (classId != static_cast<int32_t>(mugen::CharacterClass::kSwordman))
-    {
-        MessageDialog::show("职业暂未开放");
-        return;
-    }
-
-    auto name = nameInput->getText();
-    if (name.empty())
-    {
-        MessageDialog::show("请输入角色名称");
-        return;
-    }
-
-    PB::Game::CreateCharacterReq req;
-    req.set_name(name);
-    req.set_class_id(classId);
-    req.set_gender(0);
-
-    this->call(req, [this](const PB::Game::CreateCharacterResp* resp, std::string_view error) {
-        if (!resp)
-        {
-            MessageDialog::showNetErr(error);
-            return;
-        }
-
-        if (resp->code() != 0)
-        {
-            MessageDialog::show(resp->message().empty() ? "创建角色失败" : resp->message());
-            return;
-        }
-
-        if (auto* current = dynamic_cast<CharacterLobbyView*>(getUIManager()->getViewManager()->getCurrentView()))
-        {
-            current->requestCharacterList();
-        }
-
-        MessageDialog::show("创建角色成功", [this]() { this->close(); });
-    });
+    getUIManager()->open<CharacterCreationChooseClouthPanel>(static_cast<mugen::CharacterClass>(m_curRoleTypeIndex + 1));
+    this->close();
 }
 
 void CharacterCreationPanel::onClickBackButton(EventContext* context)
@@ -308,7 +269,7 @@ void CharacterCreationPanel::onClickBackButton(EventContext* context)
 
 void CharacterCreationPanel::onClickRoleTypeButton(EventContext* context, int32_t index)
 {
-    if (index < 0 || index >= 4)
+    if (index >= mugen::CharacterClass::kCount || (index + 1) == mugen::CharacterClass::kFighter)
     {
         MessageDialog::show("敬请期待");
         return;

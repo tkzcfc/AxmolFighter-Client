@@ -11,6 +11,7 @@
 #include "mugen/conf/GameDef.h"
 #include "ui/widgets/character_lobby/CharacterCreationPanel.h"
 #include "ui/widgets/common/MessageDialog.h"
+#include "ui/core/AudioManager.h"
 #include "fairygui/GLoader3D.h"
 #include <net/client_game.pb.h>
 
@@ -171,6 +172,7 @@ void CharacterLobbyView::onClickStartGameButton(EventContext* context)
             session->setSelectedFromSelectResp(*resp);
         }
 
+        AudioManager::getInstance()->stopBGM();
         getViewManager()->switchView<TownView>();
     });
 }

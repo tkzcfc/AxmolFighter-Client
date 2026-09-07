@@ -70,7 +70,9 @@ enum CharacterClass : int8_t
     kUnknown  = 0,
     kSwordman = 1,  // 剑士
     kRanger   = 2,  // 游侠
+    kFighter  = 3,  // 格斗家
     kMage     = 4,  // 法师
+    kCount    = 4,  // 职业数量
 };
 
 // 角色受击反馈类型
