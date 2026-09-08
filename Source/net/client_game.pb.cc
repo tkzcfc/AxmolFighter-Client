@@ -130,6 +130,8 @@ PROTOBUF_CONSTEXPR CreateCharacterReq::CreateCharacterReq(
     /*decltype(_impl_.name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.class_id_)*/0
   , /*decltype(_impl_.gender_)*/0
+  , /*decltype(_impl_.hair_id_)*/0
+  , /*decltype(_impl_.clothes_id_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct CreateCharacterReqDefaultTypeInternal {
   PROTOBUF_CONSTEXPR CreateCharacterReqDefaultTypeInternal()
@@ -3999,6 +4001,8 @@ CreateCharacterReq::CreateCharacterReq(const CreateCharacterReq& from)
       decltype(_impl_.name_){}
     , decltype(_impl_.class_id_){}
     , decltype(_impl_.gender_){}
+    , decltype(_impl_.hair_id_){}
+    , decltype(_impl_.clothes_id_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
@@ -4011,8 +4015,8 @@ CreateCharacterReq::CreateCharacterReq(const CreateCharacterReq& from)
       _this->GetArenaForAllocation());
   }
   ::memcpy(&_impl_.class_id_, &from._impl_.class_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.gender_) -
-    reinterpret_cast<char*>(&_impl_.class_id_)) + sizeof(_impl_.gender_));
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.clothes_id_) -
+    reinterpret_cast<char*>(&_impl_.class_id_)) + sizeof(_impl_.clothes_id_));
   // @@protoc_insertion_point(copy_constructor:PB.Game.CreateCharacterReq)
 }
 
@@ -4024,6 +4028,8 @@ inline void CreateCharacterReq::SharedCtor(
       decltype(_impl_.name_){}
     , decltype(_impl_.class_id_){0}
     , decltype(_impl_.gender_){0}
+    , decltype(_impl_.hair_id_){0}
+    , decltype(_impl_.clothes_id_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
   _impl_.name_.InitDefault();
@@ -4058,8 +4064,8 @@ void CreateCharacterReq::Clear() {
 
   _impl_.name_.ClearToEmpty();
   ::memset(&_impl_.class_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.gender_) -
-      reinterpret_cast<char*>(&_impl_.class_id_)) + sizeof(_impl_.gender_));
+      reinterpret_cast<char*>(&_impl_.clothes_id_) -
+      reinterpret_cast<char*>(&_impl_.class_id_)) + sizeof(_impl_.clothes_id_));
   _internal_metadata_.Clear<std::string>();
 }
 
@@ -4091,6 +4097,22 @@ const char* CreateCharacterReq::_InternalParse(const char* ptr, ::_pbi::ParseCon
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
           _impl_.gender_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 hair_id = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
+          _impl_.hair_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 clothes_id = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 40)) {
+          _impl_.clothes_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -4146,6 +4168,18 @@ uint8_t* CreateCharacterReq::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteInt32ToArray(3, this->_internal_gender(), target);
   }
 
+  // int32 hair_id = 4;
+  if (this->_internal_hair_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(4, this->_internal_hair_id(), target);
+  }
+
+  // int32 clothes_id = 5;
+  if (this->_internal_clothes_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(5, this->_internal_clothes_id(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
         static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
@@ -4179,6 +4213,16 @@ size_t CreateCharacterReq::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_gender());
   }
 
+  // int32 hair_id = 4;
+  if (this->_internal_hair_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_hair_id());
+  }
+
+  // int32 clothes_id = 5;
+  if (this->_internal_clothes_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_clothes_id());
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
@@ -4209,6 +4253,12 @@ void CreateCharacterReq::MergeFrom(const CreateCharacterReq& from) {
   if (from._internal_gender() != 0) {
     _this->_internal_set_gender(from._internal_gender());
   }
+  if (from._internal_hair_id() != 0) {
+    _this->_internal_set_hair_id(from._internal_hair_id());
+  }
+  if (from._internal_clothes_id() != 0) {
+    _this->_internal_set_clothes_id(from._internal_clothes_id());
+  }
   _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
@@ -4233,8 +4283,8 @@ void CreateCharacterReq::InternalSwap(CreateCharacterReq* other) {
       &other->_impl_.name_, rhs_arena
   );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(CreateCharacterReq, _impl_.gender_)
-      + sizeof(CreateCharacterReq::_impl_.gender_)
+      PROTOBUF_FIELD_OFFSET(CreateCharacterReq, _impl_.clothes_id_)
+      + sizeof(CreateCharacterReq::_impl_.clothes_id_)
       - PROTOBUF_FIELD_OFFSET(CreateCharacterReq, _impl_.class_id_)>(
           reinterpret_cast<char*>(&_impl_.class_id_),
           reinterpret_cast<char*>(&other->_impl_.class_id_));

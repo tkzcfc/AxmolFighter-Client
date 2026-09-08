@@ -2191,6 +2191,8 @@ class CreateCharacterReq final :
     kNameFieldNumber = 1,
     kClassIdFieldNumber = 2,
     kGenderFieldNumber = 3,
+    kHairIdFieldNumber = 4,
+    kClothesIdFieldNumber = 5,
   };
   // string name = 1;
   void clear_name();
@@ -2224,6 +2226,24 @@ class CreateCharacterReq final :
   void _internal_set_gender(int32_t value);
   public:
 
+  // int32 hair_id = 4;
+  void clear_hair_id();
+  int32_t hair_id() const;
+  void set_hair_id(int32_t value);
+  private:
+  int32_t _internal_hair_id() const;
+  void _internal_set_hair_id(int32_t value);
+  public:
+
+  // int32 clothes_id = 5;
+  void clear_clothes_id();
+  int32_t clothes_id() const;
+  void set_clothes_id(int32_t value);
+  private:
+  int32_t _internal_clothes_id() const;
+  void _internal_set_clothes_id(int32_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:PB.Game.CreateCharacterReq)
  private:
   class _Internal;
@@ -2235,6 +2255,8 @@ class CreateCharacterReq final :
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr name_;
     int32_t class_id_;
     int32_t gender_;
+    int32_t hair_id_;
+    int32_t clothes_id_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -6747,6 +6769,46 @@ inline void CreateCharacterReq::_internal_set_gender(int32_t value) {
 inline void CreateCharacterReq::set_gender(int32_t value) {
   _internal_set_gender(value);
   // @@protoc_insertion_point(field_set:PB.Game.CreateCharacterReq.gender)
+}
+
+// int32 hair_id = 4;
+inline void CreateCharacterReq::clear_hair_id() {
+  _impl_.hair_id_ = 0;
+}
+inline int32_t CreateCharacterReq::_internal_hair_id() const {
+  return _impl_.hair_id_;
+}
+inline int32_t CreateCharacterReq::hair_id() const {
+  // @@protoc_insertion_point(field_get:PB.Game.CreateCharacterReq.hair_id)
+  return _internal_hair_id();
+}
+inline void CreateCharacterReq::_internal_set_hair_id(int32_t value) {
+  
+  _impl_.hair_id_ = value;
+}
+inline void CreateCharacterReq::set_hair_id(int32_t value) {
+  _internal_set_hair_id(value);
+  // @@protoc_insertion_point(field_set:PB.Game.CreateCharacterReq.hair_id)
+}
+
+// int32 clothes_id = 5;
+inline void CreateCharacterReq::clear_clothes_id() {
+  _impl_.clothes_id_ = 0;
+}
+inline int32_t CreateCharacterReq::_internal_clothes_id() const {
+  return _impl_.clothes_id_;
+}
+inline int32_t CreateCharacterReq::clothes_id() const {
+  // @@protoc_insertion_point(field_get:PB.Game.CreateCharacterReq.clothes_id)
+  return _internal_clothes_id();
+}
+inline void CreateCharacterReq::_internal_set_clothes_id(int32_t value) {
+  
+  _impl_.clothes_id_ = value;
+}
+inline void CreateCharacterReq::set_clothes_id(int32_t value) {
+  _internal_set_clothes_id(value);
+  // @@protoc_insertion_point(field_set:PB.Game.CreateCharacterReq.clothes_id)
 }
 
 // -------------------------------------------------------------------

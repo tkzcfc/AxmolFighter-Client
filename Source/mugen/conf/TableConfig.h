@@ -2473,7 +2473,7 @@ public:
 
     int32_t id = 0;
 
-    // 皮肤名（源表可为数字或字符串）
+    // 皮肤名
     std::string skinName;
 
     // Spine 路径（空表示无资源）

@@ -17,11 +17,15 @@ public:
 
     // 返回缓存的 SkeletonData（非拥有）；失败返回 nullptr。atlas/loader 仅内部持有。
     spine::SkeletonData* getOrCreate(std::string_view skeletonFile, std::string_view atlasFile, float scale = 1.0f);
+    spine::SkeletonData* getOrCreate(std::string_view skeletonFile,
+                                     const std::vector<std::string>& atlasFiles,
+                                     float scale = 1.0f);
 
     spine::SkeletonData* getOrCreate(int32_t skeletonId);
 
     // 预加载
     void preload(std::string_view skeletonFile, std::string_view atlasFile, float scale = 1.0f);
+    void preload(std::string_view skeletonFile, const std::vector<std::string>& atlasFiles, float scale = 1.0f);
 
     // 按 res_spine 表 id 预加载（查 Config.resSpine）
     bool preloadResSpine(int32_t resSpineId);
@@ -49,6 +53,7 @@ private:
     SpineSkeletonCache& operator=(const SpineSkeletonCache&) = delete;
 
     CacheEntry load(std::string_view skeletonFile, std::string_view atlasFile, float scale);
+    CacheEntry load(std::string_view skeletonFile, const std::vector<std::string>& atlasFiles, float scale);
 
     std::unordered_map<uint64_t, CacheEntry> m_map;
 

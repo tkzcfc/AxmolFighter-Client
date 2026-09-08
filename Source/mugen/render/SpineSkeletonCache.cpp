@@ -56,6 +56,94 @@ static uint64_t makeKey(std::string_view skeletonFile, std::string_view atlasFil
     XXH3_freeState(state);
     return hash;
 }
+
+static uint64_t makeKey(std::string_view skeletonFile, const std::vector<std::string>& atlasFiles, float scale)
+{
+    XXH3_state_t* state = XXH3_createState();
+    XXH3_64bits_reset(state);
+    XXH3_64bits_update(state, skeletonFile.data(), skeletonFile.size());
+    const char sep = 0;
+    XXH3_64bits_update(state, &sep, 1);
+    for (const auto& atlasFile : atlasFiles)
+    {
+        XXH3_64bits_update(state, atlasFile.data(), atlasFile.size());
+        XXH3_64bits_update(state, &sep, 1);
+    }
+    XXH3_64bits_update(state, &scale, sizeof(scale));
+    const uint64_t hash = XXH3_64bits_digest(state);
+    XXH3_freeState(state);
+    return hash;
+}
+
+static spine::Atlas* createAtlas(std::string_view atlasFile)
+{
+    auto* atlas = new (__FILE__, __LINE__) spine::Atlas(std::string(atlasFile).c_str(), &s_textureLoader, true);
+    if (!atlas || atlas->getPages().size() == 0)
+    {
+        MG_LOG_E("SpineSkeletonCache: failed to read atlas '{}'", atlasFile);
+        delete atlas;
+        return nullptr;
+    }
+    return atlas;
+}
+
+// 每份 atlas 用自己的目录加载；把 page/region 接到第一份后面。缺件只跳过。
+static void atlasAppend(spine::Atlas* self, std::string_view path)
+{
+    spine::Atlas* extra = createAtlas(path);
+    if (!extra)
+        return;
+
+    auto& extraPages   = extra->getPages();
+    auto& extraRegions = extra->getRegions();
+    self->getPages().addAll(extraPages);
+    self->getRegions().addAll(extraRegions);
+    extraPages.clear();
+    extraRegions.clear();
+    delete extra;
+}
+
+static spine::Atlas* createAtlas(const std::vector<std::string>& atlasFiles)
+{
+    //if (atlasFiles.empty())
+    //    return nullptr;
+
+    //spine::Atlas* merged = nullptr;
+    //for (const auto& path : atlasFiles)
+    //{
+    //    if (!merged)
+    //    {
+    //        merged = createAtlas(std::string_view{path});
+    //        continue;
+    //    }
+    //    atlasAppend(merged, path);
+    //}
+    //return merged;
+
+    std::string atlasContent;
+    for (const auto& path : atlasFiles)
+    {
+        ax::Data data = ax::FileUtils::getInstance()->getDataFromFile(path);
+        if (data.isNull() || data.getSize() <= 0)
+        {
+            MG_LOG_E("SpineSkeletonCache: failed to read atlas '{}'", path);
+            continue;
+        }
+        atlasContent.append(reinterpret_cast<const char*>(data.getBytes()), data.getSize());
+    }
+
+    auto atlasDir = ax::FileUtils::getPathDirName(atlasFiles.front());
+
+    auto* atlas = new (__FILE__, __LINE__)
+        spine::Atlas(atlasContent.c_str(), atlasContent.size(), atlasDir.c_str(), &s_textureLoader, true);
+    if (!atlas || atlas->getPages().size() == 0)
+    {
+        MG_LOG_E("SpineSkeletonCache: failed to read atlas '{}'", atlasFiles.front());
+        delete atlas;
+        return nullptr;
+    }
+    return atlas;
+}
 }  // namespace
 
 SpineSkeletonCache* SpineSkeletonCache::s_instance = nullptr;
@@ -95,6 +183,26 @@ spine::SkeletonData* SpineSkeletonCache::getOrCreate(std::string_view skeletonFi
     return loaded.skeletonData;
 }
 
+spine::SkeletonData* SpineSkeletonCache::getOrCreate(std::string_view skeletonFile,
+                                                     const std::vector<std::string>& atlasFiles,
+                                                     float scale)
+{
+    if (atlasFiles.size() <= 1)
+        return getOrCreate(skeletonFile, atlasFiles.empty() ? std::string_view{} : atlasFiles.front(), scale);
+
+    const uint64_t key = makeKey(skeletonFile, atlasFiles, scale);
+    auto it            = m_map.find(key);
+    if (it != m_map.end())
+        return it->second.skeletonData;
+
+    CacheEntry loaded = load(skeletonFile, atlasFiles, scale);
+    if (!loaded.valid())
+        return nullptr;
+
+    m_map[key] = loaded;
+    return loaded.skeletonData;
+}
+
 spine::SkeletonData* SpineSkeletonCache::getOrCreate(int32_t skeletonId)
 {
     auto* cfg = Config::getInstance()->getResSpineConfigById(skeletonId);
@@ -121,6 +229,11 @@ void SpineSkeletonCache::preload(std::string_view skeletonFile, std::string_view
         return;
     }
     getOrCreate(skeletonFile, atlasFile, scale);
+}
+
+void SpineSkeletonCache::preload(std::string_view skeletonFile, const std::vector<std::string>& atlasFiles, float scale)
+{
+    getOrCreate(skeletonFile, atlasFiles, scale);
 }
 
 bool SpineSkeletonCache::preloadResSpine(int32_t resSpineId)
@@ -179,19 +292,12 @@ SpineSkeletonCache::CacheEntry SpineSkeletonCache::load(std::string_view skeleto
         return out;
     }
 
-    // 允许 atlasFile 为空，自动从 skeletonFile 推导
     std::string atlasPath(atlasFile);
     if (atlasPath.empty())
-    {
         atlasPath = atlasFromSpine(skeletonFile);
-    }
-    auto* atlas = new (__FILE__, __LINE__) spine::Atlas(atlasPath.c_str(), &s_textureLoader, true);
-    if (!atlas || atlas->getPages().size() == 0)
-    {
-        MG_LOG_E("SpineSkeletonCache: failed to read atlas '{}'", atlasPath);
-        delete atlas;
+    auto* atlas = createAtlas(atlasPath);
+    if (!atlas)
         return out;
-    }
 
     auto* attachmentLoader            = new (__FILE__, __LINE__) spine::AxmolAtlasAttachmentLoader(atlas);
     spine::SkeletonData* skeletonData = nullptr;
@@ -199,6 +305,72 @@ SpineSkeletonCache::CacheEntry SpineSkeletonCache::load(std::string_view skeleto
     const bool isJson                 = (first == static_cast<unsigned char>('{'));
 
     // 允许 skeletonFile 为 JSON 或二进制格式, 通过首个非空白字节判断,不通过文件扩展名判断
+    if (isJson)
+    {
+        std::string jsonText(reinterpret_cast<const char*>(skelData.getBytes()),
+                             static_cast<size_t>(skelData.getSize()));
+        spine::SkeletonJson reader(attachmentLoader);
+        reader.setScale(scale);
+        skeletonData = reader.readSkeletonData(jsonText.c_str());
+        if (!skeletonData)
+        {
+            MG_LOG_E("SpineSkeletonCache: SkeletonJson failed '{}': {}", skeletonFile,
+                     reader.getError().isEmpty() ? "unknown" : reader.getError().buffer());
+            delete attachmentLoader;
+            delete atlas;
+            return out;
+        }
+    }
+    else
+    {
+        spine::SkeletonBinary reader(attachmentLoader);
+        reader.setScale(scale);
+        skeletonData = reader.readSkeletonData(skelData.getBytes(), static_cast<int>(skelData.getSize()));
+        if (!skeletonData)
+        {
+            MG_LOG_E("SpineSkeletonCache: SkeletonBinary failed '{}': {}", skeletonFile,
+                     reader.getError().isEmpty() ? "unknown" : reader.getError().buffer());
+            delete attachmentLoader;
+            delete atlas;
+            return out;
+        }
+    }
+
+    out.skeletonData     = skeletonData;
+    out.atlas            = atlas;
+    out.attachmentLoader = attachmentLoader;
+    return out;
+}
+
+SpineSkeletonCache::CacheEntry SpineSkeletonCache::load(std::string_view skeletonFile,
+                                                        const std::vector<std::string>& atlasFiles,
+                                                        float scale)
+{
+    if (atlasFiles.size() <= 1)
+        return load(skeletonFile, atlasFiles.empty() ? std::string_view{} : atlasFiles.front(), scale);
+
+    CacheEntry out;
+    if (skeletonFile.empty())
+    {
+        MG_LOG_E("SpineSkeletonCache: empty skeleton path");
+        return out;
+    }
+
+    ax::Data skelData = ax::FileUtils::getInstance()->getDataFromFile(skeletonFile);
+    if (skelData.isNull() || skelData.getSize() <= 0)
+    {
+        MG_LOG_E("SpineSkeletonCache: failed to read skeleton '{}'", skeletonFile);
+        return out;
+    }
+
+    auto* atlas = createAtlas(atlasFiles);
+    if (!atlas)
+        return out;
+
+    auto* attachmentLoader            = new (__FILE__, __LINE__) spine::AxmolAtlasAttachmentLoader(atlas);
+    spine::SkeletonData* skeletonData = nullptr;
+    const unsigned char first         = firstPayloadByte(skelData);
+    const bool isJson                 = (first == static_cast<unsigned char>('{'));
     if (isJson)
     {
         std::string jsonText(reinterpret_cast<const char*>(skelData.getBytes()),

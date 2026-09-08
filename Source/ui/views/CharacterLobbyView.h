@@ -18,6 +18,7 @@ public:
     virtual void onEnter() override;
 
     void requestCharacterList();
+    void refreshCharacterList();
 
 private:
     void updateCharacterList();

@@ -94,10 +94,41 @@ struct ItemInfoDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ItemInfoDefaultTypeInternal _ItemInfo_default_instance_;
+PROTOBUF_CONSTEXPR DefaultSkin::DefaultSkin(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.position_)*/0
+  , /*decltype(_impl_.res_fashion_id_)*/0
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct DefaultSkinDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR DefaultSkinDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~DefaultSkinDefaultTypeInternal() {}
+  union {
+    DefaultSkin _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 DefaultSkinDefaultTypeInternal _DefaultSkin_default_instance_;
+PROTOBUF_CONSTEXPR FashionInfo::FashionInfo(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.id_)*/int64_t{0}
+  , /*decltype(_impl_.config_id_)*/0
+  , /*decltype(_impl_.position_)*/0
+  , /*decltype(_impl_.worn_)*/false
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct FashionInfoDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR FashionInfoDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~FashionInfoDefaultTypeInternal() {}
+  union {
+    FashionInfo _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 FashionInfoDefaultTypeInternal _FashionInfo_default_instance_;
 PROTOBUF_CONSTEXPR InventoryInfo::InventoryInfo(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.items_)*/{}
   , /*decltype(_impl_.equipments_)*/{}
+  , /*decltype(_impl_.fashions_)*/{}
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct InventoryInfoDefaultTypeInternal {
   PROTOBUF_CONSTEXPR InventoryInfoDefaultTypeInternal()
@@ -110,7 +141,10 @@ struct InventoryInfoDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 InventoryInfoDefaultTypeInternal _InventoryInfo_default_instance_;
 PROTOBUF_CONSTEXPR CharacterInfo::CharacterInfo(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+    /*decltype(_impl_.default_skins_)*/{}
+  , /*decltype(_impl_.fashions_)*/{}
+  , /*decltype(_impl_.equipments_)*/{}
+  , /*decltype(_impl_.name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.character_id_)*/int64_t{0}
   , /*decltype(_impl_.class_id_)*/0
   , /*decltype(_impl_.gender_)*/0
@@ -1476,6 +1510,480 @@ std::string ItemInfo::GetTypeName() const {
 
 // ===================================================================
 
+class DefaultSkin::_Internal {
+ public:
+};
+
+DefaultSkin::DefaultSkin(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:PB.Types.DefaultSkin)
+}
+DefaultSkin::DefaultSkin(const DefaultSkin& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  DefaultSkin* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.position_){}
+    , decltype(_impl_.res_fashion_id_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  ::memcpy(&_impl_.position_, &from._impl_.position_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.res_fashion_id_) -
+    reinterpret_cast<char*>(&_impl_.position_)) + sizeof(_impl_.res_fashion_id_));
+  // @@protoc_insertion_point(copy_constructor:PB.Types.DefaultSkin)
+}
+
+inline void DefaultSkin::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.position_){0}
+    , decltype(_impl_.res_fashion_id_){0}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+DefaultSkin::~DefaultSkin() {
+  // @@protoc_insertion_point(destructor:PB.Types.DefaultSkin)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void DefaultSkin::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+}
+
+void DefaultSkin::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void DefaultSkin::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Types.DefaultSkin)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  ::memset(&_impl_.position_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.res_fashion_id_) -
+      reinterpret_cast<char*>(&_impl_.position_)) + sizeof(_impl_.res_fashion_id_));
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* DefaultSkin::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // int32 position = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.position_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 res_fashion_id = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.res_fashion_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* DefaultSkin::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Types.DefaultSkin)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // int32 position = 1;
+  if (this->_internal_position() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(1, this->_internal_position(), target);
+  }
+
+  // int32 res_fashion_id = 2;
+  if (this->_internal_res_fashion_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_res_fashion_id(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Types.DefaultSkin)
+  return target;
+}
+
+size_t DefaultSkin::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Types.DefaultSkin)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // int32 position = 1;
+  if (this->_internal_position() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_position());
+  }
+
+  // int32 res_fashion_id = 2;
+  if (this->_internal_res_fashion_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_res_fashion_id());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void DefaultSkin::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const DefaultSkin*>(
+      &from));
+}
+
+void DefaultSkin::MergeFrom(const DefaultSkin& from) {
+  DefaultSkin* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Types.DefaultSkin)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_position() != 0) {
+    _this->_internal_set_position(from._internal_position());
+  }
+  if (from._internal_res_fashion_id() != 0) {
+    _this->_internal_set_res_fashion_id(from._internal_res_fashion_id());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void DefaultSkin::CopyFrom(const DefaultSkin& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Types.DefaultSkin)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool DefaultSkin::IsInitialized() const {
+  return true;
+}
+
+void DefaultSkin::InternalSwap(DefaultSkin* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(DefaultSkin, _impl_.res_fashion_id_)
+      + sizeof(DefaultSkin::_impl_.res_fashion_id_)
+      - PROTOBUF_FIELD_OFFSET(DefaultSkin, _impl_.position_)>(
+          reinterpret_cast<char*>(&_impl_.position_),
+          reinterpret_cast<char*>(&other->_impl_.position_));
+}
+
+std::string DefaultSkin::GetTypeName() const {
+  return "PB.Types.DefaultSkin";
+}
+
+
+// ===================================================================
+
+class FashionInfo::_Internal {
+ public:
+};
+
+FashionInfo::FashionInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:PB.Types.FashionInfo)
+}
+FashionInfo::FashionInfo(const FashionInfo& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  FashionInfo* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.id_){}
+    , decltype(_impl_.config_id_){}
+    , decltype(_impl_.position_){}
+    , decltype(_impl_.worn_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  ::memcpy(&_impl_.id_, &from._impl_.id_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.worn_) -
+    reinterpret_cast<char*>(&_impl_.id_)) + sizeof(_impl_.worn_));
+  // @@protoc_insertion_point(copy_constructor:PB.Types.FashionInfo)
+}
+
+inline void FashionInfo::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.id_){int64_t{0}}
+    , decltype(_impl_.config_id_){0}
+    , decltype(_impl_.position_){0}
+    , decltype(_impl_.worn_){false}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+FashionInfo::~FashionInfo() {
+  // @@protoc_insertion_point(destructor:PB.Types.FashionInfo)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void FashionInfo::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+}
+
+void FashionInfo::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void FashionInfo::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Types.FashionInfo)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  ::memset(&_impl_.id_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.worn_) -
+      reinterpret_cast<char*>(&_impl_.id_)) + sizeof(_impl_.worn_));
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* FashionInfo::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // int64 id = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 config_id = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.config_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 position = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.position_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // bool worn = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
+          _impl_.worn_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* FashionInfo::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Types.FashionInfo)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // int64 id = 1;
+  if (this->_internal_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(1, this->_internal_id(), target);
+  }
+
+  // int32 config_id = 2;
+  if (this->_internal_config_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_config_id(), target);
+  }
+
+  // int32 position = 3;
+  if (this->_internal_position() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(3, this->_internal_position(), target);
+  }
+
+  // bool worn = 4;
+  if (this->_internal_worn() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteBoolToArray(4, this->_internal_worn(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Types.FashionInfo)
+  return target;
+}
+
+size_t FashionInfo::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Types.FashionInfo)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // int64 id = 1;
+  if (this->_internal_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_id());
+  }
+
+  // int32 config_id = 2;
+  if (this->_internal_config_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_config_id());
+  }
+
+  // int32 position = 3;
+  if (this->_internal_position() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_position());
+  }
+
+  // bool worn = 4;
+  if (this->_internal_worn() != 0) {
+    total_size += 1 + 1;
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void FashionInfo::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const FashionInfo*>(
+      &from));
+}
+
+void FashionInfo::MergeFrom(const FashionInfo& from) {
+  FashionInfo* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Types.FashionInfo)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_id() != 0) {
+    _this->_internal_set_id(from._internal_id());
+  }
+  if (from._internal_config_id() != 0) {
+    _this->_internal_set_config_id(from._internal_config_id());
+  }
+  if (from._internal_position() != 0) {
+    _this->_internal_set_position(from._internal_position());
+  }
+  if (from._internal_worn() != 0) {
+    _this->_internal_set_worn(from._internal_worn());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void FashionInfo::CopyFrom(const FashionInfo& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Types.FashionInfo)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool FashionInfo::IsInitialized() const {
+  return true;
+}
+
+void FashionInfo::InternalSwap(FashionInfo* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(FashionInfo, _impl_.worn_)
+      + sizeof(FashionInfo::_impl_.worn_)
+      - PROTOBUF_FIELD_OFFSET(FashionInfo, _impl_.id_)>(
+          reinterpret_cast<char*>(&_impl_.id_),
+          reinterpret_cast<char*>(&other->_impl_.id_));
+}
+
+std::string FashionInfo::GetTypeName() const {
+  return "PB.Types.FashionInfo";
+}
+
+
+// ===================================================================
+
 class InventoryInfo::_Internal {
  public:
 };
@@ -1492,6 +2000,7 @@ InventoryInfo::InventoryInfo(const InventoryInfo& from)
   new (&_impl_) Impl_{
       decltype(_impl_.items_){from._impl_.items_}
     , decltype(_impl_.equipments_){from._impl_.equipments_}
+    , decltype(_impl_.fashions_){from._impl_.fashions_}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
@@ -1505,6 +2014,7 @@ inline void InventoryInfo::SharedCtor(
   new (&_impl_) Impl_{
       decltype(_impl_.items_){arena}
     , decltype(_impl_.equipments_){arena}
+    , decltype(_impl_.fashions_){arena}
     , /*decltype(_impl_._cached_size_)*/{}
   };
 }
@@ -1522,6 +2032,7 @@ inline void InventoryInfo::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
   _impl_.items_.~RepeatedPtrField();
   _impl_.equipments_.~RepeatedPtrField();
+  _impl_.fashions_.~RepeatedPtrField();
 }
 
 void InventoryInfo::SetCachedSize(int size) const {
@@ -1536,6 +2047,7 @@ void InventoryInfo::Clear() {
 
   _impl_.items_.Clear();
   _impl_.equipments_.Clear();
+  _impl_.fashions_.Clear();
   _internal_metadata_.Clear<std::string>();
 }
 
@@ -1568,6 +2080,19 @@ const char* InventoryInfo::_InternalParse(const char* ptr, ::_pbi::ParseContext*
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<18>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated .PB.Types.FashionInfo fashions = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_fashions(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<26>(ptr));
         } else
           goto handle_unusual;
         continue;
@@ -1616,6 +2141,14 @@ uint8_t* InventoryInfo::_InternalSerialize(
         InternalWriteMessage(2, repfield, repfield.GetCachedSize(), target, stream);
   }
 
+  // repeated .PB.Types.FashionInfo fashions = 3;
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_fashions_size()); i < n; i++) {
+    const auto& repfield = this->_internal_fashions(i);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+        InternalWriteMessage(3, repfield, repfield.GetCachedSize(), target, stream);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
         static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
@@ -1646,6 +2179,13 @@ size_t InventoryInfo::ByteSizeLong() const {
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
+  // repeated .PB.Types.FashionInfo fashions = 3;
+  total_size += 1UL * this->_internal_fashions_size();
+  for (const auto& msg : this->_impl_.fashions_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
@@ -1669,6 +2209,7 @@ void InventoryInfo::MergeFrom(const InventoryInfo& from) {
 
   _this->_impl_.items_.MergeFrom(from._impl_.items_);
   _this->_impl_.equipments_.MergeFrom(from._impl_.equipments_);
+  _this->_impl_.fashions_.MergeFrom(from._impl_.fashions_);
   _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
@@ -1688,6 +2229,7 @@ void InventoryInfo::InternalSwap(InventoryInfo* other) {
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   _impl_.items_.InternalSwap(&other->_impl_.items_);
   _impl_.equipments_.InternalSwap(&other->_impl_.equipments_);
+  _impl_.fashions_.InternalSwap(&other->_impl_.fashions_);
 }
 
 std::string InventoryInfo::GetTypeName() const {
@@ -1711,7 +2253,10 @@ CharacterInfo::CharacterInfo(const CharacterInfo& from)
   : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
   CharacterInfo* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.name_){}
+      decltype(_impl_.default_skins_){from._impl_.default_skins_}
+    , decltype(_impl_.fashions_){from._impl_.fashions_}
+    , decltype(_impl_.equipments_){from._impl_.equipments_}
+    , decltype(_impl_.name_){}
     , decltype(_impl_.character_id_){}
     , decltype(_impl_.class_id_){}
     , decltype(_impl_.gender_){}
@@ -1740,7 +2285,10 @@ inline void CharacterInfo::SharedCtor(
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.name_){}
+      decltype(_impl_.default_skins_){arena}
+    , decltype(_impl_.fashions_){arena}
+    , decltype(_impl_.equipments_){arena}
+    , decltype(_impl_.name_){}
     , decltype(_impl_.character_id_){int64_t{0}}
     , decltype(_impl_.class_id_){0}
     , decltype(_impl_.gender_){0}
@@ -1766,6 +2314,9 @@ CharacterInfo::~CharacterInfo() {
 
 inline void CharacterInfo::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.default_skins_.~RepeatedPtrField();
+  _impl_.fashions_.~RepeatedPtrField();
+  _impl_.equipments_.~RepeatedPtrField();
   _impl_.name_.Destroy();
 }
 
@@ -1779,6 +2330,9 @@ void CharacterInfo::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
+  _impl_.default_skins_.Clear();
+  _impl_.fashions_.Clear();
+  _impl_.equipments_.Clear();
   _impl_.name_.ClearToEmpty();
   ::memset(&_impl_.character_id_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&_impl_.level_) -
@@ -1847,6 +2401,45 @@ const char* CharacterInfo::_InternalParse(const char* ptr, ::_pbi::ParseContext*
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 56)) {
           _impl_.gold_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated .PB.Types.DefaultSkin default_skins = 8;
+      case 8:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 66)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_default_skins(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<66>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated .PB.Types.FashionInfo fashions = 9;
+      case 9:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 74)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_fashions(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<74>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated .PB.Types.EquipmentInfo equipments = 10;
+      case 10:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 82)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_equipments(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<82>(ptr));
         } else
           goto handle_unusual;
         continue;
@@ -1925,6 +2518,30 @@ uint8_t* CharacterInfo::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteInt64ToArray(7, this->_internal_gold(), target);
   }
 
+  // repeated .PB.Types.DefaultSkin default_skins = 8;
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_default_skins_size()); i < n; i++) {
+    const auto& repfield = this->_internal_default_skins(i);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+        InternalWriteMessage(8, repfield, repfield.GetCachedSize(), target, stream);
+  }
+
+  // repeated .PB.Types.FashionInfo fashions = 9;
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_fashions_size()); i < n; i++) {
+    const auto& repfield = this->_internal_fashions(i);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+        InternalWriteMessage(9, repfield, repfield.GetCachedSize(), target, stream);
+  }
+
+  // repeated .PB.Types.EquipmentInfo equipments = 10;
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_equipments_size()); i < n; i++) {
+    const auto& repfield = this->_internal_equipments(i);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+        InternalWriteMessage(10, repfield, repfield.GetCachedSize(), target, stream);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
         static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
@@ -1940,6 +2557,27 @@ size_t CharacterInfo::ByteSizeLong() const {
   uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
+
+  // repeated .PB.Types.DefaultSkin default_skins = 8;
+  total_size += 1UL * this->_internal_default_skins_size();
+  for (const auto& msg : this->_impl_.default_skins_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
+
+  // repeated .PB.Types.FashionInfo fashions = 9;
+  total_size += 1UL * this->_internal_fashions_size();
+  for (const auto& msg : this->_impl_.fashions_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
+
+  // repeated .PB.Types.EquipmentInfo equipments = 10;
+  total_size += 1UL * this->_internal_equipments_size();
+  for (const auto& msg : this->_impl_.equipments_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
 
   // string name = 2;
   if (!this->_internal_name().empty()) {
@@ -1999,6 +2637,9 @@ void CharacterInfo::MergeFrom(const CharacterInfo& from) {
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
+  _this->_impl_.default_skins_.MergeFrom(from._impl_.default_skins_);
+  _this->_impl_.fashions_.MergeFrom(from._impl_.fashions_);
+  _this->_impl_.equipments_.MergeFrom(from._impl_.equipments_);
   if (!from._internal_name().empty()) {
     _this->_internal_set_name(from._internal_name());
   }
@@ -2039,6 +2680,9 @@ void CharacterInfo::InternalSwap(CharacterInfo* other) {
   auto* lhs_arena = GetArenaForAllocation();
   auto* rhs_arena = other->GetArenaForAllocation();
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  _impl_.default_skins_.InternalSwap(&other->_impl_.default_skins_);
+  _impl_.fashions_.InternalSwap(&other->_impl_.fashions_);
+  _impl_.equipments_.InternalSwap(&other->_impl_.equipments_);
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
       &_impl_.name_, lhs_arena,
       &other->_impl_.name_, rhs_arena
@@ -3199,6 +3843,14 @@ Arena::CreateMaybeMessage< ::PB::Types::EquipmentInfo >(Arena* arena) {
 template<> PROTOBUF_NOINLINE ::PB::Types::ItemInfo*
 Arena::CreateMaybeMessage< ::PB::Types::ItemInfo >(Arena* arena) {
   return Arena::CreateMessageInternal< ::PB::Types::ItemInfo >(arena);
+}
+template<> PROTOBUF_NOINLINE ::PB::Types::DefaultSkin*
+Arena::CreateMaybeMessage< ::PB::Types::DefaultSkin >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Types::DefaultSkin >(arena);
+}
+template<> PROTOBUF_NOINLINE ::PB::Types::FashionInfo*
+Arena::CreateMaybeMessage< ::PB::Types::FashionInfo >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Types::FashionInfo >(arena);
 }
 template<> PROTOBUF_NOINLINE ::PB::Types::InventoryInfo*
 Arena::CreateMaybeMessage< ::PB::Types::InventoryInfo >(Arena* arena) {

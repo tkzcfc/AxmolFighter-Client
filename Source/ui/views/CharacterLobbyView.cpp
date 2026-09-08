@@ -2,32 +2,15 @@
 
 #include "AppContext.h"
 #include "TownView.h"
-#include "mugen/common/TypeConversions.h"
-#include "mugen/ActorSpawner.h"
+#include "mugen/avatar/FashionSpine.h"
 #include "mugen/avatar/render/Avatar.h"
 #include "mugen/avatar/render/AvatarBuilder.h"
-#include "mugen/avatar/render/SpineLayer.h"
-#include "mugen/conf/Config.h"
-#include "mugen/conf/GameDef.h"
+#include "mugen/common/TypeConversions.h"
 #include "ui/widgets/character_lobby/CharacterCreationPanel.h"
 #include "ui/widgets/common/MessageDialog.h"
 #include "ui/core/AudioManager.h"
 #include "fairygui/GLoader3D.h"
 #include <net/client_game.pb.h>
-
-namespace
-{
-
-std::string replaceExtension(const std::string& path, const std::string& newExt)
-{
-    const auto slash = path.find_last_of("/\\");
-    const auto dot   = path.find_last_of('.');
-    if (dot == std::string::npos || (slash != std::string::npos && dot < slash))
-        return path + newExt;
-    return path.substr(0, dot) + newExt;
-}
-
-}  // namespace
 
 namespace gameui
 {
@@ -106,25 +89,25 @@ void CharacterLobbyView::updateCharacterList()
 
         nameText->setText(fmt::format("Lv{} {}", c.level, c.name));
 
-        // classID 是服务器 characterClass，需映射到英雄 RoleConfig id（101/...）
-        const int32_t roleId = mugen::type_conversions::toRoleConfigId(static_cast<mugen::CharacterClass>(c.classID));
-        auto* config         = mugen::Config::getInstance();
-        auto* role           = config->getRoleConfigById(roleId);
-        const auto* spine    = role && role->resSpineId > 0 ? config->getResSpineConfigById(role->resSpineId) : nullptr;
-        mugen::SpineAvatarDesc desc;
-        if (spine && !spine->spine.empty())
+        const auto cls = static_cast<mugen::CharacterClass>(c.classID);
+        mugen::FashionAppearance appearance;
+        appearance.roleId = mugen::type_conversions::toRoleConfigId(cls);
+        for (const auto& skin : c.defaultSkins)
         {
-            desc.skeleton = spine->spine;
-            desc.atlas    = replaceExtension(spine->spine, ".atlas");
-            desc.defaultSkin.clear();
-            desc.scale = spine->scale;
+            appearance.baseFashion[static_cast<mugen::FashionPosition>(skin.position)] = skin.resFashionId;
         }
+        for (const auto& f : c.fashions)
+        {
+            if (f.worn && f.configID > 0)
+                appearance.equipFashion[static_cast<mugen::FashionPosition>(f.position)] = f.configID;
+        }
+        const auto fashion = mugen::FashionResolver::resolve(appearance);
+
         auto* previewAvatar =
-            (!desc.skeleton.empty() && !desc.atlas.empty()) ? mugen::AvatarBuilder::createAvatar(desc) : nullptr;
+            fashion.valid ? mugen::AvatarBuilder::createFashionAvatar(fashion) : nullptr;
         if (!previewAvatar)
         {
-            AXLOGW("CharacterLobbyView: preview avatar failed classId={} roleId={} spine='{}'", c.classID, roleId,
-                   spine ? spine->spine : "");
+            AXLOGW("CharacterLobbyView: preview avatar failed classId={}", c.classID);
             avatarLoader->setContent(nullptr);
             continue;
         }
@@ -134,6 +117,11 @@ void CharacterLobbyView::updateCharacterList()
         previewAvatar->setPosition(avatarLoader->getWidth() * 0.5f, -avatarLoader->getHeight());
         avatarLoader->setContent(previewAvatar);
     }
+}
+
+void CharacterLobbyView::refreshCharacterList()
+{
+    updateCharacterList();
 }
 
 void CharacterLobbyView::onClickStartGameButton(EventContext* context)

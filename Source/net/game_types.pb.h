@@ -53,12 +53,18 @@ extern BattlePlayerSpecDefaultTypeInternal _BattlePlayerSpec_default_instance_;
 class CharacterInfo;
 struct CharacterInfoDefaultTypeInternal;
 extern CharacterInfoDefaultTypeInternal _CharacterInfo_default_instance_;
+class DefaultSkin;
+struct DefaultSkinDefaultTypeInternal;
+extern DefaultSkinDefaultTypeInternal _DefaultSkin_default_instance_;
 class EnchantProp;
 struct EnchantPropDefaultTypeInternal;
 extern EnchantPropDefaultTypeInternal _EnchantProp_default_instance_;
 class EquipmentInfo;
 struct EquipmentInfoDefaultTypeInternal;
 extern EquipmentInfoDefaultTypeInternal _EquipmentInfo_default_instance_;
+class FashionInfo;
+struct FashionInfoDefaultTypeInternal;
+extern FashionInfoDefaultTypeInternal _FashionInfo_default_instance_;
 class InventoryInfo;
 struct InventoryInfoDefaultTypeInternal;
 extern InventoryInfoDefaultTypeInternal _InventoryInfo_default_instance_;
@@ -80,8 +86,10 @@ PROTOBUF_NAMESPACE_OPEN
 template<> ::PB::Types::AccountInfo* Arena::CreateMaybeMessage<::PB::Types::AccountInfo>(Arena*);
 template<> ::PB::Types::BattlePlayerSpec* Arena::CreateMaybeMessage<::PB::Types::BattlePlayerSpec>(Arena*);
 template<> ::PB::Types::CharacterInfo* Arena::CreateMaybeMessage<::PB::Types::CharacterInfo>(Arena*);
+template<> ::PB::Types::DefaultSkin* Arena::CreateMaybeMessage<::PB::Types::DefaultSkin>(Arena*);
 template<> ::PB::Types::EnchantProp* Arena::CreateMaybeMessage<::PB::Types::EnchantProp>(Arena*);
 template<> ::PB::Types::EquipmentInfo* Arena::CreateMaybeMessage<::PB::Types::EquipmentInfo>(Arena*);
+template<> ::PB::Types::FashionInfo* Arena::CreateMaybeMessage<::PB::Types::FashionInfo>(Arena*);
 template<> ::PB::Types::InventoryInfo* Arena::CreateMaybeMessage<::PB::Types::InventoryInfo>(Arena*);
 template<> ::PB::Types::ItemInfo* Arena::CreateMaybeMessage<::PB::Types::ItemInfo>(Arena*);
 template<> ::PB::Types::PlayerState* Arena::CreateMaybeMessage<::PB::Types::PlayerState>(Arena*);
@@ -894,6 +902,310 @@ class ItemInfo final :
 };
 // -------------------------------------------------------------------
 
+class DefaultSkin final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Types.DefaultSkin) */ {
+ public:
+  inline DefaultSkin() : DefaultSkin(nullptr) {}
+  ~DefaultSkin() override;
+  explicit PROTOBUF_CONSTEXPR DefaultSkin(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  DefaultSkin(const DefaultSkin& from);
+  DefaultSkin(DefaultSkin&& from) noexcept
+    : DefaultSkin() {
+    *this = ::std::move(from);
+  }
+
+  inline DefaultSkin& operator=(const DefaultSkin& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline DefaultSkin& operator=(DefaultSkin&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const DefaultSkin& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const DefaultSkin* internal_default_instance() {
+    return reinterpret_cast<const DefaultSkin*>(
+               &_DefaultSkin_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    5;
+
+  friend void swap(DefaultSkin& a, DefaultSkin& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(DefaultSkin* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(DefaultSkin* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  DefaultSkin* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<DefaultSkin>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const DefaultSkin& from);
+  void MergeFrom(const DefaultSkin& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(DefaultSkin* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Types.DefaultSkin";
+  }
+  protected:
+  explicit DefaultSkin(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kPositionFieldNumber = 1,
+    kResFashionIdFieldNumber = 2,
+  };
+  // int32 position = 1;
+  void clear_position();
+  int32_t position() const;
+  void set_position(int32_t value);
+  private:
+  int32_t _internal_position() const;
+  void _internal_set_position(int32_t value);
+  public:
+
+  // int32 res_fashion_id = 2;
+  void clear_res_fashion_id();
+  int32_t res_fashion_id() const;
+  void set_res_fashion_id(int32_t value);
+  private:
+  int32_t _internal_res_fashion_id() const;
+  void _internal_set_res_fashion_id(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Types.DefaultSkin)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    int32_t position_;
+    int32_t res_fashion_id_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_game_5ftypes_2eproto;
+};
+// -------------------------------------------------------------------
+
+class FashionInfo final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Types.FashionInfo) */ {
+ public:
+  inline FashionInfo() : FashionInfo(nullptr) {}
+  ~FashionInfo() override;
+  explicit PROTOBUF_CONSTEXPR FashionInfo(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  FashionInfo(const FashionInfo& from);
+  FashionInfo(FashionInfo&& from) noexcept
+    : FashionInfo() {
+    *this = ::std::move(from);
+  }
+
+  inline FashionInfo& operator=(const FashionInfo& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline FashionInfo& operator=(FashionInfo&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const FashionInfo& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const FashionInfo* internal_default_instance() {
+    return reinterpret_cast<const FashionInfo*>(
+               &_FashionInfo_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    6;
+
+  friend void swap(FashionInfo& a, FashionInfo& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(FashionInfo* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(FashionInfo* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  FashionInfo* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<FashionInfo>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const FashionInfo& from);
+  void MergeFrom(const FashionInfo& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(FashionInfo* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Types.FashionInfo";
+  }
+  protected:
+  explicit FashionInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kIdFieldNumber = 1,
+    kConfigIdFieldNumber = 2,
+    kPositionFieldNumber = 3,
+    kWornFieldNumber = 4,
+  };
+  // int64 id = 1;
+  void clear_id();
+  int64_t id() const;
+  void set_id(int64_t value);
+  private:
+  int64_t _internal_id() const;
+  void _internal_set_id(int64_t value);
+  public:
+
+  // int32 config_id = 2;
+  void clear_config_id();
+  int32_t config_id() const;
+  void set_config_id(int32_t value);
+  private:
+  int32_t _internal_config_id() const;
+  void _internal_set_config_id(int32_t value);
+  public:
+
+  // int32 position = 3;
+  void clear_position();
+  int32_t position() const;
+  void set_position(int32_t value);
+  private:
+  int32_t _internal_position() const;
+  void _internal_set_position(int32_t value);
+  public:
+
+  // bool worn = 4;
+  void clear_worn();
+  bool worn() const;
+  void set_worn(bool value);
+  private:
+  bool _internal_worn() const;
+  void _internal_set_worn(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Types.FashionInfo)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    int64_t id_;
+    int32_t config_id_;
+    int32_t position_;
+    bool worn_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_game_5ftypes_2eproto;
+};
+// -------------------------------------------------------------------
+
 class InventoryInfo final :
     public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Types.InventoryInfo) */ {
  public:
@@ -933,7 +1245,7 @@ class InventoryInfo final :
                &_InventoryInfo_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    5;
+    7;
 
   friend void swap(InventoryInfo& a, InventoryInfo& b) {
     a.Swap(&b);
@@ -999,6 +1311,7 @@ class InventoryInfo final :
   enum : int {
     kItemsFieldNumber = 1,
     kEquipmentsFieldNumber = 2,
+    kFashionsFieldNumber = 3,
   };
   // repeated .PB.Types.ItemInfo items = 1;
   int items_size() const;
@@ -1036,6 +1349,24 @@ class InventoryInfo final :
   const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::EquipmentInfo >&
       equipments() const;
 
+  // repeated .PB.Types.FashionInfo fashions = 3;
+  int fashions_size() const;
+  private:
+  int _internal_fashions_size() const;
+  public:
+  void clear_fashions();
+  ::PB::Types::FashionInfo* mutable_fashions(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::FashionInfo >*
+      mutable_fashions();
+  private:
+  const ::PB::Types::FashionInfo& _internal_fashions(int index) const;
+  ::PB::Types::FashionInfo* _internal_add_fashions();
+  public:
+  const ::PB::Types::FashionInfo& fashions(int index) const;
+  ::PB::Types::FashionInfo* add_fashions();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::FashionInfo >&
+      fashions() const;
+
   // @@protoc_insertion_point(class_scope:PB.Types.InventoryInfo)
  private:
   class _Internal;
@@ -1046,6 +1377,7 @@ class InventoryInfo final :
   struct Impl_ {
     ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::ItemInfo > items_;
     ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::EquipmentInfo > equipments_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::FashionInfo > fashions_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -1092,7 +1424,7 @@ class CharacterInfo final :
                &_CharacterInfo_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    6;
+    8;
 
   friend void swap(CharacterInfo& a, CharacterInfo& b) {
     a.Swap(&b);
@@ -1156,6 +1488,9 @@ class CharacterInfo final :
   // accessors -------------------------------------------------------
 
   enum : int {
+    kDefaultSkinsFieldNumber = 8,
+    kFashionsFieldNumber = 9,
+    kEquipmentsFieldNumber = 10,
     kNameFieldNumber = 2,
     kCharacterIdFieldNumber = 1,
     kClassIdFieldNumber = 3,
@@ -1164,6 +1499,60 @@ class CharacterInfo final :
     kGoldFieldNumber = 7,
     kLevelFieldNumber = 5,
   };
+  // repeated .PB.Types.DefaultSkin default_skins = 8;
+  int default_skins_size() const;
+  private:
+  int _internal_default_skins_size() const;
+  public:
+  void clear_default_skins();
+  ::PB::Types::DefaultSkin* mutable_default_skins(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::DefaultSkin >*
+      mutable_default_skins();
+  private:
+  const ::PB::Types::DefaultSkin& _internal_default_skins(int index) const;
+  ::PB::Types::DefaultSkin* _internal_add_default_skins();
+  public:
+  const ::PB::Types::DefaultSkin& default_skins(int index) const;
+  ::PB::Types::DefaultSkin* add_default_skins();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::DefaultSkin >&
+      default_skins() const;
+
+  // repeated .PB.Types.FashionInfo fashions = 9;
+  int fashions_size() const;
+  private:
+  int _internal_fashions_size() const;
+  public:
+  void clear_fashions();
+  ::PB::Types::FashionInfo* mutable_fashions(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::FashionInfo >*
+      mutable_fashions();
+  private:
+  const ::PB::Types::FashionInfo& _internal_fashions(int index) const;
+  ::PB::Types::FashionInfo* _internal_add_fashions();
+  public:
+  const ::PB::Types::FashionInfo& fashions(int index) const;
+  ::PB::Types::FashionInfo* add_fashions();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::FashionInfo >&
+      fashions() const;
+
+  // repeated .PB.Types.EquipmentInfo equipments = 10;
+  int equipments_size() const;
+  private:
+  int _internal_equipments_size() const;
+  public:
+  void clear_equipments();
+  ::PB::Types::EquipmentInfo* mutable_equipments(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::EquipmentInfo >*
+      mutable_equipments();
+  private:
+  const ::PB::Types::EquipmentInfo& _internal_equipments(int index) const;
+  ::PB::Types::EquipmentInfo* _internal_add_equipments();
+  public:
+  const ::PB::Types::EquipmentInfo& equipments(int index) const;
+  ::PB::Types::EquipmentInfo* add_equipments();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::EquipmentInfo >&
+      equipments() const;
+
   // string name = 2;
   void clear_name();
   const std::string& name() const;
@@ -1240,6 +1629,9 @@ class CharacterInfo final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::DefaultSkin > default_skins_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::FashionInfo > fashions_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::EquipmentInfo > equipments_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr name_;
     int64_t character_id_;
     int32_t class_id_;
@@ -1293,7 +1685,7 @@ class PlayerState final :
                &_PlayerState_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    7;
+    9;
 
   friend void swap(PlayerState& a, PlayerState& b) {
     a.Swap(&b);
@@ -1554,7 +1946,7 @@ class SceneInfo final :
                &_SceneInfo_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    8;
+    10;
 
   friend void swap(SceneInfo& a, SceneInfo& b) {
     a.Swap(&b);
@@ -1706,7 +2098,7 @@ class BattlePlayerSpec final :
                &_BattlePlayerSpec_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    9;
+    11;
 
   friend void swap(BattlePlayerSpec& a, BattlePlayerSpec& b) {
     a.Swap(&b);
@@ -2253,6 +2645,134 @@ inline void ItemInfo::set_count(int32_t value) {
 
 // -------------------------------------------------------------------
 
+// DefaultSkin
+
+// int32 position = 1;
+inline void DefaultSkin::clear_position() {
+  _impl_.position_ = 0;
+}
+inline int32_t DefaultSkin::_internal_position() const {
+  return _impl_.position_;
+}
+inline int32_t DefaultSkin::position() const {
+  // @@protoc_insertion_point(field_get:PB.Types.DefaultSkin.position)
+  return _internal_position();
+}
+inline void DefaultSkin::_internal_set_position(int32_t value) {
+  
+  _impl_.position_ = value;
+}
+inline void DefaultSkin::set_position(int32_t value) {
+  _internal_set_position(value);
+  // @@protoc_insertion_point(field_set:PB.Types.DefaultSkin.position)
+}
+
+// int32 res_fashion_id = 2;
+inline void DefaultSkin::clear_res_fashion_id() {
+  _impl_.res_fashion_id_ = 0;
+}
+inline int32_t DefaultSkin::_internal_res_fashion_id() const {
+  return _impl_.res_fashion_id_;
+}
+inline int32_t DefaultSkin::res_fashion_id() const {
+  // @@protoc_insertion_point(field_get:PB.Types.DefaultSkin.res_fashion_id)
+  return _internal_res_fashion_id();
+}
+inline void DefaultSkin::_internal_set_res_fashion_id(int32_t value) {
+  
+  _impl_.res_fashion_id_ = value;
+}
+inline void DefaultSkin::set_res_fashion_id(int32_t value) {
+  _internal_set_res_fashion_id(value);
+  // @@protoc_insertion_point(field_set:PB.Types.DefaultSkin.res_fashion_id)
+}
+
+// -------------------------------------------------------------------
+
+// FashionInfo
+
+// int64 id = 1;
+inline void FashionInfo::clear_id() {
+  _impl_.id_ = int64_t{0};
+}
+inline int64_t FashionInfo::_internal_id() const {
+  return _impl_.id_;
+}
+inline int64_t FashionInfo::id() const {
+  // @@protoc_insertion_point(field_get:PB.Types.FashionInfo.id)
+  return _internal_id();
+}
+inline void FashionInfo::_internal_set_id(int64_t value) {
+  
+  _impl_.id_ = value;
+}
+inline void FashionInfo::set_id(int64_t value) {
+  _internal_set_id(value);
+  // @@protoc_insertion_point(field_set:PB.Types.FashionInfo.id)
+}
+
+// int32 config_id = 2;
+inline void FashionInfo::clear_config_id() {
+  _impl_.config_id_ = 0;
+}
+inline int32_t FashionInfo::_internal_config_id() const {
+  return _impl_.config_id_;
+}
+inline int32_t FashionInfo::config_id() const {
+  // @@protoc_insertion_point(field_get:PB.Types.FashionInfo.config_id)
+  return _internal_config_id();
+}
+inline void FashionInfo::_internal_set_config_id(int32_t value) {
+  
+  _impl_.config_id_ = value;
+}
+inline void FashionInfo::set_config_id(int32_t value) {
+  _internal_set_config_id(value);
+  // @@protoc_insertion_point(field_set:PB.Types.FashionInfo.config_id)
+}
+
+// int32 position = 3;
+inline void FashionInfo::clear_position() {
+  _impl_.position_ = 0;
+}
+inline int32_t FashionInfo::_internal_position() const {
+  return _impl_.position_;
+}
+inline int32_t FashionInfo::position() const {
+  // @@protoc_insertion_point(field_get:PB.Types.FashionInfo.position)
+  return _internal_position();
+}
+inline void FashionInfo::_internal_set_position(int32_t value) {
+  
+  _impl_.position_ = value;
+}
+inline void FashionInfo::set_position(int32_t value) {
+  _internal_set_position(value);
+  // @@protoc_insertion_point(field_set:PB.Types.FashionInfo.position)
+}
+
+// bool worn = 4;
+inline void FashionInfo::clear_worn() {
+  _impl_.worn_ = false;
+}
+inline bool FashionInfo::_internal_worn() const {
+  return _impl_.worn_;
+}
+inline bool FashionInfo::worn() const {
+  // @@protoc_insertion_point(field_get:PB.Types.FashionInfo.worn)
+  return _internal_worn();
+}
+inline void FashionInfo::_internal_set_worn(bool value) {
+  
+  _impl_.worn_ = value;
+}
+inline void FashionInfo::set_worn(bool value) {
+  _internal_set_worn(value);
+  // @@protoc_insertion_point(field_set:PB.Types.FashionInfo.worn)
+}
+
+// -------------------------------------------------------------------
+
 // InventoryInfo
 
 // repeated .PB.Types.ItemInfo items = 1;
@@ -2333,6 +2853,46 @@ inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::EquipmentIn
 InventoryInfo::equipments() const {
   // @@protoc_insertion_point(field_list:PB.Types.InventoryInfo.equipments)
   return _impl_.equipments_;
+}
+
+// repeated .PB.Types.FashionInfo fashions = 3;
+inline int InventoryInfo::_internal_fashions_size() const {
+  return _impl_.fashions_.size();
+}
+inline int InventoryInfo::fashions_size() const {
+  return _internal_fashions_size();
+}
+inline void InventoryInfo::clear_fashions() {
+  _impl_.fashions_.Clear();
+}
+inline ::PB::Types::FashionInfo* InventoryInfo::mutable_fashions(int index) {
+  // @@protoc_insertion_point(field_mutable:PB.Types.InventoryInfo.fashions)
+  return _impl_.fashions_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::FashionInfo >*
+InventoryInfo::mutable_fashions() {
+  // @@protoc_insertion_point(field_mutable_list:PB.Types.InventoryInfo.fashions)
+  return &_impl_.fashions_;
+}
+inline const ::PB::Types::FashionInfo& InventoryInfo::_internal_fashions(int index) const {
+  return _impl_.fashions_.Get(index);
+}
+inline const ::PB::Types::FashionInfo& InventoryInfo::fashions(int index) const {
+  // @@protoc_insertion_point(field_get:PB.Types.InventoryInfo.fashions)
+  return _internal_fashions(index);
+}
+inline ::PB::Types::FashionInfo* InventoryInfo::_internal_add_fashions() {
+  return _impl_.fashions_.Add();
+}
+inline ::PB::Types::FashionInfo* InventoryInfo::add_fashions() {
+  ::PB::Types::FashionInfo* _add = _internal_add_fashions();
+  // @@protoc_insertion_point(field_add:PB.Types.InventoryInfo.fashions)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::FashionInfo >&
+InventoryInfo::fashions() const {
+  // @@protoc_insertion_point(field_list:PB.Types.InventoryInfo.fashions)
+  return _impl_.fashions_;
 }
 
 // -------------------------------------------------------------------
@@ -2507,6 +3067,126 @@ inline void CharacterInfo::_internal_set_gold(int64_t value) {
 inline void CharacterInfo::set_gold(int64_t value) {
   _internal_set_gold(value);
   // @@protoc_insertion_point(field_set:PB.Types.CharacterInfo.gold)
+}
+
+// repeated .PB.Types.DefaultSkin default_skins = 8;
+inline int CharacterInfo::_internal_default_skins_size() const {
+  return _impl_.default_skins_.size();
+}
+inline int CharacterInfo::default_skins_size() const {
+  return _internal_default_skins_size();
+}
+inline void CharacterInfo::clear_default_skins() {
+  _impl_.default_skins_.Clear();
+}
+inline ::PB::Types::DefaultSkin* CharacterInfo::mutable_default_skins(int index) {
+  // @@protoc_insertion_point(field_mutable:PB.Types.CharacterInfo.default_skins)
+  return _impl_.default_skins_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::DefaultSkin >*
+CharacterInfo::mutable_default_skins() {
+  // @@protoc_insertion_point(field_mutable_list:PB.Types.CharacterInfo.default_skins)
+  return &_impl_.default_skins_;
+}
+inline const ::PB::Types::DefaultSkin& CharacterInfo::_internal_default_skins(int index) const {
+  return _impl_.default_skins_.Get(index);
+}
+inline const ::PB::Types::DefaultSkin& CharacterInfo::default_skins(int index) const {
+  // @@protoc_insertion_point(field_get:PB.Types.CharacterInfo.default_skins)
+  return _internal_default_skins(index);
+}
+inline ::PB::Types::DefaultSkin* CharacterInfo::_internal_add_default_skins() {
+  return _impl_.default_skins_.Add();
+}
+inline ::PB::Types::DefaultSkin* CharacterInfo::add_default_skins() {
+  ::PB::Types::DefaultSkin* _add = _internal_add_default_skins();
+  // @@protoc_insertion_point(field_add:PB.Types.CharacterInfo.default_skins)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::DefaultSkin >&
+CharacterInfo::default_skins() const {
+  // @@protoc_insertion_point(field_list:PB.Types.CharacterInfo.default_skins)
+  return _impl_.default_skins_;
+}
+
+// repeated .PB.Types.FashionInfo fashions = 9;
+inline int CharacterInfo::_internal_fashions_size() const {
+  return _impl_.fashions_.size();
+}
+inline int CharacterInfo::fashions_size() const {
+  return _internal_fashions_size();
+}
+inline void CharacterInfo::clear_fashions() {
+  _impl_.fashions_.Clear();
+}
+inline ::PB::Types::FashionInfo* CharacterInfo::mutable_fashions(int index) {
+  // @@protoc_insertion_point(field_mutable:PB.Types.CharacterInfo.fashions)
+  return _impl_.fashions_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::FashionInfo >*
+CharacterInfo::mutable_fashions() {
+  // @@protoc_insertion_point(field_mutable_list:PB.Types.CharacterInfo.fashions)
+  return &_impl_.fashions_;
+}
+inline const ::PB::Types::FashionInfo& CharacterInfo::_internal_fashions(int index) const {
+  return _impl_.fashions_.Get(index);
+}
+inline const ::PB::Types::FashionInfo& CharacterInfo::fashions(int index) const {
+  // @@protoc_insertion_point(field_get:PB.Types.CharacterInfo.fashions)
+  return _internal_fashions(index);
+}
+inline ::PB::Types::FashionInfo* CharacterInfo::_internal_add_fashions() {
+  return _impl_.fashions_.Add();
+}
+inline ::PB::Types::FashionInfo* CharacterInfo::add_fashions() {
+  ::PB::Types::FashionInfo* _add = _internal_add_fashions();
+  // @@protoc_insertion_point(field_add:PB.Types.CharacterInfo.fashions)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::FashionInfo >&
+CharacterInfo::fashions() const {
+  // @@protoc_insertion_point(field_list:PB.Types.CharacterInfo.fashions)
+  return _impl_.fashions_;
+}
+
+// repeated .PB.Types.EquipmentInfo equipments = 10;
+inline int CharacterInfo::_internal_equipments_size() const {
+  return _impl_.equipments_.size();
+}
+inline int CharacterInfo::equipments_size() const {
+  return _internal_equipments_size();
+}
+inline void CharacterInfo::clear_equipments() {
+  _impl_.equipments_.Clear();
+}
+inline ::PB::Types::EquipmentInfo* CharacterInfo::mutable_equipments(int index) {
+  // @@protoc_insertion_point(field_mutable:PB.Types.CharacterInfo.equipments)
+  return _impl_.equipments_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::EquipmentInfo >*
+CharacterInfo::mutable_equipments() {
+  // @@protoc_insertion_point(field_mutable_list:PB.Types.CharacterInfo.equipments)
+  return &_impl_.equipments_;
+}
+inline const ::PB::Types::EquipmentInfo& CharacterInfo::_internal_equipments(int index) const {
+  return _impl_.equipments_.Get(index);
+}
+inline const ::PB::Types::EquipmentInfo& CharacterInfo::equipments(int index) const {
+  // @@protoc_insertion_point(field_get:PB.Types.CharacterInfo.equipments)
+  return _internal_equipments(index);
+}
+inline ::PB::Types::EquipmentInfo* CharacterInfo::_internal_add_equipments() {
+  return _impl_.equipments_.Add();
+}
+inline ::PB::Types::EquipmentInfo* CharacterInfo::add_equipments() {
+  ::PB::Types::EquipmentInfo* _add = _internal_add_equipments();
+  // @@protoc_insertion_point(field_add:PB.Types.CharacterInfo.equipments)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::EquipmentInfo >&
+CharacterInfo::equipments() const {
+  // @@protoc_insertion_point(field_list:PB.Types.CharacterInfo.equipments)
+  return _impl_.equipments_;
 }
 
 // -------------------------------------------------------------------
@@ -3014,6 +3694,10 @@ inline void BattlePlayerSpec::set_character_id(int64_t value) {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

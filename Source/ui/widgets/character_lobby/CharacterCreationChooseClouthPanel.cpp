@@ -1,42 +1,19 @@
 #include "CharacterCreationChooseClouthPanel.h"
 #include "ui/views/CharacterLobbyView.h"
 #include "ui/widgets/common/MessageDialog.h"
-#include "mugen/render/SpineSkeletonLoader.h"
-#include "mugen/conf/GameDef.h"
+#include "ui/UiConfig.h"
+#include "mugen/avatar/FashionSpine.h"
+#include "mugen/avatar/render/Avatar.h"
+#include "mugen/avatar/render/AvatarBuilder.h"
+#include "mugen/common/TypeConversions.h"
+#include "AppContext.h"
 #include "ui/core/AudioManager.h"
 #include <net/client_game.pb.h>
 #include "CharacterCreationPanel.h"
+#include "fairygui/GLoader3D.h"
 
 namespace gameui
 {
-
-constexpr int kHairCount = 5;
-constexpr int kClouthCount = 5;
-
-struct CharacterClouthConfig
-{
-    const char* hairs[kHairCount];
-    const char* cloths[kClouthCount];
-};
-
-static const CharacterClouthConfig kCharacterClouthConfig[mugen::CharacterClass::kCount] = {
-    {
-        {"ui://CharacterLobby/ui_juesechuangjian_tou_01_1", "ui://CharacterLobby/ui_juesechuangjian_tou_01_2", "ui://CharacterLobby/ui_juesechuangjian_tou_01_3", "ui://CharacterLobby/ui_juesechuangjian_tou_01_4", "ui://CharacterLobby/ui_juesechuangjian_tou_01_5"},
-        {"ui://CharacterLobby/ui_juesechuangjian_shizhuang_01_1", "ui://CharacterLobby/ui_juesechuangjian_shizhuang_01_2", "ui://CharacterLobby/ui_juesechuangjian_shizhuang_01_3", "ui://CharacterLobby/ui_juesechuangjian_shizhuang_01_4", "ui://CharacterLobby/ui_juesechuangjian_shizhuang_01_5"},
-    },
-    {
-        {"ui://CharacterLobby/ui_juesechuangjian_tou_03_1", "ui://CharacterLobby/ui_juesechuangjian_tou_03_2", "ui://CharacterLobby/ui_juesechuangjian_tou_03_3", "ui://CharacterLobby/ui_juesechuangjian_tou_03_4", "ui://CharacterLobby/ui_juesechuangjian_tou_03_5"},
-        {"ui://CharacterLobby/ui_juesechuangjian_shizhuang_03_1", "ui://CharacterLobby/ui_juesechuangjian_shizhuang_03_2", "ui://CharacterLobby/ui_juesechuangjian_shizhuang_03_3", "ui://CharacterLobby/ui_juesechuangjian_shizhuang_03_4", "ui://CharacterLobby/ui_juesechuangjian_shizhuang_03_5"},
-    },
-    {
-        {"ui://CharacterLobby/ui_juesechuangjian_tou_02_1", "ui://CharacterLobby/ui_juesechuangjian_tou_02_2", "ui://CharacterLobby/ui_juesechuangjian_tou_02_3", "ui://CharacterLobby/ui_juesechuangjian_tou_02_4", "ui://CharacterLobby/ui_juesechuangjian_tou_02_5"},
-        {"ui://CharacterLobby/ui_juesechuangjian_shizhuang_02_1", "ui://CharacterLobby/ui_juesechuangjian_shizhuang_02_2", "ui://CharacterLobby/ui_juesechuangjian_shizhuang_02_3", "ui://CharacterLobby/ui_juesechuangjian_shizhuang_02_4",  "ui://CharacterLobby/ui_juesechuangjian_shizhuang_02_5"},
-    },
-    {
-        {"ui://CharacterLobby/ui_juesechuangjian_tou_04_1", "ui://CharacterLobby/ui_juesechuangjian_tou_04_2", "ui://CharacterLobby/ui_juesechuangjian_tou_04_3", "ui://CharacterLobby/ui_juesechuangjian_tou_04_4", "ui://CharacterLobby/ui_juesechuangjian_tou_04_5"},
-        {"ui://CharacterLobby/ui_juesechuangjian_shizhuang_04_1", "ui://CharacterLobby/ui_juesechuangjian_shizhuang_04_2", "ui://CharacterLobby/ui_juesechuangjian_shizhuang_04_3", "ui://CharacterLobby/ui_juesechuangjian_shizhuang_04_4", "ui://CharacterLobby/ui_juesechuangjian_shizhuang_04_5"},
-    },
-};
 
 void CharacterCreationChooseClouthPanel::onCreate()
 {
@@ -72,22 +49,20 @@ void CharacterCreationChooseClouthPanel::onCreate()
 void CharacterCreationChooseClouthPanel::onShow()
 {
     m_choiceHairList->itemRenderer = [this](int index, GObject* obj) {
-        auto& curConfig = kCharacterClouthConfig[static_cast<int32_t>(this->m_curClass) - 1];
-        obj->setIcon(curConfig.hairs[index]);
+        obj->setIcon(kLookIcons[this->m_curClass - 1].hairIcons[index]);
         obj->setText(std::to_string(index));
-        };
+    };
     m_choiceHairList->setVirtualAndLoop();
-    m_choiceHairList->setNumItems(kHairCount);
+    m_choiceHairList->setNumItems(kCreateRoleVariantCount);
     m_choiceHairList->addEventListener(UIEventType::Scroll,
                                        AX_CALLBACK_1(CharacterCreationChooseClouthPanel::doSpecialEffect, this));
-    
+
     m_choiceClothingList->itemRenderer = [this](int index, GObject* obj) {
-        auto& curConfig = kCharacterClouthConfig[static_cast<int32_t>(this->m_curClass) - 1];
-        obj->setIcon(curConfig.cloths[index]);
+        obj->setIcon(kLookIcons[this->m_curClass - 1].clothIcons[index]);
         obj->setText(std::to_string(index));
     };
     m_choiceClothingList->setVirtualAndLoop();
-    m_choiceClothingList->setNumItems(kClouthCount);
+    m_choiceClothingList->setNumItems(kCreateRoleVariantCount);
     m_choiceClothingList->addEventListener(UIEventType::Scroll,
                                        AX_CALLBACK_1(CharacterCreationChooseClouthPanel::doSpecialEffect, this));
 
@@ -130,8 +105,27 @@ void CharacterCreationChooseClouthPanel::updateUI()
     }
 
     auto loaderAvatar = container->getChild("loaderAvatar")->as<GLoader3D>();
-    // 创建spine骨骼动画
-    // ...
+
+    mugen::FashionAppearance appearance;
+    appearance.roleId = mugen::type_conversions::toRoleConfigId(m_curClass);
+    const auto& look  = kLookIcons[static_cast<int>(m_curClass) - 1];
+    appearance.baseFashion[mugen::FashionPosition::kHair]    = look.hairIds[m_curHairIndex];
+    appearance.baseFashion[mugen::FashionPosition::kClothes] = look.clothIds[m_curClothingIndex];
+    appearance.baseFashion[mugen::FashionPosition::kSkin]    = look.skinIds[m_curClothingIndex];
+    auto fashion          = mugen::FashionResolver::resolve(appearance);
+    auto* preview = fashion.valid ? mugen::AvatarBuilder::createFashionAvatar(fashion) : nullptr;
+    if (!preview)
+    {
+        AXLOGW("CharacterCreationChooseClouthPanel: fashion avatar failed class={} hair={} clothes={}",
+               static_cast<int>(m_curClass), m_curHairIndex, m_curClothingIndex);
+        loaderAvatar->setContent(nullptr);
+        return;
+    }
+    preview->setMotion("stand", "", true);
+    preview->setAutoPlay(true);
+    //preview->setPosition(loaderAvatar->getWidth() * 0.5f, 0.0f);
+    preview->setPosition(ax::Vec2(loaderAvatar->getWidth() * 0.5f, -loaderAvatar->getHeight()));
+    loaderAvatar->setContent(preview);
 }
 
 void CharacterCreationChooseClouthPanel::doSpecialEffect(EventContext* context)
@@ -157,24 +151,55 @@ void CharacterCreationChooseClouthPanel::adjustListItem(GList* list, int32_t cur
     for (int i = 0; i < cnt; i++)
     {
         GButton* obj = list->getChildAt(i)->as<GButton>();
-        //float dist   = std::abs(midX - obj->getX() - obj->getWidth() / 2);
-        //if (dist > obj->getWidth())  // no intersection
-        //{
-        //    obj->setScale(1, 1);
-        //}
-        //else
-        //{
-        //    float ss = 1 + (1 - dist / obj->getWidth()) * 0.24f;
-        //    obj->setScale(ss, ss);
-        //}
-
         obj->setSelected(i == curIndex);
     }
 }
 
 void CharacterCreationChooseClouthPanel::onClickCreateButton(EventContext* context)
 {
-    
+    if (m_curHairIndex < 0 || m_curClothingIndex < 0)
+    {
+        MessageDialog::show("请选择头饰和服饰");
+        return;
+    }
+
+    const std::string name = m_inputTextName->getText();
+    if (name.empty())
+    {
+        MessageDialog::show("请输入角色名");
+        return;
+    }
+
+    PB::Game::CreateCharacterReq req;
+    req.set_name(name);
+    req.set_class_id(static_cast<int32_t>(m_curClass));
+    req.set_gender(0);
+    req.set_hair_id(kLookIcons[m_curClass - 1].hairIds[m_curHairIndex]);
+    req.set_clothes_id(kLookIcons[m_curClass - 1].clothIds[m_curClothingIndex]);
+
+    this->call(req, [this](const PB::Game::CreateCharacterResp* resp, std::string_view error) {
+        if (!resp)
+        {
+            MessageDialog::showNetErr(error);
+            return;
+        }
+        if (resp->code() != 0)
+        {
+            MessageDialog::show(resp->message().empty() ? "创建角色失败" : resp->message());
+            return;
+        }
+
+        if (auto* session = AppContext::get().gameSession())
+            session->appendFromCreateResp(*resp);
+
+        if (auto* lobby =
+                dynamic_cast<CharacterLobbyView*>(getUIManager()->getViewManager()->getCurrentView()))
+        {
+            lobby->refreshCharacterList();
+        }
+
+        this->close();
+    });
 }
 
 void CharacterCreationChooseClouthPanel::onClickBackButton(EventContext* context)

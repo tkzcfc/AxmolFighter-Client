@@ -75,6 +75,71 @@ enum CharacterClass : int8_t
     kCount    = 4,  // 职业数量
 };
 
+// 装备部位
+enum class EquipPosition : int32_t
+{
+    kNone    = 0,  // 无
+    kWeapon = 1,  // 武器
+    kClothes = 2,  // 衣服
+    kTrousers = 3,  // 裤子
+    kGloves   = 4,  // 手套
+    kShoes    = 5,  // 鞋
+    kNecklace = 6,  // 项链
+    kEarrings = 7,  // 耳环
+    kRing     = 8,  // 戒指
+};
+
+// 时装部位
+enum class FashionPosition : int32_t
+{
+    kBody    = 0,  // 身体
+    kHat     = 1,  // 头饰
+    kClothes = 2,  // 衣服
+    kWeapon  = 3,  // 武器
+    kHair    = 4,  // 发型
+    kFace    = 5,  // 脸饰
+    kWing    = 6,  // 翅膀
+    kSkin    = 7,  // 皮肤
+    kSkinType= 8,  // 皮肤类型
+    kHalo    = 9,  // 光环
+
+    kCount = 10,  // 部位数量
+};
+
+// 头像部位
+enum class PortraitPosition : int32_t
+{
+    kNone    = 0,  // 无
+    kHead = 1,  // 头像
+    kFrame = 2,  // 头像框
+};
+
+// 道具属性类型
+enum class AttributeType : int32_t
+{
+    kUnknown           = 0,
+    kSourceForce       = 1,   // 源力
+    kAgility           = 2,   // 敏捷
+    kHabitus           = 3,   // 体质
+    kSpirit            = 4,   // 精神
+    kHp                = 5,   // 生命值
+    kAtk               = 6,   // 物理攻击
+    kDef               = 7,   // 物理防御
+    kMatk              = 8,   // 魔法攻击
+    kMdef              = 9,   // 魔法防御
+    kCrit              = 10,  // 暴击
+    kCritResist        = 11,  // 爆抗
+    kCritDamage        = 12,  // 暴击伤害
+    kCritDamageResist  = 13,  // 爆伤抗性
+    kDodge             = 14,  // 闪避
+    kHit               = 15,  // 命中
+    kBaseDamage        = 16,  // 基础伤害
+    kAtkTemThousandPer = 17,  // 物理攻击(万分比)
+    kDefTemThousandPer = 18,  // 物理防御(万分比)
+    kHpTemThousandPer  = 19,  // 生命值(万分比)
+    kMax               = 20,  // 属性种类最大值
+};
+
 // 角色受击反馈类型
 enum HitType : int8_t
 {
