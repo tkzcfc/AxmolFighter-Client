@@ -4,17 +4,20 @@
 
 #ifdef RUNTIME_IN_AXMOL
 
-#    include "spine/SkeletonAnimation.h"
+#    include "mugen/render/SpineRuntime.h"
 
 NS_MG_BEGIN
 
 // 屏蔽自动 scheduleUpdate 的 Spine 节点，由上层手动驱动
-class ManualSkeletonAnimation : public spine::SkeletonAnimation
+class ManualSkeletonAnimation : public MgSkeletonAnimation
 {
 public:
     // 从骨骼/图集文件创建
     static ManualSkeletonAnimation* createWithFile(const std::string& skeletonFile,
                                                    const std::string& atlasFile,
+                                                   float scale = 1.0f);
+    static ManualSkeletonAnimation* createWithFile(const std::string& skeletonFile,
+                                                   const std::vector<std::string>& atlasFiles,
                                                    float scale = 1.0f);
 
     // 仅调用 Node::onEnter，不启动自动更新

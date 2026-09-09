@@ -60,10 +60,16 @@ list(FILTER GAME_SOURCE EXCLUDE REGEX "Source/3rd/protobuf/")
 list(FILTER GAME_HEADER EXCLUDE REGEX "Source/3rd/behaviac/")
 list(FILTER GAME_SOURCE EXCLUDE REGEX "Source/3rd/behaviac/")
 
-# Spine 3.4 runtime is C; keep MSVC from compiling those files as C++.
-file(GLOB SPINE34_C_SOURCES CONFIGURE_DEPENDS
-  "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd/spine_3_4/*.c")
-set_source_files_properties(${SPINE34_C_SOURCES} PROPERTIES LANGUAGE C)
+option(MG_SPINE_USE_3_4 "mugen/avatar uses bundled Spine 3.4" ON)
+if(NOT MG_SPINE_USE_3_4)
+  list(FILTER GAME_HEADER EXCLUDE REGEX "Source/3rd/spine_3_4/")
+  list(FILTER GAME_SOURCE EXCLUDE REGEX "Source/3rd/spine_3_4/")
+else()
+  # Spine 3.4 runtime is C; keep MSVC from compiling those files as C++.
+  file(GLOB SPINE34_C_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd/spine_3_4/*.c")
+  set_source_files_properties(${SPINE34_C_SOURCES} PROPERTIES LANGUAGE C)
+endif()
 
 set(GAME_INC_DIRS
   "${CMAKE_CURRENT_SOURCE_DIR}/Source"
@@ -134,6 +140,19 @@ if(_AX_TESTS)
 endif()
 
 include(AXGameTargetSetup)
+
+if(MG_SPINE_USE_3_4)
+  target_compile_definitions(${APP_NAME} PRIVATE MG_SPINE_USE_3_4=1)
+else()
+  target_compile_definitions(${APP_NAME} PRIVATE MG_SPINE_USE_3_4=0)
+endif()
+if(_AX_TESTS)
+  if(MG_SPINE_USE_3_4)
+    target_compile_definitions(${TEST_TARGET_NAME} PRIVATE MG_SPINE_USE_3_4=1)
+  else()
+    target_compile_definitions(${TEST_TARGET_NAME} PRIVATE MG_SPINE_USE_3_4=0)
+  endif()
+endif()
 
 # 链接 protobuf-lite
 target_link_libraries(${APP_NAME} libprotobuf-lite)

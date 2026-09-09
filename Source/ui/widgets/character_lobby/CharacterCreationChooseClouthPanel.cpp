@@ -123,7 +123,6 @@ void CharacterCreationChooseClouthPanel::updateUI()
     }
     preview->setMotion("stand", "", true);
     preview->setAutoPlay(true);
-    //preview->setPosition(loaderAvatar->getWidth() * 0.5f, 0.0f);
     preview->setPosition(ax::Vec2(loaderAvatar->getWidth() * 0.5f, -loaderAvatar->getHeight()));
     loaderAvatar->setContent(preview);
 }

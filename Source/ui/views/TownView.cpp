@@ -16,7 +16,7 @@
 
 #include "2d/DrawNode.h"
 #include "imgui.h"
-#include "spine/SkeletonAnimation.h"
+#include "mugen/render/SpineRuntime.h"
 
 #include <net/client_game.pb.h>
 #include <net/client_town.pb.h>
@@ -77,21 +77,23 @@ int32_t resolvePortalSpineAnimIndex(const PortalConfig* portalCfg)
     return -1;
 }
 
-void playPortalSpineAnimation(spine::SkeletonAnimation* skeleton, const PortalConfig* portalCfg)
+void playPortalSpineAnimation(mugen::MgSkeletonAnimation* skeleton, const PortalConfig* portalCfg)
 {
-    if (!skeleton || !skeleton->getSkeleton() || !skeleton->getSkeleton()->getData())
+    if (!skeleton || !skeleton->getSkeleton())
         return;
 
-    auto& anims = skeleton->getSkeleton()->getData()->getAnimations();
-    if (anims.size() <= 0)
+    mugen::MgSkeletonData* data = mugen::skeletonDataOf(skeleton);
+    const int animCount         = mugen::animationCount(data);
+    if (animCount <= 0)
         return;
 
     int32_t animIndex = resolvePortalSpineAnimIndex(portalCfg);
     // 索引 0 在传送门 Spine 上通常是关闭态，尽量避开
-    if (animIndex < 0 || animIndex >= static_cast<int32_t>(anims.size()))
-        animIndex = anims.size() > 1 ? 1 : 0;
+    if (animIndex < 0 || animIndex >= animCount)
+        animIndex = animCount > 1 ? 1 : 0;
 
-    const char* animName = anims[animIndex]->getName().buffer();
+    mugen::MgAnimation* anim = mugen::animationAt(data, animIndex);
+    const char* animName     = anim ? mugen::animationName(anim) : nullptr;
     if (animName && animName[0] != '\0')
         skeleton->setAnimation(0, animName, true);
 }

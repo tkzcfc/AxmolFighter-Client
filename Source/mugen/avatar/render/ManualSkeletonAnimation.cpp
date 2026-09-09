@@ -24,6 +24,23 @@ ManualSkeletonAnimation* ManualSkeletonAnimation::createWithFile(const std::stri
     return node;
 }
 
+ManualSkeletonAnimation* ManualSkeletonAnimation::createWithFile(const std::string& skeletonFile,
+                                                                 const std::vector<std::string>& atlasFiles,
+                                                                 float scale)
+{
+    auto* data = SpineSkeletonCache::getInstance()->getOrCreate(skeletonFile, atlasFiles, scale);
+    if (!data)
+        return nullptr;
+
+    ManualSkeletonAnimation* node = new (std::nothrow) ManualSkeletonAnimation();
+    if (!node)
+        return nullptr;
+
+    node->initWithData(data, false);
+    node->autorelease();
+    return node;
+}
+
 ManualSkeletonAnimation::~ManualSkeletonAnimation() = default;
 
 void ManualSkeletonAnimation::onEnter()

@@ -97,6 +97,16 @@ void CharacterCreationPanel::updateUI()
         std::string animationName = spine.animationName;
 
         skeletonAnimation->setAnimation(0, "chuxian", false);
+#if MG_SPINE_USE_3_4
+        skeletonAnimation->setCompleteListener([skeletonAnimation, animationName](int, int) {
+            mugen::MgTrackEntry* entry = skeletonAnimation->getCurrent(0);
+            if (entry && entry->animation && std::strcmp(mugen::animationName(entry->animation), "chuxian") == 0)
+            {
+                skeletonAnimation->setAnimation(0, animationName, true);
+                skeletonAnimation->setCompleteListener(nullptr);
+            }
+        });
+#else
         skeletonAnimation->setCompleteListener([skeletonAnimation, animationName](spine::TrackEntry* entry) {
             if (entry->getAnimation()->getName() == "chuxian")
             {
@@ -104,6 +114,7 @@ void CharacterCreationPanel::updateUI()
                 skeletonAnimation->setCompleteListener(nullptr);
             }
         });
+#endif
     }
     else
     {
