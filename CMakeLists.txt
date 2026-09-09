@@ -60,6 +60,11 @@ list(FILTER GAME_SOURCE EXCLUDE REGEX "Source/3rd/protobuf/")
 list(FILTER GAME_HEADER EXCLUDE REGEX "Source/3rd/behaviac/")
 list(FILTER GAME_SOURCE EXCLUDE REGEX "Source/3rd/behaviac/")
 
+# Spine 3.4 runtime is C; keep MSVC from compiling those files as C++.
+file(GLOB SPINE34_C_SOURCES CONFIGURE_DEPENDS
+  "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd/spine_3_4/*.c")
+set_source_files_properties(${SPINE34_C_SOURCES} PROPERTIES LANGUAGE C)
+
 set(GAME_INC_DIRS
   "${CMAKE_CURRENT_SOURCE_DIR}/Source"
   "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd"
