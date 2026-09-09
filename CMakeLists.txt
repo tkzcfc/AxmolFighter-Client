@@ -73,7 +73,7 @@ endif()
 
 set(GAME_INC_DIRS
   "${CMAKE_CURRENT_SOURCE_DIR}/Source"
-  "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd" # <spine_3_4/...>
   "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd/protobuf/src"
 )
 
@@ -136,10 +136,15 @@ if(_AX_TESTS)
  set(TEST_INC_DIRS
    "${CMAKE_CURRENT_SOURCE_DIR}/Tests"
    "${CMAKE_CURRENT_SOURCE_DIR}/Source"
+   "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd"
  )
 endif()
 
 include(AXGameTargetSetup)
+
+# <spine_3_4/xxx.h> 以 Source/3rd 为根目录
+target_include_directories(${APP_NAME} BEFORE PRIVATE
+  "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd")
 
 if(MG_SPINE_USE_3_4)
   target_compile_definitions(${APP_NAME} PRIVATE MG_SPINE_USE_3_4=1)
@@ -147,6 +152,8 @@ else()
   target_compile_definitions(${APP_NAME} PRIVATE MG_SPINE_USE_3_4=0)
 endif()
 if(_AX_TESTS)
+  target_include_directories(${TEST_TARGET_NAME} BEFORE PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd")
   if(MG_SPINE_USE_3_4)
     target_compile_definitions(${TEST_TARGET_NAME} PRIVATE MG_SPINE_USE_3_4=1)
   else()

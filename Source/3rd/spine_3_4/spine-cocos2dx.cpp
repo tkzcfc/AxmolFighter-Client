@@ -72,7 +72,7 @@ void _spAtlasPage_createTexture (spAtlasPage* self, const char* path) {
 	AXASSERT(texture != nullptr, "Invalid image");
 	texture->retain();
 
-	Texture2D::TexParams textureParams = (filter(self->minFilter), filter(self->magFilter), wrap(self->uWrap),
+    Texture2D::TexParams textureParams(filter(self->minFilter), filter(self->magFilter), wrap(self->uWrap),
                                            wrap(self->vWrap));
 	texture->setTexParameters(textureParams);
 

@@ -35,37 +35,42 @@
 #include <spine_3_4/spine.h>
 #include "axmol.h"
 
-namespace spine34 {
-    
-    class SkeletonBatch {
-    public:
-        static SkeletonBatch* getInstance ();
-        
-        static void destroyInstance ();
-        
-        void update (float delta);
-        
-        void addCommand (ax::Renderer* renderer, float globalOrder, GLuint textureID, ax::GLProgramState* glProgramState,
-                         ax::BlendFunc blendType, const ax::TrianglesCommand:: Triangles& triangles, const ax::Mat4& mv, uint32_t flags);
-        
-    protected:
-        SkeletonBatch ();
-        virtual ~SkeletonBatch ();
-        
-        class Command {
-        public:
-            Command ();
-            virtual ~Command ();
-            
-            ax::TrianglesCommand* trianglesCommand;
-            ax::TrianglesCommand::Triangles* triangles;
-            Command* next;
-        };
-        
-        Command* _firstCommand;
-        Command* _command;
-    };
-    
-}
+namespace spine34
+{
+
+struct SkeletonCommand : public ax::TrianglesCommand
+{
+    ax::backend::UniformLocation _locMVP;
+    ax::backend::UniformLocation _locTexture;
+};
+
+class SkeletonBatch
+{
+public:
+    static SkeletonBatch* getInstance();
+    static void destroyInstance();
+
+    void update(float delta);
+
+    ax::TrianglesCommand* addCommand(ax::Renderer* renderer, float globalOrder, ax::Texture2D* texture,
+                                     ax::backend::ProgramState* programState, ax::BlendFunc blendType,
+                                     const ax::TrianglesCommand::Triangles& triangles, const ax::Mat4& mv,
+                                     uint32_t flags);
+
+protected:
+    SkeletonBatch();
+    virtual ~SkeletonBatch();
+
+    void reset();
+    SkeletonCommand* nextFreeCommand();
+    SkeletonCommand* newCommand();
+    ax::backend::ProgramState* updateCommandPipelinePS(SkeletonCommand* command, ax::backend::ProgramState* programState);
+
+    ax::backend::ProgramState* _programState = nullptr;
+    std::vector<SkeletonCommand*> _commandsPool;
+    uint32_t _nextFreeCommand = 0;
+};
+
+}  // namespace spine34
 
 #endif // SPINE_SKELETONBATCH_H_
