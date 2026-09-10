@@ -18,8 +18,7 @@
 #ifdef RUNTIME_IN_AXMOL
 #    include "mugen/avatar/render/Avatar.h"
 #    include "mugen/avatar/render/AvatarBuilder.h"
-#    include "mugen/render/SpineSkeletonCache.h"
-#    include "spine/Animation.h"
+#    include "mugen/render/spine/SpineSkeletonCache.h"
 #endif
 
 #include <algorithm>
@@ -99,10 +98,10 @@ int32_t spineClipDurationMs(const AvatarComponent* avatar, const std::string& an
     auto* data = SpineSkeletonCache::getInstance()->getOrCreate(skel, atlas, avatar->getSpineScale());
     if (!data)
         return 0;
-    spine::Animation* anim = data->findAnimation(animName.c_str());
+    MgAnimation anim = data->findAnimation(animName.c_str());
     if (!anim)
         return 0;
-    return static_cast<int32_t>(std::lround(anim->getDuration() * 1000.0f));
+    return static_cast<int32_t>(std::lround(anim.duration() * 1000.0f));
 }
 
 std::string pickDisplaySpineAnim(const ResSpineConfig* spine)
@@ -116,9 +115,12 @@ std::string pickDisplaySpineAnim(const ResSpineConfig* spine)
         return "animation";
     if (data->findAnimation("animation"))
         return "animation";
-    auto& anims = data->getAnimations();
-    if (anims.size() > 0 && anims[0])
-        return anims[0]->getName().buffer();
+    if (data->animationCount() > 0)
+    {
+        MgAnimation first = data->animationAt(0);
+        if (first)
+            return first.name();
+    }
     return "animation";
 }
 

@@ -52,6 +52,8 @@ void MainScene::onEnter()
 {
     Super::onEnter();
 
+    FileUtils::getInstance()->addSearchPath("res_zhcn");
+
     setupImGui();
 
     // Initialize application context

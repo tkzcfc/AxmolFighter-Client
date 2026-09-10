@@ -16,7 +16,8 @@ std::unordered_map<FashionPosition, int32_t> getDefaultFashion(int32_t roleId)
             {FashionPosition::kClothes, 101002},
             {FashionPosition::kSkin, 101007},
             {FashionPosition::kHat, 101001},
-            {FashionPosition::kFace, 101005}
+            {FashionPosition::kFace, 101005},
+            {FashionPosition::kWeapon, 14001},
         };
     }
     case mugen::CharacterClass::kRanger:
@@ -26,7 +27,9 @@ std::unordered_map<FashionPosition, int32_t> getDefaultFashion(int32_t roleId)
                 {FashionPosition::kClothes, 102002},
                 {FashionPosition::kSkin, 102007},
                 {FashionPosition::kHat, 102001},
-                {FashionPosition::kFace, 102005}};
+                {FashionPosition::kFace, 102005},
+                {FashionPosition::kWeapon, 14101},
+        };
     }
     case mugen::CharacterClass::kMage:
     {
@@ -35,7 +38,9 @@ std::unordered_map<FashionPosition, int32_t> getDefaultFashion(int32_t roleId)
                 {FashionPosition::kClothes, 104002},
                 {FashionPosition::kSkin, 104007},
                 {FashionPosition::kHat, 104001},
-                {FashionPosition::kFace, 104005}};
+                {FashionPosition::kFace, 104005},
+                {FashionPosition::kWeapon, 14301},
+        };
     }
     default:
     {

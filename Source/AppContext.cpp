@@ -4,6 +4,7 @@
 #include "ui/widgets/common/MessageDialog.h"
 #include "net/client_game.pb.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
+#include "mugen/render/spine/SpineSkeletonCache.h"
 
 using namespace fairygui;
 
@@ -36,11 +37,11 @@ void AppContext::destroy()
 {
     gameui::FGUIPackageManager::getInstance().unload({"UI/Common"});
 
-    // 释放全局动画资产缓存单例
-    mugen::AvatarAssetCache::destroy();
-
     delete s_instance;
     s_instance = nullptr;
+
+    mugen::SpineSkeletonCache::destroy();
+    mugen::AvatarAssetCache::destroy();
 }
 
 AppContext::AppContext()

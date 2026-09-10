@@ -44,13 +44,15 @@ void CharacterCreationChooseClouthPanel::onCreate()
     // 创建角色按钮
     auto createButton = container->getChild("createButton")->as<GButton>();
     this->addClickListener(createButton, AX_CALLBACK_1(CharacterCreationChooseClouthPanel::onClickCreateButton, this));
+
+    // 根据当前职业设置选择器的页签
+    container->getController("c1")->setSelectedIndex(static_cast<int>(m_curClass) - 1);
 }
 
 void CharacterCreationChooseClouthPanel::onShow()
 {
     m_choiceHairList->itemRenderer = [this](int index, GObject* obj) {
         obj->setIcon(kLookIcons[this->m_curClass - 1].hairIcons[index]);
-        obj->setText(std::to_string(index));
     };
     m_choiceHairList->setVirtualAndLoop();
     m_choiceHairList->setNumItems(kCreateRoleVariantCount);
@@ -59,7 +61,6 @@ void CharacterCreationChooseClouthPanel::onShow()
 
     m_choiceClothingList->itemRenderer = [this](int index, GObject* obj) {
         obj->setIcon(kLookIcons[this->m_curClass - 1].clothIcons[index]);
-        obj->setText(std::to_string(index));
     };
     m_choiceClothingList->setVirtualAndLoop();
     m_choiceClothingList->setNumItems(kCreateRoleVariantCount);
@@ -91,20 +92,14 @@ void CharacterCreationChooseClouthPanel::updateUI()
     m_showClothingIndex = m_curClothingIndex;
 
     auto container     = this->getChild<GComponent>("container");
-    auto textCurSelect = container->getChild("textCurSelect")->as<GTextField>();
-    textCurSelect->setText(std::to_string(m_curHairIndex) + "-" + std::to_string(m_curClothingIndex));
-
-    AXLOGI("CharacterCreationChooseClouthPanel::updateUI: hairIndex={}, clothingIndex={}", m_curHairIndex,
-           m_curClothingIndex);
+    auto loaderAvatar = container->getChild("loaderAvatar")->as<GLoader3D>();
 
     auto t0 = container->getTransition("t0");
-    if (t0)
+    if (t0 && loaderAvatar->getContent() != nullptr)
     {
         t0->stop();
         t0->play();
     }
-
-    auto loaderAvatar = container->getChild("loaderAvatar")->as<GLoader3D>();
 
     mugen::FashionAppearance appearance;
     appearance.roleId = mugen::type_conversions::toRoleConfigId(m_curClass);

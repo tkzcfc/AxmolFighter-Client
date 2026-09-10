@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "EquipmentModel.h"
+#include "CharacterModel.h"
 
 namespace game::model
 {
@@ -17,11 +18,13 @@ struct InventoryModel
 {
     std::vector<ItemModel> items;            // 消耗品/材料
     std::vector<EquipmentModel> equipments;  // 装备
+    std::vector<FashionModel> fashions;      // 装扮
 
     void clear()
     {
         items.clear();
         equipments.clear();
+        fashions.clear();
     }
 };
 

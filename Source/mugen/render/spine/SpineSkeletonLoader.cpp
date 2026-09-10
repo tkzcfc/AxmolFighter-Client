@@ -2,8 +2,6 @@
 
 #ifdef RUNTIME_IN_AXMOL
 
-#    include "mugen/conf/Config.h"
-
 NS_MG_BEGIN
 
 MgSkeletonAnimation* SpineSkeletonLoader::createSkeletonAnimation(const std::string& skeletonFile,
@@ -13,7 +11,7 @@ MgSkeletonAnimation* SpineSkeletonLoader::createSkeletonAnimation(const std::str
     auto* data = SpineSkeletonCache::getInstance()->getOrCreate(skeletonFile, atlasFile, scale);
     if (!data)
         return nullptr;
-    return MgSkeletonAnimation::createWithData(data, false);
+    return MgSkeletonAnimation::createWithData(data);
 }
 
 MgSkeletonAnimation* SpineSkeletonLoader::createSkeletonAnimation(int32_t skeletonId)
@@ -21,7 +19,7 @@ MgSkeletonAnimation* SpineSkeletonLoader::createSkeletonAnimation(int32_t skelet
     auto* data = SpineSkeletonCache::getInstance()->getOrCreate(skeletonId);
     if (!data)
         return nullptr;
-    return MgSkeletonAnimation::createWithData(data, false);
+    return MgSkeletonAnimation::createWithData(data);
 }
 
 NS_MG_END

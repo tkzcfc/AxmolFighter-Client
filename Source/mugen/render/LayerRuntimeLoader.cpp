@@ -3,7 +3,7 @@
 #ifdef RUNTIME_IN_AXMOL
 
 #    include "mugen/render/RenderUtils.h"
-#    include "mugen/render/SpineSkeletonLoader.h"
+#    include "mugen/render/spine/SpineSkeletonLoader.h"
 
 #    include "mugen/core/io/FileUtils.h"
 #    include "rapidjson/document.h"

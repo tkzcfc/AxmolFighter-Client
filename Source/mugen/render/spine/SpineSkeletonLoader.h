@@ -1,11 +1,9 @@
 #pragma once
 
-#include "mugen/core/StdC.h"
+#include "mugen/render/spine/MgSkeletonAnimation.h"
+#include "mugen/render/spine/SpineSkeletonCache.h"
 
 #ifdef RUNTIME_IN_AXMOL
-
-#    include "mugen/render/SpineRuntime.h"
-#    include "mugen/render/SpineSkeletonCache.h"
 
 NS_MG_BEGIN
 

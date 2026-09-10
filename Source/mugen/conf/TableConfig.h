@@ -1129,8 +1129,8 @@ public:
     int32_t ep = 0;
     // crystal 晶体耗
     int32_t crystal = 0;
-    // sorder 打断优先级。-1 可打断任意技能
-    int32_t sorder = 0;
+    // sorder 打断优先级。-1 可打断任意技能；表默认 80
+    int32_t sorder = 80;
     // sorder_control_type 0 普通打断；1 允许被低优先在 interrupt_frame 后打断；2 无视优先、看 interrupt_extra_frame
     std::vector<int32_t> sorderControlType;
     // skill_ai_id 关联 skill_ai（部分调用仍用 entity_ai.skill_ai_ids 覆盖）
@@ -1144,6 +1144,14 @@ public:
     int32_t icon = -1;
     // type -1 普通（受击中只能放挣脱）；0 反击；1 表注释写暂时无效
     int32_t type = -1;
+    // press_time 蓄力门槛毫秒。抬起时若技能时间未到则走 up_action_ids
+    int32_t pressTime = 0;
+    // rage 怒气伙伴命中加怒，0 不加
+    int32_t rage = 0;
+    // skill_type 0 按下释放；1 抬起释放
+    int32_t skillType = 0;
+    // up_action_ids 抬起释放方向 × 动作序列，形状同 actionIds
+    std::vector<IntListRow> upActionIds;
 
     MG_DEFINE_SERIALIZABLE(id,
                            actionIds,
@@ -1160,7 +1168,11 @@ public:
                            nameId,
                            descId,
                            icon,
-                           type);
+                           type,
+                           pressTime,
+                           rage,
+                           skillType,
+                           upActionIds);
 };
 
 // 命中结果 skill_hit（伤害系数 + 受击反应）
@@ -1570,6 +1582,8 @@ public:
     int32_t spineId = -1;
     std::vector<float> spineOffsets;
     std::vector<int32_t> spineStep;
+    // spine_layer 0 人物前；1 人物后
+    int32_t spineLayer = 0;
     // icon / icon_desc_id / name_id / desc_id UI
     int32_t icon       = -1;
     int32_t iconDescId = 0;
@@ -1616,6 +1630,7 @@ public:
                            spineId,
                            spineOffsets,
                            spineStep,
+                           spineLayer,
                            icon,
                            iconDescId,
                            nameId,

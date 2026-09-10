@@ -9,14 +9,13 @@
 #include "mugen/conf/Config.h"
 #include "mugen/conf/GameDef.h"
 #include "mugen/conf/TableConfig.h"
-#include "mugen/render/SpineSkeletonLoader.h"
+#include "mugen/render/spine/SpineSkeletonLoader.h"
 #include "ui/battle/BattleBootParams.h"
 #include "ui/input/DefaultInputSlotMap.h"
 #include "ui/widgets/common/MessageDialog.h"
 
 #include "2d/DrawNode.h"
 #include "imgui.h"
-#include "mugen/render/SpineRuntime.h"
 
 #include <net/client_game.pb.h>
 #include <net/client_town.pb.h>
@@ -79,11 +78,11 @@ int32_t resolvePortalSpineAnimIndex(const PortalConfig* portalCfg)
 
 void playPortalSpineAnimation(mugen::MgSkeletonAnimation* skeleton, const PortalConfig* portalCfg)
 {
-    if (!skeleton || !skeleton->getSkeleton())
+    if (!skeleton || !skeleton->isValid())
         return;
 
-    mugen::MgSkeletonData* data = mugen::skeletonDataOf(skeleton);
-    const int animCount         = mugen::animationCount(data);
+    mugen::MgSkeletonData* data = skeleton->skeletonData();
+    const int animCount         = data->animationCount();
     if (animCount <= 0)
         return;
 
@@ -92,8 +91,8 @@ void playPortalSpineAnimation(mugen::MgSkeletonAnimation* skeleton, const Portal
     if (animIndex < 0 || animIndex >= animCount)
         animIndex = animCount > 1 ? 1 : 0;
 
-    mugen::MgAnimation* anim = mugen::animationAt(data, animIndex);
-    const char* animName     = anim ? mugen::animationName(anim) : nullptr;
+    mugen::MgAnimation anim = data->animationAt(animIndex);
+    const char* animName    = anim.name();
     if (animName && animName[0] != '\0')
         skeleton->setAnimation(0, animName, true);
 }

@@ -2,11 +2,13 @@
 #include "ui/views/CharacterLobbyView.h"
 #include "ui/widgets/common/MessageDialog.h"
 #include "ui/UiConfig.h"
-#include "mugen/render/SpineSkeletonLoader.h"
+#include "mugen/render/spine/SpineSkeletonLoader.h"
 #include "mugen/conf/GameDef.h"
 #include "ui/core/AudioManager.h"
 #include <net/client_game.pb.h>
 #include "CharacterCreationChooseClouthPanel.h"
+
+#include <cstring>
 
 namespace gameui
 {
@@ -97,24 +99,13 @@ void CharacterCreationPanel::updateUI()
         std::string animationName = spine.animationName;
 
         skeletonAnimation->setAnimation(0, "chuxian", false);
-#if MG_SPINE_USE_3_4
-        skeletonAnimation->setCompleteListener([skeletonAnimation, animationName](int, int) {
-            mugen::MgTrackEntry* entry = skeletonAnimation->getCurrent(0);
-            if (entry && entry->animation && std::strcmp(mugen::animationName(entry->animation), "chuxian") == 0)
+        skeletonAnimation->setCompleteListener([skeletonAnimation, animationName](const mugen::MgTrackEntry& entry) {
+            if (entry.animationName() && std::strcmp(entry.animationName(), "chuxian") == 0)
             {
                 skeletonAnimation->setAnimation(0, animationName, true);
                 skeletonAnimation->setCompleteListener(nullptr);
             }
         });
-#else
-        skeletonAnimation->setCompleteListener([skeletonAnimation, animationName](spine::TrackEntry* entry) {
-            if (entry->getAnimation()->getName() == "chuxian")
-            {
-                skeletonAnimation->setAnimation(0, animationName, true);
-                skeletonAnimation->setCompleteListener(nullptr);
-            }
-        });
-#endif
     }
     else
     {
