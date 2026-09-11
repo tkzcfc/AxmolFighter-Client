@@ -11,17 +11,18 @@ NS_MG_BEGIN
 //
 // 时间契约：
 // - durationMs()：本层自身时长；容器（Avatar）取各层最大值作为全局时长。
-// - seek/step：当 timeMs >= durationMs() 且非层内循环时，保持末帧显示（短层冻结）。
-// - setMotion(..., loop)：loop 表示容器是否循环；实现层不应在时长短于容器时自行 loop，
-//   由 Avatar 全局 wrap + seek(绝对时间) 负责重启。未来 FrameAniLayer 同样在 seek/step
-//   里对时间 min(t, durationMs) 后显示最后一帧。
+// - step：增量推进（Spine 走 update(dt)）；到本层时长后冻末帧。
+// - seek：绝对跳转（对齐、校正、循环 wrap）；超出本层时长时冻末帧。
+// - 层内动画轨道不自循环；由 Avatar 全局 wrap + seek(绝对时间) 负责重启。
 class RenderLayer : public ax::Node
 {
 public:
-    // 切换动作（loop 为容器意图，层内动画轨道默认非自循环）
-    virtual bool setMotion(const std::string& motionName, const std::string& entryId, bool loop) = 0;
+    // 切换动作
+    // @param motionName 动作名（对应 MotionMap 中的 motionName）
+    // @param entryId 动作条目 id（在设计中一个动作可能由多个动画组合而成）；空表示取首个
+    virtual bool setMotion(const std::string& motionName, const std::string& entryId) = 0;
 
-    // 推进显示时间；实现应与 seek(current+dt) 语义一致（含末帧冻结）
+    // 增量推进显示时间（冻末帧）；循环 wrap 由容器 seek 重启
     virtual void step(int dtMs) = 0;
 
     // 跳到绝对时间点（对齐/校正）；超出本层时长时冻末帧

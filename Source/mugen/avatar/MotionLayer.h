@@ -16,14 +16,14 @@ class MotionLayer
 public:
     MotionLayer() = default;
 
-    // 加载 MotionMap；空路径表示直通（无 .motion）
+    // 加载 MotionMap；路径为空或加载失败则失败
     bool init(const AvatarLayerDef& def);
 
-    // 切换动作并加载 .box；找不到 entry 时按 motionName 自动找 .box
+    // 切换动作并加载 .box；无 map / 无 entry 则失败
     bool setMotion(const std::string& motionName, const std::string& entryId);
 
     // 清空当前 .box
-    void clearMotion();
+    void clearBox();
 
     // 当前 .box 时长（毫秒），无盒为 0
     int durationMs() const;
@@ -36,6 +36,8 @@ public:
 
     // 层来源 tag
     AvatarLayerTag getTag() const { return m_def.tag; }
+
+    const MotionMap* motionMap() const { return m_motionMap.get(); }
 
     // 层静态描述
     MG_SYNTHESIZE_READONLY_BY_REF(AvatarLayerDef, m_def, Def)

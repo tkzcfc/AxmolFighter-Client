@@ -1,4 +1,5 @@
 #include "FashionSpine.h"
+#include "mugen/avatar/AvatarLayerUtils.h"
 #include "mugen/common/TypeConversions.h"
 #include "mugen/conf/Config.h"
 
@@ -143,6 +144,7 @@ FashionSpineDesc FashionResolver::resolve(const FashionAppearance& appearance)
 
     desc.skeleton = spine->spine;
     desc.scale         = spine->scale > 0.0f ? spine->scale : 1.0f;
+    desc.motionFile    = AvatarLayerUtils::spinePathToMotionFile(desc.skeleton);
     desc.weaponSpineId = fashionWeaponId;
     desc.wingSpineId   = fashionWingId;
     desc.ringSpineId   = fashionRingId;

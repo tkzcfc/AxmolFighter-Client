@@ -3,6 +3,7 @@
 #include "mugen/buff/BuffManager.h"
 #include "mugen/buff/BuffRuleUtil.h"
 #include "mugen/bt/EffectTreeBuilder.h"
+#include "mugen/avatar/AvatarLayerUtils.h"
 #include "mugen/component/AttributeComponent.h"
 #include "mugen/component/AvatarComponent.h"
 #include "mugen/component/AvatarRenderComponent.h"
@@ -55,9 +56,8 @@ void attachSpineAvatar(Entity* effect, const ResSpineConfig* spine)
     avatar->spineSkeleton = spine->spine;
     avatar->spineAtlas    = replaceExtension(spine->spine, ".atlas");
     avatar->defaultSkin.clear();
-    avatar->spineScale           = spine->scale > 0.0f ? spine->scale : 1.0f;
-    const auto slash             = spine->spine.find_last_of("/\\");
-    avatar->defaultAnimationPath = slash == std::string::npos ? std::string{} : spine->spine.substr(0, slash);
+    avatar->spineScale = spine->scale > 0.0f ? spine->scale : 1.0f;
+    avatar->motionFile = AvatarLayerUtils::spinePathToMotionFile(spine->spine);
 }
 
 void seedEffectIdentity(Entity* effect, EntityId ownerId)

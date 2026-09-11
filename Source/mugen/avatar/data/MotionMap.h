@@ -67,6 +67,7 @@ public:
     MG_SYNTHESIZE_READONLY_BY_REF(std::string, m_sourcePath, SourcePath);
 
     const MotionDefinition* findMotion(const std::string& name) const;
+    const MotionDefinition* motionAt(size_t index) const;
     const MotionEntry* findEntry(const std::string& motionName, const std::string& entryId) const;
     const MotionEntry* entryAt(const std::string& motionName, size_t index) const;
 

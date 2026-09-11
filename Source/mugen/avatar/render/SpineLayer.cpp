@@ -3,13 +3,11 @@
 #ifdef RUNTIME_IN_AXMOL
 
 #    include "mugen/avatar/data/AvatarAssetCache.h"
-
-#    include <cmath>
-#    include <limits>
+#    include "mugen/render/spine/SpineSkeletonCache.h"
 
 NS_MG_BEGIN
 
-SpineLayer* SpineLayer::create(const SpineAvatarDesc& desc)
+SpineLayer* SpineLayer::create(const FashionSpineDesc& desc)
 {
     auto* ret = new (std::nothrow) SpineLayer();
     if (ret && ret->initWithDesc(desc))
@@ -21,50 +19,43 @@ SpineLayer* SpineLayer::create(const SpineAvatarDesc& desc)
     return nullptr;
 }
 
-bool SpineLayer::initWithDesc(const SpineAvatarDesc& desc)
+bool SpineLayer::initWithDesc(const FashionSpineDesc& desc)
 {
     if (!ax::Node::init())
     {
         MG_LOG_E("SpineLayer::init: invalid args");
         return false;
     }
-    if (desc.skeleton.empty() || desc.atlas.empty())
+
+    m_motionMap = AvatarAssetCache::getInstance()->getMotionMap(desc.motionFile);
+    if (!m_motionMap)
     {
-        MG_LOG_E("SpineLayer::init: spineSkeleton/spineAtlas required");
+        MG_LOG_E("SpineLayer::init: failed to load motion map '{}'", desc.motionFile);
         return false;
     }
 
-    setLayerTag(kAvatarLayerTagCharacter);
-    initMotionMap(desc);
     if (!initSkeleton(desc))
         return false;
 
-    if (!desc.defaultSkin.empty())
-        setSkin(desc.defaultSkin);
+    if (!desc.skin.empty())
+        setSkin(desc.skin);
 
     return true;
 }
 
-void SpineLayer::initMotionMap(const SpineAvatarDesc& desc)
-{
-    if (desc.motionFile.empty())
-        return;
-
-    m_motionMap = AvatarAssetCache::getInstance()->getMotionMap(desc.motionFile);
-    if (!m_motionMap)
-        MG_LOG_W("SpineLayer: failed to load MotionMap '{}'", desc.motionFile);
-}
-
-bool SpineLayer::initSkeleton(const SpineAvatarDesc& desc)
+bool SpineLayer::initSkeleton(const FashionSpineDesc& desc)
 {
     const float scale = desc.scale > 0.0f ? desc.scale : 1.0f;
-    m_skeleton        = ManualSkeletonAnimation::createWithFile(desc.skeleton, desc.atlas, scale);
+    auto* cache       = SpineSkeletonCache::getInstance();
+    MgSkeletonData* data = cache->getOrCreate(desc.skeleton, desc.atlases, scale);
+    m_skeleton = data ? MgSkeletonAnimation::createWithData(data) : nullptr;
     if (!m_skeleton)
     {
-        MG_LOG_E("SpineLayer::init: failed to load skeleton '{}' atlas '{}'", desc.skeleton, desc.atlas);
+        MG_LOG_E("SpineLayer::init: failed to load skeleton '{}' atlas '{}'", desc.skeleton, desc.atlases.front());
         return false;
     }
 
+    m_skeleton->setAutoUpdate(false);
     m_skeleton->setUpdateOnlyIfVisible(false);
     m_skeleton->setTimeScale(1.0f);
     addChild(m_skeleton);
@@ -82,10 +73,7 @@ bool SpineLayer::setSkin(const std::string& skinName)
 {
     if (!m_skeleton || skinName.empty())
         return false;
-    if (!m_skeleton->getSkeleton() || !m_skeleton->getSkeleton()->getData())
-        return false;
-    spine::Skin* skin = m_skeleton->getSkeleton()->getData()->findSkin(skinName.c_str());
-    if (!skin)
+    if (!m_skeleton->skeletonData()->hasSkin(skinName.c_str()))
     {
         MG_LOG_W("SpineLayer: skin not found '{}'", skinName);
         return false;
@@ -95,50 +83,48 @@ bool SpineLayer::setSkin(const std::string& skinName)
     return true;
 }
 
-std::string SpineLayer::resolveSpineAnim(const std::string& motionName, const std::string& entryId) const
+const MotionEntry* SpineLayer::findEntry(const std::string& motionName, const std::string& entryId) const
 {
     if (!m_motionMap)
-        return motionName;
-
-    const MotionEntry* entry = nullptr;
+        return nullptr;
     if (entryId.empty())
-        entry = m_motionMap->entryAt(motionName, 0);
-    else
-        entry = m_motionMap->findEntry(motionName, entryId);
-
-    if (entry && entry->getType() == MotionEntryType::kSpine && !entry->getSource().empty())
-        return entry->getSource();
-
-    return motionName;
+        return m_motionMap->entryAt(motionName, 0);
+    return m_motionMap->findEntry(motionName, entryId);
 }
 
-bool SpineLayer::setMotion(const std::string& motionName, const std::string& entryId, bool loop)
+bool SpineLayer::setMotion(const std::string& motionName, const std::string& entryId)
 {
-    m_loop             = loop;
-    m_timeMs           = 0;
-    m_spineDurationSec = 0.0f;
+    m_timeMs     = 0;
+    m_durationMs = 0;
 
     if (!m_skeleton)
         return false;
 
-    const std::string spineAnim = resolveSpineAnim(motionName, entryId);
+    const MotionEntry* entry = findEntry(motionName, entryId);
+    if (!entry || entry->getType() != MotionEntryType::kSpine || entry->getSource().empty())
+        return false;
 
-    if (!m_skeleton->findAnimation(spineAnim))
+    const auto box = AvatarAssetCache::getInstance()->getCombatTimeline(entry->getBoxPath());
+    if (!box)
+        return false;
+    m_durationMs = box->getDuration();
+
+    const std::string& spineAnim = entry->getSource();
+    MgAnimation anim             = m_skeleton->findAnimation(spineAnim);
+    if (!anim)
     {
-        MG_LOG_W("SpineLayer: animation not found '{}', empty play", spineAnim);
+        MG_LOG_W("SpineLayer: animation not found '{}'", spineAnim);
         return false;
     }
 
-    spine::Animation* anim = m_skeleton->findAnimation(spineAnim);
-    m_spineDurationSec     = anim ? anim->getDuration() : 0.0f;
+    MG_ASSERT(m_durationMs == static_cast<int>(std::lround(anim.duration() * 1000.0f)));
 
-    spine::TrackEntry* track = m_skeleton->setAnimation(0, spineAnim, /*loop=*/false);
-    if (!track)
+    if (!m_skeleton->setAnimation(0, spineAnim, false))
     {
         MG_LOG_W("SpineLayer: setAnimation failed '{}'", spineAnim);
         return false;
     }
-    track->setTrackEnd(std::numeric_limits<float>::max());
+    m_skeleton->keepCurrentTrackAlive(0);
 
     applyTrackTime(0);
     return true;
@@ -146,9 +132,7 @@ bool SpineLayer::setMotion(const std::string& motionName, const std::string& ent
 
 int SpineLayer::durationMs() const
 {
-    if (m_spineDurationSec > 0.0f)
-        return static_cast<int>(std::lround(m_spineDurationSec * 1000.0f));
-    return 0;
+    return m_durationMs;
 }
 
 void SpineLayer::applyTrackTime(int timeMs)
@@ -158,22 +142,32 @@ void SpineLayer::applyTrackTime(int timeMs)
 
     const int tMs = std::max(0, timeMs);
     float tSec    = static_cast<float>(tMs) / 1000.0f;
-    if (m_spineDurationSec > 0.0f)
-        tSec = std::min(tSec, m_spineDurationSec);
+    if (m_durationMs > 0)
+        tSec = std::min(tSec, static_cast<float>(m_durationMs) / 1000.0f);
 
-    if (spine::TrackEntry* track = m_skeleton->getCurrent(0))
-    {
-        track->setTrackTime(tSec);
-        track->setAnimationLast(tSec);
-    }
+    if (m_skeleton->getCurrent(0))
+        m_skeleton->seekCurrentTrack(0, tSec);
     m_skeleton->update(0.0f);
 }
 
 void SpineLayer::step(int dtMs)
 {
-    if (dtMs > 0)
-        m_timeMs += dtMs;
-    applyTrackTime(m_timeMs);
+    if (dtMs <= 0 || !m_skeleton)
+        return;
+
+    const int dur = durationMs();
+    if (dur > 0 && m_timeMs >= dur)
+        return;
+
+    int applyMs = dtMs;
+    m_timeMs += dtMs;
+    if (dur > 0 && m_timeMs > dur)
+    {
+        applyMs -= (m_timeMs - dur);
+        m_timeMs = dur;
+    }
+    if (applyMs > 0)
+        m_skeleton->update(static_cast<float>(applyMs) / 1000.0f);
 }
 
 void SpineLayer::seek(int timeMs)

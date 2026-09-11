@@ -22,7 +22,6 @@
 #endif
 
 #include <algorithm>
-#include <cmath>
 #include <vector>
 
 NS_MG_BEGIN
@@ -86,24 +85,6 @@ GameMapRenderComponent* findMapRender(ECSManager* ecs)
     return MG_GET_COMPONENT(mapEntity, GameMapRenderComponent);
 }
 
-int32_t spineClipDurationMs(const AvatarComponent* avatar, const std::string& animName)
-{
-    if (!avatar || animName.empty())
-        return 0;
-    const std::string& skel = avatar->getSpineSkeleton();
-    if (skel.empty())
-        return 0;
-    const std::string atlas =
-        !avatar->getSpineAtlas().empty() ? avatar->getSpineAtlas() : replaceExtension(skel, ".atlas");
-    auto* data = SpineSkeletonCache::getInstance()->getOrCreate(skel, atlas, avatar->getSpineScale());
-    if (!data)
-        return 0;
-    MgAnimation anim = data->findAnimation(animName.c_str());
-    if (!anim)
-        return 0;
-    return static_cast<int32_t>(std::lround(anim.duration() * 1000.0f));
-}
-
 std::string pickDisplaySpineAnim(const ResSpineConfig* spine)
 {
     if (!spine || spine->spine.empty())
@@ -129,11 +110,10 @@ void spawnDisplaySpineOverlay(GameMapRenderComponent* mapRender, const ResSpineC
     if (!mapRender || !mapRender->overlayNode || !spine)
         return;
 
-    SpineAvatarDesc desc;
+    FashionSpineDesc desc;
     desc.skeleton = spine->spine;
-    desc.atlas    = replaceExtension(spine->spine, ".atlas");
-    desc.defaultSkin.clear();
-    desc.scale     = spine->scale > 0.0f ? spine->scale : 1.0f;
+    desc.atlases  = {replaceExtension(spine->spine, ".atlas")};
+    desc.scale    = spine->scale > 0.0f ? spine->scale : 1.0f;
     Avatar* avatar = AvatarBuilder::createAvatar(desc);
     if (!avatar)
         return;
@@ -341,23 +321,15 @@ void AttackAction::onActionEnter(BTContext& ctx)
 
     if (avatar)
     {
-        const std::string animName = std::to_string(actionCfg->action);
-        const bool looping         = actionCfg->loop < 0 || actionCfg->loop > 1;
-        avatar->animationSpeed     = scale;
-        avatar->play(animName, looping ? -1 : 1, true);
+        std::string animName;
+        if (actionCfg->action >= 0)
+            animName = avatar->playback.motionNameAt(static_cast<size_t>(actionCfg->action));
+        const bool looping = actionCfg->loop < 0 || actionCfg->loop > 1;
+        avatar->animationSpeed = scale;
+        if (!animName.empty())
+            avatar->play(animName, looping ? -1 : 1, true);
         estimatedDurMs = avatar->playback.getDurationMs();
-#ifdef RUNTIME_IN_AXMOL
-        const int32_t spineDur = spineClipDurationMs(avatar, animName);
-        if (spineDur > estimatedDurMs)
-        {
-            avatar->playback.setDurationMs(spineDur);
-            estimatedDurMs = spineDur;
-        }
-#else
-        if (estimatedDurMs <= 0)
-            estimatedDurMs = kSafetyActionDurationMs;
-#endif
-        // 骨骼时长未知时保持 0，完成事件不会触发
+        // 时长来自 .box；未知时保持 0，完成事件不会触发
     }
     else
     {

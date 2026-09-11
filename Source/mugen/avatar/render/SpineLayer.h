@@ -5,26 +5,18 @@
 
 #ifdef RUNTIME_IN_AXMOL
 
-#    include "ManualSkeletonAnimation.h"
+#    include "mugen/render/spine/MgSkeletonAnimation.h"
 #    include "mugen/avatar/data/MotionMap.h"
+#    include "mugen/avatar/FashionSpine.h"
 
 NS_MG_BEGIN
-
-struct SpineAvatarDesc
-{
-    std::string skeleton;
-    std::string atlas;
-    std::string motionFile;
-    std::string defaultSkin;
-    float scale = 1.0f;
-};
 
 class SpineLayer : public RenderLayer
 {
 public:
-    static SpineLayer* create(const SpineAvatarDesc& desc);
+    static SpineLayer* create(const FashionSpineDesc& desc);
 
-    bool setMotion(const std::string& motionName, const std::string& entryId, bool loop) override;
+    bool setMotion(const std::string& motionName, const std::string& entryId) override;
     void step(int dtMs) override;
     void seek(int timeMs) override;
     int durationMs() const override;
@@ -36,17 +28,16 @@ public:
     ax::Rect skeletonBoundingBox() const;
 
 private:
-    bool initWithDesc(const SpineAvatarDesc& desc);
-    void initMotionMap(const SpineAvatarDesc& desc);
-    bool initSkeleton(const SpineAvatarDesc& desc);
-    std::string resolveSpineAnim(const std::string& motionName, const std::string& entryId) const;
+    bool initWithDesc(const FashionSpineDesc& desc);
+    void initMotionMap(const FashionSpineDesc& desc);
+    bool initSkeleton(const FashionSpineDesc& desc);
+    const MotionEntry* findEntry(const std::string& motionName, const std::string& entryId) const;
     void applyTrackTime(int timeMs);
 
     std::shared_ptr<const MotionMap> m_motionMap;
-    ManualSkeletonAnimation* m_skeleton = nullptr;
-    int m_timeMs                        = 0;
-    float m_spineDurationSec            = 0.0f;
-    bool m_loop                         = false;
+    MgSkeletonAnimation* m_skeleton = nullptr;
+    int m_timeMs                    = 0;
+    int m_durationMs                = 0;
 };
 
 NS_MG_END

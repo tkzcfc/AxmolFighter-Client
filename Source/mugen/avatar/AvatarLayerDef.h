@@ -20,14 +20,12 @@ public:
 
     // .motion 文件路径（Content 相对）
     std::string motionMapPath;
-    // 资源基目录（解析 .box）
-    std::string baseDir;
     // 渲染 LocalZOrder
     int32_t order = 0;
     // 角色形象合成层标记
     AvatarLayerTag tag = AvatarLayerTag::kBody;
 
-    MG_DEFINE_SERIALIZABLE(motionMapPath, baseDir, order, tag);
+    MG_DEFINE_SERIALIZABLE(motionMapPath, order, tag);
 };
 
 NS_MG_END

@@ -31,6 +31,9 @@ public:
     // 播放动作；任一层解析失败则停止（避免每帧重试）
     bool play(const std::string& motionName, const std::string& entryId, bool loop);
 
+    // 按下标取 motion 名（与 .motion 中 animations 顺序一致）；越界返回空
+    std::string motionNameAt(size_t index) const;
+
     // 覆盖时长（毫秒）。用于直通无 .box 时由时间轴估算驱动 animationFinished。
     void setDurationMs(int durationMs);
 

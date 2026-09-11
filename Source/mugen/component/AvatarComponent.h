@@ -62,7 +62,6 @@ public:
     std::string spineSkeleton;
     std::string spineAtlas;
     std::string defaultSkin;
-    std::string defaultAnimationPath;
     std::string motionFile;
     float spineScale = 1.0f;
 
@@ -86,7 +85,6 @@ public:
                                   spineSkeleton,
                                   spineAtlas,
                                   defaultSkin,
-                                  defaultAnimationPath,
                                   motionFile,
                                   spineScale,
                                   playback,

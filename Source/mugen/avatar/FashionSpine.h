@@ -29,7 +29,7 @@ struct FashionSpineDesc
     std::string skin;
     // spine 缩放比例
     float scale = 1.0f;
-    // 动作名 → Spine 动画（怪物/战斗用；时装预览可空）
+    // 动画文件
     std::string motionFile;
 
     // 各部位在 atlases 中的索引，-1 表示这个部位没有对应的 atlas

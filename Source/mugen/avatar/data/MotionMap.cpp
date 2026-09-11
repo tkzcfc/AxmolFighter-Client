@@ -152,6 +152,13 @@ const MotionDefinition* MotionMap::findMotion(const std::string& name) const
     return &m_motions[it->second];
 }
 
+const MotionDefinition* MotionMap::motionAt(size_t index) const
+{
+    if (index >= m_motions.size())
+        return nullptr;
+    return &m_motions[index];
+}
+
 const MotionEntry* MotionMap::findEntry(const std::string& motionName, const std::string& entryId) const
 {
     const MotionDefinition* motion = findMotion(motionName);

@@ -1,115 +1,64 @@
 #include "AvatarLayerUtils.h"
 
+#include "mugen/core/utils/StringUtils.h"
 #include "mugen/avatar/AvatarLayerDef.h"
 #include "mugen/component/AvatarComponent.h"
 
-#include <algorithm>
-#include <cctype>
-
 NS_MG_BEGIN
 
-std::string AvatarLayerUtils::resolveAssetPath(const std::string& baseDir, const std::string& fileName)
-{
-    if (fileName.empty())
-        return baseDir;
-    if (baseDir.empty())
-    {
-        std::string file = fileName;
-        for (char& c : file)
-        {
-            if (c == '\\')
-                c = '/';
-        }
-        std::transform(file.begin(), file.end(), file.begin(),
-                       [](unsigned char c) { return static_cast<char>(::tolower(c)); });
-        return file;
-    }
-
-    std::string file = fileName;
-    for (char& c : file)
-    {
-        if (c == '\\')
-            c = '/';
-    }
-
-    std::string result;
-    if (file.rfind("mugen/", 0) == 0)
-        result = file;
-    else
-    {
-        std::string base = baseDir;
-        for (char& c : base)
-        {
-            if (c == '\\')
-                c = '/';
-        }
-        while (!base.empty() && base.back() == '/')
-            base.pop_back();
-        result = base + "/" + file;
-    }
-
-    std::transform(result.begin(), result.end(), result.begin(),
-                   [](unsigned char c) { return static_cast<char>(::tolower(c)); });
-    return result;
-}
-
-std::string AvatarLayerUtils::spinePathToBoxDir(const std::string& spineSkeleton)
+std::string AvatarLayerUtils::spinePathToMotionFile(const std::string& spineSkeleton)
 {
     if (spineSkeleton.empty())
         return {};
 
-    std::string norm = spineSkeleton;
-    for (char& c : norm)
+    std::string path = spineSkeleton;
+    for (char& c : path)
     {
         if (c == '\\')
+        {
+// 尽量在debug期间发现路径中有反斜杠，让路径格式统一为正斜杠
+#if _DEBUG
+                MG_LOG_E("AvatarLayerUtils: spineSkeleton path contains '\\' separator: '{}'", spineSkeleton);
+                MG_ASSERT(false && "spineSkeleton path contains '\\' separator");
+#endif
             c = '/';
+        }
     }
 
-    const std::string kSpinePrefix = "mugen/spine/";
-    const auto pos                 = norm.find(kSpinePrefix);
-    std::string under;
-    if (pos != std::string::npos)
-        under = norm.substr(pos + kSpinePrefix.size());
+    const char kSpine[] = "mugen/spine/";
+    if (const auto pos = path.find(kSpine); pos != std::string::npos)
+        path.replace(pos, sizeof(kSpine) - 1, "mugen/motion/");
+
+    const auto slash = path.find_last_of('/');
+    const auto dot   = path.find_last_of('.');
+    if (dot != std::string::npos && (slash == std::string::npos || dot > slash))
+        path.replace(dot, std::string::npos, ".motion");
     else
     {
-        const auto slash = norm.find_last_of('/');
-        under            = slash == std::string::npos ? norm : norm.substr(slash + 1);
-    }
-
-    const auto dot = under.find_last_of('.');
-    if (dot != std::string::npos)
-        under = under.substr(0, dot);
-
-    if (under.empty())
+        // spineSkeleton 不应该没有扩展名
+        MG_LOG_E("AvatarLayerUtils: spineSkeleton path has no extension: '{}'", spineSkeleton);
+        MG_ASSERT(false && "spineSkeleton path has no extension");
         return {};
-    return "mugen/box/" + under;
+    }
+    return path;
 }
 
-std::vector<AvatarLayerDef> AvatarLayerUtils::resolveLayersFromSpine(const std::string& spineSkeleton,
-                                                                     const std::string& motionFile,
-                                                                     const std::string& defaultAnimationPath)
+std::vector<AvatarLayerDef> AvatarLayerUtils::resolveLayersFromSpine(const std::string& motionFile)
 {
-    std::vector<AvatarLayerDef> result;
+    if (motionFile.empty())
+        return {};
     AvatarLayerDef def;
     def.motionMapPath = motionFile;
-    def.baseDir       = defaultAnimationPath;
-    if (def.motionMapPath.empty() && !spineSkeleton.empty())
-    {
-        const std::string boxDir = spinePathToBoxDir(spineSkeleton);
-        if (!boxDir.empty())
-            def.baseDir = boxDir;
-    }
-    def.order = 0;
-    def.tag   = AvatarLayerTag::kBody;
-    result.push_back(std::move(def));
-    return result;
+    def.order         = 0;
+    def.tag           = AvatarLayerTag::kBody;
+    return {std::move(def)};
 }
 
 std::vector<AvatarLayerDef> AvatarLayerUtils::resolveLayers(const AvatarComponent* avatar)
 {
     if (!avatar)
         return {};
-    return resolveLayersFromSpine(avatar->getSpineSkeleton(), avatar->motionFile, avatar->defaultAnimationPath);
+    return resolveLayersFromSpine(avatar->motionFile);
 }
 
 NS_MG_END

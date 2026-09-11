@@ -103,13 +103,27 @@ bool MotionPlayer::play(const std::string& motionName, const std::string& entryI
         m_durationMs = 0;
         m_timeMs     = 0;
         for (auto& layer : m_layers)
-            layer.clearMotion();
+            layer.clearBox();
         return false;
     }
 
     recomputeDuration();
     m_playing = true;
     return true;
+}
+
+std::string MotionPlayer::motionNameAt(size_t index) const
+{
+    for (const auto& layer : m_layers)
+    {
+        const MotionMap* map = layer.motionMap();
+        if (!map)
+            continue;
+        const MotionDefinition* def = map->motionAt(index);
+        if (def)
+            return def->getName();
+    }
+    return {};
 }
 
 void MotionPlayer::setDurationMs(int durationMs)
@@ -224,7 +238,7 @@ void MotionPlayer::stop()
     m_loop       = false;
     m_playing    = false;
     for (auto& layer : m_layers)
-        layer.clearMotion();
+        layer.clearBox();
 }
 
 bool MotionPlayer::isFinished() const
