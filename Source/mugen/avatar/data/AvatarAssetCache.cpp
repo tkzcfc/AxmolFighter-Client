@@ -78,8 +78,11 @@ bool AvatarAssetCache::load(const std::string& path)
     buffer.fastSet(raw, static_cast<uint32_t>(size));
     if (!deserialize(buffer))
     {
-        MG_LOG_E("AvatarAssetCache deserialize failed: {}", path);
+#if defined(OLUA_AUTOCONF)
         std::fprintf(stderr, "AvatarAssetCache deserialize failed: %s\n", path.c_str());
+#else
+        MG_LOG_E("AvatarAssetCache deserialize failed: {}", path);
+#endif
         clear();
         return false;
     }
