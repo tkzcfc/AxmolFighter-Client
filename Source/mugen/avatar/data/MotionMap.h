@@ -1,11 +1,8 @@
 #pragma once
 
+#include "mugen/avatar/data/CombatTimeline.h"
 #include "mugen/core/MacroDefinition.h"
-
-#include <cstdint>
-#include <string>
-#include <unordered_map>
-#include <vector>
+#include "mugen/core/Object.h"
 
 NS_MG_BEGIN
 
@@ -16,64 +13,105 @@ enum class MotionEntryType : int8_t
     kSpine = 1,
 };
 
-// 单个动作条目
-class MotionEntry
+// 单个动作条目（序列化）
+class MotionEntry : public Object
 {
 public:
-    MotionEntry() : m_type(MotionEntryType::kAni) {}
+    typedef Object Super;
 
+public:
+    MotionEntry() {}
+    virtual ~MotionEntry() {}
+
+public:
     // 条目 id
-    MG_SYNTHESIZE_PASS_BY_REF(std::string, m_id, Id);
+    std::string id;
     // ani / spine
-    MG_SYNTHESIZE(MotionEntryType, m_type, Type);
-    /**
-     * 通用引用：type=ani 时为动画的文件名；
-     * type=spine 时为 Spine 动画名。
-     */
-    MG_SYNTHESIZE_PASS_BY_REF(std::string, m_source, Source);
-    /**
-     * 碰撞盒文件名
-     */
-    MG_SYNTHESIZE_PASS_BY_REF(std::string, m_boxPath, BoxPath);
+    MotionEntryType type = MotionEntryType::kAni;
+    // type=ani 时为动画文件名；type=spine 时为 Spine 动画名
+    std::string source;
+    // 碰撞盒路径
+    std::string boxPath;
+
+public:
+    MG_DEFINE_SERIALIZABLE(id, type, source, boxPath)
 };
 
-// 单个Motion定义
-class MotionDefinition
+// 序列化后的 Motion 定义
+class MotionDef : public Object
 {
 public:
-    MotionDefinition() = default;
+    typedef Object Super;
 
-    // Motion名称
-    MG_SYNTHESIZE_PASS_BY_REF(std::string, m_name, Name);
-    // 一个Motion可能由多个动画组成
-    MG_SYNTHESIZE_PASS_BY_REF(std::vector<MotionEntry>, m_entries, Entries);
+public:
+    MotionDef() {}
+    virtual ~MotionDef() {}
+
+public:
+    // Motion 名称
+    std::string name;
+    // 一个 Motion 可能由多个动画组成
+    std::vector<MotionEntry> entries;
+
+public:
+    MG_DEFINE_SERIALIZABLE(name, entries)
+};
+
+struct MotionClip
+{
+    std::string id;
+    MotionEntryType type = MotionEntryType::kAni;
+    std::string source;
+    const CombatTimeline* timeline = nullptr;
+    int startMs                    = 0;
+    int durationMs                 = 0;
+};
+
+// 运行时 Motion：不参与序列化，由 MotionMap 在反序列化后绑定 CombatTimeline*
+class Motion
+{
+public:
+    int durationMs() const { return duration; }
+    int startTimeMs(const std::string& entryId) const;
+    size_t clipCount() const { return clips.size(); }
+    const MotionClip* clipAtIndex(size_t index) const;
+    const MotionClip* clipAt(int timeMs, int* localMs, size_t* index = nullptr) const;
+
+    void boxesAt(int timeMs, std::vector<const DamageBox*>& outAttack, std::vector<const DamageBox*>& outDamage) const;
+    void eventsBetween(int t0, int t1, std::vector<const CombatEvent*>& out) const;
+
+public:
+    std::string name;
+    std::vector<MotionClip> clips;
+    int duration = 0;
 };
 
 // 动画映射表
-// 为了统一Spine类型和帧动画类型的动画,单独定义了一个MotionMap,用于存储所有的动画定义
-// 并且将动画和碰撞盒的映射关系存储在MotionEntry中,和动画分离
-// 播放时统一使用.motion文件里面定义的名称
-class MotionMap
+class MotionMap : public Object
 {
 public:
-    MotionMap() = default;
+    typedef Object Super;
 
-    // 加载编辑器生成的.motion文件
-    bool load(const std::string& path);
+public:
+    MotionMap() {}
+    virtual ~MotionMap() {}
 
-    // 全部 motion 定义
-    MG_SYNTHESIZE_READONLY_BY_REF(std::vector<MotionDefinition>, m_motions, Motions);
-    // 源文件路径(用于同步)
-    MG_SYNTHESIZE_READONLY_BY_REF(std::string, m_sourcePath, SourcePath);
+    const Motion* findMotion(const std::string& name) const;
+    const Motion* motionAt(size_t index) const;
 
-    const MotionDefinition* findMotion(const std::string& name) const;
-    const MotionDefinition* motionAt(size_t index) const;
-    const MotionEntry* findEntry(const std::string& motionName, const std::string& entryId) const;
-    const MotionEntry* entryAt(const std::string& motionName, size_t index) const;
+    // 按 defs 构建运行时 Motion，timeline 由 lookup(boxPath) 解析
+    bool bindTimelines(const std::function<const CombatTimeline*(const std::string&)>& lookup);
 
 private:
-    // motion 名 -> motions 下标
+    std::vector<Motion> m_motions;
     std::unordered_map<std::string, size_t> m_nameToIndex;
+
+public:
+    std::vector<MotionDef> defs;
+    std::string sourcePath;
+
+public:
+    MG_DEFINE_SERIALIZABLE(defs, sourcePath)
 };
 
 NS_MG_END

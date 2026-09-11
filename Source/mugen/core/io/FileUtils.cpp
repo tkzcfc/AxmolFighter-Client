@@ -23,32 +23,40 @@ std::vector<std::string>& searchPaths()
     return paths;
 }
 
-std::string normalizePath(const fs::path& path)
+fs::path pathFromUtf8(const std::string& utf8)
 {
-    std::string normalized = path.lexically_normal().string();
-    std::replace(normalized.begin(), normalized.end(), '\\', '/');
-    return normalized;
+#    if defined(__cpp_char8_t)
+    return fs::path(std::u8string(utf8.begin(), utf8.end()));
+#    else
+    return fs::u8path(utf8);
+#    endif
+}
+
+std::string pathToUtf8(const fs::path& path)
+{
+    const auto u8 = path.lexically_normal().generic_u8string();
+    return std::string(reinterpret_cast<const char*>(u8.c_str()), u8.size());
 }
 
 std::string resolvePath(const std::string& path)
 {
-    fs::path input(path);
+    fs::path input = pathFromUtf8(path);
     if (input.empty())
         return {};
 
     std::error_code ec;
     if (input.is_absolute() || fs::exists(input, ec))
-        return normalizePath(input);
+        return pathToUtf8(input);
 
     for (const auto& searchPath : searchPaths())
     {
-        fs::path candidate = fs::path(searchPath) / input;
+        fs::path candidate = pathFromUtf8(searchPath) / input;
         ec.clear();
         if (fs::exists(candidate, ec))
-            return normalizePath(candidate);
+            return pathToUtf8(candidate);
     }
 
-    return normalizePath(input);
+    return pathToUtf8(input);
 }
 }  // namespace
 #endif
@@ -61,7 +69,7 @@ void addSearchPath(const std::string& path, bool front)
     if (path.empty())
         return;
 
-    auto normalized = normalizePath(path);
+    auto normalized = io::normalizePath(path);
     auto& paths     = searchPaths();
     paths.erase(std::remove(paths.begin(), paths.end(), normalized), paths.end());
 
@@ -96,7 +104,7 @@ bool isDirectoryExist(const std::string& path)
     return ax::FileUtils::getInstance()->isDirectoryExist(path);
 #else
     std::error_code ec;
-    return fs::is_directory(fullFilePath(path), ec);
+    return fs::is_directory(pathFromUtf8(fullFilePath(path)), ec);
 #endif
 }
 
@@ -106,7 +114,7 @@ bool isFileExist(const std::string& path)
     return ax::FileUtils::getInstance()->isFileExist(path);
 #else
     std::error_code ec;
-    return fs::is_regular_file(fullFilePath(path), ec);
+    return fs::is_regular_file(pathFromUtf8(fullFilePath(path)), ec);
 #endif
 }
 
@@ -118,7 +126,7 @@ bool createDirectory(const std::string& path)
     if (path.empty())
         return false;
     std::error_code ec;
-    fs::create_directories(path, ec);
+    fs::create_directories(pathFromUtf8(path), ec);
     return !ec;
 #endif
 }
@@ -128,8 +136,7 @@ bool writeStringToFile(const std::string& content, const std::string& path)
 #if RUNTIME_IN_AXMOL
     return ax::FileUtils::getInstance()->writeStringToFile(content, path);
 #else
-    // 确保父目录存在
-    fs::path filePath(path);
+    fs::path filePath = pathFromUtf8(path);
     if (auto parent = filePath.parent_path(); !parent.empty())
     {
         std::error_code ec;
@@ -138,7 +145,7 @@ bool writeStringToFile(const std::string& content, const std::string& path)
             return false;
     }
 
-    std::ofstream out(path, std::ios::out | std::ios::trunc);
+    std::ofstream out(filePath, std::ios::out | std::ios::trunc);
     if (!out)
         return false;
 
@@ -152,13 +159,7 @@ bool writeDataToFile(const char* data, size_t dataSize, const std::string& path)
 #if RUNTIME_IN_AXMOL
     return ax::FileUtils::writeBinaryToFile(data, dataSize, path);
 #else
-    // UTF-8 路径：Windows 下用 fs::u8path，避免中文动画名写文件失败
-    fs::path filePath =
-#    if defined(_WIN32)
-        fs::u8path(path);
-#    else
-        fs::path(path);
-#    endif
+    fs::path filePath = pathFromUtf8(path);
     if (auto parent = filePath.parent_path(); !parent.empty())
     {
         std::error_code ec;
@@ -184,7 +185,7 @@ std::vector<uint8_t> getDataFromFile(const std::string& path)
         return {};
     return std::vector<uint8_t>(data.getBytes(), data.getBytes() + data.getSize());
 #else
-    std::ifstream in(fullFilePath(path), std::ios::in | std::ios::binary);
+    std::ifstream in(pathFromUtf8(fullFilePath(path)), std::ios::in | std::ios::binary);
     if (!in)
         return {};
 
@@ -197,7 +198,7 @@ std::string getStringFromFile(const std::string& path)
 #if RUNTIME_IN_AXMOL
     return ax::FileUtils::getInstance()->getStringFromFile(path);
 #else
-    std::ifstream in(fullFilePath(path), std::ios::in | std::ios::binary);
+    std::ifstream in(pathFromUtf8(fullFilePath(path)), std::ios::in | std::ios::binary);
     if (!in)
         return {};
 
@@ -227,7 +228,7 @@ uint8_t* getFileData(const std::string& path, size_t& size)
     size = static_cast<size_t>(dataSize);
     return ptr;
 #else
-    std::ifstream in(fullFilePath(path), std::ios::in | std::ios::binary);
+    std::ifstream in(pathFromUtf8(fullFilePath(path)), std::ios::in | std::ios::binary);
     if (!in)
         return nullptr;
 
@@ -258,7 +259,7 @@ std::vector<std::string> listFiles(const std::string& dirPath)
     return ax::FileUtils::getInstance()->listFiles(dirPath);
 #else
     // 返回逻辑相对路径（相对 content 根），与 Axmol 搜索路径语义一致
-    const std::string resolved = fullFilePath(dirPath);
+    const fs::path resolved = pathFromUtf8(fullFilePath(dirPath));
     std::error_code ec;
     if (!fs::is_directory(resolved, ec))
         return {};
@@ -280,7 +281,7 @@ std::vector<std::string> listFiles(const std::string& dirPath)
         if (relEc)
             continue;
 
-        std::string p = logicalRoot + "/" + normalizePath(rel);
+        std::string p = logicalRoot + "/" + pathToUtf8(rel);
         if (isDir && p.back() != '/')
             p += '/';
         files.emplace_back(std::move(p));
@@ -297,7 +298,7 @@ void listFilesRecursively(const std::string& dirPath, std::vector<std::string>* 
     if (!files)
         return;
 
-    const std::string resolved = fullFilePath(dirPath);
+    const fs::path resolved = pathFromUtf8(fullFilePath(dirPath));
     std::error_code ec;
     if (!fs::is_directory(resolved, ec))
         return;
@@ -318,7 +319,7 @@ void listFilesRecursively(const std::string& dirPath, std::vector<std::string>* 
         if (relEc)
             continue;
 
-        std::string p = logicalRoot + "/" + normalizePath(rel);
+        std::string p = logicalRoot + "/" + pathToUtf8(rel);
         if (isDir && p.back() != '/')
             p += '/';
         files->emplace_back(std::move(p));

@@ -6,6 +6,7 @@
 #include "mugen/conf/GameDef.h"
 #include "mugen/core/io/FileUtils.h"
 #include "mugen/skill/SkillManager.h"
+#include "mugen/avatar/AvatarLayerUtils.h"
 #include "mugen/common/TypeConversions.h"
 
 NS_MG_BEGIN
@@ -23,14 +24,6 @@ std::string replaceExtension(const std::string& path, const std::string& newExt)
     if (dot == std::string::npos || (slash != std::string::npos && dot < slash))
         return path + newExt;
     return path.substr(0, dot) + newExt;
-}
-
-std::string parentDir(const std::string& path)
-{
-    const auto slash = path.find_last_of("/\\");
-    if (slash == std::string::npos)
-        return {};
-    return path.substr(0, slash);
 }
 
 std::string toCitySpinePath(const std::string& spinePath)
@@ -80,7 +73,6 @@ void fillAvatarFromRole(AvatarComponent* avatarComp,
         avatarComp->spineSkeleton = spine->spine;
         avatarComp->spineAtlas    = replaceExtension(spine->spine, ".atlas");
         avatarComp->defaultSkin.clear();
-        avatarComp->defaultAnimationPath = parentDir(spine->spine);
         if (spine->scale > 0.0f)
             avatarComp->spineScale = spine->scale;
         else if (spine->spine.find("/hero/") != std::string::npos)
@@ -94,13 +86,16 @@ void fillAvatarFromRole(AvatarComponent* avatarComp,
             const std::string cityAtlas = replaceExtension(citySkel, ".atlas");
             if (citySkel != avatarComp->spineSkeleton && io::isFileExist(citySkel) && io::isFileExist(cityAtlas))
             {
-                avatarComp->spineSkeleton        = citySkel;
-                avatarComp->spineAtlas           = cityAtlas;
-                avatarComp->defaultAnimationPath = parentDir(citySkel);
+                avatarComp->spineSkeleton = citySkel;
+                avatarComp->spineAtlas    = cityAtlas;
             }
         }
+        avatarComp->motionFile = AvatarLayerUtils::spinePathToMotionFile(avatarComp->spineSkeleton);
     }
-    avatarComp->motionFile.clear();
+    else
+    {
+        avatarComp->motionFile.clear();
+    }
 }
 
 // 参照 EntityTypeIndex[Role]：roleType → 属性模板虚拟基址（Elite/Boss 不是真实表行）。

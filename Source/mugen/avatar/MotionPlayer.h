@@ -34,9 +34,6 @@ public:
     // 按下标取 motion 名（与 .motion 中 animations 顺序一致）；越界返回空
     std::string motionNameAt(size_t index) const;
 
-    // 覆盖时长（毫秒）。用于直通无 .box 时由时间轴估算驱动 animationFinished。
-    void setDurationMs(int durationMs);
-
     // 推进时间并收集事件
     void step(int dtMs, std::vector<const CombatEvent*>* outEvents = nullptr);
 
@@ -54,7 +51,7 @@ public:
 
     // 当前动作名
     MG_SYNTHESIZE_READONLY_BY_REF(std::string, m_motionName, CurrentMotionName)
-    // 当前 entryId（空表示各层取首个）
+    // 当前 entryId（空表示从第一段起播）
     MG_SYNTHESIZE_READONLY_BY_REF(std::string, m_entryId, CurrentEntryId)
     // 当前播放时间（毫秒）
     MG_SYNTHESIZE_READONLY(int, m_timeMs, CurrentTimeMs)

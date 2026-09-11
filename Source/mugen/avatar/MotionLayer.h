@@ -1,16 +1,14 @@
 #pragma once
 
 #include "mugen/avatar/AvatarLayerDef.h"
-#include "mugen/avatar/data/CombatTimeline.h"
 #include "mugen/avatar/data/MotionMap.h"
 
-#include <memory>
 #include <string>
 #include <vector>
 
 NS_MG_BEGIN
 
-// 逻辑层：motionName → .box（时长 / 事件 / 碰撞盒）
+// 逻辑层：motionName → 串接的 .box（时长 / 事件 / 碰撞盒）
 class MotionLayer
 {
 public:
@@ -19,14 +17,17 @@ public:
     // 加载 MotionMap；路径为空或加载失败则失败
     bool init(const AvatarLayerDef& def);
 
-    // 切换动作并加载 .box；无 map / 无 entry 则失败
+    // 绑定 motion；无 map / 无 entry / 缺盒则失败
     bool setMotion(const std::string& motionName, const std::string& entryId);
 
-    // 清空当前 .box
+    // 清空当前 motion
     void clearBox();
 
-    // 当前 .box 时长（毫秒），无盒为 0
+    // 全部 clip 时长之和（毫秒）
     int durationMs() const;
+
+    // entryId 对应 clip 的全局起点（空 entryId 为 0）
+    int startTimeMs() const { return m_startMs; }
 
     // 采样攻/受盒（追加到出参）
     void boxesAt(int timeMs, std::vector<const DamageBox*>& outAttack, std::vector<const DamageBox*>& outDamage) const;
@@ -37,16 +38,15 @@ public:
     // 层来源 tag
     AvatarLayerTag getTag() const { return m_def.tag; }
 
-    const MotionMap* motionMap() const { return m_motionMap.get(); }
+    const MotionMap* motionMap() const { return m_motionMap; }
 
     // 层静态描述
     MG_SYNTHESIZE_READONLY_BY_REF(AvatarLayerDef, m_def, Def)
 
 private:
-    // 本层 MotionMap
-    std::shared_ptr<const MotionMap> m_motionMap;
-    // 当前动作 .box（可空）
-    std::shared_ptr<const CombatTimeline> m_box;
+    const MotionMap* m_motionMap = nullptr;
+    const Motion* m_motion       = nullptr;
+    int m_startMs                = 0;
 };
 
 NS_MG_END

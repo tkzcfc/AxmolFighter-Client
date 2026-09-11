@@ -1,16 +1,16 @@
 #include "mugen/render/spine/MgSpineBackend.h"
 
 #ifdef RUNTIME_IN_AXMOL
-#if MG_SPINE_USE_3_4
+#    if MG_SPINE_USE_3_4
 
-#include "mugen/render/spine/MgSpineProbe.h"
+#        include "mugen/render/spine/MgSpineProbe.h"
 
-#include "spine_3_4/Cocos2dAttachmentLoader.h"
-#include "spine_3_4/extension.h"
-#include "spine_3_4/spine-cocos2dx.h"
+#        include "spine_3_4/Cocos2dAttachmentLoader.h"
+#        include "spine_3_4/extension.h"
+#        include "spine_3_4/spine-cocos2dx.h"
 
-#include <limits>
-#include <new>
+#        include <limits>
+#        include <new>
 
 NS_MG_BEGIN
 
@@ -324,5 +324,5 @@ const MgSpineBackend& MgSpineBackend::spine34()
 
 NS_MG_END
 
-#endif
+#    endif
 #endif

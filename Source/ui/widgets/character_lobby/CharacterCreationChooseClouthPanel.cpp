@@ -25,15 +25,14 @@ void CharacterCreationChooseClouthPanel::onCreate()
     m_choiceHairList     = container->getChild("choiceHair")->as<GComponent>()->getChild("list")->as<GList>();
     m_choiceClothingList = container->getChild("choiceClothing")->as<GComponent>()->getChild("list")->as<GList>();
 
-        m_choiceHairList->addEventListener(UIEventType::Scroll, [this](EventContext*) {
-        this->m_choiceHairListScrollEnd = false;
-    });
+    m_choiceHairList->addEventListener(UIEventType::Scroll,
+                                       [this](EventContext*) { this->m_choiceHairListScrollEnd = false; });
     m_choiceClothingList->addEventListener(UIEventType::Scroll,
-                                               [this](EventContext*) { this->m_choiceClothingListScrollEnd = false; });
-    m_choiceHairList->addEventListener(UIEventType::ScrollEnd,
-                                       [this](EventContext*) { this->m_choiceHairListScrollEnd = true;
+                                           [this](EventContext*) { this->m_choiceClothingListScrollEnd = false; });
+    m_choiceHairList->addEventListener(UIEventType::ScrollEnd, [this](EventContext*) {
+        this->m_choiceHairListScrollEnd = true;
         this->updateUI();
-        });
+    });
     m_choiceClothingList->addEventListener(UIEventType::ScrollEnd, [this](EventContext*) {
         this->m_choiceClothingListScrollEnd = true;
         this->updateUI();
@@ -65,14 +64,12 @@ void CharacterCreationChooseClouthPanel::onShow()
     m_choiceClothingList->setVirtualAndLoop();
     m_choiceClothingList->setNumItems(kCreateRoleVariantCount);
     m_choiceClothingList->addEventListener(UIEventType::Scroll,
-                                       AX_CALLBACK_1(CharacterCreationChooseClouthPanel::doSpecialEffect, this));
+                                           AX_CALLBACK_1(CharacterCreationChooseClouthPanel::doSpecialEffect, this));
 
     doSpecialEffect(nullptr);
 }
 
-void CharacterCreationChooseClouthPanel::onDestroy()
-{
-}
+void CharacterCreationChooseClouthPanel::onDestroy() {}
 
 void CharacterCreationChooseClouthPanel::updateUI()
 {
@@ -88,10 +85,10 @@ void CharacterCreationChooseClouthPanel::updateUI()
     if (m_showHairIndex == m_curHairIndex && m_showClothingIndex == m_curClothingIndex)
         return;
 
-    m_showHairIndex = m_curHairIndex;
+    m_showHairIndex     = m_curHairIndex;
     m_showClothingIndex = m_curClothingIndex;
 
-    auto container     = this->getChild<GComponent>("container");
+    auto container    = this->getChild<GComponent>("container");
     auto loaderAvatar = container->getChild("loaderAvatar")->as<GLoader3D>();
 
     auto t0 = container->getTransition("t0");
@@ -102,12 +99,12 @@ void CharacterCreationChooseClouthPanel::updateUI()
     }
 
     mugen::FashionAppearance appearance;
-    appearance.roleId = mugen::type_conversions::toRoleConfigId(m_curClass);
-    const auto& look  = kLookIcons[static_cast<int>(m_curClass) - 1];
+    appearance.roleId                                        = mugen::type_conversions::toRoleConfigId(m_curClass);
+    const auto& look                                         = kLookIcons[static_cast<int>(m_curClass) - 1];
     appearance.baseFashion[mugen::FashionPosition::kHair]    = look.hairIds[m_curHairIndex];
     appearance.baseFashion[mugen::FashionPosition::kClothes] = look.clothIds[m_curClothingIndex];
     appearance.baseFashion[mugen::FashionPosition::kSkin]    = look.skinIds[m_curClothingIndex];
-    auto fashion          = mugen::FashionResolver::resolve(appearance);
+    auto fashion                                             = mugen::FashionResolver::resolve(appearance);
     auto* preview = fashion.valid ? mugen::AvatarBuilder::createAvatar(fashion) : nullptr;
     if (!preview)
     {
@@ -132,7 +129,7 @@ void CharacterCreationChooseClouthPanel::doSpecialEffect(EventContext* context)
 
     if (nextHairIndex != m_curHairIndex || nextClouthIndex != m_curClothingIndex)
     {
-        m_curHairIndex = nextHairIndex;
+        m_curHairIndex     = nextHairIndex;
         m_curClothingIndex = nextClouthIndex;
         this->updateUI();
     }
@@ -186,8 +183,7 @@ void CharacterCreationChooseClouthPanel::onClickCreateButton(EventContext* conte
         if (auto* session = AppContext::get().gameSession())
             session->appendFromCreateResp(*resp);
 
-        if (auto* lobby =
-                dynamic_cast<CharacterLobbyView*>(getUIManager()->getViewManager()->getCurrentView()))
+        if (auto* lobby = dynamic_cast<CharacterLobbyView*>(getUIManager()->getViewManager()->getCurrentView()))
         {
             lobby->refreshCharacterList();
         }

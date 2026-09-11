@@ -2,8 +2,8 @@
 
 #ifdef RUNTIME_IN_AXMOL
 
-#include "mugen/conf/Config.h"
-#include "xxhash.h"
+#    include "mugen/conf/Config.h"
+#    include "xxhash.h"
 
 NS_MG_BEGIN
 

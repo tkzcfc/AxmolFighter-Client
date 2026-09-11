@@ -6,41 +6,56 @@
 
 NS_MG_BEGIN
 
-// 动画数据、战斗时间轴、动作映射的缓存管理器
-class AvatarAssetCache
+class AvatarAssetCache : public Object
 {
 public:
+    typedef Object Super;
+
+public:
+    AvatarAssetCache();
+    virtual ~AvatarAssetCache();
+
     static AvatarAssetCache* getInstance();
     static void destroy();
 
-    std::shared_ptr<const AniData> getAniData(const std::string& path);
-    std::shared_ptr<const CombatTimeline> getCombatTimeline(const std::string& path);
-    std::shared_ptr<const MotionMap> getMotionMap(const std::string& path);
-
-    // 清空所有缓存
     void clear();
 
-    // 使指定路径的缓存失效，下次访问会重新加载
-    void invalidate(const std::string& path);
+    void addSearchPath(const std::string& path);
+    void clearSearchPaths();
+
+    bool load(const std::string& path);
+    bool isLoaded() const;
+    bool saveToFile(const std::string& path) const;
+
+    const AniData* getAniData(const std::string& path) const;
+    const CombatTimeline* getCombatTimeline(const std::string& path) const;
+    const MotionMap* getMotionMap(const std::string& path) const;
+
+    void putAniData(const std::string& key, const AniData& value);
+    void putCombatTimeline(const std::string& key, const CombatTimeline& value);
+    void putMotionMap(const std::string& key, const MotionMap& value);
 
 private:
-    AvatarAssetCache() = default;
-
-    AvatarAssetCache(const AvatarAssetCache&)            = delete;
-    AvatarAssetCache& operator=(const AvatarAssetCache&) = delete;
-
     template <typename T>
-    std::shared_ptr<const T> loadCached(std::unordered_map<std::string, std::shared_ptr<const T>>& cache,
-                                        const std::string& path);
+    const T* findByPath(const std::unordered_map<std::string, T>& map, const std::string& path) const;
 
-    static AvatarAssetCache* s_instance;
+    void serializeCustomImpl(ByteBuffer& byteBuffer) const;
+    bool deserializeCustomImpl(ByteBuffer& byteBuffer);
 
-    // .ani 缓存
-    std::unordered_map<std::string, std::shared_ptr<const AniData>> m_aniCache;
-    // .box 缓存
-    std::unordered_map<std::string, std::shared_ptr<const CombatTimeline>> m_boxCache;
-    // .motion 缓存
-    std::unordered_map<std::string, std::shared_ptr<const MotionMap>> m_motionCache;
+    std::vector<std::string> m_searchPaths;
+    bool m_isLoaded = false;
+
+#if defined(OLUA_AUTOCONF)
+public:
+#else
+private:
+#endif
+    std::unordered_map<std::string, AniData> aniDatas;
+    std::unordered_map<std::string, CombatTimeline> combatTimelines;
+    std::unordered_map<std::string, MotionMap> motionMaps;
+
+public:
+    MG_DEFINE_SERIALIZABLE_CUSTOM(serializeCustomImpl, deserializeCustomImpl, aniDatas, combatTimelines, motionMaps)
 };
 
 NS_MG_END

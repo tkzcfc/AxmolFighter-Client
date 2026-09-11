@@ -18,8 +18,8 @@ std::string AvatarLayerUtils::spinePathToMotionFile(const std::string& spineSkel
         {
 // 尽量在debug期间发现路径中有反斜杠，让路径格式统一为正斜杠
 #if _DEBUG
-                MG_LOG_E("AvatarLayerUtils: spineSkeleton path contains '\\' separator: '{}'", spineSkeleton);
-                MG_ASSERT(false && "spineSkeleton path contains '\\' separator");
+            MG_LOG_E("AvatarLayerUtils: spineSkeleton path contains '\\' separator: '{}'", spineSkeleton);
+            MG_ASSERT(false && "spineSkeleton path contains '\\' separator");
 #endif
             c = '/';
         }

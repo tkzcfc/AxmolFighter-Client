@@ -146,11 +146,7 @@ void AvatarRenderSystem::update()
                 avatar->seek(playback.getCurrentTimeMs());
                 avatarRenderComp->syncedMotion = playback.getCurrentMotionName();
                 avatarRenderComp->syncedEntry  = playback.getCurrentEntryId();
-                // 完成事件以骨骼时长为准；.box 往往只覆盖攻击盒区间，过短会冻在最高点
-                const int spineDur = avatar->durationMs();
-                if (spineDur > playback.getDurationMs())
-                    playback.setDurationMs(spineDur);
-                avatarComp->animationFinished = playback.isFinished();
+                avatarComp->animationFinished  = playback.isFinished();
             }
             else
             {

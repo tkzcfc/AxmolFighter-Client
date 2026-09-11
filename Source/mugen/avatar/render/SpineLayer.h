@@ -29,15 +29,14 @@ public:
 
 private:
     bool initWithDesc(const FashionSpineDesc& desc);
-    void initMotionMap(const FashionSpineDesc& desc);
     bool initSkeleton(const FashionSpineDesc& desc);
-    const MotionEntry* findEntry(const std::string& motionName, const std::string& entryId) const;
     void applyTrackTime(int timeMs);
 
-    std::shared_ptr<const MotionMap> m_motionMap;
+    const MotionMap* m_motionMap    = nullptr;
+    const Motion* m_motion          = nullptr;
     MgSkeletonAnimation* m_skeleton = nullptr;
     int m_timeMs                    = 0;
-    int m_durationMs                = 0;
+    size_t m_clipIndex              = static_cast<size_t>(-1);
 };
 
 NS_MG_END

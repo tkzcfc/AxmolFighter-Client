@@ -114,7 +114,7 @@ void GameSessionModel::appendFromCreateResp(const PB::Game::CreateCharacterResp&
         return;
     }
 
-    CharacterModel cm     = characterFromProto(resp.character());
+    CharacterModel cm = characterFromProto(resp.character());
     characters.push_back(cm);
     selectedCharacterID = cm.characterID;
 }

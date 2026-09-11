@@ -37,14 +37,13 @@ void MotionPlayer::recomputeDuration()
     for (const auto& layer : m_layers)
         m_durationMs = std::max(m_durationMs, layer.durationMs());
 
-    // 各层时长不一致时告警（忽略 duration=0 空层）
+#if _DEBUG
+    // 各层时长不一致时告警
     int firstNonZero = -1;
     bool mismatch    = false;
     for (const auto& layer : m_layers)
     {
         const int d = layer.durationMs();
-        if (d <= 0)
-            continue;
         if (firstNonZero < 0)
             firstNonZero = d;
         else if (d != firstNonZero)
@@ -65,8 +64,7 @@ void MotionPlayer::recomputeDuration()
             "frame)",
             m_motionName, m_durationMs, detail);
     }
-
-    // 无 .box 时时长为 0 是常态；AttackAction / 渲染层会用骨骼时长补上
+#endif
 }
 
 void MotionPlayer::applyMotionToLayers()
@@ -89,11 +87,15 @@ bool MotionPlayer::play(const std::string& motionName, const std::string& entryI
         return false;
     }
 
-    bool anyOk = false;
+    bool anyOk  = false;
+    int startMs = 0;
     for (auto& layer : m_layers)
     {
         if (layer.setMotion(motionName, entryId))
-            anyOk = true;
+        {
+            anyOk   = true;
+            startMs = std::max(startMs, layer.startTimeMs());
+        }
     }
 
     if (!anyOk)
@@ -108,6 +110,7 @@ bool MotionPlayer::play(const std::string& motionName, const std::string& entryI
     }
 
     recomputeDuration();
+    m_timeMs  = startMs;
     m_playing = true;
     return true;
 }
@@ -119,18 +122,11 @@ std::string MotionPlayer::motionNameAt(size_t index) const
         const MotionMap* map = layer.motionMap();
         if (!map)
             continue;
-        const MotionDefinition* def = map->motionAt(index);
-        if (def)
-            return def->getName();
+        const Motion* motion = map->motionAt(index);
+        if (motion)
+            return motion->name;
     }
     return {};
-}
-
-void MotionPlayer::setDurationMs(int durationMs)
-{
-    m_durationMs = std::max(0, durationMs);
-    if (m_playing && m_durationMs > 0 && m_timeMs > m_durationMs)
-        m_timeMs = m_durationMs;
 }
 
 void MotionPlayer::collectEventsRange(int t0, int t1, std::vector<const CombatEvent*>* out) const
@@ -147,7 +143,7 @@ void MotionPlayer::sortEventsByTime(std::vector<const CombatEvent*>& events)
     std::stable_sort(events.begin(), events.end(), [](const CombatEvent* a, const CombatEvent* b) {
         if (!a || !b)
             return a != nullptr;
-        return a->getTimeMs() < b->getTimeMs();
+        return a->timeMs < b->timeMs;
     });
 }
 
@@ -247,9 +243,9 @@ bool MotionPlayer::isFinished() const
         return false;
     if (!m_playing)
         return true;
-    // 时长未知时不算播完（完成事件以骨骼时长为准；.box 经常没有）
+    // 时长未知时算播完
     if (m_durationMs <= 0)
-        return false;
+        return true;
     return m_timeMs >= m_durationMs;
 }
 

@@ -1,150 +1,165 @@
 #include "MotionMap.h"
 
-#include "JsonHelper.h"
 #include "mugen/core/StdC.h"
-#include "mugen/core/io/FileUtils.h"
+
+#include <algorithm>
+#include <cstdio>
 
 NS_MG_BEGIN
 
-namespace
+int Motion::startTimeMs(const std::string& entryId) const
 {
-
-bool parseEntryType(const std::string& typeStr, MotionEntryType& outType)
-{
-    if (typeStr == "ani")
+    if (entryId.empty())
+        return 0;
+    for (const MotionClip& clip : clips)
     {
-        outType = MotionEntryType::kAni;
-        return true;
+        if (clip.id == entryId)
+            return clip.startMs;
     }
-    if (typeStr == "spine")
-    {
-        outType = MotionEntryType::kSpine;
-        return true;
-    }
-    return false;
+    return -1;
 }
 
-}  // namespace
+const MotionClip* Motion::clipAtIndex(size_t index) const
+{
+    if (index >= clips.size())
+        return nullptr;
+    return &clips[index];
+}
 
-bool MotionMap::load(const std::string& path)
+const MotionClip* Motion::clipAt(int timeMs, int* localMs, size_t* index) const
+{
+    if (clips.empty())
+        return nullptr;
+
+    int t = std::max(0, timeMs);
+    if (t >= duration)
+    {
+        const size_t last = clips.size() - 1;
+        if (localMs)
+            *localMs = clips[last].durationMs;
+        if (index)
+            *index = last;
+        return &clips[last];
+    }
+
+    for (size_t i = 0; i < clips.size(); ++i)
+    {
+        const MotionClip& clip = clips[i];
+        const int endMs        = clip.startMs + clip.durationMs;
+        if (t < endMs || i + 1 == clips.size())
+        {
+            if (localMs)
+                *localMs = t - clip.startMs;
+            if (index)
+                *index = i;
+            return &clip;
+        }
+    }
+    return nullptr;
+}
+
+void Motion::boxesAt(int timeMs,
+                     std::vector<const DamageBox*>& outAttack,
+                     std::vector<const DamageBox*>& outDamage) const
+{
+    int localMs            = 0;
+    const MotionClip* clip = clipAt(timeMs, &localMs);
+    if (!clip)
+        return;
+    clip->timeline->boxesAt(localMs, outAttack, outDamage);
+}
+
+void Motion::eventsBetween(int t0, int t1, std::vector<const CombatEvent*>& out) const
+{
+    if (t1 <= t0 || clips.empty() || t0 >= duration)
+        return;
+
+    const int t1Clamped = std::min(t1, duration);
+    if (t1Clamped <= t0)
+        return;
+
+    for (const MotionClip& clip : clips)
+    {
+        const int clipEnd = clip.startMs + clip.durationMs;
+        if (clipEnd <= t0)
+            continue;
+        if (clip.startMs >= t1Clamped)
+            break;
+        const int local0 = std::max(0, t0 - clip.startMs);
+        const int local1 = std::min(clip.durationMs, t1Clamped - clip.startMs);
+        if (local1 > local0)
+            clip.timeline->eventsBetween(local0, local1, out);
+    }
+}
+
+bool MotionMap::bindTimelines(const std::function<const CombatTimeline*(const std::string&)>& lookup)
 {
     m_motions.clear();
     m_nameToIndex.clear();
-    m_sourcePath = path;
+    m_motions.reserve(defs.size());
 
-    const std::string jsonText = io::getStringFromFile(path);
-    if (jsonText.empty())
+    for (const MotionDef& def : defs)
     {
-        MG_LOG_W("MotionMap: failed to read '{}'", path);
-        return false;
-    }
-
-    JsonHelper helper(path);
-    rapidjson::Document doc;
-    if (!helper.parse(jsonText, doc))
-        return false;
-    if (!helper.requireObject(doc))
-        return false;
-
-    const rapidjson::Value* motions = nullptr;
-    if (!helper.requireMemberArray(doc, "motions", motions))
-        return false;
-
-    helper.enterKey("motions");
-    m_motions.reserve(motions->Size());
-    for (rapidjson::SizeType i = 0; i < motions->Size(); ++i)
-    {
-        helper.enterIndex(i);
-        const rapidjson::Value& motionValue = (*motions)[i];
-        if (!helper.requireObject(motionValue))
-            return false;
-
-        std::string name;
-        if (!helper.requireString(motionValue, "name", name))
-            return false;
-
-        if (m_nameToIndex.find(name) != m_nameToIndex.end())
+        if (def.name.empty() || def.entries.empty())
         {
-            MG_LOG_W("MotionMap: duplicate motion name '{}', keeping first", name);
-            helper.leave();
-            continue;
+            MG_LOG_E("MotionMap: empty motion name/entries in '{}'", sourcePath);
+            std::fprintf(stderr, "MotionMap: empty motion name/entries in '%s'\n", sourcePath.c_str());
+            return false;
+        }
+        if (m_nameToIndex.find(def.name) != m_nameToIndex.end())
+        {
+            MG_LOG_E("MotionMap: duplicate motion '{}' in '{}'", def.name, sourcePath);
+            std::fprintf(stderr, "MotionMap: duplicate motion '%s' in '%s'\n", def.name.c_str(), sourcePath.c_str());
+            return false;
         }
 
-        MotionDefinition motion;
-        motion.setName(name);
-
-        const rapidjson::Value* animations = nullptr;
-        if (!helper.requireMemberArray(motionValue, "animations", animations))
-            return false;
-
-        helper.enterKey("animations");
-        std::vector<MotionEntry> entries;
-        entries.reserve(animations->Size());
-        std::unordered_map<std::string, size_t> entryIds;
-        for (rapidjson::SizeType j = 0; j < animations->Size(); ++j)
+        Motion motion;
+        motion.name = def.name;
+        motion.clips.reserve(def.entries.size());
+        int cursor = 0;
+        for (const MotionEntry& entry : def.entries)
         {
-            helper.enterIndex(j);
-            const rapidjson::Value& entryValue = (*animations)[j];
-            if (!helper.requireObject(entryValue))
-                return false;
-
-            MotionEntry entry;
-            std::string id;
-            if (!helper.requireString(entryValue, "id", id))
-                return false;
-
-            if (entryIds.find(id) != entryIds.end())
+            if (entry.boxPath.empty())
             {
-                MG_LOG_W("MotionMap: duplicate entry id '{}' in motion '{}', keeping first", id, name);
-                helper.leave();
-                continue;
+                MG_LOG_E("MotionMap: empty boxPath motion='{}' entry='{}' in '{}'", def.name, entry.id, sourcePath);
+                std::fprintf(stderr, "MotionMap: empty boxPath motion='%s' entry='%s' in '%s'\n", def.name.c_str(),
+                             entry.id.c_str(), sourcePath.c_str());
+                return false;
             }
-
-            std::string typeStr;
-            if (!helper.requireString(entryValue, "type", typeStr))
-                return false;
-
-            MotionEntryType entryType = MotionEntryType::kAni;
-            if (!parseEntryType(typeStr, entryType))
+            const CombatTimeline* timeline = lookup(entry.boxPath);
+            if (!timeline)
             {
-                helper.enterKey("type");
-                helper.fail("expected \"ani\" or \"spine\"");
-                helper.leave();
+                MG_LOG_E("MotionMap: missing box '{}' motion='{}' in '{}'", entry.boxPath, def.name, sourcePath);
+                std::fprintf(stderr, "MotionMap: missing box '%s' motion='%s' in '%s'\n", entry.boxPath.c_str(),
+                             def.name.c_str(), sourcePath.c_str());
                 return false;
             }
 
-            std::string source;
-            if (!helper.requireString(entryValue, "source", source))
-                return false;
-            if (source.empty())
-            {
-                helper.enterKey("source");
-                helper.fail("must be non-empty");
-                helper.leave();
-                return false;
-            }
-
-            entry.setId(id);
-            entry.setType(entryType);
-            entry.setSource(source);
-            entry.setBoxPath(helper.getString(entryValue, "box"));
-            entryIds[id] = entries.size();
-            entries.push_back(std::move(entry));
-            helper.leave();
+            MotionClip clip;
+            clip.id         = entry.id;
+            clip.type       = entry.type;
+            clip.source     = entry.source;
+            clip.timeline   = timeline;
+            clip.startMs    = cursor;
+            clip.durationMs = timeline->duration;
+            cursor += clip.durationMs;
+            motion.clips.push_back(std::move(clip));
         }
-        helper.leave();
 
-        motion.setEntries(entries);
-        m_nameToIndex[name] = m_motions.size();
+        motion.duration = cursor;
+        if (motion.duration <= 0)
+        {
+            MG_LOG_E("MotionMap: duration<=0 motion='{}' in '{}'", def.name, sourcePath);
+            std::fprintf(stderr, "MotionMap: duration<=0 motion='%s' in '%s'\n", def.name.c_str(), sourcePath.c_str());
+            return false;
+        }
+        m_nameToIndex[motion.name] = m_motions.size();
         m_motions.push_back(std::move(motion));
-        helper.leave();
     }
-    helper.leave();
-
-    return helper.ok();
+    return true;
 }
 
-const MotionDefinition* MotionMap::findMotion(const std::string& name) const
+const Motion* MotionMap::findMotion(const std::string& name) const
 {
     const auto it = m_nameToIndex.find(name);
     if (it == m_nameToIndex.end())
@@ -152,32 +167,11 @@ const MotionDefinition* MotionMap::findMotion(const std::string& name) const
     return &m_motions[it->second];
 }
 
-const MotionDefinition* MotionMap::motionAt(size_t index) const
+const Motion* MotionMap::motionAt(size_t index) const
 {
     if (index >= m_motions.size())
         return nullptr;
     return &m_motions[index];
-}
-
-const MotionEntry* MotionMap::findEntry(const std::string& motionName, const std::string& entryId) const
-{
-    const MotionDefinition* motion = findMotion(motionName);
-    if (!motion)
-        return nullptr;
-    for (const MotionEntry& entry : motion->getEntries())
-    {
-        if (entry.getId() == entryId)
-            return &entry;
-    }
-    return nullptr;
-}
-
-const MotionEntry* MotionMap::entryAt(const std::string& motionName, size_t index) const
-{
-    const MotionDefinition* motion = findMotion(motionName);
-    if (!motion || index >= motion->getEntries().size())
-        return nullptr;
-    return &motion->getEntries()[index];
 }
 
 NS_MG_END

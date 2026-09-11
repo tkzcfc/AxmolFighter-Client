@@ -16,6 +16,7 @@
 #include "mugen/system/SoundSystem.h"
 
 #ifdef RUNTIME_IN_AXMOL
+#    include "mugen/avatar/AvatarLayerUtils.h"
 #    include "mugen/avatar/render/Avatar.h"
 #    include "mugen/avatar/render/AvatarBuilder.h"
 #    include "mugen/render/spine/SpineSkeletonCache.h"
@@ -111,10 +112,11 @@ void spawnDisplaySpineOverlay(GameMapRenderComponent* mapRender, const ResSpineC
         return;
 
     FashionSpineDesc desc;
-    desc.skeleton = spine->spine;
-    desc.atlases  = {replaceExtension(spine->spine, ".atlas")};
-    desc.scale    = spine->scale > 0.0f ? spine->scale : 1.0f;
-    Avatar* avatar = AvatarBuilder::createAvatar(desc);
+    desc.skeleton   = spine->spine;
+    desc.atlases    = {replaceExtension(spine->spine, ".atlas")};
+    desc.scale      = spine->scale > 0.0f ? spine->scale : 1.0f;
+    desc.motionFile = AvatarLayerUtils::spinePathToMotionFile(spine->spine);
+    Avatar* avatar  = AvatarBuilder::createAvatar(desc);
     if (!avatar)
         return;
 
@@ -324,7 +326,7 @@ void AttackAction::onActionEnter(BTContext& ctx)
         std::string animName;
         if (actionCfg->action >= 0)
             animName = avatar->playback.motionNameAt(static_cast<size_t>(actionCfg->action));
-        const bool looping = actionCfg->loop < 0 || actionCfg->loop > 1;
+        const bool looping     = actionCfg->loop < 0 || actionCfg->loop > 1;
         avatar->animationSpeed = scale;
         if (!animName.empty())
             avatar->play(animName, looping ? -1 : 1, true);

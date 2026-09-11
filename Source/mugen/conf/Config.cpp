@@ -30,6 +30,7 @@ void Config::destroyInstance()
 
 void Config::clearConfig()
 {
+    m_isLoaded = false;
     townConfigs.clear();
     campConfigs.clear();
     stageConfigs.clear();
@@ -99,7 +100,15 @@ bool Config::loadConfig(const std::string& path)
         actionAttackConfigs.size(), actionAttackEffectConfigs.size(), roleConfigs.size(), resSpineConfigs.size(),
         behaviorTemplateConfigs.size(), displacementConfigs.size(), effectConfigs.size(), buffConfigs.size(),
         aiConfigs.size(), resSoundConfigs.size(), soundUiConfigs.size());
+
+    m_isLoaded = true;
+
     return true;
+}
+
+bool Config::isLoaded() const
+{
+    return m_isLoaded;
 }
 
 bool Config::saveToFile(const std::string& path) const

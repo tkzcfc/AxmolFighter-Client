@@ -5,6 +5,9 @@
 #    include "mugen/avatar/data/AvatarAssetCache.h"
 #    include "mugen/render/spine/SpineSkeletonCache.h"
 
+#    include <algorithm>
+#    include <cmath>
+
 NS_MG_BEGIN
 
 SpineLayer* SpineLayer::create(const FashionSpineDesc& desc)
@@ -45,10 +48,10 @@ bool SpineLayer::initWithDesc(const FashionSpineDesc& desc)
 
 bool SpineLayer::initSkeleton(const FashionSpineDesc& desc)
 {
-    const float scale = desc.scale > 0.0f ? desc.scale : 1.0f;
-    auto* cache       = SpineSkeletonCache::getInstance();
+    const float scale    = desc.scale > 0.0f ? desc.scale : 1.0f;
+    auto* cache          = SpineSkeletonCache::getInstance();
     MgSkeletonData* data = cache->getOrCreate(desc.skeleton, desc.atlases, scale);
-    m_skeleton = data ? MgSkeletonAnimation::createWithData(data) : nullptr;
+    m_skeleton           = data ? MgSkeletonAnimation::createWithData(data) : nullptr;
     if (!m_skeleton)
     {
         MG_LOG_E("SpineLayer::init: failed to load skeleton '{}' atlas '{}'", desc.skeleton, desc.atlases.front());
@@ -83,90 +86,116 @@ bool SpineLayer::setSkin(const std::string& skinName)
     return true;
 }
 
-const MotionEntry* SpineLayer::findEntry(const std::string& motionName, const std::string& entryId) const
-{
-    if (!m_motionMap)
-        return nullptr;
-    if (entryId.empty())
-        return m_motionMap->entryAt(motionName, 0);
-    return m_motionMap->findEntry(motionName, entryId);
-}
-
 bool SpineLayer::setMotion(const std::string& motionName, const std::string& entryId)
 {
-    m_timeMs     = 0;
-    m_durationMs = 0;
+    m_timeMs    = 0;
+    m_clipIndex = static_cast<size_t>(-1);
+    m_motion    = nullptr;
 
-    if (!m_skeleton)
+    if (!m_skeleton || !m_motionMap)
         return false;
 
-    const MotionEntry* entry = findEntry(motionName, entryId);
-    if (!entry || entry->getType() != MotionEntryType::kSpine || entry->getSource().empty())
+    const Motion* motion = m_motionMap->findMotion(motionName);
+    if (!motion || motion->clips.empty())
         return false;
 
-    const auto box = AvatarAssetCache::getInstance()->getCombatTimeline(entry->getBoxPath());
-    if (!box)
+    const int startMs = motion->startTimeMs(entryId);
+    if (startMs < 0)
         return false;
-    m_durationMs = box->getDuration();
 
-    const std::string& spineAnim = entry->getSource();
-    MgAnimation anim             = m_skeleton->findAnimation(spineAnim);
-    if (!anim)
+    for (size_t i = 0; i < motion->clipCount(); ++i)
     {
-        MG_LOG_W("SpineLayer: animation not found '{}'", spineAnim);
-        return false;
+        const MotionClip* clip = motion->clipAtIndex(i);
+        if (clip->type != MotionEntryType::kSpine || clip->source.empty())
+            return false;
+
+        MgAnimation anim = m_skeleton->findAnimation(clip->source);
+        if (!anim)
+        {
+            MG_LOG_W("SpineLayer: animation not found '{}'", clip->source);
+            return false;
+        }
+
+        MG_ASSERT(clip->durationMs == static_cast<int>(std::lround(anim.duration() * 1000.0f)));
     }
 
-    MG_ASSERT(m_durationMs == static_cast<int>(std::lround(anim.duration() * 1000.0f)));
-
-    if (!m_skeleton->setAnimation(0, spineAnim, false))
-    {
-        MG_LOG_W("SpineLayer: setAnimation failed '{}'", spineAnim);
-        return false;
-    }
-    m_skeleton->keepCurrentTrackAlive(0);
-
-    applyTrackTime(0);
+    m_motion = motion;
+    m_timeMs = startMs;
+    applyTrackTime(m_timeMs);
     return true;
 }
 
 int SpineLayer::durationMs() const
 {
-    return m_durationMs;
+    return m_motion ? m_motion->durationMs() : 0;
 }
 
 void SpineLayer::applyTrackTime(int timeMs)
 {
-    if (!m_skeleton)
+    if (!m_skeleton || !m_motion)
         return;
 
-    const int tMs = std::max(0, timeMs);
-    float tSec    = static_cast<float>(tMs) / 1000.0f;
-    if (m_durationMs > 0)
-        tSec = std::min(tSec, static_cast<float>(m_durationMs) / 1000.0f);
+    int localMs            = 0;
+    size_t index           = 0;
+    const MotionClip* clip = m_motion->clipAt(timeMs, &localMs, &index);
+    if (!clip)
+        return;
+
+    if (index != m_clipIndex)
+    {
+        const std::string& spineAnim = clip->source;
+        if (!m_skeleton->setAnimation(0, spineAnim, false))
+        {
+            MG_LOG_W("SpineLayer: setAnimation failed '{}'", spineAnim);
+            return;
+        }
+        // setAnimation(..., false) 会新建一条 不循环 的 TrackEntry。
+        // Spine 默认把 trackEnd / endTime 设成动画时长，时间一到就 complete，然后丢掉这条 track。
+        // 丢掉之后 getCurrent(0) 为空，姿势会掉回 setup pose
+        // 所以这里要 keepCurrentTrackAlive(0) 保持这条 track 不被丢掉
+        // 他的实现是把 trackEnd / endTime 设成 FLT_MAX，时间永远到不了
+        // 这样 seek 到末尾、update(0)、或 update(dt) 稍稍越过动画时长，track 都还在，最后一帧能freeze住，下一次
+        // seekCurrentTrack 也还有当前 entry
+        m_skeleton->keepCurrentTrackAlive(0);
+        m_clipIndex = index;
+    }
+
+    float tSec = static_cast<float>(std::max(0, localMs)) / 1000.0f;
+    if (clip->durationMs > 0)
+        tSec = std::min(tSec, static_cast<float>(clip->durationMs) / 1000.0f);
 
     if (m_skeleton->getCurrent(0))
+    {
+        // 跳转到指定时间点
         m_skeleton->seekCurrentTrack(0, tSec);
+    }
     m_skeleton->update(0.0f);
 }
 
 void SpineLayer::step(int dtMs)
 {
-    if (dtMs <= 0 || !m_skeleton)
+    if (dtMs <= 0 || !m_skeleton || !m_motion)
         return;
 
     const int dur = durationMs();
     if (dur > 0 && m_timeMs >= dur)
         return;
 
-    int applyMs = dtMs;
+    const size_t oldIndex = m_clipIndex;
+    int applyMs           = dtMs;
     m_timeMs += dtMs;
     if (dur > 0 && m_timeMs > dur)
     {
         applyMs -= (m_timeMs - dur);
         m_timeMs = dur;
     }
-    if (applyMs > 0)
+
+    size_t newIndex = oldIndex;
+    int localMs     = 0;
+    m_motion->clipAt(m_timeMs, &localMs, &newIndex);
+    if (newIndex != oldIndex)
+        applyTrackTime(m_timeMs);
+    else if (applyMs > 0)
         m_skeleton->update(static_cast<float>(applyMs) / 1000.0f);
 }
 

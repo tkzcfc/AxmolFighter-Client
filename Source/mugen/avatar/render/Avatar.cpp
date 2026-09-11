@@ -46,7 +46,7 @@ void Avatar::addLayer(RenderLayer* layer, int order, AvatarLayerTag tag)
 
     if (!m_motionName.empty())
     {
-        layer->setMotion(m_motionName, m_entryId, m_loop);
+        layer->setMotion(m_motionName, m_entryId);
         layer->seek(getCurrentTimeMs());
     }
 }
@@ -91,10 +91,17 @@ void Avatar::setMotion(const std::string& motionName, const std::string& entryId
     for (RenderLayer* layer : m_layers)
     {
         if (layer)
-            layer->setMotion(motionName, entryId, loop);
+            layer->setMotion(motionName, entryId);
     }
 
-    // 各层时长不一致时告警（忽略 duration=0 空层）；全局仍取 max，短层冻末帧
+    for (const RenderLayer* layer : m_layers)
+    {
+        if (layer)
+            m_timeMs = std::max(m_timeMs, layer->currentTimeMs());
+    }
+
+#    if _DEBUG
+    // 各层时长不一致时告警
     int firstNonZero = -1;
     bool mismatch    = false;
     for (const RenderLayer* layer : m_layers)
@@ -102,8 +109,6 @@ void Avatar::setMotion(const std::string& motionName, const std::string& entryId
         if (!layer)
             continue;
         const int d = layer->durationMs();
-        if (d <= 0)
-            continue;
         if (firstNonZero < 0)
             firstNonZero = d;
         else if (d != firstNonZero)
@@ -124,6 +129,7 @@ void Avatar::setMotion(const std::string& motionName, const std::string& entryId
         MG_LOG_W("Avatar: layer durations mismatch motion='{}' max={} [{}] (using max; short layers freeze last frame)",
                  m_motionName, durationMs(), detail);
     }
+#    endif
 }
 
 // 按循环规则规范化累计时间
@@ -152,14 +158,19 @@ void Avatar::step(int dtMs)
     if (dtMs <= 0)
         return;
 
+    const int dur = durationMs();
     m_timeMs += dtMs;
+    const bool wrapped = m_loop && dur > 0 && m_timeMs >= dur;
     normalizeTime();
 
-    // 绝对时间驱动各层（与 MotionPlayer 全局时钟一致；短层 seek 后冻末帧）
     for (RenderLayer* layer : m_layers)
     {
-        if (layer)
+        if (!layer)
+            continue;
+        if (wrapped)
             layer->seek(m_timeMs);
+        else
+            layer->step(dtMs);
     }
 }
 

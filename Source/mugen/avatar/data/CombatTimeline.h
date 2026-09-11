@@ -9,75 +9,91 @@
 NS_MG_BEGIN
 
 // 时间轴的轨道类型
-enum class CombatTrackKind
+enum class CombatTrackKind : int8_t
 {
     // 攻击类型
-    Attack,
+    Attack = 0,
     // 受击类型
-    Damage,
+    Damage = 1,
     // 中性碰撞几何
-    Hitbox,
+    Hitbox = 2,
 };
 
-// 时间轴上的单个关键关键帧
-class CombatKey
+// 时间轴上的单个关键帧
+class CombatKey : public Object
 {
 public:
-    CombatKey() : m_timeMs(0), m_hasBox(false) {}
+    typedef Object Super;
 
+public:
+    CombatKey() {}
+    virtual ~CombatKey() {}
+
+public:
     // 这一帧的时间点（毫秒）
-    MG_SYNTHESIZE(int, m_timeMs, TimeMs);
-    // 这个帧上是否有碰撞盒，若为 false 则 m_box 无效
-    MG_SYNTHESIZE_IS(bool, m_hasBox, HasBox);
+    int timeMs = 0;
+    // 这个帧上是否有碰撞盒，若为 false 则 box 无效
+    bool hasBox = false;
     // 本关键帧上的碰撞盒
-    MG_SYNTHESIZE_PASS_BY_REF(DamageBox, m_box, Box);
+    DamageBox box;
+
+public:
+    MG_DEFINE_SERIALIZABLE(timeMs, hasBox, box)
 };
 
 // 时间轴上的轨道
-class CombatTrack
+class CombatTrack : public Object
 {
 public:
-    CombatTrack() : m_kind(CombatTrackKind::Damage) {}
+    typedef Object Super;
 
+public:
+    CombatTrack() {}
+    virtual ~CombatTrack() {}
+
+public:
     // 轨道名称
-    MG_SYNTHESIZE_PASS_BY_REF(std::string, m_name, Name);
+    std::string name;
     // 轨道类型
-    MG_SYNTHESIZE(CombatTrackKind, m_kind, Kind);
+    CombatTrackKind kind = CombatTrackKind::Damage;
     // 轨道包含的关键帧列表，按时间升序排列
-    MG_SYNTHESIZE_PASS_BY_REF(std::vector<CombatKey>, m_keys, Keys);
+    std::vector<CombatKey> keys;
+
+public:
+    MG_DEFINE_SERIALIZABLE(name, kind, keys)
 };
 
 // 时间轴上的事件
-class CombatEvent
+class CombatEvent : public Object
 {
 public:
-    CombatEvent() : m_timeMs(0) {}
+    typedef Object Super;
 
+public:
+    CombatEvent() {}
+    virtual ~CombatEvent() {}
+
+public:
     // 事件触发的时间点（毫秒）
-    MG_SYNTHESIZE(int, m_timeMs, TimeMs);
+    int timeMs = 0;
     // 事件类型
-    MG_SYNTHESIZE_PASS_BY_REF(std::string, m_type, Type);
+    std::string type;
     // 事件值
-    MG_SYNTHESIZE_PASS_BY_REF(std::string, m_value, Value);
+    std::string value;
+
+public:
+    MG_DEFINE_SERIALIZABLE(timeMs, type, value)
 };
 
 // 时间轴
-class CombatTimeline
+class CombatTimeline : public Object
 {
 public:
-    CombatTimeline() : m_duration(0) {}
+    typedef Object Super;
 
-    // 加载编辑器生成的.box文件
-    bool load(const std::string& path);
-
-    // 总时长（毫秒）
-    MG_SYNTHESIZE_READONLY(int, m_duration, Duration);
-    // 轨道列表
-    MG_SYNTHESIZE_READONLY_BY_REF(std::vector<CombatTrack>, m_tracks, Tracks);
-    // 事件列表
-    MG_SYNTHESIZE_READONLY_BY_REF(std::vector<CombatEvent>, m_events, Events);
-    // 源文件路径(用于同步)
-    MG_SYNTHESIZE_READONLY_BY_REF(std::string, m_sourcePath, SourcePath);
+public:
+    CombatTimeline() {}
+    virtual ~CombatTimeline() {}
 
     // 采样指定时间点的碰撞盒（只追加；调用方负责传入干净 vector）
     void boxesAt(int timeMs, std::vector<const DamageBox*>& outAttack, std::vector<const DamageBox*>& outDamage) const;
@@ -87,6 +103,19 @@ public:
 
 private:
     static const CombatKey* keyAtOrBefore(const CombatTrack& track, int timeMs);
+
+public:
+    // 总时长（毫秒）
+    int duration = 0;
+    // 轨道列表
+    std::vector<CombatTrack> tracks;
+    // 事件列表
+    std::vector<CombatEvent> events;
+    // 源文件路径
+    std::string sourcePath;
+
+public:
+    MG_DEFINE_SERIALIZABLE(duration, tracks, events, sourcePath)
 };
 
 NS_MG_END

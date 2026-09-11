@@ -2,7 +2,7 @@
 
 #ifdef RUNTIME_IN_AXMOL
 
-#include "mugen/render/spine/MgSpineBackend.h"
+#    include "mugen/render/spine/MgSpineBackend.h"
 
 NS_MG_BEGIN
 

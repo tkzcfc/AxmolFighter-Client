@@ -9,7 +9,7 @@ NS_MG_BEGIN
 struct FashionAppearance
 {
     // 角色id
-    int32_t roleId                = 0;
+    int32_t roleId = 0;
 
     // 角色基础时装配置
     std::unordered_map<FashionPosition, int32_t> baseFashion;
@@ -37,9 +37,9 @@ struct FashionSpineDesc
     // 武器id
     int32_t weaponSpineId = 0;
     // 翅膀id
-    int32_t wingSpineId   = 0;
+    int32_t wingSpineId = 0;
     // 光环id
-    int32_t ringSpineId   = 0;
+    int32_t ringSpineId = 0;
 };
 
 class FashionResolver

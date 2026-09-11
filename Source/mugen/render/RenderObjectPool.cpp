@@ -26,7 +26,6 @@ RenderObjectPool::~RenderObjectPool()
     clear();
 }
 
-
 void RenderObjectPool::recycleNode(const RenderStashKey& key, ax::Node* node)
 {
     if (key.empty() || node == nullptr)

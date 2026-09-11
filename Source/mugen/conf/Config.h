@@ -19,6 +19,8 @@ public:
 
     bool loadConfig(const std::string& path);
 
+    bool isLoaded() const;
+
     bool saveToFile(const std::string& path) const;
 
     // 根据 id 获取城镇配置
@@ -145,6 +147,9 @@ private:
     std::unordered_map<int32_t, SoundMapSpineConfig> soundMapSpineConfigs;
     std::unordered_map<int32_t, SoundSendMessageConfig> soundSendMessageConfigs;
     std::unordered_map<int32_t, SoundTalkConfig> soundTalkConfigs;
+
+private:
+    bool m_isLoaded = false;
 
 public:
     MG_DEFINE_SERIALIZABLE(townConfigs,

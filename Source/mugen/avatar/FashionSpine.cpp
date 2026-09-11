@@ -12,35 +12,25 @@ static std::unordered_map<FashionPosition, int32_t> getDefaultFashion(int32_t ro
     case mugen::CharacterClass::kSwordman:
     {
         return {
-            {FashionPosition::kBody, 101008},
-            {FashionPosition::kHair, 101004},
-            {FashionPosition::kClothes, 101002},
-            {FashionPosition::kSkin, 101007},
-            {FashionPosition::kHat, 101001},
-            {FashionPosition::kFace, 101005},
+            {FashionPosition::kBody, 101008},  {FashionPosition::kHair, 101004}, {FashionPosition::kClothes, 101002},
+            {FashionPosition::kSkin, 101007},  {FashionPosition::kHat, 101001},  {FashionPosition::kFace, 101005},
             {FashionPosition::kWeapon, 14001},
         };
     }
     case mugen::CharacterClass::kRanger:
     {
-        return {{FashionPosition::kBody, 102008},
-                {FashionPosition::kHair, 102004},
-                {FashionPosition::kClothes, 102002},
-                {FashionPosition::kSkin, 102007},
-                {FashionPosition::kHat, 102001},
-                {FashionPosition::kFace, 102005},
-                {FashionPosition::kWeapon, 14101},
+        return {
+            {FashionPosition::kBody, 102008},  {FashionPosition::kHair, 102004}, {FashionPosition::kClothes, 102002},
+            {FashionPosition::kSkin, 102007},  {FashionPosition::kHat, 102001},  {FashionPosition::kFace, 102005},
+            {FashionPosition::kWeapon, 14101},
         };
     }
     case mugen::CharacterClass::kMage:
     {
-        return {{FashionPosition::kBody, 104008},            
-                {FashionPosition::kHair, 104004},
-                {FashionPosition::kClothes, 104002},
-                {FashionPosition::kSkin, 104007},
-                {FashionPosition::kHat, 104001},
-                {FashionPosition::kFace, 104005},
-                {FashionPosition::kWeapon, 14301},
+        return {
+            {FashionPosition::kBody, 104008},  {FashionPosition::kHair, 104004}, {FashionPosition::kClothes, 104002},
+            {FashionPosition::kSkin, 104007},  {FashionPosition::kHat, 104001},  {FashionPosition::kFace, 104005},
+            {FashionPosition::kWeapon, 14301},
         };
     }
     default:
@@ -100,13 +90,13 @@ FashionSpineDesc FashionResolver::resolve(const FashionAppearance& appearance)
     int32_t fashionRingId = 0;
 
     // TODO: 套装光环
-    //if (!equipItems.empty())
+    // if (!equipItems.empty())
     //    fashionRingId = ringIdFromEquip(equipItems);
 
     for (const auto* item : equipItems)
     {
         const auto pos = static_cast<FashionPosition>(item->position);
-        
+
         // 武器
         if (pos == FashionPosition::kWeapon)
         {
@@ -142,7 +132,7 @@ FashionSpineDesc FashionResolver::resolve(const FashionAppearance& appearance)
         return desc;
     }
 
-    desc.skeleton = spine->spine;
+    desc.skeleton      = spine->spine;
     desc.scale         = spine->scale > 0.0f ? spine->scale : 1.0f;
     desc.motionFile    = AvatarLayerUtils::spinePathToMotionFile(desc.skeleton);
     desc.weaponSpineId = fashionWeaponId;
@@ -155,8 +145,8 @@ FashionSpineDesc FashionResolver::resolve(const FashionAppearance& appearance)
         if (isIndependentSpinePosition(static_cast<FashionPosition>(i)))
             continue;
 
-        int32_t id    = 0;
-        auto it = equipSpineIds.find(static_cast<FashionPosition>(i));
+        int32_t id = 0;
+        auto it    = equipSpineIds.find(static_cast<FashionPosition>(i));
         if (it == equipSpineIds.end())
         {
             it = baseFashion.find(static_cast<FashionPosition>(i));
@@ -181,11 +171,11 @@ FashionSpineDesc FashionResolver::resolve(const FashionAppearance& appearance)
 
             if (desc.skin.empty())
             {
-                desc.skin = cfg->skinName;                    
+                desc.skin = cfg->skinName;
             }
         }
     }
-    desc.valid         = !desc.skeleton.empty() && !desc.atlases.empty();
+    desc.valid = !desc.skeleton.empty() && !desc.atlases.empty();
     if (!desc.valid)
         MG_LOG_E("FashionResolver: no atlas for role {}", roleId);
     return desc;

@@ -10,8 +10,7 @@ namespace gameui
 class CharacterCreationChooseClouthPanel : public UIWidget
 {
 public:
-    CharacterCreationChooseClouthPanel(mugen::CharacterClass curClass)
-        : m_curClass(curClass)
+    CharacterCreationChooseClouthPanel(mugen::CharacterClass curClass) : m_curClass(curClass)
     {
         m_options.hasBackground  = false;
         m_options.draggable      = false;
@@ -44,21 +43,20 @@ protected:
     void onClickCreateButton(EventContext* context);
 
     void onClickBackButton(EventContext* context);
-    
 
 private:
-    GList* m_choiceHairList = nullptr;
-    GList* m_choiceClothingList  = nullptr;
-    GTextInput* m_inputTextName = nullptr;
+    GList* m_choiceHairList          = nullptr;
+    GList* m_choiceClothingList      = nullptr;
+    GTextInput* m_inputTextName      = nullptr;
     mugen::CharacterClass m_curClass = mugen::kUnknown;
 
-    bool m_choiceHairListScrollEnd = true;
+    bool m_choiceHairListScrollEnd     = true;
     bool m_choiceClothingListScrollEnd = true;
 
-    int32_t m_curHairIndex = -1;
+    int32_t m_curHairIndex     = -1;
     int32_t m_curClothingIndex = -1;
 
-    int32_t m_showHairIndex = -1;
+    int32_t m_showHairIndex     = -1;
     int32_t m_showClothingIndex = -1;
 };
 

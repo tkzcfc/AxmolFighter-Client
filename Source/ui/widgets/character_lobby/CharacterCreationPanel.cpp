@@ -88,8 +88,8 @@ void CharacterCreationPanel::updateUI()
     // 职业模型
     auto loaderAvatar = container->getChild("loaderAvatar")->as<GLoader3D>();
 
-    const auto& spine          = curProfessionConfig.spine;
-    auto skeletonAnimation     = mugen::SpineSkeletonLoader::createSkeletonAnimation(spine.id);
+    const auto& spine      = curProfessionConfig.spine;
+    auto skeletonAnimation = mugen::SpineSkeletonLoader::createSkeletonAnimation(spine.id);
     skeletonAnimation->setPosition(ax::Vec2(loaderAvatar->getWidth() * 0.5f, -loaderAvatar->getHeight()) +
                                    ax::Vec2(spine.offsetX, spine.offsetY));
     skeletonAnimation->setScale(spine.scaleX, spine.scaleY);
@@ -130,7 +130,8 @@ void CharacterCreationPanel::updateUI()
 
 void CharacterCreationPanel::onClickCreateButton(EventContext* context)
 {
-    getUIManager()->open<CharacterCreationChooseClouthPanel>(static_cast<mugen::CharacterClass>(m_curRoleTypeIndex + 1));
+    getUIManager()->open<CharacterCreationChooseClouthPanel>(
+        static_cast<mugen::CharacterClass>(m_curRoleTypeIndex + 1));
     this->close();
 }
 

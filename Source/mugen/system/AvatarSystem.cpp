@@ -22,21 +22,21 @@ void dispatchCombatEvents(ECSManager* ecs, Entity* entity, const std::vector<con
     {
         if (!event)
             continue;
-        const std::string& type = event->getType();
+        const std::string& type = event->type;
         if (type == "sound")
         {
-            if (soundSystem && !event->getValue().empty())
-                soundSystem->play(event->getValue(), entity);
-            else if (!event->getValue().empty())
-                MG_LOG_W("AvatarSystem: sound event but SoundSystem missing, key='{}'", event->getValue());
+            if (soundSystem && !event->value.empty())
+                soundSystem->play(event->value, entity);
+            else if (!event->value.empty())
+                MG_LOG_W("AvatarSystem: sound event but SoundSystem missing, key='{}'", event->value);
         }
         else if (type == "hitPoint")
         {
-            MG_LOG_D("AvatarSystem: hitPoint event at {}ms value='{}'", event->getTimeMs(), event->getValue());
+            MG_LOG_D("AvatarSystem: hitPoint event at {}ms value='{}'", event->timeMs, event->value);
         }
         else
         {
-            MG_LOG_D("AvatarSystem: ignore unknown combat event type='{}' value='{}'", type, event->getValue());
+            MG_LOG_D("AvatarSystem: ignore unknown combat event type='{}' value='{}'", type, event->value);
         }
     }
 }

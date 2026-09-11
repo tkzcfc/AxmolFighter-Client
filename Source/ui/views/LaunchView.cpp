@@ -1,6 +1,7 @@
 #include "LaunchView.h"
 #include "ui/core/ViewManager.h"
 #include "mugen/conf/Config.h"
+#include "mugen/avatar/data/AvatarAssetCache.h"
 #include "CharacterLobbyView.h"
 
 namespace gameui
@@ -29,11 +30,29 @@ void LaunchView::onEnter()
 void LaunchView::collectLoadingTasks()
 {
     m_taskQueue.push([]() {
-        if (!mugen::Config::getInstance()->loadConfig("mugen/config/config.bin"))
+        auto config = mugen::Config::getInstance();
+        if (config->isLoaded())
+            return true;
+
+        if (!config->loadConfig("mugen/config/config.bin"))
         {
-            MG_LOG_E("Failed to load file-config registries");
+            AXLOGE("Failed to load mugen/config/config.bin");
             return false;
         }
+        return true;
+    });
+
+    m_taskQueue.push([]() {
+        auto avatarCache = mugen::AvatarAssetCache::getInstance();
+        if (avatarCache->isLoaded())
+            return true;
+
+        if (!avatarCache->load("mugen/config/avatar.bin"))
+        {
+            AXLOGE("Failed to load mugen/config/avatar.bin");
+            return false;
+        }
+        avatarCache->addSearchPath("res_zhcn");
         return true;
     });
 

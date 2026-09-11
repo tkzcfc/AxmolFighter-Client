@@ -2,19 +2,19 @@
 
 #ifdef RUNTIME_IN_AXMOL
 
-#include "mugen/render/spine/MgSpineProbe.h"
+#    include "mugen/render/spine/MgSpineProbe.h"
 
-#include "spine/spine-axmol.h"
-#include "spine/Animation.h"
-#include "spine/AnimationState.h"
-#include "spine/Atlas.h"
-#include "spine/AttachmentLoader.h"
-#include "spine/SkeletonBinary.h"
-#include "spine/SkeletonData.h"
-#include "spine/SkeletonJson.h"
+#    include "spine/spine-axmol.h"
+#    include "spine/Animation.h"
+#    include "spine/AnimationState.h"
+#    include "spine/Atlas.h"
+#    include "spine/AttachmentLoader.h"
+#    include "spine/SkeletonBinary.h"
+#    include "spine/SkeletonData.h"
+#    include "spine/SkeletonJson.h"
 
-#include <limits>
-#include <new>
+#    include <limits>
+#    include <new>
 
 NS_MG_BEGIN
 

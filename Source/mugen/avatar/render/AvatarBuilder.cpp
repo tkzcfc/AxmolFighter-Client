@@ -42,10 +42,10 @@ Avatar* AvatarBuilder::createAvatar(const AvatarComponent* avatarComp)
     }
 
     FashionSpineDesc desc;
-    desc.skeleton   = avatarComp->getSpineSkeleton();
-    desc.skin       = avatarComp->defaultSkin;
-    desc.scale      = avatarComp->getSpineScale();
-    desc.motionFile = avatarComp->motionFile;
+    desc.skeleton            = avatarComp->getSpineSkeleton();
+    desc.skin                = avatarComp->defaultSkin;
+    desc.scale               = avatarComp->getSpineScale();
+    desc.motionFile          = avatarComp->motionFile;
     const std::string& atlas = avatarComp->getSpineAtlas();
     if (!atlas.empty())
         desc.atlases.push_back(atlas);

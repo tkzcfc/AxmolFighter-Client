@@ -24,13 +24,13 @@ struct SpinePreview
 struct Profession
 {
     // 职业名称
-    const char* name        = "";
+    const char* name = "";
     // 难度,范围 [1, 5]
-    int difficulty          = 1;
+    int difficulty = 1;
     // 职业描述
     const char* description = "";
     // 职业名图片
-    const char* icon        = "";
+    const char* icon = "";
     // 角色模型预览
     SpinePreview spine;
     // 视频

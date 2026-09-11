@@ -38,10 +38,10 @@ public:
     void* nativeAttachmentLoader() const { return m_attachmentLoader; }
 
 private:
-    MgSpineRuntime m_runtime     = MgSpineRuntime::Axmol;
-    void* m_skeletonData         = nullptr;
-    void* m_atlas                = nullptr;
-    void* m_attachmentLoader     = nullptr;
+    MgSpineRuntime m_runtime = MgSpineRuntime::Axmol;
+    void* m_skeletonData     = nullptr;
+    void* m_atlas            = nullptr;
+    void* m_attachmentLoader = nullptr;
 };
 
 NS_MG_END

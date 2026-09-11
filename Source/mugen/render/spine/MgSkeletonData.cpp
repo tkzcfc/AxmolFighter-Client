@@ -2,8 +2,8 @@
 
 #ifdef RUNTIME_IN_AXMOL
 
-#include "mugen/render/spine/MgSpineBackend.h"
-#include "mugen/render/spine/MgSpineProbe.h"
+#    include "mugen/render/spine/MgSpineBackend.h"
+#    include "mugen/render/spine/MgSpineProbe.h"
 
 NS_MG_BEGIN
 
@@ -34,17 +34,17 @@ MgSkeletonData* MgSkeletonData::load(const ax::Data& skelData,
                                      float scale,
                                      std::string_view skeletonFile)
 {
-#if MG_SPINE_USE_3_4
-    const bool prefer34     = headerLooksLikeSpine34(skelData);
-    MgSkeletonData* loaded  = prefer34 ? MgSpineBackend::spine34().load(skelData, atlasFiles, scale, skeletonFile)
-                                       : MgSpineBackend::axmol().load(skelData, atlasFiles, scale, skeletonFile);
+#    if MG_SPINE_USE_3_4
+    const bool prefer34    = headerLooksLikeSpine34(skelData);
+    MgSkeletonData* loaded = prefer34 ? MgSpineBackend::spine34().load(skelData, atlasFiles, scale, skeletonFile)
+                                      : MgSpineBackend::axmol().load(skelData, atlasFiles, scale, skeletonFile);
     if (loaded)
         return loaded;
     return prefer34 ? MgSpineBackend::axmol().load(skelData, atlasFiles, scale, skeletonFile)
                     : MgSpineBackend::spine34().load(skelData, atlasFiles, scale, skeletonFile);
-#else
+#    else
     return MgSpineBackend::axmol().load(skelData, atlasFiles, scale, skeletonFile);
-#endif
+#    endif
 }
 
 MgSkeletonData* MgSkeletonData::loadFromFile(std::string_view skeletonFile,
