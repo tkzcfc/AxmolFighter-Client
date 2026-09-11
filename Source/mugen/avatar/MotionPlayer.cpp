@@ -19,7 +19,7 @@ bool MotionPlayer::addLayer(const AvatarLayerDef& def)
     return true;
 }
 
-void MotionPlayer::removeLayersByTag(int32_t tag)
+void MotionPlayer::removeLayersByTag(AvatarLayerTag tag)
 {
     m_layers.erase(std::remove_if(m_layers.begin(), m_layers.end(),
                                   [tag](const MotionLayer& layer) { return layer.getTag() == tag; }),
@@ -57,7 +57,8 @@ void MotionPlayer::recomputeDuration()
         {
             if (!detail.empty())
                 detail += ", ";
-            detail += "tag=" + std::to_string(layer.getTag()) + " dur=" + std::to_string(layer.durationMs());
+            detail += "tag=" + std::to_string(static_cast<int32_t>(layer.getTag())) +
+                      " dur=" + std::to_string(layer.durationMs());
         }
         MG_LOG_W(
             "MotionPlayer: layer durations mismatch motion='{}' max={} [{}] (using max; short layers freeze last "

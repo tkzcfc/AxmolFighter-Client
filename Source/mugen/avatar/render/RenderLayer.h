@@ -34,9 +34,9 @@ public:
     virtual int currentTimeMs() const = 0;
 
     // 层来源标识
-    MG_SYNTHESIZE(int32_t, m_layerTag, LayerTag)
+    MG_SYNTHESIZE(AvatarLayerTag, m_layerTag, LayerTag)
 
-    RenderLayer() : m_layerTag(kAvatarLayerTagCharacter) {}
+    RenderLayer() : m_layerTag(AvatarLayerTag::kBody) {}
 };
 
 NS_MG_END

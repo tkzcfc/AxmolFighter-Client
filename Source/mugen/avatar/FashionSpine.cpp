@@ -4,7 +4,7 @@
 
 NS_MG_BEGIN
 
-std::unordered_map<FashionPosition, int32_t> getDefaultFashion(int32_t roleId)
+static std::unordered_map<FashionPosition, int32_t> getDefaultFashion(int32_t roleId)
 {
     switch (mugen::type_conversions::toCharacterClass(roleId))
     {
@@ -47,6 +47,13 @@ std::unordered_map<FashionPosition, int32_t> getDefaultFashion(int32_t roleId)
         return {};
     }
     }
+}
+
+// 判断某些部位是否是独立的 spine 资源（不需要在 FashionSpineDesc.atlases 中处理）
+inline bool isIndependentSpinePosition(FashionPosition pos)
+{
+    // 武器、翅膀、光环是独立的spine资源
+    return pos == FashionPosition::kWeapon || pos == FashionPosition::kWing || pos == FashionPosition::kHalo;
 }
 
 FashionSpineDesc FashionResolver::resolve(const FashionAppearance& appearance)
@@ -142,13 +149,9 @@ FashionSpineDesc FashionResolver::resolve(const FashionAppearance& appearance)
 
     for (int i = static_cast<int>(FashionPosition::kBody); i < static_cast<int>(FashionPosition::kCount); ++i)
     {
-        // 武器、翅膀、光环是独立的spine资源，不需要在这里处理
-        if (i == static_cast<int>(FashionPosition::kWeapon) ||
-            i == static_cast<int>(FashionPosition::kWing) ||
-            i == static_cast<int>(FashionPosition::kHalo))
-        {
+        // 武器、翅膀、光环是独立的spine资源
+        if (isIndependentSpinePosition(static_cast<FashionPosition>(i)))
             continue;
-        }
 
         int32_t id    = 0;
         auto it = equipSpineIds.find(static_cast<FashionPosition>(i));

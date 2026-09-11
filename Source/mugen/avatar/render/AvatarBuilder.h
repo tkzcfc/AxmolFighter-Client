@@ -1,8 +1,7 @@
 #pragma once
 
 #include "mugen/core/StdC.h"
-#include "mugen/conf/GameDef.h"
-#include "mugen/avatar/render/SpineLayer.h"
+#include "mugen/avatar/FashionSpine.h"
 
 #ifdef RUNTIME_IN_AXMOL
 
@@ -15,7 +14,7 @@ class AvatarBuilder
 {
 public:
     static Avatar* createAvatar(const AvatarComponent* avatarComp);
-    static Avatar* createAvatar(const SpineAvatarDesc& desc);
+    static Avatar* createAvatar(const FashionSpineDesc& desc);
 };
 
 NS_MG_END

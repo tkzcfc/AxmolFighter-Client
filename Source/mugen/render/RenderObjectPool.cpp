@@ -6,6 +6,8 @@
 
 NS_MG_BEGIN
 
+#ifdef RUNTIME_IN_AXMOL
+
 RenderObjectPool* RenderObjectPool::s_instance = nullptr;
 
 RenderObjectPool* RenderObjectPool::getInstance()
@@ -21,12 +23,9 @@ RenderObjectPool::RenderObjectPool() = default;
 
 RenderObjectPool::~RenderObjectPool()
 {
-#ifdef RUNTIME_IN_AXMOL
     clear();
-#endif
 }
 
-#ifdef RUNTIME_IN_AXMOL
 
 void RenderObjectPool::recycleNode(const RenderStashKey& key, ax::Node* node)
 {

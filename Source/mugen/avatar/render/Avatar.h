@@ -14,13 +14,13 @@ public:
     static Avatar* create();
 
     // 添加渲染层；播放中会同步当前动作
-    void addLayer(RenderLayer* layer, int order, int32_t tag);
+    void addLayer(RenderLayer* layer, int order, AvatarLayerTag tag);
 
     // 按 tag 移除层
-    void removeLayersByTag(int32_t tag);
+    void removeLayersByTag(AvatarLayerTag tag);
 
     // 是否存在指定 tag 的层
-    bool hasLayersWithTag(int32_t tag) const;
+    bool hasLayersWithTag(AvatarLayerTag tag) const;
 
     // 广播切换动作
     void setMotion(const std::string& motionName, const std::string& entryId, bool loop);

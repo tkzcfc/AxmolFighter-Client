@@ -20,7 +20,7 @@ public:
     bool addLayer(const AvatarLayerDef& def);
 
     // 按 tag 移除层
-    void removeLayersByTag(int32_t tag);
+    void removeLayersByTag(AvatarLayerTag tag);
 
     // 清空全部层
     void clearLayers();

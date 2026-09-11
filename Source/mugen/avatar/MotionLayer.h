@@ -35,7 +35,7 @@ public:
     void eventsBetween(int t0, int t1, std::vector<const CombatEvent*>& out) const;
 
     // 层来源 tag
-    int32_t getTag() const { return m_def.tag; }
+    AvatarLayerTag getTag() const { return m_def.tag; }
 
     // 层静态描述
     MG_SYNTHESIZE_READONLY_BY_REF(AvatarLayerDef, m_def, Def)

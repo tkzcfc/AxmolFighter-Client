@@ -100,7 +100,7 @@ std::vector<AvatarLayerDef> AvatarLayerUtils::resolveLayersFromSpine(const std::
             def.baseDir = boxDir;
     }
     def.order = 0;
-    def.tag   = kAvatarLayerTagCharacter;
+    def.tag   = AvatarLayerTag::kBody;
     result.push_back(std::move(def));
     return result;
 }

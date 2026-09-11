@@ -35,7 +35,7 @@ bool Avatar::init()
 }
 
 // 添加层；播放中立即同步动作并对齐时间
-void Avatar::addLayer(RenderLayer* layer, int order, int32_t tag)
+void Avatar::addLayer(RenderLayer* layer, int order, AvatarLayerTag tag)
 {
     if (!layer)
         return;
@@ -52,7 +52,7 @@ void Avatar::addLayer(RenderLayer* layer, int order, int32_t tag)
 }
 
 // 按 tag 移除层
-void Avatar::removeLayersByTag(int32_t tag)
+void Avatar::removeLayersByTag(AvatarLayerTag tag)
 {
     for (auto it = m_layers.begin(); it != m_layers.end();)
     {
@@ -70,7 +70,7 @@ void Avatar::removeLayersByTag(int32_t tag)
 }
 
 // 是否存在指定 tag 的层
-bool Avatar::hasLayersWithTag(int32_t tag) const
+bool Avatar::hasLayersWithTag(AvatarLayerTag tag) const
 {
     for (const RenderLayer* layer : m_layers)
     {
@@ -118,7 +118,8 @@ void Avatar::setMotion(const std::string& motionName, const std::string& entryId
                 continue;
             if (!detail.empty())
                 detail += ", ";
-            detail += "tag=" + std::to_string(layer->getLayerTag()) + " dur=" + std::to_string(layer->durationMs());
+            detail += "tag=" + std::to_string(static_cast<int32_t>(layer->getLayerTag())) +
+                      " dur=" + std::to_string(layer->durationMs());
         }
         MG_LOG_W("Avatar: layer durations mismatch motion='{}' max={} [{}] (using max; short layers freeze last frame)",
                  m_motionName, durationMs(), detail);

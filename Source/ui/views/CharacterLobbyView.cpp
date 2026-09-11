@@ -104,7 +104,7 @@ void CharacterLobbyView::updateCharacterList()
         const auto fashion = mugen::FashionResolver::resolve(appearance);
 
         auto* previewAvatar =
-            fashion.valid ? mugen::AvatarBuilder::createFashionAvatar(fashion) : nullptr;
+            fashion.valid ? mugen::AvatarBuilder::createAvatar(fashion) : nullptr;
         if (!previewAvatar)
         {
             AXLOGW("CharacterLobbyView: preview avatar failed classId={}", c.classID);
