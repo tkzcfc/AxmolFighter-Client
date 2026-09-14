@@ -61,8 +61,7 @@ void CharacterLobbyView::updateCharacterList()
         return;
     }
 
-    const int characterCount =
-        session->serverConfig.maxCharacterCount > 0 ? session->serverConfig.maxCharacterCount : 10;
+    const int characterCount = static_cast<int>(session->characters.size());
     auto charactorList        = this->getChild<GList>("charactorList");
     auto currentSelectedIndex = charactorList->getSelectedIndex();
 
@@ -116,6 +115,11 @@ void CharacterLobbyView::updateCharacterList()
         previewAvatar->setPosition(avatarLoader->getWidth() * 0.5f, -avatarLoader->getHeight());
         avatarLoader->setContent(previewAvatar);
     }
+
+    if (charactorList->getNumItems() && charactorList->getSelectedIndex() < 0)
+    {
+        charactorList->setSelectedIndex(0);
+    }
 }
 
 void CharacterLobbyView::refreshCharacterList()
@@ -166,6 +170,18 @@ void CharacterLobbyView::onClickStartGameButton(EventContext* context)
 
 void CharacterLobbyView::onClickCreatePlayerButton(EventContext* context)
 {
+    auto session = AppContext::get().gameSession();
+    if (!session)
+    {
+        return;
+    }
+    auto characterCount = session->characters.size();
+    auto maxCharacterCount = session->serverConfig.maxCharacterCount;
+    if (characterCount >= maxCharacterCount)
+    {
+        MessageDialog::show("已达到最大角色数量");
+        return;
+    }
     getViewManager()->getUIManager()->open<CharacterCreationPanel>();
 }
 

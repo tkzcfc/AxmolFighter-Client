@@ -47,12 +47,12 @@ void LaunchView::collectLoadingTasks()
         if (avatarCache->isLoaded())
             return true;
 
+        avatarCache->addSearchPath("res_zhcn");
         if (!avatarCache->load("mugen/config/avatar.bin"))
         {
             AXLOGE("Failed to load mugen/config/avatar.bin");
             return false;
         }
-        avatarCache->addSearchPath("res_zhcn");
         return true;
     });
 
