@@ -61,7 +61,7 @@ void CharacterLobbyView::updateCharacterList()
         return;
     }
 
-    const int characterCount = static_cast<int>(session->characters.size());
+    const int characterCount  = static_cast<int>(session->characters.size());
     auto charactorList        = this->getChild<GList>("charactorList");
     auto currentSelectedIndex = charactorList->getSelectedIndex();
 
@@ -175,7 +175,7 @@ void CharacterLobbyView::onClickCreatePlayerButton(EventContext* context)
     {
         return;
     }
-    auto characterCount = session->characters.size();
+    auto characterCount    = session->characters.size();
     auto maxCharacterCount = session->serverConfig.maxCharacterCount;
     if (characterCount >= maxCharacterCount)
     {

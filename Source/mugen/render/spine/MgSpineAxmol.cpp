@@ -117,8 +117,8 @@ void wrapAttachmentVertices(spine::Attachment* attachment, spine::AtlasRegion* r
     const spine::RTTI& rtti = attachment->getRTTI();
     if (rtti.instanceOf(spine::RegionAttachment::rtti))
     {
-        auto* regionAtt            = static_cast<spine::RegionAttachment*>(attachment);
-        auto* attachmentVertices   = new spine::AttachmentVertices(
+        auto* regionAtt          = static_cast<spine::RegionAttachment*>(attachment);
+        auto* attachmentVertices = new spine::AttachmentVertices(
             static_cast<ax::Texture2D*>(region->page->getRendererObject()), 4, quadTriangles, 6);
         auto& uvs = regionAtt->getUVs();
         for (int i = 0, ii = 0; i < 4; ++i, ii += 2)
@@ -132,10 +132,9 @@ void wrapAttachmentVertices(spine::Attachment* attachment, spine::AtlasRegion* r
     if (rtti.instanceOf(spine::MeshAttachment::rtti))
     {
         auto* mesh               = static_cast<spine::MeshAttachment*>(attachment);
-        auto* attachmentVertices =
-            new spine::AttachmentVertices(static_cast<ax::Texture2D*>(region->page->getRendererObject()),
-                                          mesh->getWorldVerticesLength() >> 1, mesh->getTriangles().buffer(),
-                                          static_cast<int>(mesh->getTriangles().size()));
+        auto* attachmentVertices = new spine::AttachmentVertices(
+            static_cast<ax::Texture2D*>(region->page->getRendererObject()), mesh->getWorldVerticesLength() >> 1,
+            mesh->getTriangles().buffer(), static_cast<int>(mesh->getTriangles().size()));
         auto& uvs = mesh->getUVs();
         for (int i = 0, ii = 0, nn = mesh->getWorldVerticesLength(); ii < nn; ++i, ii += 2)
         {
@@ -217,10 +216,11 @@ void materializeAttachment(spine::Attachment* attachment)
 {
     if (!attachment)
         return;
-    const spine::RTTI& rtti      = attachment->getRTTI();
-    spine::AtlasRegion* region   = nullptr;
+    const spine::RTTI& rtti    = attachment->getRTTI();
+    spine::AtlasRegion* region = nullptr;
     if (rtti.instanceOf(spine::RegionAttachment::rtti))
-        region = static_cast<spine::AtlasRegion*>(static_cast<spine::RegionAttachment*>(attachment)->getRendererObject());
+        region =
+            static_cast<spine::AtlasRegion*>(static_cast<spine::RegionAttachment*>(attachment)->getRendererObject());
     else if (rtti.instanceOf(spine::MeshAttachment::rtti))
         region = static_cast<spine::AtlasRegion*>(static_cast<spine::MeshAttachment*>(attachment)->getRendererObject());
     if (!region)
@@ -299,7 +299,9 @@ spine::SkeletonData* parseSkeletonData(const ax::Data& skelData,
     return skeletonData;
 }
 
-MgSkeletonData* wrapData(spine::SkeletonData* skeletonData, spine::Atlas* atlas, spine::AttachmentLoader* attachmentLoader)
+MgSkeletonData* wrapData(spine::SkeletonData* skeletonData,
+                         spine::Atlas* atlas,
+                         spine::AttachmentLoader* attachmentLoader)
 {
     auto* out = new (std::nothrow) MgSkeletonData();
     if (!out)
@@ -350,10 +352,7 @@ public:
         return createAtlas(atlasFiles, false);
     }
 
-    void disposeAtlasHandle(void* atlasHandle) const override
-    {
-        delete static_cast<spine::Atlas*>(atlasHandle);
-    }
+    void disposeAtlasHandle(void* atlasHandle) const override { delete static_cast<spine::Atlas*>(atlasHandle); }
 
     void bindAtlasTextures(void* atlasHandle) const override
     {

@@ -50,7 +50,9 @@ MgSkeletonAnimation* MgSkeletonAnimation::create(std::string_view skeletonFile, 
     return data ? createWithData(data) : nullptr;
 }
 
-MgSkeletonAnimation* MgSkeletonAnimation::create(std::string_view skeletonFile, const std::string& atlasFile, float scale)
+MgSkeletonAnimation* MgSkeletonAnimation::create(std::string_view skeletonFile,
+                                                 const std::string& atlasFile,
+                                                 float scale)
 {
     auto* data = SpineSkeletonCache::getInstance()->getOrCreate(skeletonFile, atlasFile, scale);
     return data ? createWithData(data) : nullptr;
@@ -75,9 +77,9 @@ void MgSkeletonAnimation::createAsync(std::string skeletonFile,
                                       std::function<void(MgSkeletonAnimation*)> onDone)
 {
     MgSpineLoadPipeline::start(std::move(skeletonFile), std::move(atlasFiles), scale,
-                                          [onDone = std::move(onDone)](MgSkeletonData* data) mutable {
-                                              onDone(data ? createWithOwnedData(data) : nullptr);
-                                          });
+                               [onDone = std::move(onDone)](MgSkeletonData* data) mutable {
+        onDone(data ? createWithOwnedData(data) : nullptr);
+    });
 }
 
 MgSkeletonAnimation::~MgSkeletonAnimation()

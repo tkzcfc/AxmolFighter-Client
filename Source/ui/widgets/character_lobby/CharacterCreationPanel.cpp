@@ -94,45 +94,45 @@ void CharacterCreationPanel::updateUI()
         curProfessionConfig.spine.id,
         [weakThis, this, loaderAvatar, roleTypeIndex = m_curRoleTypeIndex,
          professionIndex = m_curProfessionIndex](mugen::MgSkeletonAnimation* skeletonAnimation) {
-            if (!skeletonAnimation)
-            {
-                AXLOGW("CharacterCreationPanel: async profession spine failed");
-                return;
-            }
-            // 界面已关闭或销毁
-            if (weakThis.expired())
-            {
-                return;
-            }
-            if (roleTypeIndex != m_curRoleTypeIndex || professionIndex != m_curProfessionIndex)
-                return;  // 加载期间已切换职业
+        if (!skeletonAnimation)
+        {
+            AXLOGW("CharacterCreationPanel: async profession spine failed");
+            return;
+        }
+        // 界面已关闭或销毁
+        if (weakThis.expired())
+        {
+            return;
+        }
+        if (roleTypeIndex != m_curRoleTypeIndex || professionIndex != m_curProfessionIndex)
+            return;  // 加载期间已切换职业
 
-            const auto& spine = kRoleIntros[m_curRoleTypeIndex].professions[m_curProfessionIndex].spine;
-            skeletonAnimation->setPosition(ax::Vec2(loaderAvatar->getWidth() * 0.5f, -loaderAvatar->getHeight()) +
-                                           ax::Vec2(spine.offsetX, spine.offsetY));
-            skeletonAnimation->setScale(spine.scaleX, spine.scaleY);
-            // 有出现动画
-            if (m_curProfessionIndex == 0)
-            {
-                std::string animationName = spine.animationName;
+        const auto& spine = kRoleIntros[m_curRoleTypeIndex].professions[m_curProfessionIndex].spine;
+        skeletonAnimation->setPosition(ax::Vec2(loaderAvatar->getWidth() * 0.5f, -loaderAvatar->getHeight()) +
+                                       ax::Vec2(spine.offsetX, spine.offsetY));
+        skeletonAnimation->setScale(spine.scaleX, spine.scaleY);
+        // 有出现动画
+        if (m_curProfessionIndex == 0)
+        {
+            std::string animationName = spine.animationName;
 
-                skeletonAnimation->setAnimation(0, "chuxian", false);
-                skeletonAnimation->setCompleteListener([skeletonAnimation, animationName](
-                                                           const mugen::MgTrackEntry& entry) {
-                    if (entry.animationName() && std::strcmp(entry.animationName(), "chuxian") == 0)
-                    {
-                        skeletonAnimation->setAnimation(0, animationName, true);
-                        skeletonAnimation->setCompleteListener(nullptr);
-                    }
-                });
-            }
-            else
-            {
-                skeletonAnimation->setAnimation(0, spine.animationName, true);
-            }
+            skeletonAnimation->setAnimation(0, "chuxian", false);
+            skeletonAnimation->setCompleteListener(
+                [skeletonAnimation, animationName](const mugen::MgTrackEntry& entry) {
+                if (entry.animationName() && std::strcmp(entry.animationName(), "chuxian") == 0)
+                {
+                    skeletonAnimation->setAnimation(0, animationName, true);
+                    skeletonAnimation->setCompleteListener(nullptr);
+                }
+            });
+        }
+        else
+        {
+            skeletonAnimation->setAnimation(0, spine.animationName, true);
+        }
 
-            loaderAvatar->setContent(skeletonAnimation);
-        });
+        loaderAvatar->setContent(skeletonAnimation);
+    });
 
     // 视频
     if (m_mediaPlayer == nullptr)

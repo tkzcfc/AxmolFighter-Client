@@ -62,9 +62,7 @@ void MgSpineLoadPipeline::start(std::string_view skeletonFile,
         ->run(skeletonFile, std::move(atlasFiles), scale);
 }
 
-MgSpineLoadPipeline::MgSpineLoadPipeline(std::function<void(MgSkeletonData*)> onDone)
-    : m_onDone(std::move(onDone))
-{}
+MgSpineLoadPipeline::MgSpineLoadPipeline(std::function<void(MgSkeletonData*)> onDone) : m_onDone(std::move(onDone)) {}
 
 MgSpineLoadPipeline::~MgSpineLoadPipeline()
 {
@@ -95,20 +93,16 @@ void MgSpineLoadPipeline::run(std::string_view skeletonFile, std::vector<std::st
     m_backend = &MgSpineBackend::of(*runtime);
 
     // 纹理解码任务
-    prewarmTexturesOnMain(collectTexturePaths(m_atlasFiles), [self]() {
-        self->notifyTexturesReady();
-    });
+    prewarmTexturesOnMain(collectTexturePaths(m_atlasFiles), [self]() { self->notifyTexturesReady(); });
 
     // 动画数据解析任务
-    runAsync([self, scale]() mutable {
-        self->parseOnWorker(scale);
-    });
+    runAsync([self, scale]() mutable { self->parseOnWorker(scale); });
 }
 
 void MgSpineLoadPipeline::parseOnWorker(float scale)
 {
-    auto self      = shared_from_this();
-    m_atlasHandle  = m_backend->createAtlasHandle(m_atlasFiles);
+    auto self     = shared_from_this();
+    m_atlasHandle = m_backend->createAtlasHandle(m_atlasFiles);
 
     MgSkeletonData* data = nullptr;
     if (m_atlasHandle)
@@ -131,7 +125,7 @@ void MgSpineLoadPipeline::parseOnWorker(float scale)
 
     runOnMain([self, data, scale]() mutable {
         // 注释掉回退逻辑,如果异步加载失败,直接返回 nullptr,不再回退同步加载
-        //if (!data)
+        // if (!data)
         //{
         //    // 罕见路径：后台 parse 失败（如版本探测偏差）回退同步加载（自包含完整数据，不再材质化）
         //    MG_LOG_W("MgSpineLoadPipeline: async parse failed '{}', fallback to sync load", skeletonFile);

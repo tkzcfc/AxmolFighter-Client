@@ -168,8 +168,8 @@ void relinkAttachment(spAttachment* attachment, spAtlas* newAtlas)
         spRegionAttachment_updateOffset(regionAtt);
 
         delete SUB_CAST(spine34::AttachmentVertices, regionAtt->rendererObject);
-        auto* attachmentVertices = new spine34::AttachmentVertices((ax::Texture2D*)region->page->rendererObject, 4,
-                                                                   quadTriangles, 6);
+        auto* attachmentVertices =
+            new spine34::AttachmentVertices((ax::Texture2D*)region->page->rendererObject, 4, quadTriangles, 6);
         for (int i = 0, ii = 0; i < 4; ++i, ii += 2)
         {
             attachmentVertices->_triangles->verts[i].texCoords.u = regionAtt->uvs[ii];
@@ -190,17 +190,17 @@ void relinkAttachment(spAttachment* attachment, spAtlas* newAtlas)
             MG_LOG_W("Spine: replaceAtlas missing region '{}'", mesh->path);
             return;
         }
-        mesh->regionU               = region->u;
-        mesh->regionV               = region->v;
-        mesh->regionU2              = region->u2;
-        mesh->regionV2              = region->v2;
-        mesh->regionRotate          = region->rotate;
-        mesh->regionOffsetX         = region->offsetX;
-        mesh->regionOffsetY         = region->offsetY;
-        mesh->regionWidth           = region->width;
-        mesh->regionHeight          = region->height;
-        mesh->regionOriginalWidth   = region->originalWidth;
-        mesh->regionOriginalHeight  = region->originalHeight;
+        mesh->regionU              = region->u;
+        mesh->regionV              = region->v;
+        mesh->regionU2             = region->u2;
+        mesh->regionV2             = region->v2;
+        mesh->regionRotate         = region->rotate;
+        mesh->regionOffsetX        = region->offsetX;
+        mesh->regionOffsetY        = region->offsetY;
+        mesh->regionWidth          = region->width;
+        mesh->regionHeight         = region->height;
+        mesh->regionOriginalWidth  = region->originalWidth;
+        mesh->regionOriginalHeight = region->originalHeight;
         spMeshAttachment_updateUVs(mesh);
 
         delete SUB_CAST(spine34::AttachmentVertices, mesh->rendererObject);

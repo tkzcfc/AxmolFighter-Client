@@ -34,8 +34,8 @@ public:
                                            std::string_view skeletonFile) const = 0;
     // 3. bindAtlasTextures + materialize（主线程）：绑定页纹理（预热后为缓存命中），
     //    为所有 attachment 建 AttachmentVertices 渲染对象，并换上正式渲染 loader
-    virtual void bindAtlasTextures(void* atlasHandle) const         = 0;
-    virtual void materialize(MgSkeletonData& data) const            = 0;
+    virtual void bindAtlasTextures(void* atlasHandle) const = 0;
+    virtual void materialize(MgSkeletonData& data) const    = 0;
 
     virtual MgAnimation findAnimation(const MgSkeletonData& data, const char* name) const = 0;
     virtual int animationCount(const MgSkeletonData& data) const                          = 0;

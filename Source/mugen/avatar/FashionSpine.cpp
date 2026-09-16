@@ -144,12 +144,12 @@ FashionSpineDesc FashionResolver::resolve(const FashionAppearance& appearance)
     baseIndependent(FashionPosition::kWing, fashionWingId);
     baseIndependent(FashionPosition::kHalo, fashionRingId);
 
-    desc.skeleton       = spine->spine;
-    desc.scale          = spine->scale > 0.0f ? spine->scale : 1.0f;
-    desc.motionFile     = AvatarLayerUtils::spinePathToMotionFile(desc.skeleton);
-    desc.weaponSpineId  = fashionWeaponId;
-    desc.wingSpineId    = fashionWingId;
-    desc.ringSpineId    = fashionRingId;
+    desc.skeleton      = spine->spine;
+    desc.scale         = spine->scale > 0.0f ? spine->scale : 1.0f;
+    desc.motionFile    = AvatarLayerUtils::spinePathToMotionFile(desc.skeleton);
+    desc.weaponSpineId = fashionWeaponId;
+    desc.wingSpineId   = fashionWingId;
+    desc.ringSpineId   = fashionRingId;
 
     for (int i = static_cast<int>(FashionPosition::kBody); i < static_cast<int>(FashionPosition::kCount); ++i)
     {

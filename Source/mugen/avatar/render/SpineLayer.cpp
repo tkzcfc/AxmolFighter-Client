@@ -80,15 +80,14 @@ bool SpineLayer::initSkeleton(const FashionSpineDesc& desc, bool asyncLoad)
         // 异步装配：实例私有数据（可换装）；先返回空层，骨架就绪后自动应用皮肤/暂存换装/暂存动作
         m_skeletonLoading = true;
         auto alive        = m_asyncAlive;
-        MgSpineLoadPipeline::start(desc.skeleton, desc.atlases, scale,
-                                              [this, alive](MgSkeletonData* data) {
-                                                  if (!alive->load())
-                                                  {
-                                                      delete data;
-                                                      return;
-                                                  }
-                                                  onSkeletonReady(data);
-                                              });
+        MgSpineLoadPipeline::start(desc.skeleton, desc.atlases, scale, [this, alive](MgSkeletonData* data) {
+            if (!alive->load())
+            {
+                delete data;
+                return;
+            }
+            onSkeletonReady(data);
+        });
         return true;
     }
     // 同步：共享缓存（返回即就绪，不可换装）
@@ -178,10 +177,10 @@ bool SpineLayer::replaceAtlases(const std::vector<std::string>& atlasFiles, cons
 
 void SpineLayer::applyRequestedAtlases()
 {
-    const uint32_t seq       = ++m_swapSeq;
-    auto alive               = m_asyncAlive;
-    const auto atlasFiles    = m_requestedAtlases;
-    const std::string skin   = m_requestedSkin;
+    const uint32_t seq     = ++m_swapSeq;
+    auto alive             = m_asyncAlive;
+    const auto atlasFiles  = m_requestedAtlases;
+    const std::string skin = m_requestedSkin;
 
     prewarmTexturesOnMain(collectTexturePaths(atlasFiles), [this, alive, seq, atlasFiles, skin]() {
         if (!alive->load() || seq != m_swapSeq || !m_skeleton)

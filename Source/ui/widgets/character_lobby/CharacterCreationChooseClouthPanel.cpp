@@ -115,7 +115,7 @@ void CharacterCreationChooseClouthPanel::updateUI()
     appearance.baseFashion[mugen::FashionPosition::kHair]    = look.hairIds[m_curHairIndex];
     appearance.baseFashion[mugen::FashionPosition::kClothes] = look.clothIds[m_curClothingIndex];
     appearance.baseFashion[mugen::FashionPosition::kSkin]    = look.skinIds[m_curClothingIndex];
-    auto* preview = mugen::AvatarBuilder::createAvatar(appearance);
+    auto* preview                                            = mugen::AvatarBuilder::createAvatar(appearance);
     if (!preview)
     {
         AXLOGW("CharacterCreationChooseClouthPanel: fashion avatar failed class={} hair={} clothes={}",

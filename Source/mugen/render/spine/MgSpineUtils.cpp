@@ -101,7 +101,6 @@ unsigned char firstPayloadByte(const ax::Data& data)
 
 }  // namespace
 
-
 std::string atlasFromSpine(std::string_view spine)
 {
     const std::string path(spine);
@@ -127,7 +126,7 @@ MgSpineRuntime runtimeFromSkeletonData(const void* bytes, size_t size)
 #    if MG_SPINE_USE_3_4
     if (headerLooksLikeSpine34(bytes, size))
         return MgSpineRuntime::Spine34;
-#endif
+#    endif
     return MgSpineRuntime::Axmol;
 }
 

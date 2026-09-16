@@ -61,8 +61,8 @@ MgSkeletonData* SpineSkeletonCache::getOrCreate(std::string_view skeletonFile,
         MG_LOG_E("SpineSkeletonCache::getOrCreate: empty skeleton path");
         return nullptr;
     }
-    const uint64_t key                        = makeKey(skeletonFile, atlasFiles, scale);
-    auto it                                   = m_map.find(key);
+    const uint64_t key = makeKey(skeletonFile, atlasFiles, scale);
+    auto it            = m_map.find(key);
     if (it != m_map.end())
         return it->second;
 
