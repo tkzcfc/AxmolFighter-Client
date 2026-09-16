@@ -17,6 +17,26 @@ public:
                                  std::string_view skeletonFile) const = 0;
     virtual void dispose(MgSkeletonData& data) const                  = 0;
 
+    // 运行时替换图集：atlasFiles 合并为新 atlas，所有 attachment 按同名 region 重指，旧 atlas 释放。
+    // 会就地改写 SkeletonData，仅允许实例私有的数据调用（共享数据会影响所有使用者）。
+    virtual bool replaceAtlas(MgSkeletonData& data, const std::vector<std::string>& atlasFiles) const = 0;
+
+    // 三段式异步加载：
+    // 1. createAtlasHandle（工作线程、parse 前）：创建合并 atlas，禁止建纹理（纯文本解析）
+    virtual void* createAtlasHandle(const std::vector<std::string>& atlasFiles) const = 0;
+    //    parse 未接管时释放裸 atlas（PipelineState RAII）
+    virtual void disposeAtlasHandle(void* atlasHandle) const = 0;
+    // 2. parseWithAtlas（后台线程安全）：纯 AtlasAttachmentLoader 解析，不建渲染对象；
+    //    成功则接管 atlasHandle 并返回数据；失败内部释放 atlasHandle 并返回 nullptr
+    virtual MgSkeletonData* parseWithAtlas(const ax::Data& skelData,
+                                           void* atlasHandle,
+                                           float scale,
+                                           std::string_view skeletonFile) const = 0;
+    // 3. bindAtlasTextures + materialize（主线程）：绑定页纹理（预热后为缓存命中），
+    //    为所有 attachment 建 AttachmentVertices 渲染对象，并换上正式渲染 loader
+    virtual void bindAtlasTextures(void* atlasHandle) const         = 0;
+    virtual void materialize(MgSkeletonData& data) const            = 0;
+
     virtual MgAnimation findAnimation(const MgSkeletonData& data, const char* name) const = 0;
     virtual int animationCount(const MgSkeletonData& data) const                          = 0;
     virtual MgAnimation animationAt(const MgSkeletonData& data, int index) const          = 0;

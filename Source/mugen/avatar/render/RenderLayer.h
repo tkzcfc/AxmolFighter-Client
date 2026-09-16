@@ -34,6 +34,9 @@ public:
     // 本层当前时间
     virtual int currentTimeMs() const = 0;
 
+    // 骨架是否已就绪（异步装配的层就绪前为 false；未就绪时 step/seek 只记录时间）
+    virtual bool isReady() const = 0;
+
     // 层来源标识
     MG_SYNTHESIZE(AvatarLayerTag, m_layerTag, LayerTag)
 

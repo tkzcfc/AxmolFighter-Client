@@ -72,12 +72,47 @@ void Avatar::removeLayersByTag(AvatarLayerTag tag)
 // 是否存在指定 tag 的层
 bool Avatar::hasLayersWithTag(AvatarLayerTag tag) const
 {
-    for (const RenderLayer* layer : m_layers)
+    return findLayer(tag) != nullptr;
+}
+
+RenderLayer* Avatar::findLayer(AvatarLayerTag tag) const
+{
+    for (RenderLayer* layer : m_layers)
     {
         if (layer && layer->getLayerTag() == tag)
-            return true;
+            return layer;
     }
-    return false;
+    return nullptr;
+}
+
+void Avatar::initFashionAppearance(const FashionAppearance& appearance)
+{
+    m_appearance    = appearance;
+    m_fashionDriven = true;
+}
+
+bool Avatar::setFashion(FashionPosition position, int32_t id)
+{
+    if (!m_fashionDriven)
+    {
+        MG_LOG_W("Avatar::setFashion: not a fashion-driven avatar");
+        return false;
+    }
+
+    if (id != 0)
+        m_appearance.equipFashion[position] = id;
+    else
+        m_appearance.equipFashion.erase(position);
+
+    const auto desc = FashionResolver::resolve(m_appearance);
+    if (!desc.valid)
+        return false;
+
+    auto* body = dynamic_cast<SpineLayer*>(findLayer(AvatarLayerTag::kBody));
+    if (!body)
+        return false;
+    body->applyFashionDesc(desc);
+    return true;
 }
 
 // 广播切换动作
@@ -172,6 +207,13 @@ void Avatar::step(int dtMs)
         else
             layer->step(dtMs);
     }
+
+    // 层在异步装配就绪后会跳转到记录的时间；这里对齐到各层最大当前时间（吸收跳转）
+    for (RenderLayer* layer : m_layers)
+    {
+        if (layer)
+            m_timeMs = std::max(m_timeMs, layer->currentTimeMs());
+    }
 }
 
 void Avatar::seek(int timeMs)
@@ -193,6 +235,12 @@ void Avatar::update(float delta)
 {
     if (!m_autoPlay)
         return;
+    // UI 展示：等所有层就绪再推进，避免就绪后动画突然跳跃
+    for (RenderLayer* layer : m_layers)
+    {
+        if (layer && !layer->isReady())
+            return;
+    }
     const int dtMs = static_cast<int>(delta * 1000.0f);
     if (dtMs > 0)
         step(dtMs);

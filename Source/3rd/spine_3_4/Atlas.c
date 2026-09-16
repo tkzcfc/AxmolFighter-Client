@@ -43,6 +43,7 @@ spAtlasPage* spAtlasPage_create (spAtlas* atlas, const char* name) {
 void spAtlasPage_dispose (spAtlasPage* self) {
 	_spAtlasPage_disposeTexture(self);
 	FREE(self->name);
+	FREE(self->texturePath);
 	FREE(self);
 }
 
@@ -165,7 +166,7 @@ static const char* formatNames[] = {"", "Alpha", "Intensity", "LuminanceAlpha", 
 static const char* textureFilterNames[] = {"", "Nearest", "Linear", "MipMap", "MipMapNearestNearest", "MipMapLinearNearest",
 		"MipMapNearestLinear", "MipMapLinearLinear"};
 
-spAtlas* spAtlas_create (const char* begin, int length, const char* dir, void* rendererObject) {
+spAtlas* spAtlas_create (const char* begin, int length, const char* dir, void* rendererObject, int createTexture) {
 	spAtlas* self;
 
 	int count;
@@ -194,6 +195,8 @@ spAtlas* spAtlas_create (const char* begin, int length, const char* dir, void* r
 
 			page = spAtlasPage_create(self, name);
 			FREE(name);
+			/* 记录完整路径供延迟建纹理使用 */
+			MALLOC_STR(page->texturePath, path);
 			if (lastPage)
 				lastPage->next = page;
 			else
@@ -230,7 +233,8 @@ spAtlas* spAtlas_create (const char* begin, int length, const char* dir, void* r
 				}
 			}
 
-			_spAtlasPage_createTexture(page, path);
+			if (createTexture)
+				_spAtlasPage_createTexture(page, path);
 			FREE(path);
 		} else {
 			spAtlasRegion *region = spAtlasRegion_create();
@@ -299,7 +303,7 @@ spAtlas* spAtlas_create (const char* begin, int length, const char* dir, void* r
 	return self;
 }
 
-spAtlas* spAtlas_createFromFile (const char* path, void* rendererObject) {
+spAtlas* spAtlas_createFromFile (const char* path, void* rendererObject, int createTexture) {
 	int dirLength;
 	char *dir;
 	int length;
@@ -318,7 +322,7 @@ spAtlas* spAtlas_createFromFile (const char* path, void* rendererObject) {
 	dir[dirLength] = '\0';
 
 	data = _spUtil_readFile(path, &length);
-	if (data) atlas = spAtlas_create(data, length, dir, rendererObject);
+	if (data) atlas = spAtlas_create(data, length, dir, rendererObject, createTexture);
 
 	FREE(data);
 	FREE(dir);

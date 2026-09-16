@@ -132,12 +132,24 @@ FashionSpineDesc FashionResolver::resolve(const FashionAppearance& appearance)
         return desc;
     }
 
-    desc.skeleton      = spine->spine;
-    desc.scale         = spine->scale > 0.0f ? spine->scale : 1.0f;
-    desc.motionFile    = AvatarLayerUtils::spinePathToMotionFile(desc.skeleton);
-    desc.weaponSpineId = fashionWeaponId;
-    desc.wingSpineId   = fashionWingId;
-    desc.ringSpineId   = fashionRingId;
+    // baseFashion 的武器/翅膀/光环槽位按 ResSpine id 直接生效（equipFashion 优先）
+    const auto baseIndependent = [&baseFashion](FashionPosition pos, int32_t& out) {
+        if (out != 0)
+            return;
+        auto it = baseFashion.find(pos);
+        if (it != baseFashion.end())
+            out = it->second;
+    };
+    baseIndependent(FashionPosition::kWeapon, fashionWeaponId);
+    baseIndependent(FashionPosition::kWing, fashionWingId);
+    baseIndependent(FashionPosition::kHalo, fashionRingId);
+
+    desc.skeleton       = spine->spine;
+    desc.scale          = spine->scale > 0.0f ? spine->scale : 1.0f;
+    desc.motionFile     = AvatarLayerUtils::spinePathToMotionFile(desc.skeleton);
+    desc.weaponSpineId  = fashionWeaponId;
+    desc.wingSpineId    = fashionWingId;
+    desc.ringSpineId    = fashionRingId;
 
     for (int i = static_cast<int>(FashionPosition::kBody); i < static_cast<int>(FashionPosition::kCount); ++i)
     {

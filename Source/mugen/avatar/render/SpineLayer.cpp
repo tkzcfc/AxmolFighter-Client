@@ -3,6 +3,8 @@
 #ifdef RUNTIME_IN_AXMOL
 
 #    include "mugen/avatar/data/AvatarAssetCache.h"
+#    include "mugen/render/spine/MgSpineLoadPipeline.h"
+#    include "mugen/render/spine/MgSpineUtils.h"
 #    include "mugen/render/spine/SpineSkeletonCache.h"
 
 #    include <algorithm>
@@ -10,10 +12,20 @@
 
 NS_MG_BEGIN
 
-SpineLayer* SpineLayer::create(const FashionSpineDesc& desc)
+namespace
+{
+// 附件（武器/翅膀/光环）在层内的 z-order：光环/翅膀在身体骨架后，武器在前
+constexpr int kHaloZOrder   = -20;
+constexpr int kWingZOrder   = -10;
+constexpr int kWeaponZOrder = 10;
+// 附件循环播放的待机动画
+constexpr const char* kAttachmentAnim = "stand";
+}  // namespace
+
+SpineLayer* SpineLayer::create(const FashionSpineDesc& desc, bool asyncLoad)
 {
     auto* ret = new (std::nothrow) SpineLayer();
-    if (ret && ret->initWithDesc(desc))
+    if (ret && ret->initWithDesc(desc, asyncLoad))
     {
         ret->autorelease();
         return ret;
@@ -22,13 +34,21 @@ SpineLayer* SpineLayer::create(const FashionSpineDesc& desc)
     return nullptr;
 }
 
-bool SpineLayer::initWithDesc(const FashionSpineDesc& desc)
+SpineLayer::~SpineLayer()
+{
+    if (m_asyncAlive)
+        m_asyncAlive->store(false);
+}
+
+bool SpineLayer::initWithDesc(const FashionSpineDesc& desc, bool asyncLoad)
 {
     if (!ax::Node::init())
     {
         MG_LOG_E("SpineLayer::init: invalid args");
         return false;
     }
+
+    m_asyncAlive = std::make_shared<std::atomic<bool>>(true);
 
     m_motionMap = AvatarAssetCache::getInstance()->getMotionMap(desc.motionFile);
     if (!m_motionMap)
@@ -37,24 +57,52 @@ bool SpineLayer::initWithDesc(const FashionSpineDesc& desc)
         return false;
     }
 
-    if (!initSkeleton(desc))
+    m_requestedAtlases = desc.atlases;
+    m_requestedSkin    = desc.skin;
+
+    if (!initSkeleton(desc, asyncLoad))
         return false;
 
-    if (!desc.skin.empty())
+    // 武器/翅膀/光环附件（独立 spine 子节点，与身体骨架异步加载互不阻塞）
+    syncAttachments(desc);
+
+    if (m_skeleton && !desc.skin.empty())
         setSkin(desc.skin);
 
     return true;
 }
 
-bool SpineLayer::initSkeleton(const FashionSpineDesc& desc)
+bool SpineLayer::initSkeleton(const FashionSpineDesc& desc, bool asyncLoad)
 {
-    const float scale    = desc.scale > 0.0f ? desc.scale : 1.0f;
-    auto* cache          = SpineSkeletonCache::getInstance();
-    MgSkeletonData* data = cache->getOrCreate(desc.skeleton, desc.atlases, scale);
-    m_skeleton           = data ? MgSkeletonAnimation::createWithData(data) : nullptr;
+    const float scale = desc.scale > 0.0f ? desc.scale : 1.0f;
+    if (asyncLoad)
+    {
+        // 异步装配：实例私有数据（可换装）；先返回空层，骨架就绪后自动应用皮肤/暂存换装/暂存动作
+        m_skeletonLoading = true;
+        auto alive        = m_asyncAlive;
+        MgSpineLoadPipeline::start(desc.skeleton, desc.atlases, scale,
+                                              [this, alive](MgSkeletonData* data) {
+                                                  if (!alive->load())
+                                                  {
+                                                      delete data;
+                                                      return;
+                                                  }
+                                                  onSkeletonReady(data);
+                                              });
+        return true;
+    }
+    // 同步：共享缓存（返回即就绪，不可换装）
+    return setupSkeleton(SpineSkeletonCache::getInstance()->getOrCreate(desc.skeleton, desc.atlases, scale), false);
+}
+
+bool SpineLayer::setupSkeleton(MgSkeletonData* data, bool owned)
+{
+    if (!data)
+        return false;
+    m_skeleton = owned ? MgSkeletonAnimation::createWithOwnedData(data) : MgSkeletonAnimation::createWithData(data);
     if (!m_skeleton)
     {
-        MG_LOG_E("SpineLayer::init: failed to load skeleton '{}' atlas '{}'", desc.skeleton, desc.atlases.front());
+        MG_LOG_E("SpineLayer: failed to create skeleton node");
         return false;
     }
 
@@ -63,6 +111,156 @@ bool SpineLayer::initSkeleton(const FashionSpineDesc& desc)
     m_skeleton->setTimeScale(1.0f);
     addChild(m_skeleton);
     return true;
+}
+
+void SpineLayer::onSkeletonReady(MgSkeletonData* data)
+{
+    m_skeletonLoading = false;
+    if (!setupSkeleton(data, true))
+    {
+        MG_LOG_E("SpineLayer: async skeleton setup failed");
+        return;
+    }
+    // 身体骨架异步装配期间附件先隐藏，就绪后再显示
+    setAttachmentsVisible(true);
+
+    if (!m_requestedSkin.empty())
+        setSkin(m_requestedSkin);
+
+    // 装配期间请求的换装（最新一条）
+    if (m_swapDirty)
+    {
+        m_swapDirty = false;
+        applyRequestedAtlases();
+    }
+
+    // 装配期间暂存的动作
+    if (m_hasPendingMotion)
+    {
+        const std::string motionName = std::move(m_pendingMotionName);
+        const std::string entryId    = std::move(m_pendingMotionEntry);
+        const int elapsed            = m_timeMs;  // 装配期间累计的流逝时间
+        const int seekTarget         = m_pendingSeekMs;
+        m_hasPendingMotion           = false;
+        m_pendingSeekMs              = -1;
+        setMotion(motionName, entryId);
+        // 跳转到装配期间记录的时间（战斗：最能还原；UI 因 update 门闸不会走到这）
+        if (seekTarget >= 0)
+            seek(seekTarget);
+        else if (elapsed > 0)
+            seek(m_timeMs + elapsed);
+    }
+}
+
+bool SpineLayer::replaceAtlases(const std::vector<std::string>& atlasFiles, const std::string& skin)
+{
+    // 相同请求直接跳过（含初始图集）
+    if (atlasFiles == m_requestedAtlases && skin == m_requestedSkin)
+        return true;
+
+    m_requestedAtlases = atlasFiles;
+    m_requestedSkin    = skin;
+
+    if (m_skeletonLoading)
+    {
+        // 骨架异步装配中：就绪后应用最新请求
+        m_swapDirty = true;
+        return true;
+    }
+    if (!m_skeleton || !m_skeleton->ownsData())
+    {
+        MG_LOG_W("SpineLayer: replaceAtlases requires instance-owned skeleton data");
+        return false;
+    }
+    applyRequestedAtlases();
+    return true;
+}
+
+void SpineLayer::applyRequestedAtlases()
+{
+    const uint32_t seq       = ++m_swapSeq;
+    auto alive               = m_asyncAlive;
+    const auto atlasFiles    = m_requestedAtlases;
+    const std::string skin   = m_requestedSkin;
+
+    prewarmTexturesOnMain(collectTexturePaths(atlasFiles), [this, alive, seq, atlasFiles, skin]() {
+        if (!alive->load() || seq != m_swapSeq || !m_skeleton)
+            return;
+        m_skeleton->skeletonData()->replaceAtlas(atlasFiles);
+        if (!skin.empty())
+            setSkin(skin);
+    });
+}
+
+void SpineLayer::applyFashionDesc(const FashionSpineDesc& desc)
+{
+    // 身体图集/皮肤
+    replaceAtlases(desc.atlases, desc.skin);
+    // 武器/翅膀/光环附件
+    syncAttachments(desc);
+}
+
+void SpineLayer::syncAttachments(const FashionSpineDesc& desc)
+{
+    const struct
+    {
+        FashionPosition pos;
+        int32_t descId;
+        int32_t* curId;
+        MgSkeletonAnimation** node;
+        int zOrder;
+    } rules[] = {
+        {FashionPosition::kWeapon, desc.weaponSpineId, &m_weaponSpineId, &m_weapon, kWeaponZOrder},
+        {FashionPosition::kWing, desc.wingSpineId, &m_wingSpineId, &m_wing, kWingZOrder},
+        {FashionPosition::kHalo, desc.ringSpineId, &m_ringSpineId, &m_halo, kHaloZOrder},
+    };
+    for (const auto& rule : rules)
+    {
+        if (rule.descId == *rule.curId)
+            continue;
+        if (*rule.node)
+        {
+            (*rule.node)->removeFromParent();
+            *rule.node = nullptr;
+        }
+        *rule.curId = 0;
+        if (rule.descId != 0)
+        {
+            *rule.node = createAttachment(rule.descId, rule.zOrder);
+            if (*rule.node)
+                *rule.curId = rule.descId;
+        }
+    }
+}
+
+MgSkeletonAnimation* SpineLayer::createAttachment(int32_t resSpineId, int zOrder)
+{
+    auto* node = MgSkeletonAnimation::create(resSpineId);
+    if (!node)
+    {
+        MG_LOG_W("SpineLayer: attachment spine load failed {}", resSpineId);
+        return nullptr;
+    }
+    // 附件为独立循环动画，自驱动（不随层的 step/seek）
+    auto* data = node->skeletonData();
+    if (data->findAnimation(kAttachmentAnim))
+        node->setAnimation(0, kAttachmentAnim, true);
+    else if (data->animationCount() > 0)
+        node->setAnimation(0, data->animationAt(0).name(), true);
+    // 身体骨架异步装配时，就绪后再显示
+    node->setVisible(m_skeleton != nullptr);
+    addChild(node, zOrder);
+    return node;
+}
+
+void SpineLayer::setAttachmentsVisible(bool visible)
+{
+    if (m_weapon)
+        m_weapon->setVisible(visible);
+    if (m_wing)
+        m_wing->setVisible(visible);
+    if (m_halo)
+        m_halo->setVisible(visible);
 }
 
 ax::Rect SpineLayer::skeletonBoundingBox() const
@@ -92,8 +290,18 @@ bool SpineLayer::setMotion(const std::string& motionName, const std::string& ent
     m_clipIndex = static_cast<size_t>(-1);
     m_motion    = nullptr;
 
-    if (!m_skeleton || !m_motionMap)
+    if (!m_motionMap)
         return false;
+
+    // 骨架异步装配中：暂存，就绪后应用
+    if (!m_skeleton)
+    {
+        m_pendingMotionName  = motionName;
+        m_pendingMotionEntry = entryId;
+        m_hasPendingMotion   = true;
+        return true;
+    }
+    m_hasPendingMotion = false;
 
     const Motion* motion = m_motionMap->findMotion(motionName);
     if (!motion || motion->clips.empty())
@@ -174,7 +382,21 @@ void SpineLayer::applyTrackTime(int timeMs)
 
 void SpineLayer::step(int dtMs)
 {
-    if (dtMs <= 0 || !m_skeleton || !m_motion)
+    if (dtMs <= 0)
+        return;
+
+    // 骨架异步装配中：时间照常记录，就绪后跳转到对应时间（战斗可接受，最能还原）
+    if (!m_skeleton)
+    {
+        if (m_skeletonLoading)
+        {
+            m_timeMs += dtMs;
+            if (m_pendingSeekMs >= 0)
+                m_pendingSeekMs += dtMs;
+        }
+        return;
+    }
+    if (!m_motion)
         return;
 
     const int dur = durationMs();
@@ -203,6 +425,15 @@ void SpineLayer::seek(int timeMs)
 {
     if (timeMs < 0)
         timeMs = 0;
+
+    // 骨架异步装配中：记录绝对目标时间，就绪后跳转（战斗 sync 切动作的主路径）
+    if (!m_skeleton)
+    {
+        if (m_skeletonLoading)
+            m_pendingSeekMs = timeMs;
+        return;
+    }
+
     m_timeMs = timeMs;
     applyTrackTime(timeMs);
 }

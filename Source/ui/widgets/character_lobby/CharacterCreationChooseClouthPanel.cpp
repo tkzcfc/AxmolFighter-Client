@@ -98,19 +98,28 @@ void CharacterCreationChooseClouthPanel::updateUI()
         t0->play();
     }
 
+    const auto& look = kLookIcons[static_cast<int>(m_curClass) - 1];
+
+    // 已有预览：按部位换装（内部处理身体图集替换与附件增删，连续调用自动合并）
+    if (auto* preview = dynamic_cast<mugen::Avatar*>(loaderAvatar->getContent()))
+    {
+        preview->setFashion(mugen::FashionPosition::kHair, look.hairIds[m_curHairIndex]);
+        preview->setFashion(mugen::FashionPosition::kClothes, look.clothIds[m_curClothingIndex]);
+        preview->setFashion(mugen::FashionPosition::kSkin, look.skinIds[m_curClothingIndex]);
+        return;
+    }
+
+    // 首个预览：外观驱动创建（骨架异步装配，就绪自动浮现；含默认武器）
     mugen::FashionAppearance appearance;
     appearance.roleId                                        = mugen::type_conversions::toRoleConfigId(m_curClass);
-    const auto& look                                         = kLookIcons[static_cast<int>(m_curClass) - 1];
     appearance.baseFashion[mugen::FashionPosition::kHair]    = look.hairIds[m_curHairIndex];
     appearance.baseFashion[mugen::FashionPosition::kClothes] = look.clothIds[m_curClothingIndex];
     appearance.baseFashion[mugen::FashionPosition::kSkin]    = look.skinIds[m_curClothingIndex];
-    auto fashion                                             = mugen::FashionResolver::resolve(appearance);
-    auto* preview = fashion.valid ? mugen::AvatarBuilder::createAvatar(fashion) : nullptr;
+    auto* preview = mugen::AvatarBuilder::createAvatar(appearance);
     if (!preview)
     {
         AXLOGW("CharacterCreationChooseClouthPanel: fashion avatar failed class={} hair={} clothes={}",
                static_cast<int>(m_curClass), m_curHairIndex, m_curClothingIndex);
-        loaderAvatar->setContent(nullptr);
         return;
     }
     preview->setMotion("stand", "", true);

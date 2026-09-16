@@ -3,6 +3,7 @@
 #ifdef RUNTIME_IN_AXMOL
 
 #    include "mugen/conf/Config.h"
+#    include "mugen/render/spine/MgSpineUtils.h"
 #    include "xxhash.h"
 
 NS_MG_BEGIN
@@ -19,10 +20,8 @@ uint64_t makeKey(std::string_view skeletonFile, const std::vector<std::string>& 
     XXH3_64bits_update(state, &sep, 1);
     for (const auto& atlasFile : atlasFiles)
     {
-        if (atlasFile.size() > 0)
-        {
+        if (!atlasFile.empty())
             XXH3_64bits_update(state, atlasFile.data(), atlasFile.size());
-        }
         XXH3_64bits_update(state, &sep, 1);
     }
     XXH3_64bits_update(state, &scale, sizeof(scale));
@@ -53,32 +52,31 @@ SpineSkeletonCache::~SpineSkeletonCache()
     clear();
 }
 
-MgSkeletonData* SpineSkeletonCache::getOrCreate(std::string_view skeletonFile, std::string_view atlasFile, float scale)
-{
-    return getOrCreate(skeletonFile, std::vector<std::string>{std::string(atlasFile)}, scale);
-}
-
 MgSkeletonData* SpineSkeletonCache::getOrCreate(std::string_view skeletonFile,
                                                 const std::vector<std::string>& atlasFiles,
                                                 float scale)
 {
     if (skeletonFile.empty())
     {
-        MG_LOG_E("SpineSkeletonCache::preload: empty skeleton path");
+        MG_LOG_E("SpineSkeletonCache::getOrCreate: empty skeleton path");
         return nullptr;
     }
-
-    const uint64_t key = makeKey(skeletonFile, atlasFiles, scale);
-    auto it            = m_map.find(key);
+    const uint64_t key                        = makeKey(skeletonFile, atlasFiles, scale);
+    auto it                                   = m_map.find(key);
     if (it != m_map.end())
         return it->second;
 
-    MgSkeletonData* loaded = load(skeletonFile, atlasFiles, scale);
+    MgSkeletonData* loaded = MgSkeletonData::loadFromFile(skeletonFile, atlasFiles, scale);
     if (!loaded)
         return nullptr;
 
     m_map[key] = loaded;
     return loaded;
+}
+
+MgSkeletonData* SpineSkeletonCache::getOrCreate(std::string_view skeletonFile, std::string_view atlasFile, float scale)
+{
+    return getOrCreate(skeletonFile, std::vector<std::string>{std::string(atlasFile)}, scale);
 }
 
 MgSkeletonData* SpineSkeletonCache::getOrCreate(int32_t skeletonId)
@@ -90,12 +88,7 @@ MgSkeletonData* SpineSkeletonCache::getOrCreate(int32_t skeletonId)
         return nullptr;
     }
     const float scale = cfg->scale > 0.0f ? cfg->scale : 1.0f;
-    return getOrCreate(cfg->spine, std::string_view{}, scale);
-}
-
-bool SpineSkeletonCache::preload(std::string_view skeletonFile, std::string_view atlasFile, float scale)
-{
-    return getOrCreate(skeletonFile, atlasFile, scale) != nullptr;
+    return getOrCreate(cfg->spine, std::vector<std::string>{}, scale);
 }
 
 bool SpineSkeletonCache::preload(std::string_view skeletonFile, const std::vector<std::string>& atlasFiles, float scale)
@@ -113,24 +106,6 @@ void SpineSkeletonCache::clear()
     for (auto& pair : m_map)
         delete pair.second;
     m_map.clear();
-}
-
-void SpineSkeletonCache::remove(std::string_view skeletonFile, std::string_view atlasFile, float scale)
-{
-    const uint64_t key = makeKey(skeletonFile, std::vector<std::string>{std::string(atlasFile)}, scale);
-    auto it            = m_map.find(key);
-    if (it == m_map.end())
-        return;
-
-    delete it->second;
-    m_map.erase(it);
-}
-
-MgSkeletonData* SpineSkeletonCache::load(std::string_view skeletonFile,
-                                         const std::vector<std::string>& atlasFiles,
-                                         float scale)
-{
-    return MgSkeletonData::loadFromFile(skeletonFile, atlasFiles, scale);
 }
 
 NS_MG_END

@@ -67,6 +67,15 @@ ax::backend::SamplerFilter filter(spAtlasFilter filter)
 }
 }  // namespace
 
+void spAtlas_bindTextures(spAtlas* self)
+{
+    for (spAtlasPage* page = self->pages; page; page = page->next)
+    {
+        if (!page->rendererObject && page->texturePath)
+            _spAtlasPage_createTexture(page, page->texturePath);
+    }
+}
+
 void _spAtlasPage_createTexture (spAtlasPage* self, const char* path) {
 	Texture2D* texture = Director::getInstance()->getTextureCache()->addImage(path);
 	AXASSERT(texture != nullptr, "Invalid image");
@@ -82,7 +91,9 @@ void _spAtlasPage_createTexture (spAtlasPage* self, const char* path) {
 }
 
 void _spAtlasPage_disposeTexture (spAtlasPage* self) {
-	((Texture2D*)self->rendererObject)->release();
+	// 延迟创建后未绑定的页没有纹理
+	if (self->rendererObject)
+		((Texture2D*)self->rendererObject)->release();
 }
 
 char* _spUtil_readFile(const char* path, int* length)

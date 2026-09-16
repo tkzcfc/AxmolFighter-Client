@@ -75,6 +75,8 @@ struct spAtlasPage {
 	spAtlasWrap uWrap, vWrap;
 
 	void* rendererObject;
+	/* 图集文本中图片的完整路径（延迟建纹理时用） */
+	const char* texturePath;
 	int width, height;
 
 	spAtlasPage* next;
@@ -149,10 +151,16 @@ struct spAtlas {
 	void* rendererObject;
 };
 
-/* Image files referenced in the atlas file will be prefixed with dir. */
-spAtlas* spAtlas_create (const char* data, int length, const char* dir, void* rendererObject);
+/* Image files referenced in the atlas file will be prefixed with dir.
+ * createTexture: 0 只解析文本（page->texturePath 供后续绑定），非 0 立即建纹理。 */
+#ifdef __cplusplus
+spAtlas* spAtlas_create (const char* data, int length, const char* dir, void* rendererObject, int createTexture = 1);
+spAtlas* spAtlas_createFromFile (const char* path, void* rendererObject, int createTexture = 1);
+#else
+spAtlas* spAtlas_create (const char* data, int length, const char* dir, void* rendererObject, int createTexture);
 /* Image files referenced in the atlas file will be prefixed with the directory containing the atlas file. */
-spAtlas* spAtlas_createFromFile (const char* path, void* rendererObject);
+spAtlas* spAtlas_createFromFile (const char* path, void* rendererObject, int createTexture);
+#endif
 void spAtlas_dispose (spAtlas* atlas);
 
 /* Returns 0 if the region was not found. */

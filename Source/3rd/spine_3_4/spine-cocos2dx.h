@@ -39,4 +39,7 @@
 #include <spine_3_4/SkeletonAnimation.h>
 #include <spine_3_4/SkeletonBatch.h>
 
+/* 无纹理 atlas 创建后，用此函数在主线程按 page->texturePath 绑定纹理 */
+void spAtlas_bindTextures(spAtlas* self);
+
 #endif /* SPINE_COCOS2DX_H_ */

@@ -100,13 +100,13 @@ void CharacterLobbyView::updateCharacterList()
             if (f.worn && f.configID > 0)
                 appearance.equipFashion[static_cast<mugen::FashionPosition>(f.position)] = f.configID;
         }
-        const auto fashion = mugen::FashionResolver::resolve(appearance);
 
-        auto* previewAvatar = fashion.valid ? mugen::AvatarBuilder::createAvatar(fashion) : nullptr;
+        // 外观驱动创建（骨架异步装配，就绪自动浮现）
+        auto* previewAvatar = mugen::AvatarBuilder::createAvatar(appearance);
+        avatarLoader->setContent(nullptr);
         if (!previewAvatar)
         {
             AXLOGW("CharacterLobbyView: preview avatar failed classId={}", c.classID);
-            avatarLoader->setContent(nullptr);
             continue;
         }
 

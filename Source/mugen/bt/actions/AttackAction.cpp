@@ -116,7 +116,7 @@ void spawnDisplaySpineOverlay(GameMapRenderComponent* mapRender, const ResSpineC
     desc.atlases    = {replaceExtension(spine->spine, ".atlas")};
     desc.scale      = spine->scale > 0.0f ? spine->scale : 1.0f;
     desc.motionFile = AvatarLayerUtils::spinePathToMotionFile(spine->spine);
-    Avatar* avatar  = AvatarBuilder::createAvatar(desc);
+    Avatar* avatar  = AvatarBuilder::createAvatar(desc, false);
     if (!avatar)
         return;
 

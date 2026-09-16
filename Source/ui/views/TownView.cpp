@@ -9,7 +9,7 @@
 #include "mugen/conf/Config.h"
 #include "mugen/conf/GameDef.h"
 #include "mugen/conf/TableConfig.h"
-#include "mugen/render/spine/SpineSkeletonLoader.h"
+#include "mugen/render/spine/MgSkeletonAnimation.h"
 #include "ui/battle/BattleBootParams.h"
 #include "ui/input/DefaultInputSlotMap.h"
 #include "ui/widgets/common/MessageDialog.h"
@@ -1035,7 +1035,7 @@ void TownView::initPortals()
             {
                 const float scale           = spineCfg->scale > 0.0f ? spineCfg->scale : 1.0f;
                 const std::string atlasPath = replaceExtension(spineCfg->spine, ".atlas");
-                auto* skeleton = SpineSkeletonLoader::createSkeletonAnimation(spineCfg->spine, atlasPath, scale);
+                auto* skeleton = mugen::MgSkeletonAnimation::create(spineCfg->spine, atlasPath, scale);
                 if (skeleton)
                 {
                     playPortalSpineAnimation(skeleton, portalCfg);

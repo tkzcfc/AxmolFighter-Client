@@ -26,6 +26,10 @@ public:
     MgSpineRuntime runtime() const { return m_runtime; }
     bool valid() const { return m_skeletonData != nullptr; }
 
+    // 运行时替换图集（换装）：所有 attachment 按同名 region 重指到新合并的 atlas。
+    // 会就地改写 SkeletonData，仅允许实例私有的数据调用（共享数据会影响所有使用者）。
+    bool replaceAtlas(const std::vector<std::string>& atlasFiles);
+
     MgAnimation findAnimation(const char* name) const;
     int animationCount() const;
     MgAnimation animationAt(int index) const;

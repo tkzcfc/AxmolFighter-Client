@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mugen/core/StdC.h"
+#include "mugen/avatar/FashionSpine.h"
 #include "RenderLayer.h"
 
 #ifdef RUNTIME_IN_AXMOL
@@ -19,11 +20,21 @@ public:
     // 按 tag 移除层
     void removeLayersByTag(AvatarLayerTag tag);
 
+    // 按 tag 查找层；不存在返回 nullptr
+    RenderLayer* findLayer(AvatarLayerTag tag) const;
+
     // 是否存在指定 tag 的层
     bool hasLayersWithTag(AvatarLayerTag tag) const;
 
     // 广播切换动作
     void setMotion(const std::string& motionName, const std::string& entryId, bool loop);
+
+    // 按部位更换外观（0 = 卸下/恢复默认）；仅外观驱动（以 FashionAppearance 创建）的 Avatar 可用
+    // 试穿语义：写 baseFashion 并清除该部位的 equipFashion 覆盖；内部处理身体图集替换与武器/翅膀/光环附件增删
+    bool setFashion(FashionPosition position, int32_t id);
+
+    // 设置外观状态（由 AvatarBuilder 创建时调用，标记为外观驱动）
+    void initFashionAppearance(const FashionAppearance& appearance);
 
     // 步进时间
     void step(int dtMs);
@@ -62,6 +73,10 @@ private:
 
     // 渲染层列表（子节点）
     std::vector<RenderLayer*> m_layers;
+
+    // 外观状态（外观驱动时有效）
+    FashionAppearance m_appearance;
+    bool m_fashionDriven = false;
 };
 
 NS_MG_END

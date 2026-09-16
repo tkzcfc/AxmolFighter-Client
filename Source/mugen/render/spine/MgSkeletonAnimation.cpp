@@ -2,12 +2,18 @@
 
 #ifdef RUNTIME_IN_AXMOL
 
+#    include "mugen/conf/Config.h"
 #    include "mugen/render/spine/MgSpineBackend.h"
+#    include "mugen/render/spine/MgSpineLoadPipeline.h"
+#    include "mugen/render/spine/MgSpineUtils.h"
+#    include "mugen/render/spine/SpineSkeletonCache.h"
 
 NS_MG_BEGIN
 
 MgSkeletonAnimation* MgSkeletonAnimation::createWithData(MgSkeletonData* data)
 {
+    if (!data)
+        return nullptr;
     auto* node = new (std::nothrow) MgSkeletonAnimation();
     if (node && node->initWithData(data))
     {
@@ -18,36 +24,60 @@ MgSkeletonAnimation* MgSkeletonAnimation::createWithData(MgSkeletonData* data)
     return nullptr;
 }
 
-MgSkeletonAnimation* MgSkeletonAnimation::createWithFile(const std::string& skeletonFile,
-                                                         const std::string& atlasFile,
-                                                         float scale)
+MgSkeletonAnimation* MgSkeletonAnimation::createWithOwnedData(MgSkeletonData* data)
 {
-    return createWithFile(skeletonFile, std::vector<std::string>{atlasFile}, scale);
-}
-
-MgSkeletonAnimation* MgSkeletonAnimation::createWithFile(const std::string& skeletonFile,
-                                                         const std::vector<std::string>& atlasFiles,
-                                                         float scale)
-{
-    auto* data = MgSkeletonData::loadFromFile(skeletonFile, atlasFiles, scale);
     if (!data)
         return nullptr;
-
-    auto* node = new (std::nothrow) MgSkeletonAnimation();
+    auto* node = createWithData(data);
     if (!node)
     {
         delete data;
         return nullptr;
     }
-    if (!node->initWithData(data))
-    {
-        AX_SAFE_DELETE(node);
-        delete data;
-        return nullptr;
-    }
     node->m_ownsData = true;
-    node->autorelease();
     return node;
+}
+
+MgSkeletonAnimation* MgSkeletonAnimation::create(int32_t resSpineId)
+{
+    auto* data = SpineSkeletonCache::getInstance()->getOrCreate(resSpineId);
+    return data ? createWithData(data) : nullptr;
+}
+
+MgSkeletonAnimation* MgSkeletonAnimation::create(std::string_view skeletonFile, float scale)
+{
+    auto* data = SpineSkeletonCache::getInstance()->getOrCreate(skeletonFile, std::vector<std::string>{}, scale);
+    return data ? createWithData(data) : nullptr;
+}
+
+MgSkeletonAnimation* MgSkeletonAnimation::create(std::string_view skeletonFile, const std::string& atlasFile, float scale)
+{
+    auto* data = SpineSkeletonCache::getInstance()->getOrCreate(skeletonFile, atlasFile, scale);
+    return data ? createWithData(data) : nullptr;
+}
+
+void MgSkeletonAnimation::createAsync(int32_t resSpineId, std::function<void(MgSkeletonAnimation*)> onDone)
+{
+    auto* cfg = Config::getInstance()->getResSpineConfigById(resSpineId);
+    if (!cfg || cfg->spine.empty())
+    {
+        MG_LOG_E("MgSkeletonAnimation::createAsync: ResSpine {} missing or spine empty", resSpineId);
+        onDone(nullptr);
+        return;
+    }
+    const float scale = cfg->scale > 0.0f ? cfg->scale : 1.0f;
+    createAsync(cfg->spine, {atlasFromSpine(cfg->spine)}, scale, std::move(onDone));
+}
+
+void MgSkeletonAnimation::createAsync(std::string skeletonFile,
+                                      std::vector<std::string> atlasFiles,
+                                      float scale,
+                                      std::function<void(MgSkeletonAnimation*)> onDone)
+{
+    MgSpineLoadPipeline::start(std::move(skeletonFile), std::move(atlasFiles), scale,
+                                          [onDone = std::move(onDone)](MgSkeletonData* data) mutable {
+                                              onDone(data ? createWithOwnedData(data) : nullptr);
+                                          });
 }
 
 MgSkeletonAnimation::~MgSkeletonAnimation()

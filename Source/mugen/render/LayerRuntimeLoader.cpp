@@ -3,7 +3,7 @@
 #ifdef RUNTIME_IN_AXMOL
 
 #    include "mugen/render/RenderUtils.h"
-#    include "mugen/render/spine/SpineSkeletonLoader.h"
+#    include "mugen/render/spine/MgSkeletonAnimation.h"
 
 #    include "mugen/core/io/FileUtils.h"
 #    include "rapidjson/document.h"
@@ -254,7 +254,7 @@ ax::Node* createSpineNode(const JsonValue& node)
     }
 
     // path 常为 .json，内容可能是 Binary；走公共探测加载
-    auto* skeleton = SpineSkeletonLoader::createSkeletonAnimation(jsonPath, atlasPath);
+    auto* skeleton = MgSkeletonAnimation::create(jsonPath, atlasPath);
     if (!skeleton)
     {
         MG_LOG_W("LayerRuntimeLoader: failed to load Spine '{}' skeleton='{}' atlas='{}'", stringOr(node, "name"),

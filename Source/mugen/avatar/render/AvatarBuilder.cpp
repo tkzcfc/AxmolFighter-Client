@@ -8,7 +8,7 @@
 
 NS_MG_BEGIN
 
-Avatar* AvatarBuilder::createAvatar(const FashionSpineDesc& desc)
+Avatar* AvatarBuilder::createAvatar(const FashionSpineDesc& desc, bool asyncLoad)
 {
     if (desc.skeleton.empty() || desc.atlases.empty())
     {
@@ -23,7 +23,7 @@ Avatar* AvatarBuilder::createAvatar(const FashionSpineDesc& desc)
         return nullptr;
     }
 
-    SpineLayer* layer = SpineLayer::create(desc);
+    SpineLayer* layer = SpineLayer::create(desc, asyncLoad);
     if (!layer)
     {
         MG_LOG_E("AvatarBuilder: SpineLayer::create failed '{}'", desc.skeleton);
@@ -49,7 +49,34 @@ Avatar* AvatarBuilder::createAvatar(const AvatarComponent* avatarComp)
     const std::string& atlas = avatarComp->getSpineAtlas();
     if (!atlas.empty())
         desc.atlases.push_back(atlas);
-    return createAvatar(desc);
+    return createAvatar(desc, false);
+}
+
+Avatar* AvatarBuilder::createAvatar(const FashionAppearance& appearance, bool asyncLoad)
+{
+    const auto desc = FashionResolver::resolve(appearance);
+    if (!desc.valid)
+    {
+        MG_LOG_E("AvatarBuilder: resolve fashion failed role={}", appearance.roleId);
+        return nullptr;
+    }
+
+    Avatar* avatar = Avatar::create();
+    if (!avatar)
+    {
+        MG_LOG_E("AvatarBuilder: Avatar::create failed");
+        return nullptr;
+    }
+    avatar->initFashionAppearance(appearance);
+
+    SpineLayer* layer = SpineLayer::create(desc, asyncLoad);
+    if (!layer)
+    {
+        MG_LOG_E("AvatarBuilder: SpineLayer::create failed '{}'", desc.skeleton);
+        return nullptr;
+    }
+    avatar->addLayer(layer, 0, AvatarLayerTag::kBody);
+    return avatar;
 }
 
 NS_MG_END
