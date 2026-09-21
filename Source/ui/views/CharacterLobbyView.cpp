@@ -20,6 +20,8 @@ void CharacterLobbyView::onEnter()
     auto startGameBtn    = this->getChild<GButton>("startGameBtn");
     auto createPlayerBtn = this->getChild<GButton>("createPlayerBtn");
 
+    m_startGameBtn = startGameBtn;
+
     this->addClickListener(startGameBtn, AX_CALLBACK_1(CharacterLobbyView::onClickStartGameButton, this));
     this->addClickListener(createPlayerBtn, AX_CALLBACK_1(CharacterLobbyView::onClickCreatePlayerButton, this));
 
@@ -129,6 +131,11 @@ void CharacterLobbyView::refreshCharacterList()
 
 void CharacterLobbyView::onClickStartGameButton(EventContext* context)
 {
+    if (m_isWillEnterGame)
+    {
+        return;
+    }
+
     auto* session       = AppContext::get().gameSession();
     auto* charactorList = this->getChild<GList>("charactorList");
     int selectedIndex   = charactorList->getSelectedIndex();
@@ -163,13 +170,20 @@ void CharacterLobbyView::onClickStartGameButton(EventContext* context)
             session->setSelectedFromSelectResp(*resp);
         }
 
-        AudioManager::getInstance()->stopBGM();
-        getViewManager()->switchView<TownView>();
+        m_isWillEnterGame = true;
+        m_startGameBtn->getTransition("t_click")->play([this]() {
+            AudioManager::getInstance()->stopBGM();
+            getViewManager()->switchView<TownView>();
+        });
     });
 }
 
 void CharacterLobbyView::onClickCreatePlayerButton(EventContext* context)
 {
+    if (m_isWillEnterGame)
+    {
+        return;
+    }
     auto session = AppContext::get().gameSession();
     if (!session)
     {

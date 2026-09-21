@@ -28,6 +28,10 @@ private:
     void onClickCreatePlayerButton(EventContext* context);
 
     long long m_selectedCharacterID = 0;
+
+    bool m_isWillEnterGame = false;
+
+    GButton* m_startGameBtn = nullptr;
 };
 
 }  // namespace gameui
