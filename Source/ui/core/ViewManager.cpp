@@ -1,6 +1,7 @@
 #include "ViewManager.h"
-#include "View.h"
+
 #include "UIManager.h"
+#include "View.h"
 
 using namespace fairygui;
 
@@ -51,8 +52,29 @@ void ViewManager::init(ax::Scene* scene)
 
 void ViewManager::update(float dt)
 {
-    if (auto* current = getCurrentView())
-        current->onUpdate(dt);
+    flushPendingViews();
+
+    if (View* current = getCurrentView())
+    {
+        // 如果当前 View 正在加载资源，则调用 _updateLoading；如果加载完成，则调用 _finishLoading
+        if (current->isLoading())
+        {
+            if (current->_updateLoading(dt))
+            {
+                // 确保当前 View 仍然是栈顶 View，防止在_updateLoading中切换了 View
+                AX_ASSERT(current == getCurrentView());
+
+                current->_finishLoading();
+                if (auto* content = current->getContent())
+                    m_viewLayer->addChild(content);
+            }
+        }
+        else
+        {
+            current->onUpdate(dt);
+        }
+    }
+
     if (m_uiManager)
         m_uiManager->update(dt);
 
@@ -61,14 +83,24 @@ void ViewManager::update(float dt)
 
 void ViewManager::_queuePending(PendingViewAction action, std::unique_ptr<View> newView)
 {
-    // 同一帧多次切换：只保留最后一次（丢弃尚未 _create 的 pending）
+    if (isLoading())
+    {
+        AXLOGW("ViewManager: ignore view transition while current View is loading");
+        return;
+    }
+
     m_pendingView   = std::move(newView);
     m_pendingAction = action;
 }
 
+bool ViewManager::isLoading() const
+{
+    auto* current = getCurrentView();
+    return current && current->isLoading();
+}
+
 void ViewManager::flushPendingViews()
 {
-    // 新 View 的 onEnter 里若再次 switch/push，继续应用到空为止
     while (m_pendingAction != PendingViewAction::None)
     {
         const PendingViewAction action = m_pendingAction;
@@ -87,10 +119,12 @@ void ViewManager::flushPendingViews()
 
 void ViewManager::_switchView(std::unique_ptr<View> newView)
 {
-    // 逐个关闭旧 View 关联的 Widget（保留 Independent 生命周期的 Widget）
-    for (auto& view : m_viewStack)
+    if (m_uiManager)
     {
-        m_uiManager->closeByOwner(view.get());
+        for (auto it = m_viewStack.rbegin(); it != m_viewStack.rend(); ++it)
+        {
+            m_uiManager->closeByOwner(it->get());
+        }
     }
 
     for (auto it = m_viewStack.rbegin(); it != m_viewStack.rend(); ++it)
@@ -111,7 +145,9 @@ void ViewManager::_pushView(std::unique_ptr<View> newView)
     auto* current          = getCurrentView();
     current->m_viewManager = this;
     current->_create();
-    m_viewLayer->addChild(current->getContent());
+
+    if (auto* displayContent = current->getDisplayContent())
+        m_viewLayer->addChild(displayContent);
 }
 
 bool ViewManager::popView()
@@ -143,8 +179,8 @@ void ViewManager::_showView(View* view, bool visible)
     if (!view)
         return;
 
-    if (view->getContent())
-        view->getContent()->setVisible(visible);
+    if (auto* displayContent = view->getDisplayContent())
+        displayContent->setVisible(visible);
     if (m_uiManager)
         m_uiManager->setVisibleByOwner(view, visible);
 }

@@ -98,7 +98,6 @@ void AppContext::init(ax::Scene* scene)
 
 void AppContext::update(float delta)
 {
-    m_viewManager->flushPendingViews();
     m_viewManager->update(delta);
 
     // 重连计时

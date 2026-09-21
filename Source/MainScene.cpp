@@ -102,7 +102,8 @@ void MainScene::onImGuiRender()
     auto* viewManager = AppContext::get().viewManager();
     if (auto* curView = viewManager->getCurrentView())
     {
-        curView->onImGUIRender();
+        if (!curView->isLoading())
+            curView->onImGUIRender();
     }
     // ImGui 回调内可能 switchView；必须在当前 View 的 onImGUIRender 返回后再销毁
     viewManager->flushPendingViews();

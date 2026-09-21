@@ -25,27 +25,47 @@ public:
     template <typename T, typename... Args>
     T* switchView(Args&&... args)
     {
+        if (isLoading())
+        {
+            AXLOGW("ViewManager: ignore switchView while current View is loading");
+            return nullptr;
+        }
+
         auto view = std::make_unique<T>(std::forward<Args>(args)...);
         T* ptr    = view.get();
         _queuePending(PendingViewAction::Switch, std::move(view));
         return ptr;
     }
-
+    
+    // 压入新的 View 到栈顶
     template <typename T, typename... Args>
     T* pushView(Args&&... args)
     {
+        if (isLoading())
+        {
+            AXLOGW("ViewManager: ignore pushView while current View is loading");
+            return nullptr;
+        }
+
         auto view = std::make_unique<T>(std::forward<Args>(args)...);
         T* ptr    = view.get();
         _queuePending(PendingViewAction::Push, std::move(view));
         return ptr;
     }
 
+    // 弹出当前栈顶 View
     bool popView();
 
     // 在安全点应用排队中的 switch/push
     void flushPendingViews();
 
+    // 获取当前栈顶 View；如果栈为空，返回 nullptr。
     View* getCurrentView() const { return m_viewStack.empty() ? nullptr : m_viewStack.back().get(); }
+
+    // 当前View是否正在加载资源（即处于 ViewState::Loading 状态）
+    bool isLoading() const;
+
+    // 获取 UIManager 实例，用于管理 UIWidget
     UIManager* getUIManager() const { return m_uiManager.get(); }
 
 private:
