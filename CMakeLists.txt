@@ -137,6 +137,7 @@ if(_AX_TESTS)
    "${CMAKE_CURRENT_SOURCE_DIR}/Tests"
    "${CMAKE_CURRENT_SOURCE_DIR}/Source"
    "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd"
+   "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd/protobuf/src"
  )
 endif()
 
@@ -163,6 +164,9 @@ endif()
 
 # 链接 protobuf-lite
 target_link_libraries(${APP_NAME} libprotobuf-lite)
+if(_AX_TESTS)
+  target_link_libraries(${TEST_TARGET_NAME} libprotobuf-lite)
+endif()
 
 # mark app resources, resource will be copy auto after mark
 ax_setup_app_config(${APP_NAME})

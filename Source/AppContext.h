@@ -4,6 +4,7 @@
 #include <string>
 #include "net/NetClient.h"
 #include "model/GameSessionModel.h"
+#include "resource/ResourceLoader.h"
 #include "ui/core/UIManager.h"
 #include "ui/core/ViewManager.h"
 #include "axmol.h"
@@ -24,8 +25,13 @@ public:
     gameui::ViewManager* viewManager() const { return m_viewManager.get(); }
     gameui::UIManager* uiManager() const;
 
+    // 全局资源（UI/Common、配置表等），生命周期与 AppContext 相同；由 LaunchView 启动加载
+    gameres::ResourceLoader* globalLoader() const { return m_globalLoader.get(); }
+
     /// 连接到服务器
     void connectToServer(const std::string& host, int port);
+    /// 连接到默认服务器
+    void connectToDefaultServer();
 
 private:
     AppContext();
@@ -43,6 +49,7 @@ private:
     std::unique_ptr<net::NetClient> m_netClient;
     std::unique_ptr<game::model::GameSessionModel> m_gameSession;
     std::unique_ptr<gameui::ViewManager> m_viewManager;
+    std::unique_ptr<gameres::ResourceLoader> m_globalLoader;
 
     // 连接遮罩
     fairygui::GComponent* m_connectMask = nullptr;

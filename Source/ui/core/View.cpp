@@ -22,7 +22,7 @@ void View::_create()
 
         // 创建 loading 界面
         m_loadingRoot = m_loadOperation->onCreateLoadingContent();
-        m_state        = ViewState::Loading;
+        m_state       = ViewState::Loading;
         m_loadOperation->start();
         return;
     }

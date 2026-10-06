@@ -36,7 +36,7 @@ public:
         _queuePending(PendingViewAction::Switch, std::move(view));
         return ptr;
     }
-    
+
     // 压入新的 View 到栈顶
     template <typename T, typename... Args>
     T* pushView(Args&&... args)

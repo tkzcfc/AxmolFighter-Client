@@ -1,7 +1,7 @@
 #include "LoginPanel.h"
 #include "RegisterPanel.h"
 #include "AppContext.h"
-#include "ui/views/LaunchView.h"
+#include "ui/views/CharacterLobbyView.h"
 #include "ui/widgets/common/MessageDialog.h"
 #include <net/client_game.pb.h>
 
@@ -79,7 +79,7 @@ void LoginPanel::onLoginSuccess()
     ax::UserDefault::getInstance()->setStringForKey("account", m_usernameInput->getText());
     ax::UserDefault::getInstance()->setStringForKey("password", m_passwordInput->getText());
 
-    getUIManager()->getViewManager()->switchView<LaunchView>();
+    getUIManager()->getViewManager()->switchView<CharacterLobbyView>();
 }
 
 }  // namespace gameui

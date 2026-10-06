@@ -1,12 +1,19 @@
 #include "AppContext.h"
-#include "ui/core/FGUIPackageManager.h"
 #include "ui/core/AudioManager.h"
 #include "ui/widgets/common/MessageDialog.h"
 #include "net/client_game.pb.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
 #include "mugen/render/spine/SpineSkeletonCache.h"
+#include "resource/builtin/ConfigResource.h"
+#include "resource/builtin/FguiPackageResource.h"
 
 using namespace fairygui;
+
+namespace
+{
+constexpr const char* kDefaultServerHost = "127.0.0.1";
+constexpr int kDefaultServerPort         = 7000;
+}  // namespace
 
 static AppContext* s_instance = nullptr;
 
@@ -27,16 +34,14 @@ void AppContext::create()
         gameui::AudioManager::getInstance()->playUISFX(path, volumnScale);
     };
 
-    gameui::FGUIPackageManager::getInstance().load({"UI/Common"});
-
     AXASSERT(!s_instance, "AppContext already created");
     s_instance = new AppContext();
 }
 
 void AppContext::destroy()
 {
-    gameui::FGUIPackageManager::getInstance().unload({"UI/Common"});
-
+    // 全局加载器持有的资源（UI/Common 引用计数等）在其析构后的下一帧释放；
+    // 进程退出时这一帧可能不再执行，此时由进程退出统一回收。
     delete s_instance;
     s_instance = nullptr;
 
@@ -48,6 +53,14 @@ AppContext::AppContext()
 {
     m_netClient   = std::make_unique<net::NetClient>(1);
     m_gameSession = std::make_unique<game::model::GameSessionModel>();
+
+    mugen::AvatarAssetCache::getInstance()->addSearchPath("res_zhcn");
+
+    m_globalLoader = std::make_unique<gameres::ResourceLoader>();
+    m_globalLoader->add<gameres::FguiPackageResource>("UI/Common");
+    m_globalLoader->add<gameres::ConfigResource>(gameres::ConfigResource::Kind::Mugen, "mugen/config/config.bin");
+    m_globalLoader->add<gameres::ConfigResource>(gameres::ConfigResource::Kind::AvatarAssets,
+                                                 "mugen/config/avatar.bin");
 }
 
 AppContext::~AppContext()
@@ -121,6 +134,11 @@ void AppContext::connectToServer(const std::string& host, int port)
     m_reconnectAttempts = 0;
     m_authenticated     = false;
     startConnect();
+}
+
+void AppContext::connectToDefaultServer()
+{
+    connectToServer(kDefaultServerHost, kDefaultServerPort);
 }
 
 void AppContext::startConnect()

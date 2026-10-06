@@ -19,6 +19,9 @@ public:
     // 卸载 FairyGUI 包资源，支持引用计数，只有当引用计数为 0 时才会真正卸载包
     void unload(const std::vector<std::string>& paths);
 
+    // 从包路径提取包名，例如 "UI/Common" -> "Common"
+    static std::string getPackageName(const std::string& path);
+
 private:
     FGUIPackageManager() = default;
 

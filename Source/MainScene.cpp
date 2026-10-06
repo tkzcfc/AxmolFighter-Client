@@ -28,7 +28,6 @@
 #include "AppContext.h"
 #include "ui/core/ViewManager.h"
 #include "ui/views/LaunchView.h"
-#include "ui/views/LoginView.h"
 
 const std::string_view IMGUI_LOOP_ID = "#MainScene";
 
@@ -59,10 +58,9 @@ void MainScene::onEnter()
     // Initialize application context
     AppContext::create();
     AppContext::get().init(this);
-    AppContext::get().connectToServer("127.0.0.1", 7000);
 
-    // Switch to login view
-    AppContext::get().viewManager()->switchView<gameui::LoginView>();
+    // 先进入启动界面加载全局资源，完成后由 LaunchView 连接服务器并进入登录界面
+    AppContext::get().viewManager()->switchView<gameui::LaunchView>();
     AppContext::get().viewManager()->flushPendingViews();
 
     // scheduleUpdate() is required to ensure update(float) is called on every loop

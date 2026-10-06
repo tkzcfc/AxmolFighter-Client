@@ -1,8 +1,7 @@
 #include "LaunchView.h"
-#include "ui/core/ViewManager.h"
-#include "mugen/conf/Config.h"
-#include "mugen/avatar/data/AvatarAssetCache.h"
-#include "CharacterLobbyView.h"
+#include "AppContext.h"
+#include "LoginView.h"
+#include "ui/widgets/common/MessageDialog.h"
 
 namespace gameui
 {
@@ -12,102 +11,39 @@ void LaunchView::onEnter()
     m_progressBar = getChild<GProgressBar>("progressBar");
     m_progressBar->setValue(0);
 
-    collectLoadingTasks();
-
-    if (m_taskQueue.empty())
+    auto* loader = AppContext::get().globalLoader();
+    if (loader->isFinished())
     {
-        m_progressBar->tweenValue(100.0, 1.0f);
-        m_loadingState = LoadingState::Completed;
+        m_loaded = true;
+        m_progressBar->tweenValue(m_progressBar->getMax(), 0.3f);
+        return;
     }
-    else
-    {
-        ax::Director::getInstance()->getJobSystem()->enqueue([this]() { this->doLoadingTasks(); }, [this]() {
-            m_progressBar->tweenValue(m_progressBar->getMax(), 0.3f);
-        });
-    }
-}
 
-void LaunchView::collectLoadingTasks()
-{
-    m_taskQueue.push([]() {
-        auto config = mugen::Config::getInstance();
-        if (config->isLoaded())
-            return true;
-
-        if (!config->loadConfig("mugen/config/config.bin"))
+    // 只在加载完成后才离开本界面，回调里访问 this 是安全的
+    loader->start([this](const gameres::LoadProgress& p) {
+        m_progressBar->tweenValue(p.percent * m_progressBar->getMax(), 0.3f);
+    }, [this](const std::vector<gameres::ResourcePtr>& failed) {
+        if (!failed.empty())
         {
-            AXLOGE("Failed to load mugen/config/config.bin");
-            return false;
+            for (const auto& res : failed)
+                AXLOGE("LaunchView: failed to load {} '{}': {}", gameres::toString(res->getType()), res->getKey(),
+                       res->getError());
+            MessageDialog::showGlobal("资源加载失败", []() { ax::Director::getInstance()->end(); });
+            return;
         }
-        return true;
+        m_loaded = true;
     });
-
-    m_taskQueue.push([]() {
-        auto avatarCache = mugen::AvatarAssetCache::getInstance();
-        if (avatarCache->isLoaded())
-            return true;
-
-        avatarCache->addSearchPath("res_zhcn");
-        if (!avatarCache->load("mugen/config/avatar.bin"))
-        {
-            AXLOGE("Failed to load mugen/config/avatar.bin");
-            return false;
-        }
-        return true;
-    });
-
-    m_totalTasks = m_taskQueue.size();
-}
-
-void LaunchView::doLoadingTasks()
-{
-    m_loadingState = LoadingState::InProgress;
-
-    while (!m_taskQueue.empty())
-    {
-        auto task = m_taskQueue.front();
-        m_taskQueue.pop();
-
-#if _DEBUG
-        task();
-#else
-        if (!task())
-        {
-            m_loadingState = LoadingState::Failed;
-            AXLOGE("Failed to execute a loading task.");
-            break;
-        }
-#endif
-        m_completedTasks++;
-    }
-    if (m_loadingState != LoadingState::Failed)
-    {
-        m_loadingState = LoadingState::Completed;
-    }
 }
 
 void LaunchView::onUpdate(float /*dt*/)
 {
-    switch (m_loadingState.load())
-    {
-    case LoadingState::NotStarted:
-        break;
-    case LoadingState::InProgress:
-        m_progressBar->tweenValue(static_cast<double>(m_completedTasks.load()) / m_totalTasks * m_progressBar->getMax(),
-                                  0.3f);
-        break;
-    case LoadingState::Completed:
-        if (m_progressBar->getValue() >= m_progressBar->getMax() &&
-            !GTween::isTweening(m_progressBar, TweenPropType::Progress))
-        {
-            getViewManager()->switchView<CharacterLobbyView>();
-        }
-        break;
-    case LoadingState::Failed:
-        // 显示错误信息
-        AXLOGE("Failed to load game resources.");
-        break;
-    }
+    if (!m_loaded || m_progressBar->getValue() < m_progressBar->getMax() ||
+        GTween::isTweening(m_progressBar, TweenPropType::Progress))
+        return;
+
+    m_loaded = false;
+    AppContext::get().connectToDefaultServer();
+    getViewManager()->switchView<LoginView>();
 }
 
 }  // namespace gameui
