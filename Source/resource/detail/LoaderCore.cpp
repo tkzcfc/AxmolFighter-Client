@@ -275,6 +275,17 @@ bool LoaderCore::isFinished() const
     return std::all_of(m_roots.begin(), m_roots.end(), [](const Entry* r) { return r->finished; });
 }
 
+std::vector<ResourcePtr> LoaderCore::getFailedResources() const
+{
+    std::vector<ResourcePtr> result;
+    for (auto* r : m_roots)
+    {
+        if (r->finished && !r->success)
+            result.push_back(r->resource);
+    }
+    return result;
+}
+
 std::vector<ResourcePtr> LoaderCore::collectHeldResources() const
 {
     std::vector<ResourcePtr> result;

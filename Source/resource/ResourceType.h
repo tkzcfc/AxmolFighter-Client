@@ -16,6 +16,7 @@ enum class ResourceType : uint16_t
     FguiPackage,
     Audio,
     Config,
+    Map,
 
     CustomBegin = 100,
 };

@@ -97,73 +97,71 @@ void GameWord::update(float dt)
 #endif
 }
 
-bool GameWord::loadMap(int32_t mapId)
+MapResolveResult GameWord::resolveMap(int32_t mapId)
 {
+    MapResolveResult result;
     auto* config = Config::getInstance();
 
-    // town / room / camp id → mapKey
-    std::string mapKey;
-    int32_t logicalId            = mapId;
-    const TownConfig* townConfig = nullptr;
-    const RoomConfig* roomConfig = nullptr;
-    const CampConfig* campConfig = nullptr;
-
-    townConfig = config->getTownConfigById(mapId);
-    if (townConfig && !townConfig->mapKey.empty())
+    result.townConfig = config->getTownConfigById(mapId);
+    if (result.townConfig && !result.townConfig->mapKey.empty())
     {
-        mapKey = townConfig->mapKey;
+        result.mapKey = result.townConfig->mapKey;
+        return result;
     }
-    else
-    {
-        townConfig = nullptr;
-        roomConfig = config->getRoomConfigById(mapId);
-        if (roomConfig && !roomConfig->mapKey.empty())
-        {
-            mapKey = roomConfig->mapKey;
-        }
-        else
-        {
-            roomConfig = nullptr;
-            campConfig = config->getCampConfigById(mapId);
-            if (campConfig && !campConfig->mapKey.empty())
-            {
-                mapKey = campConfig->mapKey;
-            }
-            else
-            {
-                campConfig = nullptr;
-            }
-        }
-    }
+    result.townConfig = nullptr;
 
-    if (mapKey.empty())
+    result.roomConfig = config->getRoomConfigById(mapId);
+    if (result.roomConfig && !result.roomConfig->mapKey.empty())
+    {
+        result.mapKey = result.roomConfig->mapKey;
+        return result;
+    }
+    result.roomConfig = nullptr;
+
+    result.campConfig = config->getCampConfigById(mapId);
+    if (result.campConfig && !result.campConfig->mapKey.empty())
+    {
+        result.mapKey = result.campConfig->mapKey;
+        return result;
+    }
+    result.campConfig = nullptr;
+
+    return result;
+}
+
+bool GameWord::loadMap(int32_t mapId)
+{
+    const MapResolveResult resolved = resolveMap(mapId);
+    if (!resolved.isValid())
     {
         MG_LOG_E("GameWord::loadMap: no Town/Room/Camp mapKey for id={}", mapId);
         return false;
     }
 
     std::vector<Vector2i> spawnPoints;
-    if (townConfig && (townConfig->actorPosX != 0 || townConfig->actorPosZ != 0))
+    if (resolved.townConfig && (resolved.townConfig->actorPosX != 0 || resolved.townConfig->actorPosZ != 0))
     {
-        spawnPoints.push_back(Vector2i{townConfig->actorPosX, townConfig->actorPosZ});
+        spawnPoints.push_back(Vector2i{resolved.townConfig->actorPosX, resolved.townConfig->actorPosZ});
     }
-    else if (roomConfig && !roomConfig->actorSpawns.empty())
+    else if (resolved.roomConfig && !resolved.roomConfig->actorSpawns.empty())
     {
-        spawnPoints.push_back(Vector2i{roomConfig->actorSpawns.front().posX, roomConfig->actorSpawns.front().posZ});
+        spawnPoints.push_back(
+            Vector2i{resolved.roomConfig->actorSpawns.front().posX, resolved.roomConfig->actorSpawns.front().posZ});
     }
-    else if (campConfig && !campConfig->actorSpawns.empty())
+    else if (resolved.campConfig && !resolved.campConfig->actorSpawns.empty())
     {
-        spawnPoints.push_back(Vector2i{campConfig->actorSpawns.front().posX, campConfig->actorSpawns.front().posZ});
+        spawnPoints.push_back(
+            Vector2i{resolved.campConfig->actorSpawns.front().posX, resolved.campConfig->actorSpawns.front().posZ});
     }
 
-    if (!loadMapByKey(mapKey, logicalId, std::move(spawnPoints)))
+    if (!loadMapByKey(resolved.mapKey, mapId, std::move(spawnPoints)))
         return false;
 
     // 必须在 map->notifyEntityReady之后再刷怪，
     // 否则 Avatar 挂 entity 层时 entityNode 仍为空。
-    if (roomConfig)
+    if (resolved.roomConfig)
     {
-        for (const auto& monster : roomConfig->monsters)
+        for (const auto& monster : resolved.roomConfig->monsters)
         {
             actor_spawner::ActorSpawnParams params;
             params.category = EntityCategory::kMonster;

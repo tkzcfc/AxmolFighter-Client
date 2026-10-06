@@ -1,11 +1,11 @@
 #include "AppContext.h"
 #include "ui/core/AudioManager.h"
+#include "ui/core/FGUIPackageManager.h"
 #include "ui/widgets/common/MessageDialog.h"
 #include "net/client_game.pb.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
 #include "mugen/render/spine/SpineSkeletonCache.h"
 #include "resource/builtin/ConfigResource.h"
-#include "resource/builtin/FguiPackageResource.h"
 
 using namespace fairygui;
 
@@ -36,12 +36,15 @@ void AppContext::create()
 
     AXASSERT(!s_instance, "AppContext already created");
     s_instance = new AppContext();
+
+    // UI/Common 同步加载：只读取包描述文件，里面的图集/字体等到真正用到时才会加载解码
+    gameui::FGUIPackageManager::getInstance().load({"UI/Common"});
 }
 
 void AppContext::destroy()
 {
-    // 全局加载器持有的资源（UI/Common 引用计数等）在其析构后的下一帧释放；
-    // 进程退出时这一帧可能不再执行，此时由进程退出统一回收。
+    gameui::FGUIPackageManager::getInstance().unload({"UI/Common"});
+
     delete s_instance;
     s_instance = nullptr;
 
@@ -56,8 +59,10 @@ AppContext::AppContext()
 
     mugen::AvatarAssetCache::getInstance()->addSearchPath("res_zhcn");
 
-    m_globalLoader = std::make_unique<gameres::ResourceLoader>();
-    m_globalLoader->add<gameres::FguiPackageResource>("UI/Common");
+    // 生命周期与 AppContext 相同的常驻资源：配置表，以及之后可能加入的其他常驻资源
+    // （不一定都在 UI/Common 里）。由 LaunchView 通过 setResourceLoader() 共同持有并驱动加载；
+    // LaunchView 销毁后 AppContext 这份引用还在，资源不会被释放，直到 AppContext 自己销毁。
+    m_globalLoader = std::make_shared<gameres::ResourceLoader>();
     m_globalLoader->add<gameres::ConfigResource>(gameres::ConfigResource::Kind::Mugen, "mugen/config/config.bin");
     m_globalLoader->add<gameres::ConfigResource>(gameres::ConfigResource::Kind::AvatarAssets,
                                                  "mugen/config/avatar.bin");
@@ -65,6 +70,8 @@ AppContext::AppContext()
 
 AppContext::~AppContext()
 {
+    // m_globalLoader 的析构会立即释放它持有的资源（见 ResourceLoader 的生命周期说明），
+    // 不需要手动处理；这里只处理连接遮罩。
     if (m_connectMask)
     {
         m_connectMask->removeFromParent();

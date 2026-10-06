@@ -74,6 +74,15 @@ void ViewManager::update(float dt)
         else
         {
             current->onUpdate(dt);
+
+            // 新 View 已经进入 Active：它这时已经把自己要用的共享数据标记为"在用"，
+            // 现在清理才不会把它刚预热、还没来得及引用的数据当成"无人引用"误删
+            if (m_purgeSpineCachePending)
+            {
+                m_purgeSpineCachePending = false;
+                ax::Director::getInstance()->getScheduler()->runOnAxmolThread(
+                    []() { mugen::SpineSkeletonCache::getInstance()->purgeUnused(); });
+            }
         }
     }
 
@@ -137,9 +146,10 @@ void ViewManager::_switchView(std::unique_ptr<View> newView)
 
     _pushView(std::move(newView));
 
-    // 旧 View 的节点下一帧才会真正释放，届时回收无人引用的共享 spine 数据
-    ax::Director::getInstance()->getScheduler()->runOnAxmolThread(
-        []() { mugen::SpineSkeletonCache::getInstance()->purgeUnused(); });
+    // 旧 View 的节点下一帧才会真正释放；清理本身也要延后到新 View 进入 Active 之后再做
+    // （见 update() 里的说明），避免新 View 还在异步加载时，它刚预热、尚未被任何节点
+    // 引用的共享 Spine 数据被这里的清理当成"无人引用"误删，又得重新加载一遍。
+    m_purgeSpineCachePending = true;
 }
 
 void ViewManager::_pushView(std::unique_ptr<View> newView)

@@ -414,6 +414,75 @@ ax::Node* createNode(const JsonValue& node)
     }
     return runtimeNode;
 }
+
+int propInt(const JsonValue& objectNode, const char* key, int fallback)
+{
+    return static_cast<int>(std::round(propertyNumber(objectNode, key, static_cast<float>(fallback))));
+}
+
+void parseRootMetaSoundId(const JsonValue& root, LayerResourceList& out)
+{
+    const JsonValue* children = member(root, "children");
+    if (!children || !children->IsArray())
+        return;
+
+    for (const JsonValue& child : children->GetArray())
+    {
+        if (!child.IsObject() || stringOr(child, "type") != "Object")
+            continue;
+
+        const std::string name = stringOr(child, "name");
+        const std::string kind = propertyString(child, "kind");
+        if (name != "meta" && kind != "meta")
+            continue;
+
+        out.soundId = propInt(child, "soundId", 0);
+        return;
+    }
+}
+
+// 只收集资源引用，不创建节点；和 createNode/createSpriteNode/createSpineNode 共用同一套字段名。
+void collectNodeResources(const JsonValue& node, LayerResourceList& out)
+{
+    const std::string type = stringOr(node, "type", "Node");
+    if (type == "Sprite")
+    {
+        if (const JsonValue* spriteData = member(node, "sprite"); spriteData && spriteData->IsObject())
+        {
+            const std::string sourceType = stringOr(*spriteData, "sourceType", "Texture");
+            if (sourceType == "SpriteFrame")
+            {
+                if (std::string atlasPath = stringOr(*spriteData, "atlasPath"); !atlasPath.empty())
+                    out.spriteFrames.push_back(std::move(atlasPath));
+            }
+            else if (std::string imagePath = stringOr(*spriteData, "imagePath"); !imagePath.empty())
+            {
+                out.textures.push_back(std::move(imagePath));
+            }
+        }
+    }
+    else if (type == "Spine")
+    {
+        if (const JsonValue* spineData = member(node, "spine"); spineData && spineData->IsObject())
+        {
+            std::string jsonPath  = stringOr(*spineData, "jsonPath");
+            std::string atlasPath = stringOr(*spineData, "atlasPath");
+            if (!jsonPath.empty() && !atlasPath.empty())
+                out.spines.emplace_back(std::move(jsonPath), std::move(atlasPath));
+        }
+    }
+
+    const JsonValue* children = member(node, "children");
+    if (children && children->IsArray())
+    {
+        for (const JsonValue& child : children->GetArray())
+        {
+            if (child.IsObject())
+                collectNodeResources(child, out);
+        }
+    }
+}
+
 }  // namespace
 
 ax::ParallaxNode* LayerRuntimeLoader::loadNode(const std::string& layerFile)
@@ -468,6 +537,49 @@ ax::ParallaxNode* LayerRuntimeLoader::loadNode(const std::string& layerFile)
     }
 
     return mapRoot;
+}
+
+LayerResourceList LayerRuntimeLoader::collectResources(const std::string& layerFile)
+{
+    LayerResourceList result;
+
+    const std::vector<uint8_t> data = io::getDataFromFile(layerFile);
+    if (data.empty())
+    {
+        MG_LOG_E("LayerRuntimeLoader: failed to read layer file '{}'", layerFile);
+        return result;
+    }
+
+    const std::string json(reinterpret_cast<const char*>(data.data()), data.size());
+    rapidjson::Document document;
+    document.Parse(json.c_str(), json.size());
+    if (document.HasParseError())
+    {
+        MG_LOG_E("LayerRuntimeLoader: failed to parse '{}': {}", layerFile,
+                 rapidjson::GetParseError_En(document.GetParseError()));
+        return result;
+    }
+
+    const JsonValue* root = member(document, "root");
+    if (!root || !root->IsObject())
+    {
+        MG_LOG_E("LayerRuntimeLoader: '{}' does not contain root object", layerFile);
+        return result;
+    }
+
+    parseRootMetaSoundId(*root, result);
+
+    const JsonValue* children = member(*root, "children");
+    if (children && children->IsArray())
+    {
+        for (const JsonValue& child : children->GetArray())
+        {
+            if (child.IsObject())
+                collectNodeResources(child, result);
+        }
+    }
+
+    return result;
 }
 
 NS_MG_END

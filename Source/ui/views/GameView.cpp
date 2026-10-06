@@ -1,12 +1,16 @@
 #include "GameView.h"
 
+#include "AppContext.h"
 #include "TownView.h"
 #include "mugen/Components.h"
 #include "mugen/GameWord.h"
 #include "mugen/conf/Config.h"
 #include "mugen/conf/GameDef.h"
 #include "mugen/skill/SkillManager.h"
+#include "resource/builtin/MapResource.h"
+#include "resource/builtin/RoleSpineHelper.h"
 #include "ui/battle/LocalBattleMode.h"
+#include "ui/battle/LocalRoleUtils.h"
 #include "ui/battle/OnlineBattleMode.h"
 #include "ui/core/ViewManager.h"
 #include "ui/input/DefaultInputSlotMap.h"
@@ -29,32 +33,57 @@ GameView::GameView(LocalBattleParams local) : m_local(std::move(local)) {}
 
 GameView::~GameView() = default;
 
+void GameView::onPrepareLoad()
+{
+    auto& loader = getResourceLoader();
+
+    const int32_t mapId = m_boot ? m_boot->mapId : (m_local ? m_local->roomId : 0);
+    if (mapId > 0)
+    {
+        const auto resolved = mugen::GameWord::resolveMap(mapId);
+        if (resolved.isValid())
+            loader.add<gameres::MapResource>(resolved.layerFile());
+
+        // 怪物本体是固定的（loadMap 时一次性生成，没有分波刷怪），本地/联网都能按 mapId 枚举
+        if (resolved.roomConfig)
+        {
+            for (const auto& monster : resolved.roomConfig->monsters)
+                gameres::addRoleSpine(loader, monster.monsterId, /*preferCity*/ false);
+        }
+    }
+
+    // 本地副本出场的玩家角色是已知的；联网对战靠 world_dump 还原 Avatar（里面已经是别人
+    // 打包好的身体数据），这里不重复预加载。preferCity 和 LocalBattleMode::init 的模式判断
+    // 保持一致：只有调试用的"无房间 id"本地模式会退回城镇模式。
+    if (m_local)
+    {
+        const bool isDungeon = m_local->roomId > 0;
+        gameres::addRoleSpine(loader, resolveLocalPlayerRoleId(), /*preferCity*/ !isDungeon);
+    }
+
+    addLoadStep([this] { return initGameWord(); });
+    addLoadStep([this] {
+        m_battleMode = createBattleMode();
+        if (!m_battleMode)
+        {
+            MG_LOG_E("GameView: createBattleMode returned null");
+            return false;
+        }
+        if (!m_battleMode->init(m_gameWord.get()))
+        {
+            MG_LOG_E("GameView: battleMode init failed");
+            m_battleMode = nullptr;
+            return false;
+        }
+        return true;
+    });
+}
+
 void GameView::onEnter()
 {
     Super::onEnter();
 
     fillCombatInputSlotMap(m_slotMap);
-
-    if (!initGameWord())
-    {
-        MG_LOG_E("GameView: initGameWord failed");
-        m_gameWord = nullptr;
-        return;
-    }
-
-    m_battleMode = createBattleMode();
-    if (!m_battleMode)
-    {
-        MG_LOG_E("GameView: createBattleMode returned null");
-        return;
-    }
-
-    if (!m_battleMode->init(m_gameWord.get()))
-    {
-        MG_LOG_E("GameView: battleMode init failed");
-        m_battleMode = nullptr;
-        return;
-    }
 
     MG_LOG_I("GameView: entered (online={}, localRoom={})", m_boot.has_value(),
              m_local.has_value() ? m_local->roomId : 0);

@@ -36,6 +36,7 @@ public:
     void onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event* event);
 
 private:
+    void onPrepareLoad() override;
     bool initGameWord();
     std::unique_ptr<IBattleMode> createBattleMode();
     void setInputFromKey(ax::EventKeyboard::KeyCode code, bool pressed);

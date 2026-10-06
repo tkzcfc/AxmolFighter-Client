@@ -7,6 +7,7 @@
 #include "mugen/GameWord.h"
 #include "mugen/conf/Config.h"
 #include "mugen/conf/GameDef.h"
+#include "ui/battle/LocalRoleUtils.h"
 
 using namespace mugen;
 
@@ -17,8 +18,6 @@ namespace
 {
 // 单机城镇调试图：town 41 → city_newcity_xueyuan
 constexpr int32_t LOCAL_MAP_ID = 41;
-// 英雄 role 101（resSpineId=88101）
-constexpr int32_t PILOT_ROLE_ID = 101;
 }  // namespace
 
 LocalBattleMode::LocalBattleMode(int32_t roomId) : m_roomId(roomId) {}
@@ -84,8 +83,6 @@ void LocalBattleMode::setInput(uint32_t slot, bool pressed)
 
 bool LocalBattleMode::spawnLocalPlayer()
 {
-    auto* config = Config::getInstance();
-
     auto director     = m_gameWord->getDirector();
     auto directorComp = MG_GET_COMPONENT(director, DirectorComponent);
     if (!directorComp)
@@ -112,21 +109,14 @@ bool LocalBattleMode::spawnLocalPlayer()
 
     int64_t playerId      = 0;
     std::string_view name = "Player";
-    int32_t roleId        = PILOT_ROLE_ID;
+    const int32_t roleId  = resolveLocalPlayerRoleId();
 
     if (auto* session = AppContext::get().gameSession())
     {
         if (session->selectedCharacter.characterID != 0)
         {
-            roleId = mugen::type_conversions::toRoleConfigId(
-                static_cast<mugen::CharacterClass>(session->selectedCharacter.classID));
             playerId = session->account.playerID;
             name     = session->selectedCharacter.name;
-            if (!config->getRoleConfigById(roleId))
-            {
-                MG_LOG_E("LocalBattleMode: role {} missing, fallback to pilot role {}", roleId, PILOT_ROLE_ID);
-                roleId = PILOT_ROLE_ID;
-            }
         }
     }
 

@@ -37,6 +37,43 @@ std::string toCitySpinePath(const std::string& spinePath)
     return spinePath.substr(0, dot) + "_city" + spinePath.substr(dot);
 }
 
+// 根据 ResSpineConfig 算出实际要用的骨架/atlas/缩放：preferCity 为 true 且存在城镇覆盖
+// （同目录下的 *_city.skel + *_city.atlas）时优先用覆盖版本。
+// 预加载（gameres::addRoleSpine）和真正 spawn 时（fillAvatarFromRole）都走这个函数，
+// 确保两边算出的 SpineSkeletonCache key 完全一致。
+void resolveSpinePath(const ResSpineConfig* spine,
+                      bool preferCity,
+                      std::string& skeleton,
+                      std::string& atlas,
+                      float& scale)
+{
+    skeleton.clear();
+    atlas.clear();
+    scale = 1.0f;
+    if (!spine || spine->spine.empty())
+        return;
+
+    skeleton = spine->spine;
+    atlas    = replaceExtension(spine->spine, ".atlas");
+    if (spine->scale > 0.0f)
+        scale = spine->scale;
+    else if (spine->spine.find("/hero/") != std::string::npos)
+        scale = 0.25f;
+    else
+        scale = 1.0f;
+
+    if (preferCity)
+    {
+        const std::string citySkel  = toCitySpinePath(skeleton);
+        const std::string cityAtlas = replaceExtension(citySkel, ".atlas");
+        if (citySkel != skeleton && io::isFileExist(citySkel) && io::isFileExist(cityAtlas))
+        {
+            skeleton = citySkel;
+            atlas    = cityAtlas;
+        }
+    }
+}
+
 // 收集 root 的 nextSkill 链（同槽多段），不去重进全局槽列表
 void collectSkillChain(Config* config, int32_t rootId, std::vector<int32_t>& chainOut)
 {
@@ -70,26 +107,8 @@ void fillAvatarFromRole(AvatarComponent* avatarComp,
 
     if (spine && !spine->spine.empty())
     {
-        avatarComp->spineSkeleton = spine->spine;
-        avatarComp->spineAtlas    = replaceExtension(spine->spine, ".atlas");
+        resolveSpinePath(spine, preferCity, avatarComp->spineSkeleton, avatarComp->spineAtlas, avatarComp->spineScale);
         avatarComp->defaultSkin.clear();
-        if (spine->scale > 0.0f)
-            avatarComp->spineScale = spine->scale;
-        else if (spine->spine.find("/hero/") != std::string::npos)
-            avatarComp->spineScale = 0.25f;
-        else
-            avatarComp->spineScale = 1.0f;
-
-        if (preferCity)
-        {
-            const std::string citySkel  = toCitySpinePath(avatarComp->spineSkeleton);
-            const std::string cityAtlas = replaceExtension(citySkel, ".atlas");
-            if (citySkel != avatarComp->spineSkeleton && io::isFileExist(citySkel) && io::isFileExist(cityAtlas))
-            {
-                avatarComp->spineSkeleton = citySkel;
-                avatarComp->spineAtlas    = cityAtlas;
-            }
-        }
         avatarComp->motionFile = AvatarPaths::motionFileFromSpine(avatarComp->spineSkeleton);
     }
     else
@@ -302,6 +321,19 @@ void applyAttributeTemplate(AttributeComponent* attrComp, const RoleConfig* role
 }
 
 }  // namespace
+
+RoleSpineInfo resolveRoleSpine(int32_t roleId, bool preferCity)
+{
+    RoleSpineInfo info;
+    const auto* role = Config::getInstance()->getRoleConfigById(roleId);
+    if (!role)
+        return info;
+
+    const auto* spine = Config::getInstance()->getResSpineConfigById(role->resSpineId);
+    resolveSpinePath(spine, preferCity, info.skeleton, info.atlas, info.scale);
+    info.valid = !info.skeleton.empty();
+    return info;
+}
 
 Entity* spawnRoleActor(ECSManager* ecs, int32_t roleId, int32_t x, int32_t y, const ActorSpawnParams& params)
 {

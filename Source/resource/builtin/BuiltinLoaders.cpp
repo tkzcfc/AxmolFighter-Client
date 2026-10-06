@@ -6,6 +6,7 @@
 #include "resource/builtin/AudioResource.h"
 #include "resource/builtin/ConfigResource.h"
 #include "resource/builtin/FguiPackageResource.h"
+#include "resource/builtin/MapResource.h"
 #include "resource/builtin/SpineResource.h"
 #include "resource/builtin/SpriteFramesResource.h"
 #include "resource/builtin/TextureResource.h"
@@ -14,6 +15,7 @@
 
 #include "mugen/avatar/data/AvatarAssetCache.h"
 #include "mugen/conf/Config.h"
+#include "mugen/render/LayerRuntimeLoader.h"
 #include "mugen/render/spine/MgSpineUtils.h"
 #include "mugen/render/spine/SpineSkeletonCache.h"
 
@@ -228,6 +230,44 @@ void registerConfig(ResourceLoaderRegistry& registry)
         });
     }, 2.0f);
 }
+
+void registerMap(ResourceLoaderRegistry& registry)
+{
+    registry.registerType<MapResource>(ResourceType::Map,
+                                       [](std::shared_ptr<MapResource> res, const LoadTaskPtr& task) {
+        std::string fullPath = ax::FileUtils::getInstance()->fullPathForFilename(res->getLayerFile());
+        if (fullPath.empty())
+        {
+            task->fail("map layer file not found");
+            return;
+        }
+
+        // 只解析 JSON、不创建节点，解析逻辑和真正建图共用（见 LayerRuntimeLoader::collectResources）
+        auto resources = std::make_shared<mugen::LayerResourceList>();
+        task->runOnWorker([fullPath, resources]() {
+            *resources = mugen::LayerRuntimeLoader::collectResources(fullPath);
+        }, [task, resources]() {
+            for (const auto& [skeleton, atlas] : resources->spines)
+                task->spawn<SpineResource>(skeleton, std::vector<std::string>{atlas}, 1.0f);
+            for (const auto& texture : resources->textures)
+                task->spawn<TextureResource>(texture);
+            for (const auto& plist : resources->spriteFrames)
+                task->spawn<SpriteFramesResource>(plist);
+            if (resources->soundId > 0)
+            {
+                if (const auto* sound = mugen::Config::getInstance()->getResSoundById(resources->soundId))
+                    task->spawn<AudioResource>(sound->fileName);
+            }
+
+            task->onChildrenDone([task]() {
+                if (task->anyChildFailed())
+                    task->fail("one or more map resources failed to preload");
+                else
+                    task->complete();
+            });
+        });
+    }, 10.0f);
+}
 }  // namespace
 
 void registerBuiltinLoaders(ResourceLoaderRegistry& registry)
@@ -238,6 +278,7 @@ void registerBuiltinLoaders(ResourceLoaderRegistry& registry)
     registerFguiPackage(registry);
     registerAudio(registry);
     registerConfig(registry);
+    registerMap(registry);
 }
 
 }  // namespace gameres

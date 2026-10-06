@@ -19,6 +19,8 @@ std::string toString(ResourceType type)
         return "Audio";
     case ResourceType::Config:
         return "Config";
+    case ResourceType::Map:
+        return "Map";
     default:
         return "Custom#" + std::to_string(static_cast<uint16_t>(type));
     }

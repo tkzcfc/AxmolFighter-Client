@@ -90,6 +90,9 @@ private:
 
     PendingViewAction m_pendingAction = PendingViewAction::None;
     std::unique_ptr<View> m_pendingView;
+
+    // _switchView 之后延后到新 View 进入 Active 才清理共享 Spine 数据（见 ViewManager.cpp 的说明）
+    bool m_purgeSpineCachePending = false;
 };
 
 }  // namespace gameui

@@ -52,9 +52,7 @@ public:
     void onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event* event);
 
 private:
-    class LoadOperation;
-
-    std::unique_ptr<IResourceLoadOperation> createResourceLoadOperation() override;
+    void onPrepareLoad() override;
 
     // 远程玩家同步数据
     struct RemotePlayer

@@ -10,7 +10,11 @@
 #include "mugen/conf/GameDef.h"
 #include "mugen/conf/TableConfig.h"
 #include "mugen/render/spine/MgSkeletonAnimation.h"
+#include "resource/builtin/MapResource.h"
+#include "resource/builtin/RoleSpineHelper.h"
+#include "resource/builtin/SpineResource.h"
 #include "ui/battle/BattleBootParams.h"
+#include "ui/battle/LocalRoleUtils.h"
 #include "ui/input/DefaultInputSlotMap.h"
 #include "ui/widgets/common/MessageDialog.h"
 
@@ -130,96 +134,32 @@ constexpr uint32_t LOCAL_MOVE_KEY_MASK = (1u << INPUT_SLOT_MOVE_LEFT) | (1u << I
                                          (1u << INPUT_SLOT_MOVE_UP) | (1u << INPUT_SLOT_MOVE_DOWN);
 }  // namespace
 
-class TownView::LoadOperation final : public IResourceLoadOperation
+void TownView::onPrepareLoad()
 {
-public:
-    explicit LoadOperation(TownView* owner) : m_owner(owner) {}
+    auto& loader = getResourceLoader();
 
-    std::vector<std::string> getLoadingPackages() const override { return {"UI/Launch"}; }
+    const auto resolved = mugen::GameWord::resolveMap(m_boot.townId);
+    if (resolved.isValid())
+        loader.add<gameres::MapResource>(resolved.layerFile());
 
-    GComponent* onCreateLoadingContent() override
+    if (resolved.townConfig)
     {
-        auto* object = UIPackage::createObject("Launch", "LaunchView");
-        if (!object)
-            return nullptr;
-
-        m_loadingContent = object->as<GComponent>();
-        if (m_loadingContent)
+        for (const auto& portal : resolved.townConfig->portals)
         {
-            m_progressBar = m_loadingContent->getChild("progressBar")->as<GProgressBar>();
-            if (m_progressBar)
-                m_progressBar->setValue(0.0);
-        }
-        return m_loadingContent;
-    }
-
-    void start() override {}
-
-    bool update(float /*dt*/) override
-    {
-        if (m_finished || m_failed)
-            return m_finished;
-
-        if (!m_owner)
-            return false;
-
-        if (m_stage == 0)
-        {
-            if (!m_owner->initGameWord())
+            const auto* portalCfg = Config::getInstance()->getPortalConfigById(portal.portalId);
+            if (portalCfg && portalCfg->resSpineId > 0 &&
+                Config::getInstance()->getResSpineConfigById(portalCfg->resSpineId))
             {
-                fail("Town initialization failed");
-                return false;
+                loader.add<gameres::SpineResource>(portalCfg->resSpineId);
             }
-
-            m_stage = 1;
-            setProgress(50.0);
-            return false;
         }
-
-        if (m_stage == 1)
-        {
-            if (!m_owner->createLocalPlayer())
-            {
-                fail("Failed to create local player");
-                return false;
-            }
-
-            m_stage    = 2;
-            m_finished = true;
-            setProgress(100.0);
-            return true;
-        }
-
-        return m_finished;
     }
 
-private:
-    void setProgress(double value)
-    {
-        if (m_progressBar)
-            m_progressBar->setValue(value);
-    }
+    // 城镇里优先用 _city 覆盖骨架，和 createLocalPlayer -> spawnRoleActor 的规则保持一致
+    gameres::addRoleSpine(loader, resolveLocalPlayerRoleId(), /*preferCity*/ true);
 
-    void fail(std::string_view message)
-    {
-        if (m_failed)
-            return;
-
-        m_failed = true;
-        MessageDialog::showGlobal(message, []() { ax::Director::getInstance()->end(); });
-    }
-
-    TownView* m_owner            = nullptr;
-    GComponent* m_loadingContent = nullptr;
-    GProgressBar* m_progressBar  = nullptr;
-    int m_stage                  = 0;
-    bool m_finished              = false;
-    bool m_failed                = false;
-};
-
-std::unique_ptr<IResourceLoadOperation> TownView::createResourceLoadOperation()
-{
-    return std::make_unique<LoadOperation>(this);
+    addLoadStep([this] { return initGameWord(); });
+    addLoadStep([this] { return createLocalPlayer(); });
 }
 
 TownView::TownView()
@@ -348,6 +288,7 @@ void TownView::installKeyboardListener()
     ax::Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(m_keyboardListener,
                                                                                               currentScene);
 }
+
 bool TownView::createLocalPlayer()
 {
     auto* session = AppContext::get().gameSession();
@@ -382,8 +323,7 @@ bool TownView::createLocalPlayer()
     }
 
     // classID 是 CharacterClass，映射到可玩英雄 RoleConfig
-    const int32_t roleId =
-        type_conversions::toRoleConfigId(static_cast<CharacterClass>(session->selectedCharacter.classID));
+    const int32_t roleId = resolveLocalPlayerRoleId();
     mugen::actor_spawner::ActorSpawnParams params;
     params.category = EntityCategory::kPlayer;
     params.playerId = static_cast<int32_t>(session->account.playerID);

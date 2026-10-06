@@ -80,6 +80,9 @@ public:
     // 有些资源在加载过程中就已经拿到了需要释放的东西（例如 FGUI 包的引用计数）。
     std::vector<ResourcePtr> collectHeldResources() const;
 
+    // 已结束且失败的顶层资源；配合轮询式的加载流程使用（不依赖 onComplete 回调）。
+    std::vector<ResourcePtr> getFailedResources() const;
+
     // 以下给 LoadTask 使用
     void completeEntry(Entry* e);
     void failEntry(Entry* e, std::string error);

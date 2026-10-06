@@ -29,7 +29,7 @@ public:
 
     std::string getKey() const override
     {
-        if (m_resSpineId >= 0)
+        if (m_resSpineId > 0)
             return "res:" + std::to_string(m_resSpineId);
 
         std::string key = m_skeletonFile;
@@ -39,7 +39,8 @@ public:
         return key;
     }
 
-    bool isByResId() const { return m_resSpineId >= 0; }
+    // resSpineId <= 0 视为无效（0 是"没有配置传送门/效果 Spine"的常见哨兵值），按骨架路径处理
+    bool isByResId() const { return m_resSpineId > 0; }
     int32_t getResSpineId() const { return m_resSpineId; }
     const std::string& getSkeletonFile() const { return m_skeletonFile; }
     const std::vector<std::string>& getAtlasFiles() const { return m_atlasFiles; }

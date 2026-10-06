@@ -23,23 +23,19 @@ struct LoadProgress
     size_t totalCount    = 0;     // 顶层资源总数
 };
 
-// 一批资源的异步加载任务。典型用法：在 IResourceLoadOperation::start() 中创建、
-// add() 若干资源、调用 start()；在 update() 里根据 isFinished() 切换到正式内容。
-//
-//   m_loader = std::make_unique<gameres::ResourceLoader>();
-//   m_loader->add<gameres::FguiPackageResource>("UI/Town");
-//   m_loader->add<gameres::SpineResource>(resSpineId);
-//   m_loader->start(
-//       [this](const gameres::LoadProgress& p) { m_progressBar->setValue(p.percent * 100.0); },
-//       [this](const std::vector<gameres::ResourcePtr>& failed) { ... });
+// 一批资源的异步加载任务。典型用法：在 gameui::View::onPrepareLoad() 中通过
+// gameui::View::getResourceLoader() 拿到一个实例、add() 若干资源；框架会自动 start()
+// 并驱动加载界面，不需要手动调用。
 //
 // 进度：每个顶层资源的权重取 ResourceLoaderRegistry 中该类型的权重；有任务结束时触发 onProgress。
 // 失败：失败的资源同样算作结束，进度照常推进，结束时在 onComplete 中汇总。
 //
-// 生命周期：加载函数已经被调用过的资源（不限于加载成功）会被 ResourceLoader 持有，
-// 析构时延迟到下一帧才调用它们的 releaseHold()。这样刚创建的正式内容可以先引用这些资源
-// （FGUI 包引用计数、Spine 共享数据 use_count），避免被 SpineSkeletonCache::purgeUnused()
-// 或 FGUIPackageManager::unload() 过早回收。
+// 生命周期：加载函数被调用过的资源（不限于加载成功）会被 ResourceLoader 持有，
+// 析构时立即（同步）对它们调用 releaseHold()。典型用法是让 View 持有一个 ResourceLoader
+// 直到自己销毁为止，这样加载完成的资源在整个 View 存活期间都不会被
+// SpineSkeletonCache::purgeUnused() 或 FGUIPackageManager::unload() 过早回收；
+// 需要让资源比某个 View 活得更久时（例如常驻资源），可以把同一个 ResourceLoader
+// 交给多个持有者共同持有（std::shared_ptr），最后一个持有者销毁时才真正释放。
 class ResourceLoader
 {
 public:
@@ -73,18 +69,24 @@ public:
     // 只能调用一次。回调都在主线程触发，且不会在 start() 的调用栈内同步触发。
     void start(ProgressCallback onProgress, CompleteCallback onComplete);
 
+    // start() 是否已经被调用过；用于多个持有者共用同一个 ResourceLoader 时避免重复 start()。
+    bool isStarted() const { return m_startCalled; }
+
     // 取消所有未完成的任务，之后不再触发任何回调。
     void cancel();
 
     float getProgress() const;
     bool isFinished() const;
+    // 已结束且失败的顶层资源；配合轮询式的加载流程使用（不依赖 onComplete 回调）。
+    std::vector<ResourcePtr> getFailedResources() const;
 
 private:
     ResourcePtr addResource(ResourcePtr resource);
     void unschedule();
 
     std::shared_ptr<detail::LoaderCore> m_core;
-    bool m_scheduled = false;
+    bool m_scheduled   = false;
+    bool m_startCalled = false;
 };
 
 }  // namespace gameres

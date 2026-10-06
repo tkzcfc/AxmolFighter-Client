@@ -16,16 +16,10 @@ ResourceLoader::ResourceLoader() : m_core(std::make_shared<detail::LoaderCore>()
 
 ResourceLoader::~ResourceLoader()
 {
+    // 立即释放，不延迟一帧：调用方（通常是 View）负责把本对象持有到不再需要资源的那一刻。
     cancel();
-
-    auto held = m_core->collectHeldResources();
-    if (!held.empty())
-    {
-        ax::Director::getInstance()->getScheduler()->runOnAxmolThread([held = std::move(held)]() {
-            for (auto& resource : held)
-                resource->releaseHold();
-        });
-    }
+    for (auto& resource : m_core->collectHeldResources())
+        resource->releaseHold();
 }
 
 ResourcePtr ResourceLoader::addResource(ResourcePtr resource)
@@ -46,6 +40,7 @@ void ResourceLoader::setFrameBudget(float milliseconds)
 void ResourceLoader::start(ProgressCallback onProgress, CompleteCallback onComplete)
 {
     m_core->start(std::move(onProgress), std::move(onComplete));
+    m_startCalled = true;
 
     // 调度目标用 LoaderCore 而不是 this：lambda 持有 shared_ptr<LoaderCore>，
     // 即使 ResourceLoader 在 onComplete 回调里被销毁，lambda 剩余代码也不会访问它。
@@ -79,6 +74,11 @@ float ResourceLoader::getProgress() const
 bool ResourceLoader::isFinished() const
 {
     return m_core->isFinished();
+}
+
+std::vector<ResourcePtr> ResourceLoader::getFailedResources() const
+{
+    return m_core->getFailedResources();
 }
 
 }  // namespace gameres
