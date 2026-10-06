@@ -56,6 +56,7 @@ struct _Entry {
 	int slotIndex;
 	const char* name;
 	spAttachment* attachment;
+	spAttachment* newAttachment;
 	_Entry* next;
 };
 
@@ -77,6 +78,9 @@ const char* spSkin_getAttachmentName (const spSkin* self, int slotIndex, int att
 
 /** Attach each attachment in this skin if the corresponding attachment in oldSkin is currently attached. */
 void spSkin_attachAll (const spSkin* self, struct spSkeleton* skeleton, const spSkin* oldspSkin);
+
+/* 用 newSkin 中同名 attachment 覆盖 self；newSkin 为 0 则清除覆盖。不接管所有权。 */
+void spSkin_replaceAttachment (spSkin* self, const char* name, const spSkin* newSkin);
 
 #ifdef SPINE_SHORT_NAMES
 typedef spSkin Skin;

@@ -52,6 +52,10 @@ public:
     void onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event* event);
 
 private:
+    class LoadOperation;
+
+    std::unique_ptr<IResourceLoadOperation> createResourceLoadOperation() override;
+
     // 远程玩家同步数据
     struct RemotePlayer
     {
@@ -100,6 +104,7 @@ private:
     };
 
     bool initGameWord();
+    void installKeyboardListener();
     bool createLocalPlayer();
     void sendEnterScene();
     void fillLocalState(PB::Types::PlayerState* state) const;

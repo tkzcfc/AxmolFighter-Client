@@ -8,6 +8,7 @@
 #        include "spine_3_4/Cocos2dAttachmentLoader.h"
 #        include "spine_3_4/AttachmentVertices.h"
 #        include "spine_3_4/extension.h"
+#        include "spine_3_4/Skin.h"
 #        include "spine_3_4/spine-cocos2dx.h"
 
 #        include <limits>
@@ -261,13 +262,13 @@ spSkeletonData* parseSkeletonData(const ax::Data& skelData,
     return skeletonData;
 }
 
-MgSkeletonData* wrapData(spSkeletonData* skeletonData, spAtlas* atlas, spAttachmentLoader* attachmentLoader)
+MgSkeletonDataPtr wrapData(spSkeletonData* skeletonData, spAtlas* atlas, spAttachmentLoader* attachmentLoader)
 {
-    auto* out = new (std::nothrow) MgSkeletonData();
-    if (!out)
+    auto* raw = new (std::nothrow) MgSkeletonData();
+    if (!raw)
         return nullptr;
-    out->bindNative(MgSpineRuntime::Spine34, skeletonData, atlas, attachmentLoader);
-    return out;
+    raw->bindNative(MgSpineRuntime::Spine34, skeletonData, atlas, attachmentLoader);
+    return MgSkeletonDataPtr(raw);
 }
 
 // parseWithAtlas 用纯 loader 解析后 rendererObject 仍是 spAtlasRegion*，
@@ -312,10 +313,10 @@ spine34::SkeletonAnimation* asSpine34(ax::Node* inner)
 class Spine34Backend final : public MgSpineBackend
 {
 public:
-    MgSkeletonData* load(const ax::Data& skelData,
-                         const std::vector<std::string>& atlasFiles,
-                         float scale,
-                         std::string_view skeletonFile) const override
+    MgSkeletonDataPtr load(const ax::Data& skelData,
+                           const std::vector<std::string>& atlasFiles,
+                           float scale,
+                           std::string_view skeletonFile) const override
     {
         spAtlas* atlas = createAtlas(atlasFiles, true);
         if (!atlas)
@@ -330,7 +331,7 @@ public:
             return nullptr;
         }
 
-        auto* out = wrapData(skeletonData, atlas, attachmentLoader);
+        auto out = wrapData(skeletonData, atlas, attachmentLoader);
         if (!out)
         {
             spSkeletonData_dispose(skeletonData);
@@ -358,10 +359,10 @@ public:
             spAtlas_bindTextures(static_cast<spAtlas*>(atlasHandle));
     }
 
-    MgSkeletonData* parseWithAtlas(const ax::Data& skelData,
-                                   void* atlasHandle,
-                                   float scale,
-                                   std::string_view skeletonFile) const override
+    MgSkeletonDataPtr parseWithAtlas(const ax::Data& skelData,
+                                     void* atlasHandle,
+                                     float scale,
+                                     std::string_view skeletonFile) const override
     {
         spAtlas* atlas = SUB_CAST(spAtlas, atlasHandle);
         if (!atlas)
@@ -377,7 +378,7 @@ public:
             return nullptr;
         }
 
-        auto* out = wrapData(skeletonData, atlas, attachmentLoader);
+        auto out = wrapData(skeletonData, atlas, attachmentLoader);
         if (!out)
         {
             spSkeletonData_dispose(skeletonData);
@@ -414,29 +415,19 @@ public:
         data.clearNative();
     }
 
-    bool replaceAtlas(MgSkeletonData& data, const std::vector<std::string>& atlasFiles) const override
+    void replaceAtlas(MgSkeletonData& data, void* atlasHandle) const override
     {
         auto* skeletonData = static_cast<spSkeletonData*>(data.nativeSkeletonData());
-        if (!skeletonData)
-        {
-            MG_LOG_E("Spine: replaceAtlas on invalid skeleton data");
-            return false;
-        }
-        spAtlas* atlas = createAtlas(atlasFiles, true);
-        if (!atlas)
-        {
-            MG_LOG_E("Spine: replaceAtlas failed to build atlas");
-            return false;
-        }
+        auto* atlas        = static_cast<spAtlas*>(atlasHandle);
 
         // 就地重指所有 skin 中的 attachment region；使用该数据的节点下一帧自动生效
+        // （嫁接的 newAttachment 不在 entry->attachment 上，不会被重指）
         forEachSkin(skeletonData, [&](spSkin* skin) { relinkSkin(skin, atlas); });
 
         // attachmentLoader 仅 parse 期使用，且 attachment 持有它的回指指针（disposeAttachment 用），保留不动
         if (auto* old = static_cast<spAtlas*>(data.nativeAtlas()))
             spAtlas_dispose(old);
         data.bindNative(MgSpineRuntime::Spine34, skeletonData, atlas, data.nativeAttachmentLoader());
-        return true;
     }
 
     MgAnimation findAnimation(const MgSkeletonData& data, const char* name) const override
@@ -535,6 +526,53 @@ public:
     }
 
     void setUpdateOnlyIfVisible(ax::Node* inner, bool) const override { (void)inner; }
+
+    static void patch34Skin(spSkin* skin, const char* name, const spSkin* srcSkin)
+    {
+        if (!skin)
+            return;
+        spSkin_replaceAttachment(skin, name, srcSkin);
+    }
+
+    // 3.4 的嫁接写在 _Entry::newAttachment 上（Skin.c 扩展），原 attachment 不动，因此无需 originals
+    bool replaceSkinSlots(ax::Node* destInner,
+                          const MgSkeletonData& donor,
+                          const char* srcSkinName,
+                          const std::vector<std::string>& names,
+                          MgSkinSlotOriginals&) const override
+    {
+        spSkeleton* destSkel = asSpine34(destInner)->getSkeleton();
+        auto* donorData      = static_cast<spSkeletonData*>(donor.nativeSkeletonData());
+
+        spSkin* srcSkin = nullptr;
+        if (srcSkinName && srcSkinName[0])
+            srcSkin = spSkeletonData_findSkin(donorData, srcSkinName);
+        if (!srcSkin)
+            srcSkin = donorData->defaultSkin;
+        if (!srcSkin)
+            return false;
+
+        for (const auto& name : names)
+        {
+            patch34Skin(destSkel->data->defaultSkin, name.c_str(), srcSkin);
+            if (destSkel->skin && destSkel->skin != destSkel->data->defaultSkin)
+                patch34Skin(destSkel->skin, name.c_str(), srcSkin);
+        }
+        spSkeleton_setSlotsToSetupPose(destSkel);
+        return true;
+    }
+
+    void clearSkinSlots(ax::Node* destInner, const std::vector<std::string>& names, MgSkinSlotOriginals&) const override
+    {
+        spSkeleton* destSkel = asSpine34(destInner)->getSkeleton();
+        for (const auto& name : names)
+        {
+            patch34Skin(destSkel->data->defaultSkin, name.c_str(), nullptr);
+            if (destSkel->skin && destSkel->skin != destSkel->data->defaultSkin)
+                patch34Skin(destSkel->skin, name.c_str(), nullptr);
+        }
+        spSkeleton_setSlotsToSetupPose(destSkel);
+    }
 };
 
 Spine34Backend g_spine34Backend;

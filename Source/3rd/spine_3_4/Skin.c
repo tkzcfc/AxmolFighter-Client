@@ -37,6 +37,7 @@ _Entry* _Entry_create (int slotIndex, const char* name, spAttachment* attachment
 	self->slotIndex = slotIndex;
 	MALLOC_STR(self->name, name);
 	self->attachment = attachment;
+	self->newAttachment = 0;
 	return self;
 }
 
@@ -75,7 +76,8 @@ void spSkin_addAttachment (spSkin* self, int slotIndex, const char* name, spAtta
 spAttachment* spSkin_getAttachment (const spSkin* self, int slotIndex, const char* name) {
 	const _Entry* entry = SUB_CAST(_spSkin, self)->entries;
 	while (entry) {
-		if (entry->slotIndex == slotIndex && strcmp(entry->name, name) == 0) return entry->attachment;
+		if ((entry->slotIndex == slotIndex || slotIndex == -1) && strcmp(entry->name, name) == 0)
+			return entry->newAttachment ? entry->newAttachment : entry->attachment;
 		entry = entry->next;
 	}
 	return 0;
@@ -98,9 +100,21 @@ void spSkin_attachAll (const spSkin* self, spSkeleton* skeleton, const spSkin* o
 	const _Entry *entry = SUB_CAST(_spSkin, oldSkin)->entries;
 	while (entry) {
 		spSlot *slot = skeleton->slots[entry->slotIndex];
-		if (slot->attachment == entry->attachment) {
+		if (slot->attachment == entry->attachment || slot->attachment == entry->newAttachment) {
 			spAttachment *attachment = spSkin_getAttachment(self, entry->slotIndex, entry->name);
 			if (attachment) spSlot_setAttachment(slot, attachment);
+		}
+		entry = entry->next;
+	}
+}
+
+void spSkin_replaceAttachment (spSkin* self, const char* name, const spSkin* newSkin) {
+	spAttachment* attachment = newSkin ? spSkin_getAttachment(newSkin, -1, name) : 0;
+	_Entry* entry = SUB_CAST(_spSkin, self)->entries;
+	while (entry) {
+		if (strcmp(entry->name, name) == 0) {
+			entry->newAttachment = (attachment && attachment != entry->attachment) ? attachment : 0;
+			break;
 		}
 		entry = entry->next;
 	}

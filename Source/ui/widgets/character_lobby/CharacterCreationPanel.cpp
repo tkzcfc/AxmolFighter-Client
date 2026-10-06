@@ -90,7 +90,7 @@ void CharacterCreationPanel::updateUI()
     loaderAvatar->setContent(nullptr);
 
     auto weakThis = this->weak_from_this();
-    mugen::MgSkeletonAnimation::createAsync(
+    mugen::MgSkeletonAnimation::createFromCacheAsync(
         curProfessionConfig.spine.id,
         [weakThis, this, loaderAvatar, roleTypeIndex = m_curRoleTypeIndex,
          professionIndex = m_curProfessionIndex](mugen::MgSkeletonAnimation* skeletonAnimation) {

@@ -9,17 +9,16 @@
 #include "mugen/core/ecs/Entity.h"
 #include "mugen/core/math/Random.h"
 #include "mugen/core/StdC.h"
-#include "mugen/render/VirtualCamera.h"
 #include "mugen/effect/Effect.h"
 #include "mugen/skill/SkillManager.h"
 #include "mugen/system/EffectLifeSystem.h"
 #include "mugen/system/SoundSystem.h"
 
 #ifdef RUNTIME_IN_AXMOL
-#    include "mugen/avatar/AvatarLayerUtils.h"
+#    include "mugen/avatar/AvatarPaths.h"
+#    include "mugen/avatar/data/AvatarAssetCache.h"
 #    include "mugen/avatar/render/Avatar.h"
-#    include "mugen/avatar/render/AvatarBuilder.h"
-#    include "mugen/render/spine/SpineSkeletonCache.h"
+#    include "mugen/render/VirtualCamera.h"
 #endif
 
 #include <algorithm>
@@ -55,21 +54,17 @@ std::string replaceExtension(const std::string& path, const std::string& newExt)
 
 #ifdef RUNTIME_IN_AXMOL
 GameMapRenderComponent* findMapRender(ECSManager* ecs);
-#endif
 
 VirtualCamera* findMapCamera(ECSManager* ecs)
 {
-#ifdef RUNTIME_IN_AXMOL
     if (auto* mapRender = findMapRender(ecs))
     {
         if (mapRender->camera)
             return mapRender->camera.get();
     }
-#else
-    (void)ecs;
-#endif
     return nullptr;
 }
+#endif
 
 #ifdef RUNTIME_IN_AXMOL
 GameMapRenderComponent* findMapRender(ECSManager* ecs)
@@ -86,24 +81,14 @@ GameMapRenderComponent* findMapRender(ECSManager* ecs)
     return MG_GET_COMPONENT(mapEntity, GameMapRenderComponent);
 }
 
-std::string pickDisplaySpineAnim(const ResSpineConfig* spine)
+// 展示用动作：优先 "animation"，否则取 .motion 中第一个动作
+std::string pickDisplayMotion(const std::string& motionFile)
 {
-    if (!spine || spine->spine.empty())
+    const MotionMap* map = AvatarAssetCache::getInstance()->getMotionMap(motionFile);
+    if (!map || map->findMotion("animation"))
         return "animation";
-    const std::string atlas = replaceExtension(spine->spine, ".atlas");
-    const float scale       = spine->scale > 0.0f ? spine->scale : 1.0f;
-    auto* data              = SpineSkeletonCache::getInstance()->getOrCreate(spine->spine, atlas, scale);
-    if (!data)
-        return "animation";
-    if (data->findAnimation("animation"))
-        return "animation";
-    if (data->animationCount() > 0)
-    {
-        MgAnimation first = data->animationAt(0);
-        if (first)
-            return first.name();
-    }
-    return "animation";
+    const Motion* first = map->motionAt(0);
+    return first ? first->name : "animation";
 }
 
 void spawnDisplaySpineOverlay(GameMapRenderComponent* mapRender, const ResSpineConfig* spine)
@@ -111,17 +96,15 @@ void spawnDisplaySpineOverlay(GameMapRenderComponent* mapRender, const ResSpineC
     if (!mapRender || !mapRender->overlayNode || !spine)
         return;
 
-    FashionSpineDesc desc;
+    AvatarDesc desc;
     desc.skeleton   = spine->spine;
-    desc.atlases    = {replaceExtension(spine->spine, ".atlas")};
     desc.scale      = spine->scale > 0.0f ? spine->scale : 1.0f;
-    desc.motionFile = AvatarLayerUtils::spinePathToMotionFile(spine->spine);
-    Avatar* avatar  = AvatarBuilder::createAvatar(desc, false);
+    desc.motionFile = AvatarPaths::motionFileFromSpine(spine->spine);
+    Avatar* avatar  = Avatar::create(desc, AvatarLoadMode::kSyncShared);
     if (!avatar)
         return;
 
-    const std::string anim = pickDisplaySpineAnim(spine);
-    avatar->setMotion(anim, "", false);
+    avatar->setMotion(pickDisplayMotion(desc.motionFile), "", false);
     avatar->setAutoPlay(true);
 
     const ax::Size vis = ax::Director::getInstance()->getVisibleSize();
@@ -666,11 +649,13 @@ void AttackAction::triggerTransform(BTContext& ctx)
         avatar->spineAtlas    = replaceExtension(spine->spine, ".atlas");
         avatar->defaultSkin.clear();
         avatar->spineScale = spine->scale > 0.0f ? spine->scale : avatar->spineScale;
+#ifdef RUNTIME_IN_AXMOL
         if (auto* render = MG_GET_COMPONENT(ctx.entity, AvatarRenderComponent))
         {
             render->syncedMotion.clear();
             render->syncedEntry.clear();
         }
+#endif
     }
 }
 

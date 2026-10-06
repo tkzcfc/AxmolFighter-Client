@@ -92,18 +92,18 @@ enum class EquipPosition : int32_t
 // 时装部位
 enum class FashionPosition : int32_t
 {
-    kBody     = 0,  // 身体
-    kHat      = 1,  // 头饰
-    kClothes  = 2,  // 衣服
-    kWeapon   = 3,  // 武器
-    kHair     = 4,  // 发型
-    kFace     = 5,  // 脸饰
-    kWing     = 6,  // 翅膀
-    kSkin     = 7,  // 皮肤
-    kSkinType = 8,  // 皮肤类型
-    kHalo     = 9,  // 光环
-
-    kCount = 10,  // 部位数量
+    kBody     = 0,   // 身体
+    kHat      = 1,   // 头饰
+    kClothes  = 2,   // 衣服
+    kWeapon   = 3,   // 武器
+    kHair     = 4,   // 发型
+    kFace     = 5,   // 脸饰
+    kWing     = 6,   // 翅膀
+    kSkin     = 7,   // 皮肤
+    kSkinType = 8,   // 皮肤类型
+    kHalo     = 9,   // 光环
+    kPhantom  = 10,  // 幻影
+    kCount    = 11,  // 部位数量
 };
 
 // 头像部位

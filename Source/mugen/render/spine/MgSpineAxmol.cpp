@@ -14,11 +14,15 @@
 #    include "spine/MeshAttachment.h"
 #    include "spine/RegionAttachment.h"
 #    include "spine/RTTI.h"
+#    include "spine/Skeleton.h"
 #    include "spine/SkeletonBinary.h"
 #    include "spine/SkeletonData.h"
 #    include "spine/SkeletonJson.h"
 #    include "spine/Skin.h"
+#    include "spine/Slot.h"
+#    include "spine/SlotData.h"
 
+#    include <algorithm>
 #    include <limits>
 #    include <new>
 
@@ -299,15 +303,15 @@ spine::SkeletonData* parseSkeletonData(const ax::Data& skelData,
     return skeletonData;
 }
 
-MgSkeletonData* wrapData(spine::SkeletonData* skeletonData,
-                         spine::Atlas* atlas,
-                         spine::AttachmentLoader* attachmentLoader)
+MgSkeletonDataPtr wrapData(spine::SkeletonData* skeletonData,
+                           spine::Atlas* atlas,
+                           spine::AttachmentLoader* attachmentLoader)
 {
-    auto* out = new (std::nothrow) MgSkeletonData();
-    if (!out)
+    auto* raw = new (std::nothrow) MgSkeletonData();
+    if (!raw)
         return nullptr;
-    out->bindNative(MgSpineRuntime::Axmol, skeletonData, atlas, attachmentLoader);
-    return out;
+    raw->bindNative(MgSpineRuntime::Axmol, skeletonData, atlas, attachmentLoader);
+    return MgSkeletonDataPtr(raw);
 }
 
 spine::SkeletonAnimation* asAxmol(ax::Node* inner)
@@ -318,10 +322,10 @@ spine::SkeletonAnimation* asAxmol(ax::Node* inner)
 class AxmolBackend final : public MgSpineBackend
 {
 public:
-    MgSkeletonData* load(const ax::Data& skelData,
-                         const std::vector<std::string>& atlasFiles,
-                         float scale,
-                         std::string_view skeletonFile) const override
+    MgSkeletonDataPtr load(const ax::Data& skelData,
+                           const std::vector<std::string>& atlasFiles,
+                           float scale,
+                           std::string_view skeletonFile) const override
     {
         spine::Atlas* atlas = createAtlas(atlasFiles, true);
         if (!atlas)
@@ -336,7 +340,7 @@ public:
             return nullptr;
         }
 
-        auto* out = wrapData(skeletonData, atlas, attachmentLoader);
+        auto out = wrapData(skeletonData, atlas, attachmentLoader);
         if (!out)
         {
             delete skeletonData;
@@ -368,10 +372,10 @@ public:
         }
     }
 
-    MgSkeletonData* parseWithAtlas(const ax::Data& skelData,
-                                   void* atlasHandle,
-                                   float scale,
-                                   std::string_view skeletonFile) const override
+    MgSkeletonDataPtr parseWithAtlas(const ax::Data& skelData,
+                                     void* atlasHandle,
+                                     float scale,
+                                     std::string_view skeletonFile) const override
     {
         auto* atlas = static_cast<spine::Atlas*>(atlasHandle);
         if (!atlas)
@@ -387,7 +391,7 @@ public:
             return nullptr;
         }
 
-        auto* out = wrapData(skeletonData, atlas, attachmentLoader);
+        auto out = wrapData(skeletonData, atlas, attachmentLoader);
         if (!out)
         {
             delete skeletonData;
@@ -420,20 +424,10 @@ public:
         data.clearNative();
     }
 
-    bool replaceAtlas(MgSkeletonData& data, const std::vector<std::string>& atlasFiles) const override
+    void replaceAtlas(MgSkeletonData& data, void* atlasHandle) const override
     {
         auto* skeletonData = static_cast<spine::SkeletonData*>(data.nativeSkeletonData());
-        if (!skeletonData)
-        {
-            MG_LOG_E("Spine: replaceAtlas on invalid skeleton data");
-            return false;
-        }
-        spine::Atlas* atlas = createAtlas(atlasFiles, true);
-        if (!atlas)
-        {
-            MG_LOG_E("Spine: replaceAtlas failed to build atlas");
-            return false;
-        }
+        auto* atlas        = static_cast<spine::Atlas*>(atlasHandle);
 
         // 就地重指所有 skin 中的 attachment region；使用该数据的节点下一帧自动生效
         forEachSkin(skeletonData, [&](spine::Skin* skin) { relinkSkin(skin, atlas); });
@@ -442,7 +436,6 @@ public:
         delete static_cast<spine::Atlas*>(data.nativeAtlas());
         auto* attachmentLoader = new (__FILE__, __LINE__) spine::AxmolAtlasAttachmentLoader(atlas);
         data.bindNative(MgSpineRuntime::Axmol, skeletonData, atlas, attachmentLoader);
-        return true;
     }
 
     MgAnimation findAnimation(const MgSkeletonData& data, const char* name) const override
@@ -541,8 +534,114 @@ public:
     {
         asAxmol(inner)->setUpdateOnlyIfVisible(value);
     }
-};
 
+    static spine::Attachment* findAttachmentByName(spine::Skin* skin, const std::string& name)
+    {
+        auto entries = skin->getAttachments();
+        while (entries.hasNext())
+        {
+            spine::Skin::AttachmentMap::Entry& entry = entries.next();
+            if (entry._name == name.c_str())
+                return entry._attachment;
+        }
+        return nullptr;
+    }
+
+    // 覆盖 skin 中的 name。首次覆盖时记录原 attachment 并额外持有一次引用：
+    // Skin::setAttachment 会对被替换的 attachment 解引用，引用归零即 delete
+    static void patchSkin(spine::Skin* skin,
+                          size_t slotIndex,
+                          const std::string& name,
+                          spine::Attachment* srcAtt,
+                          MgSkinSlotOriginals& originals)
+    {
+        if (!skin)
+            return;
+        const auto it = std::find_if(originals.begin(), originals.end(), [skin, &name](const MgSkinSlotOriginal& o) {
+            return o.skin == skin && o.name == name;
+        });
+        if (it == originals.end())
+        {
+            MgSkinSlotOriginal orig;
+            orig.skin                   = skin;
+            orig.slotIndex              = static_cast<int>(slotIndex);
+            orig.name                   = name;
+            spine::Attachment* original = skin->getAttachment(slotIndex, name.c_str());
+            if (original)
+                original->reference();
+            orig.attachment = original;
+            originals.push_back(std::move(orig));
+        }
+        skin->setAttachment(slotIndex, name.c_str(), srcAtt);
+    }
+
+    bool replaceSkinSlots(ax::Node* destInner,
+                          const MgSkeletonData& donor,
+                          const char* srcSkinName,
+                          const std::vector<std::string>& names,
+                          MgSkinSlotOriginals& originals) const override
+    {
+        auto* destSkel  = asAxmol(destInner)->getSkeleton();
+        auto* donorData = static_cast<spine::SkeletonData*>(donor.nativeSkeletonData());
+
+        spine::Skin* srcSkin = nullptr;
+        if (srcSkinName && srcSkinName[0])
+            srcSkin = donorData->findSkin(srcSkinName);
+        if (!srcSkin)
+            srcSkin = donorData->getDefaultSkin();
+        if (!srcSkin)
+            return false;
+
+        spine::Skin* destDefault = destSkel->getData()->getDefaultSkin();
+        spine::Skin* destCurrent = destSkel->getSkin();
+
+        for (const auto& name : names)
+        {
+            spine::Slot* destSlot = destSkel->findSlot(name.c_str());
+            if (!destSlot)
+                continue;
+            spine::Attachment* srcAtt = findAttachmentByName(srcSkin, name);
+            if (!srcAtt)
+                continue;
+            const size_t slotIndex = destSlot->getData().getIndex();
+            patchSkin(destDefault, slotIndex, name, srcAtt, originals);
+            if (destCurrent && destCurrent != destDefault)
+                patchSkin(destCurrent, slotIndex, name, srcAtt, originals);
+        }
+        destSkel->setSlotsToSetupPose();
+        return true;
+    }
+
+    void clearSkinSlots(ax::Node* destInner,
+                        const std::vector<std::string>& names,
+                        MgSkinSlotOriginals& originals) const override
+    {
+        auto* destSkel = asAxmol(destInner)->getSkeleton();
+        for (auto it = originals.begin(); it != originals.end();)
+        {
+            if (std::find(names.begin(), names.end(), it->name) == names.end())
+            {
+                ++it;
+                continue;
+            }
+            auto* skin             = static_cast<spine::Skin*>(it->skin);
+            auto* original         = static_cast<spine::Attachment*>(it->attachment);
+            const size_t slotIndex = static_cast<size_t>(it->slotIndex);
+            if (original)
+            {
+                skin->setAttachment(slotIndex, it->name.c_str(), original);
+                // 撤销 patchSkin 中额外持有的引用
+                original->dereference();
+            }
+            else
+            {
+                skin->removeAttachment(slotIndex, it->name.c_str());
+            }
+            it = originals.erase(it);
+        }
+        destSkel->setSlotsToSetupPose();
+    }
+};
 AxmolBackend g_axmolBackend;
 
 }  // namespace

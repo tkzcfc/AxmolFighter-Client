@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mugen/avatar/MotionLayer.h"
+#include "mugen/avatar/data/MotionMap.h"
 #include "mugen/core/Object.h"
 
 #include <string>
@@ -8,7 +8,7 @@
 
 NS_MG_BEGIN
 
-// 逻辑动作播放器：管理多层、推进时间、合并碰撞盒与事件（客户端/战斗服共用）
+// 逻辑动作播放器：绑定一个 .motion，推进时间、采样碰撞盒、收集 .box 事件（客户端/战斗服共用）
 class MotionPlayer : public Object
 {
     typedef Object Super;
@@ -16,19 +16,16 @@ class MotionPlayer : public Object
 public:
     MotionPlayer();
 
-    // 添加层；播放中会立即同步当前动作
-    bool addLayer(const AvatarLayerDef& def);
+    // 绑定 .motion（AvatarAssetCache 中的路径）；失败时保持未绑定。会停止当前播放
+    bool bind(const std::string& motionFile);
 
-    // 按 tag 移除层
-    void removeLayersByTag(AvatarLayerTag tag);
+    // 解除绑定并停止
+    void unbind();
 
-    // 清空全部层
-    void clearLayers();
+    // 是否已绑定 .motion
+    bool isBound() const { return m_motionMap != nullptr; }
 
-    // 当前层数量
-    size_t layerCount() const { return m_layers.size(); }
-
-    // 播放动作；任一层解析失败则停止（避免每帧重试）
+    // 播放动作；动作不存在则停止（避免每帧重试）
     bool play(const std::string& motionName, const std::string& entryId, bool loop);
 
     // 按下标取 motion 名（与 .motion 中 animations 顺序一致）；越界返回空
@@ -43,12 +40,17 @@ public:
     // 停止播放并清空当前动作
     void stop();
 
-    // 合并各层当前时刻碰撞盒（本地坐标）
+    // 当前时刻碰撞盒（本地坐标）
     void boxesAt(std::vector<const DamageBox*>& outAttack, std::vector<const DamageBox*>& outDamage) const;
 
     // 非循环且已播完
     bool isFinished() const;
 
+    // 当前动作时长
+    int getDurationMs() const { return m_motion ? m_motion->durationMs() : 0; }
+
+    // 绑定的 .motion 路径
+    MG_SYNTHESIZE_READONLY_BY_REF(std::string, m_motionFile, MotionFile)
     // 当前动作名
     MG_SYNTHESIZE_READONLY_BY_REF(std::string, m_motionName, CurrentMotionName)
     // 当前 entryId（空表示从第一段起播）
@@ -59,39 +61,30 @@ public:
     MG_SYNTHESIZE_IS_READONLY(bool, m_loop, Loop)
     // 是否正在播放
     MG_SYNTHESIZE_IS_READONLY(bool, m_playing, Playing)
-    // 当前动作时长（各层 duration 最大值，与渲染一致）
-    MG_SYNTHESIZE_READONLY(int, m_durationMs, DurationMs)
 
     MG_DEFINE_SERIALIZABLE_CUSTOM(serializeCustomImpl,
                                   deserializeCustomImpl,
+                                  m_motionFile,
                                   m_motionName,
                                   m_entryId,
                                   m_timeMs,
                                   m_loop,
-                                  m_playing,
-                                  m_durationMs);
+                                  m_playing);
 
 private:
-    // 按各层 duration 最大值重算
-    void recomputeDuration();
-
-    // 收集各层 [t0, t1) 事件
+    // 收集 [t0, t1) 事件
     void collectEventsRange(int t0, int t1, std::vector<const CombatEvent*>* out) const;
-
-    // 对所有层执行当前动作 setMotion
-    void applyMotionToLayers();
 
     // 按时间戳稳定排序事件
     static void sortEventsByTime(std::vector<const CombatEvent*>& events);
 
-    // 序列化层描述列表
-    void serializeCustomImpl(ByteBuffer& byteBuffer) const;
+    void serializeCustomImpl(ByteBuffer& byteBuffer) const {}
 
-    // 反序列化并重建层
+    // 按 m_motionFile / m_motionName 恢复运行时指针
     bool deserializeCustomImpl(ByteBuffer& byteBuffer);
 
-    // 逻辑层列表
-    std::vector<MotionLayer> m_layers;
+    const MotionMap* m_motionMap = nullptr;
+    const Motion* m_motion       = nullptr;
 };
 
 NS_MG_END

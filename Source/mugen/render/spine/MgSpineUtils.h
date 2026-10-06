@@ -13,6 +13,9 @@ NS_MG_BEGIN
 
 std::string atlasFromSpine(std::string_view spine);
 
+// 规范化 atlas 列表：为空（或首项为空）时取骨架同名 .atlas；去掉空项，统一正斜杠
+std::vector<std::string> resolveAtlasFiles(std::string_view skeletonFile, const std::vector<std::string>& atlasFiles);
+
 // 探测数据是二进制还是json格式
 bool checkIsJsonFormat(const ax::Data& data);
 

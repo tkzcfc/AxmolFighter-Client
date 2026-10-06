@@ -2,9 +2,7 @@
 #include "ui/views/CharacterLobbyView.h"
 #include "ui/widgets/common/MessageDialog.h"
 #include "ui/UiConfig.h"
-#include "mugen/avatar/FashionSpine.h"
 #include "mugen/avatar/render/Avatar.h"
-#include "mugen/avatar/render/AvatarBuilder.h"
 #include "mugen/common/TypeConversions.h"
 #include "AppContext.h"
 #include "ui/core/AudioManager.h"
@@ -100,22 +98,21 @@ void CharacterCreationChooseClouthPanel::updateUI()
 
     const auto& look = kLookIcons[static_cast<int>(m_curClass) - 1];
 
-    // 已有预览：按部位换装（内部处理身体图集替换与附件增删，连续调用自动合并）
-    if (auto* preview = dynamic_cast<mugen::Avatar*>(loaderAvatar->getContent()))
-    {
-        preview->setFashion(mugen::FashionPosition::kHair, look.hairIds[m_curHairIndex]);
-        preview->setFashion(mugen::FashionPosition::kClothes, look.clothIds[m_curClothingIndex]);
-        preview->setFashion(mugen::FashionPosition::kSkin, look.skinIds[m_curClothingIndex]);
-        return;
-    }
-
-    // 首个预览：外观驱动创建（骨架异步装配，就绪自动浮现；含默认武器）
     mugen::FashionAppearance appearance;
     appearance.roleId                                        = mugen::type_conversions::toRoleConfigId(m_curClass);
     appearance.baseFashion[mugen::FashionPosition::kHair]    = look.hairIds[m_curHairIndex];
     appearance.baseFashion[mugen::FashionPosition::kClothes] = look.clothIds[m_curClothingIndex];
     appearance.baseFashion[mugen::FashionPosition::kSkin]    = look.skinIds[m_curClothingIndex];
-    auto* preview                                            = mugen::AvatarBuilder::createAvatar(appearance);
+
+    // 已有预览：整体下发外观（内部对比差异换装，连续调用最新优先）
+    if (auto* preview = dynamic_cast<mugen::Avatar*>(loaderAvatar->getContent()))
+    {
+        preview->setAppearance(appearance);
+        return;
+    }
+
+    // 首个预览：外观驱动创建（骨架异步装配，就绪自动浮现；含默认武器）
+    auto* preview = mugen::Avatar::create(appearance);
     if (!preview)
     {
         AXLOGW("CharacterCreationChooseClouthPanel: fashion avatar failed class={} hair={} clothes={}",

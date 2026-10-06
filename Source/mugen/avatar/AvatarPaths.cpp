@@ -1,12 +1,8 @@
-#include "AvatarLayerUtils.h"
-
-#include "mugen/core/utils/StringUtils.h"
-#include "mugen/avatar/AvatarLayerDef.h"
-#include "mugen/component/AvatarComponent.h"
+#include "AvatarPaths.h"
 
 NS_MG_BEGIN
 
-std::string AvatarLayerUtils::spinePathToMotionFile(const std::string& spineSkeleton)
+std::string AvatarPaths::motionFileFromSpine(const std::string& spineSkeleton)
 {
     if (spineSkeleton.empty())
         return {};
@@ -18,7 +14,7 @@ std::string AvatarLayerUtils::spinePathToMotionFile(const std::string& spineSkel
         {
 // 尽量在debug期间发现路径中有反斜杠，让路径格式统一为正斜杠
 #if _DEBUG
-            MG_LOG_E("AvatarLayerUtils: spineSkeleton path contains '\\' separator: '{}'", spineSkeleton);
+            MG_LOG_E("AvatarPaths: spineSkeleton path contains '\\' separator: '{}'", spineSkeleton);
             MG_ASSERT(false && "spineSkeleton path contains '\\' separator");
 #endif
             c = '/';
@@ -36,29 +32,11 @@ std::string AvatarLayerUtils::spinePathToMotionFile(const std::string& spineSkel
     else
     {
         // spineSkeleton 不应该没有扩展名
-        MG_LOG_E("AvatarLayerUtils: spineSkeleton path has no extension: '{}'", spineSkeleton);
+        MG_LOG_E("AvatarPaths: spineSkeleton path has no extension: '{}'", spineSkeleton);
         MG_ASSERT(false && "spineSkeleton path has no extension");
         return {};
     }
     return path;
-}
-
-std::vector<AvatarLayerDef> AvatarLayerUtils::resolveLayersFromSpine(const std::string& motionFile)
-{
-    if (motionFile.empty())
-        return {};
-    AvatarLayerDef def;
-    def.motionMapPath = motionFile;
-    def.order         = 0;
-    def.tag           = AvatarLayerTag::kBody;
-    return {std::move(def)};
-}
-
-std::vector<AvatarLayerDef> AvatarLayerUtils::resolveLayers(const AvatarComponent* avatar)
-{
-    if (!avatar)
-        return {};
-    return resolveLayersFromSpine(avatar->motionFile);
 }
 
 NS_MG_END

@@ -7,6 +7,12 @@
 
 NS_MG_BEGIN
 
+MgAtlasHandle::~MgAtlasHandle()
+{
+    if (m_native)
+        MgSpineBackend::of(m_runtime).disposeAtlasHandle(m_native);
+}
+
 MgSkeletonData::~MgSkeletonData()
 {
     if (!m_skeletonData && !m_atlas && !m_attachmentLoader)
@@ -29,18 +35,23 @@ void MgSkeletonData::clearNative()
     m_attachmentLoader = nullptr;
 }
 
-MgSkeletonData* MgSkeletonData::load(const ax::Data& skelData,
-                                     const std::vector<std::string>& atlasFiles,
-                                     float scale,
-                                     std::string_view skeletonFile)
+MgSkeletonDataPtr MgSkeletonData::load(const ax::Data& skelData,
+                                       const std::vector<std::string>& atlasFiles,
+                                       float scale,
+                                       std::string_view skeletonFile,
+                                       bool exclusive)
 {
     auto runtime = runtimeFromSkeletonData(skelData);
-    return MgSpineBackend::of(runtime).load(skelData, atlasFiles, scale, skeletonFile);
+    auto data    = MgSpineBackend::of(runtime).load(skelData, atlasFiles, scale, skeletonFile);
+    if (data)
+        data->m_exclusive = exclusive;
+    return data;
 }
 
-MgSkeletonData* MgSkeletonData::loadFromFile(std::string_view skeletonFile,
-                                             const std::vector<std::string>& atlasFiles,
-                                             float scale)
+MgSkeletonDataPtr MgSkeletonData::loadFromFile(std::string_view skeletonFile,
+                                               const std::vector<std::string>& atlasFiles,
+                                               float scale,
+                                               bool exclusive)
 {
     if (skeletonFile.empty())
     {
@@ -55,9 +66,7 @@ MgSkeletonData* MgSkeletonData::loadFromFile(std::string_view skeletonFile,
         return nullptr;
     }
 
-    if (atlasFiles.empty() || atlasFiles.front().empty())
-        return load(skelData, {atlasFromSpine(skeletonFile)}, scale, skeletonFile);
-    return load(skelData, atlasFiles, scale, skeletonFile);
+    return load(skelData, resolveAtlasFiles(skeletonFile, atlasFiles), scale, skeletonFile, exclusive);
 }
 
 MgAnimation MgSkeletonData::findAnimation(const char* name) const
@@ -67,12 +76,32 @@ MgAnimation MgSkeletonData::findAnimation(const char* name) const
 
 bool MgSkeletonData::replaceAtlas(const std::vector<std::string>& atlasFiles)
 {
-    if (!m_skeletonData)
+    const auto& backend = MgSpineBackend::of(m_runtime);
+    void* native        = backend.createAtlasHandle(atlasFiles);
+    if (!native)
     {
-        MG_LOG_E("Spine: replaceAtlas on invalid skeleton data");
+        MG_LOG_E("Spine: replaceAtlas failed to build atlas");
         return false;
     }
-    return MgSpineBackend::of(m_runtime).replaceAtlas(*this, atlasFiles);
+    backend.bindAtlasTextures(native);
+    return replaceAtlas(std::make_unique<MgAtlasHandle>(m_runtime, native));
+}
+
+bool MgSkeletonData::replaceAtlas(MgAtlasHandlePtr atlas)
+{
+    MG_ASSERT(m_exclusive && "replaceAtlas requires exclusive skeleton data");
+    if (!m_exclusive || !m_skeletonData)
+    {
+        MG_LOG_E("Spine: replaceAtlas requires valid exclusive skeleton data");
+        return false;
+    }
+    if (atlas->runtime() != m_runtime)
+    {
+        MG_LOG_E("Spine: replaceAtlas runtime mismatch");
+        return false;
+    }
+    MgSpineBackend::of(m_runtime).replaceAtlas(*this, atlas->release());
+    return true;
 }
 
 int MgSkeletonData::animationCount() const

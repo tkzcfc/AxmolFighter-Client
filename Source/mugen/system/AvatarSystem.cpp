@@ -4,7 +4,6 @@
 #include "mugen/conf/Config.h"
 #include "mugen/conf/GameDef.h"
 
-#include "mugen/avatar/AvatarLayerUtils.h"
 #include "mugen/avatar/DamageBoxTransform.h"
 #include "mugen/system/SoundSystem.h"
 
@@ -69,23 +68,12 @@ void updateHitboxesFromPlayback(AvatarComponent* avatarComp, const TransformComp
 
 bool initNewAvatarPlayback(AvatarComponent* avatarComp, Entity* entity)
 {
-    if (!avatarComp)
+    if (!avatarComp->playback.bind(avatarComp->motionFile))
     {
-        MG_LOG_E("AvatarSystem: AvatarComponent null, cannot init MotionPlayer");
+        MG_LOG_W("AvatarSystem: MotionPlayer bind failed role={} motion='{}'", avatarComp->roleId,
+                 avatarComp->motionFile);
         return false;
     }
-
-    avatarComp->playback.clearLayers();
-    const auto defs = AvatarLayerUtils::resolveLayers(avatarComp);
-    for (const auto& def : defs)
-    {
-        if (!avatarComp->playback.addLayer(def))
-            MG_LOG_W("AvatarSystem: addLayer failed motion='{}'", def.motionMapPath);
-    }
-
-    if (avatarComp->playback.layerCount() == 0)
-        MG_LOG_W("AvatarSystem: MotionPlayer has no layers for role={}", avatarComp->roleId);
-
     return true;
 }
 
@@ -142,7 +130,7 @@ void AvatarSystem::onEntityAdded(Entity* entity)
 
     if (getECSManager()->isDeserialized())
     {
-        MG_ASSERT(avatarComp->playback.layerCount() > 0);
+        MG_ASSERT(avatarComp->playback.isBound() || avatarComp->motionFile.empty());
         return;
     }
 
@@ -152,8 +140,7 @@ void AvatarSystem::onEntityAdded(Entity* entity)
 void AvatarSystem::onEntityRemoved(Entity* entity)
 {
     auto avatarComp = MG_GET_COMPONENT(entity, AvatarComponent);
-    avatarComp->playback.stop();
-    avatarComp->playback.clearLayers();
+    avatarComp->playback.unbind();
 }
 
 NS_MG_END

@@ -3,8 +3,7 @@
 #include "mugen/GameWord.h"
 
 #ifdef RUNTIME_IN_AXMOL
-#    include "mugen/avatar/AvatarLayerUtils.h"
-#    include "mugen/avatar/render/AvatarBuilder.h"
+#    include "mugen/avatar/render/Avatar.h"
 #    include "mugen/render/RenderObjectPool.h"
 
 #    include "2d/RenderTexture.h"
@@ -25,6 +24,19 @@ constexpr float kGhostFadeSec   = 0.5f;
 const ax::Color3B kGhostColors[] = {
     {255, 255, 255}, {0, 47, 127}, {102, 51, 204}, {216, 116, 16}, {160, 20, 255},
 };
+
+// 战斗/城镇单位：固定外观，同步 + 共享缓存
+AvatarDesc makeAvatarDesc(const AvatarComponent* avatarComp)
+{
+    AvatarDesc desc;
+    desc.skeleton   = avatarComp->getSpineSkeleton();
+    desc.skin       = avatarComp->defaultSkin;
+    desc.scale      = avatarComp->getSpineScale();
+    desc.motionFile = avatarComp->motionFile;
+    if (!avatarComp->getSpineAtlas().empty())
+        desc.atlases.push_back(avatarComp->getSpineAtlas());
+    return desc;
+}
 
 int modularDistance(int a, int b, int duration)
 {
@@ -215,10 +227,10 @@ void AvatarRenderSystem::onEntityAdded(Entity* entity)
         }
     }
 
-    avatarRenderComp->avatar = AvatarBuilder::createAvatar(avatarComp);
+    avatarRenderComp->avatar = Avatar::create(makeAvatarDesc(avatarComp), AvatarLoadMode::kSyncShared);
     if (!avatarRenderComp->avatar)
     {
-        MG_LOG_E("AvatarRenderSystem: AvatarBuilder failed");
+        MG_LOG_E("AvatarRenderSystem: create avatar failed '{}'", avatarComp->getSpineSkeleton());
         return;
     }
 

@@ -3,6 +3,8 @@
 #include "UIManager.h"
 #include "View.h"
 
+#include "mugen/render/spine/SpineSkeletonCache.h"
+
 using namespace fairygui;
 
 namespace gameui
@@ -134,6 +136,10 @@ void ViewManager::_switchView(std::unique_ptr<View> newView)
     m_viewStack.clear();
 
     _pushView(std::move(newView));
+
+    // 旧 View 的节点下一帧才会真正释放，届时回收无人引用的共享 spine 数据
+    ax::Director::getInstance()->getScheduler()->runOnAxmolThread(
+        []() { mugen::SpineSkeletonCache::getInstance()->purgeUnused(); });
 }
 
 void ViewManager::_pushView(std::unique_ptr<View> newView)

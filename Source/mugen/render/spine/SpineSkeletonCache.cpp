@@ -3,31 +3,20 @@
 #ifdef RUNTIME_IN_AXMOL
 
 #    include "mugen/conf/Config.h"
+#    include "mugen/render/spine/MgSpineLoadPipeline.h"
 #    include "mugen/render/spine/MgSpineUtils.h"
-#    include "xxhash.h"
+
+#    include <algorithm>
+#    include <cstring>
 
 NS_MG_BEGIN
 
 namespace
 {
 
-uint64_t makeKey(std::string_view skeletonFile, const std::vector<std::string>& atlasFiles, float scale)
+float resSpineScale(const ResSpineConfig* cfg)
 {
-    XXH3_state_t* state = XXH3_createState();
-    XXH3_64bits_reset(state);
-    XXH3_64bits_update(state, skeletonFile.data(), skeletonFile.size());
-    const char sep = 0;
-    XXH3_64bits_update(state, &sep, 1);
-    for (const auto& atlasFile : atlasFiles)
-    {
-        if (!atlasFile.empty())
-            XXH3_64bits_update(state, atlasFile.data(), atlasFile.size());
-        XXH3_64bits_update(state, &sep, 1);
-    }
-    XXH3_64bits_update(state, &scale, sizeof(scale));
-    const uint64_t hash = XXH3_64bits_digest(state);
-    XXH3_freeState(state);
-    return hash;
+    return cfg->scale > 0.0f ? cfg->scale : 1.0f;
 }
 
 }  // namespace
@@ -47,65 +36,136 @@ void SpineSkeletonCache::destroy()
     s_instance = nullptr;
 }
 
+SpineSkeletonCache::SpineSkeletonCache() : m_lifeToken(std::make_shared<char>(0)) {}
+
 SpineSkeletonCache::~SpineSkeletonCache()
 {
+    m_lifeToken.reset();
     clear();
 }
 
-MgSkeletonData* SpineSkeletonCache::getOrCreate(std::string_view skeletonFile,
-                                                const std::vector<std::string>& atlasFiles,
-                                                float scale)
+std::string SpineSkeletonCache::makeKey(std::string_view skeletonFile,
+                                        const std::vector<std::string>& atlasFiles,
+                                        float scale)
+{
+    std::string key(skeletonFile);
+    std::replace(key.begin(), key.end(), '\\', '/');
+    for (const auto& atlasFile : atlasFiles)
+    {
+        key += '|';
+        key += atlasFile;
+    }
+    uint32_t scaleBits = 0;
+    std::memcpy(&scaleBits, &scale, sizeof(scaleBits));
+    key += '|';
+    key += std::to_string(scaleBits);
+    return key;
+}
+
+MgSkeletonDataPtr SpineSkeletonCache::getOrCreate(std::string_view skeletonFile,
+                                                  const std::vector<std::string>& atlasFiles,
+                                                  float scale)
 {
     if (skeletonFile.empty())
     {
         MG_LOG_E("SpineSkeletonCache::getOrCreate: empty skeleton path");
         return nullptr;
     }
-    const uint64_t key = makeKey(skeletonFile, atlasFiles, scale);
-    auto it            = m_map.find(key);
-    if (it != m_map.end())
+    const auto atlases = resolveAtlasFiles(skeletonFile, atlasFiles);
+    const auto key     = makeKey(skeletonFile, atlases, scale);
+    if (auto it = m_map.find(key); it != m_map.end())
         return it->second;
 
-    MgSkeletonData* loaded = MgSkeletonData::loadFromFile(skeletonFile, atlasFiles, scale);
-    if (!loaded)
-        return nullptr;
-
-    m_map[key] = loaded;
+    auto loaded = MgSkeletonData::loadFromFile(skeletonFile, atlases, scale, false);
+    if (loaded)
+        m_map.emplace(key, loaded);
     return loaded;
 }
 
-MgSkeletonData* SpineSkeletonCache::getOrCreate(std::string_view skeletonFile, std::string_view atlasFile, float scale)
+MgSkeletonDataPtr SpineSkeletonCache::getOrCreate(int32_t resSpineId)
 {
-    return getOrCreate(skeletonFile, std::vector<std::string>{std::string(atlasFile)}, scale);
-}
-
-MgSkeletonData* SpineSkeletonCache::getOrCreate(int32_t skeletonId)
-{
-    auto* cfg = Config::getInstance()->getResSpineConfigById(skeletonId);
+    const auto* cfg = Config::getInstance()->getResSpineConfigById(resSpineId);
     if (!cfg || cfg->spine.empty())
     {
-        MG_LOG_E("SpineSkeletonCache::getOrCreate: ResSpine {} missing or spine empty", skeletonId);
+        MG_LOG_E("SpineSkeletonCache::getOrCreate: ResSpine {} missing or spine empty", resSpineId);
         return nullptr;
     }
-    const float scale = cfg->scale > 0.0f ? cfg->scale : 1.0f;
-    return getOrCreate(cfg->spine, std::vector<std::string>{}, scale);
+    return getOrCreate(cfg->spine, {}, resSpineScale(cfg));
 }
 
-bool SpineSkeletonCache::preload(std::string_view skeletonFile, const std::vector<std::string>& atlasFiles, float scale)
+void SpineSkeletonCache::loadAsync(std::string_view skeletonFile,
+                                   const std::vector<std::string>& atlasFiles,
+                                   float scale,
+                                   LoadCallback onDone)
 {
-    return getOrCreate(skeletonFile, atlasFiles, scale) != nullptr;
+    if (skeletonFile.empty())
+    {
+        MG_LOG_E("SpineSkeletonCache::loadAsync: empty skeleton path");
+        onDone(nullptr);
+        return;
+    }
+    auto atlases   = resolveAtlasFiles(skeletonFile, atlasFiles);
+    const auto key = makeKey(skeletonFile, atlases, scale);
+    if (auto it = m_map.find(key); it != m_map.end())
+    {
+        onDone(it->second);
+        return;
+    }
+
+    auto& queue         = m_pending[key];
+    const bool inFlight = !queue.empty();
+    queue.push_back(std::move(onDone));
+    if (inFlight)
+        return;
+
+    std::weak_ptr<char> token = m_lifeToken;
+    MgSpineLoadPipeline::start(skeletonFile, std::move(atlases), scale, false,
+                               [this, token, key](MgSkeletonDataPtr data) {
+        if (token.expired())
+            return;
+
+        // 在途期间可能已被同步加载写入：以已有数据为准，丢弃本次结果
+        if (auto it = m_map.find(key); it != m_map.end())
+            data = it->second;
+        else if (data)
+            m_map.emplace(key, data);
+
+        auto it = m_pending.find(key);
+        if (it == m_pending.end())
+            return;
+        auto callbacks = std::move(it->second);
+        m_pending.erase(it);
+        for (auto& callback : callbacks)
+            callback(data);
+    });
 }
 
-bool SpineSkeletonCache::preload(int32_t resSpineId)
+void SpineSkeletonCache::loadAsync(int32_t resSpineId, LoadCallback onDone)
 {
-    return getOrCreate(resSpineId) != nullptr;
+    const auto* cfg = Config::getInstance()->getResSpineConfigById(resSpineId);
+    if (!cfg || cfg->spine.empty())
+    {
+        MG_LOG_E("SpineSkeletonCache::loadAsync: ResSpine {} missing or spine empty", resSpineId);
+        onDone(nullptr);
+        return;
+    }
+    loadAsync(cfg->spine, {}, resSpineScale(cfg), std::move(onDone));
 }
 
 void SpineSkeletonCache::clear()
 {
-    for (auto& pair : m_map)
-        delete pair.second;
     m_map.clear();
+}
+
+void SpineSkeletonCache::purgeUnused()
+{
+    for (auto it = m_map.begin(); it != m_map.end();)
+    {
+        if (it->second.use_count() == 1)
+            it = m_map.erase(it);
+        else
+            ++it;
+    }
 }
 
 NS_MG_END

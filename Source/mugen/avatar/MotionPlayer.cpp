@@ -1,76 +1,32 @@
 #include "MotionPlayer.h"
 
+#include "mugen/avatar/data/AvatarAssetCache.h"
+
 #include <algorithm>
 
 NS_MG_BEGIN
 
-MotionPlayer::MotionPlayer() : m_timeMs(0), m_durationMs(0), m_loop(false), m_playing(false) {}
+MotionPlayer::MotionPlayer() : m_timeMs(0), m_loop(false), m_playing(false) {}
 
-bool MotionPlayer::addLayer(const AvatarLayerDef& def)
+bool MotionPlayer::bind(const std::string& motionFile)
 {
-    MotionLayer layer;
-    if (!layer.init(def))
+    stop();
+    m_motionFile = motionFile;
+    m_motionMap  = motionFile.empty() ? nullptr : AvatarAssetCache::getInstance()->getMotionMap(motionFile);
+    if (!m_motionMap)
+    {
+        MG_LOG_W("MotionPlayer::bind: motion map not found '{}'", motionFile);
+        m_motionFile.clear();
         return false;
-
-    if (m_playing && !m_motionName.empty())
-        layer.setMotion(m_motionName, m_entryId);
-
-    m_layers.push_back(std::move(layer));
+    }
     return true;
 }
 
-void MotionPlayer::removeLayersByTag(AvatarLayerTag tag)
+void MotionPlayer::unbind()
 {
-    m_layers.erase(std::remove_if(m_layers.begin(), m_layers.end(),
-                                  [tag](const MotionLayer& layer) { return layer.getTag() == tag; }),
-                   m_layers.end());
-}
-
-void MotionPlayer::clearLayers()
-{
-    m_layers.clear();
-}
-
-void MotionPlayer::recomputeDuration()
-{
-    m_durationMs = 0;
-    for (const auto& layer : m_layers)
-        m_durationMs = std::max(m_durationMs, layer.durationMs());
-
-#if _DEBUG
-    // 各层时长不一致时告警
-    int firstNonZero = -1;
-    bool mismatch    = false;
-    for (const auto& layer : m_layers)
-    {
-        const int d = layer.durationMs();
-        if (firstNonZero < 0)
-            firstNonZero = d;
-        else if (d != firstNonZero)
-            mismatch = true;
-    }
-    if (mismatch)
-    {
-        std::string detail;
-        for (const auto& layer : m_layers)
-        {
-            if (!detail.empty())
-                detail += ", ";
-            detail += "tag=" + std::to_string(static_cast<int32_t>(layer.getTag())) +
-                      " dur=" + std::to_string(layer.durationMs());
-        }
-        MG_LOG_W(
-            "MotionPlayer: layer durations mismatch motion='{}' max={} [{}] (using max; short layers freeze last "
-            "frame)",
-            m_motionName, m_durationMs, detail);
-    }
-#endif
-}
-
-void MotionPlayer::applyMotionToLayers()
-{
-    for (auto& layer : m_layers)
-        layer.setMotion(m_motionName, m_entryId);
+    stop();
+    m_motionFile.clear();
+    m_motionMap = nullptr;
 }
 
 bool MotionPlayer::play(const std::string& motionName, const std::string& entryId, bool loop)
@@ -79,37 +35,26 @@ bool MotionPlayer::play(const std::string& motionName, const std::string& entryI
     m_entryId    = entryId;
     m_loop       = loop;
     m_timeMs     = 0;
-    m_durationMs = 0;
+    m_motion     = nullptr;
+    m_playing    = false;
 
-    if (m_layers.empty())
+    if (!m_motionMap)
+        return false;
+
+    const Motion* motion = m_motionMap->findMotion(motionName);
+    if (!motion)
     {
-        m_playing = false;
+        MG_LOG_E("MotionPlayer::play: motion not found '{}' in '{}'", motionName, m_motionFile);
+        return false;
+    }
+    const int startMs = motion->startTimeMs(entryId);
+    if (startMs < 0)
+    {
+        MG_LOG_E("MotionPlayer::play: entry not found motion='{}' entry='{}'", motionName, entryId);
         return false;
     }
 
-    bool anyOk  = false;
-    int startMs = 0;
-    for (auto& layer : m_layers)
-    {
-        if (layer.setMotion(motionName, entryId))
-        {
-            anyOk   = true;
-            startMs = std::max(startMs, layer.startTimeMs());
-        }
-    }
-
-    if (!anyOk)
-    {
-        MG_LOG_E("MotionPlayer::play: all layers failed motion='{}' entry='{}'", motionName, entryId);
-        m_playing    = false;
-        m_durationMs = 0;
-        m_timeMs     = 0;
-        for (auto& layer : m_layers)
-            layer.clearBox();
-        return false;
-    }
-
-    recomputeDuration();
+    m_motion  = motion;
     m_timeMs  = startMs;
     m_playing = true;
     return true;
@@ -117,34 +62,23 @@ bool MotionPlayer::play(const std::string& motionName, const std::string& entryI
 
 std::string MotionPlayer::motionNameAt(size_t index) const
 {
-    for (const auto& layer : m_layers)
-    {
-        const MotionMap* map = layer.motionMap();
-        if (!map)
-            continue;
-        const Motion* motion = map->motionAt(index);
-        if (motion)
-            return motion->name;
-    }
-    return {};
+    if (!m_motionMap)
+        return {};
+    const Motion* motion = m_motionMap->motionAt(index);
+    return motion ? motion->name : std::string();
 }
 
 void MotionPlayer::collectEventsRange(int t0, int t1, std::vector<const CombatEvent*>* out) const
 {
     if (!out || t1 <= t0)
         return;
-
-    for (const auto& layer : m_layers)
-        layer.eventsBetween(t0, t1, *out);
+    m_motion->eventsBetween(t0, t1, *out);
 }
 
 void MotionPlayer::sortEventsByTime(std::vector<const CombatEvent*>& events)
 {
-    std::stable_sort(events.begin(), events.end(), [](const CombatEvent* a, const CombatEvent* b) {
-        if (!a || !b)
-            return a != nullptr;
-        return a->timeMs < b->timeMs;
-    });
+    std::stable_sort(events.begin(), events.end(),
+                     [](const CombatEvent* a, const CombatEvent* b) { return a->timeMs < b->timeMs; });
 }
 
 void MotionPlayer::step(int dtMs, std::vector<const CombatEvent*>* outEvents)
@@ -152,19 +86,16 @@ void MotionPlayer::step(int dtMs, std::vector<const CombatEvent*>* outEvents)
     if (outEvents)
         outEvents->clear();
 
-    if (!m_playing || dtMs <= 0 || m_durationMs <= 0)
-    {
-        if (m_playing && m_durationMs <= 0)
-            m_timeMs = 0;
+    if (!m_playing || !m_motion || dtMs <= 0)
         return;
-    }
 
-    const int oldTime = m_timeMs;
-    const int target  = oldTime + dtMs;
+    const int duration = m_motion->durationMs();
+    const int oldTime  = m_timeMs;
+    const int target   = oldTime + dtMs;
 
     if (!m_loop)
     {
-        const int newTime = std::min(target, m_durationMs);
+        const int newTime = std::min(target, duration);
         collectEventsRange(oldTime, newTime, outEvents);
         if (outEvents)
             sortEventsByTime(*outEvents);
@@ -173,28 +104,25 @@ void MotionPlayer::step(int dtMs, std::vector<const CombatEvent*>* outEvents)
     }
 
     // 循环时一步跨多圈最多只收集一整圈事件
-    if (dtMs >= m_durationMs)
-        MG_LOG_W("MotionPlayer::step: dtMs={} >= duration={}, collect at most one cycle", dtMs, m_durationMs);
+    if (dtMs >= duration)
+        MG_LOG_W("MotionPlayer::step: dtMs={} >= duration={}, collect at most one cycle", dtMs, duration);
 
-    std::vector<const CombatEvent*> firstSeg;
     std::vector<const CombatEvent*> secondSeg;
-
-    if (target < m_durationMs)
+    if (target < duration)
     {
-        collectEventsRange(oldTime, target, outEvents ? &firstSeg : nullptr);
+        collectEventsRange(oldTime, target, outEvents);
         m_timeMs = target;
     }
     else
     {
-        collectEventsRange(oldTime, m_durationMs, outEvents ? &firstSeg : nullptr);
-        const int wrapped = target % m_durationMs;
+        collectEventsRange(oldTime, duration, outEvents);
+        const int wrapped = target % duration;
         collectEventsRange(0, wrapped, outEvents ? &secondSeg : nullptr);
         m_timeMs = wrapped;
     }
 
     if (outEvents)
     {
-        outEvents->insert(outEvents->end(), firstSeg.begin(), firstSeg.end());
         sortEventsByTime(*outEvents);
         // 回绕段排在后
         sortEventsByTime(secondSeg);
@@ -204,126 +132,66 @@ void MotionPlayer::step(int dtMs, std::vector<const CombatEvent*>* outEvents)
 
 void MotionPlayer::seek(int timeMs)
 {
-    if (timeMs < 0)
-        timeMs = 0;
-
-    if (m_durationMs <= 0)
+    if (!m_motion)
     {
         m_timeMs = 0;
         return;
     }
 
-    if (m_loop)
-    {
-        m_timeMs = timeMs % m_durationMs;
-        if (m_timeMs < 0)
-            m_timeMs += m_durationMs;
-    }
-    else
-    {
-        m_timeMs = std::min(timeMs, m_durationMs);
-    }
+    const int duration = m_motion->durationMs();
+    timeMs             = std::max(0, timeMs);
+    m_timeMs           = m_loop ? timeMs % duration : std::min(timeMs, duration);
 }
 
 void MotionPlayer::stop()
 {
     m_motionName.clear();
     m_entryId.clear();
-    m_timeMs     = 0;
-    m_durationMs = 0;
-    m_loop       = false;
-    m_playing    = false;
-    for (auto& layer : m_layers)
-        layer.clearBox();
+    m_timeMs  = 0;
+    m_loop    = false;
+    m_playing = false;
+    m_motion  = nullptr;
 }
 
 bool MotionPlayer::isFinished() const
 {
     if (m_loop)
         return false;
-    if (!m_playing)
+    if (!m_playing || !m_motion)
         return true;
-    // 时长未知时算播完
-    if (m_durationMs <= 0)
-        return true;
-    return m_timeMs >= m_durationMs;
+    return m_timeMs >= m_motion->durationMs();
 }
 
 void MotionPlayer::boxesAt(std::vector<const DamageBox*>& outAttack, std::vector<const DamageBox*>& outDamage) const
 {
     outAttack.clear();
     outDamage.clear();
-
-    int t = m_timeMs;
-    if (m_loop && m_durationMs > 0)
-    {
-        t %= m_durationMs;
-        if (t < 0)
-            t += m_durationMs;
-    }
-
-    for (const auto& layer : m_layers)
-        layer.boxesAt(t, outAttack, outDamage);
+    if (m_motion)
+        m_motion->boxesAt(m_timeMs, outAttack, outDamage);
 }
 
-void MotionPlayer::serializeCustomImpl(ByteBuffer& byteBuffer) const
+bool MotionPlayer::deserializeCustomImpl(ByteBuffer&)
 {
-    std::vector<AvatarLayerDef> defs;
-    defs.reserve(m_layers.size());
-    for (const auto& layer : m_layers)
-        defs.push_back(layer.getDef());
-    byteBuffer.writeValue(defs);
-}
+    m_motionMap = nullptr;
+    m_motion    = nullptr;
+    if (m_motionFile.empty())
+        return true;
 
-bool MotionPlayer::deserializeCustomImpl(ByteBuffer& byteBuffer)
-{
-    std::vector<AvatarLayerDef> defs;
-    if (!byteBuffer.getValue(defs))
+    m_motionMap = AvatarAssetCache::getInstance()->getMotionMap(m_motionFile);
+    if (!m_motionMap)
     {
-        MG_LOG_E("MotionPlayer::deserializeCustomImpl: failed to read layer defs");
+        MG_LOG_E("MotionPlayer::deserialize: motion map not found '{}'", m_motionFile);
         return false;
     }
+    if (m_motionName.empty())
+        return true;
 
-    const std::string motionName = m_motionName;
-    const std::string entryId    = m_entryId;
-    const int timeMs             = m_timeMs;
-    const bool loop              = m_loop;
-    const bool playing           = m_playing;
-    const auto durationMs        = m_durationMs;
-
-    clearLayers();
-    for (const auto& def : defs)
+    m_motion = m_motionMap->findMotion(m_motionName);
+    if (!m_motion && m_playing)
     {
-        MotionLayer layer;
-        if (!layer.init(def))
-        {
-            MG_LOG_E("MotionPlayer::deserializeCustomImpl: failed to init layer motion='{}'", def.motionMapPath);
-            return false;
-        }
-        m_layers.push_back(std::move(layer));
+        MG_LOG_E("MotionPlayer::deserialize: motion not found '{}' in '{}'", m_motionName, m_motionFile);
+        return false;
     }
-
-    m_motionName = motionName;
-    m_entryId    = entryId;
-    m_loop       = loop;
-    m_playing    = playing;
-    m_timeMs     = 0;
-    m_durationMs = 0;
-
-    if (!m_motionName.empty())
-    {
-        applyMotionToLayers();
-        recomputeDuration();
-        seek(timeMs);
-    }
-    else
-    {
-        m_timeMs = timeMs;
-    }
-
-    MG_ASSERT(m_durationMs == durationMs && m_timeMs == timeMs);
-
-    m_playing = playing;
     return true;
 }
 

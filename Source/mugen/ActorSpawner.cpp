@@ -6,7 +6,7 @@
 #include "mugen/conf/GameDef.h"
 #include "mugen/core/io/FileUtils.h"
 #include "mugen/skill/SkillManager.h"
-#include "mugen/avatar/AvatarLayerUtils.h"
+#include "mugen/avatar/AvatarPaths.h"
 #include "mugen/common/TypeConversions.h"
 
 NS_MG_BEGIN
@@ -90,7 +90,7 @@ void fillAvatarFromRole(AvatarComponent* avatarComp,
                 avatarComp->spineAtlas    = cityAtlas;
             }
         }
-        avatarComp->motionFile = AvatarLayerUtils::spinePathToMotionFile(avatarComp->spineSkeleton);
+        avatarComp->motionFile = AvatarPaths::motionFileFromSpine(avatarComp->spineSkeleton);
     }
     else
     {

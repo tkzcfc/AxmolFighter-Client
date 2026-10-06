@@ -130,6 +130,101 @@ constexpr uint32_t LOCAL_MOVE_KEY_MASK = (1u << INPUT_SLOT_MOVE_LEFT) | (1u << I
                                          (1u << INPUT_SLOT_MOVE_UP) | (1u << INPUT_SLOT_MOVE_DOWN);
 }  // namespace
 
+class TownView::LoadOperation final : public IResourceLoadOperation
+{
+public:
+    explicit LoadOperation(TownView* owner) : m_owner(owner) {}
+
+    std::vector<std::string> getLoadingPackages() const override
+    {
+        return {"UI/Launch"};
+    }
+
+    GComponent* onCreateLoadingContent() override
+    {
+        auto* object = UIPackage::createObject("Launch", "LaunchView");
+        if (!object)
+            return nullptr;
+
+        m_loadingContent = object->as<GComponent>();
+        if (m_loadingContent)
+        {
+            m_progressBar = m_loadingContent->getChild("progressBar")->as<GProgressBar>();
+            if (m_progressBar)
+                m_progressBar->setValue(0.0);
+        }
+        return m_loadingContent;
+    }
+
+    void start() override {}
+
+    bool update(float /*dt*/) override
+    {
+        if (m_finished || m_failed)
+            return m_finished;
+
+        if (!m_owner)
+            return false;
+
+        if (m_stage == 0)
+        {
+            if (!m_owner->initGameWord())
+            {
+                fail("Town initialization failed");
+                return false;
+            }
+
+            m_stage = 1;
+            setProgress(50.0);
+            return false;
+        }
+
+        if (m_stage == 1)
+        {
+            if (!m_owner->createLocalPlayer())
+            {
+                fail("Failed to create local player");
+                return false;
+            }
+
+            m_stage    = 2;
+            m_finished = true;
+            setProgress(100.0);
+            return true;
+        }
+
+        return m_finished;
+    }
+
+private:
+    void setProgress(double value)
+    {
+        if (m_progressBar)
+            m_progressBar->setValue(value);
+    }
+
+    void fail(std::string_view message)
+    {
+        if (m_failed)
+            return;
+
+        m_failed = true;
+        MessageDialog::showGlobal(message, []() { ax::Director::getInstance()->end(); });
+    }
+
+    TownView* m_owner            = nullptr;
+    GComponent* m_loadingContent = nullptr;
+    GProgressBar* m_progressBar  = nullptr;
+    int m_stage                  = 0;
+    bool m_finished              = false;
+    bool m_failed                = false;
+};
+
+std::unique_ptr<IResourceLoadOperation> TownView::createResourceLoadOperation()
+{
+    return std::make_unique<LoadOperation>(this);
+}
+
 TownView::TownView()
 {
     m_boot.townId = DEFAULT_TOWN_ID;
@@ -145,27 +240,17 @@ void TownView::onEnter()
 {
     Super::onEnter();
 
-    if (!initGameWord())
-    {
-        m_gameWord = nullptr;
-        MessageDialog::show("城镇初始化失败");
+    if (!m_gameWord)
         return;
-    }
 
-    if (!createLocalPlayer())
-    {
-        MessageDialog::show("创建角色失败");
-        return;
-    }
-
+    installKeyboardListener();
     addMessagePushReceiver();
 
-    // 城镇只响应移动输入
+    // Town only responds to movement input.
     fillTownInputSlotMap(m_slotMap);
 
     sendEnterScene();
 }
-
 void TownView::onExit()
 {
     if (m_keyboardListener)
@@ -232,18 +317,12 @@ void TownView::onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event* event)
 bool TownView::initGameWord()
 {
     auto currentScene = ax::Director::getInstance()->getRunningScene();
-
-    m_keyboardListener                = ax::EventListenerKeyboard::create();
-    m_keyboardListener->onKeyPressed  = AX_CALLBACK_2(TownView::onKeyPressed, this);
-    m_keyboardListener->onKeyReleased = AX_CALLBACK_2(TownView::onKeyReleased, this);
-    ax::Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(m_keyboardListener,
-                                                                                              currentScene);
+    if (!currentScene)
+        return false;
 
     m_gameWord = std::make_unique<mugen::GameWord>();
     if (!m_gameWord->init(currentScene, 0xe53c2))
-    {
         return false;
-    }
 
     m_gameWord->setMode(GameWordMode::kTown);
 
@@ -257,6 +336,21 @@ bool TownView::initGameWord()
     return true;
 }
 
+void TownView::installKeyboardListener()
+{
+    if (m_keyboardListener)
+        return;
+
+    auto currentScene = ax::Director::getInstance()->getRunningScene();
+    if (!currentScene)
+        return;
+
+    m_keyboardListener                = ax::EventListenerKeyboard::create();
+    m_keyboardListener->onKeyPressed  = AX_CALLBACK_2(TownView::onKeyPressed, this);
+    m_keyboardListener->onKeyReleased = AX_CALLBACK_2(TownView::onKeyReleased, this);
+    ax::Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(m_keyboardListener,
+                                                                                              currentScene);
+}
 bool TownView::createLocalPlayer()
 {
     auto* session = AppContext::get().gameSession();

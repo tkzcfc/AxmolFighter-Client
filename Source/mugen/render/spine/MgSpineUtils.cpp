@@ -2,6 +2,7 @@
 
 #ifdef RUNTIME_IN_AXMOL
 
+#    include <algorithm>
 #    include <atomic>
 #    include <cstring>
 #    include <memory>
@@ -109,6 +110,27 @@ std::string atlasFromSpine(std::string_view spine)
     if (dot == std::string::npos || (slash != std::string::npos && dot < slash))
         return path + ".atlas";
     return path.substr(0, dot) + ".atlas";
+}
+
+std::vector<std::string> resolveAtlasFiles(std::string_view skeletonFile, const std::vector<std::string>& atlasFiles)
+{
+    std::vector<std::string> out;
+    out.reserve(atlasFiles.empty() ? 1 : atlasFiles.size());
+    for (const auto& atlasFile : atlasFiles)
+    {
+        if (atlasFile.empty())
+            continue;
+        std::string path = atlasFile;
+        std::replace(path.begin(), path.end(), '\\', '/');
+        out.push_back(std::move(path));
+    }
+    if (out.empty())
+    {
+        std::string path = atlasFromSpine(skeletonFile);
+        std::replace(path.begin(), path.end(), '\\', '/');
+        out.push_back(std::move(path));
+    }
+    return out;
 }
 
 bool checkIsJsonFormat(const ax::Data& data)

@@ -254,7 +254,7 @@ ax::Node* createSpineNode(const JsonValue& node)
     }
 
     // path 常为 .json，内容可能是 Binary；走公共探测加载
-    auto* skeleton = MgSkeletonAnimation::create(jsonPath, atlasPath);
+    auto* skeleton = MgSkeletonAnimation::createFromCache(jsonPath, atlasPath);
     if (!skeleton)
     {
         MG_LOG_W("LayerRuntimeLoader: failed to load Spine '{}' skeleton='{}' atlas='{}'", stringOr(node, "name"),
