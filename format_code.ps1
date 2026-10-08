@@ -1,6 +1,7 @@
 param(
     [int]$Jobs = 0,
-    [switch]$ListFiles
+    [switch]$ListFiles,
+    [string[]]$Paths = @()
 )
 
 $ErrorActionPreference = 'Stop'
@@ -253,13 +254,18 @@ try {
 
     $items = New-Object System.Collections.Generic.List[object]
 
-    $sourceFiles = Get-FilesByExtension -Path (Join-Path $root 'Source') -Extensions @('.cpp', '.h', '.mm')
+    if ($Paths.Count -gt 0) {
+        $sourceFiles = @($Paths | ForEach-Object { Get-Item -LiteralPath (Join-Path $root $_) })
+    }
+    else {
+        $sourceFiles = Get-FilesByExtension -Path (Join-Path $root 'Source') -Extensions @('.cpp', '.h', '.mm')
+    }
     Add-Stage -Title '[1/3] Formatting Source ...' -Files $sourceFiles -StyleKey 'DEFAULT' -Items $items
 
-    $iosCppFiles = Get-FilesByExtension -Path (Join-Path $root 'proj.ios_mac') -Extensions @('.cpp', '.h')
+    $iosCppFiles = if ($Paths.Count -eq 0) { Get-FilesByExtension -Path (Join-Path $root 'proj.ios_mac') -Extensions @('.cpp', '.h') } else { @() }
     Add-Stage -Title '[2/3] Formatting proj.ios_mac (*.cpp, *.h) ...' -Files $iosCppFiles -StyleKey 'IOSCPP' -Items $items
 
-    $objcFiles = Get-FilesByExtension -Path (Join-Path $root 'proj.ios_mac') -Extensions @('.mm')
+    $objcFiles = if ($Paths.Count -eq 0) { Get-FilesByExtension -Path (Join-Path $root 'proj.ios_mac') -Extensions @('.mm') } else { @() }
     Add-Stage -Title '[3/3] Formatting proj.ios_mac (*.mm) ...' -Files $objcFiles -StyleKey 'OBJC' -Items $items
 
     Write-Host ''

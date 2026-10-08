@@ -1,6 +1,6 @@
 #include "FashionResolver.h"
 #include "mugen/avatar/AvatarPaths.h"
-#include "mugen/common/TypeConversions.h"
+#include "mugen/conf/TypeConversions.h"
 #include "mugen/conf/Config.h"
 
 NS_MG_BEGIN

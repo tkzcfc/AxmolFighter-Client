@@ -1,7 +1,7 @@
 #include "ui/battle/LocalRoleUtils.h"
 
 #include "AppContext.h"
-#include "mugen/common/TypeConversions.h"
+#include "mugen/conf/TypeConversions.h"
 #include "mugen/conf/Config.h"
 
 namespace gameui

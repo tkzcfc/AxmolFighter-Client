@@ -1,0 +1,5 @@
+If:
+  PathMatch: (Source/mugen/core/(ecs|bt|reflect|serialize)/.*|TestsHeadless/tests/(Ecs|BT).*|TestsHeadless/tests/main\.cpp)
+CompileFlags:
+  CompilationDatabase: TestsHeadless/build
+  Add: [-std=c++20, -DRUNTIME_IN_AXMOL=0]

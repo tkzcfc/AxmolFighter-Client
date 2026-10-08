@@ -3,7 +3,7 @@
 #include "AppContext.h"
 #include "TownView.h"
 #include "mugen/avatar/render/Avatar.h"
-#include "mugen/common/TypeConversions.h"
+#include "mugen/conf/TypeConversions.h"
 #include "ui/widgets/character_lobby/CharacterCreationPanel.h"
 #include "ui/widgets/common/MessageDialog.h"
 #include "ui/core/AudioManager.h"

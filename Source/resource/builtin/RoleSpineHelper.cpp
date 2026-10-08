@@ -3,14 +3,14 @@
 #include "resource/ResourceLoader.h"
 #include "resource/builtin/SpineResource.h"
 
-#include "mugen/ActorSpawner.h"
+#include "mugen/avatar/AvatarPaths.h"
 
 namespace gameres
 {
 
-std::shared_ptr<SpineResource> addRoleSpine(ResourceLoader& loader, int32_t roleId, bool preferCity)
+std::shared_ptr<SpineResource> addRoleSpine(ResourceLoader& loader, int32_t roleId)
 {
-    const auto info = mugen::actor_spawner::resolveRoleSpine(roleId, preferCity);
+    const auto info = mugen::AvatarPaths::resolveRoleSpine(roleId);
     if (!info.valid)
         return nullptr;
 

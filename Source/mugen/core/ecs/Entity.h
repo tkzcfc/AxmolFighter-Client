@@ -1,67 +1,22 @@
 #pragma once
 
-#include "Types.h"
-#include "Component.h"
+#include "../reflect/Reflect.h"
 
-#define MG_GET_COMPONENT(ENTITY, TYPE) static_cast<TYPE*>(ENTITY->getComponent(#TYPE))
-#define MG_ADD_COMPONENT(ENTITY, TYPE) static_cast<TYPE*>(ENTITY->addComponent(#TYPE))
-
-NS_MG_BEGIN
-
-class ECSManager;
-class GameWord;
-class Entity : public Object
+namespace mugen
 {
-public:
-    typedef Object Super;
+struct Entity
+{
+    uint32_t value = 0;
 
-public:
-    Entity();
+    static constexpr uint32_t kIndexBits     = 20;
+    static constexpr uint32_t kIndexMask     = (1U << kIndexBits) - 1;
+    static constexpr uint32_t kMaxGeneration = (1U << 12) - 1;
 
-    virtual ~Entity();
+    constexpr uint32_t index() const { return value & kIndexMask; }
+    constexpr uint32_t generation() const { return value >> kIndexBits; }
+    constexpr bool operator==(const Entity&) const = default;
 
-    EntityId getId() const;
-
-    Component* addComponent(const std::string& name);
-
-    void removeComponent(const std::string& name);
-
-    void removeAllComponents();
-
-    bool containsComponent(const std::string& name) const;
-
-    bool containsComponentByTypeId(ComponentTypeId typeId) const;
-
-    Component* getComponent(const std::string& name) const;
-
-    Component* getComponentByTypeId(ComponentTypeId typeId) const;
-
-    bool isPendingRemoval() const;
-
-    Signature getSignature() const;
-
-    void destroy();
-
-    ECSManager* getECSManager() const;
-
-    GameWord* getGameWord() const;
-
-    void notifyEntityReady() const;
-
-public:
-    virtual void serialize(ByteBuffer& byteBuffer) const override;
-
-    virtual bool deserialize(ByteBuffer& byteBuffer) override;
-
-private:
-    friend class ECSManager;
-    ECSManager* m_ecsManager;
-    EntityId m_id;
-    // Indicates whether the entity is marked for removal
-    bool m_pendingRemoval;
-    bool isReady;
-
-    MG_SYNTHESIZE_READONLY_BY_REF(std::vector<Component*>, m_components, Components);
+    MG_REFLECT(Entity, value)
 };
-
-NS_MG_END
+static_assert(sizeof(Entity) == sizeof(uint32_t));
+}  // namespace mugen

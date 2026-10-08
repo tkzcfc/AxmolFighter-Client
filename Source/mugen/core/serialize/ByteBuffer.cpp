@@ -19,7 +19,7 @@
 
 NS_MG_BEGIN
 
-ByteBuffer::ByteBuffer() : m_buffer(nullptr), m_capacity(0), m_size(0), m_position(0U)
+ByteBuffer::ByteBuffer() : m_position(0U), m_size(0), m_capacity(0), m_buffer(nullptr)
 {
     resize(0);
 }
@@ -33,11 +33,8 @@ ByteBuffer::ByteBuffer(uint32_t capacity)
 }
 
 ByteBuffer::ByteBuffer(uint8_t* buffer, uint32_t capacity)
+    : m_position(0U), m_size(capacity), m_capacity(capacity), m_buffer(nullptr)
 {
-    m_size     = capacity;
-    m_capacity = capacity;
-    m_position = 0U;
-
     if (m_capacity > 0)
     {
         m_buffer = static_cast<byte*>(malloc(m_capacity));
@@ -46,7 +43,7 @@ ByteBuffer::ByteBuffer(uint8_t* buffer, uint32_t capacity)
 }
 
 ByteBuffer::ByteBuffer(ByteBuffer&& other) noexcept
-    : m_buffer(other.m_buffer), m_capacity(other.m_capacity), m_size(other.m_size), m_position(other.m_position)
+    : m_position(other.m_position), m_size(other.m_size), m_capacity(other.m_capacity), m_buffer(other.m_buffer)
 {
     other.m_buffer   = nullptr;
     other.m_capacity = 0;
@@ -127,7 +124,7 @@ void ByteBuffer::resize(uint32_t addLen)
         auto oldBuf = m_buffer;
         m_buffer    = static_cast<byte*>(malloc(m_capacity));
 
-        ::memcpy(m_buffer, oldBuf, m_position);
+        ::memcpy(m_buffer, oldBuf, std::max(m_size, m_position));
 
         free(oldBuf);
     }
@@ -436,12 +433,14 @@ bool ByteBuffer::getString(std::string& value)
 
 void ByteBuffer::writeString(const std::string& value)
 {
-    writeBinary((byte*)value.c_str(), value.size());
+    MG_ASSERT(isStringLengthValid(value.size()));
+    writeBinary((byte*)value.c_str(), static_cast<uint32_t>(value.size()));
 }
 
 void ByteBuffer::writeString(const std::string_view value)
 {
-    writeBinary((byte*)value.data(), value.size());
+    MG_ASSERT(isStringLengthValid(value.size()));
+    writeBinary((byte*)value.data(), static_cast<uint32_t>(value.size()));
 }
 
 bool ByteBuffer::getObject(Object& value)

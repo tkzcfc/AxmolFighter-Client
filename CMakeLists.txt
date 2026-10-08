@@ -143,6 +143,13 @@ endif()
 
 include(AXGameTargetSetup)
 
+if(MSVC)
+  target_compile_options(${APP_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/Zc:preprocessor>)
+  if(_AX_TESTS)
+    target_compile_options(${TEST_TARGET_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/Zc:preprocessor>)
+  endif()
+endif()
+
 # <spine_3_4/xxx.h> 以 Source/3rd 为根目录
 target_include_directories(${APP_NAME} BEFORE PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd")

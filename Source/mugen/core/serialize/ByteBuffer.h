@@ -1,5 +1,8 @@
 #pragma once
 
+#include <unordered_map>
+#include <unordered_set>
+
 #include "../StdC.h"
 
 NS_MG_BEGIN
@@ -135,6 +138,10 @@ public:
     bool getString(std::string& value);
     void writeString(const std::string& value);
     void writeString(const std::string_view value);
+    static constexpr bool isStringLengthValid(std::size_t length)
+    {
+        return length <= std::numeric_limits<uint32_t>::max();
+    }
 
     bool getObject(Object& value);
     void writeObject(const Object& value);

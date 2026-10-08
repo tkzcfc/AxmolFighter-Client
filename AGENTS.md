@@ -17,5 +17,5 @@ Game client written in C++ on Axmol (custom fork). It uses CMake, FairyGUI, prot
 | `Source/ui/` | FairyGUI code, `gameui` namespace (avoids clashing with `ax::ui`) |
 | `Source/mugen/` | Battle core shared with the server |
 | `Source/resource/` | Generic async resource loader, `gameres` namespace; see the "资源加载器" section in the root README.md |
-| `Source/3rd/` | behaviac, tinyexpr, sol/Lua (vendored; don't edit) |
+| `Source/3rd/` | behaviac, protobuf, spine 3.4 (vendored; don't edit) |
 | `Content/` | Runtime assets. `Content/mugen/config/config.bin` is generated |

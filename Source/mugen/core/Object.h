@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_set>
+
 #include "serialize/ByteBuffer.h"
 #include "serialize/SerializableHelper.h"
 

@@ -2,8 +2,6 @@
 
 NS_MG_BEGIN
 
-// ─── 初始化 ─────────────────────────────────────────────────
-
 Random::Random()
 {
     seed(0x123456789ABCDEF0ULL);
@@ -16,14 +14,11 @@ Random::Random(uint64_t s)
 
 void Random::seed(uint64_t s)
 {
-    // splitmix64 展开 4 个状态，避免全零初始状态
     m_s0 = _splitmix64(s);
     m_s1 = _splitmix64(s);
     m_s2 = _splitmix64(s);
     m_s3 = _splitmix64(s);
 }
-
-// ─── 核心算法：xoshiro256** ──────────────────────────────────
 
 uint64_t Random::next()
 {
@@ -41,41 +36,28 @@ uint64_t Random::next()
     return result;
 }
 
-// ─── 公共接口 ────────────────────────────────────────────────
-
-float Random::nextFloat()
+Fixed Random::randomF(Fixed min, Fixed max)
 {
-    // 取高 23 位映射到 [1.0, 2.0)，再减 1 得到 [0.0, 1.0)
-    const uint32_t bits = static_cast<uint32_t>(next() >> 41);
-    const uint32_t ieee = (127u << 23) | bits;
-    float result;
-    static_assert(sizeof(float) == sizeof(uint32_t), "float must be 32-bit");
-    memcpy(&result, &ieee, sizeof(float));
-    return result - 1.0f;
-}
-
-int32_t Random::nextInt(int32_t min, int32_t max)
-{
-    MG_ASSERT(min <= max && "Invalid range for nextInt");
-    if (min >= max)
+    MG_ASSERT(min <= max && "Invalid range for randomF");
+    if (min == max)
     {
         return min;
     }
-    const uint64_t range = static_cast<uint64_t>(max - min) + 1ULL;
-    return min + static_cast<int32_t>(next() % range);
+    const Fixed fraction = Fixed::fromRaw(static_cast<int64_t>(next() >> (64 - Fixed::kFracBits)));
+    return min + (max - min) * fraction;
 }
 
-float Random::nextFloat(float min, float max)
+int32_t Random::randomN(int32_t min, int32_t max)
 {
-    MG_ASSERT(min <= max && "Invalid range for nextFloat");
-    if (min >= max)
+    MG_ASSERT(min <= max && "Invalid range for randomN");
+    if (min == max)
     {
         return min;
     }
-    return min + nextFloat() * (max - min);
+    const uint64_t range = static_cast<uint64_t>(static_cast<int64_t>(max) - static_cast<int64_t>(min)) + 1;
+    const int64_t result = static_cast<int64_t>(min) + static_cast<int64_t>(next() % range);
+    return static_cast<int32_t>(result);
 }
-
-// ─── 私有工具 ────────────────────────────────────────────────
 
 uint64_t Random::_splitmix64(uint64_t& x)
 {

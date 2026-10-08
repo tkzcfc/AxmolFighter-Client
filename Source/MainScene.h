@@ -26,7 +26,6 @@
 #pragma once
 
 #include "axmol.h"
-#include "mugen/GameWord.h"
 
 class MainScene : public ax::Scene
 {

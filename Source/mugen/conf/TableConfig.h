@@ -6,7 +6,7 @@
 
 // 本文件只放「有 AxmolFighter-Config/table 对应行」的配置结构，以及表行内嵌套辅助类型。
 // 运行时状态（如 AttributeComponent / CombatStats）放 component/，勿再塞进此处。
-// kind → 黑月源表对照见 AxmolFighter-Tools/config_converter/docs/table-kind-mapping.md
+// kind → 源表对照见 AxmolFighter-Tools/config_converter/docs/table-kind-mapping.md
 
 NS_MG_BEGIN
 

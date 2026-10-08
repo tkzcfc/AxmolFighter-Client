@@ -1,33 +1,16 @@
 #include "GameView.h"
 
-#include "AppContext.h"
 #include "TownView.h"
-#include "mugen/Components.h"
-#include "mugen/GameWord.h"
-#include "mugen/conf/Config.h"
-#include "mugen/conf/GameDef.h"
-#include "mugen/skill/SkillManager.h"
-#include "resource/builtin/MapResource.h"
-#include "resource/builtin/RoleSpineHelper.h"
 #include "ui/battle/LocalBattleMode.h"
-#include "ui/battle/LocalRoleUtils.h"
-#include "ui/battle/OnlineBattleMode.h"
 #include "ui/core/ViewManager.h"
 #include "ui/input/DefaultInputSlotMap.h"
 
 #include "imgui.h"
 
-#include <algorithm>
-#include <cstdio>
-
-using namespace mugen;
-
 namespace gameui
 {
 
 GameView::GameView() = default;
-
-GameView::GameView(BattleBootParams boot) : m_boot(std::move(boot)) {}
 
 GameView::GameView(LocalBattleParams local) : m_local(std::move(local)) {}
 
@@ -35,46 +18,16 @@ GameView::~GameView() = default;
 
 void GameView::onPrepareLoad()
 {
-    auto& loader = getResourceLoader();
-
-    const int32_t mapId = m_boot ? m_boot->mapId : (m_local ? m_local->roomId : 0);
-    if (mapId > 0)
-    {
-        const auto resolved = mugen::GameWord::resolveMap(mapId);
-        if (resolved.isValid())
-            loader.add<gameres::MapResource>(resolved.layerFile());
-
-        // 怪物本体是固定的（loadMap 时一次性生成，没有分波刷怪），本地/联网都能按 mapId 枚举
-        if (resolved.roomConfig)
-        {
-            for (const auto& monster : resolved.roomConfig->monsters)
-                gameres::addRoleSpine(loader, monster.monsterId, /*preferCity*/ false);
-        }
-    }
-
-    // 本地副本出场的玩家角色是已知的；联网对战靠 world_dump 还原 Avatar（里面已经是别人
-    // 打包好的身体数据），这里不重复预加载。preferCity 和 LocalBattleMode::init 的模式判断
-    // 保持一致：只有调试用的"无房间 id"本地模式会退回城镇模式。
-    if (m_local)
-    {
-        const bool isDungeon = m_local->roomId > 0;
-        gameres::addRoleSpine(loader, resolveLocalPlayerRoleId(), /*preferCity*/ !isDungeon);
-    }
-
-    addLoadStep([this] { return initGameWord(); });
+    addLoadStep([this] { return initInput(); });
     addLoadStep([this] {
         m_battleMode = createBattleMode();
-        if (!m_battleMode)
+        if (!m_battleMode || !m_battleMode->init())
         {
-            MG_LOG_E("GameView: createBattleMode returned null");
-            return false;
-        }
-        if (!m_battleMode->init(m_gameWord.get()))
-        {
-            MG_LOG_E("GameView: battleMode init failed");
+            AXLOGE("GameView: battle mode init failed");
             m_battleMode = nullptr;
             return false;
         }
+        showPlaceholder();
         return true;
     });
 }
@@ -82,11 +35,8 @@ void GameView::onPrepareLoad()
 void GameView::onEnter()
 {
     Super::onEnter();
-
     fillCombatInputSlotMap(m_slotMap);
-
-    MG_LOG_I("GameView: entered (online={}, localRoom={})", m_boot.has_value(),
-             m_local.has_value() ? m_local->roomId : 0);
+    AXLOGI("GameView: entered (localRoom={})", m_local.has_value() ? m_local->roomId : 0);
 }
 
 void GameView::onExit()
@@ -103,7 +53,7 @@ void GameView::onExit()
         m_battleMode = nullptr;
     }
 
-    m_gameWord = nullptr;
+    m_placeholder = nullptr;
     Super::onExit();
 }
 
@@ -111,41 +61,14 @@ void GameView::onUpdate(float delta)
 {
     if (m_battleMode)
         m_battleMode->onUpdate(delta);
-    tickLocalRevive(delta);
 }
 
-void GameView::tickLocalRevive(float delta)
-{
-    if (!m_gameWord || !m_gameWord->getDirector())
-        return;
-    auto* director = MG_GET_COMPONENT(m_gameWord->getDirector(), DirectorComponent);
-    if (!director || director->localPlayerEntityId == INVALID_ENTITY_ID)
-        return;
-    Entity* player = m_gameWord->ecsManager.getEntity(director->localPlayerEntityId);
-    if (!player)
-        return;
-    auto* attr     = MG_GET_COMPONENT(player, AttributeComponent);
-    auto* behavior = MG_GET_COMPONENT(player, BehaviorComponent);
-    if (!attr || !behavior)
-        return;
-    if (attr->hp > 0.0f || behavior->reviveRequested)
-    {
-        m_reviveDelaySec = 0.0f;
-        return;
-    }
-    if (behavior->currentKind != static_cast<int32_t>(BehaviorKind::kDeath))
-        return;
-    m_reviveDelaySec += delta;
-    if (m_reviveDelaySec >= 1.5f)
-        behavior->reviveRequested = true;
-}
-
-void GameView::onKeyPressed(ax::EventKeyboard::KeyCode code, ax::Event* event)
+void GameView::onKeyPressed(ax::EventKeyboard::KeyCode code, ax::Event* /*event*/)
 {
     setInputFromKey(code, true);
 }
 
-void GameView::onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event* event)
+void GameView::onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event* /*event*/)
 {
     setInputFromKey(code, false);
 }
@@ -162,12 +85,12 @@ void GameView::setInputFromKey(ax::EventKeyboard::KeyCode code, bool pressed)
     m_battleMode->setInput(it->second, pressed);
 }
 
-bool GameView::initGameWord()
+bool GameView::initInput()
 {
-    auto currentScene = ax::Director::getInstance()->getRunningScene();
+    auto* currentScene = ax::Director::getInstance()->getRunningScene();
     if (!currentScene)
     {
-        MG_LOG_E("GameView: running scene is null");
+        AXLOGE("GameView: running scene is null");
         return false;
     }
 
@@ -176,155 +99,39 @@ bool GameView::initGameWord()
     m_keyboardListener->onKeyReleased = AX_CALLBACK_2(GameView::onKeyReleased, this);
     ax::Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(m_keyboardListener,
                                                                                               currentScene);
-
-    m_gameWord               = std::make_unique<mugen::GameWord>();
-    const std::uint64_t seed = (m_boot && m_boot->randomSeed != 0) ? m_boot->randomSeed : 0xe53c2;
-    if (!m_gameWord->init(currentScene, seed))
-    {
-        MG_LOG_E("GameView: GameWord::init failed");
-        return false;
-    }
-
     return true;
 }
 
 std::unique_ptr<IBattleMode> GameView::createBattleMode()
 {
-    if (m_boot)
-        return std::make_unique<OnlineBattleMode>(std::move(*m_boot));
-
     if (m_local)
         return std::make_unique<LocalBattleMode>(m_local->roomId);
-
     return std::make_unique<LocalBattleMode>();
+}
+
+void GameView::showPlaceholder()
+{
+    auto* scene = ax::Director::getInstance()->getRunningScene();
+    if (!scene)
+        return;
+
+    m_placeholder      = ax::Label::createWithSystemFont("Battle is being rebuilt", "Arial", 28);
+    const auto visible = ax::Director::getInstance()->getVisibleSize();
+    m_placeholder->setPosition(visible.width * 0.5f, visible.height * 0.5f);
+    scene->addChild(m_placeholder, 100);
 }
 
 void GameView::onImGUIRender()
 {
-    // 仅本地副本模式显示返回城镇按钮
     if (!m_local || m_local->roomId <= 0)
         return;
 
     ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(200.0f, 80.0f), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(220.0f, 90.0f), ImGuiCond_FirstUseEver);
     ImGui::Begin("副本");
-
     ImGui::Text("房间 ID: %d", m_local->roomId);
     if (ImGui::Button("返回城镇", ImVec2(-1, 0)))
-    {
         getViewManager()->switchView<TownView>();
-    }
-
-    ImGui::End();
-
-    // 技能调试面板
-    Entity* localPlayer = nullptr;
-    if (m_gameWord && m_gameWord->getDirector())
-    {
-        if (auto* director = MG_GET_COMPONENT(m_gameWord->getDirector(), DirectorComponent))
-        {
-            if (director->localPlayerEntityId != INVALID_ENTITY_ID)
-                localPlayer = m_gameWord->ecsManager.getEntity(director->localPlayerEntityId);
-        }
-    }
-
-    ImGui::SetNextWindowPos(ImVec2(20.0f, 120.0f), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(360.0f, 320.0f), ImGuiCond_FirstUseEver);
-    ImGui::Begin("技能调试");
-
-    if (!localPlayer)
-    {
-        ImGui::TextUnformatted("无本地玩家");
-        ImGui::End();
-        return;
-    }
-
-    auto* attr     = MG_GET_COMPONENT(localPlayer, AttributeComponent);
-    auto* behavior = MG_GET_COMPONENT(localPlayer, BehaviorComponent);
-    auto* mgr      = SkillManager::of(localPlayer);
-    auto* deck     = MG_GET_COMPONENT(localPlayer, SkillDeckComponent);
-    auto* skillBar = MG_GET_COMPONENT(localPlayer, SkillBarComponent);
-
-    if (attr)
-    {
-        ImGui::Text("HP %.0f / %.0f", attr->hp, attr->basic.hpMax);
-        ImGui::Text("MP %.0f / %.0f", attr->mp, attr->mpMax);
-        ImGui::Text("EP %.0f / %.0f", attr->ep, attr->epMax);
-        if (attr->hp <= 0.0f && ImGui::Button("复活"))
-        {
-            if (behavior)
-                behavior->reviveRequested = true;
-        }
-    }
-
-    if (mgr)
-    {
-        ImGui::Separator();
-        ImGui::Text("active=%d pending=%d", mgr->activeSkillAttackId, mgr->pendingSkillAttackId);
-        ImGui::Text("interrupt=%d extra=%d dash=%d", mgr->interruptOpen ? 1 : 0, mgr->interruptExtraOpen ? 1 : 0,
-                    (behavior && (behavior->statusTags & StateTag::kTagDashState)) ? 1 : 0);
-        ImGui::Text("thrust=%d", mgr->thrustSkillAttackId);
-    }
-
-    if (deck)
-    {
-        ImGui::Separator();
-        if (ImGui::Button("清空 CD"))
-        {
-            if (mgr)
-            {
-                for (auto& s : mgr->skills)
-                {
-                    if (!s)
-                        continue;
-                    s->coolDownMs   = 0;
-                    s->releaseCount = s->releaseMax > 0 ? s->releaseMax : 1;
-                }
-            }
-        }
-
-        ImGui::TextUnformatted("键位: A=SLOT0, 1-9=SLOT1-9, 0=SLOT10");
-        ImGui::BeginChild("skill_list", ImVec2(0, 0), true);
-        for (size_t i = 0; i < deck->skills.size(); ++i)
-        {
-            const auto& e        = deck->skills[i];
-            const auto* cfg      = Config::getInstance()->getSkillAttackConfigById(e.skillAttackId);
-            const int32_t mpCost = cfg ? cfg->mp : 0;
-            const int32_t epCost = cfg ? cfg->ep : 0;
-            const int32_t sorder = cfg ? cfg->sorder : 0;
-            const Skill* sk      = mgr ? mgr->findSkill(e.skillAttackId) : nullptr;
-
-            // 按 skillBar 真实槽位反查热键（skillIndexs 存的是 actorDataComp->skills 下标，与 deck 下标一致）
-            char keyLabel[8]   = "?";
-            int32_t slotOffset = -1;
-            if (skillBar)
-            {
-                for (const auto& slot : skillBar->skillSlots)
-                {
-                    if (std::find(slot.skillIndexs.begin(), slot.skillIndexs.end(), static_cast<int32_t>(i)) !=
-                        slot.skillIndexs.end())
-                    {
-                        slotOffset = slot.slotIndex - static_cast<int32_t>(INPUT_SLOT_0);
-                        break;
-                    }
-                }
-            }
-            if (slotOffset == 0)
-                std::snprintf(keyLabel, sizeof(keyLabel), "A");
-            else if (slotOffset >= 1 && slotOffset <= 9)
-                std::snprintf(keyLabel, sizeof(keyLabel), "%d", slotOffset);
-            else if (slotOffset == 10)
-                std::snprintf(keyLabel, sizeof(keyLabel), "0");
-            else
-                std::snprintf(keyLabel, sizeof(keyLabel), "-");
-
-            ImGui::Text("[%s] id %d | CD %d/%d | mp %d ep %d | sorder %d | next %d", keyLabel, e.skillAttackId,
-                        sk ? sk->coolDownMs : 0, sk ? sk->coolDownMaxMs : 0, mpCost, epCost, sorder,
-                        e.nextSkillAttackId);
-        }
-        ImGui::EndChild();
-    }
-
     ImGui::End();
 }
 

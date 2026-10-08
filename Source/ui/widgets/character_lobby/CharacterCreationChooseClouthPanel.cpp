@@ -3,7 +3,7 @@
 #include "ui/widgets/common/MessageDialog.h"
 #include "ui/UiConfig.h"
 #include "mugen/avatar/render/Avatar.h"
-#include "mugen/common/TypeConversions.h"
+#include "mugen/conf/TypeConversions.h"
 #include "AppContext.h"
 #include "ui/core/AudioManager.h"
 #include <net/client_game.pb.h>
