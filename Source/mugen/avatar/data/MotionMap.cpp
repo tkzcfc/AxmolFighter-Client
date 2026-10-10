@@ -7,6 +7,7 @@
 
 NS_MG_BEGIN
 
+// 查找片段起点，空 id 表示动作起点。
 int Motion::startTimeMs(const std::string& entryId) const
 {
     if (entryId.empty())
@@ -19,6 +20,7 @@ int Motion::startTimeMs(const std::string& entryId) const
     return -1;
 }
 
+// 返回有效索引的片段，否则返回空。
 const MotionClip* Motion::clipAtIndex(size_t index) const
 {
     if (index >= clips.size())
@@ -26,6 +28,7 @@ const MotionClip* Motion::clipAtIndex(size_t index) const
     return &clips[index];
 }
 
+// 将动作时间定位到片段及其局部时间。
 const MotionClip* Motion::clipAt(int timeMs, int* localMs, size_t* index) const
 {
     if (clips.empty())
@@ -58,6 +61,7 @@ const MotionClip* Motion::clipAt(int timeMs, int* localMs, size_t* index) const
     return nullptr;
 }
 
+// 从当前片段时间轴收集生效框体。
 void Motion::boxesAt(int timeMs,
                      std::vector<const DamageBox*>& outAttack,
                      std::vector<const DamageBox*>& outDamage) const
@@ -69,6 +73,7 @@ void Motion::boxesAt(int timeMs,
     clip->timeline->boxesAt(localMs, outAttack, outDamage);
 }
 
+// 跨越多个片段收集时间区间内事件。
 void Motion::eventsBetween(int t0, int t1, std::vector<const CombatEvent*>& out) const
 {
     if (t1 <= t0 || clips.empty() || t0 >= duration)
@@ -92,6 +97,7 @@ void Motion::eventsBetween(int t0, int t1, std::vector<const CombatEvent*>& out)
     }
 }
 
+// 展开定义并为每个片段绑定对应时间轴。
 bool MotionMap::bindTimelines(const std::function<const CombatTimeline*(const std::string&)>& lookup)
 {
     m_motions.clear();
@@ -159,6 +165,7 @@ bool MotionMap::bindTimelines(const std::function<const CombatTimeline*(const st
     return true;
 }
 
+// 按名称查询已展开的动作。
 const Motion* MotionMap::findMotion(const std::string& name) const
 {
     const auto it = m_nameToIndex.find(name);
@@ -167,6 +174,7 @@ const Motion* MotionMap::findMotion(const std::string& name) const
     return &m_motions[it->second];
 }
 
+// 按索引查询已展开的动作。
 const Motion* MotionMap::motionAt(size_t index) const
 {
     if (index >= m_motions.size())

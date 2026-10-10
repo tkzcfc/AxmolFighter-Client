@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mugen/core/Object.h"
+#include "mugen/core/StdC.h"
 
 #ifdef RUNTIME_IN_AXMOL
 

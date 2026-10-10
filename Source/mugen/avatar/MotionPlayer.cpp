@@ -6,8 +6,10 @@
 
 NS_MG_BEGIN
 
+// 创建未绑定资源且未播放的播放器。
 MotionPlayer::MotionPlayer() : m_timeMs(0), m_loop(false), m_playing(false) {}
 
+// 绑定动作图并重置当前播放状态。
 bool MotionPlayer::bind(const std::string& motionFile)
 {
     stop();
@@ -22,6 +24,7 @@ bool MotionPlayer::bind(const std::string& motionFile)
     return true;
 }
 
+// 解除动作图并清空播放状态。
 void MotionPlayer::unbind()
 {
     stop();
@@ -29,6 +32,7 @@ void MotionPlayer::unbind()
     m_motionMap = nullptr;
 }
 
+// 查找动作和起始片段后开始播放。
 bool MotionPlayer::play(const std::string& motionName, const std::string& entryId, bool loop)
 {
     m_motionName = motionName;
@@ -60,6 +64,7 @@ bool MotionPlayer::play(const std::string& motionName, const std::string& entryI
     return true;
 }
 
+// 返回动作图中指定索引的动作名称。
 std::string MotionPlayer::motionNameAt(size_t index) const
 {
     if (!m_motionMap)
@@ -68,6 +73,7 @@ std::string MotionPlayer::motionNameAt(size_t index) const
     return motion ? motion->name : std::string();
 }
 
+// 收集当前动作指定时间范围内的事件。
 void MotionPlayer::collectEventsRange(int t0, int t1, std::vector<const CombatEvent*>* out) const
 {
     if (!out || t1 <= t0)
@@ -75,12 +81,14 @@ void MotionPlayer::collectEventsRange(int t0, int t1, std::vector<const CombatEv
     m_motion->eventsBetween(t0, t1, *out);
 }
 
+// 稳定排序事件以保留同一时刻的源顺序。
 void MotionPlayer::sortEventsByTime(std::vector<const CombatEvent*>& events)
 {
     std::stable_sort(events.begin(), events.end(),
                      [](const CombatEvent* a, const CombatEvent* b) { return a->timeMs < b->timeMs; });
 }
 
+// 推进播放时间，并按循环规则收集经过的事件。
 void MotionPlayer::step(int dtMs, std::vector<const CombatEvent*>* outEvents)
 {
     if (outEvents)
@@ -130,6 +138,7 @@ void MotionPlayer::step(int dtMs, std::vector<const CombatEvent*>* outEvents)
     }
 }
 
+// 将播放时间限制或回绕到有效动作范围。
 void MotionPlayer::seek(int timeMs)
 {
     if (!m_motion)
@@ -143,6 +152,7 @@ void MotionPlayer::seek(int timeMs)
     m_timeMs           = m_loop ? timeMs % duration : std::min(timeMs, duration);
 }
 
+// 停止播放并清除当前动作选择。
 void MotionPlayer::stop()
 {
     m_motionName.clear();
@@ -153,6 +163,7 @@ void MotionPlayer::stop()
     m_motion  = nullptr;
 }
 
+// 判断非循环动作是否到达末尾。
 bool MotionPlayer::isFinished() const
 {
     if (m_loop)
@@ -162,37 +173,13 @@ bool MotionPlayer::isFinished() const
     return m_timeMs >= m_motion->durationMs();
 }
 
+// 返回当前时刻生效的攻击框和受击框。
 void MotionPlayer::boxesAt(std::vector<const DamageBox*>& outAttack, std::vector<const DamageBox*>& outDamage) const
 {
     outAttack.clear();
     outDamage.clear();
     if (m_motion)
         m_motion->boxesAt(m_timeMs, outAttack, outDamage);
-}
-
-bool MotionPlayer::deserializeCustomImpl(ByteBuffer&)
-{
-    m_motionMap = nullptr;
-    m_motion    = nullptr;
-    if (m_motionFile.empty())
-        return true;
-
-    m_motionMap = AvatarAssetCache::getInstance()->getMotionMap(m_motionFile);
-    if (!m_motionMap)
-    {
-        MG_LOG_E("MotionPlayer::deserialize: motion map not found '{}'", m_motionFile);
-        return false;
-    }
-    if (m_motionName.empty())
-        return true;
-
-    m_motion = m_motionMap->findMotion(m_motionName);
-    if (!m_motion && m_playing)
-    {
-        MG_LOG_E("MotionPlayer::deserialize: motion not found '{}' in '{}'", m_motionName, m_motionFile);
-        return false;
-    }
-    return true;
 }
 
 NS_MG_END

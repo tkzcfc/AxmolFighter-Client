@@ -1,27 +1,18 @@
 #pragma once
 
-#include "Vec3.h"
+#include "IntVec3.h"
+#include "mugen/core/reflect/Reflect.h"
 
 NS_MG_BEGIN
 
-class DamageBox : public Object
+// 以逻辑整数坐标表示的轴对齐三维碰撞盒。
+struct DamageBox
 {
-public:
-    typedef Object Super;
+    // 相对动画基点的 X、Y、Z 最小角坐标。
+    IntVec3 pos;
 
-public:
-    DamageBox() = default;
-    virtual ~DamageBox() {}
-
-    // X : 以ani坐标为基点的碰撞框X轴坐标
-    // Y : 以ani坐标为基点的碰撞框Y轴坐标
-    // Z : 以ani坐标为基点的碰撞框Z轴坐标
-    Vector3i pos;
-
-    // X : 宽度
-    // Y : 深度
-    // Z : 高度
-    Vector3i size;
+    // X 为宽度、Y 为深度、Z 为高度的非负尺寸。
+    IntVec3 size;
 
 #ifdef RUNTIME_IN_AXMOL
     void drawDebug(ax::DrawNode* drawNode,
@@ -76,16 +67,17 @@ public:
     }
 #endif
 
+    // 判断两个半开区间 AABB 在三个轴上是否均有正长度交集。
     bool overlaps(const DamageBox& other) const
     {
-        // 3D AABB 碰撞检测：x/y/z 三轴均有重叠
+        // 三维 AABB 碰撞要求 x、y、z 三轴均有重叠。
         bool overlapX = (pos.x < other.pos.x + other.size.x) && (pos.x + size.x > other.pos.x);
         bool overlapY = (pos.y < other.pos.y + other.size.y) && (pos.y + size.y > other.pos.y);
         bool overlapZ = (pos.z < other.pos.z + other.size.z) && (pos.z + size.z > other.pos.z);
         return overlapX && overlapY && overlapZ;
     }
 
-    MG_DEFINE_SERIALIZABLE(pos, size);
+    MG_REFLECT(DamageBox, pos, size)
 };
 
 NS_MG_END

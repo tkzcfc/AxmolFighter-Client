@@ -1,213 +1,310 @@
 #pragma once
 
-#include "mugen/core/Object.h"
+#include <cstdint>
 
-NS_MG_BEGIN
-
-static const uint32_t INPUT_SLOT_NONE       = 0;   // 无输入槽位
-static const uint32_t INPUT_SLOT_MOVE_LEFT  = 1;   // 左移按键槽位
-static const uint32_t INPUT_SLOT_MOVE_RIGHT = 2;   // 右移按键槽位
-static const uint32_t INPUT_SLOT_MOVE_UP    = 3;   // 上移按键槽位
-static const uint32_t INPUT_SLOT_MOVE_DOWN  = 4;   // 下移按键槽位
-static const uint32_t INPUT_SLOT_Z          = 5;   // 按键 Z 槽位
-static const uint32_t INPUT_SLOT_X          = 6;   // 按键 X 槽位
-static const uint32_t INPUT_SLOT_C          = 7;   // 按键 C 槽位
-static const uint32_t INPUT_SLOT_0          = 8;   // 技能槽位 0
-static const uint32_t INPUT_SLOT_1          = 9;   // 技能槽位 1
-static const uint32_t INPUT_SLOT_2          = 10;  // 技能槽位 2
-static const uint32_t INPUT_SLOT_3          = 11;  // 技能槽位 3
-static const uint32_t INPUT_SLOT_4          = 12;  // 技能槽位 4
-static const uint32_t INPUT_SLOT_5          = 13;  // 技能槽位 5
-static const uint32_t INPUT_SLOT_6          = 14;  // 技能槽位 6
-static const uint32_t INPUT_SLOT_7          = 15;  // 技能槽位 7
-static const uint32_t INPUT_SLOT_8          = 16;  // 技能槽位 8
-static const uint32_t INPUT_SLOT_9          = 17;  // 技能槽位 9
-static const uint32_t INPUT_SLOT_10         = 18;  // 技能槽位 10
-static const uint32_t INPUT_SLOT_MAX        = INPUT_SLOT_10 + 1;
-
-// 技能槽位触发模式标志位（可组合），决定哪些输入事件可以激活技能
-enum SlotTriggerFlag : uint32_t
+namespace mugen
 {
-    kSlotTriggerNone      = 0,       // 不可被槽位触发
-    kSlotTriggerPress     = 1 << 0,  // 按键刚按下（上升沿）时触发
-    kSlotTriggerKeepPress = 1 << 1,  // 按键持续按住期间每帧触发
-    kSlotTriggerRelease   = 1 << 2,  // 按键抬起时触发
+// 角色可叠加的运行状态位。
+enum class EntityRoleStatus : uint32_t
+{
+    None       = 0x00000000,
+    Birth      = 0x00000001,
+    Death      = 0x00000002,
+    Wake       = 0x00000004,
+    GetUp      = 0x00000008,
+    HitFloor   = 0x00000010,
+    HitDown    = 0x00000020,
+    HitUp      = 0x00000040,
+    HitSwitch  = 0x00000080,
+    Hit        = 0x00000100,
+    Attack     = 0x00000200,
+    Fall       = 0x00000400,
+    Patrol     = 0x00000800,
+    Chase      = 0x00001000,
+    Alert      = 0x00002000,
+    Run        = 0x00004000,
+    Walk       = 0x00008000,
+    Idle       = 0x00010000,
+    Finding    = 0x00020000,
+    Jostled    = 0x00040000,
+    Revive     = 0x00080000,
+    Controlled = 0x00100000,
 };
 
-enum EntityCategory : int8_t
+// 合并两个角色状态位集合。
+constexpr EntityRoleStatus operator|(EntityRoleStatus left, EntityRoleStatus right)
 {
-    kPlayer,       // 玩家
-    kMonster,      // 怪物/NPC
-    kSkillEffect,  // 技能创建的效果（投射物、AOE等）
-};
-
-enum class EntityRoleType : int32_t
-{
-    kHero           = 1,   // 英雄
-    kMonster        = 2,   // 怪物
-    kElite          = 3,   // 精英
-    kBoss           = 4,   // Boss
-    kSummon         = 5,   // 召唤物
-    kMachine        = 6,   // 机器机械装置
-    kCopperOre      = 7,   // 铜矿石
-    kSilverOre      = 8,   // 银矿石
-    kGoldOre        = 9,   // 金矿石
-    kAthena         = 10,  // 防守关被守护的角色类型
-    kMonsterMachine = 11,  // 怪物类型机关
-    kCrystal        = 12,  // 水晶
-    kMax            = 13,  // 最大值
-};
-
-inline bool isValidEntityRoleType(EntityRoleType t)
-{
-    const auto v = static_cast<int32_t>(t);
-    return v >= static_cast<int32_t>(EntityRoleType::kHero) && v < static_cast<int32_t>(EntityRoleType::kMax);
+    return static_cast<EntityRoleStatus>(static_cast<uint32_t>(left) | static_cast<uint32_t>(right));
 }
 
-// 角色职业类型
+// 角色的额外控制或强化状态。
+enum class ExtraState : int32_t
+{
+    Durance = 1,
+    Palsy,
+    Stun,
+    Silence,
+    SuperArmor,
+    Invincible,
+    Stealth,
+    Frozen
+};
+
+// 战斗流程中可触发的事件类型。
+enum class BFEvent : int32_t
+{
+    BeforePrepareSkill = 1,
+    BeforeCastSkill,
+    BeforeHit,
+    AfterHit,
+    BeforeToBeHit,
+    AfterToBeHit,
+    AfterCastSkill,
+    AfterPrepareSkill,
+    BeforeNextSkill,
+    AfterNextSkill,
+    BeforeCrazy,
+    AfterCrazy,
+    EvadeSuccess,
+    BeforeDeath,
+    EpZero,
+    UseTp,
+    ShieldClean,
+    AttackMiss,
+    SkillColdStart,
+    SkillColdEnd,
+    HpChange,
+    UseEp,
+    BeforeArtifactSkill,
+    AfterArtifactSkill,
+    AddBuff,
+    RemoveBuff,
+    BeforeRoleSkillAction,
+    AfterRoleSkillAction,
+    BehaviorStateStart = 50,
+    BehaviorStateEnd,
+    Enter = 100,
+    Exit,
+    OnceUpdate,
+};
+
+// 玩家或系统发出的控制事件。
+enum class ControlEvent : uint8_t
+{
+    CTR_NONE = 0,
+    CTR_IDLE = 1,
+    CTR_WALK,
+    CTR_RUN,
+    CTR_REVIVE,
+    CTR_DEATH,
+    CTR_GOD_1,
+    CTR_GOD_2,
+    CTR_ADD = 50,
+    CTR_DELETE,
+    CTR_ATKA = 100,
+    CTR_ATKB,
+    CTR_ATKC,
+    CTR_ATKD,
+    CTR_ATKE,
+    CTR_ATKF,
+    CTR_ATKG,
+    CTR_ATKH,
+    CTR_ATKI,
+    CTR_ATKJ,
+    CTR_ATKK,
+    CTR_ATKL,
+    CTR_ATKM,
+    CTR_ATKN,
+    CTR_ATKO,
+    CTR_ATKQ,
+    CTR_JOY1 = 150,
+    CTR_JOY2,
+    CTR_JOY3,
+    CTR_JOY4,
+    CTR_JOY5,
+    CTR_JOY6,
+    CTR_JOY7,
+    CTR_JOY8,
+    CTR_JOY9,
+    CTR_JOY10,
+    CTR_JOY11,
+    CTR_JOY12,
+    CTR_JOYB = 200,
+    CTR_JOYC,
+    CTR_JOYD,
+};
+
+// 技能在角色技能栏中的槽位。
+enum class EnumSkillSlot : int32_t
+{
+    None = 0,
+    Attack,
+    Sprint,
+    Dodge,
+    Crazy,
+    A,
+    B,
+    C,
+    SA,
+    SB,
+    SC,
+    EA,
+    EB,
+    SUA,
+    SUB,
+    SUC,
+    Break,
+    SAP,
+    SBP,
+    SCP,
+    Anger,
+    Max = Anger,
+};
+// 角色技能的配置分组。
+enum class EntitySkillGroup : int32_t
+{
+    Normal = 1,
+    Crazy,
+    JoyStick,
+    JoyStickCrazy,
+    Special
+};
+// 技能切换模式。
+enum class EntitySkillChange : int32_t
+{
+    Normal = 1,
+    Joy,
+    Anger
+};
+// 房间流程状态。
+enum class RoomState : int32_t
+{
+    Check      = -1,
+    StoryDoing = -2,
+    None       = 0,
+    Init,
+    Ready,
+    Enter,
+    ReadySpine,
+    Tip,
+    Process,
+    FightFailure,
+    FightRevive,
+    FightKo,
+    FightVictory,
+    FightBalance,
+    FightFinish,
+    FightFinalBalance,
+    FightEnd,
+    End,
+};
+// 房间采用的战斗规则。
+enum class EnumBattleRule : int32_t
+{
+    None = 0,
+    Clear,
+    Defense,
+    Survive,
+    Chasm
+};
+// 配置表使用的角色类型值。
+enum class role_type : int32_t
+{
+    Hero = 1,
+    Monster,
+    Elite,
+    Boss,
+    Summon,
+    Machine,
+    CopperOre,
+    SilverOre,
+    GoldOre,
+    Athena,
+    MonsterMachine,
+    Crystal,
+    Max,
+};
+// 运行时角色类型值。
+enum class EntityRoleType : int32_t
+{
+    kHero = 1,
+    kMonster,
+    kElite,
+    kBoss,
+    kSummon,
+    kMachine,
+    kCopperOre,
+    kSilverOre,
+    kGoldOre,
+    kAthena,
+    kMonsterMachine,
+    kCrystal,
+    kMax,
+};
+// 可选角色职业。
 enum CharacterClass : int8_t
 {
-    kUnknown  = 0,
-    kSwordman = 1,  // 剑士
-    kRanger   = 2,  // 游侠
-    kFighter  = 3,  // 格斗家
-    kMage     = 4,  // 法师
-    kCount    = 4,  // 职业数量
+    kUnknown = 0,
+    kSwordman,
+    kRanger,
+    kFighter,
+    kMage,
+    kCount = 4
 };
-
-// 装备部位
-enum class EquipPosition : int32_t
-{
-    kNone     = 0,  // 无
-    kWeapon   = 1,  // 武器
-    kClothes  = 2,  // 衣服
-    kTrousers = 3,  // 裤子
-    kGloves   = 4,  // 手套
-    kShoes    = 5,  // 鞋
-    kNecklace = 6,  // 项链
-    kEarrings = 7,  // 耳环
-    kRing     = 8,  // 戒指
-};
-
-// 时装部位
+// 时装可装备的外观部位。
 enum class FashionPosition : int32_t
 {
-    kBody     = 0,   // 身体
-    kHat      = 1,   // 头饰
-    kClothes  = 2,   // 衣服
-    kWeapon   = 3,   // 武器
-    kHair     = 4,   // 发型
-    kFace     = 5,   // 脸饰
-    kWing     = 6,   // 翅膀
-    kSkin     = 7,   // 皮肤
-    kSkinType = 8,   // 皮肤类型
-    kHalo     = 9,   // 光环
-    kPhantom  = 10,  // 幻影
-    kCount    = 11,  // 部位数量
+    kBody     = 0,
+    kHat      = 1,
+    kClothes  = 2,
+    kWeapon   = 3,
+    kHair     = 4,
+    kFace     = 5,
+    kWing     = 6,
+    kSkin     = 7,
+    kSkinType = 8,
+    kHalo     = 9,
+    kPhantom  = 10,
+    kCount    = 11,
 };
-
-// 头像部位
-enum class PortraitPosition : int32_t
-{
-    kNone  = 0,  // 无
-    kHead  = 1,  // 头像
-    kFrame = 2,  // 头像框
-};
-
-// 道具属性类型
-enum class AttributeType : int32_t
-{
-    kUnknown           = 0,
-    kSourceForce       = 1,   // 源力
-    kAgility           = 2,   // 敏捷
-    kHabitus           = 3,   // 体质
-    kSpirit            = 4,   // 精神
-    kHp                = 5,   // 生命值
-    kAtk               = 6,   // 物理攻击
-    kDef               = 7,   // 物理防御
-    kMatk              = 8,   // 魔法攻击
-    kMdef              = 9,   // 魔法防御
-    kCrit              = 10,  // 暴击
-    kCritResist        = 11,  // 爆抗
-    kCritDamage        = 12,  // 暴击伤害
-    kCritDamageResist  = 13,  // 爆伤抗性
-    kDodge             = 14,  // 闪避
-    kHit               = 15,  // 命中
-    kBaseDamage        = 16,  // 基础伤害
-    kAtkTemThousandPer = 17,  // 物理攻击(万分比)
-    kDefTemThousandPer = 18,  // 物理防御(万分比)
-    kHpTemThousandPer  = 19,  // 生命值(万分比)
-    kMax               = 20,  // 属性种类最大值
-};
-
-// 角色受击反馈类型
-enum HitType : int8_t
-{
-    kHitNone,    // 无
-    kHitLight,   // 普通攻击，小硬直
-    kHitHeavy,   // 重击/击晕，大硬直
-    kHitLaunch,  // 击飞升空，经过空中阶段再落地翻滚
-    kHitDown,    // 直接倒地，跳过空中阶段
-    kHitGrab,    // 抓取控制
-};
-
-// 角色朝向
-enum FacingDirection : int8_t
-{
-    kFacingLeft,
-    kFacingRight,
-};
-
-// 最短保底硬直（ms），无视防守方属性也不得低于此值
-static constexpr int32_t HITSTUN_MIN_MS = 100;
-
-// 状态标签位掩码
-enum StateTag : uint32_t
-{
-    kTagNone          = 0,
-    kTagGrounded      = 1 << 0,  // 地面状态
-    kTagMovable       = 1 << 1,  // 可移动
-    kTagAirborne      = 1 << 2,  // 空中状态
-    kTagHitState      = 1 << 3,  // 受击状态
-    kTagDownState     = 1 << 4,  // 倒地状态
-    kTagAttackAllowed = 1 << 5,  // 可释放攻击技能
-    kTagFacingAllowed = 1 << 6,  // 可转向
-    kTagDashState     = 1 << 7,  // 冲刺状态
-    kTagFalling       = 1 << 8,  // 下落状态
-    kTagAttackState   = 1 << 9,  // 正在施法（Idle/Walk/Dash 必须失败）
-};
-
-// 行为分支类型
+// 角色行为状态机的行为种类。
 enum class BehaviorKind : int32_t
 {
-    kIdle        = 0,
-    kWalk        = 1,
-    kDash        = 2,
-    kAttack      = 3,
-    kStun        = 4,  // Hit（轻受击）
-    kHitUp       = 5,
-    kHitDown     = 6,  // 空中击倒
-    kHitFloor    = 7,
-    kGetUp       = 8,
-    kDeath       = 9,
-    kChase       = 10,
-    kPatrol      = 11,
-    kAlert       = 12,
-    kHitSwitch   = 13,  // 受击结束过渡
-    kJostled     = 14,  // 实体重叠推开
-    kRevive      = 15,
-    kWake        = 16,
-    kPathFinding = 17,
+    kIdle = 0,
+    kWalk,
+    kDash,
+    kAttack,
+    kStun,
+    kHitUp,
+    kHitDown,
+    kHitFloor,
+    kGetUp,
+    kDeath,
+    kChase,
+    kPatrol,
+    kAlert,
+    kHitSwitch,
+    kJostled,
+    kRevive,
+    kWake,
+    kPathFinding,
 };
-
-// 纵深相对水平的缩放（对照位移 Z）
-static constexpr float kZRate = 0.55f;
-// 爆气每毫秒 EP 衰减
-static constexpr float kCrazyDecayPerMs = 0.0666f;
-// 受击回 EP：min(100*hurt/maxHp, 100) * 该值
-static constexpr float kCrazyFromHurtValue = 10.0f;
-// 苏醒无敌 / 复活无敌
-static constexpr int32_t kHeroWakeBuffId = 201;
-static constexpr int32_t kReviveBuffId   = 202;
-
-NS_MG_END
+// 实体所属阵营位。
+enum class EntityCamp : uint32_t
+{
+    Neutral     = 0x0001,
+    Our         = 0x0002,
+    OurFriend   = 0x0004,
+    Enemy       = 0x0008,
+    EnemyFriend = 0x0010
+};
+// 各阵营对应的敌对阵营位集合。
+enum class EntityHostileCamp : uint32_t
+{
+    Neutral     = 0x001e,
+    Our         = 0x0019,
+    OurFriend   = 0x0019,
+    Enemy       = 0x0007,
+    EnemyFriend = 0x0007
+};
+}  // namespace mugen

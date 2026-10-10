@@ -11,8 +11,10 @@ NS_MG_BEGIN
 
 namespace
 {
+// RapidJSON 节点类型别名。
 using JsonValue = rapidjson::Value;
 
+// 查找对象成员，缺失或非对象时返回空。
 const JsonValue* member(const JsonValue& object, const char* key)
 {
     if (!object.IsObject() || !object.HasMember(key))
@@ -20,12 +22,14 @@ const JsonValue* member(const JsonValue& object, const char* key)
     return &object[key];
 }
 
+// 读取数值成员，缺失或类型不符时返回默认值。
 float numberOr(const JsonValue& object, const char* key, float fallback)
 {
     const JsonValue* value = member(object, key);
     return value && value->IsNumber() ? value->GetFloat() : fallback;
 }
 
+// 读取整数成员，数值成员按四舍五入转换。
 int intOr(const JsonValue& object, const char* key, int fallback)
 {
     const JsonValue* value = member(object, key);
@@ -39,13 +43,15 @@ int intOr(const JsonValue& object, const char* key, int fallback)
     return fallback;
 }
 
+// 读取字符串成员，缺失或类型不符时返回默认值。
 std::string stringOr(const JsonValue& object, const char* key, const std::string& fallback = {})
 {
     const JsonValue* value = member(object, key);
     return value && value->IsString() ? value->GetString() : fallback;
 }
 
-Vector2i vec2iOr(const JsonValue& object, const char* key, const Vector2i& fallback)
+// 读取 x、y 格式的整数坐标。
+IntVec2 vec2iOr(const JsonValue& object, const char* key, const IntVec2& fallback)
 {
     const JsonValue* value = member(object, key);
     if (!value || !value->IsObject())
@@ -53,7 +59,8 @@ Vector2i vec2iOr(const JsonValue& object, const char* key, const Vector2i& fallb
     return {intOr(*value, "x", fallback.x), intOr(*value, "y", fallback.y)};
 }
 
-Vector2i size2iOr(const JsonValue& object, const char* key, const Vector2i& fallback)
+// 读取 width、height 格式的整数尺寸。
+IntVec2 size2iOr(const JsonValue& object, const char* key, const IntVec2& fallback)
 {
     const JsonValue* value = member(object, key);
     if (!value || !value->IsObject())
@@ -61,6 +68,7 @@ Vector2i size2iOr(const JsonValue& object, const char* key, const Vector2i& fall
     return {intOr(*value, "width", fallback.x), intOr(*value, "height", fallback.y)};
 }
 
+// 判断图形属性中的 kind 是否匹配。
 bool shapeKindIs(const JsonValue& shape, const char* kind)
 {
     const JsonValue* props = member(shape, "properties");
@@ -78,6 +86,7 @@ bool shapeKindIs(const JsonValue& shape, const char* kind)
     return false;
 }
 
+// 从图形插件数据收集可移动矩形。
 void parseMoveRanges(const JsonValue& document, std::vector<LayerMoveRange>& out)
 {
     const JsonValue* plugins = member(document, "plugins");
@@ -99,20 +108,21 @@ void parseMoveRanges(const JsonValue& document, std::vector<LayerMoveRange>& out
         if (!shapeKindIs(shape, "moveRange") && !nameLooksRange)
             continue;
 
-        const Vector2i center = vec2iOr(shape, "position", {0, 0});
-        const Vector2i size   = size2iOr(shape, "size", {0, 0});
+        const IntVec2 center = vec2iOr(shape, "position", {0, 0});
+        const IntVec2 size   = size2iOr(shape, "size", {0, 0});
         if (size.x <= 0 || size.y <= 0)
             continue;
 
         LayerMoveRange range;
-        range.width  = static_cast<float>(size.x);
-        range.height = static_cast<float>(size.y);
-        range.x      = static_cast<float>(center.x) - range.width * 0.5f;
-        range.y      = static_cast<float>(center.y) - range.height * 0.5f;
+        range.width  = Fixed::fromInt(size.x);
+        range.height = Fixed::fromInt(size.y);
+        range.x      = Fixed::fromInt(center.x) - Fixed::ratio(size.x, 2);
+        range.y      = Fixed::fromInt(center.y) - Fixed::ratio(size.y, 2);
         out.push_back(range);
     }
 }
 
+// 从对象属性数组读取数值。
 float propNumber(const JsonValue& objectNode, const char* key, float fallback)
 {
     const JsonValue* objectData = member(objectNode, "object");
@@ -133,11 +143,13 @@ float propNumber(const JsonValue& objectNode, const char* key, float fallback)
     return fallback;
 }
 
+// 从对象属性数组读取整数。
 int propInt(const JsonValue& objectNode, const char* key, int fallback)
 {
     return static_cast<int>(std::round(propNumber(objectNode, key, static_cast<float>(fallback))));
 }
 
+// 从对象属性数组读取字符串。
 std::string propString(const JsonValue& objectNode, const char* key, const std::string& fallback = {})
 {
     const JsonValue* objectData = member(objectNode, "object");
@@ -158,6 +170,7 @@ std::string propString(const JsonValue& objectNode, const char* key, const std::
     return fallback;
 }
 
+// 从根节点的元数据对象读取音效 id。
 void parseRootMeta(const JsonValue& root, LayerLoadResult& result)
 {
     const JsonValue* children = member(root, "children");
@@ -182,6 +195,7 @@ void parseRootMeta(const JsonValue& root, LayerLoadResult& result)
 }
 }  // namespace
 
+// 读取并校验层文件后返回可用的逻辑元数据。
 LayerLoadResult LayerLoader::load(const std::string& layerFile)
 {
     LayerLoadResult result;

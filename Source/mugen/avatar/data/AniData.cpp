@@ -2,6 +2,7 @@
 
 NS_MG_BEGIN
 
+// 累加所有帧持续时间。
 int AniData::totalDurationMs() const
 {
     int total = 0;
@@ -10,6 +11,7 @@ int AniData::totalDurationMs() const
     return total;
 }
 
+// 将时间映射为有效帧索引。
 int AniData::frameIndexAtTime(int timeMs) const
 {
     if (frames.empty())
