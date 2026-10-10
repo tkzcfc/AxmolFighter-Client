@@ -1,6 +1,5 @@
 
 #include "ByteBuffer.h"
-#include "../Object.h"
 #include <cstdlib>
 
 #define USE_ENDIAN 1
@@ -19,11 +18,13 @@
 
 NS_MG_BEGIN
 
+// 初始化最小可写的自有缓冲区。
 ByteBuffer::ByteBuffer() : m_position(0U), m_size(0), m_capacity(0), m_buffer(nullptr)
 {
     resize(0);
 }
 
+// 分配指定初始容量，初始不含有效数据。
 ByteBuffer::ByteBuffer(uint32_t capacity)
 {
     m_capacity = capacity;
@@ -32,6 +33,7 @@ ByteBuffer::ByteBuffer(uint32_t capacity)
     m_size     = 0U;
 }
 
+// 复制给定字节并将其视为完整有效载荷。
 ByteBuffer::ByteBuffer(uint8_t* buffer, uint32_t capacity)
     : m_position(0U), m_size(capacity), m_capacity(capacity), m_buffer(nullptr)
 {
@@ -42,6 +44,7 @@ ByteBuffer::ByteBuffer(uint8_t* buffer, uint32_t capacity)
     }
 }
 
+// 转移内存所有权并清空源对象。
 ByteBuffer::ByteBuffer(ByteBuffer&& other) noexcept
     : m_position(other.m_position), m_size(other.m_size), m_capacity(other.m_capacity), m_buffer(other.m_buffer)
 {
@@ -51,6 +54,7 @@ ByteBuffer::ByteBuffer(ByteBuffer&& other) noexcept
     other.m_position = 0U;
 }
 
+// 释放由本对象拥有的 malloc 缓冲区。
 ByteBuffer::~ByteBuffer()
 {
     if (m_buffer)
@@ -60,17 +64,20 @@ ByteBuffer::~ByteBuffer()
     }
 }
 
+// 在已分配范围内移动顺序读写游标。
 void ByteBuffer::resetPosition(uint32_t pos)
 {
     MG_ASSERT(pos <= m_capacity);
     m_position = pos;
 }
 
+// 读取结束后将游标返回缓冲区起点。
 void ByteBuffer::readFinish()
 {
     resetPosition(0U);
 }
 
+// 写入结束后提交游标之前的字节为有效数据。
 void ByteBuffer::writeFinish()
 {
     m_size = m_position;
@@ -87,12 +94,14 @@ uint32_t ByteBuffer::len()
     return m_size;
 }
 
+// 保留容量但丢弃当前有效数据。
 void ByteBuffer::clear()
 {
     m_position = 0U;
     m_size     = 0U;
 }
 
+// 释放旧缓冲区并无拷贝接管 malloc 分配的字节。
 void ByteBuffer::fastSet(uint8_t* data, uint32_t size)
 {
     if (m_buffer)
@@ -103,6 +112,7 @@ void ByteBuffer::fastSet(uint8_t* data, uint32_t size)
     m_position = 0U;
 }
 
+// 按倍增策略扩容，并保留已写入或游标前的字节。
 void ByteBuffer::resize(uint32_t addLen)
 {
     auto oldCapacity = m_capacity;
@@ -130,6 +140,7 @@ void ByteBuffer::resize(uint32_t addLen)
     }
 }
 
+// 读取单字节布尔值，非零视为 true。
 bool ByteBuffer::getBool(bool& value)
 {
     byte bval;
@@ -141,11 +152,13 @@ bool ByteBuffer::getBool(bool& value)
     return false;
 }
 
+// 将布尔值规范编码为零或一字节。
 void ByteBuffer::writeBool(const bool& value)
 {
     writeByte(value ? 1 : 0);
 }
 
+// 读取单字节有符号整数。
 bool ByteBuffer::getInt8(int8_t& value)
 {
     byte tmp;
@@ -157,11 +170,13 @@ bool ByteBuffer::getInt8(int8_t& value)
     return false;
 }
 
+// 写入单字节有符号整数的位表示。
 void ByteBuffer::writeInt8(const int8_t& value)
 {
     writeByte((byte)value);
 }
 
+// 读取一个原始字节并推进游标。
 bool ByteBuffer::getByte(byte& value)
 {
     READ_CHECK_RETURN_FALSE(sizeof(byte));
@@ -173,6 +188,7 @@ bool ByteBuffer::getByte(byte& value)
     return true;
 }
 
+// 追加一个原始字节并推进游标。
 void ByteBuffer::writeByte(const byte& value)
 {
     WRITE_CHECK_AND_RESIZE(sizeof(byte));
@@ -181,6 +197,7 @@ void ByteBuffer::writeByte(const byte& value)
     m_position += sizeof(byte);
 }
 
+// 读取网络字节序的有符号 16 位整数。
 bool ByteBuffer::getInt16(int16_t& value)
 {
     uint16_t tmp;
@@ -192,11 +209,13 @@ bool ByteBuffer::getInt16(int16_t& value)
     return false;
 }
 
+// 以网络字节序写入有符号 16 位整数。
 void ByteBuffer::writeInt16(const int16_t& value)
 {
     writeUint16((uint16_t)value);
 }
 
+// 读取网络字节序的无符号 16 位整数。
 bool ByteBuffer::getUint16(uint16_t& value)
 {
     READ_CHECK_RETURN_FALSE(sizeof(uint16_t));
@@ -216,6 +235,7 @@ bool ByteBuffer::getUint16(uint16_t& value)
     return true;
 }
 
+// 以网络字节序写入无符号 16 位整数。
 void ByteBuffer::writeUint16(const uint16_t& value)
 {
     WRITE_CHECK_AND_RESIZE(sizeof(uint16_t));
@@ -233,6 +253,7 @@ void ByteBuffer::writeUint16(const uint16_t& value)
     m_position += sizeof(uint16_t);
 }
 
+// 读取网络字节序的有符号 32 位整数。
 bool ByteBuffer::getInt32(int32_t& value)
 {
     uint32_t tmp;
@@ -244,11 +265,13 @@ bool ByteBuffer::getInt32(int32_t& value)
     return false;
 }
 
+// 以网络字节序写入有符号 32 位整数。
 void ByteBuffer::writeInt32(const int32_t& value)
 {
     writeUint32((uint32_t)value);
 }
 
+// 读取网络字节序的无符号 32 位整数。
 bool ByteBuffer::getUint32(uint32_t& value)
 {
     READ_CHECK_RETURN_FALSE(sizeof(uint32_t));
@@ -267,6 +290,7 @@ bool ByteBuffer::getUint32(uint32_t& value)
     m_position += sizeof(uint32_t);
     return true;
 }
+// 以网络字节序写入无符号 32 位整数。
 void ByteBuffer::writeUint32(const uint32_t& value)
 {
     WRITE_CHECK_AND_RESIZE(sizeof(uint32_t));
@@ -284,6 +308,7 @@ void ByteBuffer::writeUint32(const uint32_t& value)
     m_position += sizeof(uint32_t);
 }
 
+// 读取网络字节序的有符号 64 位整数。
 bool ByteBuffer::getInt64(int64_t& value)
 {
     uint64_t tmp;
@@ -295,11 +320,13 @@ bool ByteBuffer::getInt64(int64_t& value)
     return false;
 }
 
+// 以网络字节序写入有符号 64 位整数。
 void ByteBuffer::writeInt64(const int64_t& value)
 {
     writeUint64((uint64_t)value);
 }
 
+// 读取网络字节序的无符号 64 位整数。
 bool ByteBuffer::getUint64(uint64_t& value)
 {
     READ_CHECK_RETURN_FALSE(sizeof(uint64_t));
@@ -319,6 +346,7 @@ bool ByteBuffer::getUint64(uint64_t& value)
     return true;
 }
 
+// 以网络字节序写入无符号 64 位整数。
 void ByteBuffer::writeUint64(const uint64_t& value)
 {
     WRITE_CHECK_AND_RESIZE(sizeof(uint64_t));
@@ -336,78 +364,7 @@ void ByteBuffer::writeUint64(const uint64_t& value)
     m_position += sizeof(uint64_t);
 }
 
-bool ByteBuffer::getFloat32(float& value)
-{
-    READ_CHECK_RETURN_FALSE(sizeof(float));
-
-#if USE_ENDIAN
-#    if MG_USE_BIG_ENDIAN
-    value = EndianUtils::readFloatInBigEndian(ptr());
-#    else
-    value = EndianUtils::readFloatInLittleEndian(ptr());
-#    endif
-#else
-    auto p = (float*)ptr();
-    value  = *p;
-#endif
-
-    m_position += sizeof(float);
-    return true;
-}
-
-void ByteBuffer::writeFloat32(const float& value)
-{
-    WRITE_CHECK_AND_RESIZE(sizeof(float));
-
-#if USE_ENDIAN
-#    if MG_USE_BIG_ENDIAN
-    EndianUtils::writeFloatInBigEndian(ptr(), value);
-#    else
-    EndianUtils::writeFloatInLittleEndian(ptr(), value);
-#    endif
-#else
-    (*(float*)ptr()) = value;
-#endif
-
-    m_position += sizeof(float);
-}
-
-bool ByteBuffer::getFloat64(double& value)
-{
-    READ_CHECK_RETURN_FALSE(sizeof(double));
-
-#if USE_ENDIAN
-#    if MG_USE_BIG_ENDIAN
-    value = EndianUtils::readDoubleInBigEndian(ptr());
-#    else
-    value = EndianUtils::readDoubleInLittleEndian(ptr());
-#    endif
-#else
-    auto p = (double*)ptr();
-    value  = *p;
-#endif
-
-    m_position += sizeof(double);
-    return true;
-}
-
-void ByteBuffer::writeFloat64(const double& value)
-{
-    WRITE_CHECK_AND_RESIZE(sizeof(double));
-
-#if USE_ENDIAN
-#    if MG_USE_BIG_ENDIAN
-    EndianUtils::writeDoubleInBigEndian(ptr(), value);
-#    else
-    EndianUtils::writeDoubleInLittleEndian(ptr(), value);
-#    endif
-#else
-    (*(double*)ptr()) = value;
-#endif
-
-    m_position += sizeof(double);
-}
-
+// 读取 uint32 长度前缀及紧随其后的字符串字节。
 bool ByteBuffer::getString(std::string& value)
 {
     value.clear();
@@ -431,28 +388,21 @@ bool ByteBuffer::getString(std::string& value)
     return true;
 }
 
+// 写入 std::string 的长度前缀字节。
 void ByteBuffer::writeString(const std::string& value)
 {
     MG_ASSERT(isStringLengthValid(value.size()));
     writeBinary((byte*)value.c_str(), static_cast<uint32_t>(value.size()));
 }
 
+// 写入不要求空终止的字符串视图字节。
 void ByteBuffer::writeString(const std::string_view value)
 {
     MG_ASSERT(isStringLengthValid(value.size()));
     writeBinary((byte*)value.data(), static_cast<uint32_t>(value.size()));
 }
 
-bool ByteBuffer::getObject(Object& value)
-{
-    return value.deserialize(*this);
-}
-
-void ByteBuffer::writeObject(const Object& value)
-{
-    value.serialize(*this);
-}
-
+// 写入 uint32 长度前缀及原始二进制数据。
 void ByteBuffer::writeBinary(byte* data, uint32_t length)
 {
     WRITE_CHECK_AND_RESIZE(length + 4);
@@ -524,20 +474,6 @@ uint64_t ByteBuffer::readUint64()
 {
     uint64_t value = 0;
     getUint64(value);
-    return value;
-}
-
-float ByteBuffer::readFloat32()
-{
-    float value = 0.0f;
-    getFloat32(value);
-    return value;
-}
-
-double ByteBuffer::readFloat64()
-{
-    double value = 0.0;
-    getFloat64(value);
     return value;
 }
 

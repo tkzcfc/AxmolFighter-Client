@@ -13,23 +13,6 @@ $script:ProductNamePattern = 'heiyue|黑月|BlackMoon'
 
 $script:Violations = [System.Collections.Generic.List[string]]::new()
 
-# These legacy paths are owned by later rewrite/delete todos. They are excluded
-# from the determinism-token checks only; product-name and log-language checks
-# still apply to every source file.
-$script:DeferredDeterminismPaths = @{
-    # Rewritten or deleted as part of their dedicated core migrations.
-    'Source/mugen/core/math/Vec2.h' = 'Todo 11 replaces Vec2 with reflected numeric vectors'
-    'Source/mugen/core/math/Vec3.h' = 'Todo 11 replaces Vec3 with reflected numeric vectors'
-    'Source/mugen/core/math/DamageBox.h' = 'Todo 11 migrates DamageBox to integer coordinates'
-    'Source/mugen/core/Object.h' = 'Todo 11 deletes Object'
-    'Source/mugen/core/Object.cpp' = 'Todo 11 deletes Object'
-    # Generic byte utilities retain format helpers for non-simulation callers.
-    'Source/mugen/core/serialize/ByteBuffer.h' = 'generic binary utility retains float and unordered compatibility helpers'
-    'Source/mugen/core/serialize/ByteBuffer.cpp' = 'generic binary utility retains float compatibility helpers'
-    'Source/mugen/core/utils/EndianUtils.h' = 'generic endian utility retains float compatibility helpers'
-    'Source/mugen/core/utils/EndianUtils.cpp' = 'generic endian utility retains float compatibility helpers'
-}
-
 # This checker evaluates branches as the headless target compiles them.
 # RUNTIME_IN_AXMOL=0 is undefined by StdC.h before the engine include branch;
 # OLUA_AUTOCONF is not supplied by the standalone headless project.
@@ -49,18 +32,6 @@ function Add-Violation {
         $relative = $File.Substring($clientRoot.Length).TrimStart('\', '/')
     }
     $script:Violations.Add("${relative}:${Line}: ${Rule}")
-}
-
-function Test-DeferredDeterminismPath {
-    param([System.IO.FileInfo]$File)
-    $relative = $File.FullName.Substring($clientRoot.Length).TrimStart('\', '/').Replace('\', '/')
-    foreach ($path in $script:DeferredDeterminismPaths.Keys) {
-        if ($relative.Equals($path, [System.StringComparison]::OrdinalIgnoreCase) -or
-            $relative.StartsWith($path, [System.StringComparison]::OrdinalIgnoreCase)) {
-            return $true
-        }
-    }
-    return $false
 }
 
 function Get-ScopeRoots {
@@ -211,7 +182,7 @@ function Test-ForbiddenTokens {
     )
     $full = $File.FullName.Replace('\', '/')
     $inCoreOrSim = $full -match '/mugen/(core|sim)/'
-    $checkDeterminismTokens = $inCoreOrSim -and -not (Test-DeferredDeterminismPath $File)
+    $checkDeterminismTokens = $inCoreOrSim
     for ($i = 0; $i -lt $Lines.Count; $i++) {
         $line = $Lines[$i]
         $lineNo = $i + 1
