@@ -3,6 +3,13 @@
 #include "mugen/avatar/data/AvatarAssetCache.h"
 
 #include <algorithm>
+#include <set>
+
+namespace
+{
+// 进程级诊断：同一缺失动作路径只记一次，不参与战斗状态。
+std::set<std::string> g_loggedMissingMotions;
+}  // namespace
 
 NS_MG_BEGIN
 
@@ -17,7 +24,8 @@ bool MotionPlayer::bind(const std::string& motionFile)
     m_motionMap  = motionFile.empty() ? nullptr : AvatarAssetCache::getInstance()->getMotionMap(motionFile);
     if (!m_motionMap)
     {
-        MG_LOG_W("MotionPlayer::bind: motion map not found '{}'", motionFile);
+        if (!motionFile.empty() && g_loggedMissingMotions.insert(motionFile).second)
+            MG_LOG_W("MotionPlayer::bind: motion map not found '{}'", motionFile);
         m_motionFile.clear();
         return false;
     }
