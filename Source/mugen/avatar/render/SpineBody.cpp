@@ -215,8 +215,9 @@ ax::Rect SpineBody::bounds() const
 #    if _DEBUG
 void SpineBody::validateMotion(const Motion& motion) const
 {
-    for (const MotionClip& clip : motion.clips)
+    for (size_t i = 0; i < motion.clips.size(); ++i)
     {
+        const MotionClip& clip = motion.clips[i];
         if (clip.type != MotionEntryType::kSpine)
         {
             MG_LOG_W("SpineBody: motion '{}' clip '{}' is not a spine clip", motion.name, clip.id);
@@ -227,6 +228,13 @@ void SpineBody::validateMotion(const Motion& motion) const
         {
             MG_LOG_W("SpineBody: animation '{}' not found in '{}'", clip.source, m_skeleton);
             continue;
+        }
+        const int spineMs = static_cast<int>(std::lround(anim.duration() * 1000.0f));
+        // 0 时长动画被采样写成一帧。末片段改跟动画时长，动作总时长不动。
+        if (spineMs == 0 && clip.durationMs != spineMs && !const_cast<Motion&>(motion).alignClipToSpine(i, spineMs))
+        {
+            MG_LOG_E("SpineBody: clip '{}' durationMs {} != spine {} in motion '{}'", clip.id, clip.durationMs, spineMs,
+                     motion.name);
         }
         MG_ASSERT(clip.durationMs == static_cast<int>(std::lround(anim.duration() * 1000.0f)));
     }

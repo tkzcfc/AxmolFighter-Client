@@ -11,7 +11,7 @@ NS_MG_BEGIN
 // 动作片段使用的资源类型。
 enum class MotionEntryType : int8_t
 {
-    kAni = 0,
+    kAni   = 0,
     kSpine = 1,
 };
 
@@ -45,8 +45,8 @@ struct MotionClip
     MotionEntryType type = MotionEntryType::kAni;
     std::string source;
     const CombatTimeline* timeline = nullptr;
-    int32_t startMs = 0;
-    int32_t durationMs = 0;
+    int32_t startMs                = 0;
+    int32_t durationMs             = 0;
 };
 
 // 由多个片段组成的可播放动作。
@@ -66,6 +66,8 @@ public:
     void boxesAt(int timeMs, std::vector<const DamageBox*>& outAttack, std::vector<const DamageBox*>& outDamage) const;
     // 收集指定时间区间的逻辑事件。
     void eventsBetween(int t0, int t1, std::vector<const CombatEvent*>& out) const;
+    // 末片段对齐到骨架动画时长。有事件或更晚关键帧时拒绝，动作总时长保持不变。
+    bool alignClipToSpine(size_t index, int32_t spineDurationMs);
 
     // 动作名称、片段和总时长。
     std::string name;

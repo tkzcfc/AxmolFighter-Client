@@ -61,6 +61,31 @@ const MotionClip* Motion::clipAt(int timeMs, int* localMs, size_t* index) const
     return nullptr;
 }
 
+// 末片段改成骨架动画时长。动作总时长仍是时间轴长度，逻辑结束时刻不变。
+bool Motion::alignClipToSpine(size_t index, int32_t spineDurationMs)
+{
+    if (index + 1 != clips.size())
+        return false;
+
+    const MotionClip& clip = clips[index];
+    if (clip.timeline)
+    {
+        if (!clip.timeline->events.empty())
+            return false;
+        for (const CombatTrack& track : clip.timeline->tracks)
+        {
+            for (const CombatKey& key : track.keys)
+            {
+                if (key.timeMs > spineDurationMs)
+                    return false;
+            }
+        }
+    }
+
+    clips[index].durationMs = spineDurationMs;
+    return true;
+}
+
 // 从当前片段时间轴收集生效框体。
 void Motion::boxesAt(int timeMs,
                      std::vector<const DamageBox*>& outAttack,
