@@ -12,18 +12,11 @@ constexpr std::array<ControlEvent, 16> kAttackEvents = {
     ControlEvent::CTR_ATKM, ControlEvent::CTR_ATKN, ControlEvent::CTR_ATKO, ControlEvent::CTR_ATKQ,
 };
 // 用方向编码描述的可识别连招序列。
-constexpr std::array<std::array<int32_t, 5>, 24> kCombos = {{{2, 3, 4, 1, 2}, {4, 3, 2, 1, 4},
-                                                               {3, 2, 3, 2, 0}, {3, 4, 3, 4, 0},
-                                                               {2, 4, 3, 2, 0}, {4, 2, 3, 4, 0},
-                                                               {2, 3, 4, 0, 0}, {4, 3, 2, 0, 0},
-                                                               {3, 2, 1, 0, 0}, {3, 4, 1, 0, 0},
-                                                               {3, 4, 0, 0, 0}, {3, 2, 0, 0, 0},
-                                                               {2, 4, 0, 0, 0}, {4, 2, 0, 0, 0},
-                                                               {3, 1, 0, 0, 0}, {3, 1, 0, 0, 0},
-                                                               {3, 4, 3, 2, 0}, {3, 2, 3, 4, 0},
-                                                               {2, 1, 4, 3, 2}, {4, 1, 2, 3, 4},
-                                                               {1, 3, 0, 0, 0}, {1, 3, 0, 0, 0},
-                                                               {2, 4, 2, 0, 0}, {4, 2, 4, 0, 0}}};
+constexpr std::array<std::array<int32_t, 5>, 24> kCombos = {
+    {{2, 3, 4, 1, 2}, {4, 3, 2, 1, 4}, {3, 2, 3, 2, 0}, {3, 4, 3, 4, 0}, {2, 4, 3, 2, 0}, {4, 2, 3, 4, 0},
+     {2, 3, 4, 0, 0}, {4, 3, 2, 0, 0}, {3, 2, 1, 0, 0}, {3, 4, 1, 0, 0}, {3, 4, 0, 0, 0}, {3, 2, 0, 0, 0},
+     {2, 4, 0, 0, 0}, {4, 2, 0, 0, 0}, {3, 1, 0, 0, 0}, {3, 1, 0, 0, 0}, {3, 4, 3, 2, 0}, {3, 2, 3, 4, 0},
+     {2, 1, 4, 3, 2}, {4, 1, 2, 3, 4}, {1, 3, 0, 0, 0}, {1, 3, 0, 0, 0}, {2, 4, 2, 0, 0}, {4, 2, 4, 0, 0}}};
 
 // 将枚举键转换为按键状态数组下标。
 constexpr size_t keyIndex(ControlKey key)
@@ -48,7 +41,7 @@ int32_t direction(const std::array<bool, 20>& held)
         return 4;
     return 0;
 }
-}
+}  // namespace
 
 // 记录按键变化，并在攻击键重新按下时重置重复计时。
 void ControlManagerCore::setKey(ControlKey key, bool pressed)
@@ -98,7 +91,7 @@ ControlEvent ControlManagerCore::comboEvent() const
     return ControlEvent::CTR_NONE;
 }
 
-// 处理方向变化、推进连招并生成移动命令。
+// 处理方向变化、推进连招，并在方向归零时发出待机。
 void ControlManagerCore::updateDirection(std::vector<PlayerCommand>& commands)
 {
     const int32_t current = direction(m_held);
@@ -106,7 +99,11 @@ void ControlManagerCore::updateDirection(std::vector<PlayerCommand>& commands)
         return;
     m_lastDirection = current;
     if (current == 0)
+    {
+        // 两轴都松开后清掉上一帧留下的移动方向。
+        commands.push_back({ControlEvent::CTR_IDLE, 0, 0, 0});
         return;
+    }
     m_comboWait = kJoystickWaitFrames;
     for (size_t index = 0; index < kCombos.size(); ++index)
     {
@@ -139,4 +136,4 @@ void ControlManagerCore::advance(std::vector<PlayerCommand>& commands)
     else
         m_attackRepeat = 0;
 }
-}
+}  // namespace mugen::sim
