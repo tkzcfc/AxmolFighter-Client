@@ -1,28 +1,61 @@
 #pragma once
 
 #include "ui/battle/BattleMode.h"
+#include "ui/battle/BattleBootParams.h"
+#include "mugen/sim/Replay.h"
+#include "mugen/sim/World.h"
+#include "mugen/sim/input/ControlManagerCore.h"
+#include "ui/battle/BattleDebugPanel.h"
 
 #include <cstdint>
 
 namespace gameui
 {
 
-// 本地战斗骨架。世界已拆除，只记住房间 id，供返回城镇流程使用。
 class LocalBattleMode : public IBattleMode
 {
 public:
-    LocalBattleMode() = default;
+    LocalBattleMode();
     explicit LocalBattleMode(int32_t roomId);
+    explicit LocalBattleMode(LocalBattleParams params);
+    ~LocalBattleMode() override;
 
     bool init() override;
     void onUpdate(float delta) override;
     void setInput(uint32_t slot, bool pressed) override;
+    void onExit() override;
+    void renderDebugPanel();
+    // 切换碰撞框调试绘制，只影响表现层。
+    void toggleCollisionDebug();
+
+    void setReplayPath(std::string path) { m_replayPath = std::move(path); }
+    mugen::sim::World& world() { return m_world; }
+    const mugen::sim::World& world() const { return m_world; }
 
     int32_t roomId() const { return m_roomId; }
+    int32_t autotestFrames() const { return m_autotestFrames; }
+    // 按钮只提交下一帧系统命令。
+    void requestReturnToTown() { m_systemCommands.push_back(mugen::sim::ReturnToTownCommand{}); }
+    bool returnToTownRequested() const { return m_world.ecs().singleton<mugen::sim::RoomState>().m_returnToTown; }
 
 private:
-    // >0：副本房间 id；0：无房间的本地入口
     int32_t m_roomId = 0;
+    int32_t m_roleId = 0;
+    int32_t m_autotestFrames = 0;
+    mugen::sim::World m_world;
+    mugen::sim::ControlManagerCore m_control;
+    mugen::sim::Replay m_replay;
+    std::string m_replayPath;
+    float m_accumulator = 0.0f;
+    bool m_initialized = false;
+    bool m_debugPaused = false;
+    bool m_debugSingleStep = false;
+    BattleDebugPanel m_debugPanel;
+    // 待提交输入及最近的房间表现消息。
+    std::vector<mugen::sim::SystemCommand> m_systemCommands;
+    std::string m_roomMessage;
+    class WorldPresenterHolder;
+    std::unique_ptr<WorldPresenterHolder> m_presenter;
 };
 
 }  // namespace gameui

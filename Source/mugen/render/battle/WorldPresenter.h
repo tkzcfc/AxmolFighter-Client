@@ -97,10 +97,11 @@ public:
     explicit DebugDraw(ax::Node& root);
     void present(sim::World& world);
     void setEnabled(bool enabled) { m_enabled = enabled; }
+    bool enabled() const { return m_enabled; }
 
 private:
     ax::DrawNode* m_node = nullptr;
-    bool m_enabled = false;
+    bool m_enabled       = false;
 };
 
 class WorldPresenter
