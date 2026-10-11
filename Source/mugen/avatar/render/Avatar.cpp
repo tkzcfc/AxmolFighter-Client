@@ -2,6 +2,7 @@
 
 #ifdef RUNTIME_IN_AXMOL
 
+#    include "mugen/avatar/MissingAvatarMotion.h"
 #    include "mugen/avatar/data/AvatarAssetCache.h"
 
 #    include <algorithm>
@@ -226,12 +227,8 @@ void Avatar::setMotion(const std::string& motionName, const std::string& entryId
     m_entryId    = entryId;
     m_loop       = loop;
     m_timeMs     = 0;
-    m_motion     = m_motionMap->findMotion(motionName);
-    if (!m_motion)
-    {
-        MG_LOG_W("Avatar: motion '{}' not found in '{}'", motionName, m_desc.motionFile);
-    }
-    else
+    m_motion     = findAvatarMotion(*m_motionMap, m_desc.motionFile, motionName);
+    if (m_motion)
     {
         const int startMs = m_motion->startTimeMs(entryId);
         if (startMs < 0)
