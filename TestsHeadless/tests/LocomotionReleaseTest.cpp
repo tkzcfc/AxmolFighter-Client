@@ -74,3 +74,73 @@ TEST_CASE("Locomotion direction key release stops within two frames and enters I
     CHECK(stopped.x == settled.x);
     CHECK(stopped.z == settled.z);
 }
+
+TEST_CASE("Locomotion Control diagonal Up and Right moves positive x and z")
+{
+    World world;
+    const Entity entity = setupHero(world);
+    ControlManagerCore control;
+    control.setKey(ControlKey::Up, true);
+    control.setKey(ControlKey::Right, true);
+    const auto start = world.ecs().get<Transform>(entity).position;
+    for (int frame = 0; frame < 6; ++frame)
+        step(world, control);
+    const auto after = world.ecs().get<Transform>(entity).position;
+    CHECK(after.x > start.x);
+    CHECK(after.z > start.z);
+    CHECK(status::isRunStatus(world.ecs().get<RoleStatus>(entity)));
+}
+
+TEST_CASE("Locomotion Control Right then Up keeps moving on both axes")
+{
+    World world;
+    const Entity entity = setupHero(world);
+    ControlManagerCore control;
+    control.setKey(ControlKey::Right, true);
+    for (int frame = 0; frame < 4; ++frame)
+        step(world, control);
+    const auto beforeUp = world.ecs().get<Transform>(entity).position;
+    control.setKey(ControlKey::Up, true);
+    for (int frame = 0; frame < 4; ++frame)
+        step(world, control);
+    const auto after = world.ecs().get<Transform>(entity).position;
+    CHECK(after.x > beforeUp.x);
+    CHECK(after.z > beforeUp.z);
+}
+
+TEST_CASE("Locomotion Control Left then Right while both held moves positive x")
+{
+    World world;
+    const Entity entity = setupHero(world);
+    ControlManagerCore control;
+    control.setKey(ControlKey::Left, true);
+    step(world, control);
+    const auto turned = world.ecs().get<Transform>(entity).position.x;
+    control.setKey(ControlKey::Right, true);
+    for (int frame = 0; frame < 4; ++frame)
+        step(world, control);
+    CHECK(world.ecs().get<Transform>(entity).position.x > turned);
+    CHECK(status::isRunStatus(world.ecs().get<RoleStatus>(entity)));
+}
+
+TEST_CASE("Locomotion Control releasing Right while Left stays held moves negative x")
+{
+    World world;
+    const Entity entity = setupHero(world);
+    ControlManagerCore control;
+    control.setKey(ControlKey::Left, true);
+    step(world, control);
+    control.setKey(ControlKey::Right, true);
+    for (int frame = 0; frame < 4; ++frame)
+        step(world, control);
+    const auto beforeRelease = world.ecs().get<Transform>(entity).position.x;
+    control.setKey(ControlKey::Right, false);
+    bool keptRunning = true;
+    for (int frame = 0; frame < 2; ++frame)
+    {
+        step(world, control);
+        keptRunning = keptRunning && status::isRunStatus(world.ecs().get<RoleStatus>(entity));
+    }
+    CHECK(world.ecs().get<Transform>(entity).position.x < beforeRelease);
+    CHECK(keptRunning);
+}

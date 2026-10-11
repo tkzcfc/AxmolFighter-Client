@@ -24,22 +24,56 @@ constexpr size_t keyIndex(ControlKey key)
     return static_cast<size_t>(key);
 }
 
-// 从互斥方向键状态得出当前方向编码。
-int32_t direction(const std::array<bool, 20>& held)
+// 一帧方向意图：象限仍是四向扇区，斜向额外带 45 度角。
+struct DirectionAim
 {
-    const bool left  = held[keyIndex(ControlKey::Left)];
-    const bool right = held[keyIndex(ControlKey::Right)];
-    const bool up    = held[keyIndex(ControlKey::Up)];
-    const bool down  = held[keyIndex(ControlKey::Down)];
-    if (right && !left)
+    int32_t quadrant = 0;
+    int32_t angle    = 0;
+};
+
+// 同一轴两侧的按住状态与按下序号。
+struct AxisKeys
+{
+    bool negativeHeld      = false;
+    bool positiveHeld      = false;
+    uint32_t negativeOrder = 0;
+    uint32_t positiveOrder = 0;
+};
+
+// 同轴对向键同时按住时，后按下的一侧决定符号。
+int32_t axisSign(AxisKeys axis)
+{
+    if (axis.negativeHeld && axis.positiveHeld)
+        return axis.positiveOrder >= axis.negativeOrder ? 1 : -1;
+    if (axis.positiveHeld)
         return 1;
-    if (left && !right)
-        return 3;
-    if (down && !up)
-        return 2;
-    if (up && !down)
-        return 4;
+    if (axis.negativeHeld)
+        return -1;
     return 0;
+}
+
+// 斜向象限与移动叶子的向量符号一致：右上 1、右下 2、左下 3、左上 4。
+int32_t diagonalQuadrant(int32_t xSign, int32_t zSign)
+{
+    if (xSign > 0)
+        return zSign > 0 ? 1 : 2;
+    return zSign > 0 ? 4 : 3;
+}
+
+// 按各轴后按下的方向键得出象限；垂直两轴同时按住时角度为 45 度。
+DirectionAim direction(const std::array<bool, 20>& held, const std::array<uint32_t, 4>& pressOrder)
+{
+    const int32_t xSign = axisSign({held[keyIndex(ControlKey::Left)], held[keyIndex(ControlKey::Right)],
+                                    pressOrder[keyIndex(ControlKey::Left)], pressOrder[keyIndex(ControlKey::Right)]});
+    const int32_t zSign = axisSign({held[keyIndex(ControlKey::Down)], held[keyIndex(ControlKey::Up)],
+                                    pressOrder[keyIndex(ControlKey::Down)], pressOrder[keyIndex(ControlKey::Up)]});
+    if (xSign == 0 && zSign == 0)
+        return {};
+    if (xSign != 0 && zSign != 0)
+        return {diagonalQuadrant(xSign, zSign), 45000};
+    if (xSign != 0)
+        return {xSign > 0 ? 1 : 3, 0};
+    return {zSign > 0 ? 4 : 2, 90000};
 }
 }  // namespace
 
@@ -50,6 +84,8 @@ void ControlManagerCore::setKey(ControlKey key, bool pressed)
     if (m_held[index] == pressed)
         return;
     m_held[index] = pressed;
+    if (pressed && index < m_pressOrder.size())
+        m_pressOrder[index] = ++m_pressSerial;
     if (index >= keyIndex(ControlKey::AttackA) && pressed)
         m_attackRepeat = 0;
 }
@@ -91,30 +127,34 @@ ControlEvent ControlManagerCore::comboEvent() const
     return ControlEvent::CTR_NONE;
 }
 
-// 处理方向变化、推进连招，并在方向归零时发出待机。
+// 方向或角度变化时发令；仍有方向键按住时不发待机。
 void ControlManagerCore::updateDirection(std::vector<PlayerCommand>& commands)
 {
-    const int32_t current = direction(m_held);
-    if (current == m_lastDirection)
+    const DirectionAim aim = direction(m_held, m_pressOrder);
+    if (aim.quadrant == m_lastDirection && aim.angle == m_lastAngle)
         return;
-    m_lastDirection = current;
-    if (current == 0)
+    const bool sectorChanged = aim.quadrant != m_lastDirection;
+    m_lastDirection          = aim.quadrant;
+    m_lastAngle              = aim.angle;
+    if (aim.quadrant == 0)
     {
         // 两轴都松开后清掉上一帧留下的移动方向。
         commands.push_back({ControlEvent::CTR_IDLE, 0, 0, 0});
         return;
     }
-    m_comboWait = kJoystickWaitFrames;
-    for (size_t index = 0; index < kCombos.size(); ++index)
+    if (sectorChanged)
     {
-        const uint8_t progress = m_comboProgress[index];
-        if (kCombos[index][progress] == current)
-            ++m_comboProgress[index];
-        else
-            m_comboProgress[index] = kCombos[index][0] == current ? 1 : 0;
+        m_comboWait = kJoystickWaitFrames;
+        for (size_t index = 0; index < kCombos.size(); ++index)
+        {
+            const uint8_t progress = m_comboProgress[index];
+            if (kCombos[index][progress] == aim.quadrant)
+                ++m_comboProgress[index];
+            else
+                m_comboProgress[index] = kCombos[index][0] == aim.quadrant ? 1 : 0;
+        }
     }
-    const int32_t angle = current == 1 || current == 3 ? 0 : 90000;
-    commands.push_back({ControlEvent::CTR_RUN, current, angle, 1});
+    commands.push_back({ControlEvent::CTR_RUN, aim.quadrant, aim.angle, 1});
 }
 
 // 按固定顺序处理方向、连招超时和攻击重复。
