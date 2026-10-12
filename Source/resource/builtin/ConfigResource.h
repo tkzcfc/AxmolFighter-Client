@@ -14,7 +14,7 @@ class ConfigResource : public Resource
 public:
     enum class Kind : uint8_t
     {
-        Mugen,         // mugen::Config（config.bin）
+        Mugen,         // mugen::conf::Config（config.bin）
         AvatarAssets,  // mugen::AvatarAssetCache（avatar.bin）
     };
 

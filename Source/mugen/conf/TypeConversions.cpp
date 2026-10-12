@@ -5,6 +5,7 @@ NS_MG_BEGIN
 namespace type_conversions
 {
 
+// 返回职业对应的默认角色配置 id。
 int32_t toRoleConfigId(CharacterClass characterClass)
 {
     constexpr int32_t kDefaultHeroRoleId = 101;
@@ -25,6 +26,7 @@ int32_t toRoleConfigId(CharacterClass characterClass)
     return kDefaultHeroRoleId;
 }
 
+// 返回角色配置 id 对应的职业，未知 id 返回未知职业。
 CharacterClass toCharacterClass(int32_t roleConfigId)
 {
     switch (roleConfigId)

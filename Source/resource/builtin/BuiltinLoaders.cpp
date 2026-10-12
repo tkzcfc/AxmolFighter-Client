@@ -14,7 +14,7 @@
 #include "ui/core/FGUIPackageManager.h"
 
 #include "mugen/avatar/data/AvatarAssetCache.h"
-#include "mugen/conf/Config.h"
+#include "mugen/conf/ReflectedConfig.h"
 #include "mugen/render/LayerRuntimeLoader.h"
 #include "mugen/render/spine/MgSpineUtils.h"
 #include "mugen/render/spine/SpineSkeletonCache.h"
@@ -204,7 +204,7 @@ void registerConfig(ResourceLoaderRegistry& registry)
     registry.registerType<ConfigResource>(ResourceType::Config,
                                           [](std::shared_ptr<ConfigResource> res, const LoadTaskPtr& task) {
         const bool isMugen = res->getKind() == ConfigResource::Kind::Mugen;
-        if (isMugen ? mugen::Config::getInstance()->isLoaded() : mugen::AvatarAssetCache::getInstance()->isLoaded())
+        if (isMugen ? mugen::conf::Config::instance().loaded() : mugen::AvatarAssetCache::getInstance()->isLoaded())
         {
             task->complete();
             return;
@@ -220,7 +220,7 @@ void registerConfig(ResourceLoaderRegistry& registry)
 
         auto ok = std::make_shared<bool>(false);
         task->runOnWorker([isMugen, fullPath, ok]() {
-            *ok = isMugen ? mugen::Config::getInstance()->loadConfig(fullPath)
+            *ok = isMugen ? mugen::conf::Config::instance().load(fullPath)
                           : mugen::AvatarAssetCache::getInstance()->load(fullPath);
         }, [task, ok]() {
             if (*ok)
@@ -255,7 +255,8 @@ void registerMap(ResourceLoaderRegistry& registry)
                 task->spawn<SpriteFramesResource>(plist);
             if (resources->soundId > 0)
             {
-                if (const auto* sound = mugen::Config::getInstance()->getResSoundById(resources->soundId))
+                if (const auto* sound =
+                        mugen::conf::Config::instance().find<mugen::conf::ResSoundConfig>(resources->soundId))
                     task->spawn<AudioResource>(sound->fileName);
             }
 
