@@ -7,6 +7,7 @@
 
 namespace mugen
 {
+// 采用稀疏索引与紧凑数据数组保存单一组件类型。
 template <class T>
 class ComponentPool
 {
@@ -15,8 +16,10 @@ class ComponentPool
                   "Components must be copyable reflected data without virtual functions");
 
 public:
+    // 查询可变组件；实体不拥有该组件时返回空。
     T* tryGet(Entity entity) { return const_cast<T*>(std::as_const(*this).tryGet(entity)); }
 
+    // 查询只读组件；同时验证稀疏映射中的完整实体句柄。
     const T* tryGet(Entity entity) const
     {
         if (entity.index() >= m_sparse.size())
@@ -27,6 +30,7 @@ public:
         return &m_dense[dense];
     }
 
+    // 插入新组件；调用方必须确保实体尚未拥有该类型。
     T& add(Entity entity, T value)
     {
         MG_ASSERT(tryGet(entity) == nullptr && "Component already exists");
@@ -38,6 +42,7 @@ public:
         return m_dense.back();
     }
 
+    // 以末尾元素填补空洞，故会使组件引用失效。
     void remove(Entity entity)
     {
         if (tryGet(entity) == nullptr)
@@ -54,6 +59,7 @@ public:
         m_sparse[entity.index()] = kAbsent;
     }
 
+    // 按紧凑数组顺序写入实体索引及组件载荷。
     void serialize(BinaryWriter& writer) const
     {
         writer.write(static_cast<uint32_t>(m_dense.size()));
@@ -64,6 +70,7 @@ public:
         }
     }
 
+    // 读取组件，并与实体签名逐项交叉验证。
     bool deserialize(BinaryReader& reader, const ecs_detail::EntityStore& entities, std::size_t typeId)
     {
         uint32_t count = 0;
@@ -88,9 +95,13 @@ public:
     }
 
 private:
+    // 稀疏映射中表示无组件的哨兵值。
     static constexpr uint32_t kAbsent = std::numeric_limits<uint32_t>::max();
+    // 实体槽位索引到紧凑数组索引的映射。
     std::vector<uint32_t> m_sparse;
+    // 连续存储的组件值。
     std::vector<T> m_dense;
+    // 与紧凑组件值同下标的完整实体句柄。
     std::vector<Entity> m_entities;
 };
 }  // namespace mugen

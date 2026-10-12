@@ -5,6 +5,7 @@
 
 namespace mugen::ecs_detail
 {
+// 分配槽位并按创建顺序登记新实体。
 Entity EntityStore::create()
 {
     MG_ASSERT(m_nextSequence < std::numeric_limits<uint64_t>::max() && "Entity sequence exhausted");
@@ -28,12 +29,14 @@ Entity EntityStore::create()
     return entity;
 }
 
+// 校验句柄不是零且精确匹配当前槽位代数。
 bool EntityStore::alive(Entity entity) const
 {
     return entity.value != 0 && entity.index() < m_slots.size() && m_slots[entity.index()].alive &&
            m_slots[entity.index()].generation == entity.generation();
 }
 
+// 将存活槽位索引转换回当前代数的实体句柄。
 Entity EntityStore::at(uint32_t index) const
 {
     if (index >= m_slots.size() || !m_slots[index].alive)
@@ -41,6 +44,7 @@ Entity EntityStore::at(uint32_t index) const
     return Entity{(m_slots[index].generation << Entity::kIndexBits) | index};
 }
 
+// 仅标记销毁，以保持当前遍历和组件访问稳定。
 void EntityStore::destroy(Entity entity)
 {
     if (!alive(entity) || m_slots[entity.index()].destructionOrder != 0)
@@ -49,6 +53,7 @@ void EntityStore::destroy(Entity entity)
     m_slots[entity.index()].destructionOrder = static_cast<uint32_t>(m_pending.size());
 }
 
+// 按请求顺序回收实体，耗尽代数的槽位不再复用。
 void EntityStore::flushDestroyed()
 {
     for (Entity entity : m_pending)
@@ -57,7 +62,7 @@ void EntityStore::flushDestroyed()
         slot.alive = false;
         slot.signature.reset();
         slot.destructionOrder = 0;
-        // Retire exhausted slots rather than allowing stale handles to alias a new entity.
+        // 代数耗尽时永久退役，避免陈旧句柄别名新实体。
         if (slot.generation < Entity::kMaxGeneration)
         {
             ++slot.generation;
@@ -68,6 +73,7 @@ void EntityStore::flushDestroyed()
     m_pending.clear();
 }
 
+// 写入恢复实体生命周期所需的全部确定性状态。
 void EntityStore::serialize(BinaryWriter& writer) const
 {
     writer.write(static_cast<uint32_t>(m_slots.size()));
@@ -86,6 +92,7 @@ void EntityStore::serialize(BinaryWriter& writer) const
         writer.write(index);
 }
 
+// 读取实体状态；最终由 validate 恢复待销毁队列并检查不变量。
 bool EntityStore::deserialize(BinaryReader& reader)
 {
     uint32_t count = 0;
@@ -113,6 +120,7 @@ bool EntityStore::deserialize(BinaryReader& reader)
     return validate();
 }
 
+// 检查快照中的顺序、签名、空闲和待销毁关系。
 bool EntityStore::validate()
 {
     if (m_nextSequence == 0)

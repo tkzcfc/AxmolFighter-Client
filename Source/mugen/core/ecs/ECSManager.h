@@ -9,6 +9,7 @@ namespace mugen
 {
 namespace ecs_detail
 {
+// 在固定注册元组中计算唯一的序列化类型编号。
 template <class T, class... Ts>
 consteval std::size_t typeId()
 {
@@ -21,23 +22,28 @@ consteval std::size_t typeId()
     return 0;
 }
 
+// 用 RAII 追踪 each 遍历深度，禁止遍历中回收实体。
 class TraversalScope
 {
 public:
+    // 进入遍历作用域并增加深度。
     explicit TraversalScope(uint32_t& depth) : m_depth(depth) { ++m_depth; }
+    // 离开遍历作用域并恢复深度。
     ~TraversalScope() { --m_depth; }
     TraversalScope(const TraversalScope&)            = delete;
     TraversalScope& operator=(const TraversalScope&) = delete;
 
 private:
+    // 由 ECSManager 持有的遍历深度计数器。
     uint32_t& m_depth;
 };
 }  // namespace ecs_detail
 
-// Registry tuple order comes from the owning layer's X-macro lists and fixes serialized type IDs.
+// 注册元组顺序来自所属层的 X 宏列表，并固定序列化类型编号。
 template <class Components = std::tuple<>, class Singletons = std::tuple<>>
 class ECSManager;
 
+// 管理实体组件池、单例和可确定性快照的值类型 ECS。
 template <class... Components, class... Singletons>
 class ECSManager<std::tuple<Components...>, std::tuple<Singletons...>>
 {
@@ -53,10 +59,14 @@ public:
     template <class T>
     static constexpr std::size_t singletonId = ecs_detail::typeId<T, Singletons...>();
 
+    // 创建实体；组件必须随后单独添加。
     Entity create() { return m_entities.create(); }
+    // 标记实体销毁，实际回收延后到 flushDestroyed。
     void destroy(Entity entity) { m_entities.destroy(entity); }
+    // 检查实体句柄当前是否存活。
     bool alive(Entity entity) const { return m_entities.alive(entity); }
 
+    // 删除待销毁实体的全部组件并回收实体；遍历中禁止调用。
     void flushDestroyed()
     {
         MG_ASSERT(m_traversalDepth == 0 && "Cannot flush during traversal");
@@ -67,6 +77,7 @@ public:
         m_entities.flushDestroyed();
     }
 
+    // 为存活实体添加指定组件并更新签名。
     template <class T>
     T& add(Entity entity, T value)
     {
@@ -76,6 +87,7 @@ public:
         return result;
     }
 
+    // 移除实体指定组件；无效实体不执行操作。
     template <class T>
     void remove(Entity entity)
     {
@@ -85,24 +97,28 @@ public:
         m_entities.setComponent(entity, componentId<T>, false);
     }
 
+    // 查询可变组件；缺失或无效实体返回空。
     template <class T>
     T* tryGet(Entity entity)
     {
         return const_cast<T*>(std::as_const(*this).template tryGet<T>(entity));
     }
 
+    // 查询只读组件；缺失或无效实体返回空。
     template <class T>
     const T* tryGet(Entity entity) const
     {
         return alive(entity) ? std::get<componentId<T>>(m_pools).tryGet(entity) : nullptr;
     }
 
+    // 取得必需组件；缺失时触发断言。
     template <class T>
     T& get(Entity entity)
     {
         return const_cast<T&>(std::as_const(*this).template get<T>(entity));
     }
 
+    // 取得必需只读组件；缺失时触发断言。
     template <class T>
     const T& get(Entity entity) const
     {
@@ -111,25 +127,27 @@ public:
         return *value;
     }
 
+    // 判断实体是否拥有指定组件。
     template <class T>
     bool has(Entity entity) const
     {
         return tryGet<T>(entity) != nullptr;
     }
 
+    // 返回按注册表编号保存的可变单例。
     template <class T>
     T& singleton()
     {
         return std::get<singletonId<T>>(m_singletons);
     }
+    // 返回按注册表编号保存的只读单例。
     template <class T>
     const T& singleton() const
     {
         return std::get<singletonId<T>>(m_singletons);
     }
 
-    // Callback: fn(Entity, Ts&...). Adding/removing a pool element invalidates its references;
-    // reacquire with get/tryGet after structural changes. Flush is only allowed outside each.
+    // 回调形如 fn(Entity, Ts&...)；组件增删会使引用失效，结构变化后必须重新查询，遍历内禁止回收。
     template <class... Ts, class Fn>
     void each(Fn&& fn)
     {
@@ -145,6 +163,7 @@ public:
         }
     }
 
+    // 写入实体、组件池和单例的确定性快照。
     void serialize(ByteBuffer& buffer) const
     {
         BinaryWriter writer(buffer);
@@ -154,6 +173,7 @@ public:
         writer.finish();
     }
 
+    // 仅向从未分配实体的 manager 读取完整快照，失败不修改目标。
     bool deserialize(ByteBuffer& buffer)
     {
         if (!m_entities.empty() || m_traversalDepth != 0)
@@ -178,6 +198,7 @@ public:
         return true;
     }
 
+    // 深拷贝当前 ECS；副本不继承遍历作用域。
     ECSManager clone() const
     {
         ECSManager result       = *this;
@@ -185,6 +206,7 @@ public:
         return result;
     }
 
+    // 对序列化快照计算 xxh64 哈希。
     uint64_t hash() const
     {
         ByteBuffer buffer;
@@ -193,9 +215,13 @@ public:
     }
 
 private:
+    // 保存实体生命周期与签名。
     ecs_detail::EntityStore m_entities;
+    // 按组件注册顺序排列的稀疏组件池。
     std::tuple<ComponentPool<Components>...> m_pools;
+    // 按单例注册顺序保存的值状态。
     std::tuple<Singletons...> m_singletons;
+    // 当前嵌套 each 调用深度。
     uint32_t m_traversalDepth = 0;
 };
 }  // namespace mugen
