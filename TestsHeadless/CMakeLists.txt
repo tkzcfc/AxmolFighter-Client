@@ -98,12 +98,18 @@ file(GLOB_RECURSE MUGEN_TEST_SOURCES CONFIGURE_DEPENDS
 add_executable(mugen_tests
     ${MUGEN_SOURCES}
     ${MUGEN_TEST_SOURCES}
+    "${CMAKE_CURRENT_SOURCE_DIR}/support/ScenarioHarness.cpp"
     "${DOCTEST_INCLUDE_DIR}/doctest.cpp"
 )
 target_include_directories(mugen_tests PRIVATE "${DOCTEST_INCLUDE_DIR}")
 mugen_apply_compile_settings(mugen_tests)
 
 add_executable(mugen_sim_cli
+    ${MUGEN_SOURCES}
+    "${CMAKE_CURRENT_SOURCE_DIR}/support/ScenarioHarness.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/sim_cli_main.cpp"
 )
 mugen_apply_compile_settings(mugen_sim_cli)
+foreach(target mugen_tests mugen_sim_cli)
+    target_compile_definitions(${target} PRIVATE MUGEN_CONTENT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../Content")
+endforeach()
