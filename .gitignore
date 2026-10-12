@@ -112,6 +112,7 @@ CMakeSettings.json
 /build
 /build_*
 /TestsHeadless/build/
+/TestsHeadless/build-clangcl/
 
 # ignore ninja build dir
 /out
