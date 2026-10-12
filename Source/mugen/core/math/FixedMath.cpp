@@ -9,8 +9,10 @@ namespace FixedMath
 namespace
 {
 
+// 由生成器产出的正弦与反正切定点查找表。
 #include "FixedTables.inc"
 
+// 以 32 位半字组合无符号乘积，用于平方根比较。
 fixed_detail::UInt128 multiplyUnsigned(uint64_t lhs, uint64_t rhs)
 {
     const uint64_t lhsLow       = static_cast<uint32_t>(lhs);
@@ -31,11 +33,13 @@ fixed_detail::UInt128 multiplyUnsigned(uint64_t lhs, uint64_t rhs)
     return {high, low};
 }
 
+// 按高低半字比较两个无符号 128 位值。
 bool lessOrEqual(fixed_detail::UInt128 lhs, fixed_detail::UInt128 rhs)
 {
     return lhs.high < rhs.high || (lhs.high == rhs.high && lhs.low <= rhs.low);
 }
 
+// 在相邻定点表项之间进行线性插值。
 Fixed interpolate(const int32_t* table, int index, int64_t fractionRaw)
 {
     const int64_t first = table[index];
@@ -43,12 +47,14 @@ Fixed interpolate(const int32_t* table, int index, int64_t fractionRaw)
     return Fixed::fromRaw(first + fixed_detail::multiplyIntrinsic(delta, fractionRaw));
 }
 
+// 无溢出地取得定点原始值的无符号幅值。
 uint64_t absRaw(Fixed value)
 {
     const uint64_t bits = static_cast<uint64_t>(value.raw);
     return value.raw < 0 ? (~bits + 1) : bits;
 }
 
+// 用逐位除法生成指定数量的二进制小数位。
 uint64_t fractionalBits(uint64_t numerator, uint64_t denominator, int bitCount)
 {
     uint64_t result    = 0;
@@ -69,6 +75,7 @@ uint64_t fractionalBits(uint64_t numerator, uint64_t denominator, int bitCount)
 
 }  // namespace
 
+// 二分查找满足平方不超过输入的最大定点根。
 Fixed sqrt(Fixed value)
 {
     MG_ASSERT(value.raw >= 0 && "Fixed sqrt requires a non-negative value");
@@ -95,6 +102,7 @@ Fixed sqrt(Fixed value)
     return Fixed::fromRaw(static_cast<int64_t>(low));
 }
 
+// 归一化到一周后查表插值得到正弦。
 Fixed sinDeg(Fixed degrees)
 {
     constexpr int64_t kPeriod = 360 * Fixed::kOne;
@@ -107,11 +115,13 @@ Fixed sinDeg(Fixed degrees)
     return interpolate(kSinDegTable, index, normalized % Fixed::kOne);
 }
 
+// 通过正弦相位偏移计算余弦。
 Fixed cosDeg(Fixed degrees)
 {
     return sinDeg(degrees + Fixed::fromInt(90));
 }
 
+// 将斜率查表结果映射回输入所在象限。
 Fixed atan2Deg(Fixed y, Fixed x)
 {
     if (x.raw == 0)

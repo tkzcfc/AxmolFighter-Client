@@ -13,12 +13,14 @@ namespace fixed_detail
 namespace
 {
 
+// 无溢出地取得有符号整数的无符号绝对值。
 uint64_t magnitude(int64_t value)
 {
     const uint64_t bits = static_cast<uint64_t>(value);
     return value < 0 ? (~bits + 1) : bits;
 }
 
+// 以 32 位半字组合无符号 64 位乘法的 128 位结果。
 UInt128 multiplyUnsigned(uint64_t lhs, uint64_t rhs)
 {
     const uint64_t lhsLow  = static_cast<uint32_t>(lhs);
@@ -43,16 +45,19 @@ UInt128 multiplyUnsigned(uint64_t lhs, uint64_t rhs)
     return {high, low};
 }
 
+// 判断缩放回 Q44.20 时是否会丢弃小数位。
 bool discardedFraction(UInt128 value)
 {
     return (value.low & ((uint64_t{1} << Fixed::kFracBits) - 1)) != 0;
 }
 
+// 将 128 位无符号值右移固定小数位。
 UInt128 shiftRight20(UInt128 value)
 {
     return {value.high >> Fixed::kFracBits, (value.low >> Fixed::kFracBits) | (value.high << (64 - Fixed::kFracBits))};
 }
 
+// 验证范围后将无符号幅值转换为有符号结果。
 int64_t signedResult(UInt128 magnitudeValue, bool negative, bool roundNegativeDown)
 {
     MG_ASSERT(magnitudeValue.high == 0 && "Fixed operation overflow");
@@ -76,11 +81,13 @@ int64_t signedResult(UInt128 magnitudeValue, bool negative, bool roundNegativeDo
     return -static_cast<int64_t>(value);
 }
 
+// 将 64 位幅值左移固定小数位并扩展为 128 位。
 UInt128 shiftLeft20(uint64_t value)
 {
     return {value >> (64 - Fixed::kFracBits), value << Fixed::kFracBits};
 }
 
+// 用逐位长除法计算 128 位无符号商。
 UInt128 divideUnsigned(UInt128 numerator, uint64_t denominator)
 {
     UInt128 quotient{0, 0};
@@ -108,6 +115,7 @@ UInt128 divideUnsigned(UInt128 numerator, uint64_t denominator)
 
 }  // namespace
 
+// 以可移植 128 位模拟实现乘法，负数向下取整。
 int64_t multiplyPortable(int64_t lhs, int64_t rhs)
 {
     const bool negative   = (lhs < 0) != (rhs < 0);
@@ -116,6 +124,7 @@ int64_t multiplyPortable(int64_t lhs, int64_t rhs)
     return signedResult(shiftRight20(product), negative, roundDown);
 }
 
+// 优先使用平台宽整数乘法，不可用时退回可移植实现。
 int64_t multiplyIntrinsic(int64_t lhs, int64_t rhs)
 {
 #if defined(_MSC_VER) && defined(_M_X64) && !defined(__clang__)
@@ -138,6 +147,7 @@ int64_t multiplyIntrinsic(int64_t lhs, int64_t rhs)
 #endif
 }
 
+// 以可移植长除法计算定点除法。
 int64_t dividePortable(int64_t lhs, int64_t rhs)
 {
     MG_ASSERT(rhs != 0 && "Fixed division by zero");
@@ -146,6 +156,7 @@ int64_t dividePortable(int64_t lhs, int64_t rhs)
     return signedResult(quotient, negative, false);
 }
 
+// 优先使用平台宽整数除法，不可用时退回可移植实现。
 int64_t divideIntrinsic(int64_t lhs, int64_t rhs)
 {
     MG_ASSERT(rhs != 0 && "Fixed division by zero");
@@ -178,6 +189,7 @@ int64_t divideIntrinsic(int64_t lhs, int64_t rhs)
 
 }  // namespace fixed_detail
 
+// 将两个整数的比值缩放为 Q44.20。
 Fixed Fixed::ratio(int64_t numerator, int64_t denominator)
 {
     return fromRaw(fixed_detail::divideIntrinsic(numerator, denominator));
