@@ -12,6 +12,7 @@
 
 NS_MG_BEGIN
 
+// 保存身体加载所需的父节点、资源描述和数据归属方式。
 SpineBody::SpineBody(ax::Node* parent, const AvatarDesc& desc, AvatarLoadMode mode)
     : m_parent(parent)
     , m_mode(mode)
@@ -23,6 +24,7 @@ SpineBody::SpineBody(ax::Node* parent, const AvatarDesc& desc, AvatarLoadMode mo
     m_requested.skin    = desc.skin;
 }
 
+// 使未完成异步回调失效并移除身体节点。
 SpineBody::~SpineBody()
 {
     m_token.reset();
@@ -30,6 +32,7 @@ SpineBody::~SpineBody()
         m_node->removeFromParent();
 }
 
+// 按指定数据归属方式加载身体骨架。
 void SpineBody::load(LoadedCallback callback)
 {
     m_onLoaded = std::move(callback);
@@ -49,6 +52,7 @@ void SpineBody::load(LoadedCallback callback)
     });
 }
 
+// 接收身体加载结果并初始化骨架状态。
 void SpineBody::onLoaded(MgSkeletonAnimation* node)
 {
     if (!node)
@@ -74,6 +78,7 @@ void SpineBody::onLoaded(MgSkeletonAnimation* node)
     m_onLoaded();
 }
 
+// 请求新的图集和皮肤组合。
 void SpineBody::setLook(const std::vector<std::string>& atlases, const std::string& skin)
 {
     // 判断一下换装是否可行，避免在非独占模式下误操作
@@ -92,6 +97,7 @@ void SpineBody::setLook(const std::vector<std::string>& atlases, const std::stri
     syncLook();
 }
 
+// 异步或同步应用当前请求的图集。
 void SpineBody::syncLook()
 {
     if (!m_node)
@@ -121,6 +127,7 @@ void SpineBody::syncLook()
     });
 }
 
+// 在当前图集上应用请求的皮肤。
 void SpineBody::applySkin(const std::string& skin)
 {
     if (!skin.empty() && skin != m_applied.skin)
@@ -134,6 +141,7 @@ void SpineBody::applySkin(const std::string& skin)
     applyPose();
 }
 
+// 更新指定挂件槽位的数据嫁接。
 void SpineBody::setGraft(AvatarAccessorySlot slot, MgSkeletonDataPtr donor, const std::vector<std::string>* slotNames)
 {
     MG_ASSERT(isExclusive() && "SpineBody::setGraft requires exclusive skeleton data");
@@ -143,6 +151,7 @@ void SpineBody::setGraft(AvatarAccessorySlot slot, MgSkeletonDataPtr donor, cons
     syncGrafts();
 }
 
+// 将待应用挂件数据同步到身体插槽。
 void SpineBody::syncGrafts()
 {
     if (!m_node || !isExclusive())
@@ -164,6 +173,7 @@ void SpineBody::syncGrafts()
         applyPose();
 }
 
+// 清除当前轨道缓存以强制重设动作。
 void SpineBody::resetClip()
 {
     m_clipIndex = static_cast<size_t>(-1);
@@ -171,6 +181,7 @@ void SpineBody::resetClip()
     m_trackSec  = 0.0f;
 }
 
+// 将片段局部时间定位到身体动画轨道。
 void SpineBody::applyClip(size_t clipIndex, const MotionClip& clip, int localMs)
 {
     if (clipIndex != m_clipIndex)
@@ -193,6 +204,7 @@ void SpineBody::applyClip(size_t clipIndex, const MotionClip& clip, int localMs)
     applyPose();
 }
 
+// 按缓存轨道时间更新骨架姿势。
 void SpineBody::applyPose()
 {
     if (!m_hasTrack)
@@ -201,12 +213,14 @@ void SpineBody::applyPose()
     m_node->update(0.0f);
 }
 
+// 设置身体节点可见性。
 void SpineBody::setVisible(bool visible)
 {
     if (m_node)
         m_node->setVisible(visible);
 }
 
+// 返回身体节点的本地包围盒。
 ax::Rect SpineBody::bounds() const
 {
     return m_node ? m_node->getBoundingBox() : ax::Rect::ZERO;

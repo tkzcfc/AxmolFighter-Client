@@ -44,10 +44,13 @@ Avatar* Avatar::create(const FashionAppearance& appearance)
     return create(desc, AvatarLoadMode::kAsyncExclusive);
 }
 
+// 创建未绑定资源的角色渲染节点。
 Avatar::Avatar() : m_timeMs(0), m_loop(false), m_autoPlay(false) {}
 
+// 释放身体和挂件控制对象。
 Avatar::~Avatar() = default;
 
+// 使用资源描述初始化身体与挂件。
 bool Avatar::initWithDesc(const AvatarDesc& desc, AvatarLoadMode mode)
 {
     if (!ax::Node::init())
@@ -67,6 +70,7 @@ bool Avatar::initWithDesc(const AvatarDesc& desc, AvatarLoadMode mode)
     return true;
 }
 
+// 在保留节点的前提下重建角色资源。
 bool Avatar::rebuild(const AvatarDesc& desc)
 {
     const MotionMap* motionMap = AvatarAssetCache::getInstance()->getMotionMap(desc.motionFile);
@@ -106,6 +110,7 @@ bool Avatar::rebuild(const AvatarDesc& desc)
     return true;
 }
 
+// 解析外观并应用可用的换装更新。
 bool Avatar::setAppearance(const FashionAppearance& appearance)
 {
     if (m_mode != AvatarLoadMode::kAsyncExclusive)
@@ -130,6 +135,7 @@ bool Avatar::setAppearance(const FashionAppearance& appearance)
     return true;
 }
 
+// 按当前描述增删或保留挂件。
 void Avatar::syncAccessories()
 {
     bool changed = false;
@@ -149,6 +155,7 @@ void Avatar::syncAccessories()
         syncGrafts();
 }
 
+// 创建并开始加载指定槽位的挂件。
 void Avatar::createAccessory(AvatarAccessorySlot slot)
 {
     auto& accessory = m_accessories[static_cast<size_t>(slot)];
@@ -157,6 +164,7 @@ void Avatar::createAccessory(AvatarAccessorySlot slot)
     accessory->load(m_mode, [this](AvatarAccessory* a) { onAccessorySettled(a); });
 }
 
+// 在身体加载完成后同步挂件和嫁接。
 void Avatar::onBodyLoaded()
 {
     if (!m_body->isReady())
@@ -170,6 +178,7 @@ void Avatar::onBodyLoaded()
     tryReveal();
 }
 
+// 在单个挂件加载结束后刷新显示状态。
 void Avatar::onAccessorySettled(AvatarAccessory* accessory)
 {
     if (accessory->rule().graftSlots)
@@ -178,6 +187,7 @@ void Avatar::onAccessorySettled(AvatarAccessory* accessory)
     refreshVisibility();
 }
 
+// 将可用武器和翅膀数据嫁接到身体。
 void Avatar::syncGrafts()
 {
     if (!m_body || !m_body->isExclusive())
@@ -195,6 +205,7 @@ void Avatar::syncGrafts()
     }
 }
 
+// 在全部初始资源结算后显示角色。
 void Avatar::tryReveal()
 {
     if (m_revealed || !m_body || !m_body->isReady())
@@ -208,6 +219,7 @@ void Avatar::tryReveal()
     refreshVisibility();
 }
 
+// 按当前动作和就绪状态刷新挂件显示。
 void Avatar::refreshVisibility()
 {
     if (!m_body)
@@ -221,6 +233,7 @@ void Avatar::refreshVisibility()
     }
 }
 
+// 选择动作、片段和循环方式。
 void Avatar::setMotion(const std::string& motionName, const std::string& entryId, bool loop)
 {
     m_motionName = motionName;
@@ -245,6 +258,7 @@ void Avatar::setMotion(const std::string& motionName, const std::string& entryId
     refreshVisibility();
 }
 
+// 将当前时间限制或回绕到动作时长内。
 void Avatar::normalizeTime()
 {
     if (!m_motion)
@@ -257,6 +271,7 @@ void Avatar::normalizeTime()
     m_timeMs      = m_loop ? m_timeMs % dur : std::min(m_timeMs, dur);
 }
 
+// 将当前绝对时间应用到身体动作片段。
 void Avatar::applyTime()
 {
     if (!m_motion || !m_body || !m_body->isReady())
@@ -268,6 +283,7 @@ void Avatar::applyTime()
         m_body->applyClip(index, *clip, localMs);
 }
 
+// 推进角色动作和独立挂件动画。
 void Avatar::step(int dtMs)
 {
     if (dtMs <= 0)
@@ -288,6 +304,7 @@ void Avatar::step(int dtMs)
     }
 }
 
+// 定位角色到指定绝对动作时间。
 void Avatar::seek(int timeMs)
 {
     m_timeMs = timeMs;
@@ -295,6 +312,7 @@ void Avatar::seek(int timeMs)
     applyTime();
 }
 
+// 自动播放模式下累积帧时间。
 void Avatar::update(float delta)
 {
     // UI 展示：等全部部件就绪再推进，避免就绪后动画突然跳跃
@@ -306,11 +324,13 @@ void Avatar::update(float delta)
     step(dtMs);
 }
 
+// 返回已加载身体的本地包围盒。
 ax::Rect Avatar::localSkeletonBounds() const
 {
     return m_body ? m_body->bounds() : ax::Rect::ZERO;
 }
 
+// 判断非循环动作是否到达结尾。
 bool Avatar::isFinished() const
 {
     if (m_loop)

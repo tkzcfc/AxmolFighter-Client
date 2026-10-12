@@ -67,9 +67,12 @@ public:
     MG_SYNTHESIZE_WRITEONLY(bool, m_autoPlay, AutoPlay)
 
 private:
+    // 创建空的角色渲染节点。
     Avatar();
+    // 释放身体、挂件和异步加载状态。
     ~Avatar() override;
 
+    // 使用资源描述初始化节点。
     bool initWithDesc(const AvatarDesc& desc, AvatarLoadMode mode);
 
     // 按 desc 重建身体与全部挂件（隐藏直到就绪）；.motion 不存在时失败且保持原状
@@ -78,25 +81,32 @@ private:
     void syncAccessories();
     void createAccessory(AvatarAccessorySlot slot);
 
+    // 处理身体和挂件的加载完成通知。
     void onBodyLoaded();
     void onAccessorySettled(AvatarAccessory* accessory);
     // 把武器/翅膀的数据嫁接到身体（仅 exclusive）
     void syncGrafts();
+    // 在初始资源全部完成后显示节点。
     void tryReveal();
     void refreshVisibility();
 
+    // 规范当前时间并将其应用到身体动作。
     void normalizeTime();
     void applyTime();
 
+    // 当前资源描述和加载方式。
     AvatarDesc m_desc;
     AvatarLoadMode m_mode = AvatarLoadMode::kSyncShared;
 
+    // 已绑定的动作图和当前动作。
     const MotionMap* m_motionMap = nullptr;
     const Motion* m_motion       = nullptr;
 
+    // 身体骨架和各挂件控制对象。
     std::unique_ptr<SpineBody> m_body;
     std::array<std::unique_ptr<AvatarAccessory>, static_cast<size_t>(AvatarAccessorySlot::kCount)> m_accessories;
 
+    // 初始资源是否已显示，以及自动播放的余量。
     bool m_revealed       = false;
     float m_autoPlayCarry = 0.0f;
 };

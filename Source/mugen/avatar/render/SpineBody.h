@@ -28,9 +28,12 @@ enum class AvatarLoadMode
 class SpineBody
 {
 public:
+    // 身体资源加载完成时的通知回调。
     using LoadedCallback = std::function<void()>;
 
+    // 创建附着到父节点的身体骨架控制对象。
     SpineBody(ax::Node* parent, const AvatarDesc& desc, AvatarLoadMode mode);
+    // 释放身体骨架及其异步回调令牌。
     ~SpineBody();
 
     SpineBody(const SpineBody&)            = delete;
@@ -39,6 +42,7 @@ public:
     // 开始加载；完成（成功或失败）时回调。同步模式在返回前回调
     void load(LoadedCallback callback);
 
+    // 返回身体是否就绪、是否使用私有数据及其节点。
     bool isReady() const { return m_node != nullptr; }
     bool isExclusive() const { return m_mode == AvatarLoadMode::kAsyncExclusive; }
     MgSkeletonAnimation* node() const { return m_node; }
@@ -55,7 +59,9 @@ public:
     // 按绝对时间摆 pose（clip 内本地时间，超出 clip 时长冻末帧）
     void applyClip(size_t clipIndex, const MotionClip& clip, int localMs);
 
+    // 设置身体可见性。
     void setVisible(bool visible);
+    // 返回身体骨架的本地包围盒。
     ax::Rect bounds() const;
 
 #    if _DEBUG
@@ -64,12 +70,14 @@ public:
 #    endif
 
 private:
+    // 身体的图集和皮肤组合。
     struct Look
     {
         std::vector<std::string> atlases;
         std::string skin;
     };
 
+    // 单个挂件向身体插槽嫁接的数据状态。
     struct Graft
     {
         MgSkeletonDataPtr desired;
@@ -77,19 +85,23 @@ private:
         const std::vector<std::string>* slotNames = nullptr;
     };
 
+    // 接收身体资源加载结果。
     void onLoaded(MgSkeletonAnimation* node);
+    // 同步请求的外观与嫁接数据。
     void syncLook();
     void applySkin(const std::string& skin);
     void syncGrafts();
     // 以当前轨道时间重新摆 pose（setup pose 被重置后调用）
     void applyPose();
 
+    // 父节点、加载方式、骨架路径、缩放和加载回调。
     ax::Node* m_parent;
     AvatarLoadMode m_mode;
     std::string m_skeleton;
     float m_scale;
     LoadedCallback m_onLoaded;
 
+    // 已创建的身体 Spine 节点。
     MgSkeletonAnimation* m_node = nullptr;
 
     // 期望的外观
@@ -99,8 +111,10 @@ private:
     // 期望的外观序列号（每次 setLook 递增）
     uint32_t m_lookSeq = 0;
 
+    // 各挂件槽位的嫁接状态。
     std::array<Graft, static_cast<size_t>(AvatarAccessorySlot::kCount)> m_grafts;
 
+    // 当前动作片段索引、轨道状态和轨道时间。
     size_t m_clipIndex = static_cast<size_t>(-1);
     bool m_hasTrack    = false;
     float m_trackSec   = 0.0f;

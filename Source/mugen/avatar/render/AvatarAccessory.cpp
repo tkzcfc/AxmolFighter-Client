@@ -4,6 +4,7 @@
 
 NS_MG_BEGIN
 
+// 保存挂件加载所需的父节点、资源和表现规则。
 AvatarAccessory::AvatarAccessory(ax::Node* parent,
                                  AvatarAccessorySlot slot,
                                  int32_t resSpineId,
@@ -11,6 +12,7 @@ AvatarAccessory::AvatarAccessory(ax::Node* parent,
     : m_parent(parent), m_slot(slot), m_resSpineId(resSpineId), m_rule(rule), m_token(std::make_shared<char>(0))
 {}
 
+// 使未完成异步回调失效并移除挂件节点。
 AvatarAccessory::~AvatarAccessory()
 {
     m_token.reset();
@@ -18,6 +20,7 @@ AvatarAccessory::~AvatarAccessory()
         m_node->removeFromParent();
 }
 
+// 按指定数据归属方式加载挂件骨架。
 void AvatarAccessory::load(AvatarLoadMode mode, SettledCallback onSettled)
 {
     m_onSettled = std::move(onSettled);
@@ -35,6 +38,7 @@ void AvatarAccessory::load(AvatarLoadMode mode, SettledCallback onSettled)
     });
 }
 
+// 接收挂件加载结果并创建可选节点。
 void AvatarAccessory::onLoaded(MgSkeletonAnimation* node)
 {
     m_settled = true;
@@ -56,12 +60,14 @@ void AvatarAccessory::onLoaded(MgSkeletonAnimation* node)
     m_onSettled(this);
 }
 
+// 从头开始播放规则指定的循环动画。
 void AvatarAccessory::restartLoopAnim()
 {
     if (m_rule.loopAnim[0] && m_node->findAnimation(m_rule.loopAnim))
         m_node->setAnimation(0, m_rule.loopAnim, true);
 }
 
+// 按身体就绪和待机状态刷新显示。
 void AvatarAccessory::refresh(bool revealed, bool standing)
 {
     if (!m_node)
@@ -73,6 +79,7 @@ void AvatarAccessory::refresh(bool revealed, bool standing)
     m_node->setVisible(shown);
 }
 
+// 推进已加载挂件的循环动画。
 void AvatarAccessory::step(float dtSec)
 {
     if (m_node)

@@ -2,7 +2,7 @@
 
 #ifdef RUNTIME_IN_AXMOL
 
-#    include "mugen/conf/Config.h"
+#    include "mugen/conf/ReflectedConfig.h"
 #    include "mugen/render/spine/MgSpineLoadPipeline.h"
 #    include "mugen/render/spine/MgSpineUtils.h"
 
@@ -14,9 +14,9 @@ NS_MG_BEGIN
 namespace
 {
 
-float resSpineScale(const ResSpineConfig* cfg)
+float resSpineScale(const conf::ResSpineConfig* cfg)
 {
-    return cfg->scale > 0.0f ? cfg->scale : 1.0f;
+    return cfg->scale > Fixed{} ? cfg->scale.toFloatForRender() : 1.0f;
 }
 
 }  // namespace
@@ -84,13 +84,13 @@ MgSkeletonDataPtr SpineSkeletonCache::getOrCreate(std::string_view skeletonFile,
 
 MgSkeletonDataPtr SpineSkeletonCache::getOrCreate(int32_t resSpineId)
 {
-    const auto* cfg = Config::getInstance()->getResSpineConfigById(resSpineId);
-    if (!cfg || cfg->spine.empty())
+    const auto* cfg = conf::Config::instance().find<conf::ResSpineConfig>(resSpineId);
+    if (!cfg || cfg->fileName.empty())
     {
         MG_LOG_E("SpineSkeletonCache::getOrCreate: ResSpine {} missing or spine empty", resSpineId);
         return nullptr;
     }
-    return getOrCreate(cfg->spine, {}, resSpineScale(cfg));
+    return getOrCreate(cfg->fileName, {}, resSpineScale(cfg));
 }
 
 void SpineSkeletonCache::loadAsync(std::string_view skeletonFile,
@@ -142,14 +142,14 @@ void SpineSkeletonCache::loadAsync(std::string_view skeletonFile,
 
 void SpineSkeletonCache::loadAsync(int32_t resSpineId, LoadCallback onDone)
 {
-    const auto* cfg = Config::getInstance()->getResSpineConfigById(resSpineId);
-    if (!cfg || cfg->spine.empty())
+    const auto* cfg = conf::Config::instance().find<conf::ResSpineConfig>(resSpineId);
+    if (!cfg || cfg->fileName.empty())
     {
         MG_LOG_E("SpineSkeletonCache::loadAsync: ResSpine {} missing or spine empty", resSpineId);
         onDone(nullptr);
         return;
     }
-    loadAsync(cfg->spine, {}, resSpineScale(cfg), std::move(onDone));
+    loadAsync(cfg->fileName, {}, resSpineScale(cfg), std::move(onDone));
 }
 
 void SpineSkeletonCache::clear()

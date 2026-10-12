@@ -22,12 +22,14 @@ struct AvatarAccessoryRule
 
 struct AvatarAccessoryRules
 {
+    // 身体节点的基准层级。
     static constexpr int kBodyZOrder            = 0;
     static constexpr const char* kStandAnim     = "stand";
     static constexpr const char* kHaloBackAnim  = "guanghuanhou";
     static constexpr const char* kHaloFrontAnim = "guanghuanqian";
     static constexpr const char* kDonorSkin     = "default";
 
+    // 按挂件槽位和职业返回表现规则。
     static AvatarAccessoryRule rule(AvatarAccessorySlot slot, CharacterClass cls)
     {
         AvatarAccessoryRule r;
@@ -59,6 +61,7 @@ struct AvatarAccessoryRules
         return r;
     }
 
+    // 返回职业对应的武器嫁接槽位。
     static const std::vector<std::string>& weaponSlots(CharacterClass cls)
     {
         static const std::vector<std::string> kSword   = {"body/dao", "body/dao2", "body/daobing", "body/daoshen"};
@@ -81,6 +84,7 @@ struct AvatarAccessoryRules
         }
     }
 
+    // 返回职业对应的翅膀嫁接槽位。
     static const std::vector<std::string>& wingSlots(CharacterClass cls)
     {
         static const std::vector<std::string> kTwo = {"body/chibang", "body/chibang2"};

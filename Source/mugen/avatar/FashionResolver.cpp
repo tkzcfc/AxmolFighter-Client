@@ -1,7 +1,7 @@
 #include "FashionResolver.h"
 #include "mugen/avatar/AvatarPaths.h"
 #include "mugen/conf/TypeConversions.h"
-#include "mugen/conf/Config.h"
+#include "mugen/conf/ReflectedConfig.h"
 
 NS_MG_BEGIN
 
@@ -52,6 +52,7 @@ bool isAccessoryPosition(FashionPosition pos)
 
 }  // namespace
 
+// 将外观选择解析为身体图集、皮肤和挂件描述。
 bool FashionResolver::resolve(const FashionAppearance& appearance, AvatarDesc& out)
 {
     out = AvatarDesc{};
@@ -63,15 +64,15 @@ bool FashionResolver::resolve(const FashionAppearance& appearance, AvatarDesc& o
         return false;
     }
 
-    const auto* role = Config::getInstance()->getRoleConfigById(roleId);
+    const auto* role = conf::Config::instance().find<conf::RoleConfig>(roleId);
     if (!role)
     {
         MG_LOG_E("FashionResolver: RoleConfig {} missing", roleId);
         return false;
     }
 
-    const auto* spine = Config::getInstance()->getResSpineConfigById(role->resSpineId);
-    if (!spine || spine->spine.empty())
+    const auto* spine = conf::Config::instance().find<conf::ResSpineConfig>(role->resSpineId);
+    if (!spine || spine->fileName.empty())
     {
         MG_LOG_E("FashionResolver: ResSpine {} missing for role {}", role->resSpineId, roleId);
         return false;
@@ -88,7 +89,10 @@ bool FashionResolver::resolve(const FashionAppearance& appearance, AvatarDesc& o
     {
         if (kv.second == 0)
             continue;
-        const auto* item = Config::getInstance()->getFashionConfigById(kv.second);
+        const auto* item = conf::Config::instance().find<conf::FashionConfig>(
+            {kv.second, static_cast<int32_t>(type_conversions::toCharacterClass(roleId))});
+        if (!item)
+            item = conf::Config::instance().find<conf::FashionConfig>({kv.second, 0});
         if (!item)
         {
             MG_LOG_W("FashionResolver: FashionConfig {} missing", kv.second);
@@ -116,8 +120,8 @@ bool FashionResolver::resolve(const FashionAppearance& appearance, AvatarDesc& o
         return 0;
     };
 
-    out.skeleton       = spine->spine;
-    out.scale          = spine->scale > 0.0f ? spine->scale : 1.0f;
+    out.skeleton       = spine->fileName;
+    out.scale          = spine->scale > Fixed{} ? spine->scale.toFloatForRender() : 1.0f;
     out.motionFile     = AvatarPaths::motionFileFromSpine(out.skeleton);
     out.characterClass = type_conversions::toCharacterClass(roleId);
 
@@ -137,15 +141,24 @@ bool FashionResolver::resolve(const FashionAppearance& appearance, AvatarDesc& o
         if (id == 0)
             continue;
 
-        const auto* cfg = Config::getInstance()->getResFashionConfigById(id);
-        if (!cfg || cfg->spine.empty())
+        const auto* cfg = conf::Config::instance().find<conf::ResFashionConfig>(id);
+        if (!cfg)
         {
             MG_LOG_W("FashionResolver: ResFashion {} missing for position {}", id, i);
             continue;
         }
-        out.atlases.push_back(cfg->spine);
+        const auto* atlas = std::get_if<std::string>(&cfg->spine);
+        if (!atlas || atlas->empty())
+        {
+            MG_LOG_W("FashionResolver: ResFashion {} missing for position {}", id, i);
+            continue;
+        }
+        out.atlases.push_back(*atlas);
         if (out.skin.empty())
-            out.skin = cfg->skinName;
+        {
+            if (const auto* skin = std::get_if<std::string>(&cfg->skinName))
+                out.skin = *skin;
+        }
     }
 
     if (out.atlases.empty())

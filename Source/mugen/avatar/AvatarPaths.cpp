@@ -1,11 +1,12 @@
 #include "mugen/avatar/AvatarPaths.h"
-#include "mugen/conf/Config.h"
+#include "mugen/conf/ReflectedConfig.h"
 
 NS_MG_BEGIN
 
 namespace
 {
 
+// 用新扩展名替换路径末尾扩展名。
 std::string replaceExtension(const std::string& path, const std::string& newExt)
 {
     const auto slash = path.find_last_of('/');
@@ -17,6 +18,7 @@ std::string replaceExtension(const std::string& path, const std::string& newExt)
 
 }  // namespace
 
+// 从骨架路径推导同名动作图路径。
 std::string AvatarPaths::motionFileFromSpine(const std::string& spineSkeleton)
 {
     if (spineSkeleton.empty())
@@ -54,20 +56,21 @@ std::string AvatarPaths::motionFileFromSpine(const std::string& spineSkeleton)
     return path;
 }
 
+// 从角色与骨架配置解析渲染所需路径和缩放。
 RoleSpineInfo AvatarPaths::resolveRoleSpine(int32_t roleId)
 {
     RoleSpineInfo info;
-    const auto* role = Config::getInstance()->getRoleConfigById(roleId);
+    const auto* role = conf::Config::instance().find<conf::RoleConfig>(roleId);
     if (!role || role->resSpineId <= 0)
         return info;
 
-    const auto* spine = Config::getInstance()->getResSpineConfigById(role->resSpineId);
-    if (!spine || spine->spine.empty())
+    const auto* spine = conf::Config::instance().find<conf::ResSpineConfig>(role->resSpineId);
+    if (!spine || spine->fileName.empty())
         return info;
 
-    info.skeleton = spine->spine;
-    info.atlas    = replaceExtension(spine->spine, ".atlas");
-    info.scale    = spine->scale > 0.0f ? spine->scale : 1.0f;
+    info.skeleton = spine->fileName;
+    info.atlas    = replaceExtension(spine->fileName, ".atlas");
+    info.scale    = spine->scale > Fixed{} ? spine->scale.toFloatForRender() : 1.0f;
     info.valid    = true;
     return info;
 }

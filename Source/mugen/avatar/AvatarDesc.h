@@ -33,7 +33,9 @@ struct AvatarDesc
     // 职业（决定挂件插槽名与 z-order）
     CharacterClass characterClass = CharacterClass::kUnknown;
 
+    // 返回指定槽位的挂件资源 id。
     int32_t accessory(AvatarAccessorySlot slot) const { return accessories[static_cast<size_t>(slot)]; }
+    // 设置指定槽位的挂件资源 id。
     void setAccessory(AvatarAccessorySlot slot, int32_t resSpineId)
     {
         accessories[static_cast<size_t>(slot)] = resSpineId;
