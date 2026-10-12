@@ -59,6 +59,9 @@ list(FILTER GAME_SOURCE EXCLUDE REGEX "Source/3rd/protobuf/")
 # behaviac 先入库对齐参照，尚未接入编译
 list(FILTER GAME_HEADER EXCLUDE REGEX "Source/3rd/behaviac/")
 list(FILTER GAME_SOURCE EXCLUDE REGEX "Source/3rd/behaviac/")
+list(FILTER GAME_SOURCE EXCLUDE REGEX "Source/mugen/core/Object\\.cpp$")
+list(FILTER GAME_SOURCE EXCLUDE REGEX "Source/mugen/core/math/Vec2\\.cpp$")
+list(FILTER GAME_SOURCE EXCLUDE REGEX "Source/mugen/core/math/Vec3\\.cpp$")
 
 option(MG_SPINE_USE_3_4 "mugen/avatar uses bundled Spine 3.4" ON)
 if(NOT MG_SPINE_USE_3_4)
