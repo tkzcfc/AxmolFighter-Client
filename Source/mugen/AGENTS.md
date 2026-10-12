@@ -33,6 +33,13 @@ In `core/` and `sim/`:
 
 Comments may be Chinese. Log, error, and assert strings are English. Comments must not name the reference product and must not contain a drive-letter path or a plan-document path.
 
+## Binding code conventions
+
+- Comment every type, member variable, and function with a concise Chinese comment. Trivial accessors may omit one.
+- In `core/` and `sim/`, do not use runtime exceptions for error handling. Use English `MG_ASSERT` plus `MG_LOG_E`; return `bool`, `std::optional`, or `nullptr` only when a caller must gracefully handle failure.
+- Put readability first: use plain, explicit constructs; do not introduce clever templates or surprising implicit conversions.
+- Mugen may run multiple instances in one server process: only process-wide read-only data may be singleton or static; per-battle mutable state must be owned by an instance.
+
 No compatibility shim. Interfaces can change. Do not null-check a value the type system already proves. The only nullable lookups are `ECSManager::tryGet<T>()` and `Config::find<T>()`.
 
 ## ECS
