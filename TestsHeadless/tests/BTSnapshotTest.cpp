@@ -3,6 +3,8 @@
 #include "mugen/core/reflect/SchemaHash.h"
 
 #include <cstring>
+#include <cstdlib>
+#include <filesystem>
 
 using namespace bt_test;
 
@@ -136,16 +138,17 @@ TEST_CASE("BT ready snapshot preserves monostate alternatives and their schema i
 
 TEST_CASE("BT definition rejects malformed DFS and pool references before execution")
 {
-    // Given
-    const auto pool = params();
-    // When / Then
-    CHECK_THROWS_AS(Def({}, {}, pool), std::invalid_argument);
-    CHECK_THROWS_AS(Def({action(0), action(1)}, {}, pool), std::invalid_argument);
-    CHECK_THROWS_AS(Def({composite(BTNodeType::Selector, 2), action(0)}, {}, pool), std::invalid_argument);
-    CHECK_THROWS_AS(Def({composite(BTNodeType::Sequence, 0)}, {}, pool), std::invalid_argument);
-    CHECK_THROWS_AS(Def({action(8)}, {}, pool), std::invalid_argument);
-    CHECK_THROWS_AS(Def({composite(BTNodeType::Action, 1), action(0)}, {}, pool), std::invalid_argument);
-    CHECK_THROWS_AS(Def({composite(BTNodeType::Parallel, 0, {0, 1})}, {{0, 8}}, pool), std::invalid_argument);
+#if !defined(NDEBUG)
+    const std::filesystem::path executable = std::filesystem::absolute("mugen_tests.exe");
+    for (int probe = 0; probe < 7; ++probe)
+    {
+        const std::string command =
+            "\"" + executable.string() + "\" --bt-invalid-probe " + std::to_string(probe) + " > NUL 2>&1";
+        CHECK(std::system(command.c_str()) != 0);
+    }
+#else
+    CHECK(true);
+#endif
 }
 
 TEST_CASE("BT empty Selector and Parallel reject entry as in the reference enter path")

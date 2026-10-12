@@ -5,6 +5,7 @@
 namespace mugen
 {
 template <class C, class P, class S>
+// 仅推进 Running 状态的节点。
 void BTRunner<C, P, S>::updateNode(C& ctx, uint32_t id)
 {
     auto& state = m_instance.nodes[id];
@@ -28,6 +29,7 @@ void BTRunner<C, P, S>::updateNode(C& ctx, uint32_t id)
 }
 
 template <class C, class P, class S>
+// 守卫失效时结束子节点并视为组合成功。
 BTStatus BTRunner<C, P, S>::updateComposite(C& ctx, uint32_t id)
 {
     if (!conditionsHold(ctx, id, false))
@@ -60,6 +62,7 @@ BTStatus BTRunner<C, P, S>::updateComposite(C& ctx, uint32_t id)
 }
 
 template <class C, class P, class S>
+// 保持串行节点的游标语义并衔接后续兄弟节点。
 BTStatus BTRunner<C, P, S>::updateSerial(C& ctx, uint32_t id)
 {
     const auto& node   = m_def.topology().node(id);

@@ -5,6 +5,7 @@
 namespace mugen
 {
 template <class C, class P, class S>
+// 遍历节点守卫；仅在进入阶段保存并通知已通过的守卫。
 bool BTRunner<C, P, S>::conditionsHold(C& ctx, uint32_t id, bool entering)
 {
     const auto& node = m_def.topology().node(id);
@@ -25,6 +26,7 @@ bool BTRunner<C, P, S>::conditionsHold(C& ctx, uint32_t id, bool entering)
 }
 
 template <class C, class P, class S>
+// 依节点类别递归进入，并选择首个可运行的子节点。
 bool BTRunner<C, P, S>::enterNode(C& ctx, uint32_t id)
 {
     const auto& node = m_def.topology().node(id);
@@ -77,6 +79,7 @@ bool BTRunner<C, P, S>::enterNode(C& ctx, uint32_t id)
 }
 
 template <class C, class P, class S>
+// 退出组合节点仍在运行的直接子节点。
 void BTRunner<C, P, S>::exitChildren(C& ctx, uint32_t id)
 {
     const auto& node = m_def.topology().node(id);
@@ -106,6 +109,7 @@ void BTRunner<C, P, S>::exitChildren(C& ctx, uint32_t id)
 }
 
 template <class C, class P, class S>
+// 退出叶子或组合节点，并以逆序退出已进入的守卫。
 void BTRunner<C, P, S>::exitNode(C& ctx, uint32_t id)
 {
     const auto& node = m_def.topology().node(id);
