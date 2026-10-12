@@ -7,6 +7,7 @@
 
 NS_MG_BEGIN
 
+// 无状态字符串变换工具集合。
 class StringUtils
 {
 public:

@@ -10,8 +10,11 @@ NS_MG_BEGIN
 namespace io
 {
 
+// 添加搜索路径；front 为 true 时优先于已有路径解析。
 void addSearchPath(const std::string& path, bool front = false);
+// 清空非引擎环境维护的搜索路径。
 void clearSearchPaths();
+// 按搜索路径规则解析文件的完整路径。
 std::string fullFilePath(const std::string& path);
 
 /**
@@ -89,6 +92,7 @@ std::string normalizePath(std::string path);
  */
 std::string normalizeDirPath(std::string path);
 
+// 连接两段路径并统一目录分隔符。
 std::string joinPath(const std::string& a, const std::string& b);
 
 }  // namespace io

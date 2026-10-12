@@ -17,12 +17,14 @@ namespace io
 #if !RUNTIME_IN_AXMOL
 namespace
 {
+// 保存无引擎运行时的进程级搜索路径顺序。
 std::vector<std::string>& searchPaths()
 {
     static std::vector<std::string> paths;
     return paths;
 }
 
+// 将 UTF-8 字符串转换为文件系统路径。
 fs::path pathFromUtf8(const std::string& utf8)
 {
 #    if defined(__cpp_char8_t)
@@ -32,12 +34,14 @@ fs::path pathFromUtf8(const std::string& utf8)
 #    endif
 }
 
+// 归一化文件系统路径并转换为 UTF-8 正斜杠形式。
 std::string pathToUtf8(const fs::path& path)
 {
     const auto u8 = path.lexically_normal().generic_u8string();
     return std::string(reinterpret_cast<const char*>(u8.c_str()), u8.size());
 }
 
+// 按绝对路径、现有相对路径和搜索路径顺序解析文件。
 std::string resolvePath(const std::string& path)
 {
     fs::path input = pathFromUtf8(path);
@@ -61,6 +65,7 @@ std::string resolvePath(const std::string& path)
 }  // namespace
 #endif
 
+// 在无引擎运行时去重并按请求位置维护搜索路径。
 void addSearchPath(const std::string& path, bool front)
 {
 #if RUNTIME_IN_AXMOL
@@ -80,6 +85,7 @@ void addSearchPath(const std::string& path, bool front)
 #endif
 }
 
+// 清理仅由无引擎实现持有的搜索路径。
 void clearSearchPaths()
 {
 #if RUNTIME_IN_AXMOL
@@ -89,6 +95,7 @@ void clearSearchPaths()
 #endif
 }
 
+// 委托当前运行时解析逻辑返回完整文件路径。
 std::string fullFilePath(const std::string& path)
 {
 #if RUNTIME_IN_AXMOL
@@ -98,6 +105,7 @@ std::string fullFilePath(const std::string& path)
 #endif
 }
 
+// 判断解析后路径是否为目录。
 bool isDirectoryExist(const std::string& path)
 {
 #if RUNTIME_IN_AXMOL
@@ -108,6 +116,7 @@ bool isDirectoryExist(const std::string& path)
 #endif
 }
 
+// 判断解析后路径是否为普通文件。
 bool isFileExist(const std::string& path)
 {
 #if RUNTIME_IN_AXMOL
@@ -118,6 +127,7 @@ bool isFileExist(const std::string& path)
 #endif
 }
 
+// 递归创建目标目录，空路径视为失败。
 bool createDirectory(const std::string& path)
 {
 #if RUNTIME_IN_AXMOL
@@ -131,6 +141,7 @@ bool createDirectory(const std::string& path)
 #endif
 }
 
+// 创建父目录后以截断方式写入文本内容。
 bool writeStringToFile(const std::string& content, const std::string& path)
 {
 #if RUNTIME_IN_AXMOL
@@ -154,6 +165,7 @@ bool writeStringToFile(const std::string& content, const std::string& path)
 #endif
 }
 
+// 创建父目录后以二进制截断方式写入字节。
 bool writeDataToFile(const char* data, size_t dataSize, const std::string& path)
 {
 #if RUNTIME_IN_AXMOL
@@ -177,6 +189,7 @@ bool writeDataToFile(const char* data, size_t dataSize, const std::string& path)
 #endif
 }
 
+// 读取完整文件；无法打开时返回空字节数组。
 std::vector<uint8_t> getDataFromFile(const std::string& path)
 {
 #if RUNTIME_IN_AXMOL
@@ -193,6 +206,7 @@ std::vector<uint8_t> getDataFromFile(const std::string& path)
 #endif
 }
 
+// 读取完整文件；无法打开时返回空字符串。
 std::string getStringFromFile(const std::string& path)
 {
 #if RUNTIME_IN_AXMOL
@@ -206,6 +220,7 @@ std::string getStringFromFile(const std::string& path)
 #endif
 }
 
+// 返回 malloc 分配的文件缓冲区，失败时返回空并将大小置零。
 uint8_t* getFileData(const std::string& path, size_t& size)
 {
     size = 0;
@@ -253,12 +268,13 @@ uint8_t* getFileData(const std::string& path, size_t& size)
 #endif
 }
 
+// 列举一级逻辑路径，目录项保留末尾斜杠。
 std::vector<std::string> listFiles(const std::string& dirPath)
 {
 #if RUNTIME_IN_AXMOL
     return ax::FileUtils::getInstance()->listFiles(dirPath);
 #else
-    // 返回逻辑相对路径（相对 content 根），与 Axmol 搜索路径语义一致
+    // 返回相对内容根的逻辑路径，以保持搜索路径语义一致。
     const fs::path resolved = pathFromUtf8(fullFilePath(dirPath));
     std::error_code ec;
     if (!fs::is_directory(resolved, ec))
@@ -290,6 +306,7 @@ std::vector<std::string> listFiles(const std::string& dirPath)
 #endif
 }
 
+// 递归追加逻辑路径，目录项保留末尾斜杠。
 void listFilesRecursively(const std::string& dirPath, std::vector<std::string>* files)
 {
 #if RUNTIME_IN_AXMOL
@@ -327,6 +344,7 @@ void listFilesRecursively(const std::string& dirPath, std::vector<std::string>* 
 #endif
 }
 
+// 提取不含目录和扩展名的基础名称。
 std::string getPathBaseNameNoExtension(std::string_view filePath)
 {
     size_t pos = filePath.find_last_of("/\\");
@@ -337,6 +355,7 @@ std::string getPathBaseNameNoExtension(std::string_view filePath)
     return std::string{filePath.substr(0, dot)};
 }
 
+// 提取小写扩展名，缺失时返回空字符串。
 std::string getPathExtension(std::string_view filePath)
 {
     std::string fileExtension;
@@ -350,6 +369,7 @@ std::string getPathExtension(std::string_view filePath)
     return fileExtension;
 }
 
+// 仅将反斜杠标准化为正斜杠。
 std::string normalizePath(std::string path)
 {
     for (char& c : path)
@@ -360,6 +380,7 @@ std::string normalizePath(std::string path)
     return path;
 }
 
+// 标准化目录分隔符并确保恰有一个末尾斜杠。
 std::string normalizeDirPath(std::string path)
 {
     for (char& c : path)
@@ -372,6 +393,7 @@ std::string normalizeDirPath(std::string path)
     return path + "/";
 }
 
+// 连接非空路径段；空段直接返回另一段。
 std::string joinPath(const std::string& a, const std::string& b)
 {
     if (a.empty())

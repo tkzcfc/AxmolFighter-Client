@@ -10,6 +10,7 @@
 #    define USING_NS_MG using mugen
 #    define NS_MG       ::mugen
 
+// 定义核心命名空间、访问器和常用位操作宏。
 // MG_FORCEINLINE
 #    define MG_FORCEINLINE       inline
 
@@ -193,15 +194,15 @@
         if (cond)             \
         break
 
-// 设置标记
+// 设置标记。
 #    define MG_BIT_SET(b, flag) (b) |= (flag)
-// 移除标记
+// 移除标记。
 #    define MG_BIT_REMOVE(b, flag) (b) &= ~(flag)
-// 存在任意一个
+// 判断是否存在任意标记。
 #    define MG_BIT_HAS_ANY(b, flag) (((b) & (flag)) != 0)
-// 存在全部
+// 判断是否存在全部标记。
 #    define MG_BIT_HAS_ALL(b, flag) (((b) & (flag)) == (flag))
-// 不存在任何标记
+// 判断是否不存在任何标记。
 #    define MG_BIT_HAS_NONE(b, flag) (((b) & (flag)) == 0)
 
 #    define FLOAT_EQUAL(a, b)        (std::fabs((a) - (b)) < 1e-6f)
