@@ -1,8 +1,12 @@
 #pragma once
 
 #include "ui/core/View.h"
+#include "mugen/sim/World.h"
+#include "mugen/sim/input/ControlManagerCore.h"
 
 #include <cstdint>
+#include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -24,7 +28,6 @@ struct TownBootParams
     int32_t facing = 1;
 };
 
-// 城镇视图。世界、移动和远程玩家渲染已拆除，保留 UI 与 town 服网络。
 class TownView : public View
 {
 public:
@@ -51,6 +54,7 @@ private:
         int32_t destPosX   = 0;
         int32_t destPosZ   = 0;
         int32_t destFacing = 1;
+        ax::Node* node     = nullptr;
     };
 
     bool initTown();
@@ -62,16 +66,32 @@ private:
     void onPortalTriggered(const TownPortal& portal);
 
     void addMessagePushReceiver();
+    bool initInput();
+    void onKeyPressed(ax::EventKeyboard::KeyCode code, ax::Event* event);
+    void onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event* event);
+    void setInputFromKey(ax::EventKeyboard::KeyCode code, bool pressed);
+    void addOrUpdateRemotePlayer(const PB::Types::PlayerState& state);
+    void removeRemotePlayer(int64_t playerId);
+    void queuePuppetUpdate(mugen::Entity entity, const PB::Types::PlayerState& state);
+    mugen::Entity localEntity() const;
 
     void sendDuelInvite(int64_t targetPlayerId);
     void respondDuelInvite(int32_t accept);
 
-    void showPlaceholder();
-
 private:
     TownBootParams m_boot;
     std::vector<TownPortal> m_portals;
-    ax::Label* m_placeholder = nullptr;
+    mugen::sim::World m_world;
+    mugen::sim::ControlManagerCore m_control;
+    mugen::Entity m_localEntity;
+    std::map<int64_t, mugen::Entity> m_remotePlayers;
+    std::vector<mugen::sim::PuppetUpdate> m_pendingPuppetUpdates;
+    std::map<ax::EventKeyboard::KeyCode, uint32_t> m_slotMap;
+    ax::EventListenerKeyboard* m_keyboardListener = nullptr;
+    float m_accumulator = 0.0f;
+    bool m_initialized  = false;
+    class WorldPresenterHolder;
+    std::unique_ptr<WorldPresenterHolder> m_presenter;
 
     bool m_enteredScene = false;
     float m_reportTimer = 0.0f;

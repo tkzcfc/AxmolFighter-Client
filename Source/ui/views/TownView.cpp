@@ -2,13 +2,19 @@
 
 #include "AppContext.h"
 #include "DungeonSelectView.h"
-#include "mugen/conf/Config.h"
+#include "mugen/conf/ReflectedConfig.h"
+#include "mugen/conf/TypeConversions.h"
+#include "mugen/render/battle/WorldPresenter.h"
+#include "mugen/sim/spawn/RoleSpawn.h"
+#include "ui/battle/LocalRoleUtils.h"
 #include "ui/widgets/common/MessageDialog.h"
 
 #include "imgui.h"
 
 #include <net/client_game.pb.h>
 #include <net/client_town.pb.h>
+
+#include <algorithm>
 
 using namespace mugen;
 
@@ -19,7 +25,27 @@ namespace
 {
 constexpr int32_t DEFAULT_TOWN_ID = 41;
 constexpr float REPORT_INTERVAL   = 0.2f;
+constexpr float LOGIC_DT          = 1.0f / 30.0f;
+
+mugen::Fixed fixedFromNetwork(float value)
+{
+    return mugen::Fixed::fromRaw(static_cast<int64_t>(value * static_cast<float>(mugen::Fixed::kOne)));
+}
 }  // namespace
+
+class TownView::WorldPresenterHolder
+{
+public:
+    explicit WorldPresenterHolder(ax::Node& root) : root(&root), presenter(root) {}
+    ~WorldPresenterHolder()
+    {
+        if (root)
+            root->removeFromParent();
+    }
+
+    ax::Node* root;
+    mugen::WorldPresenter presenter;
+};
 
 void TownView::onPrepareLoad()
 {
@@ -46,38 +72,69 @@ void TownView::onEnter()
 
 void TownView::onExit()
 {
-    m_placeholder = nullptr;
+    if (m_keyboardListener)
+    {
+        ax::Director::getInstance()->getEventDispatcher()->removeEventListener(m_keyboardListener);
+        m_keyboardListener = nullptr;
+    }
+    m_presenter.reset();
+    m_initialized = false;
     Super::onExit();
 }
 
 void TownView::onUpdate(float delta)
 {
+    if (!m_initialized)
+        return;
+    m_accumulator = std::min(m_accumulator + delta, 4.0f * LOGIC_DT);
+    uint32_t catchUp = 0;
+    while (m_accumulator >= LOGIC_DT && catchUp < 4)
+    {
+        sim::FrameInput input;
+        input.frame = m_world.ecs().singleton<sim::WorldClock>().frame + 1;
+        std::vector<sim::PlayerCommand> commands;
+        m_control.advance(commands);
+        if (!commands.empty())
+            input.players.push_back({0, std::move(commands)});
+        input.puppetUpdates = std::move(m_pendingPuppetUpdates);
+        m_pendingPuppetUpdates.clear();
+        m_world.tick(input);
+        m_accumulator -= LOGIC_DT;
+        ++catchUp;
+    }
+    m_presenter->presenter.present(m_world, m_accumulator / LOGIC_DT, delta);
     reportLocalState(delta);
 }
 
 bool TownView::initTown()
 {
-    if (!Config::getInstance()->getTownConfigById(m_boot.townId))
+    if (!conf::Config::instance().find<conf::TownConfig>(m_boot.townId))
     {
         AXLOGE("TownView: town {} missing", m_boot.townId);
         return false;
     }
 
-    initPortals();
-    showPlaceholder();
-    return true;
-}
-
-void TownView::showPlaceholder()
-{
+    const auto* town = conf::Config::instance().find<conf::TownConfig>(m_boot.townId);
+    m_world.init({1, sim::WorldMode::Town, m_boot.townId, town->mapKey});
+    const int32_t spawnX = m_boot.spawnX >= 0 ? m_boot.spawnX : town->actorPosX;
+    const int32_t spawnZ = m_boot.spawnZ >= 0 ? m_boot.spawnZ : town->actorPosZ;
+    m_localEntity = sim::spawnRole(m_world, {.roleId = resolveLocalPlayerRoleId(),
+                                             .level = 1,
+                                             .position = {Fixed::fromInt(spawnX), {}, Fixed::fromInt(spawnZ)},
+                                             .toward = m_boot.facing < 0 ? -1 : 1,
+                                             .playerSlot = 0,
+                                             .isAi = false});
     auto* scene = ax::Director::getInstance()->getRunningScene();
-    if (!scene)
-        return;
-
-    m_placeholder      = ax::Label::createWithSystemFont("Town is being rebuilt", "Arial", 28);
-    const auto visible = ax::Director::getInstance()->getVisibleSize();
-    m_placeholder->setPosition(visible.width * 0.5f, visible.height * 0.5f);
-    scene->addChild(m_placeholder, 100);
+    auto* root  = ax::Node::create();
+    scene->addChild(root, 10);
+    m_presenter = std::make_unique<WorldPresenterHolder>(*root);
+    m_presenter->presenter.loadMap(town->mapKey);
+    m_presenter->presenter.setFollowEntity(m_localEntity);
+    initPortals();
+    if (!initInput())
+        return false;
+    m_initialized = true;
+    return true;
 }
 
 void TownView::sendEnterScene()
@@ -101,6 +158,8 @@ void TownView::sendEnterScene()
         }
 
         m_enteredScene = true;
+        for (const auto& player : resp->players())
+            addOrUpdateRemotePlayer(player);
         AXLOGI("TownView: entered scene, players={}", resp->players_size());
     });
 }
@@ -114,10 +173,17 @@ void TownView::fillLocalState(PB::Types::PlayerState* state) const
     state->set_player_id(session->account.playerID);
     state->set_class_id(session->selectedCharacter.classID);
     state->set_name(session->selectedCharacter.name);
-    state->set_pos_x(static_cast<float>(m_boot.spawnX));
-    state->set_pos_z(static_cast<float>(m_boot.spawnZ));
-    state->set_facing(m_boot.facing < 0 ? 0 : 1);
-    state->set_moving(false);
+    if (!m_initialized)
+        return;
+    const auto& transform = m_world.ecs().get<sim::Transform>(m_localEntity);
+    const auto& motion    = m_world.ecs().get<sim::MotionState>(m_localEntity);
+    const auto& status    = m_world.ecs().get<sim::RoleStatus>(m_localEntity);
+    state->set_pos_x(transform.position.x.toFloatForRender());
+    state->set_pos_y(transform.position.y.toFloatForRender());
+    state->set_pos_z(transform.position.z.toFloatForRender());
+    state->set_facing(transform.towardX < 0 ? 0 : 1);
+    state->set_state(motion.motionName);
+    state->set_moving(status.eEntityStatus == EntityRoleStatus::Walk);
 }
 
 void TownView::reportLocalState(float delta)
@@ -143,18 +209,21 @@ void TownView::addMessagePushReceiver()
     this->listenPush([this](PB::Town::ScenePlayerEnterPush& push) {
         if (!push.has_state())
             return;
+        addOrUpdateRemotePlayer(push.state());
         AXLOGI("TownView: player {} entered scene", push.state().player_id());
     });
 
     this->listenPush([this](PB::Town::ScenePlayerLeavePush& push) {
         if (m_selectedPlayerId == push.player_id())
             m_selectedPlayerId = 0;
+        removeRemotePlayer(push.player_id());
         AXLOGI("TownView: player {} left scene", push.player_id());
     });
 
     this->listenPush([this](PB::Town::ScenePlayerStatePush& push) {
         if (!push.has_state())
             return;
+        addOrUpdateRemotePlayer(push.state());
     });
 
     this->listenPush([this](PB::Game::DuelInvitePush& push) {
@@ -174,32 +243,113 @@ void TownView::addMessagePushReceiver()
 void TownView::initPortals()
 {
     m_portals.clear();
-    const auto* town = Config::getInstance()->getTownConfigById(m_boot.townId);
-    if (!town || town->portals.empty())
+    const auto* town = conf::Config::instance().find<conf::TownConfig>(m_boot.townId);
+    if (!town || town->portalIds.empty())
     {
         AXLOGI("TownView: town {} has no portals", m_boot.townId);
         return;
     }
 
-    for (const auto& entry : town->portals)
+    const auto valueAt = [](const std::vector<int32_t>& values, size_t index) {
+        return index < values.size() ? values[index] : 0;
+    };
+    const auto firstAt = [](const std::vector<std::vector<int32_t>>& values, size_t index) {
+        return index < values.size() && !values[index].empty() ? values[index].front() : 0;
+    };
+    for (size_t index = 0; index < town->portalIds.size(); ++index)
     {
-        if (entry.portalId <= 0 || entry.slot <= 0)
+        const auto id   = town->portalIds[index];
+        const auto slot = valueAt(town->portalSlots, index);
+        if (id <= 0 || slot <= 0)
             continue;
 
         TownPortal portal;
-        portal.portalId = entry.portalId;
-        portal.slot     = entry.slot;
-        portal.destType = entry.destType;
-        if (!entry.dests.empty())
+        portal.portalId = id;
+        portal.slot     = slot;
+        portal.destType = valueAt(town->portalDestType, index);
+        if (index < town->portalDestRoomIds.size() && !town->portalDestRoomIds[index].empty())
         {
-            const auto& dest  = entry.dests.front();
-            portal.destTownId = dest.realRoomId > 0 ? dest.realRoomId : dest.roomId;
-            portal.destPosX   = dest.posX;
-            portal.destPosZ   = dest.posZ;
-            portal.destFacing = dest.vectorX != 0 ? dest.vectorX : 1;
+            const auto realRoomId = firstAt(town->portalDestRealRoomIds, index);
+            portal.destTownId     = realRoomId > 0 ? realRoomId : firstAt(town->portalDestRoomIds, index);
+            portal.destPosX       = firstAt(town->portalDestPosX, index);
+            portal.destPosZ       = firstAt(town->portalDestPosZ, index);
+            const auto facing     = firstAt(town->portalDestVectorX, index);
+            portal.destFacing     = facing != 0 ? facing : 1;
         }
+        auto* node = ax::Node::create();
+        node->setPosition(static_cast<float>(valueAt(town->portalPosX, index)),
+                          static_cast<float>(valueAt(town->portalPosZ, index)));
+        m_presenter->presenter.addMapNode(*node);
+        portal.node = node;
         m_portals.push_back(portal);
     }
+}
+
+bool TownView::initInput()
+{
+    auto* scene = ax::Director::getInstance()->getRunningScene();
+    if (!scene)
+    {
+        AXLOGE("TownView: running scene is null");
+        return false;
+    }
+    using Key = ax::EventKeyboard::KeyCode;
+    using ControlKey = sim::ControlKey;
+    m_slotMap[Key::KEY_LEFT_ARROW]  = static_cast<uint32_t>(ControlKey::Left);
+    m_slotMap[Key::KEY_RIGHT_ARROW] = static_cast<uint32_t>(ControlKey::Right);
+    m_slotMap[Key::KEY_UP_ARROW]    = static_cast<uint32_t>(ControlKey::Up);
+    m_slotMap[Key::KEY_DOWN_ARROW]  = static_cast<uint32_t>(ControlKey::Down);
+    m_keyboardListener               = ax::EventListenerKeyboard::create();
+    m_keyboardListener->onKeyPressed = AX_CALLBACK_2(TownView::onKeyPressed, this);
+    m_keyboardListener->onKeyReleased = AX_CALLBACK_2(TownView::onKeyReleased, this);
+    ax::Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(m_keyboardListener, scene);
+    return true;
+}
+
+void TownView::onKeyPressed(ax::EventKeyboard::KeyCode code, ax::Event*) { setInputFromKey(code, true); }
+
+void TownView::onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event*) { setInputFromKey(code, false); }
+
+void TownView::setInputFromKey(ax::EventKeyboard::KeyCode code, bool pressed)
+{
+    const auto it = m_slotMap.find(code);
+    if (it != m_slotMap.end())
+        m_control.setKey(static_cast<sim::ControlKey>(it->second), pressed);
+}
+
+mugen::Entity TownView::localEntity() const { return m_localEntity; }
+
+void TownView::queuePuppetUpdate(mugen::Entity entity, const PB::Types::PlayerState& state)
+{
+    m_pendingPuppetUpdates.push_back({entity,
+                                      {fixedFromNetwork(state.pos_x()), fixedFromNetwork(state.pos_y()),
+                                       fixedFromNetwork(state.pos_z())},
+                                      state.facing() == 0 ? -1 : 1,
+                                      state.moving() ? EntityRoleStatus::Walk : EntityRoleStatus::Idle,
+                                      state.state()});
+}
+
+void TownView::addOrUpdateRemotePlayer(const PB::Types::PlayerState& state)
+{
+    auto* session = AppContext::get().gameSession();
+    if (!session || state.player_id() == session->account.playerID)
+        return;
+    auto [it, inserted] = m_remotePlayers.try_emplace(state.player_id());
+    if (inserted)
+    {
+        const int32_t roleId = type_conversions::toRoleConfigId(static_cast<CharacterClass>(state.class_id()));
+        it->second = sim::spawnPuppet(m_world, state.player_id(), roleId, {}, 1);
+    }
+    queuePuppetUpdate(it->second, state);
+}
+
+void TownView::removeRemotePlayer(int64_t playerId)
+{
+    const auto it = m_remotePlayers.find(playerId);
+    if (it == m_remotePlayers.end())
+        return;
+    m_world.destroy(it->second);
+    m_remotePlayers.erase(it);
 }
 
 void TownView::onPortalTriggered(const TownPortal& portal)
@@ -218,7 +368,7 @@ void TownView::onPortalTriggered(const TownPortal& portal)
 
     if (portal.destType == kDestTypeCity)
     {
-        if (portal.destTownId <= 0 || !Config::getInstance()->getTownConfigById(portal.destTownId))
+        if (portal.destTownId <= 0 || !conf::Config::instance().find<conf::TownConfig>(portal.destTownId))
         {
             MessageDialog::show("目标城镇配置不存在");
             return;

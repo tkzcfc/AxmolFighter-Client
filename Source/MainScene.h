@@ -27,6 +27,8 @@
 
 #include "axmol.h"
 
+#include "ui/battle/BattleBootParams.h"
+
 class MainScene : public ax::Scene
 {
     typedef ax::Scene Super;
@@ -44,4 +46,10 @@ private:
     void setupImGui();
 
     void onImGuiRender();
+    bool parseOfflineLaunch();
+    void startOfflineBattle();
+
+    gameui::LocalBattleParams m_offline;
+    bool m_offlineRequested = false;
+    bool m_offlineStarted = false;
 };

@@ -1,8 +1,7 @@
 #include "DungeonSelectView.h"
 
 #include "GameView.h"
-#include "mugen/conf/Config.h"
-#include "mugen/conf/TableConfig.h"
+#include "mugen/conf/ReflectedConfig.h"
 #include "ui/battle/BattleBootParams.h"
 #include "ui/core/ViewManager.h"
 #include "ui/widgets/common/MessageDialog.h"
@@ -28,8 +27,8 @@ void DungeonSelectView::rebuildChapterList()
     m_selectedChapterIndex = 0;
     m_selectedCopyId       = 0;
 
-    auto* config = Config::getInstance();
-    for (const auto& [id, chapter] : config->getChapterConfigs())
+    auto& config = conf::Config::instance();
+    for (const auto& chapter : config.table<conf::ChapterConfig>())
     {
         if (chapter.isHide != 0)
             continue;
@@ -66,15 +65,15 @@ void DungeonSelectView::requestClose()
 
 void DungeonSelectView::enterCopy(int32_t copyId)
 {
-    auto* config     = Config::getInstance();
-    const auto* copy = config->getCopyConfigById(copyId);
+    auto& config     = conf::Config::instance();
+    const auto* copy = config.find<conf::CopyConfig>(copyId);
     if (!copy)
     {
         MessageDialog::show(fmt::format("副本配置不存在: {}", copyId));
         return;
     }
 
-    const auto* stage = config->getStageConfigById(copy->stageId);
+    const auto* stage = config.find<conf::StageConfig>(copy->stageId);
     if (!stage)
     {
         MessageDialog::show(fmt::format("关卡配置不存在: stageId={}", copy->stageId));
@@ -87,7 +86,7 @@ void DungeonSelectView::enterCopy(int32_t copyId)
         return;
     }
 
-    const auto* room = config->getRoomConfigById(stage->roomId);
+    const auto* room = config.find<conf::RoomConfig>(stage->roomId);
     if (!room)
     {
         MessageDialog::show(fmt::format("房间配置不存在: roomId={}", stage->roomId));
@@ -147,11 +146,11 @@ void DungeonSelectView::onImGUIRender()
 
     if (m_selectedChapterIndex >= 0 && m_selectedChapterIndex < static_cast<int>(m_chapters.size()))
     {
-        auto* config        = Config::getInstance();
+        auto& config        = conf::Config::instance();
         const auto& chapter = m_chapters[static_cast<size_t>(m_selectedChapterIndex)];
         for (int32_t copyId : chapter.mainCopys)
         {
-            const auto* copy = config->getCopyConfigById(copyId);
+            const auto* copy = config.find<conf::CopyConfig>(copyId);
             std::string label;
             if (copy)
             {
@@ -170,7 +169,7 @@ void DungeonSelectView::onImGUIRender()
             {
                 ImGui::BeginTooltip();
                 ImGui::Text("copyId=%d stageId=%d", copyId, copy->stageId);
-                if (const auto* stage = config->getStageConfigById(copy->stageId))
+                if (const auto* stage = config.find<conf::StageConfig>(copy->stageId))
                     ImGui::Text("roomId=%d mapKey=%s", stage->roomId, stage->mapKey.c_str());
                 ImGui::EndTooltip();
             }
