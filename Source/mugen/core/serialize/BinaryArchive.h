@@ -7,12 +7,15 @@
 
 NS_MG_BEGIN
 
+// 按反射字段声明顺序写入确定性二进制归档。
 class BinaryWriter
 {
 public:
+    // 绑定承载归档字节的可写缓冲区。
     explicit BinaryWriter(ByteBuffer& buffer) : m_buffer(buffer) {}
 
     template <class T>
+    // 写入受支持的反射值。
     bool write(const T& value)
     {
         static_assert(reflect::isSupported<T>, "Reflected field type is not supported");
@@ -21,15 +24,18 @@ public:
     }
 
     template <class T>
+    // 作为反射访问器写入字段值，字段名不进入载荷。
     void field(std::string_view, const T& value)
     {
         write(value);
     }
 
+    // 固化当前写入位置为有效载荷长度。
     void finish() { m_buffer.writeFinish(); }
 
 private:
     template <class T>
+    // 按类型递归编码标量、容器及反射结构。
     void writeValue(const T& value)
     {
         using Value = reflect::Bare<T>;
@@ -65,6 +71,17 @@ private:
             writeValue(value.y);
         }
         else if constexpr (std::is_same_v<Value, FixedVec3>)
+        {
+            writeValue(value.x);
+            writeValue(value.y);
+            writeValue(value.z);
+        }
+        else if constexpr (std::is_same_v<Value, IntVec2>)
+        {
+            writeValue(value.x);
+            writeValue(value.y);
+        }
+        else if constexpr (std::is_same_v<Value, IntVec3>)
         {
             writeValue(value.x);
             writeValue(value.y);
@@ -111,15 +128,19 @@ private:
             Value::mgReflect(*this, value);
     }
 
+    // 归档输出目标。
     ByteBuffer& m_buffer;
 };
 
+// 按反射字段声明顺序读取确定性二进制归档。
 class BinaryReader
 {
 public:
+    // 绑定提供归档字节的读缓冲区。
     explicit BinaryReader(ByteBuffer& buffer) : m_buffer(buffer) {}
 
     template <class T>
+    // 读取受支持的反射值；首次失败后保持失败状态。
     bool read(T& value)
     {
         static_assert(reflect::isSupported<T>, "Reflected field type is not supported");
@@ -130,17 +151,21 @@ public:
     }
 
     template <class T>
+    // 作为反射访问器读取字段值，字段名不参与匹配。
     void field(std::string_view, T& value)
     {
         read(value);
     }
 
+    // 返回累计读取状态。
     bool ok() const { return m_ok; }
 
 private:
+    // 返回尚未消费的载荷字节数。
     uint32_t remaining() const { return m_buffer.getSize() - m_buffer.getPosition(); }
 
     template <std::size_t Index = 0, class... T>
+    // 递归按标签构造对应的 variant 替代项。
     bool readVariant(uint8_t index, std::variant<T...>& value)
     {
         if constexpr (Index == sizeof...(T))
@@ -159,6 +184,7 @@ private:
     }
 
     template <class T>
+    // 按类型递归解码标量、容器及反射结构。
     bool readValue(T& value)
     {
         using Value = reflect::Bare<T>;
@@ -195,6 +221,10 @@ private:
         else if constexpr (std::is_same_v<Value, FixedVec2>)
             return readValue(value.x) && readValue(value.y);
         else if constexpr (std::is_same_v<Value, FixedVec3>)
+            return readValue(value.x) && readValue(value.y) && readValue(value.z);
+        else if constexpr (std::is_same_v<Value, IntVec2>)
+            return readValue(value.x) && readValue(value.y);
+        else if constexpr (std::is_same_v<Value, IntVec3>)
             return readValue(value.x) && readValue(value.y) && readValue(value.z);
         else if constexpr (std::is_same_v<Value, std::string>)
             return m_buffer.getString(value);
@@ -265,7 +295,9 @@ private:
         }
     }
 
+    // 归档输入来源。
     ByteBuffer& m_buffer;
+    // 任一字段失败后保持的累计读取结果。
     bool m_ok = true;
 };
 
