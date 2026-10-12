@@ -1,6 +1,7 @@
 #include "Skill.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include <algorithm>
+#include <string>
 
 namespace mugen::sim::skill
 {
@@ -170,6 +171,187 @@ std::vector<PlayerSkill> offlineKit(CharacterClass occupation)
                 break;
             }
         result.push_back({rockId > 0 ? kJoy[i] : kJoyPassive[i], skillId, rockId, false});
+    }
+    return result;
+}
+
+namespace
+{
+// 返回技能槽位枚举对应的调试面板名称。
+const char* slotLabel(EnumSkillSlot slot)
+{
+    switch (slot)
+    {
+    case EnumSkillSlot::Attack: return "Attack";
+    case EnumSkillSlot::Sprint: return "Sprint";
+    case EnumSkillSlot::Dodge:  return "Dodge";
+    case EnumSkillSlot::Crazy:  return "Crazy";
+    case EnumSkillSlot::A:      return "A";
+    case EnumSkillSlot::B:      return "B";
+    case EnumSkillSlot::C:      return "C";
+    case EnumSkillSlot::SA:     return "SA";
+    case EnumSkillSlot::SB:     return "SB";
+    case EnumSkillSlot::SC:     return "SC";
+    case EnumSkillSlot::EA:     return "EA";
+    case EnumSkillSlot::EB:     return "EB";
+    case EnumSkillSlot::SUA:    return "SUA";
+    case EnumSkillSlot::SUB:    return "SUB";
+    case EnumSkillSlot::SUC:    return "SUC";
+    case EnumSkillSlot::Break:  return "Break";
+    case EnumSkillSlot::SAP:    return "SAP";
+    case EnumSkillSlot::SBP:    return "SBP";
+    case EnumSkillSlot::SCP:    return "SCP";
+    case EnumSkillSlot::Anger:  return "Anger";
+    default:                    return "None";
+    }
+}
+
+// 按槽位填入调试面板行的按键、池名与叶子标识。
+OfflineKitRow makeRow(EnumSkillSlot slot, int32_t leafId, int32_t skillId, int32_t rockId)
+{
+    OfflineKitRow row;
+    row.slot     = slot;
+    row.slotName = slotLabel(slot);
+    row.leafId   = leafId;
+    row.skillId  = skillId;
+    switch (slot)
+    {
+    case EnumSkillSlot::Attack: row.key = "U"; row.poolSlot = "A"; row.hasControlKey = true; break;
+    case EnumSkillSlot::Sprint: row.key = "Y"; row.poolSlot = "Y"; row.hasControlKey = true; break;
+    case EnumSkillSlot::Dodge:  row.key = "L"; row.poolSlot = "F"; row.hasControlKey = true; break;
+    case EnumSkillSlot::Crazy:  row.key = "K"; row.poolSlot = "E"; row.hasControlKey = true; break;
+    case EnumSkillSlot::A:      row.key = "I"; row.poolSlot = "B"; row.hasControlKey = true; break;
+    case EnumSkillSlot::B:      row.key = "O"; row.poolSlot = "C"; row.hasControlKey = true; break;
+    case EnumSkillSlot::C:      row.key = "J"; row.poolSlot = "D"; row.hasControlKey = true; break;
+    case EnumSkillSlot::EA:     row.key = "M"; row.poolSlot = "G"; row.hasControlKey = true; break;
+    case EnumSkillSlot::EB:     row.key = "N"; row.poolSlot = "H"; row.hasControlKey = true; break;
+    case EnumSkillSlot::SUA:    row.key = "8"; row.poolSlot = "I"; row.hasControlKey = true; break;
+    case EnumSkillSlot::SUB:    row.key = "9"; row.poolSlot = "J"; row.hasControlKey = true; break;
+    case EnumSkillSlot::SUC:    row.key = "0"; row.poolSlot = "K"; row.hasControlKey = true; break;
+    case EnumSkillSlot::Break:  row.key = ";"; row.poolSlot = "L"; row.hasControlKey = true; break;
+    case EnumSkillSlot::Anger:  row.key = "T"; row.poolSlot = "P"; row.hasControlKey = true; break;
+    case EnumSkillSlot::SAP:    row.poolSlot = "M"; break;
+    case EnumSkillSlot::SBP:    row.poolSlot = "N"; break;
+    case EnumSkillSlot::SCP:    row.poolSlot = "O"; break;
+    case EnumSkillSlot::SA:
+    case EnumSkillSlot::SB:
+    case EnumSkillSlot::SC:
+        if (rockId > 0)
+        {
+            const auto* rock = conf::Config::instance().find<conf::SkillRockConfig>(rockId);
+            if (rock && rock->commandIndex > 0)
+                row.poolSlot = std::to_string(rock->commandIndex) + "+";
+        }
+        break;
+    default:
+        break;
+    }
+    return row;
+}
+}  // namespace
+
+// 按职业树生成离线调试面板行，无树时返回空表。
+std::vector<OfflineKitRow> offlineKitRows(CharacterClass occupation)
+{
+    std::vector<OfflineKitRow> result;
+    const int32_t profession = static_cast<int32_t>(occupation);
+    if (profession < 1 || profession > 4) return result;
+    const conf::SkillTreeConfig* tree = nullptr;
+    for (const auto& row : conf::Config::instance().table<conf::SkillTreeConfig>())
+    {
+        if (row.professionType != profession) continue;
+        if (row.treeType == 1)
+        {
+            tree = &row;
+            break;
+        }
+        if (!tree) tree = &row;
+    }
+    if (!tree) return result;
+    constexpr std::array<EnumSkillSlot, 10> kOrdered = {
+        EnumSkillSlot::Attack, EnumSkillSlot::Sprint, EnumSkillSlot::Dodge, EnumSkillSlot::Crazy,
+        EnumSkillSlot::A,      EnumSkillSlot::B,      EnumSkillSlot::C,     EnumSkillSlot::EA,
+        EnumSkillSlot::EB,     EnumSkillSlot::SUA};
+    constexpr std::array<EnumSkillSlot, 4> kOverflow = {EnumSkillSlot::SUB, EnumSkillSlot::SUC,
+                                                        EnumSkillSlot::Break, EnumSkillSlot::Anger};
+    constexpr std::array<EnumSkillSlot, 3> kJoy        = {EnumSkillSlot::SA, EnumSkillSlot::SB, EnumSkillSlot::SC};
+    constexpr std::array<EnumSkillSlot, 3> kJoyPassive = {EnumSkillSlot::SAP, EnumSkillSlot::SBP,
+                                                          EnumSkillSlot::SCP};
+    const auto& config = conf::Config::instance();
+    auto leafSkill     = [&config](int32_t leafId) -> int32_t {
+        const auto* leaf = config.find<conf::SkillLeafConfig>(leafId);
+        return leaf ? leaf->skillId : -1;
+    };
+    size_t overflow = 0;
+    for (size_t i = 0; i < tree->leafIds.size(); ++i)
+    {
+        const int32_t leafId = tree->leafIds[i];
+        if (leafId <= 0) continue;
+        const int32_t skillId = leafSkill(leafId);
+        if (skillId <= 0) continue;
+        EnumSkillSlot slot;
+        if (i < kOrdered.size())
+            slot = kOrdered[i];
+        else if (overflow < kOverflow.size())
+            slot = kOverflow[overflow++];
+        else
+            continue;
+        result.push_back(makeRow(slot, leafId, skillId, -1));
+    }
+    for (const int32_t leafId : tree->leafBuffId)
+    {
+        if (leafId <= 0) continue;
+        if (overflow >= kOverflow.size()) break;
+        const int32_t skillId = leafSkill(leafId);
+        if (skillId <= 0) continue;
+        result.push_back(makeRow(kOverflow[overflow++], leafId, skillId, -1));
+    }
+    for (size_t i = 0; i < tree->leafRubId.size() && i < kJoy.size(); ++i)
+    {
+        const int32_t leafId = tree->leafRubId[i];
+        if (leafId <= 0) continue;
+        const int32_t skillId = leafSkill(leafId);
+        if (skillId <= 0) continue;
+        int32_t rockId = -1;
+        for (const auto& rock : config.table<conf::SkillRockConfig>())
+            if (rock.skillId == skillId)
+            {
+                rockId = rock.id;
+                break;
+            }
+        result.push_back(makeRow(rockId > 0 ? kJoy[i] : kJoyPassive[i], leafId, skillId, rockId));
+    }
+    bool usedT = false;
+    bool usedH = false;
+    bool usedQ = false;
+    for (const auto& row : result)
+    {
+        if (row.key == "T") usedT = true;
+        if (row.key == "H") usedH = true;
+        if (row.key == "Q") usedQ = true;
+    }
+    for (auto& row : result)
+    {
+        if (row.slot != EnumSkillSlot::SAP && row.slot != EnumSkillSlot::SBP && row.slot != EnumSkillSlot::SCP)
+            continue;
+        if (!usedT)
+        {
+            row.key           = "T";
+            row.hasControlKey = true;
+            usedT             = true;
+        }
+        else if (!usedH)
+        {
+            row.key           = "H";
+            row.hasControlKey = true;
+            usedH             = true;
+        }
+        else if (!usedQ)
+        {
+            row.key           = "Q";
+            row.hasControlKey = true;
+            usedQ             = true;
+        }
     }
     return result;
 }

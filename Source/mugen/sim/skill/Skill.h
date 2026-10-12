@@ -1,6 +1,7 @@
 #pragma once
 #include "SkillComponents.h"
 #include "mugen/conf/GameDef.h"
+#include <string>
 #include <string_view>
 
 namespace mugen::sim
@@ -42,6 +43,28 @@ SkillLoadout monsterLoadout(int32_t aiId);
 SkillLoadout playerLoadout(const std::vector<PlayerSkill>& skills);
 // 按职业专属技能树构建离线玩家的技能列表。
 std::vector<PlayerSkill> offlineKit(CharacterClass occupation);
+// 离线调试面板一行技能装配信息。
+struct OfflineKitRow
+{
+    // 键盘按键标签，空表示仅调试 Cast。
+    std::string key;
+    // 技能槽位枚举名称。
+    std::string slotName;
+    // 技能槽位枚举。
+    EnumSkillSlot slot = EnumSkillSlot::None;
+    // 技能树叶子标识。
+    int32_t leafId = -1;
+    // 技能攻击配置标识。
+    int32_t skillId = -1;
+    // 技能池槽位字符串。
+    std::string poolSlot;
+    // 是否已绑定键盘输入。
+    bool hasControlKey = false;
+};
+// 无职业树时调试面板显示的英文提示。
+inline constexpr std::string_view kNoProfessionTree = "no profession tree";
+// 按职业生成离线调试面板的技能行。
+std::vector<OfflineKitRow> offlineKitRows(CharacterClass occupation);
 // 按显式装配创建或替换角色的技能池。
 void loadSkill(World& world, Entity entity, const SkillLoadout& loadout);
 // 按角色 AI 配置加载默认怪物技能池。

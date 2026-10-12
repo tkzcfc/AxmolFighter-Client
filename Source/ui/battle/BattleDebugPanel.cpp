@@ -1,5 +1,7 @@
 #include "ui/battle/BattleDebugPanel.h"
 
+#include "mugen/conf/TypeConversions.h"
+#include "mugen/sim/skill/Skill.h"
 #include "imgui.h"
 
 namespace gameui
@@ -14,6 +16,42 @@ void BattleDebugPanel::render(mugen::sim::World& world, bool& paused, bool& sing
     if (ImGui::Button("Single step"))
         singleStep = true;
     ImGui::Checkbox("Collision boxes (F8)", &collisionDebug);
+    ImGui::Separator();
+    mugen::Entity player{};
+    const auto& slots = world.ecs().singleton<mugen::sim::PlayerSlots>().entities;
+    if (const auto it = slots.find(0); it != slots.end())
+        player = it->second;
+    else if (!slots.empty())
+        player = slots.begin()->second;
+    if (player.value == 0)
+        ImGui::TextUnformatted(mugen::sim::skill::kNoProfessionTree.data());
+    else
+    {
+        const auto& identity  = world.ecs().get<mugen::sim::RoleIdentity>(player);
+        const auto occupation = mugen::type_conversions::toCharacterClass(identity.roleId);
+        const auto rows       = mugen::sim::skill::offlineKitRows(occupation);
+        if (rows.empty())
+            ImGui::TextUnformatted(mugen::sim::skill::kNoProfessionTree.data());
+        else
+        {
+            ImGui::TextUnformatted("key  slot  leaf  skill  pool");
+            int index = 0;
+            for (const auto& row : rows)
+            {
+                ImGui::Text("%s  %s  %d  %d  %s", row.key.empty() ? "-" : row.key.c_str(), row.slotName.c_str(),
+                            row.leafId, row.skillId, row.poolSlot.c_str());
+                if (!row.hasControlKey && !row.poolSlot.empty())
+                {
+                    ImGui::SameLine();
+                    ImGui::PushID(index);
+                    if (ImGui::Button("Cast"))
+                        mugen::sim::skill::presetSkill(world, player, row.poolSlot);
+                    ImGui::PopID();
+                }
+                ++index;
+            }
+        }
+    }
     ImGui::Separator();
     world.ecs().each<mugen::sim::RoleIdentity, mugen::sim::RoleStatus, mugen::sim::Transform>(
         [](mugen::Entity entity, const mugen::sim::RoleIdentity& identity, const mugen::sim::RoleStatus& status,
