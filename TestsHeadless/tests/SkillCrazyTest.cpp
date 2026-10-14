@@ -2,7 +2,6 @@
 #include "SkillTestSupport.h"
 #include "mugen/sim/skill/Skill.h"
 #include "mugen/sim/role/brain/states/HitStates.h"
-#include "mugen/sim/bt/RoleTree.h"
 #include <filesystem>
 #include <fstream>
 #include <set>
@@ -25,9 +24,7 @@ Entity fullActor(World& world, CharacterClass occupation = CharacterClass::kSwor
     world.ecs().add(entity, RoleTimers{});
     world.ecs().add(entity, Displacement{});
     world.ecs().add(entity, ColliderState{});
-    RoleBrain brain;
-    brain.m_attackLayout = behavior::definitionKey(world, entity);
-    world.ecs().add(entity, brain);
+    world.ecs().add(entity, RoleBrain{});
     world.ecs().add(entity, RoleControl{});
     return entity;
 }
@@ -127,8 +124,8 @@ TEST_CASE("Death during crazy zeroes EP and exits crazy")
     pool.m_slotChanged = true;
     world.ecs().get<Vitals>(entity).ep = "500"_fx;
     role::brain::RoleContext rc{world, entity};
-    behavior::LeafState state = behavior::HitActionState{};
-    role::brain::states::HitState::enter(rc, behavior::ActionType::Death, std::get<behavior::HitActionState>(state));
+    behavior::HitActionState state;
+    role::brain::states::HitState::enter(rc, behavior::ActionType::Death, state);
     CHECK(world.ecs().get<Vitals>(entity).ep == Fixed{});
     CHECK_FALSE(pool.m_crazy);
     reloadConfig();

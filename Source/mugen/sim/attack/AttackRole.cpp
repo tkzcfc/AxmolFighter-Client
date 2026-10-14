@@ -2,6 +2,7 @@
 #include "ActionAttack.h"
 #include "AttackSeams.h"
 #include "mugen/sim/World.h"
+#include "mugen/sim/role/brain/RoleBrain.h"
 #include "mugen/sim/skill/Skill.h"
 #include "mugen/sim/skill/SkillTriggers.h"
 #include "mugen/sim/status/Status.h"
@@ -12,11 +13,10 @@ namespace mugen::sim::attack
 {
 namespace
 {
-using namespace behavior;
-/// 从攻击叶参数查询对应的动作配置。
-const conf::ActionConfig* config(const behavior::AttackAction& param)
+// 从攻击叶参数查询对应的动作配置。
+const conf::ActionConfig* config(const AttackLeafParam& param)
 {
-    return conf::Config::instance().find<conf::ActionConfig>(param.actionId);
+    return conf::Config::instance().find<conf::ActionConfig>(param.m_actionId);
 }
 /// 返回当前连段首段的技能配置 id。
 int32_t baseSkill(const SkillPool& pool, int32_t index)
@@ -78,7 +78,7 @@ void AttackAction::enter(role::brain::RoleContext& ctx, Param source, State& lea
     const auto entity = ctx.entity();
     auto& pool = ecs.get<SkillPool>(entity);
     pool.m_allowInterrupt = pool.m_allowExtraInterrupt = false;
-    buff::trigger(world, entity, BFEvent::BehaviorStateStart, {source.skill, {}, row->id});
+    buff::trigger(world, entity, BFEvent::BehaviorStateStart, {source.m_skill, {}, row->id});
     if (row->control == 1) dealWithDirection(world, entity, true);
     auto& transform = ecs.get<Transform>(entity);
     if (row->relativeActionPos.size() >= 3)
@@ -94,7 +94,7 @@ void AttackAction::enter(role::brain::RoleContext& ctx, Param source, State& lea
     if (row->actionOrientation == 0) transform.towardX = -1;
     else if (row->actionOrientation == 1) transform.towardX = 1;
     transform.vectorX = Fixed::fromInt(transform.towardX);
-    buff::trigger(world, entity, BFEvent::BeforeRoleSkillAction, {source.skill, {}, row->id});
+    buff::trigger(world, entity, BFEvent::BeforeRoleSkillAction, {source.m_skill, {}, row->id});
     auto& motion = ecs.get<MotionState>(entity);
     motion.actionScale = row->actionScaleTime * ecs.get<RoleHitState>(entity).m_actionScale;
     MG_ASSERT(motion.actionScale > Fixed{} && "Attack animation scale must be positive");
@@ -108,7 +108,7 @@ void AttackAction::enter(role::brain::RoleContext& ctx, Param source, State& lea
     motion.playing = true;
     displacement::reset(world, entity);
     displacement::set(world, entity, row->displacementId, ctx.node());
-    const auto first = baseSkill(pool, source.skill);
+    const auto first = baseSkill(pool, source.m_skill);
     for (const auto id : row->buffIds) if (id != -1) buff::addActionBuff(world, entity, id, first);
     if (row->ghost != -1) world.emit(entity, Ghost{"-1"_fx});
     if (row->tipsShow != -1) world.emit(entity, Tips{std::to_string(row->tipsShow)});
@@ -144,17 +144,17 @@ BTStatus AttackAction::update(role::brain::RoleContext& ctx, Param source, State
     }
     /// 普通窗口先开放，额外窗口仅在动作尚未结束时尝试。
     if (row->interruptFrame != -1 && action.m_time > at(row->interruptFrame))
-        interrupt(world, entity, source.skill, false, action);
+        interrupt(world, entity, source.m_skill, false, action);
     if (!action.m_finished && row->interruptExtraFrame != -1 && action.m_time > at(row->interruptExtraFrame))
-        interrupt(world, entity, source.skill, true, action);
+        interrupt(world, entity, source.m_skill, true, action);
     dealWithControl(world, entity, *row);
     const auto& pool = ecs.get<SkillPool>(entity);
     for (size_t i = 0; i < row->effectIds.size(); ++i)
     {
         const auto* id = std::get_if<int32_t>(&row->effectIds[i]);
         if (!id || *id == -1 || action.m_spawned[i] || i >= row->effectFrames.size() || action.m_time < at(row->effectFrames[i])) continue;
-        effect::RoleSpawn request{*id, pool.m_skills.at(source.skill).m_configId,
-            baseSkill(pool, source.skill), pool.m_skills.at(source.skill).m_address.m_slot, row->extendRoleVec == 1};
+        effect::RoleSpawn request{*id, pool.m_skills.at(source.m_skill).m_configId,
+            baseSkill(pool, source.m_skill), pool.m_skills.at(source.m_skill).m_address.m_slot, row->extendRoleVec == 1};
         if (row->customVec.size() >= 3)
             request.m_vector = {Fixed::fromInt(row->customVec[0]), Fixed::fromInt(row->customVec[1]), Fixed::fromInt(row->customVec[2])};
         action.m_spawned[i] = 1;
@@ -189,9 +189,9 @@ void AttackAction::exit(role::brain::RoleContext& ctx, Param source, State& leaf
     if (!row) return;
     auto& world = ctx.world();
     const auto entity = ctx.entity();
-    buff::trigger(world, entity, BFEvent::BehaviorStateEnd, {source.skill, {}, row->id});
+    buff::trigger(world, entity, BFEvent::BehaviorStateEnd, {source.m_skill, {}, row->id});
     clearEffects(world, entity, leaf.m_action);
-    buff::trigger(world, entity, BFEvent::AfterRoleSkillAction, {source.skill, {}, row->id});
+    buff::trigger(world, entity, BFEvent::AfterRoleSkillAction, {source.m_skill, {}, row->id});
     auto& pool = world.ecs().get<SkillPool>(entity);
     pool.m_allowInterrupt = true;
     pool.m_allowExtraInterrupt = false;
@@ -210,18 +210,16 @@ bool AttackAction::onDisplacement(role::brain::RoleContext& ctx, Param source, S
     return displacementEvent(ctx.world(), ctx.entity(), leaf.m_action, *row, ctx.event());
 }
 
-/// 同步动画循环结束到所有仍在运行的攻击状态。
+// 同步动画循环结束到当前施法中的攻击叶。
 void animationComplete(World& world, Entity entity, int64_t loops)
 {
-    auto& brain     = world.ecs().get<RoleBrain>(entity);
-    const auto def  = behavior::attackDefinition(brain.m_attackLayout);
-    for (uint32_t i = 0; i < brain.m_cast.m_instance.nodes.size(); ++i)
-    {
-        const auto& node = def.topology().node(i);
-        if (node.type != BTNodeType::Action || node.leafTypeId != behavior::kAttackLeaf || brain.m_cast.m_instance.nodes[i].status != BTStatus::Running) continue;
-        const auto* row = config(std::get<behavior::AttackAction>(def.param(node.paramIndex)));
-        auto& action = std::get<AttackRole>(brain.m_cast.m_instance.leaves[def.topology().leafIndex(i)]).m_action;
-        if (row) completeAnimation(action, *row, loops);
-    }
+    auto& brain = world.ecs().get<RoleBrain>(entity);
+    auto& plan  = brain.m_cast;
+    if (brain.m_branch != role::brain::RoleBranch::Attack || plan.m_skill < 0 || plan.m_index < 0 ||
+        plan.m_index >= static_cast<int32_t>(plan.m_actions.size()))
+        return;
+    const auto* row = conf::Config::instance().find<conf::ActionConfig>(plan.m_actions[static_cast<size_t>(plan.m_index)]);
+    if (row)
+        completeAnimation(plan.m_leaf.m_action, *row, loops);
 }
 }  // namespace mugen::sim::attack

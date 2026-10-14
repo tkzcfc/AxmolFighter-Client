@@ -64,9 +64,7 @@ struct WorldAttack
         ecs.add(entity, Displacement{});
         ecs.add(entity, ColliderState{});
         ecs.add(entity, ControlEventQueue{});
-        RoleBrain brain;
-        brain.m_attackLayout = behavior::definitionKey(world, entity);
-        ecs.add(entity, brain);
+        ecs.add(entity, RoleBrain{});
         ecs.add(entity, RoleControl{});
         ecs.singleton<PlayerSlots>().entities[0] = entity;
     }
@@ -82,26 +80,18 @@ struct WorldAttack
         }
         world.tick(input);
     }
-    int32_t active() const
+    // 返回当前施法动作的唯一标识；不在攻击分支时为 -1。
+    int64_t active() const
     {
         auto& brain = world.ecs().get<RoleBrain>(entity);
-        if (brain.m_branch != role::brain::RoleBranch::Attack)
+        if (brain.m_branch != role::brain::RoleBranch::Attack || brain.m_cast.m_skill < 0)
             return -1;
-        const auto def = behavior::attackDefinition(brain.m_attackLayout);
-        for (uint32_t i = 0; i < brain.m_cast.m_instance.nodes.size(); ++i)
-            if (def.topology().node(i).type == BTNodeType::Action &&
-                def.topology().node(i).leafTypeId == behavior::kAttackLeaf &&
-                brain.m_cast.m_instance.nodes[i].status == BTStatus::Running)
-                return static_cast<int32_t>(i);
-        return -1;
+        return static_cast<int64_t>(brain.m_cast.m_skill) * 1000 + brain.m_cast.m_index;
     }
-    const attack::ActionAttack& state(int32_t node) const
+    // 返回当前攻击叶的逐帧状态。
+    const attack::ActionAttack& state() const
     {
-        auto& brain     = world.ecs().get<RoleBrain>(entity);
-        const auto def  = behavior::attackDefinition(brain.m_attackLayout);
-        return std::get<attack::AttackRole>(
-                   brain.m_cast.m_instance.leaves.at(def.topology().leafIndex(static_cast<uint32_t>(node))))
-            .m_action;
+        return world.ecs().get<RoleBrain>(entity).m_cast.m_leaf.m_action;
     }
     void overrideAction()
     {
@@ -142,12 +132,12 @@ TEST_CASE("AttackRole World buffered FrameInput chains running leaf")
     CHECK(f.world.ecs().get<SkillPool>(f.entity).m_current != oldSkill);
     f.tick();
     REQUIRE(f.active() >= 0);
-    auto& brain        = f.world.ecs().get<RoleBrain>(f.entity);
-    const auto def     = behavior::attackDefinition(brain.m_attackLayout);
-    const auto next    = std::get<behavior::AttackAction>(def.param(def.topology().node(static_cast<uint32_t>(f.active())).paramIndex));
-    CHECK(next.skill != oldSkill);
+    auto& brain      = f.world.ecs().get<RoleBrain>(f.entity);
+    const auto next  = brain.m_cast.m_skill;
+    const auto actionId = brain.m_cast.m_actions[static_cast<size_t>(brain.m_cast.m_index)];
+    CHECK(next != oldSkill);
     std::cout << "AttackRole World buffered skill=" << f.skillId << " first_action=" << f.action.id
-              << " next_action=" << next.actionId << " tick=" << f.frame << '\n';
+              << " next_action=" << actionId << " tick=" << f.frame << '\n';
 }
 
 TEST_CASE("AttackRole World no press waits for real animation and delay")
@@ -162,19 +152,19 @@ TEST_CASE("AttackRole World no press waits for real animation and delay")
     while (f.frame < animationTicks)
     {
         REQUIRE(f.active() == first);
-        CHECK_FALSE(f.state(first).m_animationEnd);
+        CHECK_FALSE(f.state().m_animationEnd);
         f.tick();
     }
     REQUIRE(f.active() == first);
-    REQUIRE(f.state(first).m_animationEnd);
-    CHECK(f.state(first).m_time == Fixed{});
+    REQUIRE(f.state().m_animationEnd);
+    CHECK(f.state().m_time == Fixed{});
     const auto delayTicks =
         std::max<int64_t>(1, (Fixed::fromInt(f.action.actionDelayTime) / kLogicDtMs).ceil().toInt());
     for (int64_t i = 1; i < delayTicks; ++i)
     {
         f.tick();
         REQUIRE(f.active() == first);
-        CHECK(f.state(first).m_time < Fixed::fromInt(f.action.actionDelayTime));
+        CHECK(f.state().m_time < Fixed::fromInt(f.action.actionDelayTime));
     }
     f.tick();
     CHECK(f.active() != first);
@@ -194,17 +184,17 @@ TEST_CASE("AttackRole World real config opens interrupt on predicted tick")
     f.tick(true);
     const auto node = f.active();
     REQUIRE(node >= 0);
-    CHECK(f.state(node).m_interval == interval);
+    CHECK(f.state().m_interval == interval);
     while (f.frame < predicted)
     {
         REQUIRE(f.active() == node);
         CHECK_FALSE(f.world.ecs().get<SkillPool>(f.entity).m_allowInterrupt);
-        CHECK_FALSE(f.state(node).m_animationEnd);
+        CHECK_FALSE(f.state().m_animationEnd);
         f.tick();
     }
     CHECK(f.active() == node);
-    CHECK(f.state(node).m_time > threshold);
-    CHECK(f.state(node).m_time - kLogicDtMs <= threshold);
+    CHECK(f.state().m_time > threshold);
+    CHECK(f.state().m_time - kLogicDtMs <= threshold);
     CHECK(f.world.ecs().get<SkillPool>(f.entity).m_allowInterrupt);
     std::cout << "AttackRole World timing skill=" << f.skillId << " action=" << f.action.id
               << " predicted_tick=" << predicted << " observed_tick=" << f.frame << " threshold_raw=" << threshold.raw
@@ -274,9 +264,10 @@ TEST_CASE("AttackRole World integrator brake completes infinite loop")
     f.tick(true);
     const auto node = f.active();
     REQUIRE(node >= 0);
-    CHECK_FALSE(f.state(node).m_animationEnd);
-    CHECK(f.state(node).m_finished);
-    CHECK(f.world.ecs().get<Displacement>(f.entity).listenerNode == node);
+    CHECK_FALSE(f.state().m_animationEnd);
+    CHECK(f.state().m_finished);
+    CHECK(f.world.ecs().get<Displacement>(f.entity).listenerNode ==
+          static_cast<int32_t>(role::brain::RoleBranch::Attack));
     f.tick();
     CHECK(f.active() != node);
     std::cout << "AttackRole World brake action=" << f.action.id << " displacement=" << f.action.displacementId
@@ -329,9 +320,9 @@ TEST_CASE("AttackRole World static targets expire reset and pause leaf")
         CHECK(ecs.get<RoleTimers>(friendEnemy).staticMs == std::max(Fixed{}, duration - kLogicDtMs));
         CHECK(ecs.get<RoleTimers>(ally).staticMs == Fixed{});
         CHECK(ecs.get<RoleTimers>(f.entity).staticMs == (target == 0 ? Fixed{} : duration));
-        const auto time = f.state(node).m_time;
+        const auto time = f.state().m_time;
         f.tick();
-        CHECK(f.state(node).m_time == (target == 0 ? time + kLogicDtMs : time));
+        CHECK(f.state().m_time == (target == 0 ? time + kLogicDtMs : time));
         const auto resetAt = kLogicDtMs + "200"_fx;
         while (ecs.singleton<WorldClock>().elapsedMs + kLogicDtMs < resetAt)
         {

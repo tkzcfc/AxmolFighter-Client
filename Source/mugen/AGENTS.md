@@ -52,6 +52,7 @@ No compatibility shim. Interfaces can change. Do not null-check a value the type
 
 ## Behavior tree
 
+- Behavior trees now only drive effects; role brains are driven by the explicit state machine in `sim/role/brain/`.
 - `BTDef` is immutable and shared. `BTInstance` is a value stored on a component. Snapshots store the definition key plus the instance, not the topology.
 - Composites are Selector, Sequence, and Parallel. A guard failure makes the composite return Success. A Selector does not preempt a running child. The root does not restart itself.
 - Leaves and conditions register function pointers on `BTRegistry`. An unported leaf is `kUnimplementedLeaf`. Nothing else is a placeholder.
@@ -67,7 +68,7 @@ No compatibility shim. Interfaces can change. Do not null-check a value the type
 
 - `sim::World::tick(const FrameInput&)` is the only frame step. Order: clock, logic timers, control events, camera and slow motion, entity groups (Role, Effect, Obstacle, Goods, Portal), scene, collision, `flushDestroyed`.
 - Position is `(x, y, z)`: horizontal, height, depth. Facing is `towardX` in `{-1, 1}`.
-- Status bits are the only character state. Pool data (skills, buffs, abilities) is component data plus free functions, not pointer-owning objects.
+- Status bits are the only character state. Components may have non-virtual member functions over their own data; temporary view classes are allowed; no owning pointers, no virtuals.
 - Cross-entity references are `Entity` handles.
 - The sim writes presentation events. It never calls rendering or audio. The presentation layer never writes sim state.
 - One `Random` lives in the `RngState` singleton. Logic code does not construct another one.

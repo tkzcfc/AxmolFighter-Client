@@ -1,6 +1,8 @@
 #pragma once
 
-#include "mugen/sim/bt/RoleTree.h"
+#include "mugen/core/bt/BTInstance.h"
+#include "mugen/sim/bt/HitActionState.h"
+#include "mugen/sim/role/brain/RoleAction.h"
 #include "mugen/sim/role/brain/RoleContext.h"
 
 namespace mugen::sim::role::brain::states

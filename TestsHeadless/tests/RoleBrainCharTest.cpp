@@ -4,7 +4,6 @@
 #include "../support/ScenarioHarness.h"
 #include "mugen/sim/attack/AttackRole.h"
 #include "mugen/sim/role/brain/states/HitStates.h"
-#include "mugen/sim/bt/RoleTree.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "mugen/sim/room/RoomFlow.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
@@ -76,20 +75,18 @@ TEST_CASE("Attack leaf enter preserves static timer left by previous run of same
     world.ecs().add(entity, RoleTimers{});
     world.ecs().add(entity, Displacement{});
     world.ecs().add(entity, ColliderState{});
-    RoleBrain brain;
-    brain.m_attackLayout = behavior::definitionKey(world, entity);
-    world.ecs().add(entity, brain);
+    world.ecs().add(entity, RoleBrain{});
     world.ecs().add(entity, RoleControl{});
-    const behavior::Param param = behavior::AttackAction{row.id, 1, 0};
-    behavior::LeafState state   = attack::AttackRole{};
+    const attack::AttackLeafParam param{row.id, 1, 0};
+    attack::AttackRole state;
     role::brain::RoleContext rc{world, entity};
-    attack::AttackAction::enter(rc, std::get<behavior::AttackAction>(param), std::get<attack::AttackRole>(state));
-    auto& leaf                        = std::get<attack::AttackRole>(state);
-    leaf.m_static                    = true;
-    leaf.m_staticResetAt             = "123"_fx;
-    attack::AttackAction::exit(rc, std::get<behavior::AttackAction>(param), std::get<attack::AttackRole>(state));
-    attack::AttackAction::enter(rc, std::get<behavior::AttackAction>(param), std::get<attack::AttackRole>(state));
-    const auto& again = std::get<attack::AttackRole>(state);
+    attack::AttackAction::enter(rc, param, state);
+    auto& leaf           = state;
+    leaf.m_static        = true;
+    leaf.m_staticResetAt = "123"_fx;
+    attack::AttackAction::exit(rc, param, state);
+    attack::AttackAction::enter(rc, param, state);
+    const auto& again = state;
     CHECK(again.m_static);
     CHECK(again.m_staticResetAt == "123"_fx);
     conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin");
@@ -161,9 +158,7 @@ TEST_CASE("Interrupt window pins per-frame skill address and pipe timeline")
     ecs.add(entity, Displacement{});
     ecs.add(entity, ColliderState{});
     ecs.add(entity, ControlEventQueue{});
-    RoleBrain brain;
-    brain.m_attackLayout = behavior::definitionKey(world, entity);
-    ecs.add(entity, brain);
+    ecs.add(entity, RoleBrain{});
     ecs.add(entity, RoleControl{});
     ecs.singleton<PlayerSlots>().entities[0] = entity;
     // 每帧记录 (当前技能 configId.step, 管线, 上次施放技能 configId)。
@@ -256,9 +251,7 @@ TEST_CASE("Hit state exit resets displacement only for Death and landing Hit")
     world.ecs().add(entity, RoleTimers{});
     world.ecs().add(entity, Displacement{});
     world.ecs().add(entity, ColliderState{});
-    RoleBrain brain;
-    brain.m_attackLayout = behavior::definitionKey(world, entity);
-    world.ecs().add(entity, brain);
+    world.ecs().add(entity, RoleBrain{});
     world.ecs().add(entity, RoleControl{});
     auto& disp    = world.ecs().get<Displacement>(entity);
     world.ecs().get<Transform>(entity).position.y = Fixed{};
@@ -272,18 +265,18 @@ TEST_CASE("Hit state exit resets displacement only for Death and landing Hit")
     REQUIRE(hitRow != nullptr);
     role::brain::RoleContext rc{world, entity};
     {  // Hit (landing) -> exit resets displacement
-        behavior::LeafState state = behavior::HitActionState{};
-        role::brain::states::HitState::enter(rc, behavior::ActionType::Hit, std::get<behavior::HitActionState>(state));
-        std::get<behavior::HitActionState>(state).m_hitId = hitRow->id;
-        disp.listenerNode                               = 7;
-        role::brain::states::HitState::exit(rc, behavior::ActionType::Hit, std::get<behavior::HitActionState>(state));
+        behavior::HitActionState state;
+        role::brain::states::HitState::enter(rc, behavior::ActionType::Hit, state);
+        state.m_hitId    = hitRow->id;
+        disp.listenerNode = 7;
+        role::brain::states::HitState::exit(rc, behavior::ActionType::Hit, state);
         CHECK(disp.listenerNode == -1);
     }
     {  // HitUp -> exit does not reset displacement
-        behavior::LeafState state = behavior::HitActionState{};
-        role::brain::states::HitState::enter(rc, behavior::ActionType::HitUp, std::get<behavior::HitActionState>(state));
+        behavior::HitActionState state;
+        role::brain::states::HitState::enter(rc, behavior::ActionType::HitUp, state);
         disp.listenerNode = 7;
-        role::brain::states::HitState::exit(rc, behavior::ActionType::HitUp, std::get<behavior::HitActionState>(state));
+        role::brain::states::HitState::exit(rc, behavior::ActionType::HitUp, state);
         CHECK(disp.listenerNode == 7);
     }
     conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin");

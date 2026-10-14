@@ -9,8 +9,8 @@ struct Fixture
 {
     World world;
     Entity entity;
-    behavior::Param param;
-    behavior::LeafState state;
+    attack::AttackLeafParam param;
+    attack::AttackRole state;
     conf::ActionConfig row;
     Fixture()
     {
@@ -32,11 +32,9 @@ struct Fixture
         ecs.add(entity, RoleTimers{});
         ecs.add(entity, Displacement{});
         ecs.add(entity, ColliderState{});
-        RoleBrain brain;
-        brain.m_attackLayout = behavior::definitionKey(world, entity);
-        ecs.add(entity, brain);
+        ecs.add(entity, RoleBrain{});
         ecs.add(entity, RoleControl{});
-        param                                = behavior::AttackAction{row.id, 1, 0};
+        param                                = attack::AttackLeafParam{row.id, 1, 0};
         ecs.get<SkillPool>(entity).m_current = 0;
     }
     void replace()
@@ -61,14 +59,14 @@ struct Fixture
     {
         state = attack::AttackRole{};
         role::brain::RoleContext rc{world, entity};
-        attack::AttackAction::enter(rc, std::get<behavior::AttackAction>(param), std::get<attack::AttackRole>(state));
+        attack::AttackAction::enter(rc, param, state);
     }
     BTStatus tick(Fixed time)
     {
-        world.ecs().singleton<WorldClock>().dtMs            = {};
-        std::get<attack::AttackRole>(state).m_action.m_time = time;
+        world.ecs().singleton<WorldClock>().dtMs = {};
+        state.m_action.m_time                    = time;
         role::brain::RoleContext rc{world, entity};
-        return attack::AttackAction::update(rc, std::get<behavior::AttackAction>(param), std::get<attack::AttackRole>(state));
+        return attack::AttackAction::update(rc, param, state);
     }
     ~Fixture() { conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin"); }
 };
@@ -79,7 +77,7 @@ TEST_CASE("AttackRole real config interrupt boundary is strict")
     REQUIRE(f.row.interruptFrame >= 0);
     f.enter();
     const auto interval = "1000"_fx * kLogicDtSec / f.row.actionScaleTime;
-    CHECK(std::get<attack::AttackRole>(f.state).m_action.m_interval == interval);
+    CHECK(f.state.m_action.m_interval == interval);
     const auto threshold = interval * Fixed::fromInt(f.row.interruptFrame);
     f.tick(threshold);
     CHECK_FALSE(f.world.ecs().get<SkillPool>(f.entity).m_allowInterrupt);
@@ -94,7 +92,7 @@ TEST_CASE("AttackRole buffered press chains and no press waits for animation del
     f.row.actionDelayTime     = 100;
     f.replace();
     f.enter();
-    const auto threshold = std::get<attack::AttackRole>(f.state).m_action.m_interval * "2"_fx;
+    const auto threshold = f.state.m_action.m_interval * "2"_fx;
     CHECK(f.tick(threshold + "1"_fx) == BTStatus::Running);
     auto& pool = f.world.ecs().get<SkillPool>(f.entity);
     REQUIRE(pool.m_skills.size() >= 2);
@@ -104,7 +102,7 @@ TEST_CASE("AttackRole buffered press chains and no press waits for animation del
     pool.m_current = 0;
     f.enter();
     CHECK(f.tick("10000"_fx) == BTStatus::Running);
-    auto& action          = std::get<attack::AttackRole>(f.state).m_action;
+    auto& action          = f.state.m_action;
     action.m_animationEnd = true;
     CHECK(f.tick("99"_fx) == BTStatus::Running);
     CHECK(f.tick("100"_fx) == BTStatus::Success);
@@ -153,7 +151,7 @@ TEST_CASE("AttackRole static targets preserve allies and choose durations")
         identity.camp = static_cast<int32_t>(EntityCamp::OurFriend);
         ecs.add(ally, identity);
         ecs.add(ally, RoleTimers{});
-        const auto threshold = std::get<attack::AttackRole>(f.state).m_action.m_interval * "2"_fx;
+        const auto threshold = f.state.m_action.m_interval * "2"_fx;
         f.tick(threshold - Fixed::fromRaw(1));
         CHECK(ecs.get<RoleTimers>(enemy).staticMs == Fixed{});
         f.tick(threshold);
@@ -170,25 +168,24 @@ TEST_CASE("AttackRole infinite loop brake and displacement boundary policy")
     f.row.displacementId = 0;
     f.replace();
     f.enter();
-    behavior::BTCtx ctx{f.world, f.entity, DisplacementEvent::Brake};
-    const auto callback = behavior::registry().leaf(behavior::kAttackLeaf).onDisplacementEvent;
-    REQUIRE(callback != nullptr);
-    callback(ctx, f.param, f.state);
+    role::brain::RoleContext ctx{f.world, f.entity};
+    ctx.setEvent(DisplacementEvent::Brake);
+    attack::AttackAction::onDisplacement(ctx, f.param, f.state);
     CHECK(f.tick({}) == BTStatus::Success);
     for (const int obstruct : {-1, 0, 1})
     {
         f.row.obstruct = obstruct;
         f.replace();
         f.enter();
-        ctx.event = DisplacementEvent::Left;
-        CHECK(callback(ctx, f.param, f.state) == (obstruct == 0));
-        CHECK(std::get<attack::AttackRole>(f.state).m_action.m_finished == (obstruct == 1));
+        ctx.setEvent(DisplacementEvent::Left);
+        CHECK(attack::AttackAction::onDisplacement(ctx, f.param, f.state) == (obstruct == 0));
+        CHECK(f.state.m_action.m_finished == (obstruct == 1));
     }
     f.row.floor = 0;
     f.replace();
     f.enter();
-    ctx.event = DisplacementEvent::Floor;
-    CHECK(callback(ctx, f.param, f.state));
+    ctx.setEvent(DisplacementEvent::Floor);
+    CHECK(attack::AttackAction::onDisplacement(ctx, f.param, f.state));
     CHECK(f.tick({}) == BTStatus::Success);
 }
 
@@ -215,7 +212,7 @@ TEST_CASE("AttackRole animation completion counts loops and resets delay once")
     CHECK(action.m_finished);
 }
 
-TEST_CASE("AttackRole World input enters registered leaf and freeze preserves progress")
+TEST_CASE("AttackRole World input enters cast plan and freeze preserves progress")
 {
     Fixture f;
     f.row.staticTarget   = -1;
@@ -231,21 +228,15 @@ TEST_CASE("AttackRole World input enters registered leaf and freeze preserves pr
     f.world.tick({1, {{0, {command}}}, {}, {}});
     auto& brain = ecs.get<RoleBrain>(f.entity);
     REQUIRE(brain.m_branch == role::brain::RoleBranch::Attack);
-    const auto def = behavior::attackDefinition(brain.m_attackLayout);
-    int32_t active = -1;
-    for (uint32_t i = 0; i < brain.m_cast.m_instance.nodes.size(); ++i)
-        if (def.topology().node(i).leafTypeId == behavior::kAttackLeaf &&
-            brain.m_cast.m_instance.nodes[i].status == BTStatus::Running)
-            active = static_cast<int32_t>(i);
-    REQUIRE(active >= 0);
-    const auto index = def.topology().leafIndex(static_cast<uint32_t>(active));
-    const auto time  = std::get<attack::AttackRole>(brain.m_cast.m_instance.leaves[index]).m_action.m_time;
+    REQUIRE(brain.m_cast.m_skill >= 0);
+    REQUIRE(brain.m_cast.m_index == 0);
+    const auto time = brain.m_cast.m_leaf.m_action.m_time;
     CHECK(time == kLogicDtMs);
     ecs.get<RoleTimers>(f.entity).freezeMs = kLogicDtMs * "3"_fx;
     f.world.tick({2, {}, {}, {}});
-    CHECK(std::get<attack::AttackRole>(brain.m_cast.m_instance.leaves[index]).m_action.m_time == time);
-    CHECK(ecs.get<Displacement>(f.entity).listenerNode == active);
+    CHECK(brain.m_cast.m_leaf.m_action.m_time == time);
+    CHECK(ecs.get<Displacement>(f.entity).listenerNode == static_cast<int32_t>(role::brain::RoleBranch::Attack));
     f.world.tick({3, {}, {}, {}});
     f.world.tick({4, {}, {}, {}});
-    CHECK(std::get<attack::AttackRole>(brain.m_cast.m_instance.leaves[index]).m_action.m_time == time + kLogicDtMs);
+    CHECK(brain.m_cast.m_leaf.m_action.m_time == time + kLogicDtMs);
 }

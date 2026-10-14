@@ -208,8 +208,7 @@ Entity spawnRole(World& world, const RoleSpawnParams& params)
     }
     if (params.isAi && world.setup().mode != WorldMode::Town && row->roleType != 12)
         ecs.add(entity, AiAgent{});
-    auto& brain            = ecs.get<RoleBrain>(entity);
-    brain.m_attackLayout   = behavior::definitionKey(world, entity);
+    auto& brain = ecs.get<RoleBrain>(entity);
     role::brain::enterFirst(brain, world, entity, world.setup().mode == WorldMode::Town);
     if (params.playerSlot.has_value())
         ecs.singleton<PlayerSlots>().entities.emplace(*params.playerSlot, entity);

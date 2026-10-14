@@ -30,7 +30,6 @@ struct BrainFixture
         p.playerSlot = 0;
         entity       = sim::spawnPlayer(world, CharacterClass::kSwordman, p);
         REQUIRE(entity.value != 0);
-        brain.m_attackLayout = behavior::definitionKey(world, entity);
     }
 };
 }  // namespace
@@ -58,16 +57,18 @@ TEST_CASE("RoleBrain standalone selects cyclically Run then Idle")
     CHECK(f.brain.m_branch == role::brain::RoleBranch::Idle);
 }
 
-TEST_CASE("RoleBrain with no enterable branch stays stopped permanently")
+TEST_CASE("RoleBrain with no enterable branch falls back to Idle")
 {
     BrainFixture f;
     REQUIRE(role::brain::enterFirst(f.brain, f.world, f.entity, false));
-    // 无任何状态位时所有守卫都不成立。
+    // 无任何状态位时所有守卫都不成立，回退到待机分支。
     f.world.ecs().get<RoleStatus>(f.entity).eEntityStatus = EntityRoleStatus::None;
     role::brain::update(f.brain, f.world, f.entity, false);
-    CHECK(f.brain.m_phase == role::brain::BrainPhase::Stopped);
+    CHECK(f.brain.m_branch == role::brain::RoleBranch::Idle);
+    CHECK(f.brain.m_phase == role::brain::BrainPhase::Running);
     role::brain::update(f.brain, f.world, f.entity, false);
-    CHECK(f.brain.m_phase == role::brain::BrainPhase::Stopped);
+    CHECK(f.brain.m_branch == role::brain::RoleBranch::Idle);
+    CHECK(f.brain.m_phase == role::brain::BrainPhase::Running);
 }
 
 TEST_CASE("RoleBrain branch selection follows movement commands")

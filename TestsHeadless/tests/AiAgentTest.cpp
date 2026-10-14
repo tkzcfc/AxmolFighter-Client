@@ -78,7 +78,6 @@ struct MonsterFixture
         ecs.add(entity, Displacement{}); ecs.add(entity, MotionState{}); ecs.add(entity, ControlEventQueue{});
         ecs.add(entity, SkillPool{}); ecs.add(entity, RoleBrain{}); ecs.add(entity, RoleControl{});
         if (aiEnabled) ecs.add(entity, AiAgent{});
-        ecs.get<RoleBrain>(entity).m_attackLayout = behavior::definitionKey(world, entity);
         return entity;
     }
     void tick()

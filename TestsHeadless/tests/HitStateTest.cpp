@@ -78,21 +78,21 @@ struct HitStateWorld
     }
 };
 // 直接驱动受击叶：构造临时视图并解包叶子状态。
-void hitEnter(World& world, Entity entity, behavior::ActionType type, behavior::LeafState& state)
+void hitEnter(World& world, Entity entity, behavior::ActionType type, behavior::HitActionState& state)
 {
     state = behavior::HitActionState{};
     role::brain::RoleContext rc{world, entity};
-    role::brain::states::HitState::enter(rc, type, std::get<behavior::HitActionState>(state));
+    role::brain::states::HitState::enter(rc, type, state);
 }
-BTStatus hitTick(World& world, Entity entity, behavior::ActionType type, behavior::LeafState& state)
+BTStatus hitTick(World& world, Entity entity, behavior::ActionType type, behavior::HitActionState& state)
 {
     role::brain::RoleContext rc{world, entity};
-    return role::brain::states::HitState::update(rc, type, std::get<behavior::HitActionState>(state));
+    return role::brain::states::HitState::update(rc, type, state);
 }
-void hitExit(World& world, Entity entity, behavior::ActionType type, behavior::LeafState& state)
+void hitExit(World& world, Entity entity, behavior::ActionType type, behavior::HitActionState& state)
 {
     role::brain::RoleContext rc{world, entity};
-    role::brain::states::HitState::exit(rc, type, std::get<behavior::HitActionState>(state));
+    role::brain::states::HitState::exit(rc, type, state);
 }
 }
 
@@ -208,13 +208,13 @@ TEST_CASE("HitState chase hit types preserve distinct transitions")
             return row.hitType == type && row.id != 0 && row.displacementId != -1;
         });
         REQUIRE(found != rows.end());
-            behavior::LeafState state;
+            behavior::HitActionState state;
         hitEnter(f.m_world, f.m_entity, A::HitUp, state);
         ecs.get<RoleStatus>(f.m_entity).eEntityStatus = EntityRoleStatus::Idle | EntityRoleStatus::HitUp;
         ecs.get<RoleStatus>(f.m_entity).entityParams.hit_id = found->id;
         ecs.get<RoleHitState>(f.m_entity).rigidity = "10000"_fx;
         const auto result = hitTick(f.m_world, f.m_entity, A::HitUp, state);
-        CHECK(std::get<behavior::HitActionState>(state).m_displacementId ==
+        CHECK(state.m_displacementId ==
             (type == 0 ? found->airDisplacementId : found->displacementId));
         CHECK_FALSE(ecs.get<RoleStatus>(f.m_entity).entityParams.hit_id.has_value());
         CHECK((result == BTStatus::Success) == (type == 1));
@@ -239,13 +239,13 @@ TEST_CASE("HitState falling and floor chase matrix retains separate transitions"
                 return row.hitType == type && row.displacementId != -1;
             });
             REQUIRE(found != rows.end());
-                    behavior::LeafState state;
+                    behavior::HitActionState state;
             hitEnter(f.m_world, f.m_entity, action, state);
             ecs.get<RoleStatus>(f.m_entity).eEntityStatus = S::Idle | (action == A::HitDown ? S::HitDown : S::HitFloor);
             ecs.get<RoleStatus>(f.m_entity).entityParams.hit_id = found->id;
             ecs.get<RoleHitState>(f.m_entity).rigidity = "10000"_fx;
             const auto result = hitTick(f.m_world, f.m_entity, action, state);
-            CHECK(std::get<behavior::HitActionState>(state).m_displacementId ==
+            CHECK(state.m_displacementId ==
                 (type == 0 ? found->airDisplacementId : found->displacementId));
             CHECK(status::isHitUpStatus(ecs.get<RoleStatus>(f.m_entity)) == (type != 1));
             CHECK((result == BTStatus::Success) == (action == A::HitFloor || type != 1));
@@ -306,7 +306,6 @@ TEST_CASE("HitState breakaway cast exits hit leaf into Attack")
     loadout[0].resize(12);
     loadout[0][11] = {{{id, -1}}};
     skill::loadSkill(f.m_world, f.m_entity, loadout);
-    ecs.get<RoleBrain>(f.m_entity).m_attackLayout = behavior::definitionKey(f.m_world, f.m_entity);
     ecs.get<RoleStatus>(f.m_entity).eEntityStatus = EntityRoleStatus::Idle | EntityRoleStatus::HitUp;
     ecs.get<Transform>(f.m_entity).position.y = "100"_fx;
     f.tick();
@@ -333,7 +332,7 @@ TEST_CASE("HitState Controlled preserves Palsy animation unless Stun is active")
     auto& ecs = f.m_world.ecs();
     ecs.get<MotionState>(f.m_entity).motionName = "stand";
     ecs.get<sim::ExtraState>(f.m_entity).add(mugen::ExtraState::Palsy);
-    behavior::LeafState leaf;
+    behavior::HitActionState leaf;
     hitEnter(f.m_world, f.m_entity, behavior::ActionType::Controlled, leaf);
     CHECK(ecs.get<MotionState>(f.m_entity).motionName == "stand");
     ecs.get<sim::ExtraState>(f.m_entity).add(mugen::ExtraState::Stun);
@@ -403,7 +402,7 @@ TEST_CASE("HitState lifecycle seam preserves action class names")
     WorldHooks hooks;
     hooks.m_hit.m_behaviorState = recordBehavior;
     HitStateWorld f(hooks);
-    behavior::LeafState leaf;
+    behavior::HitActionState leaf;
     hitEnter(f.m_world, f.m_entity, behavior::ActionType::Wake, leaf);
     hitExit(f.m_world, f.m_entity, behavior::ActionType::Wake, leaf);
     std::vector<std::string> names;
