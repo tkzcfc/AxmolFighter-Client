@@ -8,6 +8,11 @@
 #include "HitActionState.h"
 #include "mugen/sim/ai/ActionMove.h"
 
+namespace mugen::conf
+{
+class Config;
+}
+
 namespace mugen::sim
 {
 /// 行为树访问的战斗世界。
@@ -217,6 +222,10 @@ struct BTCtx
 using Registry = BTRegistry<BTCtx, Param, LeafState>;
 /// 获取与缓存键对应的不可变行为树定义。
 const Def& definition(const DefinitionKey& key);
+/// 构建仅含攻击子树的定义（供新状态机桥接 B 复用，不复制构建逻辑）。
+Def buildAttackOnly(const DefinitionKey& key, const conf::Config& config);
+/// 从只读缓存获取攻击子树定义。
+const Def& attackDefinition(const DefinitionKey& key);
 /// 从实体已加载的技能构造行为树缓存键。
 DefinitionKey definitionKey(World& world, Entity entity);
 /// 获取角色行为树的回调注册表。

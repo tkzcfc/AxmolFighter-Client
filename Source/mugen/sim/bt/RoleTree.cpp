@@ -384,6 +384,38 @@ const Def& definition(const DefinitionKey& key)
     static BTDefCache<DefinitionKey, Param, conf::Config> cache(conf::Config::instance(), build);
     return cache.get(key);
 }
+/// 构建仅含攻击子树的定义，供新状态机桥接 B 复用，不复制构建逻辑。
+Def buildAttackOnly(const DefinitionKey& key, const conf::Config& config)
+{
+    std::vector<BTNodeDef> nodes;
+    std::vector<BTCondDef> conditions;
+    std::vector<Param> params{std::monostate{}};
+    uint16_t slots = 0;
+    for (size_t index = 0; index < key.skills.size();)
+    {
+        const auto slot = key.skills[index].slot;
+        bool valid      = false;
+        while (index < key.skills.size() && key.skills[index].slot == slot)
+        {
+            valid = valid || config.find<conf::SkillAttackConfig>(key.skills[index].configId);
+            ++index;
+        }
+        if (valid)
+            ++slots;
+    }
+    BTNodeDef root;
+    root.type       = BTNodeType::Selector;
+    root.childCount = slots;
+    nodes.push_back(root);
+    addAttackTree(nodes, conditions, params, key, config);
+    return Def(std::move(nodes), std::move(conditions), std::move(params));
+}
+/// 从只读缓存获取攻击子树定义。
+const Def& attackDefinition(const DefinitionKey& key)
+{
+    static BTDefCache<DefinitionKey, Param, conf::Config> cache(conf::Config::instance(), buildAttackOnly);
+    return cache.get(key);
+}
 /// 返回共享且只读的角色行为树回调表。
 const Registry& registry()
 {
