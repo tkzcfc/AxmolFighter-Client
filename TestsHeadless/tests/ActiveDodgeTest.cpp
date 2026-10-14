@@ -44,7 +44,7 @@ struct DodgeHit
         m_world.init({});
         m_hero    = role(static_cast<int>(EntityRoleType::kHero), 2);
         m_monster = role(static_cast<int>(EntityRoleType::kMonster), 8);
-        m_effect  = effect::create(m_world, m_hero, m_effectId);
+        m_effect  = effect::EffectActor::create(m_world, m_hero, m_effectId);
         REQUIRE(m_effect.value != 0);
         m_world.ecs().get<EffectState>(m_effect).m_skillId     = 920000;
         m_world.ecs().get<EffectState>(m_effect).m_baseSkillId = 920000;

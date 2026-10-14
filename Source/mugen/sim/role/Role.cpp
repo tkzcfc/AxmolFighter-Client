@@ -86,11 +86,11 @@ void Role::modifyHp(Fixed delta, Entity effect, bool noShield)
             changeStatus(EntityRoleStatus::Death, row ? row->deathDisplacementId : -1);
         if (row && row->koEffectId != -1)
         {
-            const auto spawned = effect::create(m_world, m_entity, row->koEffectId);
+            const auto spawned = effect::EffectActor::create(m_world, m_entity, row->koEffectId);
             if (spawned.value != 0)
             {
-                effect::setCustomPosition(m_world, spawned, m_entity);
-                effect::enter(m_world, spawned);
+                effect::EffectActor(m_world, spawned).setCustomPosition(m_entity);
+                effect::EffectActor(m_world, spawned).enter();
             }
         }
         m_world.hitHooks().m_ability(m_world, m_entity, HitAbilityEvent::Death, context, -1);

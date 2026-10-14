@@ -6,11 +6,8 @@
 
 namespace mugen::sim
 {
-namespace spawn
-{
-/// 在效果位置生成继承主人阵营和属性的限时角色。
-void summon(World&, Entity effect, int32_t roleId, int64_t lifetimeMs);
-}
+/// 特效视图所包装的战斗世界实例。
+class World;
 /// 特效动作的值类型叶状态。
 struct AttackEffect
 {
@@ -64,25 +61,29 @@ struct EffectTree
 };
 namespace effect
 {
-/// 创建尚未进入动作的特效实体。
-Entity create(World&, Entity owner, int32_t id);
-/// 设置相对于基准实体的位置及朝向。
-void setCustomPosition(World&, Entity effect, Entity base, bool ground = false);
-/// 按配置更新跟随坐标。
-void follow(World&, Entity);
-/// 从父特效继承归属和技能上下文并进入子特效。
-Entity spawnChild(World&, Entity parent, int32_t id);
-/// 启动效果行为树。
-void enter(World&, Entity);
-/// 推进效果组中的实体。
-void update(World&, Entity);
-/// 退出动作并回收动作拥有的子效果。
-void remove(World&, Entity);
-/// 角色移除时清理与角色绑定的特效。
-void removeOwner(World&, Entity);
-/// 接收运动系统的位移通知。
-bool onDisplacementEvent(World&, Entity, DisplacementEvent);
-/// 将动画结束通知写入正在运行的叶子。
-void animationComplete(World&, Entity, int64_t loops);
-}
-}
+// 特效实体的临时视图，不存入组件、不拥有资源，生命周期限于单次调用。
+class EffectActor
+{
+public:
+    // 工厂：从主人实体新建特效，而非对既有特效视图的操作。
+    static Entity create(World& world, Entity owner, int32_t id);
+    // 实体组回调，须保持 void(World&, Entity) 签名以注册到 WorldHooks。
+    static void update(World& world, Entity entity);
+    static void remove(World& world, Entity entity);
+    static void removeOwner(World& world, Entity owner);
+    // 构造指向指定世界实例中某个特效实体的视图。
+    EffectActor(World& world, Entity entity);
+    void setCustomPosition(Entity base, bool ground = false);
+    void follow();
+    Entity spawnChild(int32_t id);
+    void summon(int32_t roleId, int64_t lifetimeMs);
+    void enter();
+    bool onDisplacementEvent(DisplacementEvent event);
+    void animationComplete(int64_t loops);
+
+private:
+    World& m_world;
+    Entity m_entity{};
+};
+}  // namespace effect
+}  // namespace mugen::sim

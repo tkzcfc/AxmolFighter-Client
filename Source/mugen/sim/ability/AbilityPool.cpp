@@ -32,12 +32,12 @@ void addEffects(World& world, Entity entity, const conf::SpecialAbilityConfig& c
         const int32_t targetType = index < config.effectIdType.size() ? config.effectIdType[index] : 1;
         const Entity target = targetType == 1 ? entity : context.m_target;
         if (target.value == 0) continue;
-        const Entity effectEntity = effect::create(world, entity, id);
+        const Entity effectEntity = effect::EffectActor::create(world, entity, id);
         if (effectEntity.value == 0) continue;
         auto& state = world.ecs().get<EffectState>(effectEntity);
         state.m_capabilityTrigger = true;
-        effect::setCustomPosition(world, effectEntity, target);
-        effect::enter(world, effectEntity);
+        effect::EffectActor(world, effectEntity).setCustomPosition(target);
+        effect::EffectActor(world, effectEntity).enter();
     }
 }
 // 按配置目标类型添加关联 Buff。

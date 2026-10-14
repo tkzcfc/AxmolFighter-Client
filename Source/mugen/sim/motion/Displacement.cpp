@@ -164,7 +164,7 @@ void update(World& world, Entity entity)
     const auto offset = d.offset;
     const auto event = [&](DisplacementEvent e) {
         if (ecs.has<ObstacleState>(entity)) return room_entities::displacementEvent(world, entity, e);
-        return ecs.has<EffectTree>(entity) ? effect::onDisplacementEvent(world, entity, e)
+        return ecs.has<EffectTree>(entity) ? effect::EffectActor(world, entity).onDisplacementEvent(e)
                                           : role::brain::onDisplacementEvent(world, entity, e);
     };
     if (velocity.x == Fixed{} && velocity.y == Fixed{} && velocity.z == Fixed{})

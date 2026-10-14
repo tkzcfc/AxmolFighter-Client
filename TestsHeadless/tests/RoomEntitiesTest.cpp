@@ -153,7 +153,7 @@ TEST_CASE("Obstacle contact corrects position and friendly effect destroys hit-c
     CHECK(world.ecs().get<Transform>(player).position.x == "-15"_fx);
     world.ecs().get<ObstacleState>(wall).m_hits = 1;
     world.ecs().get<MotionState>(wall).motionFile.clear();
-    const auto effect = effect::create(world, player, 920000);
+    const auto effect = effect::EffectActor::create(world, player, 920000);
     REQUIRE(effect.value != 0);
     hit::onEffectCollision(world, effect, wall, CollisionEvent::Began, {});
     CHECK(world.ecs().get<ObstacleState>(wall).m_hits == 0);

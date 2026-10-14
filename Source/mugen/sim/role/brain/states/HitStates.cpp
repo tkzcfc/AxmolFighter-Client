@@ -300,7 +300,7 @@ BTStatus HitState::update(RoleContext& ctx, Param type, State& leaf)
                 if (row && row->deathEffectId != -1)
                 {
                     const auto source = ctx.get<Transform>();
-                    const auto effectEntity = effect::create(ctx.world(), ctx.entity(), row->deathEffectId);
+                    const auto effectEntity = effect::EffectActor::create(ctx.world(), ctx.entity(), row->deathEffectId);
                     if (effectEntity.value != 0)
                     {
                         auto& target             = ctx.world().ecs().get<Transform>(effectEntity);
@@ -316,7 +316,7 @@ BTStatus HitState::update(RoleContext& ctx, Param type, State& leaf)
                             target.position.z += effectRow.relativePosition[2];
                         }
                         ctx.world().ecs().get<EffectState>(effectEntity).m_hitEntity = ctx.entity();
-                        effect::enter(ctx.world(), effectEntity);
+                        effect::EffectActor(ctx.world(), effectEntity).enter();
                     }
                 }
                 if (ctx.world().hitHooks().m_dropGoods)

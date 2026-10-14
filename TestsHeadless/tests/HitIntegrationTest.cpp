@@ -75,7 +75,7 @@ struct HitFixture
         load();
         m_hero = role(1, 2);
         m_monster = role(2, 8);
-        m_effect = effect::create(m_world, m_hero, m_effectId);
+        m_effect = effect::EffectActor::create(m_world, m_hero, m_effectId);
         REQUIRE(m_effect.value != 0);
         m_world.ecs().get<ColliderState>(m_effect).attack = {box()};
         m_world.ecs().get<EffectState>(m_effect).m_skillId = 920000;
@@ -217,8 +217,8 @@ TEST_CASE("Hit positive interval multi target and count")
     CHECK(ecs.get<Vitals>(third).hp == "100000"_fx);
     CHECK(ecs.get<EffectState>(f.m_effect).m_hitCount == 2);
     CHECK(ecs.get<EffectState>(f.m_effect).m_hitInterval == Fixed{});
-    effect::enter(f.m_world, f.m_effect);
-    effect::update(f.m_world, f.m_effect);
+    effect::EffectActor(f.m_world, f.m_effect).enter();
+    effect::EffectActor::update(f.m_world, f.m_effect);
     CHECK(ecs.get<EffectState>(f.m_effect).m_hitCount == 0);
     CHECK(ecs.get<EffectState>(f.m_effect).m_hitInterval > Fixed{});
     const auto hp = ecs.get<Vitals>(f.m_monster).hp;

@@ -13,22 +13,23 @@ namespace effect
 // 从角色动作继承技能来源并立即进入效果动作。
 Entity spawnFromRole(World& world, Entity owner, const RoleSpawn& request)
 {
-    const auto entity = create(world, owner, request.m_effectId);
+    const auto entity = EffectActor::create(world, owner, request.m_effectId);
     if (entity.value == 0) return {};
     auto& state = world.ecs().get<EffectState>(entity);
     state.m_skillId = request.m_skillId;
     state.m_baseSkillId = request.m_baseSkillId;
     state.m_slot = request.m_slot;
     state.m_skillAttributeTag = owner;
-    setCustomPosition(world, entity, owner);
-    follow(world, entity);
+    EffectActor actor(world, entity);
+    actor.setCustomPosition(owner);
+    actor.follow();
     if (request.m_customVector)
     {
         auto& transform = world.ecs().get<Transform>(entity);
         transform.vectorX = request.m_vector.x;
         transform.vectorZ = request.m_vector.z;
     }
-    enter(world, entity);
+    actor.enter();
     return entity;
 }
 // 动作退出仅销毁模式零，其他效果继续自身生命周期。

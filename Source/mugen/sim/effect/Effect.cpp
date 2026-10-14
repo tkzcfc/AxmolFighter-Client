@@ -10,39 +10,6 @@
 #include "mugen/sim/trace/TraceSink.h"
 #include <charconv>
 
-namespace mugen::sim::spawn
-{
-// 从效果位置召唤，出生前确定主人、阵营和继承属性。
-void summon(World& world, Entity effect, int32_t roleId, int64_t lifetime)
-{
-    auto& ecs = world.ecs();
-    const auto owner = ecs.get<EffectState>(effect).m_owner;
-    const auto* identity = ecs.tryGet<RoleIdentity>(owner);
-    const auto* row = conf::Config::instance().find<conf::RoleConfig>(roleId);
-    if (!identity || !row) return;
-    const auto source = *identity;
-    const auto transform = ecs.get<Transform>(effect);
-    RoleSpawnParams params;
-    params.roleId = roleId;
-    params.camp = source.camp;
-    params.level = source.level;
-    params.aiDifficulty = source.aiDifficulty;
-    params.isAi = true;
-    params.position = transform.position;
-    params.toward = transform.towardX;
-    if (row->roleType == static_cast<int32_t>(EntityRoleType::kSummon)) params.m_owner = owner;
-    const auto& levels = ecs.singleton<RoomState>().m_config.monsterLevels;
-    if (row->roleType >= 2 && row->roleType <= 4 && static_cast<size_t>(row->roleType - 2) < levels.size())
-        params.level = levels[row->roleType - 2] + ecs.singleton<RoomState>().m_levelBonus;
-    const auto entity = spawnRole(world, params);
-    if (entity.value == 0) return;
-    if (const auto* drops = ecs.tryGet<DropGoods>(owner)) ecs.add(entity, *drops);
-    ecs.get<RoleTimers>(entity).summonMs = Fixed::fromInt(lifetime);
-    ecs.get<Transform>(entity).vectorX = transform.vectorX;
-    ecs.get<Transform>(entity).vectorZ = transform.vectorZ;
-}
-}
-
 namespace mugen::sim::effect
 {
 namespace
@@ -226,7 +193,7 @@ BTStatus actionTick(Context& ctx, const int32_t& id, std::variant<AttackEffect>&
         if (!action.m_spawned[i] && row->effectIds[i] != -1 && action.m_time > action.m_interval * Fixed::fromInt(row->effectFrames[i]))
         {
             action.m_spawned[i] = 1;
-            action.m_effects[i] = spawnChild(world, entity, row->effectIds[i]);
+            action.m_effects[i] = EffectActor(world, entity).spawnChild(row->effectIds[i]);
         }
     attack::dealWithShake(world, entity, action, shared);
     if (!state.m_summoned && row->summonId != -1 && action.m_time >= action.m_interval * Fixed::fromInt(row->summonFrame))
@@ -235,7 +202,7 @@ BTStatus actionTick(Context& ctx, const int32_t& id, std::variant<AttackEffect>&
         const auto owner = world.ecs().get<EffectState>(entity).m_owner;
         const auto* status = world.ecs().tryGet<RoleStatus>(owner);
         if (status && !status->isDeath())
-            spawn::summon(world, entity, row->summonId, row->summonTime);
+            EffectActor(world, entity).summon(row->summonId, row->summonTime);
     }
     return action.m_finished ? BTStatus::Success : BTStatus::Running;
 }
@@ -289,8 +256,8 @@ const Registry& registry()
 void motionUpdate(World& world, Entity entity) { role::updateMotion(world, entity); }
 }
 
-/// 创建基础组件；属性始终通过所属实体读取。
-Entity create(World& world, Entity owner, int32_t id)
+// 创建基础组件；属性始终通过所属实体读取。
+Entity EffectActor::create(World& world, Entity owner, int32_t id)
 {
     const auto* row = conf::Config::instance().find<conf::EffectConfig>(id);
     if (!row) { MG_LOG_W("Missing effect configuration {}", id); return {}; }
@@ -327,13 +294,17 @@ Entity create(World& world, Entity owner, int32_t id)
     trace::noteSpawn(world, owner, id);
     return entity;
 }
-/// 应用地图相对、地图绝对或实体相对坐标。
-void setCustomPosition(World& world, Entity entity, Entity base, bool ground)
+
+// 构造特效视图，只保存世界与实体句柄。
+EffectActor::EffectActor(World& world, Entity entity) : m_world(world), m_entity(entity) {}
+
+// 应用地图相对、地图绝对或实体相对坐标。
+void EffectActor::setCustomPosition(Entity base, bool ground)
 {
-    auto& ecs = world.ecs();
+    auto& ecs = m_world.ecs();
     const auto source = ecs.get<Transform>(base);
-    const auto& row = conf::Config::instance().get<conf::EffectConfig>(ecs.get<EffectState>(entity).m_configId);
-    auto& target = ecs.get<Transform>(entity);
+    const auto& row = conf::Config::instance().get<conf::EffectConfig>(ecs.get<EffectState>(m_entity).m_configId);
+    auto& target = ecs.get<Transform>(m_entity);
     target.towardX = row.effectOriebtationX == 0 ? -1 : row.effectOriebtationX == 1 ? 1 : source.towardX;
     target.vectorX = row.effectOriebtationX == 0 ? "-1"_fx : row.effectOriebtationX == 1 ? "1"_fx : source.vectorX;
     target.vectorZ = row.effectOriebtationZ == 1 ? "1"_fx : source.vectorZ;
@@ -355,31 +326,23 @@ void setCustomPosition(World& world, Entity entity, Entity base, bool ground)
     if (ground) position.y = {};
     target.position = position;
 }
-/// 归属角色消失时保留上次位置，不将独立特效提前销毁。
-void follow(World& world, Entity entity)
+
+// 归属角色消失时保留上次位置，不将独立特效提前销毁。
+void EffectActor::follow()
 {
-    const auto state = world.ecs().get<EffectState>(entity);
+    const auto state = m_world.ecs().get<EffectState>(m_entity);
     const auto& row = conf::Config::instance().get<conf::EffectConfig>(state.m_configId);
-    if ((row.follow == 1 || row.follow == 2) && world.ecs().has<EntityGroup>(state.m_owner) && world.ecs().has<Transform>(state.m_owner))
-        setCustomPosition(world, entity, state.m_owner, row.follow == 2);
+    if ((row.follow == 1 || row.follow == 2) && m_world.ecs().has<EntityGroup>(state.m_owner) && m_world.ecs().has<Transform>(state.m_owner))
+        setCustomPosition(state.m_owner, row.follow == 2);
 }
-/// 在栈上运行树实例，避免子效果扩容当前组件池时留下悬空引用。
-void enter(World& world, Entity entity)
+
+// 子效果保持最初施法者和技能信息，位置以父效果为基准。
+Entity EffectActor::spawnChild(int32_t id)
 {
-    auto tree = world.ecs().get<EffectTree>(entity);
-    const auto def = definition(tree);
-    tree.m_instance = BTInstance<std::variant<AttackEffect>>(def);
-    Context ctx{world, entity, tree};
-    BTRunner<Context, int32_t, std::variant<AttackEffect>>(def, registry(), tree.m_instance).enter(ctx);
-    world.ecs().get<EffectTree>(entity) = std::move(tree);
-}
-/// 子效果保持最初施法者和技能信息，位置以父效果为基准。
-Entity spawnChild(World& world, Entity parent, int32_t id)
-{
-    const auto source = world.ecs().get<EffectState>(parent);
-    const auto entity = create(world, source.m_owner, id);
-    if (entity.value == 0) return {};
-    auto& state = world.ecs().get<EffectState>(entity);
+    const auto source = m_world.ecs().get<EffectState>(m_entity);
+    const auto child = create(m_world, source.m_owner, id);
+    if (child.value == 0) return {};
+    auto& state = m_world.ecs().get<EffectState>(child);
     state.m_skillId = source.m_skillId;
     state.m_baseSkillId = source.m_baseSkillId;
     state.m_slot = source.m_slot;
@@ -387,16 +350,60 @@ Entity spawnChild(World& world, Entity parent, int32_t id)
     state.m_artifactId = source.m_artifactId;
     state.m_artifactIndex = source.m_artifactIndex;
     state.m_capabilityTrigger = source.m_capabilityTrigger;
-    setCustomPosition(world, entity, parent);
-    follow(world, entity);
-    enter(world, entity);
-    return entity;
+    EffectActor actor(m_world, child);
+    actor.setCustomPosition(m_entity);
+    actor.follow();
+    actor.enter();
+    return child;
 }
-/// 更新顺序保留先组件、后冻结、再生命周期的帧边界。
-void update(World& world, Entity entity)
+
+// 从效果位置召唤，出生前确定主人、阵营和继承属性。
+void EffectActor::summon(int32_t roleId, int64_t lifetime)
+{
+    auto& ecs = m_world.ecs();
+    const auto owner = ecs.get<EffectState>(m_entity).m_owner;
+    const auto* identity = ecs.tryGet<RoleIdentity>(owner);
+    const auto* row = conf::Config::instance().find<conf::RoleConfig>(roleId);
+    if (!identity || !row) return;
+    const auto source = *identity;
+    const auto transform = ecs.get<Transform>(m_entity);
+    RoleSpawnParams params;
+    params.roleId = roleId;
+    params.camp = source.camp;
+    params.level = source.level;
+    params.aiDifficulty = source.aiDifficulty;
+    params.isAi = true;
+    params.position = transform.position;
+    params.toward = transform.towardX;
+    if (row->roleType == static_cast<int32_t>(EntityRoleType::kSummon)) params.m_owner = owner;
+    const auto& levels = ecs.singleton<RoomState>().m_config.monsterLevels;
+    if (row->roleType >= 2 && row->roleType <= 4 && static_cast<size_t>(row->roleType - 2) < levels.size())
+        params.level = levels[row->roleType - 2] + ecs.singleton<RoomState>().m_levelBonus;
+    const auto entity = spawnRole(m_world, params);
+    if (entity.value == 0) return;
+    if (const auto* drops = ecs.tryGet<DropGoods>(owner)) ecs.add(entity, *drops);
+    ecs.get<RoleTimers>(entity).summonMs = Fixed::fromInt(lifetime);
+    ecs.get<Transform>(entity).vectorX = transform.vectorX;
+    ecs.get<Transform>(entity).vectorZ = transform.vectorZ;
+}
+
+// 在栈上运行树实例，避免子效果扩容当前组件池时留下悬空引用。
+void EffectActor::enter()
+{
+    auto tree = m_world.ecs().get<EffectTree>(m_entity);
+    const auto def = definition(tree);
+    tree.m_instance = BTInstance<std::variant<AttackEffect>>(def);
+    Context ctx{m_world, m_entity, tree};
+    BTRunner<Context, int32_t, std::variant<AttackEffect>>(def, registry(), tree.m_instance).enter(ctx);
+    m_world.ecs().get<EffectTree>(m_entity) = std::move(tree);
+}
+
+// 更新顺序保留先组件、后冻结、再生命周期的帧边界。
+void EffectActor::update(World& world, Entity entity)
 {
     auto& ecs = world.ecs();
     if (!ecs.has<EffectState>(entity)) return;
+    EffectActor actor(world, entity);
     const auto id = ecs.get<EffectState>(entity).m_configId;
     const auto& row = conf::Config::instance().get<conf::EffectConfig>(id);
     const auto* hit = conf::Config::instance().find<conf::SkillHitConfig>(row.hitId);
@@ -430,16 +437,17 @@ void update(World& world, Entity entity)
         state.m_next = row.autoRelease == 3;
         world.destroy(entity);
     }
-    follow(world, entity);
+    actor.follow();
     if (state.m_hitInterval != "-1"_fx) state.m_hitInterval = std::max(Fixed{}, state.m_hitInterval - dt);
     if (ecs.get<EntityGroup>(entity).destroyRequested && state.m_next && !ecs.get<RoleHitState>(entity).m_obstruct)
     {
         state.m_next = false;
-        if (row.nextEffectId != -1) spawnChild(world, entity, row.nextEffectId);
+        if (row.nextEffectId != -1) actor.spawnChild(row.nextEffectId);
     }
 }
-/// 世界移除钩子终止运行叶子并清理动作资源。
-void remove(World& world, Entity entity)
+
+// 世界移除钩子终止运行叶子并清理动作资源。
+void EffectActor::remove(World& world, Entity entity)
 {
     if (!world.ecs().has<EffectTree>(entity)) return;
     auto tree = world.ecs().get<EffectTree>(entity);
@@ -448,27 +456,30 @@ void remove(World& world, Entity entity)
     Context ctx{world, entity, tree};
     BTRunner<Context, int32_t, std::variant<AttackEffect>>(def, registry(), tree.m_instance).exit(ctx);
 }
-/// 只将自动释放模式一且跟随的效果绑定角色生命周期。
-void removeOwner(World& world, Entity owner)
+
+// 只将自动释放模式一且跟随的效果绑定角色生命周期。
+void EffectActor::removeOwner(World& world, Entity owner)
 {
     world.ecs().each<EffectState>([&](Entity entity, const EffectState& state) {
         const auto& row = conf::Config::instance().get<conf::EffectConfig>(state.m_configId);
         if (state.m_owner == owner && row.autoRelease == 1 && (row.follow == 1 || row.follow == 2)) world.destroy(entity);
     });
 }
-/// 将位移通知分派给特效当前动作。
-bool onDisplacementEvent(World& world, Entity entity, DisplacementEvent event)
+
+// 将位移通知分派给特效当前动作。
+bool EffectActor::onDisplacementEvent(DisplacementEvent event)
 {
-    const auto node = world.ecs().get<Displacement>(entity).listenerNode;
-    auto& tree = world.ecs().get<EffectTree>(entity);
+    const auto node = m_world.ecs().get<Displacement>(m_entity).listenerNode;
+    auto& tree = m_world.ecs().get<EffectTree>(m_entity);
     if (node < 1 || static_cast<size_t>(node) > tree.m_actions.size()) return false;
     const auto* row = conf::Config::instance().find<conf::ActionEffectConfig>(tree.m_actions[node - 1]);
-    return row && attack::displacementEvent(world, entity, std::get<AttackEffect>(tree.m_instance.leaves[node - 1]).m_action, common(*row), event);
+    return row && attack::displacementEvent(m_world, m_entity, std::get<AttackEffect>(tree.m_instance.leaves[node - 1]).m_action, common(*row), event);
 }
-/// 同步实际动画循环计数到当前动作。
-void animationComplete(World& world, Entity entity, int64_t loops)
+
+// 同步实际动画循环计数到当前动作。
+void EffectActor::animationComplete(int64_t loops)
 {
-    auto& tree = world.ecs().get<EffectTree>(entity);
+    auto& tree = m_world.ecs().get<EffectTree>(m_entity);
     for (size_t i = 0; i < tree.m_actions.size(); ++i)
         if (tree.m_instance.nodes[i + 1].status == BTStatus::Running)
         {

@@ -73,7 +73,7 @@ void HitResolver::_hitEffects(Entity sourceEntity, Entity target, FixedVec2 cont
         });
         if (child.value == 0)
         {
-            child = effect::create(m_world, source.m_owner, id);
+            child = effect::EffectActor::create(m_world, source.m_owner, id);
             if (child.value == 0)
                 continue;
             if (childRow->nextEffectId == -1)
@@ -92,7 +92,7 @@ void HitResolver::_hitEffects(Entity sourceEntity, Entity target, FixedVec2 cont
         position.vectorZ          = transform.vectorZ;
         position.towardX          = transform.towardX;
         position.position         = {contact.x, contact.y - z, z - "1"_fx};
-        effect::enter(m_world, child);
+        effect::EffectActor(m_world, child).enter();
     }
 }
 

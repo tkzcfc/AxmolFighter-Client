@@ -78,7 +78,7 @@ void motionUpdate(World& world, Entity entity)
         {
             motion.m_completedLoops += motion.loop ? motion.timeMs.raw / duration.raw : 1;
             if (world.ecs().has<EffectState>(entity))
-                effect::animationComplete(world, entity, motion.m_completedLoops);
+                effect::EffectActor(world, entity).animationComplete(motion.m_completedLoops);
             else
             {
                 attack::animationComplete(world, entity, motion.m_completedLoops);
