@@ -1,8 +1,13 @@
 #include "support/ScenarioHarness.h"
 #include "mugen/conf/ConfigFormat.h"
+#include "mugen/conf/ReflectedConfig.h"
 #include "mugen/sim/Replay.h"
+#include "mugen/sim/room/RoomFlow.h"
+#include "mugen/sim/spawn/RoleSpawn.h"
+#include "mugen/sim/trace/TraceSink.h"
 #include <charconv>
 #include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -107,6 +112,30 @@ FrameInput recordedInput(World& world)
     input.players.push_back({0, {command}});
     return input;
 }
+// 构建一个按职业装配离线技能并进入房间的战斗世界，供脚本驱动。
+World combatWorld(int32_t roomId, uint64_t seed, int32_t occupation, int32_t level = 1)
+{
+    test::ScenarioHarness::loadAssets();
+    World world;  // 默认 WorldHooks：Role 组走真实 role::update 战斗逻辑
+    world.init(test::ScenarioHarness::roomSetup(roomId, seed));
+    sim::RoleSpawnParams player;
+    player.camp       = 2;
+    player.playerSlot = 0;
+    player.level      = level;
+    sim::spawnPlayer(world, static_cast<CharacterClass>(occupation), std::move(player));
+    const auto* config = conf::Config::instance().find<conf::RoomConfig>(roomId);
+    if (!config || !sim::room::enter(world, *config, 0, 0))
+        throw std::runtime_error("Cannot enter room " + std::to_string(roomId));
+    if (const char* dbg = std::getenv("MUGEN_TRACE_DUMP_SKILLS"))
+    {
+        world.ecs().each<RoleIdentity, SkillPool>([&](Entity e, const RoleIdentity& id, const SkillPool& pool) {
+            std::cerr << "[dump] role " << id.roleId << " slots=" << pool.m_slots.size() << " skills=" << pool.m_skills.size();
+            for (const auto& s : pool.m_slots) std::cerr << " '" << s.m_name << "'";
+            std::cerr << '\n';
+        });
+    }
+    return world;
+}
 }  // namespace
 int main(int argc, char** argv)
 {
@@ -121,16 +150,24 @@ int main(int argc, char** argv)
         {
             uint64_t every = 1;
             std::string compare;
+            std::string tracePath;
+            std::string revision;
             for (int index = 3; index < argc; index += 2)
             {
                 if (index + 1 >= argc)
-                    throw std::invalid_argument("Expected replay <file> [--hash-every N] [--compare hashfile]");
+                    throw std::invalid_argument(
+                        "Expected replay <file> [--hash-every N] [--compare hashfile] [--trace file] [--revision rev]");
                 if (std::string_view(argv[index]) == "--hash-every")
                     every = number(argv[index + 1]);
                 else if (std::string_view(argv[index]) == "--compare")
                     compare = argv[index + 1];
+                else if (std::string_view(argv[index]) == "--trace")
+                    tracePath = argv[index + 1];
+                else if (std::string_view(argv[index]) == "--revision")
+                    revision = argv[index + 1];
                 else
-                    throw std::invalid_argument("Expected replay <file> [--hash-every N] [--compare hashfile]");
+                    throw std::invalid_argument(
+                        "Expected replay <file> [--hash-every N] [--compare hashfile] [--trace file] [--revision rev]");
             }
             if (every == 0)
                 throw std::invalid_argument("Hash interval must be positive");
@@ -141,6 +178,16 @@ int main(int argc, char** argv)
             if (!replay.load(argv[2], conf::configSchemaHash(), error))
                 throw std::runtime_error(error);
             World world = recordedWorld(replay.setup);
+            trace::TraceSink sink;
+            if (!tracePath.empty())
+            {
+                world.setTrace(&sink);
+                sink.write("# mugen_sim_cli trace v1");
+                if (!revision.empty())
+                    sink.write("# revision " + revision);
+                sink.write("# room " + std::to_string(replay.setup.roomId) + " seed " +
+                           std::to_string(replay.setup.seed));
+            }
             for (const auto& input : replay.frames)
             {
                 world.tick(input);
@@ -155,6 +202,13 @@ int main(int argc, char** argv)
                     throw std::runtime_error("Hash file frame is outside replay: " + std::to_string(frame));
             if (replay.frames.empty() || replay.frames.back().frame % every != 0)
                 printHash(world);
+            if (!tracePath.empty())
+            {
+                std::ofstream out(tracePath);
+                if (!out)
+                    throw std::runtime_error("Cannot open trace file: " + tracePath);
+                out << sink.text();
+            }
             return 0;
         }
         if (argc == 6 && std::string_view(argv[1]) == "record-room" && std::string_view(argv[3]) == "--frames")
@@ -183,25 +237,115 @@ int main(int argc, char** argv)
         {
             const auto room = number(argv[2]);
             if (room > INT32_MAX || std::string_view(argv[3]) != "--frames")
-                throw std::invalid_argument("Expected run-room <roomId> --frames N [--script file]");
+                throw std::invalid_argument(
+                    "Expected run-room <roomId> --frames N [--class 1-4] [--seed N] [--script file] [--trace file] "
+                    "[--revision rev]");
             const auto frames = number(argv[4]);
             std::map<uint64_t, FrameInput> inputs;
-            if (argc == 7 && std::string_view(argv[5]) == "--script")
-                inputs = loadScript(argv[6], frames);
-            else if (argc != 5)
-                throw std::invalid_argument("Expected run-room <roomId> --frames N [--script file]");
-            test::ScenarioHarness harness(test::ScenarioHarness::roomSetup(static_cast<int32_t>(room)));
+            std::string tracePath;
+            std::string revision;
+            int32_t occupation = 0;
+            uint64_t seed      = 31;
+            int32_t level      = 1;
+            for (int index = 5; index < argc; index += 2)
+            {
+                if (index + 1 >= argc)
+                    throw std::invalid_argument(
+                        "Expected run-room <roomId> --frames N [--class 1-4] [--seed N] [--level N] [--script file] "
+                        "[--trace file] [--revision rev]");
+                if (std::string_view(argv[index]) == "--script")
+                    inputs = loadScript(argv[index + 1], frames);
+                else if (std::string_view(argv[index]) == "--trace")
+                    tracePath = argv[index + 1];
+                else if (std::string_view(argv[index]) == "--revision")
+                    revision = argv[index + 1];
+                else if (std::string_view(argv[index]) == "--class")
+                    occupation = static_cast<int32_t>(number(argv[index + 1]));
+                else if (std::string_view(argv[index]) == "--seed")
+                    seed = number(argv[index + 1]);
+                else if (std::string_view(argv[index]) == "--level")
+                    level = static_cast<int32_t>(number(argv[index + 1]));
+                else
+                    throw std::invalid_argument(
+                        "Expected run-room <roomId> --frames N [--class 1-4] [--seed N] [--level N] [--script file] "
+                        "[--trace file] [--revision rev]");
+            }
+            World world;
+            if (occupation >= 1 && occupation <= 4)
+                world = combatWorld(static_cast<int32_t>(room), seed, occupation, level);
+            else
+                world.init(test::ScenarioHarness::roomSetup(static_cast<int32_t>(room), seed));
+            trace::TraceSink sink;
+            if (!tracePath.empty())
+            {
+                world.setTrace(&sink);
+                sink.write("# mugen_sim_cli trace v1");
+                if (!revision.empty())
+                    sink.write("# revision " + revision);
+                sink.write("# room " + std::to_string(world.setup().roomId) + " seed " +
+                           std::to_string(world.setup().seed));
+            }
             for (uint64_t frame = 1; frame <= frames; ++frame)
             {
                 auto input = inputs.extract(frame);
-                harness.world().tick(input.empty() ? FrameInput{frame, {}, {}, {}} : input.mapped());
+                world.tick(input.empty() ? FrameInput{frame, {}, {}, {}} : input.mapped());
+                if (std::getenv("MUGEN_DUMP_FRAME"))
+                    world.ecs().each<RoleIdentity, RoleStatus, SkillPool, EntityGroup, ControlEventQueue>(
+                        [&](Entity, const RoleIdentity& id, const RoleStatus& st, const SkillPool& pool,
+                            const EntityGroup& g, const ControlEventQueue& q) {
+                            if (id.roleId == 101)
+                                std::cerr << "[f" << frame << "] st=" << static_cast<uint32_t>(st.eEntityStatus)
+                                          << " cur=" << pool.m_current << " susp=" << g.suspended << " q=" << q.commands.size()
+                                          << '\n';
+                        });
             }
-            printHash(harness.world());
+            printHash(world);
+            if (!tracePath.empty())
+            {
+                std::ofstream out(tracePath);
+                if (!out)
+                    throw std::runtime_error("Cannot open trace file: " + tracePath);
+                out << sink.text();
+            }
             return 0;
         }
-        std::cerr << "usage: mugen_sim_cli --version | replay <file> [--hash-every N] [--compare hashfile] | "
+        if (argc >= 4 && std::string_view(argv[1]) == "trace-diff")
+        {
+            const std::string first = argv[2];
+            const std::string second = argv[3];
+            std::ifstream fa(first);
+            std::ifstream fb(second);
+            if (!fa)
+                throw std::runtime_error("Cannot open trace file: " + first);
+            if (!fb)
+                throw std::runtime_error("Cannot open trace file: " + second);
+            std::string la, lb;
+            uint64_t lineNumber = 0;
+            int printed = 0;
+            while (true)
+            {
+                const bool gotA = static_cast<bool>(std::getline(fa, la));
+                const bool gotB = static_cast<bool>(std::getline(fb, lb));
+                if (!gotA && !gotB)
+                    break;
+                ++lineNumber;
+                if (gotA != gotB || la != lb)
+                {
+                    if (printed < 20)
+                    {
+                        std::cout << "line " << lineNumber << ":\n";
+                        std::cout << "  a: " << (gotA ? la : std::string("<eof>")) << '\n';
+                        std::cout << "  b: " << (gotB ? lb : std::string("<eof>")) << '\n';
+                    }
+                    ++printed;
+                }
+            }
+            return printed == 0 ? 0 : 1;
+        }
+        std::cerr << "usage: mugen_sim_cli --version | trace-diff <a.trace> <b.trace> | "
+                     "replay <file> [--hash-every N] [--compare hashfile] [--trace file] [--revision rev] | "
                      "record-room <roomId> --frames N <file> | "
-                     "run-room <roomId> --frames N [--script file]\n"
+                     "run-room <roomId> --frames N [--script file] [--trace file] [--revision rev]\n"
                      "script rows: frame slot controlEvent quadrant angleX1000 pressType\n";
         return 1;
     }

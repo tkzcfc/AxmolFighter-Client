@@ -1,6 +1,7 @@
 #include "World.h"
 #include "buff/BuffPool.h"
 #include "room/RoomFlow.h"
+#include "trace/TraceSink.h"
 #include "mugen/conf/ReflectedConfig.h"
 
 namespace mugen::sim
@@ -44,6 +45,7 @@ Entity World::create(GroupKind kind)
     }
     const Entity entity = m_ecs.create();
     m_ecs.add(entity, EntityGroup{kind});
+    m_spawnSeq[entity] = m_nextSpawnSeq++;
     return entity;
 }
 
@@ -210,6 +212,8 @@ void World::tick(const FrameInput& input)
     if (transfer.m_transferRoom > 0)
         changeRoom(transfer.m_transferRoom, transfer.m_transferPosition, transfer.m_transferToward);
     ++m_hashSequence;
+    if (m_trace)
+        trace::emitFrame(*m_trace, *this);
 }
 
 // 保留实体句柄和池状态，仅回收旧房间拥有的实体与定时器。
@@ -319,10 +323,12 @@ bool World::deserialize(ByteBuffer& buffer)
     return true;
 }
 
-// 复制本场全部可序列化状态和驱动回调策略。
+// 复制本场全部可序列化状态和驱动回调策略；副本不共享语义追踪输出。
 World World::clone() const
 {
-    return *this;
+    World copy = *this;
+    copy.m_trace = nullptr;
+    return copy;
 }
 // 对规范序列化的世界状态计算 xxh64 哈希。
 uint64_t World::hash() const

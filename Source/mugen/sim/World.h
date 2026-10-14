@@ -5,9 +5,19 @@
 #include "role/RoleUpdate.h"
 #include "collision/Collision.h"
 #include "hit/HitSeams.h"
+#include <map>
 
 namespace mugen::sim
 {
+namespace trace
+{
+class TraceSink;
+}
+// 仅用于非序列化生成序号表的句柄全序，避免依赖 Entity 的 operator<。
+struct EntityValueLess
+{
+    bool operator()(Entity a, Entity b) const { return a.value < b.value; }
+};
 // 定义世界使用的组件与单例 ECS 存储类型。
 using WorldECS = ECSManager<Components, Singletons>;
 class World;
@@ -65,6 +75,14 @@ public:
     void destroy(Entity entity);
     // 向表现层队列追加当前帧事件。
     void emit(Entity entity, PresentationPayload payload);
+    // 挂载语义追踪输出，传入空指针即关闭追踪。
+    void setTrace(trace::TraceSink* sink) { m_trace = sink; }
+    // 返回实体创建时分配的稳定生成序号，未记录返回 0。
+    uint64_t spawnSeq(Entity entity) const
+    {
+        const auto it = m_spawnSeq.find(entity);
+        return it == m_spawnSeq.end() ? 0 : it->second;
+    }
 
 private:
     // 应用本帧系统、玩家与木偶输入。
@@ -81,5 +99,11 @@ private:
     uint64_t m_hashSequence = 0;
     // 标识世界是否已经完成初始化。
     bool m_initialized = false;
+    // 语义追踪输出，非拥有、不参与快照/哈希/克隆，为空时零开销。
+    trace::TraceSink* m_trace = nullptr;
+    // 实体到生成序号的映射，仅用于追踪中的稳定标识，不参与快照。
+    std::map<Entity, uint64_t, EntityValueLess> m_spawnSeq;
+    // 下一个待分配的生成序号。
+    uint64_t m_nextSpawnSeq = 1;
 };
 }  // namespace mugen::sim
