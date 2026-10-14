@@ -105,7 +105,7 @@ TEST_CASE("Ai monster patrol movement pauses for randomized dwell and checks tar
 {
     MonsterFixture f;
     f.tick();
-    REQUIRE(status::isPatrolStatus(f.world.ecs().get<RoleStatus>(f.monster)));
+    REQUIRE(f.world.ecs().get<RoleStatus>(f.monster).isPatrol());
     REQUIRE(f.movement());
     CHECK(f.movement()->m_delayMs >= "100"_fx);
     CHECK(f.movement()->m_delayMs < "150"_fx);
@@ -118,10 +118,10 @@ TEST_CASE("Ai monster patrol movement pauses for randomized dwell and checks tar
     {
         CHECK(f.movement()->m_timeMs == Fixed{});
         f.tick();
-        CHECK(status::isPatrolStatus(f.world.ecs().get<RoleStatus>(f.monster)));
+        CHECK(f.world.ecs().get<RoleStatus>(f.monster).isPatrol());
         CHECK(f.world.ecs().get<Transform>(f.monster).position.x == goal.x);
-        for (int i = 0; i < 20 && status::isPatrolStatus(f.world.ecs().get<RoleStatus>(f.monster)); ++i) f.tick();
-        CHECK_FALSE(status::isPatrolStatus(f.world.ecs().get<RoleStatus>(f.monster)));
+        for (int i = 0; i < 20 && f.world.ecs().get<RoleStatus>(f.monster).isPatrol(); ++i) f.tick();
+        CHECK_FALSE(f.world.ecs().get<RoleStatus>(f.monster).isPatrol());
         CHECK(f.world.ecs().get<AiAgent>(f.monster).m_tree.m_alert == ai::AlertStatus::NoAlert);
     }
     SUBCASE("patrol discovers a target during dwell")
@@ -129,7 +129,7 @@ TEST_CASE("Ai monster patrol movement pauses for randomized dwell and checks tar
         const auto target = f.create(false, 2, goal);
         f.tick();
         CHECK(f.world.ecs().get<SkillPool>(f.monster).m_target == target);
-        CHECK_FALSE(status::isPatrolStatus(f.world.ecs().get<RoleStatus>(f.monster)));
+        CHECK_FALSE(f.world.ecs().get<RoleStatus>(f.monster).isPatrol());
     }
 }
 
@@ -150,7 +150,7 @@ TEST_CASE("Ai monster hit recovery casts X before Alert and nonalert attack uses
         ai::update(f.world, f.monster);
         REQUIRE(pool.m_current != kNoSkill);
         CHECK(skill::baseSlot(pool, pool.m_skills[pool.m_current]) == "X");
-        CHECK(status::isAttackStatus(ecs.get<RoleStatus>(f.monster)));
+        CHECK(ecs.get<RoleStatus>(f.monster).isAttack());
         CHECK(ecs.get<AiAgent>(f.monster).m_tree.m_alert == ai::AlertStatus::NoAlert);
         skill::castBegan(f.world, f.monster, pool.m_current);
         ai::update(f.world, f.monster);
@@ -175,7 +175,7 @@ TEST_CASE("Ai monster Alert chases to target near-side bounds and wanders within
     ecs.get<SkillPool>(f.monster).m_target = target;
     ecs.get<AiAgent>(f.monster).m_tree.m_alert = ai::AlertStatus::Alert;
     f.tick();
-    CHECK(status::isChaseStatus(ecs.get<RoleStatus>(f.monster)));
+    CHECK(ecs.get<RoleStatus>(f.monster).isChase());
     CHECK(ecs.get<RoleStatus>(f.monster).entityParams.move_pos.x == "160"_fx);
     CHECK(ecs.get<RoleStatus>(f.monster).entityParams.move_pos.z == "80"_fx);
     REQUIRE(f.movement());
@@ -183,8 +183,8 @@ TEST_CASE("Ai monster Alert chases to target near-side bounds and wanders within
     REQUIRE(f.movement()->m_complete);
     CHECK(ecs.get<Transform>(f.monster).position.x == "160"_fx);
     CHECK(ecs.get<Transform>(f.monster).position.z == "80"_fx);
-    for (int i = 0; i < 30 && !status::isAlertStatus(ecs.get<RoleStatus>(f.monster)); ++i) f.tick();
-    REQUIRE(status::isAlertStatus(ecs.get<RoleStatus>(f.monster)));
+    for (int i = 0; i < 30 && !ecs.get<RoleStatus>(f.monster).isAlert(); ++i) f.tick();
+    REQUIRE(ecs.get<RoleStatus>(f.monster).isAlert());
     const auto goal = ecs.get<RoleStatus>(f.monster).entityParams.move_pos;
     CHECK(goal.x >= "160"_fx); CHECK(goal.x <= "180"_fx);
     CHECK(goal.z >= "80"_fx); CHECK(goal.z <= "90"_fx);
@@ -237,7 +237,7 @@ TEST_CASE("Ai monster retargets dead enemies and preserves Alert with no targets
     ai::update(f.world, f.monster);
     CHECK(ecs.get<SkillPool>(f.monster).m_target == f.monster);
     CHECK(ecs.get<AiAgent>(f.monster).m_tree.m_alert == ai::AlertStatus::Alert);
-    CHECK_FALSE(status::isPatrolStatus(ecs.get<RoleStatus>(f.monster)));
+    CHECK_FALSE(ecs.get<RoleStatus>(f.monster).isPatrol());
     CHECK(ai::candidates(f.world, f.monster).empty());
 }
 

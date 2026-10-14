@@ -187,7 +187,7 @@ void commands(World& world, const FrameInput& input)
             const auto& slots = world.ecs().singleton<PlayerSlots>().entities;
             const auto found = slots.find(revive->slot);
             if (found == slots.end() || !room.m_reviving || room.m_failure || room.m_usedRevives >= room.m_maxRevives) continue;
-            if (status::isDeathStatus(world.ecs().get<RoleStatus>(found->second)))
+            if (world.ecs().get<RoleStatus>(found->second).isDeath())
             {
                 world.ecs().get<RoleStatus>(found->second).eEntityStatus = EntityRoleStatus::Revive;
                 auto& vitals = world.ecs().get<Vitals>(found->second);

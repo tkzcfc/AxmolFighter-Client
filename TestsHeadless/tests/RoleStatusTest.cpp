@@ -18,7 +18,7 @@ TEST_CASE("Status attack refuses walk hit resets and death is terminal")
     CHECK(state.eEntityStatus == (EntityRoleStatus::Idle | EntityRoleStatus::Hit));
     CHECK(state.entityParams.hit_id == 42);
     CHECK(state.entityParams.hit_counts == 1);
-    CHECK(status::isCanBreakStatus(state));
+    CHECK(state.isCanBreak());
     CHECK(status::dealWithStatus(world, entity, EntityRoleStatus::Death, 133));
     CHECK_FALSE(status::dealWithStatus(world, entity, EntityRoleStatus::Attack));
     CHECK_FALSE(status::dealWithStatus(world, entity, EntityRoleStatus::Hit));

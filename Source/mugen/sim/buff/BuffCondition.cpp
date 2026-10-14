@@ -157,8 +157,8 @@ bool checkOne(World& world, Entity entity, const BuffInstance& instance, int32_t
         const auto subject = condition == 122 || condition == 242 ? target : entity;
         const auto* state = world.ecs().tryGet<RoleStatus>(subject);
         if (!state) return false;
-        const bool air = status::isHitUpStatus(*state) || status::isHitDownStatus(*state);
-        return condition <= 123 ? air : !(air || status::isGetUpStatus(*state) || status::isHitFloorStatus(*state));
+        const bool air = state->isHitUp() || state->isHitDown();
+        return condition <= 123 ? air : !(air || state->isGetUp() || state->isHitFloor());
     }
     case 150: case 151: {
         const auto* hit = world.ecs().tryGet<RoleHitState>(entity);

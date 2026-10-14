@@ -281,7 +281,7 @@ void consumeControl(World& world, Entity entity)
     auto& queue = ecs.get<ControlEventQueue>(entity).commands;
     for (const auto& command : queue)
     {
-        if (!ecs.get<ExtraState>(entity).isCanControl() || status::isJostledStatus(ecs.get<RoleStatus>(entity)))
+        if (!ecs.get<ExtraState>(entity).isCanControl() || ecs.get<RoleStatus>(entity).isJostled())
             continue;
         ecs.get<RoleControl>(entity).m_last = command;
         if (static_cast<int32_t>(command.controlEvent) >= static_cast<int32_t>(ControlEvent::CTR_ATKA))

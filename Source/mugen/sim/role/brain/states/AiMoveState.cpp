@@ -101,7 +101,7 @@ BTStatus AiMove::update(RoleContext& ctx, Param type, State& state)
         if (ai::checkTarget(ctx.world(), ctx.entity()) == ai::Result::Success)
             return BTStatus::Success;
     }
-    else if (status::isAttackStatus(ctx.get<RoleStatus>()))
+    else if (ctx.get<RoleStatus>().isAttack())
         return BTStatus::Success;
     advance(ctx, state);
     return state.m_complete && state.m_timeMs > state.m_delayMs ? BTStatus::Success : BTStatus::Running;

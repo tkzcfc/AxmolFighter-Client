@@ -34,20 +34,20 @@ bool guardHolds(RoleBranch branch, World& world, Entity entity, bool city)
 {
     const auto status = kBranchStatuses[static_cast<size_t>(branch)];
     const auto& r     = world.ecs().get<RoleStatus>(entity);
-    if (!status::isStatus(r, status))
+    if (!r.has(status))
         return false;
     switch (status)
     {
     case S::Alert:
-        return !status::isTobeHitStatus(r);
+        return !r.isTobeHit();
     case S::Run:
     case S::Walk:
-        return !status::isAttackStatus(r) && !status::isJostledStatus(r);
+        return !r.isAttack() && !r.isJostled();
     case S::Idle:
         if (city)
-            return !status::isMoveStatus(r);
-        return !status::isAttackStatus(r) && !status::isWakeStatus(r) && !status::isTobeHitStatus(r) &&
-               !status::isMoveStatus(r) && !status::isJostledStatus(r);
+            return !r.isMove();
+        return !r.isAttack() && !r.isWake() && !r.isTobeHit() &&
+               !r.isMove() && !r.isJostled();
     default:
         return true;
     }
@@ -59,6 +59,6 @@ void exitGuard(RoleBranch branch, World& world, Entity entity)
     if (status == S::Attack)
         skill::resetSkill(world, entity);
     if (status != S::Idle && status != S::Revive)
-        status::abortStatus(world.ecs().get<RoleStatus>(entity), status);
+        world.ecs().get<RoleStatus>(entity).abort(status);
 }
 }  // namespace mugen::sim::role::brain

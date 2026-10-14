@@ -35,7 +35,7 @@ bool enabled(const EntityGroup& group)
 bool alive(World& world, Entity entity)
 {
     const auto* state = world.ecs().tryGet<RoleStatus>(entity);
-    return state && !status::isDeathStatus(*state) && !hit::isDead(world, entity);
+    return state && !state->isDeath() && !hit::isDead(world, entity);
 }
 // 不可命中状态不参与普通 AI 目标选择。
 bool hittable(World& world, Entity entity)
@@ -62,7 +62,7 @@ bool contains(const std::vector<int32_t>& range, Fixed value)
 bool canAct(World& world, Entity entity)
 {
     const auto& state = world.ecs().get<RoleStatus>(entity);
-    return !status::isDeathStatus(state) && !status::isTobeHitStatus(state) &&
+    return !state.isDeath() && !state.isTobeHit() &&
            world.ecs().get<ExtraState>(entity).isCanControl();
 }
 // 先设置技能控制角，成功释放后再更新角色朝向。
@@ -87,7 +87,7 @@ void direction(World& world, Entity entity, bool apply)
 // 目标失效时从稳定候选数组随机重选；无目标使用自身哨兵。
 Result checkAttack(World& world, Entity entity)
 {
-    if (status::isDeathStatus(world.ecs().get<RoleStatus>(entity))) return Result::Failure;
+    if (world.ecs().get<RoleStatus>(entity).isDeath()) return Result::Failure;
     auto& target = world.ecs().get<SkillPool>(entity).m_target;
     const auto taunt = buff::sneerTarget(world, entity);
     if (alive(world, taunt)) { target = taunt; return Result::Success; }
@@ -103,7 +103,7 @@ Result checkAttack(World& world, Entity entity)
 // 受击结束只在目标句柄缺失时补选，不重置警戒。
 Result checkHitEnd(World& world, Entity entity)
 {
-    if (status::isTobeHitStatus(world.ecs().get<RoleStatus>(entity))) return Result::Running;
+    if (world.ecs().get<RoleStatus>(entity).isTobeHit()) return Result::Running;
     auto& target = world.ecs().get<SkillPool>(entity).m_target;
     if (!world.ecs().tryGet<RoleIdentity>(target))
     {
@@ -196,7 +196,7 @@ Result executeAttack(World& world, Entity entity, const conf::AiConfig& row)
 Result move(World& world, Entity entity, Method method, const conf::AiConfig& row)
 {
     const bool patrol = method == Method::ExecutePatrol, chase = method == Method::ExecuteChase;
-    if (!chase && status::isMoveStatus(world.ecs().get<RoleStatus>(entity)))
+    if (!chase && world.ecs().get<RoleStatus>(entity).isMove())
         return patrol ? Result::Running : Result::Success;
     if (!canAct(world, entity)) return Result::Failure;
     const auto self = world.ecs().get<Transform>(entity).position;
@@ -243,7 +243,7 @@ std::vector<Entity> candidates(World& world, Entity entity)
 
 Result checkTarget(World& world, Entity entity)
 {
-    if (status::isDeathStatus(world.ecs().get<RoleStatus>(entity))) return Result::Failure;
+    if (world.ecs().get<RoleStatus>(entity).isDeath()) return Result::Failure;
     auto& target = world.ecs().get<SkillPool>(entity).m_target;
     const auto taunt = buff::sneerTarget(world, entity);
     if (alive(world, taunt)) { target = taunt; return Result::Success; }
@@ -268,12 +268,12 @@ Result invoke(World& world, Entity entity, Method method)
     switch (method)
     {
     case Method::CheckAttack: return checkAttack(world, entity);
-    case Method::CheckAttackEnd: return status::isAttackStatus(state) ? Result::Running : Result::Success;
-    case Method::CheckHit: return status::isTobeHitStatus(state) ? Result::Success : Result::Failure;
+    case Method::CheckAttackEnd: return state.isAttack() ? Result::Running : Result::Success;
+    case Method::CheckHit: return state.isTobeHit() ? Result::Success : Result::Failure;
     case Method::CheckHitEnd: return checkHitEnd(world, entity);
     case Method::CheckChase: return checkChase(world, entity, *row);
     case Method::CheckMoveEnd:
-        if (status::isMoveStatus(state)) return Result::Running;
+        if (state.isMove()) return Result::Running;
         return world.ecs().get<SkillPool>(entity).m_target == entity ? Result::Success : Result::Failure;
     case Method::CheckTarget: return checkTarget(world, entity);
     case Method::ExecuteRandAttack: return specialAttack(world, entity, false);

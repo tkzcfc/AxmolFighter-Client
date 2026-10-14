@@ -157,7 +157,7 @@ TEST_CASE("Ai rules gather reads an offline scenario monster")
     const auto& pool  = world.ecs().get<SkillPool>(monster);
     const auto& vitals = world.ecs().get<Vitals>(monster);
     CHECK(facts.m_alerted == (agent.m_tree.m_alert == AlertStatus::Alert));
-    CHECK(facts.m_inAttack == status::isAttackStatus(state));
+    CHECK(facts.m_inAttack == state.isAttack());
     CHECK(facts.m_hasTarget == (pool.m_target != monster && world.ecs().tryGet<Transform>(pool.m_target) != nullptr));
     REQUIRE(vitals.maxHp > Fixed{});
     CHECK(facts.m_hpPercent == static_cast<int32_t>((vitals.hp * Fixed::fromInt(100) / vitals.maxHp).toInt()));

@@ -40,7 +40,7 @@ void play(RoleContext& ctx, A type, behavior::HitActionState& leaf)
 void transition(RoleContext& ctx, behavior::HitActionState& leaf, S next)
 {
     leaf.m_finished = true;
-    status::mixStatus(ctx.get<RoleStatus>(), next);
+    ctx.get<RoleStatus>().mix(next);
 }
 // 死亡转换保留调用点指定的位移参数。
 void death(RoleContext& ctx, behavior::HitActionState& leaf, int32_t displacement = -1)
@@ -106,7 +106,7 @@ void completed(RoleContext& ctx, A type, behavior::HitActionState& leaf)
     }
     case A::HitSwitch:
         leaf.m_animationEnd = leaf.m_finished = true;
-        status::abortStatus(ctx.get<RoleStatus>(), S::HitSwitch);
+        ctx.get<RoleStatus>().abort(S::HitSwitch);
         if (hit::isDead(ctx.world(), ctx.entity()))
             death(ctx, leaf);
         break;

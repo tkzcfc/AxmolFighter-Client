@@ -33,7 +33,7 @@ TEST_CASE("Portal Finding consumes ordered path points before returning Idle")
     CHECK(ecs.get<RoleStatus>(entity).entityParams.m_path.empty());
     CHECK(ecs.get<Transform>(entity).position.x == last.x);
     role::brain::update(ecs.get<RoleBrain>(entity), world, entity, false);
-    CHECK_FALSE(status::isFindingStatus(ecs.get<RoleStatus>(entity)));
+    CHECK_FALSE(ecs.get<RoleStatus>(entity).isFinding());
     CHECK(ecs.get<RoleHitState>(entity).forceVelocity.x == Fixed{});
 }
 

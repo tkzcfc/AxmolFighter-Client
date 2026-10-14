@@ -52,7 +52,7 @@ BTStatus Locomotion::update(RoleContext& ctx, Param type, State& state)
     state.lastMotionTime = motion.timeMs;
     if (ctx.get<RoleIdentity>().roleType == 1 && ctx.get<RoleHitState>().m_hitProtectExecuted)
     {
-        status::mixStatus(ctx.get<RoleStatus>(), S::HitDown);
+        ctx.get<RoleStatus>().mix(S::HitDown);
         return BTStatus::Success;
     }
     if (type == behavior::ActionType::Idle)

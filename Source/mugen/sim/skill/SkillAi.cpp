@@ -15,7 +15,7 @@ bool matchStatus(const RoleStatus& role, int32_t value)
     constexpr std::array states{EntityRoleStatus::Hit, EntityRoleStatus::HitUp, EntityRoleStatus::HitDown,
         EntityRoleStatus::HitFloor, EntityRoleStatus::Wake, EntityRoleStatus::Attack};
     return value == -1 || (value > 0 && value <= static_cast<int32_t>(states.size()) &&
-                           status::isStatus(role, states[value - 1]));
+                           role.has(states[value - 1]));
 }
 /// 按配置条件编号验证自动施放前提。
 bool checkCondition(World& world, Entity entity, const SkillAi& ai, int32_t condition)
@@ -48,7 +48,7 @@ bool checkCondition(World& world, Entity entity, const SkillAi& ai, int32_t cond
         if ((condition == 4 ? row.oppCombo : row.oppSkillId) == -1) return true;
         const auto* other = ecs.tryGet<SkillPool>(target);
         const auto* state = ecs.tryGet<RoleStatus>(target);
-        if (!other || !state || !status::isAttackStatus(*state) || other->m_current == kNoSkill) return false;
+        if (!other || !state || !state->isAttack() || other->m_current == kNoSkill) return false;
         const auto& current = other->m_skills.at(other->m_current);
         return condition == 4 ? current.m_address.m_index > 1 : current.m_configId == row.oppSkillId;
     }

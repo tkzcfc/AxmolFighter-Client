@@ -12,7 +12,7 @@ void observe(World& world, Entity entity, BFEvent event, const HitTrigger& data)
     world.emit(entity, Tips{"BF:" + std::to_string(static_cast<int>(event))});
     if (event == BFEvent::BeforeDeath)
     {
-        CHECK_FALSE(status::isDeathStatus(world.ecs().get<RoleStatus>(entity)));
+        CHECK_FALSE(world.ecs().get<RoleStatus>(entity).isDeath());
         CHECK(world.ecs().get<Vitals>(entity).hp == Fixed{});
     }
     if (event == BFEvent::BeforeHit && data.m_teammate) CHECK(data.m_target.value != 0);
@@ -160,8 +160,8 @@ TEST_CASE("HitState Wake ignores actual collision damage")
     const auto hp = ecs.get<Vitals>(f.m_monster).hp;
     f.tick();
     CHECK(ecs.get<Vitals>(f.m_monster).hp == hp);
-    CHECK(status::isWakeStatus(ecs.get<RoleStatus>(f.m_monster)));
-    CHECK_FALSE(status::isHitStatus(ecs.get<RoleStatus>(f.m_monster)));
+    CHECK(ecs.get<RoleStatus>(f.m_monster).isWake());
+    CHECK_FALSE(ecs.get<RoleStatus>(f.m_monster).isHit());
 }
 
 TEST_CASE("Hit collision hero monster and per target dedup")
@@ -172,7 +172,7 @@ TEST_CASE("Hit collision hero monster and per target dedup")
     REQUIRE(expected > Fixed{});
     f.tick();
     CHECK(ecs.get<Vitals>(f.m_monster).hp == "100000"_fx - expected);
-    CHECK(status::isHitStatus(ecs.get<RoleStatus>(f.m_monster)));
+    CHECK(ecs.get<RoleStatus>(f.m_monster).isHit());
     CHECK(ecs.get<RoleStatus>(f.m_monster).entityParams.hit_id == f.m_hitId);
     CHECK(ecs.get<EffectState>(f.m_effect).m_hitTargets == std::vector<Entity>{f.m_monster});
     bool shown = false;
@@ -192,7 +192,7 @@ TEST_CASE("Hit minus one and orphan failure paths")
     auto expectedWorld = f.m_world.clone();
     f.tick();
     CHECK(f.m_world.ecs().get<Vitals>(f.m_monster).hp == "100000"_fx);
-    CHECK_FALSE(status::isHitStatus(f.m_world.ecs().get<RoleStatus>(f.m_monster)));
+    CHECK_FALSE(f.m_world.ecs().get<RoleStatus>(f.m_monster).isHit());
     CHECK(f.m_world.ecs().singleton<RngState>().random.next() == expectedWorld.ecs().singleton<RngState>().random.next());
     f.effectRow().hitId = f.m_hitId; f.load();
     f.m_world.ecs().get<EffectState>(f.m_effect).m_owner = {};
@@ -255,7 +255,7 @@ TEST_CASE("Hp BEFORE_DEATH ordering rescue and death")
         HitHooks hooks; hooks.m_trigger = observe;
         HitFixture f(hooks);
         hit::modifyHp(f.m_world,f.m_monster,"-200000"_fx);
-        CHECK(status::isDeathStatus(f.m_world.ecs().get<RoleStatus>(f.m_monster)));
+        CHECK(f.m_world.ecs().get<RoleStatus>(f.m_monster).isDeath());
         CHECK(messages(f.m_world,f.m_monster) == std::vector<std::string>{"BF:17", "BF:14"});
     }
     SUBCASE("rescue")
@@ -264,7 +264,7 @@ TEST_CASE("Hp BEFORE_DEATH ordering rescue and death")
         HitFixture f(hooks);
         hit::modifyHp(f.m_world,f.m_monster,"-200000"_fx);
         CHECK(f.m_world.ecs().get<Vitals>(f.m_monster).hp == "7"_fx);
-        CHECK_FALSE(status::isDeathStatus(f.m_world.ecs().get<RoleStatus>(f.m_monster)));
+        CHECK_FALSE(f.m_world.ecs().get<RoleStatus>(f.m_monster).isDeath());
         CHECK(messages(f.m_world,f.m_monster) == std::vector<std::string>{"BF:17", "BF:14", "BF:21"});
     }
 }
@@ -303,7 +303,7 @@ TEST_CASE("Hit super armor has no stun freeze or facing change")
     ecs.get<sim::ExtraState>(f.m_monster).add(mugen::ExtraState::SuperArmor);
     f.tick();
     CHECK(ecs.get<Vitals>(f.m_monster).hp < "100000"_fx);
-    CHECK_FALSE(status::isHitStatus(ecs.get<RoleStatus>(f.m_monster)));
+    CHECK_FALSE(ecs.get<RoleStatus>(f.m_monster).isHit());
     CHECK(ecs.get<RoleHitState>(f.m_monster).stiffTime == Fixed{});
     CHECK(ecs.get<Transform>(f.m_monster).towardX == 1);
     CHECK(ecs.get<RoleTimers>(f.m_hero).freezeMs == Fixed{});

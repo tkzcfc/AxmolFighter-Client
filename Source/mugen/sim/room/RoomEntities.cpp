@@ -315,7 +315,7 @@ void collision(World& world, Entity entity, Entity other, CollisionEvent event)
         std::any_of(players.begin(), players.end(), [other](const auto& slot) { return slot.second == other; });
     if (identity->roleType != 1 && !controlled)
         return;
-    if (const auto* status = ecs.tryGet<RoleStatus>(other); status && status::isDeathStatus(*status))
+    if (const auto* status = ecs.tryGet<RoleStatus>(other); status && status->isDeath())
         return;
     if (auto* portal = ecs.tryGet<PortalState>(entity))
     {

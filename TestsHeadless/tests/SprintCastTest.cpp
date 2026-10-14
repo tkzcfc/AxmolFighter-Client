@@ -66,7 +66,7 @@ TEST_CASE("Sprint attack A during run selects Y through dealButtonEvent")
     auto& pool                                        = world.ecs().get<SkillPool>(entity);
     pool.m_canSprint                                  = true;
     world.ecs().get<RoleStatus>(entity).eEntityStatus = EntityRoleStatus::Run;
-    REQUIRE(status::isRunStatus(world.ecs().get<RoleStatus>(entity)));
+    REQUIRE(world.ecs().get<RoleStatus>(entity).isRun());
 
     REQUIRE(skill::dealButtonEvent(world, entity, ControlEvent::CTR_ATKA));
 
@@ -105,7 +105,7 @@ TEST_CASE("Sprint attack A during a non-final Y skill selects Y")
     REQUIRE(y != kNoSkill);
     REQUIRE_FALSE(pool.m_skills[y].m_finally);
     skill::setSkillBase(pool, y);
-    REQUIRE_FALSE(status::isRunStatus(world.ecs().get<RoleStatus>(entity)));
+    REQUIRE_FALSE(world.ecs().get<RoleStatus>(entity).isRun());
 
     REQUIRE(skill::dealButtonEvent(world, entity, ControlEvent::CTR_ATKA));
 

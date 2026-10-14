@@ -1,6 +1,5 @@
 #pragma once
 #include "mugen/sim/role/RoleComponents.h"
-#include <algorithm>
 
 namespace mugen::sim { class World; }
 namespace mugen::sim::hit
@@ -19,17 +18,4 @@ void updateHitProtectTime(World&, Entity);
 void dealHitProtectUpdate(World&, Entity);
 // 醒来或超时后清除保护记录。
 void resetHitProtect(World&, Entity);
-// 只有配置了正浮空总值的角色才会触发浮空保护。
-inline bool isRigidity(const RoleHitState& state, Fixed configuredRigidity)
-{
-    return state.rigidity <= Fixed{} && configuredRigidity > Fixed{};
-}
-
-// 读取硬直时逐次扣除疲劳，死亡或未触发保护时保持原值。
-inline Fixed getStiffTime(RoleHitState& state, Fixed configuredRigidity, bool dead)
-{
-    if (!dead && isRigidity(state, configuredRigidity))
-        state.stiffTime = std::max(Fixed{}, state.stiffTime - state.fatigue * Fixed::fromInt(state.hitCounts));
-    return state.stiffTime;
-}
 }

@@ -27,8 +27,8 @@ bool isAllowCastInternal(World& world, Entity entity, int32_t index, bool autoCa
     const auto& row = conf::Config::instance().get<conf::SkillAttackConfig>(skill.m_configId);
     const auto& state = ecs.get<RoleStatus>(entity);
     const auto slot = baseSlot(pool, skill);
-    if (row.type == -1 && ((status::isTobeHitStatus(state) && slot != "L") ||
-                          (slot == "L" && !status::isCanBreakStatus(state)))) return false;
+    if (row.type == -1 && ((state.isTobeHit() && slot != "L") ||
+                          (slot == "L" && !state.isCanBreak()))) return false;
     const auto& extra = ecs.get<ExtraState>(entity);
     if (!extra.isCanControl() || extra.active(mugen::ExtraState::Silence)) return false;
     if (!pool.m_slots[skill.m_address.m_slot].m_enabled || isCooling(skill)) return false;
@@ -44,8 +44,8 @@ bool isAllowCast(World& world, Entity entity, int32_t index, bool autoCast)
     const auto& state = ecs.get<RoleStatus>(entity);
     if (!allow && ecs.get<RoleIdentity>(entity).roleType == 1 && !autoCast &&
         !ecs.get<SkillPool>(entity).m_autoCast && ecs.get<Transform>(entity).position.y == Fixed{} &&
-        (status::isIdleStatus(state) || status::isMoveStatus(state)) &&
-        !status::isTobeHitStatus(state) && !status::isAttackStatus(state))
+        (state.isIdle() || state.isMove()) &&
+        !state.isTobeHit() && !state.isAttack())
         world.emit(entity, Tips{"body shake hint"});
     return allow;
 }

@@ -47,7 +47,7 @@ TEST_CASE("Locomotion held direction key keeps the hero moving")
     for (int frame = 0; frame < 6; ++frame)
         step(world, control);
     CHECK(world.ecs().get<Transform>(entity).position.x > start);
-    CHECK(status::isRunStatus(world.ecs().get<RoleStatus>(entity)));
+    CHECK(world.ecs().get<RoleStatus>(entity).isRun());
 }
 
 TEST_CASE("Locomotion direction key release stops within two frames and enters Idle")
@@ -66,9 +66,9 @@ TEST_CASE("Locomotion direction key release stops within two frames and enters I
     step(world, control);
     const auto settled = world.ecs().get<Transform>(entity).position;
     const auto& role   = world.ecs().get<RoleStatus>(entity);
-    CHECK(status::isIdleStatus(role));
-    CHECK_FALSE(status::isRunStatus(role));
-    CHECK_FALSE(status::isWalkStatus(role));
+    CHECK(role.isIdle());
+    CHECK_FALSE(role.isRun());
+    CHECK_FALSE(role.isWalk());
     step(world, control);
     const auto& stopped = world.ecs().get<Transform>(entity).position;
     CHECK(stopped.x == settled.x);
@@ -88,7 +88,7 @@ TEST_CASE("Locomotion Control diagonal Up and Right moves positive x and z")
     const auto after = world.ecs().get<Transform>(entity).position;
     CHECK(after.x > start.x);
     CHECK(after.z > start.z);
-    CHECK(status::isRunStatus(world.ecs().get<RoleStatus>(entity)));
+    CHECK(world.ecs().get<RoleStatus>(entity).isRun());
 }
 
 TEST_CASE("Locomotion Control Right then Up keeps moving on both axes")
@@ -120,7 +120,7 @@ TEST_CASE("Locomotion Control Left then Right while both held moves positive x")
     for (int frame = 0; frame < 4; ++frame)
         step(world, control);
     CHECK(world.ecs().get<Transform>(entity).position.x > turned);
-    CHECK(status::isRunStatus(world.ecs().get<RoleStatus>(entity)));
+    CHECK(world.ecs().get<RoleStatus>(entity).isRun());
 }
 
 TEST_CASE("Locomotion Control releasing Right while Left stays held moves negative x")
@@ -139,7 +139,7 @@ TEST_CASE("Locomotion Control releasing Right while Left stays held moves negati
     for (int frame = 0; frame < 2; ++frame)
     {
         step(world, control);
-        keptRunning = keptRunning && status::isRunStatus(world.ecs().get<RoleStatus>(entity));
+        keptRunning = keptRunning && world.ecs().get<RoleStatus>(entity).isRun();
     }
     CHECK(world.ecs().get<Transform>(entity).position.x < beforeRelease);
     CHECK(keptRunning);

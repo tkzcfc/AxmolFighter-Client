@@ -28,12 +28,12 @@ bool contains(const std::vector<int32_t>& range, Fixed value)
 bool living(World& world, Entity entity)
 {
     const auto* state = world.ecs().tryGet<RoleStatus>(entity);
-    return state && !status::isDeathStatus(*state) && !hit::isDead(world, entity);
+    return state && !state->isDeath() && !hit::isDead(world, entity);
 }
 // 受击、仇恨记录或有效嘲讽都算激怒。
 bool provoked(World& world, Entity entity)
 {
-    if (status::isTobeHitStatus(world.ecs().get<RoleStatus>(entity))) return true;
+    if (world.ecs().get<RoleStatus>(entity).isTobeHit()) return true;
     if (!world.ecs().get<AiAgent>(entity).m_threat.empty()) return true;
     return living(world, buff::sneerTarget(world, entity));
 }
@@ -92,9 +92,9 @@ int8_t ruleIndex(AiAction action)
 // 当前移动状态映射到正在跑的规则；没有移动时为 -1。
 int8_t movingRule(const RoleStatus& state)
 {
-    if (status::isPatrolStatus(state)) return ruleIndex(AiAction::Patrol);
-    if (status::isChaseStatus(state)) return ruleIndex(AiAction::Chase);
-    if (status::isAlertStatus(state)) return ruleIndex(AiAction::Wander);
+    if (state.isPatrol()) return ruleIndex(AiAction::Patrol);
+    if (state.isChase()) return ruleIndex(AiAction::Chase);
+    if (state.isAlert()) return ruleIndex(AiAction::Wander);
     return -1;
 }
 // 生命上限不为正时百分比为零。
@@ -106,7 +106,7 @@ int32_t hpPercent(const Vitals& vitals)
 // 攻击状态视为已经开始的动作；其余非移动状态记为待机。
 AiAction finishedAction(const RoleStatus& state)
 {
-    return status::isAttackStatus(state) ? AiAction::CastBestSkill : AiAction::Idle;
+    return state.isAttack() ? AiAction::CastBestSkill : AiAction::Idle;
 }
 // ChancePercent 只能出现在本行最后，避免前面的判断失败前就消耗随机数。
 void assertChanceLast(const AiRule& rule)
@@ -162,7 +162,7 @@ AiFacts gather(World& world, Entity entity)
     facts.m_movingRule         = movingRule(state);
     facts.m_lastAction         = facts.m_movingRule >= 0 ? AiAction::Idle : finishedAction(state);
     facts.m_hpPercent          = hpPercent(vitals);
-    facts.m_inAttack           = status::isAttackStatus(state);
+    facts.m_inAttack           = state.isAttack();
     return facts;
 }
 

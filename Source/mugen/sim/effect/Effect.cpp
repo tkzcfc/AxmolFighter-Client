@@ -92,14 +92,14 @@ conf::ActionConfig common(const conf::ActionEffectConfig& row)
 /// 特效攻击只由统一状态位控制。
 bool check(Context& ctx, const int32_t&)
 {
-    return status::isAttackStatus(ctx.m_world.ecs().get<RoleStatus>(ctx.m_entity));
+    return ctx.m_world.ecs().get<RoleStatus>(ctx.m_entity).isAttack();
 }
 /// 条件进入不产生额外状态源。
 void conditionEnter(Context&, const int32_t&) {}
 /// 条件退出清除统一攻击状态。
 void conditionExit(Context& ctx, const int32_t&)
 {
-    status::abortStatus(ctx.m_world.ecs().get<RoleStatus>(ctx.m_entity), EntityRoleStatus::Attack);
+    ctx.m_world.ecs().get<RoleStatus>(ctx.m_entity).abort(EntityRoleStatus::Attack);
 }
 /// 选择目标音效分组；缺失或单个 -1 时退回默认组。
 std::vector<int32_t> sounds(World& world, Entity entity, const conf::ActionEffectConfig& row)
@@ -235,7 +235,7 @@ BTStatus actionTick(Context& ctx, const int32_t& id, std::variant<AttackEffect>&
         state.m_summoned = true;
         const auto owner = world.ecs().get<EffectState>(entity).m_owner;
         const auto* status = world.ecs().tryGet<RoleStatus>(owner);
-        if (status && !status::isDeathStatus(*status))
+        if (status && !status->isDeath())
             spawn::summon(world, entity, row->summonId, row->summonTime);
     }
     return action.m_finished ? BTStatus::Success : BTStatus::Running;

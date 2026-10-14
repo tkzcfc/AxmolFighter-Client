@@ -56,7 +56,7 @@ void interrupt(World& world, Entity entity, int32_t index, bool extra, ActionAtt
     {
         source.m_nextRun = false;
         action.m_finished = true;
-        status::mixStatus(world.ecs().get<RoleStatus>(entity), EntityRoleStatus::Run);
+        world.ecs().get<RoleStatus>(entity).mix(EntityRoleStatus::Run);
     }
     if (!extra) pool.m_allowInterrupt = true;
 }
@@ -140,7 +140,7 @@ BTStatus AttackAction::update(role::brain::RoleContext& ctx, Param source, State
     if (ecs.get<RoleIdentity>(entity).roleType == 1 && ecs.get<RoleHitState>(entity).m_hitProtectExecuted)
     {
         action.m_finished = true;
-        status::mixStatus(ecs.get<RoleStatus>(entity), EntityRoleStatus::HitDown);
+        ecs.get<RoleStatus>(entity).mix(EntityRoleStatus::HitDown);
     }
     /// 普通窗口先开放，额外窗口仅在动作尚未结束时尝试。
     if (row->interruptFrame != -1 && action.m_time > at(row->interruptFrame))
@@ -162,7 +162,7 @@ BTStatus AttackAction::update(role::brain::RoleContext& ctx, Param source, State
     }
     dealWithShake(world, entity, action, *row);
     if (!leaf.m_transformLogged && row->transformId != -1 && action.m_time >= at(row->transformFrame) &&
-        !status::isDeathStatus(ecs.get<RoleStatus>(entity)))
+        !ecs.get<RoleStatus>(entity).isDeath())
     {
         leaf.m_transformLogged = true;
         MG_LOG_W("Attack transformation is not implemented; skipping action {}", row->id);

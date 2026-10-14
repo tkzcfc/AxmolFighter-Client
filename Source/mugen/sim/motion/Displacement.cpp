@@ -143,7 +143,7 @@ void update(World& world, Entity entity)
     auto& velocity = ecs.get<RoleHitState>(entity).forceVelocity;
     const auto last = t.position;
     const auto& role = ecs.get<RoleStatus>(entity);
-    const bool moving = status::isMoveStatus(role) && !status::isAttackStatus(role);
+    const bool moving = role.isMove() && !role.isAttack();
     const bool cannotMove = !ecs.get<ExtraState>(entity).isCanMove();
     auto v = velocity;
     v.x *= moving || cannotMove ? d.velocityScale.x : d.defaultVelocityScale;

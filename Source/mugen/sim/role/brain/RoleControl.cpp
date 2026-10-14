@@ -30,7 +30,7 @@ void consumeControl(World& world, Entity entity, RoleControl& control)
     for (const auto& command : queue)
     {
         if (!world.ecs().get<ExtraState>(entity).isCanControl() ||
-            status::isJostledStatus(world.ecs().get<RoleStatus>(entity)))
+            world.ecs().get<RoleStatus>(entity).isJostled())
             continue;
         control.m_last = command;
         if (static_cast<int32_t>(command.controlEvent) >= static_cast<int32_t>(ControlEvent::CTR_ATKA))

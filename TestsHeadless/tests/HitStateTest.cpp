@@ -218,7 +218,7 @@ TEST_CASE("HitState chase hit types preserve distinct transitions")
             (type == 0 ? found->airDisplacementId : found->displacementId));
         CHECK_FALSE(ecs.get<RoleStatus>(f.m_entity).entityParams.hit_id.has_value());
         CHECK((result == BTStatus::Success) == (type == 1));
-        CHECK(status::isHitDownStatus(ecs.get<RoleStatus>(f.m_entity)) == (type == 1));
+        CHECK(ecs.get<RoleStatus>(f.m_entity).isHitDown() == (type == 1));
     }
 }
 
@@ -247,10 +247,10 @@ TEST_CASE("HitState falling and floor chase matrix retains separate transitions"
             const auto result = hitTick(f.m_world, f.m_entity, action, state);
             CHECK(state.m_displacementId ==
                 (type == 0 ? found->airDisplacementId : found->displacementId));
-            CHECK(status::isHitUpStatus(ecs.get<RoleStatus>(f.m_entity)) == (type != 1));
+            CHECK(ecs.get<RoleStatus>(f.m_entity).isHitUp() == (type != 1));
             CHECK((result == BTStatus::Success) == (action == A::HitFloor || type != 1));
             if (action == A::HitFloor && type == 1)
-                CHECK(status::isHitDownStatus(ecs.get<RoleStatus>(f.m_entity)));
+                CHECK(ecs.get<RoleStatus>(f.m_entity).isHitDown());
         }
 }
 
@@ -313,8 +313,8 @@ TEST_CASE("HitState breakaway cast exits hit leaf into Attack")
     const auto index = skill::getGivenSkill(ecs.get<SkillPool>(f.m_entity), "L");
     REQUIRE(index != kNoSkill);
     REQUIRE(skill::presetSkill(f.m_world, f.m_entity, "L"));
-    for (int i = 0; i < 4 && !status::isAttackStatus(ecs.get<RoleStatus>(f.m_entity)); ++i) f.tick();
-    CHECK(status::isAttackStatus(ecs.get<RoleStatus>(f.m_entity)));
+    for (int i = 0; i < 4 && !ecs.get<RoleStatus>(f.m_entity).isAttack(); ++i) f.tick();
+    CHECK(ecs.get<RoleStatus>(f.m_entity).isAttack());
     CHECK(ecs.get<RoleHitState>(f.m_entity).stiffTime == Fixed{});
     bool attackRunning = false;
     for (int frame = 0; frame < 4 && !attackRunning; ++frame)
@@ -440,13 +440,13 @@ TEST_CASE("HitState snapshot resumes airborne recovery deterministically")
 TEST_CASE("HitState rigidity requires positive configured capacity")
 {
     RoleHitState state;
-    CHECK_FALSE(hit::isRigidity(state, Fixed{}));
-    CHECK_FALSE(hit::isRigidity(state, "-1"_fx));
-    CHECK(hit::isRigidity(state, "10"_fx));
+    CHECK_FALSE(state.isRigidity(Fixed{}));
+    CHECK_FALSE(state.isRigidity("-1"_fx));
+    CHECK(state.isRigidity("10"_fx));
     state.rigidity = "1"_fx;
-    CHECK_FALSE(hit::isRigidity(state, "10"_fx));
+    CHECK_FALSE(state.isRigidity("10"_fx));
     state.rigidity = "-1"_fx;
-    CHECK(hit::isRigidity(state, "10"_fx));
+    CHECK(state.isRigidity("10"_fx));
 }
 
 // 重复读取会持续扣减存储值，且不会减为负数。
@@ -456,12 +456,12 @@ TEST_CASE("HitState fatigue mutates stiffness on every eligible read")
     state.stiffTime = "100"_fx;
     state.fatigue = "15"_fx;
     state.hitCounts = 2;
-    CHECK(hit::getStiffTime(state, "10"_fx, false) == "70"_fx);
+    CHECK(state.getStiffTime("10"_fx, false) == "70"_fx);
     CHECK(state.stiffTime == "70"_fx);
-    CHECK(hit::getStiffTime(state, "10"_fx, false) == "40"_fx);
-    CHECK(hit::getStiffTime(state, "10"_fx, false) == "10"_fx);
-    CHECK(hit::getStiffTime(state, "10"_fx, false) == Fixed{});
-    CHECK(hit::getStiffTime(state, "10"_fx, false) == Fixed{});
+    CHECK(state.getStiffTime("10"_fx, false) == "40"_fx);
+    CHECK(state.getStiffTime("10"_fx, false) == "10"_fx);
+    CHECK(state.getStiffTime("10"_fx, false) == Fixed{});
+    CHECK(state.getStiffTime("10"_fx, false) == Fixed{});
 }
 
 // 死亡、未耗尽和零配置三条路径都不能扣减硬直。
@@ -471,11 +471,11 @@ TEST_CASE("HitState stiffness preserves death and unprotected paths")
     state.stiffTime = "100"_fx;
     state.fatigue = "15"_fx;
     state.hitCounts = 2;
-    CHECK(hit::getStiffTime(state, "10"_fx, true) == "100"_fx);
-    CHECK(hit::getStiffTime(state, Fixed{}, false) == "100"_fx);
+    CHECK(state.getStiffTime("10"_fx, true) == "100"_fx);
+    CHECK(state.getStiffTime(Fixed{}, false) == "100"_fx);
     state.rigidity = "1"_fx;
-    CHECK(hit::getStiffTime(state, "10"_fx, false) == "100"_fx);
+    CHECK(state.getStiffTime("10"_fx, false) == "100"_fx);
     state.rigidity = {};
     state.hitCounts = 0;
-    CHECK(hit::getStiffTime(state, "10"_fx, false) == "100"_fx);
+    CHECK(state.getStiffTime("10"_fx, false) == "100"_fx);
 }

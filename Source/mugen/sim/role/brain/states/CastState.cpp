@@ -95,7 +95,7 @@ StateStep endCast(RoleBrain& brain, World& world, Entity entity)
     closePipe(brain, world, entity);
     auto& pool = world.ecs().get<SkillPool>(entity);
     if (pool.m_current != kNoSkill && pool.m_current != ended &&
-        status::isAttackStatus(world.ecs().get<RoleStatus>(entity)) && CastState::enter(brain, world, entity))
+        world.ecs().get<RoleStatus>(entity).isAttack() && CastState::enter(brain, world, entity))
         return StateStep::Running;
     skill::resetSkill(world, entity);
     return StateStep::Done;

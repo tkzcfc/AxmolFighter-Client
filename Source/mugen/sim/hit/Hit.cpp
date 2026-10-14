@@ -109,14 +109,14 @@ bool beforeHit(World& world,
     }
     ecs.get<RoleHitState>(target).m_contact = contact;
     if (effectRow.hitExtraControl.size() > 1 && effectRow.hitExtraControl[1] == 0 &&
-        status::isGetUpStatus(ecs.get<RoleStatus>(target)) && hitRow.hitMust != 1)
+        ecs.get<RoleStatus>(target).isGetUp() && hitRow.hitMust != 1)
         return false;
     ecs.get<RoleHitState>(target).m_beHitEffect = data.m_effect;
     buff::trigger(world, target, BFEvent::BeforeToBeHit, data);
     if (hitRow.hitType == -1)
         return true;
     const auto state = ecs.get<RoleStatus>(target);
-    if (status::isDeathStatus(state) || status::isGetUpStatus(state) || status::isWakeStatus(state))
+    if (state.isDeath() || state.isGetUp() || state.isWake())
         return false;
     if (ecs.get<RoleIdentity>(target).roleType == static_cast<int>(EntityRoleType::kMachine))
     {
@@ -124,12 +124,12 @@ bool beforeHit(World& world,
         if (count == -1)
             return false;
         --count;
-        if (isDead(world, target) && (!status::isTobeHitStatus(state) || status::isHitStatus(state)))
+        if (isDead(world, target) && (!state.isTobeHit() || state.isHit()))
             status::dealWithStatus(world, target, EntityRoleStatus::Death);
         return true;
     }
-    const bool floor = status::isHitFloorStatus(state) && ecs.get<Transform>(target).position.y == Fixed{};
-    const bool air   = status::isHitUpStatus(state) || status::isHitDownStatus(state);
+    const bool floor = state.isHitFloor() && ecs.get<Transform>(target).position.y == Fixed{};
+    const bool air   = state.isHitUp() || state.isHitDown();
     if ((hitRow.hitCondition == 0 || hitRow.hitCondition == 2) && floor)
         return false;
     if ((hitRow.hitCondition == 1 || hitRow.hitCondition == 2) && air)
@@ -166,11 +166,11 @@ void hitReaction(World& world, Entity target, const HitTrigger& data, const conf
     const auto state                   = ecs.get<RoleStatus>(target);
     auto& reaction                     = ecs.get<RoleHitState>(target);
     const auto scale                   = "1"_fx + ecs.get<Attributes>(target).extend[15];
-    if (reaction.stiffTime == Fixed{} || !status::isHitFloorStatus(state))
+    if (reaction.stiffTime == Fixed{} || !state.isHitFloor())
         reaction.stiffTime = Fixed::fromInt(hitRow.stiffTime) * scale;
     if (role && role->hitStiffTime != -1)
         reaction.stiffTime = Fixed::fromInt(role->hitStiffTime) * scale;
-    if (status::isTobeHitStatus(state))
+    if (state.isTobeHit())
     {
         if ((identity.roleType != 1 && identity.roleType != 4) || !isDead(world, target))
         {

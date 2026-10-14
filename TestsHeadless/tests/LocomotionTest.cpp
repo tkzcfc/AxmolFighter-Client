@@ -112,7 +112,7 @@ TEST_CASE("Locomotion applies ControlManager arrow commands to player movement")
     world.tick(input);
     CHECK(world.ecs().singleton<PlayerSlots>().entities.contains(0));
     CHECK(world.ecs().get<RoleControl>(entity).m_last.quadrant == quadrant);
-    CHECK(status::isStatus(world.ecs().get<RoleStatus>(entity), EntityRoleStatus::Run));
+    CHECK(world.ecs().get<RoleStatus>(entity).has(EntityRoleStatus::Run));
     for (uint32_t frame = 0; frame < 2; ++frame)
     {
         input.frame = world.ecs().singleton<WorldClock>().frame + 1;

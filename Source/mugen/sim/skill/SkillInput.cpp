@@ -68,7 +68,7 @@ bool dealWithButton(World& world, Entity entity, ControlEvent event, bool up, bo
     {
         const bool sprint = pool.m_current != kNoSkill && baseSlot(pool, pool.m_skills[pool.m_current]) == "Y" &&
                             !pool.m_skills[pool.m_current].m_finally;
-        if (sprint || status::isRunStatus(world.ecs().get<RoleStatus>(entity))) slot = "Y";
+        if (sprint || world.ecs().get<RoleStatus>(entity).isRun()) slot = "Y";
     }
     if (event >= ControlEvent::CTR_JOY1 && event <= ControlEvent::CTR_JOY12)
     {
@@ -82,14 +82,14 @@ bool dealWithButton(World& world, Entity entity, ControlEvent event, bool up, bo
     }
     if (slot == "E" && (pool.m_crazy || (pool.m_current != kNoSkill && baseSlot(pool, pool.m_skills[pool.m_current]) == "E"))) return false;
     if (pool.m_crazy && getGivenSkill(pool, slot + '+') != kNoSkill) slot += '+';
-    if (!status::isAttackStatus(world.ecs().get<RoleStatus>(entity))) resetSkill(world, entity);
+    if (!world.ecs().get<RoleStatus>(entity).isAttack()) resetSkill(world, entity);
     return presetSkill(world, entity, slot, autoCast);
 }
 bool dealButtonEvent(World& world, Entity entity, ControlEvent event, bool up, bool autoCast)
 {
     const auto& state = world.ecs().get<RoleStatus>(entity);
-    if (status::isDeathStatus(state) || world.ecs().get<Vitals>(entity).hp <= Fixed{} ||
-        !world.ecs().get<ExtraState>(entity).isCanControl() || status::isJostledStatus(state)) return false;
+    if (state.isDeath() || world.ecs().get<Vitals>(entity).hp <= Fixed{} ||
+        !world.ecs().get<ExtraState>(entity).isCanControl() || state.isJostled()) return false;
     if (world.ecs().get<SkillPool>(entity).m_angerRecover) return false;
     return dealWithButton(world, entity, event, up, autoCast) && status::dealWithStatus(world, entity, EntityRoleStatus::Attack);
 }

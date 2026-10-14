@@ -23,7 +23,7 @@ int64_t permitValue(const conf::RoleConfig* row, size_t index)
 // 清空护盾后同步通知其所有者。
 void cleanShield(World& world, Entity entity)
 {
-    world.ecs().get<Vitals>(entity).m_shield = {};
+    world.ecs().get<Vitals>(entity).cleanShield();
     buff::trigger(world, entity, BFEvent::ShieldClean, HitTrigger{});
 }
 }
@@ -32,8 +32,7 @@ bool isDead(World& world, Entity entity)
 {
     if (world.ecs().get<RoleIdentity>(entity).roleType == static_cast<int>(EntityRoleType::kMachine))
         return world.ecs().get<RoleHitState>(entity).hitCounts == 0;
-    const auto& vitals = world.ecs().get<Vitals>(entity);
-    return vitals.hp <= Fixed{} && vitals.maxHp > Fixed{};
+    return world.ecs().get<Vitals>(entity).isDead();
 }
 // 攻击许可与目标对应系数乘积必须严格大于零。
 bool checkHurtPermit(World& world, Entity target, Entity effect, HurtPermit permit)
@@ -45,17 +44,16 @@ bool checkHurtPermit(World& world, Entity target, Entity effect, HurtPermit perm
 // 护盾比较使用缩放伤害，溢出生命仍使用原伤害加原护盾。
 Fixed calcShieldAndHp(World& world, Entity entity, Fixed delta)
 {
-    const auto vitals = world.ecs().get<Vitals>(entity);
-    const auto scaled = delta * vitals.m_shieldConsumeScale;
-    const auto magnitude = scaled < Fixed{} ? -scaled : scaled;
-    if (vitals.m_shield > magnitude)
+    auto& vitals = world.ecs().get<Vitals>(entity);
+    if (vitals.shieldCovers(delta))
     {
-        world.ecs().get<Vitals>(entity).m_shield += scaled;
+        vitals.absorbShield(delta);
         if (world.hitHooks().m_shieldLayer(world, entity)) cleanShield(world, entity);
         return {};
     }
+    const Fixed rest = vitals.absorbShield(delta);
     cleanShield(world, entity);
-    return -delta >= vitals.m_shield ? delta + vitals.m_shield : Fixed{};
+    return rest;
 }
 // 治疗修正、护盾和锁血依次生效；死亡事件先于死亡判定和状态转换。
 void modifyHp(World& world, Entity entity, Fixed delta, Entity effectEntity, bool noShield)
@@ -83,7 +81,7 @@ void modifyHp(World& world, Entity entity, Fixed delta, Entity effectEntity, boo
     {
         const auto* row = roleData(world, entity);
         const auto state = ecs.get<RoleStatus>(entity);
-        if (!status::isTobeHitStatus(state) && !status::isDeathStatus(state))
+        if (!state.isTobeHit() && !state.isDeath())
             status::dealWithStatus(world, entity, EntityRoleStatus::Death, row ? row->deathDisplacementId : -1);
         if (row && row->koEffectId != -1)
         {

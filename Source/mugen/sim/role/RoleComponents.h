@@ -3,6 +3,7 @@
 #include "mugen/core/ecs/Entity.h"
 #include "mugen/core/math/FixedVec3.h"
 #include "mugen/core/reflect/Reflect.h"
+#include <algorithm>
 
 namespace mugen::sim
 {
@@ -57,6 +58,52 @@ struct RoleStatus
     EntityRoleStatus eEntityStatus = EntityRoleStatus::Idle;
     // 状态转换携带的参数。
     EntityParams entityParams;
+    // 检查请求的全部状态位是否同时存在。
+    bool has(EntityRoleStatus bits) const
+    {
+        return (static_cast<uint32_t>(eEntityStatus) & static_cast<uint32_t>(bits)) == static_cast<uint32_t>(bits);
+    }
+    // 将状态位并入角色状态。
+    void mix(EntityRoleStatus bits) { eEntityStatus = eEntityStatus | bits; }
+    // 仅在已存在时清除状态位。
+    void abort(EntityRoleStatus bits)
+    {
+        if (has(bits))
+            eEntityStatus = static_cast<EntityRoleStatus>(static_cast<uint32_t>(eEntityStatus) ^
+                                                          static_cast<uint32_t>(bits));
+    }
+    // 为每个状态位生成只读查询函数。
+#define MG_ROLE_STATUS_QUERY(Name) \
+    bool is##Name() const { return has(EntityRoleStatus::Name); }
+    MG_ROLE_STATUS_QUERY(None)
+    MG_ROLE_STATUS_QUERY(Birth)
+    MG_ROLE_STATUS_QUERY(Death)
+    MG_ROLE_STATUS_QUERY(Wake)
+    MG_ROLE_STATUS_QUERY(GetUp)
+    MG_ROLE_STATUS_QUERY(HitFloor)
+    MG_ROLE_STATUS_QUERY(HitDown)
+    MG_ROLE_STATUS_QUERY(HitUp)
+    MG_ROLE_STATUS_QUERY(HitSwitch)
+    MG_ROLE_STATUS_QUERY(Hit)
+    MG_ROLE_STATUS_QUERY(Attack)
+    MG_ROLE_STATUS_QUERY(Fall)
+    MG_ROLE_STATUS_QUERY(Patrol)
+    MG_ROLE_STATUS_QUERY(Chase)
+    MG_ROLE_STATUS_QUERY(Alert)
+    MG_ROLE_STATUS_QUERY(Run)
+    MG_ROLE_STATUS_QUERY(Walk)
+    MG_ROLE_STATUS_QUERY(Idle)
+    MG_ROLE_STATUS_QUERY(Finding)
+    MG_ROLE_STATUS_QUERY(Jostled)
+    MG_ROLE_STATUS_QUERY(Revive)
+    MG_ROLE_STATUS_QUERY(Controlled)
+#undef MG_ROLE_STATUS_QUERY
+    // 判断角色是否处于可被打断的受击状态。
+    bool isCanBreak() const { return isHitFloor() || isHitDown() || isHitUp() || isHitSwitch() || isHit(); }
+    // 判断角色是否处于可受击状态。
+    bool isTobeHit() const { return isGetUp() || isCanBreak(); }
+    // 判断角色是否处于移动类状态。
+    bool isMove() const { return isPatrol() || isChase() || isAlert() || isRun() || isWalk() || isFinding(); }
     // 参与组件快照的状态字段。
     MG_REFLECT(RoleStatus, eEntityStatus, entityParams)
 };
@@ -132,6 +179,28 @@ struct Vitals
     // 上次角色更新采样的资源及变化比例，供事件条件读取。
     Fixed m_previousHp, m_previousEp, m_hpChangePercent;
     bool m_lostHp = false, m_recoveredHp = false, m_lostEp = false, m_recoveredEp = false;
+    // 判断生命耗尽且具备有效上限。
+    bool isDead() const { return hp <= Fixed{} && maxHp > Fixed{}; }
+    // 清空护盾值。
+    void cleanShield() { m_shield = {}; }
+    // 护盾是否足以完整吸收本次变化。
+    bool shieldCovers(Fixed delta) const
+    {
+        const auto scaled = delta * m_shieldConsumeScale;
+        return m_shield > (scaled < Fixed{} ? -scaled : scaled);
+    }
+    // 护盾吸收伤害：护盾充足时清零伤害，耗尽时清零护盾并返回剩余扣血量。
+    Fixed absorbShield(Fixed delta)
+    {
+        if (shieldCovers(delta))
+        {
+            m_shield += delta * m_shieldConsumeScale;
+            return {};
+        }
+        const Fixed oldShield = m_shield;
+        cleanShield();
+        return -delta >= oldShield ? delta + oldShield : Fixed{};
+    }
     // 参与组件快照的资源字段。
     MG_REFLECT(Vitals,
                hp,
@@ -327,6 +396,39 @@ struct RoleHitState
     Fixed m_comboExp, m_comboScale = "1"_fx;
     // 水晶的一次性命中标记。
     bool m_crystalHit = false;
+    // 正配置总值耗尽才触发浮空保护，零配置不表示永久保护。
+    bool isRigidity(Fixed configuredRigidity) const
+    {
+        return rigidity <= Fixed{} && configuredRigidity > Fixed{};
+    }
+    // 读取硬直时逐次扣除疲劳，死亡或未触发保护时保持原值。
+    Fixed getStiffTime(Fixed configuredRigidity, bool dead)
+    {
+        if (!dead && isRigidity(configuredRigidity))
+            stiffTime = std::max(Fixed{}, stiffTime - fatigue * Fixed::fromInt(hitCounts));
+        return stiffTime;
+    }
+    // 首次命中记录当前生命减去最大生命比例后的阈值。
+    void initHitProtect(bool pvp, Fixed hp, Fixed maxHp, Fixed hpScale, int32_t cleanTime)
+    {
+        if (!pvp || m_hitProtectHp) return;
+        m_hitProtectHp = std::max(Fixed{}, hp - maxHp * hpScale);
+        m_hitProtectTime = Fixed::fromInt(cleanTime);
+        m_hitProtectExecuted = false;
+    }
+    // 已执行的保护不再因追击延长。
+    void updateHitProtect(int32_t cleanTime)
+    {
+        if (m_hitProtectHp && !m_hitProtectExecuted)
+            m_hitProtectTime = Fixed::fromInt(cleanTime);
+    }
+    // 清除本轮保护状态，下一次命中可重新建立阈值。
+    void resetHitProtect()
+    {
+        m_hitProtectHp.reset();
+        m_hitProtectTime = {};
+        m_hitProtectExecuted = false;
+    }
     // 参与组件快照的受击字段。
     MG_REFLECT(RoleHitState,
                rigidity,
