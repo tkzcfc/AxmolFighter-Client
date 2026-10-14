@@ -305,14 +305,14 @@ TEST_CASE("HitState breakaway cast exits hit leaf into Attack")
     skill::SkillLoadout loadout(5);
     loadout[0].resize(12);
     loadout[0][11] = {{{id, -1}}};
-    skill::loadSkill(f.m_world, f.m_entity, loadout);
+    skill::SkillCaster(f.m_world, f.m_entity).loadSkill(loadout);
     ecs.get<RoleStatus>(f.m_entity).eEntityStatus = EntityRoleStatus::Idle | EntityRoleStatus::HitUp;
     ecs.get<Transform>(f.m_entity).position.y = "100"_fx;
     f.tick();
     REQUIRE(f.active() == behavior::ActionType::HitUp);
     const auto index = skill::getGivenSkill(ecs.get<SkillPool>(f.m_entity), "L");
     REQUIRE(index != kNoSkill);
-    REQUIRE(skill::presetSkill(f.m_world, f.m_entity, "L"));
+    REQUIRE(skill::SkillCaster(f.m_world, f.m_entity).presetSkill("L"));
     for (int i = 0; i < 4 && !ecs.get<RoleStatus>(f.m_entity).isAttack(); ++i) f.tick();
     CHECK(ecs.get<RoleStatus>(f.m_entity).isAttack());
     CHECK(ecs.get<RoleHitState>(f.m_entity).stiffTime == Fixed{});

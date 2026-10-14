@@ -2,7 +2,7 @@
 #include "mugen/avatar/AvatarPaths.h"
 #include "mugen/conf/TypeConversions.h"
 #include "mugen/sim/role/brain/RoleBrainRunner.h"
-#include "mugen/sim/skill/Skill.h"
+#include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/buff/BuffPool.h"
 
 namespace mugen::sim
@@ -202,9 +202,9 @@ Entity spawnRole(World& world, const RoleSpawnParams& params)
     {
         const auto occupation = type_conversions::toCharacterClass(params.roleId);
         if (occupation != CharacterClass::kUnknown)
-            skill::loadSkill(world, entity, skill::playerLoadout(skill::offlineKit(occupation)));
+            skill::SkillCaster(world, entity).loadSkill(skill::playerLoadout(skill::offlineKit(occupation)));
         else
-            skill::loadSkill(world, entity);
+            skill::SkillCaster(world, entity).loadSkill();
     }
     if (params.isAi && world.setup().mode != WorldMode::Town && row->roleType != 12)
         ecs.add(entity, AiAgent{});

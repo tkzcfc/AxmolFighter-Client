@@ -3,7 +3,7 @@
 #include "DamageCalculator.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/role/Role.h"
-#include "mugen/sim/skill/Skill.h"
+#include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/effect/Effect.h"
 #include "mugen/sim/trace/TraceSink.h"
 #include "mugen/conf/ReflectedConfig.h"
@@ -188,7 +188,7 @@ void HitResolver::_hitReaction(Entity target, const HitTrigger& data, const conf
         Role(m_world, target).changeStatus(EntityRoleStatus::Death, deathId);
     else
     {
-        skill::forcedInterrupt(m_world, target);
+        skill::SkillCaster(m_world, target).forcedInterrupt();
         Role(m_world, target).changeStatus(EntityRoleStatus::Hit, hitRow.id);
     }
 }

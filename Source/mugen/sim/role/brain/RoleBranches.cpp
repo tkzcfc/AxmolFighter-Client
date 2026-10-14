@@ -1,7 +1,7 @@
 #include "RoleBranches.h"
 
 #include "mugen/sim/World.h"
-#include "mugen/sim/skill/Skill.h"
+#include "mugen/sim/skill/SkillCaster.h"
 
 namespace mugen::sim::role::brain
 {
@@ -56,7 +56,7 @@ void exitGuard(RoleBranch branch, World& world, Entity entity)
 {
     const auto status = kBranchStatuses[static_cast<size_t>(branch)];
     if (status == S::Attack)
-        skill::resetSkill(world, entity);
+        skill::SkillCaster(world, entity).resetSkill();
     if (status != S::Idle && status != S::Revive)
         world.ecs().get<RoleStatus>(entity).abort(status);
 }

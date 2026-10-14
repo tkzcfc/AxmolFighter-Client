@@ -4,7 +4,7 @@
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/role/brain/RoleBranches.h"
-#include "mugen/sim/skill/Skill.h"
+#include "mugen/sim/skill/SkillCaster.h"
 
 namespace mugen::sim::role::brain::states
 {
@@ -264,7 +264,7 @@ void HitState::enter(RoleContext& ctx, Param type, State& leaf)
         if (pool && pool->m_crazy)
         {
             ctx.get<Vitals>().ep = {};
-            skill::updateCrazy(ctx.world(), ctx.entity());
+            skill::SkillCaster(ctx.world(), ctx.entity()).updateCrazy();
         }
     }
     displacement::set(ctx.world(), ctx.entity(), leaf.m_displacementId, ctx.node());

@@ -1,7 +1,7 @@
 #include "RoleControl.h"
 
 #include "mugen/sim/World.h"
-#include "mugen/sim/skill/Skill.h"
+#include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/role/Role.h"
 
 namespace mugen::sim::role::brain
@@ -21,7 +21,7 @@ void skillEvent(World& world, Entity entity, const PlayerCommand& command)
                                : command.quadrant == 3 ? "270"_fx - angle
                                                        : "270"_fx + angle;
     }
-    skill::dealButtonEvent(world, entity, command.controlEvent, command.pressType == 2);
+    skill::SkillCaster(world, entity).dealButtonEvent(command.controlEvent, command.pressType == 2);
 }
 
 void consumeControl(World& world, Entity entity, RoleControl& control)
@@ -39,7 +39,7 @@ void consumeControl(World& world, Entity entity, RoleControl& control)
             Role(world, entity).changeStatus(EntityRoleStatus::Idle);
         else if (command.controlEvent == ControlEvent::CTR_RUN)
         {
-            skill::interruptRun(world, entity);
+            skill::SkillCaster(world, entity).interruptRun();
             Role(world, entity).changeStatus(EntityRoleStatus::Run);
         }
         else if (command.controlEvent == ControlEvent::CTR_WALK)

@@ -7,7 +7,7 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/role/Role.h"
 #include "mugen/sim/hit/HitSeams.h"
-#include "mugen/sim/skill/Skill.h"
+#include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/skill/SkillComponents.h"
 #include "mugen/conf/ReflectedConfig.h"
 
@@ -116,7 +116,7 @@ void stunEnter(World& world, Entity entity, uint64_t serial, Fixed)
     instance->m_triggered = true;
     playEffect(world, entity, serial);
     enterState(world, entity, serial, mugen::ExtraState::Stun);
-    skill::forcedInterrupt(world, entity);
+    skill::SkillCaster(world, entity).forcedInterrupt();
     world.ecs().get<Displacement>(entity).velocityScale = {};
 }
 // 从活动速度规则恢复倍率，控制解除后调用。
@@ -161,7 +161,7 @@ void controlEnter(World& world, Entity entity, uint64_t serial, mugen::ExtraStat
     playEffect(world, entity, serial);
     enterState(world, entity, serial, state);
     if (interrupt)
-        skill::forcedInterrupt(world, entity);
+        skill::SkillCaster(world, entity).forcedInterrupt();
     world.ecs().get<Displacement>(entity).velocityScale = {};
 }
 // 控制状态结束后仅在所有限制解除时恢复各速度型 Buff 的倍率。

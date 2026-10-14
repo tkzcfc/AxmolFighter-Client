@@ -1,7 +1,7 @@
 #include "ui/battle/BattleDebugPanel.h"
 
 #include "mugen/conf/TypeConversions.h"
-#include "mugen/sim/skill/Skill.h"
+#include "mugen/sim/skill/SkillCaster.h"
 #include "imgui.h"
 
 namespace gameui
@@ -45,7 +45,7 @@ void BattleDebugPanel::render(mugen::sim::World& world, bool& paused, bool& sing
                     ImGui::SameLine();
                     ImGui::PushID(index);
                     if (ImGui::Button("Cast"))
-                        mugen::sim::skill::presetSkill(world, player, row.poolSlot);
+                        mugen::sim::skill::SkillCaster(world, player).presetSkill(row.poolSlot);
                     ImGui::PopID();
                 }
                 ++index;

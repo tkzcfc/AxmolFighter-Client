@@ -2,7 +2,7 @@
 
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/sim/attack/AttackRole.h"
-#include "mugen/sim/skill/Skill.h"
+#include "mugen/sim/skill/SkillCaster.h"
 #include <array>
 #include <optional>
 #include <utility>
@@ -84,7 +84,7 @@ void closePipe(RoleBrain& brain, World& world, Entity entity)
     const auto index = plan.m_skill;
     exitLeaf(brain, world, entity);
     plan = {};
-    skill::dealWithCastPipeEnded(world, entity, index);
+    skill::SkillCaster(world, entity).dealWithCastPipeEnded(index);
 }
 
 // 结束当前管线后，按当前技能决定续接新计划或复位技能。
@@ -96,7 +96,7 @@ StateStep endCast(RoleBrain& brain, World& world, Entity entity)
     if (pool.m_current != kNoSkill && pool.m_current != ended &&
         world.ecs().get<RoleStatus>(entity).isAttack() && CastState::enter(brain, world, entity))
         return StateStep::Running;
-    skill::resetSkill(world, entity);
+    skill::SkillCaster(world, entity).resetSkill();
     return StateStep::Done;
 }
 }  // namespace
@@ -126,7 +126,7 @@ bool CastState::enter(RoleBrain& brain, World& world, Entity entity)
     plan.m_actions = columns[static_cast<size_t>(toward - 1)];
     plan.m_index   = 0;
     brain.m_cast   = std::move(plan);
-    skill::dealWithCastPipeBegan(world, entity, index);
+    skill::SkillCaster(world, entity).dealWithCastPipeBegan(index);
     if (row->skillType == 1)
         world.ecs().get<SkillPool>(entity).m_skills.at(index).m_enoughRelease = release;
     enterLeaf(brain, world, entity);
@@ -167,7 +167,7 @@ StateStep CastState::update(RoleBrain& brain, World& world, Entity entity)
 void CastState::exit(RoleBrain& brain, World& world, Entity entity)
 {
     closePipe(brain, world, entity);
-    skill::resetSkill(world, entity);
+    skill::SkillCaster(world, entity).resetSkill();
 }
 
 // 当前攻击叶处理位移事件。

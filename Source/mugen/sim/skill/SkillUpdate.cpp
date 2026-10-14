@@ -1,4 +1,4 @@
-#include "Skill.h"
+#include "SkillCaster.h"
 #include "SkillTriggers.h"
 #include "mugen/sim/World.h"
 #include "mugen/conf/ReflectedConfig.h"
@@ -33,11 +33,11 @@ void refreshSkillPipe(SkillBase& skill)
     skill.m_pipe = skill.m_releaseMax;
     skill.m_expectedPipe = skill.m_releaseMax;
 }
-void update(World& world, Entity entity)
+void SkillCaster::update()
 {
-    auto* pool = world.ecs().tryGet<SkillPool>(entity);
+    auto* pool = m_world.ecs().tryGet<SkillPool>(m_entity);
     if (!pool) return;
-    const auto dt = world.ecs().singleton<WorldClock>().dtMs;
+    const auto dt = m_world.ecs().singleton<WorldClock>().dtMs;
     for (size_t i = 0; i < pool->m_skills.size(); ++i)
     {
         auto& skill = pool->m_skills[i];
@@ -54,7 +54,7 @@ void update(World& world, Entity entity)
                 addSkillReleaseCount(skill);
                 if (cooling)
                 {
-                    buff::trigger(world, entity, BFEvent::SkillColdEnd, {static_cast<int32_t>(i)});
+                    buff::trigger(m_world, m_entity, BFEvent::SkillColdEnd, {static_cast<int32_t>(i)});
                     skill.m_enoughRelease = false;
                 }
             }
@@ -91,21 +91,21 @@ void update(World& world, Entity entity)
             pool->m_coolingSlots.push_back(code);
     }
 }
-void updateCrazy(World& world, Entity entity)
+void SkillCaster::updateCrazy()
 {
-    auto* pool = world.ecs().tryGet<SkillPool>(entity);
+    auto* pool = m_world.ecs().tryGet<SkillPool>(m_entity);
     if (!pool || !pool->m_crazy) return;
     constexpr std::array additions{conf::kCrazyDecayValueRole1, conf::kCrazyDecayValueRole2,
         conf::kCrazyDecayValueRole3, conf::kCrazyDecayValueRole4};
-    const auto id = world.ecs().get<RoleIdentity>(entity).roleId;
+    const auto id = m_world.ecs().get<RoleIdentity>(m_entity).roleId;
     const auto extra = id >= 1 && id <= 4 ? additions[id - 1] : Fixed{};
-    auto& vitals = world.ecs().get<Vitals>(entity);
-    vitals.ep = std::max(Fixed{}, vitals.ep - world.ecs().singleton<WorldClock>().dtMs *
+    auto& vitals = m_world.ecs().get<Vitals>(m_entity);
+    vitals.ep = std::max(Fixed{}, vitals.ep - m_world.ecs().singleton<WorldClock>().dtMs *
         (conf::kCrazyDecayBasicValue + extra) * pool->m_cpScale);
     if (vitals.ep == Fixed{} && pool->m_slotChanged)
     {
         pool->m_crazy = false;
-        buff::trigger(world, entity, BFEvent::AfterCrazy);
+        buff::trigger(m_world, m_entity, BFEvent::AfterCrazy);
     }
 }
-}
+}  // namespace mugen::sim::skill

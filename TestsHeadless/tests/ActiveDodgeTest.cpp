@@ -128,7 +128,7 @@ struct DodgeHit
         skill::SkillLoadout data(5);
         for (int i = 0; i < 6; ++i)
             data[0].push_back({{{id, -1}}});
-        skill::loadSkill(m_world, m_monster, data);
+        skill::SkillCaster(m_world, m_monster).loadSkill(data);
         auto& pool       = m_world.ecs().get<SkillPool>(m_monster);
         const auto index = skill::getGivenSkill(pool, slot);
         REQUIRE(index != kNoSkill);

@@ -1,4 +1,4 @@
-#include "Skill.h"
+#include "SkillCaster.h"
 #include "mugen/sim/World.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/BattleConst.h"
@@ -18,34 +18,34 @@ Fixed epCost(const SkillPool& pool, const SkillBase& skill)
            skill.m_epScale * pool.m_epScale + skill.m_epPlus + pool.m_epPlus;
 }
 bool isCooling(const SkillBase& skill) { return skill.m_releaseCount == 0 && skill.m_cd > Fixed{}; }
-bool isAllowCastInternal(World& world, Entity entity, int32_t index, bool autoCast)
+bool SkillCaster::isAllowCastInternal(int32_t index, bool autoCast)
 {
-    auto& ecs = world.ecs();
-    auto& pool = ecs.get<SkillPool>(entity);
+    auto& ecs = m_world.ecs();
+    auto& pool = ecs.get<SkillPool>(m_entity);
     auto& skill = pool.m_skills.at(index);
     const auto& row = conf::Config::instance().get<conf::SkillAttackConfig>(skill.m_configId);
-    const auto& state = ecs.get<RoleStatus>(entity);
+    const auto& state = ecs.get<RoleStatus>(m_entity);
     const auto slot = baseSlot(pool, skill);
     if (row.type == -1 && ((state.isTobeHit() && slot != "L") ||
                           (slot == "L" && !state.isCanBreak()))) return false;
-    const auto& extra = ecs.get<ExtraState>(entity);
+    const auto& extra = ecs.get<ExtraState>(m_entity);
     if (!extra.isCanControl() || extra.active(mugen::ExtraState::Silence)) return false;
     if (!pool.m_slots[skill.m_address.m_slot].m_enabled || isCooling(skill)) return false;
-    const auto& vitals = ecs.get<Vitals>(entity);
+    const auto& vitals = ecs.get<Vitals>(m_entity);
     if (mpCost(pool, skill) > vitals.mp || epCost(pool, skill) > vitals.ep || skill.m_crystal > pool.m_crystals) return false;
     if (slot == "E" && pool.m_crazy) return false;
-    return !autoCast || checkAi(world, entity, skill.m_ai);
+    return !autoCast || checkAi(skill.m_ai);
 }
-bool isAllowCast(World& world, Entity entity, int32_t index, bool autoCast)
+bool SkillCaster::isAllowCast(int32_t index, bool autoCast)
 {
-    const bool allow = isAllowCastInternal(world, entity, index, autoCast);
-    const auto& ecs = world.ecs();
-    const auto& state = ecs.get<RoleStatus>(entity);
-    if (!allow && ecs.get<RoleIdentity>(entity).roleType == 1 && !autoCast &&
-        !ecs.get<SkillPool>(entity).m_autoCast && ecs.get<Transform>(entity).position.y == Fixed{} &&
+    const bool allow = isAllowCastInternal(index, autoCast);
+    const auto& ecs = m_world.ecs();
+    const auto& state = ecs.get<RoleStatus>(m_entity);
+    if (!allow && ecs.get<RoleIdentity>(m_entity).roleType == 1 && !autoCast &&
+        !ecs.get<SkillPool>(m_entity).m_autoCast && ecs.get<Transform>(m_entity).position.y == Fixed{} &&
         (state.isIdle() || state.isMove()) &&
         !state.isTobeHit() && !state.isAttack())
-        world.emit(entity, Tips{"body shake hint"});
+        m_world.emit(m_entity, Tips{"body shake hint"});
     return allow;
 }
 bool isPriority(const SkillBase& next, const SkillBase& current)
@@ -93,4 +93,4 @@ bool canUpRelease(const SkillBase& skill)
     const auto& row = conf::Config::instance().get<conf::SkillAttackConfig>(skill.m_configId);
     return skill.m_enoughRelease || (skill.m_upTouch && skill.m_skillTime < Fixed::fromInt(row.pressTime));
 }
-}
+}  // namespace mugen::sim::skill

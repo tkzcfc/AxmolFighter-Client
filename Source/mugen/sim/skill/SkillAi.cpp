@@ -1,4 +1,4 @@
-#include "Skill.h"
+#include "SkillCaster.h"
 #include "mugen/sim/World.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include <algorithm>
@@ -16,12 +16,13 @@ bool matchStatus(const RoleStatus& role, int32_t value)
     return value == -1 || (value > 0 && value <= static_cast<int32_t>(states.size()) &&
                            role.has(states[value - 1]));
 }
+}  // namespace
 /// 按配置条件编号验证自动施放前提。
-bool checkCondition(World& world, Entity entity, const SkillAi& ai, int32_t condition)
+bool SkillCaster::_checkCondition(const SkillAi& ai, int32_t condition) const
 {
-    auto& ecs = world.ecs();
+    auto& ecs = m_world.ecs();
     const auto& row = conf::Config::instance().get<conf::SkillAiConfig>(ai.m_configId);
-    const auto target = ecs.get<SkillPool>(entity).m_target;
+    const auto target = ecs.get<SkillPool>(m_entity).m_target;
     switch (condition)
     {
     case 1: // 横向距离范围。
@@ -29,7 +30,7 @@ bool checkCondition(World& world, Entity entity, const SkillAi& ai, int32_t cond
     {
         const auto* other = ecs.tryGet<Transform>(target);
         if (!other) return false;
-        const auto& self = ecs.get<Transform>(entity);
+        const auto& self = ecs.get<Transform>(m_entity);
         auto distance = condition == 1 ? other->position.x - self.position.x : other->position.z - self.position.z;
         if (distance < Fixed{}) distance = -distance;
         const auto& range = condition == 1 ? row.oppDisX : row.oppDisZ;
@@ -53,37 +54,36 @@ bool checkCondition(World& world, Entity entity, const SkillAi& ai, int32_t cond
     }
     case 6: // 自身生命百分比。
     {
-        const auto& vitals = ecs.get<Vitals>(entity);
+        const auto& vitals = ecs.get<Vitals>(m_entity);
         if (vitals.maxHp <= Fixed{} || row.selfHp.size() < 2) return false;
         const auto percent = "100"_fx * vitals.hp / vitals.maxHp;
         return Fixed::fromInt(row.selfHp[0]) <= percent && percent <= Fixed::fromInt(row.selfHp[1]);
     }
-    case 7: return matchStatus(ecs.get<RoleStatus>(entity), row.selfStatus); // 自身状态。
+    case 7: return matchStatus(ecs.get<RoleStatus>(m_entity), row.selfStatus); // 自身状态。
     default: return false;
     }
 }
-}
-bool checkComposition(World& world, Entity entity, const SkillAi& ai)
+bool SkillCaster::checkComposition(const SkillAi& ai) const
 {
     const auto& row = conf::Config::instance().get<conf::SkillAiConfig>(ai.m_configId);
     if (row.composition.size() < 2) return false;
     const bool all = std::all_of(row.composition[0].begin(), row.composition[0].end(), [&](int32_t c) {
-        return checkCondition(world, entity, ai, c);
+        return _checkCondition(ai, c);
     });
     const bool any = std::any_of(row.composition[1].begin(), row.composition[1].end(), [&](int32_t c) {
-        return c == -1 || checkCondition(world, entity, ai, c);
+        return c == -1 || _checkCondition(ai, c);
     });
     return all && any;
 }
-bool checkAi(World& world, Entity entity, SkillAi& ai)
+bool SkillCaster::checkAi(SkillAi& ai)
 {
     if (ai.m_configId == -1) return true;
     if (ai.m_loadCd != Fixed{} || (ai.m_useCount != -1 && ai.m_useCount <= 0) || ai.m_checkCd != Fixed{}) return false;
-    if (!checkComposition(world, entity, ai)) return false;
+    if (!checkComposition(ai)) return false;
     const auto& row = conf::Config::instance().get<conf::SkillAiConfig>(ai.m_configId);
     ai.m_checkCd = Fixed::fromInt(std::min(row.checkCd, std::numeric_limits<int64_t>::max() / Fixed::kOne));
-    if (world.ecs().singleton<RngState>().random.randomF({}, "100"_fx) >= Fixed::fromInt(row.prob)) return false;
+    if (m_world.ecs().singleton<RngState>().random.randomF({}, "100"_fx) >= Fixed::fromInt(row.prob)) return false;
     if (ai.m_useCount > 0) --ai.m_useCount;
     return true;
 }
-}
+}  // namespace mugen::sim::skill

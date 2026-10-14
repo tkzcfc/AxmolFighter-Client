@@ -1,6 +1,6 @@
 #include "AiAgent.h"
 #include "mugen/sim/World.h"
-#include "mugen/sim/skill/Skill.h"
+#include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/role/Role.h"
 #include "mugen/sim/buff/BuffRules.h"
 #include "mugen/conf/ReflectedConfig.h"
@@ -139,7 +139,7 @@ Result specialAttack(World& world, Entity entity, bool first)
     const auto& pool = world.ecs().get<SkillPool>(entity);
     const std::string slot = pool.m_current == kNoSkill ? (first ? "X" : "Z") :
         pool.m_slots[pool.m_skills[pool.m_current].m_address.m_slot].m_name;
-    if (!skill::presetSkill(world, entity, slot, false)) return Result::Success;
+    if (!skill::SkillCaster(world, entity).presetSkill(slot, false)) return Result::Success;
     Role(world, entity).changeStatus(EntityRoleStatus::Attack);
     if (first) direction(world, entity, true);
     return Result::Running;
@@ -159,7 +159,7 @@ Result executeAttack(World& world, Entity entity, const conf::AiConfig& row)
     if (pool.m_current != kNoSkill)
     {
         const auto slot = pool.m_slots[pool.m_skills[pool.m_current].m_address.m_slot].m_name;
-        if (!skill::presetSkill(world, entity, slot, true)) return Result::Success;
+        if (!skill::SkillCaster(world, entity).presetSkill(slot, true)) return Result::Success;
         Role(world, entity).changeStatus(EntityRoleStatus::Attack);
         return Result::Running;
     }
@@ -176,7 +176,7 @@ Result executeAttack(World& world, Entity entity, const conf::AiConfig& row)
     for (const auto index : ready)
     {
         const std::string slot(1, static_cast<char>('A' + index));
-        if (!skill::presetSkill(world, entity, slot, true)) continue;
+        if (!skill::SkillCaster(world, entity).presetSkill(slot, true)) continue;
         Role(world, entity).changeStatus(EntityRoleStatus::Attack);
         const auto priority = firstValue(row.skillPriorityLevel, index, 1);
         auto& intervals = world.ecs().get<SkillPool>(entity).m_aiSkillCastInterval;

@@ -59,33 +59,33 @@ TEST_CASE("Skill AI AND OR composition respects one frame inclusive tolerance")
     AiFixture f;
     f.publish();
     const auto target = f.m_world.ecs().get<SkillPool>(f.m_entity).m_target;
-    SUBCASE("AND and first OR pass at tolerance boundary") { CHECK(skill::checkComposition(f.m_world, f.m_entity, f.m_ai)); }
+    SUBCASE("AND and first OR pass at tolerance boundary") { CHECK(skill::SkillCaster(f.m_world, f.m_entity).checkComposition(f.m_ai)); }
     SUBCASE("AND fails just outside tolerance")
     {
         f.m_world.ecs().get<Transform>(target).position.x += Fixed::fromRaw(1);
-        CHECK_FALSE(skill::checkComposition(f.m_world, f.m_entity, f.m_ai));
+        CHECK_FALSE(skill::SkillCaster(f.m_world, f.m_entity).checkComposition(f.m_ai));
     }
     SUBCASE("AND fails HP despite passing OR")
     {
         f.m_world.ecs().get<Vitals>(f.m_entity).hp = "499"_fx;
-        CHECK_FALSE(skill::checkComposition(f.m_world, f.m_entity, f.m_ai));
+        CHECK_FALSE(skill::SkillCaster(f.m_world, f.m_entity).checkComposition(f.m_ai));
     }
     SUBCASE("second OR passes despite first OR failure")
     {
         f.m_world.ecs().get<RoleStatus>(target).eEntityStatus = EntityRoleStatus::Idle;
         f.m_world.ecs().get<RoleStatus>(f.m_entity).eEntityStatus = EntityRoleStatus::Attack;
-        CHECK(skill::checkComposition(f.m_world, f.m_entity, f.m_ai));
+        CHECK(skill::SkillCaster(f.m_world, f.m_entity).checkComposition(f.m_ai));
     }
     SUBCASE("all OR fail")
     {
         f.m_world.ecs().get<RoleStatus>(target).eEntityStatus = EntityRoleStatus::Idle;
-        CHECK_FALSE(skill::checkComposition(f.m_world, f.m_entity, f.m_ai));
+        CHECK_FALSE(skill::SkillCaster(f.m_world, f.m_entity).checkComposition(f.m_ai));
     }
     SUBCASE("minus one OR unconditional")
     {
         f.m_row.composition[1] = {-1};
         f.publish();
-        CHECK(skill::checkComposition(f.m_world, f.m_entity, f.m_ai));
+        CHECK(skill::SkillCaster(f.m_world, f.m_entity).checkComposition(f.m_ai));
     }
 }
 
@@ -95,17 +95,17 @@ TEST_CASE("Skill AI cooldown probability and use count gates consume RNG only af
     f.publish();
     const auto before = f.m_world.hash();
     f.m_ai.m_loadCd = "1"_fx;
-    CHECK_FALSE(skill::checkAi(f.m_world, f.m_entity, f.m_ai));
+    CHECK_FALSE(skill::SkillCaster(f.m_world, f.m_entity).checkAi(f.m_ai));
     CHECK(f.m_world.hash() == before);
     f.m_ai.m_loadCd = {};
-    REQUIRE(skill::checkAi(f.m_world, f.m_entity, f.m_ai));
+    REQUIRE(skill::SkillCaster(f.m_world, f.m_entity).checkAi(f.m_ai));
     CHECK(f.m_ai.m_useCount == 1);
     CHECK(f.m_ai.m_checkCd == "100"_fx);
-    CHECK_FALSE(skill::checkAi(f.m_world, f.m_entity, f.m_ai));
+    CHECK_FALSE(skill::SkillCaster(f.m_world, f.m_entity).checkAi(f.m_ai));
     f.m_ai.m_checkCd = {};
     f.m_row.prob = 0;
     f.publish();
-    CHECK_FALSE(skill::checkAi(f.m_world, f.m_entity, f.m_ai));
+    CHECK_FALSE(skill::SkillCaster(f.m_world, f.m_entity).checkAi(f.m_ai));
     CHECK(f.m_ai.m_useCount == 1);
     CHECK(f.m_ai.m_checkCd == "100"_fx);
 }
@@ -119,10 +119,10 @@ TEST_CASE("Skill crazy EP drain waits for slot change before ending")
     pool.m_crazy = true;
     pool.m_slotChanged = false;
     world.ecs().get<Vitals>(entity).ep = "1"_fx;
-    skill::updateCrazy(world, entity);
+    skill::SkillCaster(world, entity).updateCrazy();
     CHECK(world.ecs().get<Vitals>(entity).ep == Fixed{});
     CHECK(pool.m_crazy);
     pool.m_slotChanged = true;
-    skill::updateCrazy(world, entity);
+    skill::SkillCaster(world, entity).updateCrazy();
     CHECK_FALSE(pool.m_crazy);
 }

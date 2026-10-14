@@ -2,7 +2,7 @@
 #include "mugen/sim/World.h"
 #include "mugen/avatar/MotionPlayer.h"
 #include "mugen/conf/BattleConst.h"
-#include "mugen/sim/skill/Skill.h"
+#include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/attack/AttackRole.h"
 #include "mugen/sim/role/brain/states/HitStates.h"
 #include "mugen/sim/role/brain/RoleBrainRunner.h"
@@ -16,7 +16,7 @@ namespace mugen::sim::role
 namespace
 {
 // 推进角色技能池。
-void skillPoolUpdate(World& world, Entity entity) { skill::update(world, entity); }
+void skillPoolUpdate(World& world, Entity entity) { skill::SkillCaster(world, entity).update(); }
 // 推进角色 Buff 池。
 void buffPoolUpdate(World& world, Entity entity) { buff::update(world, entity); }
 // 推进角色能力池。
@@ -37,7 +37,7 @@ void summonUpdate(World& world, Entity entity)
     }
 }
 // 推进角色狂暴技能流程。
-void crazyUpdate(World& world, Entity entity) { skill::updateCrazy(world, entity); }
+void crazyUpdate(World& world, Entity entity) { skill::SkillCaster(world, entity).updateCrazy(); }
 // 推进怒气流程。
 void rageUpdate(World&, Entity) {}
 // 推进受击保护流程。

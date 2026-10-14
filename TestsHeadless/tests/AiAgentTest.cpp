@@ -90,7 +90,7 @@ struct MonsterFixture
         skill::SkillLoadout data(5);
         if (special) data[4] = {{{{skillId, -1}}}, {{{-1, -1}}}, {{{skillId, -1}}}};
         else for (int i = 0; i < 3; ++i) data[0].push_back({{{skillId, -1}}});
-        skill::loadSkill(world, monster, data);
+        skill::SkillCaster(world, monster).loadSkill(data);
         world.ecs().get<SkillPool>(monster).m_crystals = 100000;
     }
     ai::ActionMove* movement()
@@ -152,7 +152,7 @@ TEST_CASE("Ai monster hit recovery casts X before Alert and nonalert attack uses
         CHECK(skill::baseSlot(pool, pool.m_skills[pool.m_current]) == "X");
         CHECK(ecs.get<RoleStatus>(f.monster).isAttack());
         CHECK(ecs.get<AiAgent>(f.monster).m_tree.m_alert == ai::AlertStatus::NoAlert);
-        skill::castBegan(f.world, f.monster, pool.m_current);
+        skill::SkillCaster(f.world, f.monster).castBegan(pool.m_current);
         ai::update(f.world, f.monster);
         CHECK(ecs.get<AiAgent>(f.monster).m_tree.m_alert == ai::AlertStatus::NoAlert);
         idle(f.world, f.monster);
@@ -218,7 +218,7 @@ TEST_CASE("Ai monster selects priority then index resets peers and consumes Skil
     CHECK(pool.m_aiSkillCastInterval[0] == Fixed{});
     CHECK(pool.m_aiSkillCastInterval[1] == "200"_fx);
     CHECK(pool.m_aiSkillCastInterval[2] == "300"_fx);
-    skill::update(f.world, f.monster);
+    skill::SkillCaster(f.world, f.monster).update();
     CHECK(pool.m_aiSkillCastInterval[1] < "200"_fx);
 }
 

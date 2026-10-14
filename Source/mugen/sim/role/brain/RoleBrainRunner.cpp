@@ -8,7 +8,7 @@
 #include "mugen/sim/role/brain/states/CastState.h"
 #include "mugen/sim/role/brain/states/HitStates.h"
 #include "mugen/sim/role/brain/states/LocomotionStates.h"
-#include "mugen/sim/skill/Skill.h"
+#include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/role/Role.h"
 
 namespace mugen::sim::role::brain
@@ -67,7 +67,7 @@ void skillEvent(World& world, Entity entity, const PlayerCommand& command)
                                : command.quadrant == 3 ? "270"_fx - angle
                                                        : "270"_fx + angle;
     }
-    skill::dealButtonEvent(world, entity, command.controlEvent, command.pressType == 2);
+    skill::SkillCaster(world, entity).dealButtonEvent(command.controlEvent, command.pressType == 2);
 }
 // 进入当前分支的叶子；返回是否成功（仅 Attack 可能失败）。
 bool enterState(RoleBrain& brain, World& world, Entity entity)
@@ -290,7 +290,7 @@ void consumeControl(World& world, Entity entity)
             Role(world, entity).changeStatus(EntityRoleStatus::Idle);
         else if (command.controlEvent == ControlEvent::CTR_RUN)
         {
-            skill::interruptRun(world, entity);
+            skill::SkillCaster(world, entity).interruptRun();
             Role(world, entity).changeStatus(EntityRoleStatus::Run);
         }
         else if (command.controlEvent == ControlEvent::CTR_WALK)

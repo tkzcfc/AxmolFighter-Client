@@ -1,6 +1,6 @@
 #include "doctest.h"
 #include "SkillTestSupport.h"
-#include "mugen/sim/skill/Skill.h"
+#include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/role/brain/states/HitStates.h"
 #include <filesystem>
 #include <fstream>
@@ -18,7 +18,7 @@ Entity fullActor(World& world, CharacterClass occupation = CharacterClass::kSwor
 {
     skill_test::loadConfig();
     const auto entity = skill_test::actor(world);
-    skill::loadSkill(world, entity, skill::playerLoadout(skill::offlineKit(occupation)));
+    skill::SkillCaster(world, entity).loadSkill(skill::playerLoadout(skill::offlineKit(occupation)));
     world.ecs().add(entity, MotionState{});
     world.ecs().add(entity, RoleHitState{});
     world.ecs().add(entity, RoleTimers{});
@@ -54,10 +54,10 @@ TEST_CASE("Crazy slot rejects when EP below epCost and emits body-shake tip")
     vitals.ep               = cost - "1"_fx;
     auto& events            = world.ecs().singleton<PresentationEvents>();
     const auto beforeEvents = events.events.size();
-    CHECK_FALSE(skill::isAllowCast(world, entity, crazyIdx));
+    CHECK_FALSE(skill::SkillCaster(world, entity).isAllowCast(crazyIdx));
     CHECK(events.events.size() == beforeEvents + 1);
     vitals.ep = cost;
-    CHECK(skill::isAllowCastInternal(world, entity, crazyIdx));
+    CHECK(skill::SkillCaster(world, entity).isAllowCastInternal(crazyIdx));
     reloadConfig();
 }
 
@@ -78,12 +78,12 @@ TEST_CASE("castBegan skips MP and EP deduction while crazy")
     vitals.mp    = "100"_fx;
     vitals.ep    = "100"_fx;
     pool.m_crazy = false;
-    skill::castBegan(world, entity, mpIdx);
+    skill::SkillCaster(world, entity).castBegan(mpIdx);
     CHECK(vitals.mp < "100"_fx);
     pool.m_crazy = true;
     vitals.mp    = "100"_fx;
     vitals.ep    = "100"_fx;
-    skill::castBegan(world, entity, mpIdx);
+    skill::SkillCaster(world, entity).castBegan(mpIdx);
     CHECK(vitals.mp == "100"_fx);
     CHECK(vitals.ep == "100"_fx);
     reloadConfig();
@@ -95,9 +95,9 @@ TEST_CASE("E slot rejected again at key entry while already crazy")
     const auto entity = fullActor(world);
     auto& pool        = world.ecs().get<SkillPool>(entity);
     pool.m_crazy      = true;
-    skill::resetSkill(world, entity);
+    skill::SkillCaster(world, entity).resetSkill();
     const auto before = pool.m_current;
-    CHECK_FALSE(skill::dealWithButton(world, entity, ControlEvent::CTR_ATKE));
+    CHECK_FALSE(skill::SkillCaster(world, entity).dealWithButton(ControlEvent::CTR_ATKE));
     CHECK(pool.m_current == before);
     reloadConfig();
 }
@@ -108,8 +108,8 @@ TEST_CASE("A input becomes A+ while crazy")
     const auto entity = fullActor(world);
     auto& pool        = world.ecs().get<SkillPool>(entity);
     pool.m_crazy      = true;
-    skill::resetSkill(world, entity);
-    REQUIRE(skill::dealWithButton(world, entity, ControlEvent::CTR_ATKA));
+    skill::SkillCaster(world, entity).resetSkill();
+    REQUIRE(skill::SkillCaster(world, entity).dealWithButton(ControlEvent::CTR_ATKA));
     REQUIRE(pool.m_current != kNoSkill);
     CHECK(skill::baseSlot(pool, pool.m_skills[static_cast<size_t>(pool.m_current)]) == "A+");
     reloadConfig();
@@ -151,10 +151,10 @@ TEST_CASE("Interrupt window advances current skill and rotates pipe")
     auto& first           = pool.m_skills[static_cast<size_t>(chain)];
     const auto pipeBefore = first.m_pipe;
     pool.m_current        = chain;
-    skill::castBegan(world, entity, chain);
+    skill::SkillCaster(world, entity).castBegan(chain);
     CHECK(first.m_previousPipe == pipeBefore);
     first.m_nextSkill = chain + 1;
-    CHECK(skill::dealWithNextSkillBase(world, entity));
+    CHECK(skill::SkillCaster(world, entity).dealWithNextSkillBase());
     CHECK(pool.m_current == chain + 1);
     reloadConfig();
 }
@@ -170,7 +170,7 @@ TEST_CASE("Skill slot-name round trip matches golden list")
             continue;
         World world;
         const auto entity = skill_test::actor(world);
-        skill::loadSkill(world, entity, skill::playerLoadout(skills));
+        skill::SkillCaster(world, entity).loadSkill(skill::playerLoadout(skills));
         for (const auto& slot : world.ecs().get<SkillPool>(entity).m_slots)
             names.insert(slot.m_name);
     }

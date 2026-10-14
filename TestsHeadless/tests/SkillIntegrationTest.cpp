@@ -20,7 +20,7 @@ TEST_CASE("Skill cooldown advances before frozen role input and survives snapsho
     world.ecs().get<Vitals>(entity).mp = "100"_fx;
     auto& pool = world.ecs().get<SkillPool>(entity);
     const auto index = skill::getGivenSkill(pool, "A");
-    skill::castBegan(world, entity, index);
+    skill::SkillCaster(world, entity).castBegan(index);
     const auto before = pool.m_skills[index].m_cd;
     world.ecs().get<RoleTimers>(entity).freezeMs = "100"_fx;
     FrameInput input;
@@ -74,18 +74,18 @@ TEST_CASE("Skill cast synchronizes modes and forced interrupt clears cached next
     const auto entity = actor(world);
     skill::SkillLoadout data(5);
     data[0] = {{{{id, -1}, {id, -1}}}};
-    skill::loadSkill(world, entity, data);
+    skill::SkillCaster(world, entity).loadSkill(data);
     auto& pool = world.ecs().get<SkillPool>(entity);
     pool.m_crystals = 1000000;
     const auto normal = skill::getGivenSkill(pool, "A");
     const auto alternate = skill::getGivenSkill(pool, "A", 1, 2);
     REQUIRE(alternate != kNoSkill);
     skill::setSkillBase(pool, normal);
-    skill::castBegan(world, entity, normal);
+    skill::SkillCaster(world, entity).castBegan(normal);
     CHECK(pool.m_skills[normal].m_cd == pool.m_skills[alternate].m_cd);
     CHECK(pool.m_skills[normal].m_releaseCount == pool.m_skills[alternate].m_releaseCount);
     pool.m_skills[normal].m_nextSkill = alternate;
-    skill::forcedInterrupt(world, entity);
+    skill::SkillCaster(world, entity).forcedInterrupt();
     CHECK(pool.m_current == kNoSkill);
     CHECK(pool.m_skills[normal].m_nextSkill == kNoSkill);
 }

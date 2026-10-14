@@ -3,7 +3,7 @@
 #include "AttackSeams.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/role/brain/RoleBrain.h"
-#include "mugen/sim/skill/Skill.h"
+#include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/skill/SkillTriggers.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/BattleConst.h"
@@ -48,7 +48,7 @@ void interrupt(World& world, Entity entity, int32_t index, bool extra, ActionAtt
                 allow = sameSlot ? (target.m_address != source.m_address &&
                     std::find(types.begin(), types.end(), 2) != types.end()) : skill::isSuperPriority(pool, next, index);
             }
-            if (allow && skill::dealWithNextSkillBase(world, entity)) action.m_finished = true;
+            if (allow && skill::SkillCaster(world, entity).dealWithNextSkillBase()) action.m_finished = true;
         }
     }
     else if (source.m_nextRun)

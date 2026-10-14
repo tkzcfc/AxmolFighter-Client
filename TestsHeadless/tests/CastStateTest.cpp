@@ -42,7 +42,7 @@ struct CastFixture
     // 选择当前技能并进入施法状态，返回施法技能下标。
     int32_t beginCast()
     {
-        REQUIRE(skill::presetSkill(world, entity, "A"));
+        REQUIRE(skill::SkillCaster(world, entity).presetSkill("A"));
         REQUIRE(Role(world, entity).changeStatus(EntityRoleStatus::Attack));
         REQUIRE(states::CastState::enter(brain(), world, entity));
         return world.ecs().get<SkillPool>(entity).m_current;
@@ -92,7 +92,7 @@ TEST_CASE("CastState builds a plan from the current skill")
     const auto id = simpleCastSkill();
     CastFixture f(id);
     auto& pool   = f.world.ecs().get<SkillPool>(f.entity);
-    REQUIRE(skill::presetSkill(f.world, f.entity, "A"));
+    REQUIRE(skill::SkillCaster(f.world, f.entity).presetSkill("A"));
     const auto index      = pool.m_current;
     const auto pipeBefore = pool.m_skills.at(index).m_pipe;
     const auto& row =

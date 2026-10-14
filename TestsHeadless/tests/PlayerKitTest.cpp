@@ -66,7 +66,7 @@ TEST_CASE("PlayerKit harness role zero keeps monster kit")
     World scratch;
     const auto expectedEntity = actor(scratch);
     scratch.ecs().get<RoleIdentity>(expectedEntity).roleId = 0;
-    skill::loadSkill(scratch, expectedEntity, skill::monsterLoadout(identity.aiId));
+    skill::SkillCaster(scratch, expectedEntity).loadSkill(skill::monsterLoadout(identity.aiId));
     const auto& expected = scratch.ecs().get<SkillPool>(expectedEntity);
     REQUIRE(!expected.m_skills.empty());
     CHECK(pool.m_skills.size() == expected.m_skills.size());
@@ -90,7 +90,7 @@ TEST_CASE("PlayerKit monster spawn keeps AI skill ids")
     World scratch;
     const auto expectedEntity = actor(scratch);
     scratch.ecs().get<RoleIdentity>(expectedEntity).roleId = 261;
-    skill::loadSkill(scratch, expectedEntity, skill::monsterLoadout(identity.aiId));
+    skill::SkillCaster(scratch, expectedEntity).loadSkill(skill::monsterLoadout(identity.aiId));
     const auto& expected = scratch.ecs().get<SkillPool>(expectedEntity);
     REQUIRE(!expected.m_skills.empty());
     CHECK(pool.m_skills.size() == expected.m_skills.size());

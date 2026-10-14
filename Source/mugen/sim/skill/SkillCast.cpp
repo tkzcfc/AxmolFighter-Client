@@ -1,4 +1,4 @@
-#include "Skill.h"
+#include "SkillCaster.h"
 #include "SkillTriggers.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/trace/TraceSink.h"
@@ -18,27 +18,27 @@ void setSkillBase(SkillPool& pool, int32_t index)
         pool.m_beforeTime = "1000"_fx;
     }
 }
-void resetSkill(World& world, Entity entity)
+void SkillCaster::resetSkill()
 {
-    auto* pool = world.ecs().tryGet<SkillPool>(entity);
+    auto* pool = m_world.ecs().tryGet<SkillPool>(m_entity);
     if (!pool || pool->m_current == kNoSkill) return;
     const auto slot = baseSlot(*pool, pool->m_skills.at(pool->m_current));
     for (auto& skill : pool->m_skills)
         if (baseSlot(*pool, skill) == slot) skill.m_nextSkill = kNoSkill;
     setSkillBase(*pool, kNoSkill);
 }
-void forcedInterrupt(World& world, Entity entity)
+void SkillCaster::forcedInterrupt()
 {
-    auto* pool = world.ecs().tryGet<SkillPool>(entity);
+    auto* pool = m_world.ecs().tryGet<SkillPool>(m_entity);
     if (!pool || pool->m_current == kNoSkill) return;
     auto& skill = pool->m_skills.at(pool->m_current);
-    effect::clearSkillEffectsByInterrupt(world, entity, skill.m_configId);
+    effect::clearSkillEffectsByInterrupt(m_world, m_entity, skill.m_configId);
     if (skill.m_changeTime > Fixed{}) { skill.m_changeTime = {}; pool->m_change = 1; }
-    resetSkill(world, entity);
+    resetSkill();
 }
-bool dealWithNextSkillBase(World& world, Entity entity)
+bool SkillCaster::dealWithNextSkillBase()
 {
-    auto& pool = world.ecs().get<SkillPool>(entity);
+    auto& pool = m_world.ecs().get<SkillPool>(m_entity);
     if (pool.m_current == kNoSkill) return false;
     auto& current = pool.m_skills.at(pool.m_current);
     auto next = current.m_nextSkill;
@@ -63,20 +63,20 @@ bool dealWithNextSkillBase(World& world, Entity entity)
     current.m_vector = 1;
     return true;
 }
-void castBegan(World& world, Entity entity, int32_t index)
+void SkillCaster::castBegan(int32_t index)
 {
-    auto& pool = world.ecs().get<SkillPool>(entity);
+    auto& pool = m_world.ecs().get<SkillPool>(m_entity);
     auto& skill = pool.m_skills.at(index);
     dealWithCoolDown(skill);
     pool.m_crystals -= std::max(0, skill.m_crystal);
     if (!pool.m_crazy)
     {
-        auto& vitals = world.ecs().get<Vitals>(entity);
+        auto& vitals = m_world.ecs().get<Vitals>(m_entity);
         const auto mp = mpCost(pool, skill), ep = epCost(pool, skill);
         vitals.mp = std::clamp(vitals.mp - mp, Fixed{}, vitals.maxMp);
         vitals.ep = std::clamp(vitals.ep - ep, Fixed{}, vitals.maxEp);
-        buff::trigger(world, entity, BFEvent::UseTp, {index, mp});
-        buff::trigger(world, entity, BFEvent::UseEp, {index, ep});
+        buff::trigger(m_world, m_entity, BFEvent::UseTp, {index, mp});
+        buff::trigger(m_world, m_entity, BFEvent::UseEp, {index, ep});
     }
     dealWithDirection(pool, index);
     if (skill.m_address.m_step == 1)
@@ -99,7 +99,7 @@ void castBegan(World& world, Entity entity, int32_t index)
     skill.m_pipe = skill.m_expectedPipe;
     skill.m_expectedPipe = skill.m_previousPipe - 1;
     skill.m_releaseCount = std::max(0, skill.m_releaseCount - 1);
-    buff::trigger(world, entity, BFEvent::SkillColdStart, {index});
+    buff::trigger(m_world, m_entity, BFEvent::SkillColdStart, {index});
     pool.m_running.push_back(index);
     const auto* change = conf::Config::instance().find<conf::SkillChangeSystemConfig>(skill.m_configId);
     if (change)
@@ -110,33 +110,33 @@ void castBegan(World& world, Entity entity, int32_t index)
         { pool.m_change = change->skillChangeId; skill.m_changeTime = Fixed::fromInt(change->skillChangeTime); }
     }
 }
-void dealWithCastPipeBegan(World& world, Entity entity, int32_t index)
+void SkillCaster::dealWithCastPipeBegan(int32_t index)
 {
-    auto& pool = world.ecs().get<SkillPool>(entity);
+    auto& pool = m_world.ecs().get<SkillPool>(m_entity);
     const auto& skill = pool.m_skills.at(index);
     if (pool.m_previous != kNoSkill && skill.m_address.m_step == 1)
     {
         const auto& previous = pool.m_skills.at(pool.m_previous);
         if (baseSlot(pool, previous) != baseSlot(pool, skill) || previous.m_address.m_index != skill.m_address.m_index ||
             previous.m_address.m_step >= skill.m_address.m_step)
-            buff::trigger(world, entity, BFEvent::BeforeNextSkill, {index});
+            buff::trigger(m_world, m_entity, BFEvent::BeforeNextSkill, {index});
     }
-    castBegan(world, entity, index);
-    trace::noteCast(world, entity, skill.m_configId, pool.m_slots[skill.m_address.m_slot].m_name, skill.m_pipe);
+    castBegan(index);
+    trace::noteCast(m_world, m_entity, skill.m_configId, pool.m_slots[skill.m_address.m_slot].m_name, skill.m_pipe);
     const auto first = getGivenSkill(pool, pool.m_slots[skill.m_address.m_slot].m_name, skill.m_address.m_index, skill.m_address.m_mode, 1, true);
-    buff::trigger(world, entity, BFEvent::BeforeCastSkill, {first});
-    ability::trigger(world, entity, ability::SkillEvent::BeforeCastSkill, {first});
+    buff::trigger(m_world, m_entity, BFEvent::BeforeCastSkill, {first});
+    ability::trigger(m_world, m_entity, ability::SkillEvent::BeforeCastSkill, {first});
     pool.m_previous = index;
 }
-void dealWithCastPipeEnded(World& world, Entity entity, int32_t index)
+void SkillCaster::dealWithCastPipeEnded(int32_t index)
 {
-    auto& pool = world.ecs().get<SkillPool>(entity);
+    auto& pool = m_world.ecs().get<SkillPool>(m_entity);
     const auto& skill = pool.m_skills.at(index);
-    trace::noteCastEnd(world, entity, skill.m_configId);
+    trace::noteCastEnd(m_world, m_entity, skill.m_configId);
     const auto first = getGivenSkill(pool, pool.m_slots[skill.m_address.m_slot].m_name, skill.m_address.m_index, skill.m_address.m_mode, 1, true);
-    buff::trigger(world, entity, BFEvent::AfterCastSkill, {first});
-    if (skill.m_address.m_step == skill.m_stepCount) buff::trigger(world, entity, BFEvent::AfterNextSkill, {index});
-    ability::trigger(world, entity, ability::SkillEvent::AfterCastSkill, {first});
-    if (pool.m_current == index) dealWithNextSkillBase(world, entity);
+    buff::trigger(m_world, m_entity, BFEvent::AfterCastSkill, {first});
+    if (skill.m_address.m_step == skill.m_stepCount) buff::trigger(m_world, m_entity, BFEvent::AfterNextSkill, {index});
+    ability::trigger(m_world, m_entity, ability::SkillEvent::AfterCastSkill, {first});
+    if (pool.m_current == index) dealWithNextSkillBase();
 }
-}
+}  // namespace mugen::sim::skill

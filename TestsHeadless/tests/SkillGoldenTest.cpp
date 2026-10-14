@@ -32,7 +32,7 @@ TEST_CASE("Skill golden matches ordered slots and steps for two heroes and two m
         heroes += role.roleType == 1;
         monsters += role.roleType == 2;
         world.ecs().get<RoleIdentity>(entity).roleId = roleId;
-        skill::loadSkill(world, entity, skill::monsterLoadout(role.aiId.at(0)));
+        skill::SkillCaster(world, entity).loadSkill(skill::monsterLoadout(role.aiId.at(0)));
         const auto& pool = world.ecs().get<SkillPool>(entity);
         REQUIRE(pool.m_slots.size() == slots.size());
         for (size_t s = 0; s < slots.size(); ++s)
@@ -63,7 +63,7 @@ TEST_CASE("Skill player slot mapping rock and change-system expansion use config
     REQUIRE(rock != rocks.end());
     World world;
     const auto entity = actor(world);
-    skill::loadSkill(world, entity, skill::playerLoadout({{EnumSkillSlot::Attack, id},
+    skill::SkillCaster(world, entity).loadSkill(skill::playerLoadout({{EnumSkillSlot::Attack, id},
         {EnumSkillSlot::Sprint, id}, {EnumSkillSlot::A, id, rock->id}, {EnumSkillSlot::SA, -1, rock->id}}));
     auto& pool = world.ecs().get<SkillPool>(entity);
     CHECK(skill::getGivenSkill(pool, "A") != kNoSkill);
@@ -77,7 +77,7 @@ TEST_CASE("Skill player slot mapping rock and change-system expansion use config
                conf::Config::instance().find<conf::SkillAttackConfig>(r.skillNewId);
     });
     REQUIRE(change != changes.end());
-    skill::loadSkill(world, entity, skill::playerLoadout({{EnumSkillSlot::Attack, change->id}}));
+    skill::SkillCaster(world, entity).loadSkill(skill::playerLoadout({{EnumSkillSlot::Attack, change->id}}));
     const auto& changed = world.ecs().get<SkillPool>(entity);
     const auto index = skill::getGivenSkill(changed, "A", 1, change->skillChange);
     REQUIRE(index != kNoSkill);

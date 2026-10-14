@@ -25,7 +25,7 @@ void loadAttackAndSprint(World& world, Entity entity, SprintLoad ids)
     data[0].push_back({{{ids.m_attack, -1}}});
     data[4].resize(3);
     data[4][1].push_back({{ids.m_sprint, -1}});
-    skill::loadSkill(world, entity, data);
+    skill::SkillCaster(world, entity).loadSkill(data);
     world.ecs().get<SkillPool>(entity).m_crystals = 1000000;
 }
 
@@ -68,7 +68,7 @@ TEST_CASE("Sprint attack A during run selects Y through dealButtonEvent")
     world.ecs().get<RoleStatus>(entity).eEntityStatus = EntityRoleStatus::Run;
     REQUIRE(world.ecs().get<RoleStatus>(entity).isRun());
 
-    REQUIRE(skill::dealButtonEvent(world, entity, ControlEvent::CTR_ATKA));
+    REQUIRE(skill::SkillCaster(world, entity).dealButtonEvent(ControlEvent::CTR_ATKA));
 
     expectCurrent(world, entity, {"Y", sprint});
 }
@@ -85,7 +85,7 @@ TEST_CASE("Sprint attack A during run keeps A when sprint is disabled")
     pool.m_canSprint                                  = false;
     world.ecs().get<RoleStatus>(entity).eEntityStatus = EntityRoleStatus::Run;
 
-    REQUIRE(skill::dealButtonEvent(world, entity, ControlEvent::CTR_ATKA));
+    REQUIRE(skill::SkillCaster(world, entity).dealButtonEvent(ControlEvent::CTR_ATKA));
 
     expectCurrent(world, entity, {"A", attack});
 }
@@ -107,7 +107,7 @@ TEST_CASE("Sprint attack A during a non-final Y skill selects Y")
     skill::setSkillBase(pool, y);
     REQUIRE_FALSE(world.ecs().get<RoleStatus>(entity).isRun());
 
-    REQUIRE(skill::dealButtonEvent(world, entity, ControlEvent::CTR_ATKA));
+    REQUIRE(skill::SkillCaster(world, entity).dealButtonEvent(ControlEvent::CTR_ATKA));
 
     expectCurrent(world, entity, {"Y", sprint});
 }
@@ -125,7 +125,7 @@ TEST_CASE("Sprint attack A while idle keeps A")
     world.ecs().get<RoleStatus>(entity).eEntityStatus = EntityRoleStatus::Idle;
     REQUIRE(pool.m_current == kNoSkill);
 
-    REQUIRE(skill::dealButtonEvent(world, entity, ControlEvent::CTR_ATKA));
+    REQUIRE(skill::SkillCaster(world, entity).dealButtonEvent(ControlEvent::CTR_ATKA));
 
     expectCurrent(world, entity, {"A", attack});
 }

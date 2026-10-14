@@ -65,10 +65,6 @@ struct OfflineKitRow
 inline constexpr std::string_view kNoProfessionTree = "no profession tree";
 // 按职业生成离线调试面板的技能行。
 std::vector<OfflineKitRow> offlineKitRows(CharacterClass occupation);
-// 按显式装配创建或替换角色的技能池。
-void loadSkill(World& world, Entity entity, const SkillLoadout& loadout);
-// 按角色 AI 配置加载默认怪物技能池。
-void loadSkill(World& world, Entity entity);
 // 按槽位、索引、模式和步骤查找技能池条目。
 int32_t getGivenSkill(const SkillPool& pool,
                       std::string_view slot,
@@ -82,18 +78,6 @@ int32_t getFightSkill(const SkillPool& pool, std::string_view slot);
 std::string_view baseSlot(const SkillPool& pool, const SkillBase& skill);
 // 将控制事件转换为技能输入槽位名称。
 std::string eventSlot(ControlEvent event);
-// 推进角色全部技能的冷却和释放状态。
-void update(World& world, Entity entity);
-// 推进角色暴走状态关联的技能逻辑。
-void updateCrazy(World& world, Entity entity);
-// 检查 AI 条件是否允许选择技能。
-bool checkAi(World& world, Entity entity, SkillAi& ai);
-// 检查 AI 组合条件是否满足。
-bool checkComposition(World& world, Entity entity, const SkillAi& ai);
-// 检查技能是否满足内部施放约束。
-bool isAllowCastInternal(World& world, Entity entity, int32_t index, bool autoCast = false);
-// 检查技能是否可以由当前输入或自动施放触发。
-bool isAllowCast(World& world, Entity entity, int32_t index, bool autoCast = false);
 // 判断技能是否仍处于冷却阶段。
 bool isCooling(const SkillBase& skill);
 // 比较两个技能的普通施放优先级。
@@ -104,28 +88,10 @@ bool isSuperPriority(const SkillPool& pool, int32_t next, int32_t current);
 Fixed mpCost(const SkillPool& pool, const SkillBase& skill);
 // 计算施放技能需要消耗的能量值。
 Fixed epCost(const SkillPool& pool, const SkillBase& skill);
-// 预设指定槽位的待施放技能。
-bool presetSkill(World& world, Entity entity, std::string_view slot, bool autoCast = false);
-// 根据按钮按下或抬起处理技能输入。
-bool dealWithButton(World& world, Entity entity, ControlEvent event, bool up = false, bool autoCast = false);
-// 分发单个控制事件到技能输入处理。
-bool dealButtonEvent(World& world, Entity entity, ControlEvent event, bool up = false, bool autoCast = false);
 // 将技能池当前技能切换为指定索引。
 void setSkillBase(SkillPool& pool, int32_t index);
-// 重置角色技能池的临时施放状态。
-void resetSkill(World& world, Entity entity);
-// 强制中断角色当前技能施放。
-void forcedInterrupt(World& world, Entity entity);
-// 推进当前技能到下一基础技能步骤。
-bool dealWithNextSkillBase(World& world, Entity entity);
 // 更新技能池记录的方向输入。
 void dealWithDirection(SkillPool& pool, int32_t index);
-// 进入技能施放的开始阶段。
-void castBegan(World& world, Entity entity, int32_t index);
-// 处理施放管线开始时的状态变化。
-void dealWithCastPipeBegan(World& world, Entity entity, int32_t index);
-// 处理施放管线结束时的状态变化。
-void dealWithCastPipeEnded(World& world, Entity entity, int32_t index);
 // 根据配置刷新技能的施放管线字段。
 void refreshSkillPipe(SkillBase& skill);
 // 增加技能剩余可释放次数。
@@ -136,7 +102,5 @@ void dealWithCoolDown(SkillBase& skill);
 void addColdTime(SkillBase& skill, Fixed time);
 // 判断技能是否允许在松开输入后释放。
 bool canUpRelease(const SkillBase& skill);
-// 中断角色正在进行的跑步技能。
-void interruptRun(World& world, Entity entity);
 }  // namespace skill
 }  // namespace mugen::sim

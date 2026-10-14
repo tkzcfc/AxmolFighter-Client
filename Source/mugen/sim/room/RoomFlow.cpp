@@ -2,7 +2,7 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "mugen/sim/role/Role.h"
-#include "mugen/sim/skill/Skill.h"
+#include "mugen/sim/skill/SkillCaster.h"
 #include <algorithm>
 
 namespace mugen::sim::room
@@ -202,7 +202,7 @@ void commands(World& world, const FrameInput& input)
                         entry.m_releaseCount = entry.m_releaseMax;
                         skill::refreshSkillPipe(entry);
                     }
-                    skill::resetSkill(world, found->second);
+                    skill::SkillCaster(world, found->second).resetSkill();
                     buff::addEntityBuff(world, found->second, 202);
                 }
                 ++room.m_usedRevives;

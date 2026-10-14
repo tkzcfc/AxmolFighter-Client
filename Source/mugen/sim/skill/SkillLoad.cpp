@@ -1,4 +1,4 @@
-#include "Skill.h"
+#include "SkillCaster.h"
 #include "mugen/sim/World.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/BattleConst.h"
@@ -23,12 +23,15 @@ std::string slotName(size_t group, size_t slot, size_t specialCount)
     return result;
 }
 }  // namespace
+
+SkillCaster::SkillCaster(World& world, Entity entity) : m_world(world), m_entity(entity) {}
+
 // 展开技能链配置并写入角色的技能池和地址索引。
-void loadSkill(World& world, Entity entity, const SkillLoadout& loadout)
+void SkillCaster::loadSkill(const SkillLoadout& loadout)
 {
     SkillPool pool;
     const auto& config    = conf::Config::instance();
-    const auto& identity  = world.ecs().get<RoleIdentity>(entity);
+    const auto& identity  = m_world.ecs().get<RoleIdentity>(m_entity);
     const auto* role      = config.find<conf::RoleConfig>(identity.roleId);
     const size_t specials = loadout.size() > 4 ? loadout[4].size() : 0;
     for (size_t g = 0; g < loadout.size(); ++g)
@@ -99,15 +102,15 @@ void loadSkill(World& world, Entity entity, const SkillLoadout& loadout)
             if (pool.m_skills.size() > first)
                 pool.m_slots.push_back({slotName(g + 1, s + 1, specials)});
         }
-    if (auto* existing = world.ecs().tryGet<SkillPool>(entity))
+    if (auto* existing = m_world.ecs().tryGet<SkillPool>(m_entity))
         *existing = std::move(pool);
     else
-        world.ecs().add<SkillPool>(entity, std::move(pool));
+        m_world.ecs().add<SkillPool>(m_entity, std::move(pool));
 }
 // 从角色 AI 配置取得默认装配并加载技能池。
-void loadSkill(World& world, Entity entity)
+void SkillCaster::loadSkill()
 {
-    loadSkill(world, entity, monsterLoadout(world.ecs().get<RoleIdentity>(entity).aiId));
+    loadSkill(monsterLoadout(m_world.ecs().get<RoleIdentity>(m_entity).aiId));
 }
 // 返回技能槽位名中不包含模式后缀的基础部分。
 std::string_view baseSlot(const SkillPool& pool, const SkillBase& skill)

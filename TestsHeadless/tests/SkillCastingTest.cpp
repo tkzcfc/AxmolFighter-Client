@@ -12,9 +12,9 @@ TEST_CASE("Skill zero cooldown basic attack casts ten times without a tick")
     for (int i = 0; i < 10; ++i)
     {
         idle(world, entity);
-        REQUIRE(skill::dealButtonEvent(world, entity, ControlEvent::CTR_ATKA));
+        REQUIRE(skill::SkillCaster(world, entity).dealButtonEvent(ControlEvent::CTR_ATKA));
         auto& pool = world.ecs().get<SkillPool>(entity);
-        skill::dealWithCastPipeBegan(world, entity, pool.m_current);
+        skill::SkillCaster(world, entity).dealWithCastPipeBegan(pool.m_current);
         CHECK_FALSE(skill::isCooling(pool.m_skills[pool.m_current]));
     }
 }
@@ -34,25 +34,25 @@ TEST_CASE("Skill three charges retain partial cooldown and recover one per inter
     const auto index = skill::getGivenSkill(pool, "A");
     for (int remaining = 2; remaining >= 0; --remaining)
     {
-        REQUIRE(skill::isAllowCast(world, entity, index));
-        skill::castBegan(world, entity, index);
+        REQUIRE(skill::SkillCaster(world, entity).isAllowCast(index));
+        skill::SkillCaster(world, entity).castBegan(index);
         CHECK(pool.m_skills[index].m_releaseCount == remaining);
     }
-    CHECK_FALSE(skill::isAllowCast(world, entity, index));
+    CHECK_FALSE(skill::SkillCaster(world, entity).isAllowCast(index));
     const auto cd = pool.m_skills[index].m_cd;
     world.ecs().singleton<WorldClock>().dtMs = cd / "2"_fx;
-    skill::update(world, entity);
+    skill::SkillCaster(world, entity).update();
     CHECK(pool.m_skills[index].m_releaseCount == 0);
     world.ecs().singleton<WorldClock>().dtMs = cd;
-    skill::update(world, entity);
+    skill::SkillCaster(world, entity).update();
     CHECK(pool.m_skills[index].m_releaseCount == 1);
-    CHECK(skill::isAllowCast(world, entity, index));
+    CHECK(skill::SkillCaster(world, entity).isAllowCast(index));
     const auto partial = pool.m_skills[index].m_cd;
-    skill::castBegan(world, entity, index);
+    skill::SkillCaster(world, entity).castBegan(index);
     CHECK(pool.m_skills[index].m_cd == partial);
     for (int remaining = 1; remaining <= 3; ++remaining)
     {
-        skill::update(world, entity);
+        skill::SkillCaster(world, entity).update();
         CHECK(pool.m_skills[index].m_releaseCount == remaining);
     }
     CHECK_FALSE(pool.m_skills[index].m_timing);
@@ -70,15 +70,15 @@ TEST_CASE("Skill A1 A2 A3 chaining uses preset cache and pipe exit")
     const auto entity = actor(world);
     slots(world, entity, {id});
     auto& pool = world.ecs().get<SkillPool>(entity);
-    REQUIRE(skill::presetSkill(world, entity, "A"));
+    REQUIRE(skill::SkillCaster(world, entity).presetSkill("A"));
     for (int step = 1; step <= 2; ++step)
     {
         const auto current = pool.m_current;
-        skill::dealWithCastPipeBegan(world, entity, current);
-        REQUIRE(skill::presetSkill(world, entity, "A"));
+        skill::SkillCaster(world, entity).dealWithCastPipeBegan(current);
+        REQUIRE(skill::SkillCaster(world, entity).presetSkill("A"));
         CHECK(pool.m_current == current);
         REQUIRE(pool.m_skills[current].m_nextSkill != kNoSkill);
-        skill::dealWithCastPipeEnded(world, entity, current);
+        skill::SkillCaster(world, entity).dealWithCastPipeEnded(current);
         CHECK(pool.m_skills[pool.m_current].m_address.m_step == step + 1);
     }
 }
@@ -93,13 +93,13 @@ TEST_CASE("Skill high priority replaces immediately while low priority caches")
     const auto entity = actor(world);
     slots(world, entity, {low, high});
     auto& pool = world.ecs().get<SkillPool>(entity);
-    REQUIRE(skill::presetSkill(world, entity, "A"));
+    REQUIRE(skill::SkillCaster(world, entity).presetSkill("A"));
     pool.m_allowInterrupt = true;
-    REQUIRE(skill::presetSkill(world, entity, "B"));
+    REQUIRE(skill::SkillCaster(world, entity).presetSkill("B"));
     CHECK(pool.m_skills[pool.m_current].m_configId == high);
     const auto current = pool.m_current;
     pool.m_allowInterrupt = true;
-    REQUIRE(skill::presetSkill(world, entity, "A"));
+    REQUIRE(skill::SkillCaster(world, entity).presetSkill("A"));
     CHECK(pool.m_current == current);
     CHECK(pool.m_skills[pool.m_skills[current].m_nextSkill].m_configId == low);
 }
@@ -116,7 +116,7 @@ TEST_CASE("Skill silence stun and resource refusal emit body shake hint")
     SUBCASE("stun") { world.ecs().get<sim::ExtraState>(entity).add(mugen::ExtraState::Stun); }
     SUBCASE("MP") { world.ecs().get<Vitals>(entity).mp = {}; }
     SUBCASE("EP") { world.ecs().get<Vitals>(entity).ep = {}; }
-    CHECK_FALSE(skill::isAllowCast(world, entity, index));
+    CHECK_FALSE(skill::SkillCaster(world, entity).isAllowCast(index));
     const auto& events = world.ecs().singleton<PresentationEvents>().events;
     REQUIRE(events.size() == 1);
     REQUIRE(std::holds_alternative<Tips>(events[0].payload));

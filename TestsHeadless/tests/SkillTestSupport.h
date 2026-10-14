@@ -1,7 +1,7 @@
 #pragma once
 #include "doctest.h"
 #include "mugen/sim/World.h"
-#include "mugen/sim/skill/Skill.h"
+#include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/core/serialize/BinaryArchive.h"
 
@@ -66,12 +66,12 @@ inline void slots(World& world, Entity entity, std::initializer_list<int32_t> id
     skill::SkillLoadout data(5);
     data[4].resize(3);
     for (const auto id : ids) data[0].push_back({{{id, -1}}});
-    skill::loadSkill(world, entity, data);
+    skill::SkillCaster(world, entity).loadSkill(data);
     world.ecs().get<SkillPool>(entity).m_crystals = 1000000;
 }
 inline void idle(World& world, Entity entity)
 {
-    skill::resetSkill(world, entity);
+    skill::SkillCaster(world, entity).resetSkill();
     world.ecs().get<RoleStatus>(entity).eEntityStatus = EntityRoleStatus::Idle;
 }
 }

@@ -63,7 +63,7 @@ LetterIds loadLetters(World& world, Entity entity)
     data[0].push_back({{{ids.m_b, -1}}});
     data[0].push_back({{{ids.m_c, -1}}});
     data[0].push_back({{{ids.m_d, -1}}});
-    skill::loadSkill(world, entity, data);
+    skill::SkillCaster(world, entity).loadSkill(data);
     grantCrystals(world, entity);
     return ids;
 }
@@ -89,7 +89,7 @@ SecondIds loadSecondForm(World& world, Entity entity)
     data[0].push_back({{{baseB, -1}, {ids.m_b2, -1}}});
     data[0].push_back({{{baseC, -1}, {ids.m_c2, -1}}});
     data[0].push_back({{{baseD, -1}, {ids.m_d2, -1}}});
-    skill::loadSkill(world, entity, data);
+    skill::SkillCaster(world, entity).loadSkill(data);
     grantCrystals(world, entity);
     return ids;
 }
@@ -104,7 +104,7 @@ void loadRock(World& world, Entity entity, RockLoad ids)
         data[2].resize(1);
         data[2][0].push_back({{ids.m_rock, -1}});
     }
-    skill::loadSkill(world, entity, data);
+    skill::SkillCaster(world, entity).loadSkill(data);
     grantCrystals(world, entity);
 }
 
@@ -122,7 +122,7 @@ void press(World& world, Entity entity, ButtonPress button)
 {
     idle(world, entity);
     CHECK_FALSE(world.ecs().get<SkillPool>(entity).m_crazy);
-    REQUIRE(skill::dealWithButton(world, entity, button.m_event));
+    REQUIRE(skill::SkillCaster(world, entity).dealWithButton(button.m_event));
     expectCurrent(world, entity, button.m_expect);
 }
 }  // namespace

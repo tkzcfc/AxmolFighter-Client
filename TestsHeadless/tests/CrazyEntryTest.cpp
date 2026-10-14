@@ -35,7 +35,7 @@ void loadNormalAndCrazy(World& world, Entity entity, int32_t normal, int32_t cra
     skill::SkillLoadout data(5);
     data[0].push_back({{{normal, -1}}});
     data[1].push_back({{{crazy, -1}}});
-    skill::loadSkill(world, entity, data);
+    skill::SkillCaster(world, entity).loadSkill(data);
 }
 
 void expectCurrent(World& world, Entity entity, std::string_view slot, int32_t configId)
@@ -64,7 +64,7 @@ TEST_CASE("Crazy entry through buff selects plus slot")
     CHECK_FALSE(pool.m_crazy);
 
     idle(world, entity);
-    REQUIRE(skill::dealButtonEvent(world, entity, ControlEvent::CTR_ATKA));
+    REQUIRE(skill::SkillCaster(world, entity).dealButtonEvent(ControlEvent::CTR_ATKA));
     expectCurrent(world, entity, "A", normal);
     CHECK_FALSE(pool.m_crazy);
 
@@ -75,7 +75,7 @@ TEST_CASE("Crazy entry through buff selects plus slot")
     REQUIRE(buff::hasBuff(world, entity, buffId));
     CHECK(pool.m_crazy);
 
-    REQUIRE(skill::dealButtonEvent(world, entity, ControlEvent::CTR_ATKA));
+    REQUIRE(skill::SkillCaster(world, entity).dealButtonEvent(ControlEvent::CTR_ATKA));
     expectCurrent(world, entity, "A+", crazy);
     CHECK(pool.m_crazy);
 }
