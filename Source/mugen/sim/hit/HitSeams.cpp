@@ -2,8 +2,7 @@
 #include "mugen/sim/room/RoomEntities.h"
 
 #include "mugen/sim/World.h"
-#include "mugen/sim/buff/BuffPool.h"
-#include "mugen/sim/buff/BuffEvents.h"
+#include "mugen/sim/buff/BuffHolder.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/sim/ability/AbilityPool.h"
 
@@ -49,7 +48,7 @@ void HitHooks::poolTrigger(World& world, Entity entity, BFEvent event, const Hit
     if (source.m_artifactIndex != -1) context.m_artifactIndex = source.m_artifactIndex;
     context.m_damage = source.m_damage;
     context.m_critical = source.m_critical;
-    buff::dispatchEvent(world, entity, event, context,
+    buff::BuffHolder(world, entity).dispatchEvent(event, context,
         source.m_target == entity ? 8 : source.m_teammate ? 3 : 2);
 }
 // 命中特效指定接收池，不再次按配置目标重新分派。
@@ -64,14 +63,14 @@ void HitHooks::poolApply(World& world, Entity entity, const HitBuffApplication& 
     if (application.m_source.m_skillId != -1) context.m_frontSkill = application.m_source.m_skillId;
     if (application.m_source.m_artifactId != -1) context.m_artifactId = application.m_source.m_artifactId;
     if (application.m_source.m_artifactIndex != -1) context.m_artifactIndex = application.m_source.m_artifactIndex;
-    buff::addBuff(world, entity, static_cast<int32_t>(application.m_buffId.toInt()), context, world.setup().m_fightType);
+    buff::BuffHolder(world, entity).addBuff(static_cast<int32_t>(application.m_buffId.toInt()), context, world.setup().m_fightType);
 }
 // 命中保护查询同一个实体实例池，不维护第二份存在性状态。
-bool HitHooks::poolHasBuff(World& world, Entity entity, int32_t id) { return buff::hasBuff(world, entity, id); }
+bool HitHooks::poolHasBuff(World& world, Entity entity, int32_t id) { return buff::BuffHolder(world, entity).hasBuff(id); }
 // 行为树叶子名称直接交给 Buff 状态路由。
 void HitHooks::poolBehaviorState(World& world, Entity entity, BFEvent event, const char* actionName)
 {
-    buff::dispatchBehaviorState(world, entity, event, actionName);
+    buff::BuffHolder(world, entity).dispatchBehaviorState(event, actionName);
 }
 // 默认不存在治疗限制。
 HpBuffModifiers HitHooks::noModifiers(World&, Entity) { return {}; }

@@ -7,7 +7,7 @@
 #include "mugen/sim/role/brain/states/HitStates.h"
 #include "mugen/sim/role/brain/RoleBrainRunner.h"
 #include "mugen/sim/role/Role.h"
-#include "mugen/sim/buff/BuffPool.h"
+#include "mugen/sim/buff/BuffHolder.h"
 #include "mugen/sim/ability/AbilityPool.h"
 #include <algorithm>
 
@@ -18,7 +18,7 @@ namespace
 // 推进角色技能池。
 void skillPoolUpdate(World& world, Entity entity) { skill::SkillCaster(world, entity).update(); }
 // 推进角色 Buff 池。
-void buffPoolUpdate(World& world, Entity entity) { buff::update(world, entity); }
+void buffPoolUpdate(World& world, Entity entity) { buff::BuffHolder(world, entity).update(); }
 // 推进角色能力池。
 void abilityPoolUpdate(World& world, Entity entity) { ability::update(world, entity); }
 // 推进伤害数字连击流程。

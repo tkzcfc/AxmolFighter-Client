@@ -2,8 +2,7 @@
 #include "BuffCondition.h"
 #include "BuffDamage.h"
 #include "BuffPool.h"
-#include "BuffInstance.h"
-#include "BuffPresentation.h"
+#include "BuffHolder.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/role/Role.h"
 #include "mugen/sim/hit/HitSeams.h"
@@ -14,9 +13,9 @@
 namespace mugen::sim::buff
 {
 // 在实体池中按序号查找，不使用可能因扩容失效的地址作为身份。
-BuffInstance* findInstance(World& world, Entity entity, uint64_t serial)
+BuffInstance* BuffHolder::findInstance(uint64_t serial)
 {
-    auto* pool = world.ecs().tryGet<BuffPool>(entity);
+    auto* pool = m_world.ecs().tryGet<BuffPool>(m_entity);
     if (!pool)
         return nullptr;
     for (auto& instance : pool->m_instances)
@@ -32,7 +31,7 @@ void noHook(World&, Entity, uint64_t, Fixed) {}
 // 规则播放音效只发送表现事件，不调用音频后端。
 void playEffect(World& world, Entity entity, uint64_t serial)
 {
-    const auto* instance = findInstance(world, entity, serial);
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
     const auto* row = conf::Config::instance().find<conf::BuffConfig>(instance->m_id);
@@ -47,7 +46,7 @@ void playEffect(World& world, Entity entity, uint64_t serial)
 // 尚未移植的规则按场次和配置标识只报告一次。
 void unported(World& world, Entity entity, uint64_t serial, Fixed)
 {
-    const auto* instance = findInstance(world, entity, serial);
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
     const int32_t id = instance->m_id;
@@ -64,7 +63,7 @@ void unported(World& world, Entity entity, uint64_t serial, Fixed)
 // 状态引用由实例记录实际施加次数，防止未激活实例退出导致下溢。
 void enterState(World& world, Entity entity, uint64_t serial, mugen::ExtraState state)
 {
-    auto* instance = findInstance(world, entity, serial);
+    auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
     ++instance->m_appliedRefs;
@@ -76,7 +75,7 @@ void enterState(World& world, Entity entity, uint64_t serial, mugen::ExtraState 
 // 每次退出仅撤销一次实际施加的状态引用。
 void exitState(World& world, Entity entity, uint64_t serial, mugen::ExtraState state)
 {
-    auto* instance = findInstance(world, entity, serial);
+    auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance || instance->m_appliedRefs == 0)
         return;
     --instance->m_appliedRefs;
@@ -110,7 +109,7 @@ void invincibleExit(World& world, Entity entity, uint64_t serial, Fixed)
 // 眩晕门闩只允许一次施加，强制中断可能同步触发其他 Buff。
 void stunEnter(World& world, Entity entity, uint64_t serial, Fixed)
 {
-    auto* instance = findInstance(world, entity, serial);
+    auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance || instance->m_triggered)
         return;
     instance->m_triggered = true;
@@ -142,7 +141,7 @@ void recoverMoveSpeed(World& world, Entity entity)
 // 眩晕退出恢复移动倍率，其他控制状态仍由独立引用约束。
 void stunExit(World& world, Entity entity, uint64_t serial, Fixed)
 {
-    auto* instance = findInstance(world, entity, serial);
+    auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance || !instance->m_triggered)
         return;
     instance->m_triggered = false;
@@ -154,7 +153,7 @@ void stunExit(World& world, Entity entity, uint64_t serial, Fixed)
 // 受限状态的重复事件只保留一次状态引用和速度归零。
 void controlEnter(World& world, Entity entity, uint64_t serial, mugen::ExtraState state, bool interrupt)
 {
-    auto* instance = findInstance(world, entity, serial);
+    auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance || instance->m_triggered)
         return;
     instance->m_triggered = true;
@@ -167,7 +166,7 @@ void controlEnter(World& world, Entity entity, uint64_t serial, mugen::ExtraStat
 // 控制状态结束后仅在所有限制解除时恢复各速度型 Buff 的倍率。
 void controlExit(World& world, Entity entity, uint64_t serial, mugen::ExtraState state)
 {
-    auto* instance = findInstance(world, entity, serial);
+    auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance || !instance->m_triggered)
         return;
     instance->m_triggered = false;
@@ -224,7 +223,7 @@ void stealthExit(World& w, Entity e, uint64_t s, Fixed)
 // 速度规则统一按实例开关叠加，避免 Begin 与 Enter 重复叠加。
 void speedChange(World& world, Entity entity, uint64_t serial, bool entering, bool hurt, bool dodge)
 {
-    auto* instance = findInstance(world, entity, serial);
+    auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance || instance->m_triggered == entering)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -269,7 +268,7 @@ void ghostExit(World& w, Entity e, uint64_t s, Fixed)
 // 周期伤害规则在进入时走统一生命修改管线。
 void dotEnter(World& world, Entity entity, uint64_t serial, Fixed)
 {
-    const auto* instance = findInstance(world, entity, serial);
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
     dealBuffDamage(world, entity, instance->m_context.m_applicator, getAttackValue(world, entity, *instance));
@@ -277,7 +276,7 @@ void dotEnter(World& world, Entity entity, uint64_t serial, Fixed)
 // 锁血按配置比例或绝对值叠加到生命限制。
 void hpLockChange(World& world, Entity entity, uint64_t serial, bool entering)
 {
-    const auto* instance = findInstance(world, entity, serial);
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -299,7 +298,7 @@ void hpLockExit(World& w, Entity e, uint64_t s, Fixed)
 // 紫毒在开始和进入事件中补充能量。
 void purplePoison(World& world, Entity entity, uint64_t serial, Fixed)
 {
-    const auto* instance = findInstance(world, entity, serial);
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -337,7 +336,7 @@ void changeSneer(World& world, Entity entity, Entity source, Fixed delta)
 // 嘲讽进入按配置值向施加者累计权重。
 void sneerEnter(World& world, Entity entity, uint64_t serial, Fixed)
 {
-    const auto* instance = findInstance(world, entity, serial);
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -348,7 +347,7 @@ void sneerEnter(World& world, Entity entity, uint64_t serial, Fixed)
 // 嘲讽退出对同一施加者撤销本实例权重。
 void sneerExit(World& world, Entity entity, uint64_t serial, Fixed)
 {
-    const auto* instance = findInstance(world, entity, serial);
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -359,7 +358,7 @@ void sneerExit(World& world, Entity entity, uint64_t serial, Fixed)
 // 星盾按层数叠加规避伤害扩展属性。
 void starShieldChange(World& world, Entity entity, uint64_t serial, bool entering)
 {
-    const auto* instance = findInstance(world, entity, serial);
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -378,7 +377,7 @@ void starShieldExit(World& w, Entity e, uint64_t s, Fixed)
 // 强致盲按层数叠加命中扩展属性。
 void superBlindChange(World& world, Entity entity, uint64_t serial, bool entering)
 {
-    const auto* instance = findInstance(world, entity, serial);
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -397,8 +396,8 @@ void superBlindExit(World& w, Entity e, uint64_t s, Fixed)
 // 分离效果仅在角色移动时造成一次标准 Buff 伤害。
 void separateEnter(World& world, Entity entity, uint64_t serial, Fixed)
 {
-    const auto* instance = findInstance(world, entity, serial);
-    if (instance && isMoved(world, entity))
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
+    if (instance && BuffHolder(world, entity).isMoved())
         dealBuffDamage(world, entity, instance->m_context.m_applicator, getAttackValue(world, entity, *instance));
 }
 // 白帧只发出表现事件，表现层不得回写模拟状态。
@@ -413,7 +412,7 @@ void whiteFrameExit(World& world, Entity entity, uint64_t, Fixed)
 // 条件循环按条件结果增减参数中的 Buff，并转发已声明的能力接缝。
 void loopCheck(World& world, Entity entity, uint64_t serial, Fixed, bool latched)
 {
-    auto* instance = findInstance(world, entity, serial);
+    auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
     const bool passed = checkConditions(world, entity, *instance);
@@ -431,7 +430,7 @@ void loopCheck(World& world, Entity entity, uint64_t serial, Fixed, bool latched
         if (!passed)
             addEntityBuff(world, entity, id);
         else
-            removeBuff(world, entity, id, true);
+            BuffHolder(world, entity).removeBuff(id, true);
     }
 }
 void loopCheckUpdate(World& w, Entity e, uint64_t s, Fixed d)
@@ -445,7 +444,7 @@ void loopCheck2Update(World& w, Entity e, uint64_t s, Fixed d)
 // 数值规则只在实际进入后修改一次，Begin 与 Enter 共用这个门闩。
 void changeExtend(World& world, Entity entity, uint64_t serial, int32_t attribute, bool entering)
 {
-    auto* instance = findInstance(world, entity, serial);
+    auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance || instance->m_triggered == entering)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -474,7 +473,7 @@ void hitExit(World& w, Entity e, uint64_t s, Fixed) { changeExtend(w, e, s, 111,
 enum class ResourceScale : uint8_t { EpConsume, EpRecovery, TpRecovery };
 void changeResourceScale(World& world, Entity entity, uint64_t serial, ResourceScale kind, bool entering)
 {
-    auto* instance = findInstance(world, entity, serial);
+    auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance || instance->m_triggered == entering)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -499,7 +498,7 @@ void tpRecoveryExit(World& w, Entity e, uint64_t s, Fixed) { changeResourceScale
 // 增伤规则按来源的层数或生命差计算，并在退出时精确撤销已加入的值。
 void damageHurtChange(World& world, Entity entity, uint64_t serial, bool entering, bool repeat, bool lostHp)
 {
-    auto* instance = findInstance(world, entity, serial);
+    auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance || instance->m_triggered == entering)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -536,7 +535,7 @@ void damageHPLossEnd(World& w, Entity e, uint64_t s, Fixed) { damageHurtChange(w
 // 立即资源规则使用绝对值或上限比例，均由统一生命修改入口处理。
 void hpEnter(World& world, Entity entity, uint64_t serial, Fixed)
 {
-    const auto* instance = findInstance(world, entity, serial);
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -552,7 +551,7 @@ void hpEnter(World& world, Entity entity, uint64_t serial, Fixed)
 }
 void epEnter(World& world, Entity entity, uint64_t serial, Fixed)
 {
-    const auto* instance = findInstance(world, entity, serial);
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -566,7 +565,7 @@ void epEnter(World& world, Entity entity, uint64_t serial, Fixed)
 }
 void tpEnter(World& world, Entity entity, uint64_t serial, Fixed)
 {
-    const auto* instance = findInstance(world, entity, serial);
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -582,7 +581,7 @@ void tpEnter(World& world, Entity entity, uint64_t serial, Fixed)
 // 技能冷却和魔法消耗按绑定技能筛选；没有绑定时作用于全部技能。
 void changeSkillScale(World& world, Entity entity, uint64_t serial, bool entering, bool cooldown)
 {
-    auto* instance = findInstance(world, entity, serial);
+    auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance || instance->m_triggered == entering)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -606,7 +605,7 @@ void tpConsumeExit(World& w, Entity e, uint64_t s, Fixed) { changeSkillScale(w, 
 // 护盾进入可附加效果，退出时清零并应用结束效果。
 void shieldChange(World& world, Entity entity, uint64_t serial, bool entering)
 {
-    const auto* instance = findInstance(world, entity, serial);
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -619,7 +618,7 @@ void shieldChange(World& world, Entity entity, uint64_t serial, bool entering)
         vitals.m_shield = value > "1"_fx ? value : vitals.maxHp * value;
         if (config.paramValue.size() > 1 && config.paramValue[1].toInt() > 0)
             addEntityBuff(world, entity, config.paramValue[1].toInt());
-        auto* refreshed = findInstance(world, entity, serial);
+        auto* refreshed = BuffHolder(world, entity).findInstance(serial);
         if (refreshed && config.paramValue.size() > 3 && config.paramValue[3] > Fixed{})
             refreshed->m_lifecycle.m_repeat = config.paramValue[3].toInt();
     }
@@ -627,7 +626,7 @@ void shieldChange(World& world, Entity entity, uint64_t serial, bool entering)
     {
         vitals.m_shield = {};
         if (config.paramValue.size() > 1 && config.paramValue[1].toInt() > 0)
-            removeBuff(world, entity, config.paramValue[1].toInt(), true);
+            BuffHolder(world, entity).removeBuff(config.paramValue[1].toInt(), true);
         if (config.paramValue.size() > 2 && config.paramValue[2].toInt() > 0)
             addEntityBuff(world, entity, config.paramValue[2].toInt());
     }
@@ -639,7 +638,7 @@ void shieldExit(World& w, Entity e, uint64_t s, Fixed) { shieldChange(w, e, s, f
 enum class RemoveSelector : uint8_t { Id, Rule, Type };
 void removeSelected(World& world, Entity entity, uint64_t serial, RemoveSelector selector, bool partial)
 {
-    const auto* instance = findInstance(world, entity, serial);
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -657,7 +656,7 @@ void removeSelected(World& world, Entity entity, uint64_t serial, RemoveSelector
             if (matches)
             {
                 if (partial && index < config.paramValue2.size() && !config.paramValue2[index].empty())
-                    removeRepeat(world, entity, candidate.m_serial, false, config.paramValue2[index][0].toInt(), true);
+                    BuffHolder(world, entity).removeRepeat(candidate.m_serial, false, config.paramValue2[index][0].toInt(), true);
                 else
                     selected.push_back(candidate.m_serial);
                 break;
@@ -666,13 +665,13 @@ void removeSelected(World& world, Entity entity, uint64_t serial, RemoveSelector
     }
     for (const auto value : selected)
     {
-        auto* candidate = findInstance(world, entity, value);
+        auto* candidate = BuffHolder(world, entity).findInstance(value);
         if (candidate)
-            removeBuff(world, entity, candidate->m_id, true);
+            BuffHolder(world, entity).removeBuff(candidate->m_id, true);
     }
-    auto* self = findInstance(world, entity, serial);
+    auto* self = BuffHolder(world, entity).findInstance(serial);
     if (self)
-        exitInstance(world, entity, serial);
+        BuffHolder(world, entity).exitInstance(serial);
 }
 void removeByIdEnter(World& w, Entity e, uint64_t s, Fixed) { removeSelected(w, e, s, RemoveSelector::Id, false); }
 void removeById2Enter(World& w, Entity e, uint64_t s, Fixed) { removeSelected(w, e, s, RemoveSelector::Id, true); }
@@ -682,7 +681,7 @@ void removeByTypeEnter(World& w, Entity e, uint64_t s, Fixed) { removeSelected(w
 // 连击经验倍率由受击状态保存，退出后恢复默认倍率。
 void comboEnter(World& world, Entity entity, uint64_t serial, Fixed)
 {
-    const auto* instance = findInstance(world, entity, serial);
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -699,7 +698,7 @@ void comboExit(World& world, Entity entity, uint64_t, Fixed)
 // 数值怒气和能力池由各自系统拥有；这里使用已声明的能力接缝完成绑定。
 void specialAbilityEnter(World& world, Entity entity, uint64_t serial, Fixed)
 {
-    const auto* instance = findInstance(world, entity, serial);
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -709,7 +708,7 @@ void specialAbilityEnter(World& world, Entity entity, uint64_t serial, Fixed)
 // 施加器规则按配置顺序添加或撤销子效果，来源上下文由池操作保存。
 void addApplicator(World& world, Entity entity, uint64_t serial, Fixed)
 {
-    auto* instance = findInstance(world, entity, serial);
+    auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance || instance->m_triggered)
         return;
     instance->m_triggered = true;
@@ -720,18 +719,18 @@ void addApplicator(World& world, Entity entity, uint64_t serial, Fixed)
 }
 void removeApplicator(World& world, Entity entity, uint64_t serial, Fixed)
 {
-    auto* instance = findInstance(world, entity, serial);
+    auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance || !instance->m_triggered)
         return;
     instance->m_triggered = false;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
     for (const auto value : config.paramValue)
         if (value.toInt() > 0)
-            removeBuff(world, entity, value.toInt(), true);
+            BuffHolder(world, entity).removeBuff(value.toInt(), true);
 }
 void addToApplicator(World& world, Entity entity, uint64_t serial, Fixed)
 {
-    const auto* instance = findInstance(world, entity, serial);
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance || instance->m_context.m_applicator.value == 0)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -742,7 +741,7 @@ void addToApplicator(World& world, Entity entity, uint64_t serial, Fixed)
 // 范围检测只对满足阵营和二维距离限制的角色施加后续效果。
 void detectorApply(World& world, Entity entity, uint64_t serial)
 {
-    const auto* instance = findInstance(world, entity, serial);
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -779,14 +778,14 @@ void angerAdd(World&, Entity, uint64_t, Fixed) {}
 // 寒冷即时按标准 Buff 伤害入口结算。
 void coldEnter(World& world, Entity entity, uint64_t serial, Fixed)
 {
-    const auto* instance = findInstance(world, entity, serial);
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (instance)
         dealBuffDamage(world, entity, instance->m_context.m_applicator, getAttackValue(world, entity, *instance));
 }
 // 类型渐进规则依赖完整池筛选，暂以进入时快照写入并在结束时精确撤销。
 void damageTypeGradationChange(World& world, Entity entity, uint64_t serial, bool entering)
 {
-    auto* instance = findInstance(world, entity, serial);
+    auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance || instance->m_triggered == entering)
         return;
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
@@ -942,9 +941,9 @@ constexpr auto makeDispatch()
 constexpr auto kDispatch = makeDispatch();
 }  // namespace
 // 返回最高权重来源；同权重保留最早加入的来源。
-Entity sneerTarget(World& world, Entity entity)
+Entity BuffHolder::sneerTarget() const
 {
-    const auto* timers = world.ecs().tryGet<RoleTimers>(entity);
+    const auto* timers = m_world.ecs().tryGet<RoleTimers>(m_entity);
     if (!timers || timers->m_sneerRecounts.empty())
         return {};
     const auto* best = &timers->m_sneerRecounts.front();
@@ -954,9 +953,9 @@ Entity sneerTarget(World& world, Entity entity)
     return best->m_source;
 }
 // 移动时间大于零表示角色正在保持移动状态。
-bool isMoved(World& world, Entity entity)
+bool BuffHolder::isMoved() const
 {
-    const auto* timers = world.ecs().tryGet<RoleTimers>(entity);
+    const auto* timers = m_world.ecs().tryGet<RoleTimers>(m_entity);
     return timers && timers->m_movedSeconds > Fixed{};
 }
 // 枚举只来自经过严格验证的配置名称。

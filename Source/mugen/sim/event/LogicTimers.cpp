@@ -1,6 +1,6 @@
 #include "LogicTimers.h"
 #include "../World.h"
-#include "../buff/BuffPresentation.h"
+#include "../buff/BuffHolder.h"
 #include <algorithm>
 
 namespace mugen::sim
@@ -76,10 +76,10 @@ void updateLogicTimers(World& world)
             }
             break;
         case 3:
-            buff::finishExit(world, firing.owner, std::get<BuffExit>(firing.payload).m_serial);
+            buff::BuffHolder(world, firing.owner).finishExit(std::get<BuffExit>(firing.payload).m_serial);
             break;
         case 4:
-            buff::continuePresentation(world, firing.owner, std::get<BuffContinue>(firing.payload).m_serial);
+            buff::BuffHolder(world, firing.owner).continuePresentation(std::get<BuffContinue>(firing.payload).m_serial);
             break;
         case 5:
             if (world.ecs().singleton<RoomState>().roomId == std::get<RoomWaveReady>(firing.payload).m_roomId)

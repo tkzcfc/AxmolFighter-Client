@@ -1,6 +1,5 @@
 #include "SkillTestSupport.h"
-#include "mugen/sim/buff/BuffPool.h"
-#include "mugen/sim/buff/BuffInstance.h"
+#include "mugen/sim/buff/BuffHolder.h"
 
 // 命中事件必须通过真实接缝过滤绑定技能，再激活池内实例。
 TEST_CASE("BuffIntegration hit trigger binding gates activation")
@@ -20,17 +19,17 @@ TEST_CASE("BuffIntegration hit trigger binding gates activation")
     REQUIRE(world.ecs().has<BuffPool>(entity));
     REQUIRE(world.ecs().get<BuffPool>(entity).m_instances.size() == 1);
     const auto serial = std::optional<uint64_t>{world.ecs().get<BuffPool>(entity).m_instances.front().m_serial};
-    CHECK(buff::findInstance(world, entity, *serial)->m_source == 42);
-    REQUIRE_FALSE(buff::findInstance(world, entity, *serial)->m_lifecycle.m_active);
+    CHECK(buff::BuffHolder(world, entity).findInstance(*serial)->m_source == 42);
+    REQUIRE_FALSE(buff::BuffHolder(world, entity).findInstance(*serial)->m_lifecycle.m_active);
     HitTrigger event;
     event.m_target = Entity{1048577};
     event.m_baseSkillId = 920001;
     buff::trigger(world, entity, BFEvent::AfterHit, event);
-    CHECK_FALSE(buff::findInstance(world, entity, *serial)->m_lifecycle.m_active);
+    CHECK_FALSE(buff::BuffHolder(world, entity).findInstance(*serial)->m_lifecycle.m_active);
     event.m_baseSkillId = 920000;
     buff::trigger(world, entity, BFEvent::AfterHit, event);
-    CHECK(buff::findInstance(world, entity, *serial)->m_lifecycle.m_active);
-    CHECK(buff::findInstance(world, entity, *serial)->m_context.m_currentSkill == 920000);
+    CHECK(buff::BuffHolder(world, entity).findInstance(*serial)->m_lifecycle.m_active);
+    CHECK(buff::BuffHolder(world, entity).findInstance(*serial)->m_context.m_currentSkill == 920000);
 }
 
 // 禁止周期更新的实例即使初始执行已满次数，也不能在池更新时被移层。
@@ -51,9 +50,9 @@ TEST_CASE("BuffIntegration negative interval preserves exhausted finite instance
     instance.m_lifecycle.m_times = 1;
     pool.m_instances.push_back(instance);
     world.ecs().add(entity, pool);
-    buff::update(world, entity);
-    REQUIRE(buff::hasBuff(world, entity, 201));
-    const auto* result = buff::findInstance(world, entity, 1);
+    buff::BuffHolder(world, entity).update();
+    REQUIRE(buff::BuffHolder(world, entity).hasBuff(201));
+    const auto* result = buff::BuffHolder(world, entity).findInstance(1);
     REQUIRE(result != nullptr);
     CHECK(result->m_lifecycle.m_repeat == 1);
     CHECK(result->m_lifecycle.m_times == 1);
@@ -87,12 +86,12 @@ TEST_CASE("BuffIntegration stun interrupts skill and restores movement")
     instance.m_serial = 1;
     pool.m_instances.push_back(instance);
     world.ecs().add(entity, pool);
-    buff::invokeRule(world, entity, 1, buff::RuleHook::Enter);
+    buff::BuffHolder(world, entity).invokeRule(1, buff::RuleHook::Enter);
     CHECK(world.ecs().get<SkillPool>(entity).m_current == kNoSkill);
     CHECK(world.ecs().get<sim::ExtraState>(entity).active(mugen::ExtraState::Stun));
     CHECK(world.ecs().get<Displacement>(entity).velocityScale.x == Fixed{});
     CHECK(world.ecs().get<Displacement>(entity).velocityScale.z == Fixed{});
-    buff::destroyBuff(world, entity);
+    buff::BuffHolder(world, entity).destroyBuff();
     CHECK_FALSE(world.ecs().get<sim::ExtraState>(entity).active(mugen::ExtraState::Stun));
     CHECK(world.ecs().get<Displacement>(entity).velocityScale.x == "1"_fx);
     CHECK(world.ecs().get<Displacement>(entity).velocityScale.z == "1"_fx);
@@ -111,8 +110,8 @@ TEST_CASE("BuffIntegration real invincibility application removal and update")
     REQUIRE(world.ecs().has<BuffPool>(entity));
     REQUIRE(world.hitHooks().m_hasBuff(world, entity, 201));
     CHECK(world.ecs().get<sim::ExtraState>(entity).active(mugen::ExtraState::Invincible));
-    buff::removeBuff(world, entity, 201, true);
-    buff::update(world, entity);
+    buff::BuffHolder(world, entity).removeBuff(201, true);
+    buff::BuffHolder(world, entity).update();
     CHECK_FALSE(world.hitHooks().m_hasBuff(world, entity, 201));
     CHECK_FALSE(world.ecs().get<sim::ExtraState>(entity).active(mugen::ExtraState::Invincible));
 }
@@ -129,15 +128,15 @@ TEST_CASE("BuffIntegration hit application reaches pool and clones deterministic
     HitBuffApplication application;
     application.m_buffId = "201"_fx;
     buff::dealBuff(world, entity, application);
-    REQUIRE(buff::hasBuff(world, entity, 201));
+    REQUIRE(buff::BuffHolder(world, entity).hasBuff(201));
     auto clone = world.clone();
     for (int frame = 0; frame < 100; ++frame)
     {
-        buff::update(world, entity);
-        buff::update(clone, entity);
+        buff::BuffHolder(world, entity).update();
+        buff::BuffHolder(clone, entity).update();
         REQUIRE(world.hash() == clone.hash());
     }
-    buff::destroyBuff(world, entity);
+    buff::BuffHolder(world, entity).destroyBuff();
     CHECK_FALSE(world.ecs().get<sim::ExtraState>(entity).active(mugen::ExtraState::Invincible));
     CHECK(world.ecs().get<BuffPool>(entity).m_instances.empty());
 }

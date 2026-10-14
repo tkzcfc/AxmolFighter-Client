@@ -1,6 +1,7 @@
 #include "doctest.h"
 #include "SkillTestSupport.h"
 #include "mugen/sim/buff/BuffRules.h"
+#include "mugen/sim/buff/BuffHolder.h"
 #include "mugen/sim/motion/Displacement.h"
 
 namespace
@@ -84,9 +85,9 @@ TEST_CASE("BuffStatus Sneer query and WhiteFrame presentation event")
     sneer.m_context.m_applicator = source;
     const auto& sneerDispatch    = buff::ruleDispatch(conf::BuffRuleId::BuffSneer);
     sneerDispatch.m_hooks[static_cast<size_t>(buff::RuleHook::Enter)](world, entity, sneer.m_serial, {});
-    CHECK(buff::sneerTarget(world, entity) == source);
+    CHECK(buff::BuffHolder(world, entity).sneerTarget() == source);
     sneerDispatch.m_hooks[static_cast<size_t>(buff::RuleHook::Exit)](world, entity, sneer.m_serial, {});
-    CHECK(buff::sneerTarget(world, entity).value == 0);
+    CHECK(buff::BuffHolder(world, entity).sneerTarget().value == 0);
 
     auto& whiteFrame               = addRuleInstance(world, entity, conf::BuffRuleId::BuffWhiteFrame, 2);
     const auto& whiteFrameDispatch = buff::ruleDispatch(conf::BuffRuleId::BuffWhiteFrame);

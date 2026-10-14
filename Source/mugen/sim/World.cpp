@@ -1,5 +1,5 @@
 #include "World.h"
-#include "buff/BuffPool.h"
+#include "buff/BuffHolder.h"
 #include "room/RoomFlow.h"
 #include "role/brain/RoleBrainRunner.h"
 #include "trace/TraceSink.h"
@@ -144,7 +144,7 @@ void World::updateGroup(GroupKind kind)
         // Hooks may grow a component pool: reacquire rather than retaining a reference.
         if (m_ecs.get<EntityGroup>(entity).destroyRequested)
         {
-            buff::destroyBuff(*this, entity);
+            buff::BuffHolder(*this, entity).destroyBuff();
             m_hooks.remove[index](*this, entity);
             std::erase_if(m_ecs.singleton<PlayerSlots>().entities,
                           [entity](const auto& slot) { return slot.second == entity; });
@@ -265,7 +265,7 @@ bool World::changeRoom(int32_t id, FixedVec3 position, int32_t toward)
     for (const auto entity : removed)
     {
         const auto kind = m_ecs.get<EntityGroup>(entity).kind;
-        buff::destroyBuff(*this, entity);
+        buff::BuffHolder(*this, entity).destroyBuff();
         m_hooks.remove[static_cast<size_t>(kind)](*this, entity);
         m_ecs.singleton<LogicTimers>().cancelOwner(entity);
         m_ecs.destroy(entity);

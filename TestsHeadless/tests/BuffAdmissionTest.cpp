@@ -1,6 +1,7 @@
 #include "doctest.h"
 #include "SkillTestSupport.h"
 #include "mugen/sim/buff/BuffPool.h"
+#include "mugen/sim/buff/BuffHolder.h"
 
 // 验证免疫与冷却边界，零冷却在下一次更新才删除。
 TEST_CASE("BuffAdmission immunity cooldown and area checks")
@@ -15,26 +16,26 @@ TEST_CASE("BuffAdmission immunity cooldown and area checks")
     config.id = 11;
     config.ruleId = 3;
     config.areaSetting = {-1};
-    CHECK(buff::buffCheck(world, entity, config, 8));
+    CHECK(buff::BuffHolder(world, entity).buffCheck(config, 8));
     buff::setImmune(pool, 3, true);
     buff::setImmune(pool, 3, true);
     CHECK(pool.m_immunity.size() == 1);
-    CHECK_FALSE(buff::buffCheck(world, entity, config, 8));
+    CHECK_FALSE(buff::BuffHolder(world, entity).buffCheck(config, 8));
     buff::setImmune(pool, 3, false);
     buff::setImmune(pool, -1, true);
-    CHECK_FALSE(buff::buffCheck(world, entity, config, 8));
+    CHECK_FALSE(buff::BuffHolder(world, entity).buffCheck(config, 8));
     buff::setImmune(pool, -1, false);
     pool.m_cooldowns.push_back({11, "0.1"_fx});
     buff::updateCooldowns(pool, "0.1"_fx);
-    CHECK_FALSE(buff::buffCheck(world, entity, config, 8));
+    CHECK_FALSE(buff::BuffHolder(world, entity).buffCheck(config, 8));
     buff::updateCooldowns(pool, "0.1"_fx);
-    CHECK(buff::buffCheck(world, entity, config, 8));
+    CHECK(buff::BuffHolder(world, entity).buffCheck(config, 8));
     config.areaSetting = {0, 8};
-    CHECK_FALSE(buff::buffCheck(world, entity, config, 8));
-    CHECK(buff::buffCheck(world, entity, config, 9));
+    CHECK_FALSE(buff::BuffHolder(world, entity).buffCheck(config, 8));
+    CHECK(buff::BuffHolder(world, entity).buffCheck(config, 9));
     config.areaSetting = {1, 8};
-    CHECK(buff::buffCheck(world, entity, config, 8));
-    CHECK_FALSE(buff::buffCheck(world, entity, config, 9));
+    CHECK(buff::BuffHolder(world, entity).buffCheck(config, 8));
+    CHECK_FALSE(buff::BuffHolder(world, entity).buffCheck(config, 9));
 }
 
 // 重复概率严格比较且只使用插入顺序中的第一个同类实例。
@@ -90,6 +91,6 @@ TEST_CASE("BuffAdmission ImmuneDebuff blocks types three and four")
     for (int32_t type : {1, 2, 3, 4})
     {
         candidate.buffType = type;
-        CHECK(buff::buffCheck(world, entity, candidate, 0) == (type < 3));
+        CHECK(buff::BuffHolder(world, entity).buffCheck(candidate, 0) == (type < 3));
     }
 }

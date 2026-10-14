@@ -1,5 +1,5 @@
 #include "SkillTestSupport.h"
-#include "mugen/sim/buff/BuffPool.h"
+#include "mugen/sim/buff/BuffHolder.h"
 
 // 使用实际限制场景的配置证明生产施加入口读取世界战斗类型。
 TEST_CASE("BuffAreaIntegration world fight type controls production admission")
@@ -26,7 +26,7 @@ TEST_CASE("BuffAreaIntegration world fight type controls production admission")
         HitBuffApplication request;
         request.m_buffId = Fixed::fromInt(row->id);
         buff::dealBuff(world, entity, request);
-        CHECK(buff::hasBuff(world, entity, row->id) == allowed);
+        CHECK(buff::BuffHolder(world, entity).hasBuff(row->id) == allowed);
         CHECK(world.clone().setup().m_fightType == setup.m_fightType);
     }
 }

@@ -1,6 +1,5 @@
 #include "SkillTestSupport.h"
-#include "mugen/sim/buff/BuffEvents.h"
-#include "mugen/sim/buff/BuffPool.h"
+#include "mugen/sim/buff/BuffHolder.h"
 
 namespace
 {
@@ -16,7 +15,7 @@ void consumeBoundAbility(mugen::sim::World& world, mugen::Entity entity, int32_t
     CHECK_FALSE(pool.m_instances.front().m_lifecycle.m_active);
     CHECK(pool.m_instances.front().m_context.m_currentSkill == context.m_currentSkill);
     world.emit(entity, Tips{"Bound ability invoked"});
-    mugen::sim::buff::destroyBuff(world, entity);
+    mugen::sim::buff::BuffHolder(world, entity).destroyBuff();
 }
 }
 
@@ -47,7 +46,7 @@ TEST_CASE("BuffAbility binding callback precedes activation and may destroy inst
     BuffContext context;
     context.m_target = entity;
     context.m_currentSkill = 920000;
-    buff::dispatchEvent(world, entity, static_cast<BFEvent>(row->began), context, 8);
+    buff::BuffHolder(world, entity).dispatchEvent(static_cast<BFEvent>(row->began), context, 8);
     CHECK(world.ecs().get<BuffPool>(entity).m_instances.empty());
     const auto& events = world.ecs().singleton<PresentationEvents>().events;
     CHECK(std::any_of(events.begin(), events.end(), [](const auto& event) {

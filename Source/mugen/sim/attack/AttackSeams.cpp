@@ -2,7 +2,7 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/skill/SkillTriggers.h"
 #include "mugen/conf/ReflectedConfig.h"
-#include "mugen/sim/buff/BuffPool.h"
+#include "mugen/sim/buff/BuffHolder.h"
 
 // 动作模块与效果、Buff 模块之间的接缝：这里只声明空的接缝入口，
 // 具体实现分别由后续的效果（effect）和 Buff 待办补齐。
@@ -58,9 +58,9 @@ void addActionBuff(World& world, Entity entity, int32_t id, int32_t skillId)
     BuffContext context;
     context.m_frontSkill = skillId;
     context.m_applicator = entity;
-    addBuff(world, entity, id, context, world.setup().m_fightType);
+    BuffHolder(world, entity).addBuff(id, context, world.setup().m_fightType);
 }
 // 动作结束沿用普通移除与消失动画计时。
-void removeActionBuff(World& world, Entity entity, int32_t id) { removeBuff(world, entity, id); }
+void removeActionBuff(World& world, Entity entity, int32_t id) { BuffHolder(world, entity).removeBuff(id); }
 }
 }

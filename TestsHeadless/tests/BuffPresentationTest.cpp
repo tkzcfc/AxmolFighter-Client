@@ -1,7 +1,7 @@
 #include "doctest.h"
 #include "SkillTestSupport.h"
 #include "mugen/sim/buff/BuffPresentation.h"
-#include "mugen/sim/buff/BuffRules.h"
+#include "mugen/sim/buff/BuffHolder.h"
 #include "mugen/avatar/AvatarPaths.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
 
@@ -51,19 +51,19 @@ TEST_CASE("BuffPresentation resolved motion schedules appearance and disappearan
     instance.m_serial = 1;
     pool.m_instances.push_back(instance);
     world.ecs().add(entity, pool);
-    buff::beginPresentation(world, entity, 1);
+    buff::BuffHolder(world, entity).beginPresentation(1);
     REQUIRE(world.ecs().singleton<LogicTimers>().entries.size() == 1);
     CHECK(world.ecs().singleton<LogicTimers>().entries.front().intervalMs == "50"_fx);
     updateLogicTimers(world);
     updateLogicTimers(world);
     CHECK(std::get<BuffSpine>(world.ecs().singleton<PresentationEvents>().events.back().payload).m_stage == 2);
-    buff::exitInstance(world, entity, 1);
+    buff::BuffHolder(world, entity).exitInstance(1);
     REQUIRE(world.ecs().singleton<LogicTimers>().entries.size() == 1);
-    CHECK_FALSE(buff::findInstance(world, entity, 1)->m_lifecycle.m_destroy);
+    CHECK_FALSE(buff::BuffHolder(world, entity).findInstance(1)->m_lifecycle.m_destroy);
     updateLogicTimers(world);
-    CHECK_FALSE(buff::findInstance(world, entity, 1)->m_lifecycle.m_destroy);
+    CHECK_FALSE(buff::BuffHolder(world, entity).findInstance(1)->m_lifecycle.m_destroy);
     updateLogicTimers(world);
-    CHECK(buff::findInstance(world, entity, 1)->m_lifecycle.m_destroy);
+    CHECK(buff::BuffHolder(world, entity).findInstance(1)->m_lifecycle.m_destroy);
 }
 
 // 持续阶段定时器只切换表现，退出会取消尚未完成的出现阶段。
@@ -86,15 +86,15 @@ TEST_CASE("BuffPresentation continuation timer is cancelled by exit")
     REQUIRE(events.size() == 1);
     REQUIRE(std::holds_alternative<BuffSpine>(events.front().payload));
     CHECK(std::get<BuffSpine>(events.front().payload).m_stage == 2);
-    CHECK_FALSE(buff::findInstance(world, entity, 1)->m_lifecycle.m_active);
+    CHECK_FALSE(buff::BuffHolder(world, entity).findInstance(1)->m_lifecycle.m_active);
     world.ecs().singleton<LogicTimers>().add(entity, kLogicDtMs, false, BuffContinue{1});
-    buff::exitInstance(world, entity, 1);
+    buff::BuffHolder(world, entity).exitInstance(1);
     const auto& timers = world.ecs().singleton<LogicTimers>().entries;
     CHECK(std::none_of(timers.begin(), timers.end(), [](const auto& timer) {
         return std::holds_alternative<BuffContinue>(timer.payload);
     }));
     const auto eventCount = events.size();
-    buff::continuePresentation(world, entity, 1);
+    buff::BuffHolder(world, entity).continuePresentation(1);
     CHECK(events.size() == eventCount);
 }
 
@@ -122,11 +122,11 @@ TEST_CASE("BuffPresentation production disappearance resolves or exits immediate
     const auto duration = buff::disappearDuration(config.spineId);
     std::cout << "Buff disappearance mapping: spine=" << config.spineId << " path=" << path
               << " clip=disappear durationMs=" << (duration ? duration->toInt() : -1) << '\n';
-    buff::exitInstance(world, entity, 1);
-    REQUIRE(buff::findInstance(world, entity, 1)->m_lifecycle.m_exit);
+    buff::BuffHolder(world, entity).exitInstance(1);
+    REQUIRE(buff::BuffHolder(world, entity).findInstance(1)->m_lifecycle.m_exit);
     if (!duration || *duration <= Fixed{})
     {
-        CHECK(buff::findInstance(world, entity, 1)->m_lifecycle.m_destroy);
+        CHECK(buff::BuffHolder(world, entity).findInstance(1)->m_lifecycle.m_destroy);
         CHECK(world.ecs().singleton<LogicTimers>().entries.empty());
         const auto& events = world.ecs().singleton<PresentationEvents>().events;
         REQUIRE(events.size() >= 2);
@@ -139,7 +139,7 @@ TEST_CASE("BuffPresentation production disappearance resolves or exits immediate
     }
     else
     {
-        CHECK_FALSE(buff::findInstance(world, entity, 1)->m_lifecycle.m_destroy);
+        CHECK_FALSE(buff::BuffHolder(world, entity).findInstance(1)->m_lifecycle.m_destroy);
         REQUIRE(world.ecs().singleton<LogicTimers>().entries.size() == 1);
         CHECK(world.ecs().singleton<LogicTimers>().entries[0].intervalMs == *duration);
     }
@@ -163,9 +163,9 @@ TEST_CASE("BuffPresentation exit timer dispatch survives world clone")
     world.ecs().singleton<LogicTimers>().add(entity, kLogicDtMs * "2"_fx, false, BuffExit{7});
     auto clone = world.clone();
     updateLogicTimers(world);
-    CHECK_FALSE(buff::findInstance(world, entity, 7)->m_lifecycle.m_destroy);
+    CHECK_FALSE(buff::BuffHolder(world, entity).findInstance(7)->m_lifecycle.m_destroy);
     updateLogicTimers(world);
-    CHECK(buff::findInstance(world, entity, 7)->m_lifecycle.m_destroy);
+    CHECK(buff::BuffHolder(world, entity).findInstance(7)->m_lifecycle.m_destroy);
     updateLogicTimers(clone);
     updateLogicTimers(clone);
     CHECK(clone.hash() == world.hash());

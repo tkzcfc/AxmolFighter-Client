@@ -3,7 +3,7 @@
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/core/math/Random.h"
 #include "mugen/sim/World.h"
-#include "mugen/sim/buff/BuffRules.h"
+#include "mugen/sim/buff/BuffHolder.h"
 #include "mugen/sim/role/Role.h"
 #include <limits>
 
@@ -34,7 +34,7 @@ bool provoked(World& world, Entity entity)
 {
     if (world.ecs().get<RoleStatus>(entity).isTobeHit()) return true;
     if (!world.ecs().get<AiAgent>(entity).m_threat.empty()) return true;
-    return living(world, buff::sneerTarget(world, entity));
+    return living(world, buff::BuffHolder(world, entity).sneerTarget());
 }
 // 索敌使用带符号的视野区间，先看已锁定目标再看候选者。
 bool inSight(World& world, Entity entity, const conf::AiConfig& row)

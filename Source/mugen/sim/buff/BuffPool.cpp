@@ -1,8 +1,5 @@
-#include "BuffPool.h"
-#include "BuffInstance.h"
+#include "BuffHolder.h"
 #include "BuffCondition.h"
-#include "BuffEvents.h"
-#include "BuffPresentation.h"
 #include "mugen/sim/role/Role.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/trace/TraceSink.h"
@@ -10,16 +7,17 @@
 
 namespace mugen::sim::buff
 {
+BuffHolder::BuffHolder(World& world, Entity entity) : m_world(world), m_entity(entity) {}
+
 // 先保存目标句柄，再执行同步施加，避免回调扩容使遍历引用失效。
-void addBuffForApplicator(World& world, Entity entity, int32_t id, const BuffContext& context,
-                          int32_t fightType, bool notify)
+void BuffHolder::addBuffForApplicator(int32_t id, const BuffContext& context, int32_t fightType, bool notify)
 {
     const auto* config = conf::Config::instance().find<conf::BuffConfig>(id);
     if (!config) return;
-    const auto identity = world.ecs().get<RoleIdentity>(entity);
+    const auto identity = m_world.ecs().get<RoleIdentity>(m_entity);
     std::vector<Entity> targets;
-    if (config->target == 1 || (config->target == 8 && context.m_target == entity)) targets.push_back(entity);
-    else world.ecs().each<RoleIdentity>([&](Entity candidate, const RoleIdentity& other) {
+    if (config->target == 1 || (config->target == 8 && context.m_target == m_entity)) targets.push_back(m_entity);
+    else m_world.ecs().each<RoleIdentity>([&](Entity candidate, const RoleIdentity& other) {
         const bool enemy = (identity.hostileCamp & other.camp) != 0;
         const bool selected = (config->target == 2 && enemy && candidate == context.m_target) ||
             (config->target == 3 && !enemy && candidate == context.m_target) ||
@@ -33,40 +31,39 @@ void addBuffForApplicator(World& world, Entity entity, int32_t id, const BuffCon
         auto source = context;
         source.m_target = {};
         if (config->target >= 4 && config->target != 8) source.m_boundSkill.reset();
-        if (config->target == 2 || config->target == 3 || config->target == 8) source.m_applicator = entity;
-        addBuff(world, target, id, source, fightType, notify);
+        if (config->target == 2 || config->target == 3 || config->target == 8) source.m_applicator = m_entity;
+        BuffHolder(m_world, target).addBuff(id, source, fightType, notify);
     }
 }
 
 // 技能池和角色必需组件已建立后才允许初始效果同步触发回调。
-void loadBuffs(World& world, Entity entity, const std::vector<LoadEntry>& additional)
+void BuffHolder::loadBuffs(const std::vector<LoadEntry>& additional)
 {
-    if (!world.ecs().has<BuffPool>(entity)) world.ecs().add(entity, BuffPool{});
-    const auto identity = world.ecs().get<RoleIdentity>(entity);
+    if (!m_world.ecs().has<BuffPool>(m_entity)) m_world.ecs().add(m_entity, BuffPool{});
+    const auto identity = m_world.ecs().get<RoleIdentity>(m_entity);
     const auto* row = conf::Config::instance().find<conf::RoleConfig>(identity.roleId);
     if (!row) return;
     for (const auto id : row->buffIds)
-        if (id != -1) addEntityBuff(world, entity, id);
+        if (id != -1) addEntityBuff(m_world, m_entity, id);
     for (const auto& entry : additional)
-        if (entry.m_id > 0) addEntityBuff(world, entity, entry.m_id, entry.m_skill, entry.m_origin);
+        if (entry.m_id > 0) addEntityBuff(m_world, m_entity, entry.m_id, entry.m_skill, entry.m_origin);
     if (identity.roleType == static_cast<int32_t>(EntityRoleType::kHero))
-        if (const auto* room = conf::Config::instance().find<conf::RoomConfig>(world.setup().roomId))
+        if (const auto* room = conf::Config::instance().find<conf::RoomConfig>(m_world.setup().roomId))
             for (const auto id : room->actorBuffIds)
-                if (id != -1) addEntityBuff(world, entity, id);
+                if (id != -1) addEntityBuff(m_world, m_entity, id);
 }
 
 // 概率只从世界唯一随机源抽取，未通过准入检查时不消耗随机数。
-std::optional<uint64_t> addBuff(World& world, Entity entity, int32_t id,
-                               const BuffContext& context, int32_t fightType, bool notify)
+std::optional<uint64_t> BuffHolder::addBuff(int32_t id, const BuffContext& context, int32_t fightType, bool notify)
 {
-    const auto* group = world.ecs().tryGet<EntityGroup>(entity);
+    const auto* group = m_world.ecs().tryGet<EntityGroup>(m_entity);
     if (!group || group->stopped || group->destroyRequested) return std::nullopt;
     const auto* config = conf::Config::instance().find<conf::BuffConfig>(id);
-    if (!config || !buffCheck(world, entity, *config, fightType)) return std::nullopt;
+    if (!config || !buffCheck(*config, fightType)) return std::nullopt;
     if (!conf::Config::instance().find<conf::BuffRuleConfig>(config->ruleId)) return std::nullopt;
-    if (!world.ecs().has<BuffPool>(entity)) world.ecs().add(entity, BuffPool{});
-    auto& pool = world.ecs().get<BuffPool>(entity);
-    const auto draw = world.ecs().singleton<RngState>().random.randomF("0"_fx, "100"_fx);
+    if (!m_world.ecs().has<BuffPool>(m_entity)) m_world.ecs().add(m_entity, BuffPool{});
+    auto& pool = m_world.ecs().get<BuffPool>(m_entity);
+    const auto draw = m_world.ecs().singleton<RngState>().random.randomF("0"_fx, "100"_fx);
     if (!probabilityPass(pool, *config, draw)) return std::nullopt;
     auto serial = findByType(pool, config->ruleId, config->subType);
     if (!serial || config->subType == -1)
@@ -79,137 +76,134 @@ std::optional<uint64_t> addBuff(World& world, Entity entity, int32_t id,
         instance.m_lifecycle = makeLifecycle(*config);
         serial = instance.m_serial;
         pool.m_instances.push_back(instance);
-        beginPresentation(world, entity, *serial);
-        auto* added = findInstance(world, entity, *serial);
+        beginPresentation(*serial);
+        auto* added = findInstance(*serial);
         const auto action = execute(added->m_lifecycle, config->executeType);
-        if (action == LifecycleAction::Enter && (config->addType == 1 || !Role(world, entity).isDead()) &&
-            checkConditions(world, entity, *added)) invokeRule(world, entity, *serial, RuleHook::Enter);
+        if (action == LifecycleAction::Enter && (config->addType == 1 || !Role(m_world, m_entity).isDead()) &&
+            checkConditions(m_world, m_entity, *added)) invokeRule(*serial, RuleHook::Enter);
     }
-    else resetInstance(world, entity, *serial, *config);
-    const auto cd = world.setup().m_pvp ? config->cdPvp : config->cd;
-    if (cd != Fixed{}) world.ecs().get<BuffPool>(entity).m_cooldowns.push_back({id, cd});
+    else resetInstance(*serial, *config);
+    const auto cd = m_world.setup().m_pvp ? config->cdPvp : config->cd;
+    if (cd != Fixed{}) m_world.ecs().get<BuffPool>(m_entity).m_cooldowns.push_back({id, cd});
     if (notify)
     {
         BuffContext event;
-        event.m_target = entity;
-        dispatchEvent(world, entity, BFEvent::AddBuff, event, 8);
+        event.m_target = m_entity;
+        dispatchEvent(BFEvent::AddBuff, event, 8);
     }
-    trace::noteBuffAdd(world, entity, id);
+    trace::noteBuffAdd(m_world, m_entity, id);
     return serial;
 }
 
 // 对全部匹配标识依次移除，剩余单层直接进入退出阶段。
-void removeBuff(World& world, Entity entity, int32_t id, bool all, bool notify)
+void BuffHolder::removeBuff(int32_t id, bool all, bool notify)
 {
-    const auto* pool = world.ecs().tryGet<BuffPool>(entity);
+    const auto* pool = m_world.ecs().tryGet<BuffPool>(m_entity);
     if (!pool) return;
     std::vector<uint64_t> serials;
     for (const auto& instance : pool->m_instances)
         if (instance.m_id == id) serials.push_back(instance.m_serial);
     for (const auto serial : serials)
     {
-        const auto* instance = findInstance(world, entity, serial);
+        const auto* instance = findInstance(serial);
         if (!instance) continue;
-        if (instance->m_lifecycle.m_repeat == 1) exitInstance(world, entity, serial);
-        else removeRepeat(world, entity, serial, all);
+        if (instance->m_lifecycle.m_repeat == 1) exitInstance(serial);
+        else removeRepeat(serial, all);
         if (notify)
         {
             BuffContext context;
-            context.m_target = entity;
-            dispatchEvent(world, entity, BFEvent::RemoveBuff, context, 8);
+            context.m_target = m_entity;
+            dispatchEvent(BFEvent::RemoveBuff, context, 8);
         }
     }
 }
 
 // 周期回调和移层保持同步，完成后稳定移除已销毁实例。
-void update(World& world, Entity entity)
+void BuffHolder::update()
 {
-    auto* pool = world.ecs().tryGet<BuffPool>(entity);
+    auto* pool = m_world.ecs().tryGet<BuffPool>(m_entity);
     if (!pool) return;
-    const auto seconds = world.ecs().singleton<WorldClock>().dtMs / "1000"_fx;
+    const auto seconds = m_world.ecs().singleton<WorldClock>().dtMs / "1000"_fx;
     std::vector<uint64_t> serials;
     for (const auto& instance : pool->m_instances) serials.push_back(instance.m_serial);
     for (const auto serial : serials)
     {
-        auto* instance = findInstance(world, entity, serial);
+        auto* instance = findInstance(serial);
         if (!instance) continue;
         const auto* config = conf::Config::instance().find<conf::BuffConfig>(instance->m_id);
         if (!config) continue;
-        const bool dead = Role(world, entity).isDead();
+        const bool dead = Role(m_world, m_entity).isDead();
         const auto applicator = instance->m_context.m_applicator;
         if (config->addType == 2 && (dead ||
-            (world.ecs().has<Vitals>(applicator) && Role(world, applicator).isDead())))
+            (m_world.ecs().has<Vitals>(applicator) && Role(m_world, applicator).isDead())))
         {
-            destroyBuff(world, entity, instance->m_id);
+            destroyBuff(instance->m_id);
             continue;
         }
         if (dead && config->addType != 1) continue;
         if (instance->m_lifecycle.m_maxInterval < Fixed{} || instance->m_lifecycle.m_maxTimes < -1)
             continue;
         const auto action = advance(instance->m_lifecycle, seconds);
-        if (action == LifecycleAction::Enter && checkConditions(world, entity, *instance))
-            invokeRule(world, entity, serial, RuleHook::Enter);
+        if (action == LifecycleAction::Enter && checkConditions(m_world, m_entity, *instance))
+            invokeRule(serial, RuleHook::Enter);
         else if (action == LifecycleAction::Update)
-            invokeRule(world, entity, serial, RuleHook::Update, seconds);
-        instance = findInstance(world, entity, serial);
+            invokeRule(serial, RuleHook::Update, seconds);
+        instance = findInstance(serial);
         if (!instance) continue;
         if (action == LifecycleAction::RemoveRepeat ||
             (instance->m_lifecycle.m_active && !instance->m_lifecycle.m_exit && finishEnter(instance->m_lifecycle)))
-            removeRepeat(world, entity, serial);
+            removeRepeat(serial);
     }
-    pool = world.ecs().tryGet<BuffPool>(entity);
+    pool = m_world.ecs().tryGet<BuffPool>(m_entity);
     if (!pool) return;
     for (const auto& instance : pool->m_instances)
         if (instance.m_lifecycle.m_destroy)
-            trace::noteBuffRemove(world, entity, instance.m_id);
+            trace::noteBuffRemove(m_world, m_entity, instance.m_id);
     std::erase_if(pool->m_instances, [](const BuffInstance& instance) { return instance.m_lifecycle.m_destroy; });
     updateCooldowns(*pool, seconds);
 }
 
-namespace
-{
 // 强制删除不等待表现，回调后重新取得组件以规避扩容失效。
-void destroySerial(World& world, Entity entity, uint64_t serial, bool byRule)
+void BuffHolder::_destroySerial(uint64_t serial, bool byRule)
 {
-    const auto* instance = findInstance(world, entity, serial);
+    const auto* instance = findInstance(serial);
     if (!instance) return;
     const auto* row = conf::Config::instance().find<conf::BuffConfig>(instance->m_id);
     if (!byRule && row && row->destroyType == 1 && instance->m_lifecycle.m_repeat > 1)
-        removeRepeat(world, entity, serial, true);
-    invokeRule(world, entity, serial, RuleHook::Exit);
-    cancelAppearance(world, entity, serial);
-    if (row && row->spineId != -1) world.emit(entity, BuffSpine{serial, row->spineId, 0, row->id});
-    auto& timers = world.ecs().singleton<LogicTimers>().entries;
-    std::erase_if(timers, [entity, serial](const LogicTimer& timer) {
+        removeRepeat(serial, true);
+    invokeRule(serial, RuleHook::Exit);
+    cancelAppearance(serial);
+    if (row && row->spineId != -1) m_world.emit(m_entity, BuffSpine{serial, row->spineId, 0, row->id});
+    auto& timers = m_world.ecs().singleton<LogicTimers>().entries;
+    std::erase_if(timers, [entity = m_entity, serial](const LogicTimer& timer) {
         const auto* exit = std::get_if<BuffExit>(&timer.payload);
         return timer.owner == entity && exit && exit->m_serial == serial;
     });
-    auto* pool = world.ecs().tryGet<BuffPool>(entity);
+    auto* pool = m_world.ecs().tryGet<BuffPool>(m_entity);
     if (!pool) return;
-    const auto* removed = findInstance(world, entity, serial);
+    const auto* removed = findInstance(serial);
     const int32_t removedId = removed ? removed->m_id : 0;
     const auto before = pool->m_instances.size();
     std::erase_if(pool->m_instances, [serial](const BuffInstance& value) { return value.m_serial == serial; });
     if (removed && pool->m_instances.size() < before)
-        trace::noteBuffRemove(world, entity, removedId);
-}
+        trace::noteBuffRemove(m_world, m_entity, removedId);
 }
 
 // 先保存逆序实例标识，退出回调改变数组时不会误删其他实例。
-void destroyBuff(World& world, Entity entity, std::optional<int32_t> id)
+void BuffHolder::destroyBuff(std::optional<int32_t> id)
 {
-    const auto* pool = world.ecs().tryGet<BuffPool>(entity);
+    const auto* pool = m_world.ecs().tryGet<BuffPool>(m_entity);
     if (!pool) return;
     std::vector<uint64_t> serials;
     for (auto it = pool->m_instances.rbegin(); it != pool->m_instances.rend(); ++it)
         if (!id || it->m_id == *id) serials.push_back(it->m_serial);
-    for (const auto serial : serials) destroySerial(world, entity, serial, false);
+    for (const auto serial : serials) _destroySerial(serial, false);
 }
 
 // 规则销毁保持独立的退出一次语义，不执行配置的逐层销毁选项。
-void destroyBuffByRule(World& world, Entity entity, int32_t ruleId)
+void BuffHolder::destroyBuffByRule(int32_t ruleId)
 {
-    const auto* pool = world.ecs().tryGet<BuffPool>(entity);
+    const auto* pool = m_world.ecs().tryGet<BuffPool>(m_entity);
     if (!pool) return;
     std::vector<uint64_t> serials;
     for (auto it = pool->m_instances.rbegin(); it != pool->m_instances.rend(); ++it)
@@ -217,7 +211,7 @@ void destroyBuffByRule(World& world, Entity entity, int32_t ruleId)
         const auto* row = conf::Config::instance().find<conf::BuffConfig>(it->m_id);
         if (row && row->ruleId == ruleId) serials.push_back(it->m_serial);
     }
-    for (const auto serial : serials) destroySerial(world, entity, serial, true);
+    for (const auto serial : serials) _destroySerial(serial, true);
 }
 
 // 同类匹配不排除退出标记，物理删除由池更新负责。
@@ -251,9 +245,9 @@ bool probabilityPass(const BuffPool& pool, const conf::BuffConfig& config, Fixed
 }
 
 // 保留池中的实例可被查询，销毁实例由更新阶段统一移除。
-bool hasBuff(World& world, Entity entity, int32_t id)
+bool BuffHolder::hasBuff(int32_t id) const
 {
-    const auto* pool = world.ecs().tryGet<BuffPool>(entity);
+    const auto* pool = m_world.ecs().tryGet<BuffPool>(m_entity);
     if (!pool) return false;
     return std::any_of(pool->m_instances.begin(), pool->m_instances.end(),
                        [id](const BuffInstance& instance) { return instance.m_id == id; });
@@ -283,9 +277,9 @@ void updateCooldowns(BuffPool& pool, Fixed dtSeconds)
 }
 
 // 配置链可能悬空，减益规则查询使用可空查找。
-bool buffCheck(World& world, Entity entity, const conf::BuffConfig& config, int32_t fightType)
+bool BuffHolder::buffCheck(const conf::BuffConfig& config, int32_t fightType) const
 {
-    const auto* pool = world.ecs().tryGet<BuffPool>(entity);
+    const auto* pool = m_world.ecs().tryGet<BuffPool>(m_entity);
     if (pool)
     {
         for (const int32_t immune : pool->m_immunity)
@@ -310,4 +304,4 @@ bool buffCheck(World& world, Entity entity, const conf::BuffConfig& config, int3
     if (config.areaSetting.front() == 1) return listed;
     return true;
 }
-}
+}  // namespace mugen::sim::buff

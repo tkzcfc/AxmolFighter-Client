@@ -3,7 +3,7 @@
 #include "mugen/conf/TypeConversions.h"
 #include "mugen/sim/role/brain/RoleBrainRunner.h"
 #include "mugen/sim/skill/SkillCaster.h"
-#include "mugen/sim/buff/BuffPool.h"
+#include "mugen/sim/buff/BuffHolder.h"
 
 namespace mugen::sim
 {
@@ -213,7 +213,7 @@ Entity spawnRole(World& world, const RoleSpawnParams& params)
     if (params.playerSlot.has_value())
         ecs.singleton<PlayerSlots>().entities.emplace(*params.playerSlot, entity);
     if (world.setup().mode != WorldMode::Town)
-        buff::loadBuffs(world, entity, params.m_buffs);
+        buff::BuffHolder(world, entity).loadBuffs(params.m_buffs);
     return entity;
 }
 // 将职业映射为角色配置后复用标准角色创建流程。

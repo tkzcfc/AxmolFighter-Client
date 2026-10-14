@@ -2,7 +2,7 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/role/Role.h"
-#include "mugen/sim/buff/BuffRules.h"
+#include "mugen/sim/buff/BuffHolder.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/BattleConst.h"
 #include "mugen/core/math/FixedMath.h"
@@ -88,7 +88,7 @@ Result checkAttack(World& world, Entity entity)
 {
     if (world.ecs().get<RoleStatus>(entity).isDeath()) return Result::Failure;
     auto& target = world.ecs().get<SkillPool>(entity).m_target;
-    const auto taunt = buff::sneerTarget(world, entity);
+    const auto taunt = buff::BuffHolder(world, entity).sneerTarget();
     if (alive(world, taunt)) { target = taunt; return Result::Success; }
     if (!hittable(world, target))
     {
@@ -244,7 +244,7 @@ Result checkTarget(World& world, Entity entity)
 {
     if (world.ecs().get<RoleStatus>(entity).isDeath()) return Result::Failure;
     auto& target = world.ecs().get<SkillPool>(entity).m_target;
-    const auto taunt = buff::sneerTarget(world, entity);
+    const auto taunt = buff::BuffHolder(world, entity).sneerTarget();
     if (alive(world, taunt)) { target = taunt; return Result::Success; }
     target = entity;
     const auto* row = config(world, entity);
@@ -339,7 +339,7 @@ void update(World& world, Entity entity)
         !enabled(ecs.get<EntityGroup>(entity)) || !ecs.get<ExtraState>(entity).isCanControl() || !config(world, entity)) return;
     Context context{world, entity};
     tickEntityTree(ecs.get<AiAgent>(entity).m_tree, &context, dispatch);
-    const auto taunt = buff::sneerTarget(world, entity);
+    const auto taunt = buff::BuffHolder(world, entity).sneerTarget();
     if (alive(world, taunt)) { ecs.get<SkillPool>(entity).m_target = taunt; return; }
     auto& elapsed = ecs.get<AiAgent>(entity).m_changeTargetMs;
     elapsed += ecs.singleton<WorldClock>().dtMs;

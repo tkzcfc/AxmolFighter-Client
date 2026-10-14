@@ -1,5 +1,5 @@
 #include "SkillTestSupport.h"
-#include "mugen/sim/buff/BuffPool.h"
+#include "mugen/sim/buff/BuffHolder.h"
 #include "mugen/sim/hit/HitSeams.h"
 
 using namespace skill_test;
@@ -72,7 +72,7 @@ TEST_CASE("Crazy entry through buff selects plus slot")
     HitBuffApplication application;
     application.m_buffId = Fixed::fromInt(buffId);
     buff::dealBuff(world, entity, application);
-    REQUIRE(buff::hasBuff(world, entity, buffId));
+    REQUIRE(buff::BuffHolder(world, entity).hasBuff(buffId));
     CHECK(pool.m_crazy);
 
     REQUIRE(skill::SkillCaster(world, entity).dealButtonEvent(ControlEvent::CTR_ATKA));

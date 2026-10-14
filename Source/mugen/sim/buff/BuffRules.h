@@ -28,11 +28,5 @@ struct RuleDispatch
 const RuleDispatch& ruleDispatch(conf::BuffRuleId rule);
 // 判断规则是否仍使用未移植占位分派。
 bool isUnportedRule(conf::BuffRuleId rule);
-// 按稳定序号重新定位实例，不跨回调保留返回的指针。
-BuffInstance* findInstance(World& world, Entity entity, uint64_t serial);
-// 返回目标当前最高嘲讽权重对应的施加者。
-Entity sneerTarget(World& world, Entity entity);
-// 判断角色是否处于持续移动状态。
-bool isMoved(World& world, Entity entity);
 }  // namespace buff
 }  // namespace mugen::sim

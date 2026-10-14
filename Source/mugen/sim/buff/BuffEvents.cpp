@@ -1,7 +1,6 @@
 #include "BuffEvents.h"
+#include "BuffHolder.h"
 #include "BuffCondition.h"
-#include "BuffPresentation.h"
-#include "BuffInstance.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/role/Role.h"
 #include "mugen/conf/ReflectedConfig.h"
@@ -9,9 +8,9 @@
 namespace mugen::sim::buff
 {
 // 不把行为状态当作普通 began/ended 广播，避免其他规则错误响应。
-void dispatchBehaviorState(World& world, Entity entity, BFEvent event, const char* actionName)
+void BuffHolder::dispatchBehaviorState(BFEvent event, const char* actionName)
 {
-    const auto* pool = world.ecs().tryGet<BuffPool>(entity);
+    const auto* pool = m_world.ecs().tryGet<BuffPool>(m_entity);
     if (!pool) return;
     std::vector<uint64_t> serials;
     for (const auto& instance : pool->m_instances)
@@ -23,34 +22,34 @@ void dispatchBehaviorState(World& world, Entity entity, BFEvent event, const cha
     }
     for (const auto serial : serials)
     {
-        auto* instance = findInstance(world, entity, serial);
+        auto* instance = findInstance(serial);
         if (!instance) continue;
         instance->m_behaviorAction = actionName;
         instance->m_behaviorEvent = event;
-        invokeRule(world, entity, serial, event == BFEvent::BehaviorStateStart ? RuleHook::Begin : RuleHook::End);
+        invokeRule(serial, event == BFEvent::BehaviorStateStart ? RuleHook::Begin : RuleHook::End);
     }
 }
 
 // 固定本次广播的序号列表，新增实例不递归接收当前广播。
-void dispatchEvent(World& world, Entity entity, BFEvent event, const BuffContext& context, int32_t targetCamp)
+void BuffHolder::dispatchEvent(BFEvent event, const BuffContext& context, int32_t targetCamp)
 {
     if (event == BFEvent::BehaviorStateStart || event == BFEvent::BehaviorStateEnd)
     {
-        dispatchBehaviorState(world, entity, event, "AttackRole");
+        dispatchBehaviorState(event, "AttackRole");
         return;
     }
-    const auto* pool = world.ecs().tryGet<BuffPool>(entity);
+    const auto* pool = m_world.ecs().tryGet<BuffPool>(m_entity);
     if (!pool) return;
     std::vector<uint64_t> serials;
     for (const auto& instance : pool->m_instances) serials.push_back(instance.m_serial);
     for (const auto serial : serials)
     {
-        auto* instance = findInstance(world, entity, serial);
+        auto* instance = findInstance(serial);
         if (!instance) continue;
         const auto* config = conf::Config::instance().find<conf::BuffConfig>(instance->m_id);
         const auto* initial = conf::Config::instance().find<conf::BuffConfig>(
             instance->m_initialId == 0 ? instance->m_id : instance->m_initialId);
-        if (!config || !initial || !acceptsEvent(*config, *initial, *instance, entity, event, context, targetCamp)) continue;
+        if (!config || !initial || !acceptsEvent(*config, *initial, *instance, m_entity, event, context, targetCamp)) continue;
         const auto bound = instance->m_context.m_boundSkill;
         const auto front = instance->m_context.m_frontSkill;
         const auto applicator = instance->m_context.m_applicator;
@@ -58,27 +57,27 @@ void dispatchEvent(World& world, Entity entity, BFEvent event, const BuffContext
         instance->m_context.m_boundSkill = bound;
         instance->m_context.m_frontSkill = front;
         instance->m_context.m_applicator = applicator;
-        const bool permitted = checkConditions(world, entity, *instance);
+        const bool permitted = checkConditions(m_world, m_entity, *instance);
         if (static_cast<int32_t>(event) == 9)
         {
-            if (instance->m_lifecycle.m_active && !permitted) exitInstance(world, entity, serial);
-            instance = findInstance(world, entity, serial);
+            if (instance->m_lifecycle.m_active && !permitted) exitInstance(serial);
+            instance = findInstance(serial);
             if (!instance || instance->m_lifecycle.m_active || !permitted) continue;
         }
         else if (static_cast<int32_t>(event) == 10 && (!permitted || !instance->m_lifecycle.m_active)) continue;
-        if (config->bindSpecialAbilityId != -1 && config->bindSpecialAbilityId != 0 && world.hitHooks().m_buffAbility)
+        if (config->bindSpecialAbilityId != -1 && config->bindSpecialAbilityId != 0 && m_world.hitHooks().m_buffAbility)
         {
             const auto abilityContext = instance->m_context;
-            world.hitHooks().m_buffAbility(world, entity, config->bindSpecialAbilityId, event, abilityContext);
-            instance = findInstance(world, entity, serial);
+            m_world.hitHooks().m_buffAbility(m_world, m_entity, config->bindSpecialAbilityId, event, abilityContext);
+            instance = findInstance(serial);
             if (!instance) continue;
         }
         instance->m_lifecycle.m_active = true;
         const bool ended = static_cast<int32_t>(event) == initial->ended;
-        if (!ended && (!permitted || (config->addType != 1 && Role(world, entity).isDead()))) continue;
-        invokeRule(world, entity, serial, ended ? RuleHook::End : RuleHook::Begin);
+        if (!ended && (!permitted || (config->addType != 1 && Role(m_world, m_entity).isDead()))) continue;
+        invokeRule(serial, ended ? RuleHook::End : RuleHook::Begin);
         if (config->eventParam.size() > 1 && config->eventParam[1] == 1 && (ended || config->ended == -1))
-            exitInstance(world, entity, serial);
+            exitInstance(serial);
     }
 }
 
@@ -102,4 +101,4 @@ bool acceptsEvent(const conf::BuffConfig& current, const conf::BuffConfig& initi
         return false;
     return true;
 }
-}
+}  // namespace mugen::sim::buff

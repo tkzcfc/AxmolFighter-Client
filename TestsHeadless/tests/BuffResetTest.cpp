@@ -1,6 +1,6 @@
 #include "doctest.h"
 #include "SkillTestSupport.h"
-#include "mugen/sim/buff/BuffInstance.h"
+#include "mugen/sim/buff/BuffHolder.h"
 
 // 全部移层和强制单层分支使用同一真实配置，刷新取消旧退出定时器。
 TEST_CASE("BuffReset remove repeat all and forced single layer")
@@ -20,8 +20,8 @@ TEST_CASE("BuffReset remove repeat all and forced single layer")
         instance.m_lifecycle.m_repeat = 3;
         pool.m_instances.push_back(instance);
         world.ecs().add(entity, pool);
-        buff::removeRepeat(world, entity, 1, false, 1, force);
-        const auto* result = buff::findInstance(world, entity, 1);
+        buff::BuffHolder(world, entity).removeRepeat(1, false, 1, force);
+        const auto* result = buff::BuffHolder(world, entity).findInstance(1);
         REQUIRE(result != nullptr);
         CHECK(result->m_lifecycle.m_repeat == (force ? 2 : 0));
         CHECK(result->m_lifecycle.m_destroy == !force);
@@ -29,9 +29,9 @@ TEST_CASE("BuffReset remove repeat all and forced single layer")
         world.ecs().singleton<LogicTimers>().add(entity, "100"_fx, false, BuffExit{1});
         auto config = conf::Config::instance().get<conf::BuffConfig>(1);
         config.resetType = 1;
-        buff::resetInstance(world, entity, 1, config);
+        buff::BuffHolder(world, entity).resetInstance(1, config);
         CHECK(world.ecs().singleton<LogicTimers>().entries.empty());
-        CHECK_FALSE(buff::findInstance(world, entity, 1)->m_lifecycle.m_exit);
+        CHECK_FALSE(buff::BuffHolder(world, entity).findInstance(1)->m_lifecycle.m_exit);
     }
 }
 
@@ -61,8 +61,8 @@ TEST_CASE("BuffReset all eight policies update instance counters and stacks")
         world.ecs().add(entity, pool);
         auto incoming = *selected;
         incoming.resetType = type;
-        buff::resetInstance(world, entity, 1, incoming);
-        const auto* result = buff::findInstance(world, entity, 1);
+        buff::BuffHolder(world, entity).resetInstance(1, incoming);
+        const auto* result = buff::BuffHolder(world, entity).findInstance(1);
         REQUIRE(result != nullptr);
         CHECK(result->m_lifecycle.m_times == ((type == 1 || type == 2 || type == 6 || type == 7) ? 0 : 3));
         CHECK(result->m_lifecycle.m_interval == ((type == 1 || type == 3 || type == 5 || type == 7) ? Fixed{} : "2"_fx));
@@ -94,8 +94,8 @@ TEST_CASE("BuffReset stacking does not enter invincibility on a dead role")
         world.ecs().add(entity, pool);
         auto incoming = config;
         incoming.resetType = 4;
-        buff::resetInstance(world, entity, 1, incoming);
+        buff::BuffHolder(world, entity).resetInstance(1, incoming);
         CHECK(world.ecs().get<sim::ExtraState>(entity).active(mugen::ExtraState::Invincible) == !dead);
-        CHECK(buff::findInstance(world, entity, 1)->m_appliedRefs == (dead ? 0 : 1));
+        CHECK(buff::BuffHolder(world, entity).findInstance(1)->m_appliedRefs == (dead ? 0 : 1));
     }
 }

@@ -1,6 +1,6 @@
 #include "SkillTestSupport.h"
 #include "mugen/sim/ai/AiAgent.h"
-#include "mugen/sim/buff/BuffRules.h"
+#include "mugen/sim/buff/BuffHolder.h"
 
 using namespace skill_test;
 
@@ -258,7 +258,7 @@ TEST_CASE("Ai monster threat changes every ten seconds and taunt forces target b
     CHECK(ecs.get<SkillPool>(f.monster).m_target == second);
     CHECK(ecs.get<AiAgent>(f.monster).m_threat.empty());
     ecs.get<RoleTimers>(f.monster).m_sneerRecounts = {{first, "100"_fx}, {second, "1"_fx}};
-    REQUIRE(buff::sneerTarget(f.world, f.monster) == first);
+    REQUIRE(buff::BuffHolder(f.world, f.monster).sneerTarget() == first);
     CHECK(ai::checkTarget(f.world, f.monster) == ai::Result::Success);
     CHECK(ecs.get<SkillPool>(f.monster).m_target == first);
     const auto elapsed = ecs.get<AiAgent>(f.monster).m_changeTargetMs;
