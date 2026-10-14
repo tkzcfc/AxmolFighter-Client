@@ -105,8 +105,8 @@ void AttackAction::enter(role::brain::RoleContext& ctx, Param source, State& lea
     motion.m_completedLoops = 0;
     motion.loop = row->loop == "-1"_fx || row->loop > "1"_fx;
     motion.playing = true;
-    displacement::reset(world, entity);
-    displacement::set(world, entity, row->displacementId, ctx.node());
+    displacement::DisplacementDriver(world, entity).reset();
+    displacement::DisplacementDriver(world, entity).set(row->displacementId, ctx.node());
     const auto first = baseSkill(pool, source.m_skill);
     for (const auto id : row->buffIds) if (id != -1) buff::addActionBuff(world, entity, id, first);
     if (row->ghost != -1) world.emit(entity, Ghost{"-1"_fx});
@@ -195,7 +195,7 @@ void AttackAction::exit(role::brain::RoleContext& ctx, Param source, State& leaf
     pool.m_allowInterrupt = true;
     pool.m_allowExtraInterrupt = false;
     world.ecs().get<MotionState>(entity).actionScale = conf::kIdleScaleTime;
-    displacement::reset(world, entity);
+    displacement::DisplacementDriver(world, entity).reset();
     for (const auto id : row->buffIds) if (id != -1) buff::removeActionBuff(world, entity, id);
     if (row->ghost != -1) world.emit(entity, Ghost{});
     world.emit(entity, Sound{0, {}, true, row->id});

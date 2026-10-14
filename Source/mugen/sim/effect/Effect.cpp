@@ -171,8 +171,8 @@ void actionEnter(Context& ctx, const int32_t& id, std::variant<AttackEffect>& va
     int32_t node = -1;
     for (size_t i = 0; i < ctx.m_tree.m_instance.leaves.size(); ++i)
         if (&ctx.m_tree.m_instance.leaves[i] == &value) node = static_cast<int32_t>(i + 1);
-    displacement::reset(world, entity);
-    displacement::set(world, entity, row->displacementId, node);
+    displacement::DisplacementDriver(world, entity).reset();
+    displacement::DisplacementDriver(world, entity).set(row->displacementId, node);
     if (row->ghost != -1) world.emit(entity, Ghost{"-1"_fx});
     world.emit(entity, Sound{0, sounds(world, entity, *row), false, id});
 }
@@ -212,7 +212,7 @@ void actionExit(Context& ctx, const int32_t& id, std::variant<AttackEffect>& val
     auto& state = std::get<AttackEffect>(value);
     attack::clearEffects(ctx.m_world, ctx.m_entity, state.m_action);
     ctx.m_world.ecs().get<MotionState>(ctx.m_entity).actionScale = "1"_fx;
-    displacement::reset(ctx.m_world, ctx.m_entity);
+    displacement::DisplacementDriver(ctx.m_world, ctx.m_entity).reset();
     const auto* row = conf::Config::instance().find<conf::ActionEffectConfig>(id);
     if (row && row->ghost != -1) ctx.m_world.emit(ctx.m_entity, Ghost{});
     ctx.m_world.emit(ctx.m_entity, Sound{0, {}, true, id});
@@ -421,7 +421,7 @@ void EffectActor::update(World& world, Entity entity)
         ecs.get<EffectTree>(entity) = std::move(tree);
         if (!ecs.get<EntityGroup>(entity).destroyRequested)
         {
-            displacement::update(world, entity);
+            displacement::DisplacementDriver(world, entity).update();
             motionUpdate(world, entity);
             if (!hit) { ecs.get<ColliderState>(entity).attack.clear(); ecs.get<ColliderState>(entity).damage.clear(); }
         }

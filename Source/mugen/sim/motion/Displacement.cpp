@@ -42,27 +42,30 @@ AxisStep integrate(Fixed time, Fixed velocity, Fixed acceleration, Fixed acceler
     return {offset, next};
 }
 
+// 构造位移视图，只保存世界与实体句柄。
+DisplacementDriver::DisplacementDriver(World& world, Entity entity) : m_world(world), m_entity(entity) {}
+
 // 重置位移状态及受击施加的强制速度。
-void reset(World& world, Entity entity)
+void DisplacementDriver::reset()
 {
-    auto& d = world.ecs().get<Displacement>(entity);
+    auto& d = m_world.ecs().get<Displacement>(m_entity);
     d.elapsedMs = {};
     d.velocityTime = d.acceleration = d.accelerationTime = {};
     d.gravity = Fixed::fromInt(1);
     d.bounces = {};
     d.listenerNode = -1;
-    world.ecs().get<RoleHitState>(entity).forceVelocity = {};
+    m_world.ecs().get<RoleHitState>(m_entity).forceVelocity = {};
 }
 
 // 选择前方扇形内最近的敌对存活角色。
-Entity findTargetInSector(World& world, Entity entity, Fixed radius, Fixed angle)
+Entity DisplacementDriver::findTargetInSector(Fixed radius, Fixed angle)
 {
-    const auto origin = world.ecs().get<Transform>(entity);
-    const auto identity = world.ecs().get<RoleIdentity>(entity);
+    const auto origin = m_world.ecs().get<Transform>(m_entity);
+    const auto identity = m_world.ecs().get<RoleIdentity>(m_entity);
     const auto campGroup = [](int32_t camp) { return camp == 2 || camp == 4 ? 2 : camp == 8 || camp == 16 ? 3 : 1; };
     Entity result;
     Fixed best = radius;
-    world.ecs().each<RoleIdentity, Transform, Vitals, EntityGroup>(
+    m_world.ecs().each<RoleIdentity, Transform, Vitals, EntityGroup>(
         [&](Entity candidate, const RoleIdentity& role, const Transform& t, const Vitals& vitals, const EntityGroup& group) {
             if (group.kind != GroupKind::Role || role.camp == identity.camp ||
                 campGroup(role.camp) == campGroup(identity.camp) || (vitals.hp <= Fixed{} && vitals.maxHp > Fixed{}))
@@ -82,18 +85,18 @@ Entity findTargetInSector(World& world, Entity entity, Fixed radius, Fixed angle
 }
 
 // 解析追踪或三轴配置并初始化位移参数。
-void setData(World& world, Entity entity, const conf::DisplacementConfig& data, int32_t listenerNode)
+void DisplacementDriver::setData(const conf::DisplacementConfig& data, int32_t listenerNode)
 {
-    auto& d = world.ecs().get<Displacement>(entity);
-    auto& velocity = world.ecs().get<RoleHitState>(entity).forceVelocity;
-    const auto& t = world.ecs().get<Transform>(entity);
+    auto& d = m_world.ecs().get<Displacement>(m_entity);
+    auto& velocity = m_world.ecs().get<RoleHitState>(m_entity).forceVelocity;
+    const auto& t = m_world.ecs().get<Transform>(m_entity);
     bool traced = false;
     if (data.isTrace > 0)
     {
-        const Entity target = findTargetInSector(world, entity, Fixed::fromInt(data.traceRadius), Fixed::fromInt(data.traceAngle));
+        const Entity target = findTargetInSector(Fixed::fromInt(data.traceRadius), Fixed::fromInt(data.traceAngle));
         if (target.value != 0)
         {
-            const auto& end = world.ecs().get<Transform>(target).position;
+            const auto& end = m_world.ecs().get<Transform>(target).position;
             const Fixed x = end.x - t.position.x, z = end.z - t.position.z;
             const Fixed totalTime = FixedMath::sqrt(x * x + z * z) / data.traceVelocity;
             if (totalTime > Fixed{})
@@ -119,31 +122,31 @@ void setData(World& world, Entity entity, const conf::DisplacementConfig& data, 
 }
 
 // 查表设置位移；-1 仅更新事件监听节点。
-bool set(World& world, Entity entity, int32_t id, int32_t listenerNode)
+bool DisplacementDriver::set(int32_t id, int32_t listenerNode)
 {
     if (id == -1)
     {
-        world.ecs().get<Displacement>(entity).listenerNode = listenerNode;
+        m_world.ecs().get<Displacement>(m_entity).listenerNode = listenerNode;
         return true;
     }
     const auto* row = conf::Config::instance().find<conf::DisplacementConfig>(id);
     if (!row)
         return false;
-    setData(world, entity, *row, listenerNode);
+    setData(*row, listenerNode);
     return true;
 }
 
 // 推进三轴位移、触发事件并限制在地图可移动区域内。
-void update(World& world, Entity entity)
+void DisplacementDriver::update()
 {
-    auto& ecs = world.ecs();
-    auto& d = ecs.get<Displacement>(entity);
-    auto& t = ecs.get<Transform>(entity);
-    auto& velocity = ecs.get<RoleHitState>(entity).forceVelocity;
+    auto& ecs = m_world.ecs();
+    auto& d = ecs.get<Displacement>(m_entity);
+    auto& t = ecs.get<Transform>(m_entity);
+    auto& velocity = ecs.get<RoleHitState>(m_entity).forceVelocity;
     const auto last = t.position;
-    const auto& role = ecs.get<RoleStatus>(entity);
+    const auto& role = ecs.get<RoleStatus>(m_entity);
     const bool moving = role.isMove() && !role.isAttack();
-    const bool cannotMove = !ecs.get<ExtraState>(entity).isCanMove();
+    const bool cannotMove = !ecs.get<ExtraState>(m_entity).isCanMove();
     auto v = velocity;
     v.x *= moving || cannotMove ? d.velocityScale.x : d.defaultVelocityScale;
     v.y *= moving ? d.velocityScale.y : d.defaultVelocityScale;
@@ -163,9 +166,9 @@ void update(World& world, Entity entity)
     d.offset = {x.offset, y.offset, z.offset * conf::kZRate};
     const auto offset = d.offset;
     const auto event = [&](DisplacementEvent e) {
-        if (ecs.has<ObstacleState>(entity)) return room_entities::displacementEvent(world, entity, e);
-        return ecs.has<EffectTree>(entity) ? effect::EffectActor(world, entity).onDisplacementEvent(e)
-                                          : role::brain::onDisplacementEvent(world, entity, e);
+        if (ecs.has<ObstacleState>(m_entity)) return room_entities::displacementEvent(m_world, m_entity, e);
+        return ecs.has<EffectTree>(m_entity) ? effect::EffectActor(m_world, m_entity).onDisplacementEvent(e)
+                                          : role::brain::onDisplacementEvent(m_world, m_entity, e);
     };
     if (velocity.x == Fixed{} && velocity.y == Fixed{} && velocity.z == Fixed{})
         event(DisplacementEvent::Brake);
@@ -190,7 +193,7 @@ void update(World& world, Entity entity)
         }
     }
     else if (y.velocity == Fixed{}) event(DisplacementEvent::Lie);
-    const Fixed radius = ecs.get<ColliderState>(entity).radius;
+    const Fixed radius = ecs.get<ColliderState>(m_entity).radius;
     const auto sign = [](Fixed value) { return Fixed::fromInt(value > Fixed{} ? 1 : value < Fixed{} ? -1 : 0); };
     const FixedVec2 point{t.position.x + sign(offset.x) * radius, t.position.z + sign(offset.z) * radius};
     const auto& map = ecs.singleton<MapRegion>();

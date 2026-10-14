@@ -134,11 +134,11 @@ TEST_CASE("Displacement zero VelocityScale preserves falling height")
     world.ecs().get<Transform>(entity).position.y = "100"_fx;
     world.ecs().get<sim::ExtraState>(entity).add(mugen::ExtraState::Durance);
     world.ecs().get<Displacement>(entity).velocityScale = {};
-    displacement::update(world, entity);
+    displacement::DisplacementDriver(world, entity).update();
     CHECK(world.ecs().get<Transform>(entity).position.y < "100"_fx);
     CHECK(world.ecs().get<RoleHitState>(entity).forceVelocity.y < Fixed{});
     for (int i = 0; i < 60; ++i)
-        displacement::update(world, entity);
+        displacement::DisplacementDriver(world, entity).update();
     CHECK(world.ecs().get<Transform>(entity).position.y == Fixed{});
 }
 TEST_CASE("Action animation names and playback mapping")
@@ -167,12 +167,12 @@ TEST_CASE("Displacement golden three ids match positions and velocities per fram
         REQUIRE(static_cast<bool>(input >> id >> frame));
         if (id != previous)
         {
-            displacement::reset(world, entity);
+            displacement::DisplacementDriver(world, entity).reset();
             world.ecs().get<Transform>(entity).position = {};
-            REQUIRE(displacement::set(world, entity, id));
+            REQUIRE(displacement::DisplacementDriver(world, entity).set(id));
             previous = id;
         }
-        displacement::update(world, entity);
+        displacement::DisplacementDriver(world, entity).update();
         const auto p = world.ecs().get<Transform>(entity).position;
         const auto v = world.ecs().get<RoleHitState>(entity).forceVelocity;
         for (Fixed actual : {p.x, p.y, p.z, v.x, v.y, v.z})

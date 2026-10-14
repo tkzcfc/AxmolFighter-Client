@@ -37,7 +37,7 @@ void Locomotion::enter(RoleContext& ctx, Param type, State& state)
                                    : type == behavior::ActionType::Run ? conf::kRunScaleTime
                                                                        : conf::kIdleScaleTime;
     if (type == behavior::ActionType::Idle)
-        displacement::reset(ctx.world(), ctx.entity());
+        displacement::DisplacementDriver(ctx.world(), ctx.entity()).reset();
     footstep(ctx, type);
 }
 
@@ -101,7 +101,7 @@ void Jostled::enter(RoleContext& ctx, Param, State& state)
     const auto* row = conf::Config::instance().find<conf::DisplacementConfig>(id);
     if (row && !row->velocity.empty() && row->velocity[0] != Fixed{})
         ctx.get<Transform>().towardX *= -1;
-    displacement::set(ctx.world(), ctx.entity(), id, ctx.node());
+    displacement::DisplacementDriver(ctx.world(), ctx.entity()).set(id, ctx.node());
 }
 
 BTStatus Jostled::update(RoleContext&, Param, State& state)
@@ -112,7 +112,7 @@ BTStatus Jostled::update(RoleContext&, Param, State& state)
 void Jostled::exit(RoleContext& ctx, Param, State&)
 {
     behavior::behaviorStateEnd(ctx.world(), ctx.entity(), behavior::ActionType::Jostled);
-    displacement::reset(ctx.world(), ctx.entity());
+    displacement::DisplacementDriver(ctx.world(), ctx.entity()).reset();
 }
 
 bool Jostled::onDisplacement(RoleContext& ctx, Param, State& state)
@@ -131,7 +131,7 @@ void Finding::enter(RoleContext& ctx, Param, State& state)
 {
     const auto type = ctx.world().setup().mode == WorldMode::Town ? behavior::ActionType::Run : behavior::ActionType::Walk;
     Locomotion::enter(ctx, type, state);
-    displacement::reset(ctx.world(), ctx.entity());
+    displacement::DisplacementDriver(ctx.world(), ctx.entity()).reset();
 }
 
 BTStatus Finding::update(RoleContext& ctx, Param, State&)
@@ -179,6 +179,6 @@ void Finding::exit(RoleContext& ctx, Param, State& state)
 {
     const auto type = ctx.world().setup().mode == WorldMode::Town ? behavior::ActionType::Run : behavior::ActionType::Walk;
     Locomotion::exit(ctx, type, state);
-    displacement::reset(ctx.world(), ctx.entity());
+    displacement::DisplacementDriver(ctx.world(), ctx.entity()).reset();
 }
 }  // namespace mugen::sim::role::brain::states

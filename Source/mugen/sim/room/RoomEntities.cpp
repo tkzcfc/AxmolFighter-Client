@@ -258,10 +258,10 @@ void update(World& world, Entity entity)
             state->m_deathStarted    = true;
             state->m_displacementEnd = !row || row->deathDisplacementId == -1;
             if (row)
-                displacement::set(world, entity, row->deathDisplacementId);
+                displacement::DisplacementDriver(world, entity).set(row->deathDisplacementId);
         }
         if (state->m_deathStarted && !state->m_displacementEnd)
-            displacement::update(world, entity);
+            displacement::DisplacementDriver(world, entity).update();
         state->m_time += dt;
         const bool complete = animate(world, entity);
         if (state->m_hits == 0 && state->m_displacementEnd && complete && state->m_time > Fixed{})

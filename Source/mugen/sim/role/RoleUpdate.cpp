@@ -58,7 +58,7 @@ void behaviorTreeUpdate(World& world, Entity entity)
     role::brain::update(brain, world, entity, world.setup().mode == WorldMode::Town);
 }
 // 推进角色位移。
-void displacementUpdate(World& world, Entity entity) { displacement::update(world, entity); }
+void displacementUpdate(World& world, Entity entity) { displacement::DisplacementDriver(world, entity).update(); }
 // 更新角色碰撞体流程。
 void collisionBodyUpdate(World&, Entity) {}
 // 推进动作时间并重新登记本帧碰撞框。

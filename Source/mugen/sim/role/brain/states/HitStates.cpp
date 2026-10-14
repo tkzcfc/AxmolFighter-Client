@@ -55,7 +55,7 @@ void success(RoleContext& ctx, behavior::HitActionState& leaf, S next)
     }
     else
     {
-        displacement::reset(ctx.world(), ctx.entity());
+        displacement::DisplacementDriver(ctx.world(), ctx.entity()).reset();
         transition(ctx, leaf, next);
     }
     ctx.get<RoleHitState>().stiffTime = {};
@@ -170,13 +170,13 @@ void groundChase(RoleContext& ctx, behavior::HitActionState& leaf, const conf::S
         else if (data.hitType == 0)
             leaf.m_displacementId = data.displacementId;
     }
-    displacement::set(ctx.world(), ctx.entity(), leaf.m_displacementId, ctx.node());
+    displacement::DisplacementDriver(ctx.world(), ctx.entity()).set(leaf.m_displacementId, ctx.node());
 }
 // 浮空和倒地追击先重设位移再扣浮空值，最后决定能否再次挑起。
 void airChase(RoleContext& ctx, A type, behavior::HitActionState& leaf, const conf::SkillHitConfig& data)
 {
     leaf.m_displacementId = data.hitType == 0 ? data.airDisplacementId : data.displacementId;
-    displacement::set(ctx.world(), ctx.entity(), leaf.m_displacementId, ctx.node());
+    displacement::DisplacementDriver(ctx.world(), ctx.entity()).set(leaf.m_displacementId, ctx.node());
     if (data.hitType != 1)
         ctx.role().applyWeight(data.hitRigidity);
     if (type == A::HitUp)
@@ -267,7 +267,7 @@ void HitState::enter(RoleContext& ctx, Param type, State& leaf)
             skill::SkillCaster(ctx.world(), ctx.entity()).updateCrazy();
         }
     }
-    displacement::set(ctx.world(), ctx.entity(), leaf.m_displacementId, ctx.node());
+    displacement::DisplacementDriver(ctx.world(), ctx.entity()).set(leaf.m_displacementId, ctx.node());
 }
 
 BTStatus HitState::update(RoleContext& ctx, Param type, State& leaf)
@@ -379,7 +379,7 @@ void HitState::exit(RoleContext& ctx, Param type, State& leaf)
     const auto* data = conf::Config::instance().find<conf::SkillHitConfig>(leaf.m_hitId);
     if (type == A::Death || ((type == A::Hit || type == A::Controlled) && data && data->hitType == 0 &&
         ctx.get<Transform>().position.y == Fixed{}))
-        displacement::reset(ctx.world(), ctx.entity());
+        displacement::DisplacementDriver(ctx.world(), ctx.entity()).reset();
     behavior::behaviorStateEnd(ctx.world(), ctx.entity(), type);
 }
 

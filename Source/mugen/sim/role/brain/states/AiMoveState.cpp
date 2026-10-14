@@ -79,7 +79,7 @@ void AiMove::enter(RoleContext& ctx, Param type, State& state)
         state.m_complete = true;
         return;
     }
-    displacement::set(ctx.world(), ctx.entity(), -1, ctx.node());
+    displacement::DisplacementDriver(ctx.world(), ctx.entity()).set(-1, ctx.node());
     const auto* row = conf::Config::instance().find<conf::AiConfig>(ctx.get<RoleIdentity>().aiId);
     if (row)
     {

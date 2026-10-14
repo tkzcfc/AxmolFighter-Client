@@ -252,7 +252,7 @@ bool World::changeRoom(int32_t id, FixedVec3 position, int32_t toward)
         }
         if (auto* control = m_ecs.tryGet<RoleControl>(entity))
             control->m_last = {};
-        if (m_ecs.has<Displacement>(entity)) displacement::reset(*this, entity);
+        if (m_ecs.has<Displacement>(entity)) displacement::DisplacementDriver(*this, entity).reset();
         if (auto* status = m_ecs.tryGet<RoleStatus>(entity))
         {
             status->eEntityStatus = EntityRoleStatus::Idle;
