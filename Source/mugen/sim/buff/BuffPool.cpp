@@ -5,6 +5,7 @@
 #include "BuffPresentation.h"
 #include "mugen/sim/hit/Hit.h"
 #include "mugen/sim/World.h"
+#include "mugen/sim/trace/TraceSink.h"
 #include "mugen/conf/ReflectedConfig.h"
 
 namespace mugen::sim::buff
@@ -93,6 +94,7 @@ std::optional<uint64_t> addBuff(World& world, Entity entity, int32_t id,
         event.m_target = entity;
         dispatchEvent(world, entity, BFEvent::AddBuff, event, 8);
     }
+    trace::noteBuffAdd(world, entity, id);
     return serial;
 }
 
@@ -157,6 +159,9 @@ void update(World& world, Entity entity)
     }
     pool = world.ecs().tryGet<BuffPool>(entity);
     if (!pool) return;
+    for (const auto& instance : pool->m_instances)
+        if (instance.m_lifecycle.m_destroy)
+            trace::noteBuffRemove(world, entity, instance.m_id);
     std::erase_if(pool->m_instances, [](const BuffInstance& instance) { return instance.m_lifecycle.m_destroy; });
     updateCooldowns(*pool, seconds);
 }
@@ -181,7 +186,12 @@ void destroySerial(World& world, Entity entity, uint64_t serial, bool byRule)
     });
     auto* pool = world.ecs().tryGet<BuffPool>(entity);
     if (!pool) return;
+    const auto* removed = findInstance(world, entity, serial);
+    const int32_t removedId = removed ? removed->m_id : 0;
+    const auto before = pool->m_instances.size();
     std::erase_if(pool->m_instances, [serial](const BuffInstance& value) { return value.m_serial == serial; });
+    if (removed && pool->m_instances.size() < before)
+        trace::noteBuffRemove(world, entity, removedId);
 }
 }
 

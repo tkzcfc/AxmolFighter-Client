@@ -8,6 +8,7 @@
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/core/math/FixedMath.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
+#include "mugen/sim/trace/TraceSink.h"
 #include <charconv>
 
 namespace mugen::sim::spawn
@@ -324,6 +325,7 @@ Entity create(World& world, Entity owner, int32_t id)
     ecs.add(entity, identity);
     ecs.add(entity, ColliderState{{}, {}, ecs.singleton<WorldClock>().frame, Fixed::fromInt(row->radius)});
     ecs.add(entity, CollisionState{});
+    trace::noteSpawn(world, owner, id);
     return entity;
 }
 /// 应用地图相对、地图绝对或实体相对坐标。

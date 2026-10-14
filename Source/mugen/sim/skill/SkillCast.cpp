@@ -1,6 +1,7 @@
 #include "Skill.h"
 #include "SkillTriggers.h"
 #include "mugen/sim/World.h"
+#include "mugen/sim/trace/TraceSink.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include <algorithm>
 
@@ -121,6 +122,7 @@ void dealWithCastPipeBegan(World& world, Entity entity, int32_t index)
             buff::trigger(world, entity, BFEvent::BeforeNextSkill, {index});
     }
     castBegan(world, entity, index);
+    trace::noteCast(world, entity, skill.m_configId, pool.m_slots[skill.m_address.m_slot].m_name, skill.m_pipe);
     const auto first = getGivenSkill(pool, pool.m_slots[skill.m_address.m_slot].m_name, skill.m_address.m_index, skill.m_address.m_mode, 1, true);
     buff::trigger(world, entity, BFEvent::BeforeCastSkill, {first});
     ability::trigger(world, entity, ability::SkillEvent::BeforeCastSkill, {first});
@@ -130,6 +132,7 @@ void dealWithCastPipeEnded(World& world, Entity entity, int32_t index)
 {
     auto& pool = world.ecs().get<SkillPool>(entity);
     const auto& skill = pool.m_skills.at(index);
+    trace::noteCastEnd(world, entity, skill.m_configId);
     const auto first = getGivenSkill(pool, pool.m_slots[skill.m_address.m_slot].m_name, skill.m_address.m_index, skill.m_address.m_mode, 1, true);
     buff::trigger(world, entity, BFEvent::AfterCastSkill, {first});
     if (skill.m_address.m_step == skill.m_stepCount) buff::trigger(world, entity, BFEvent::AfterNextSkill, {index});

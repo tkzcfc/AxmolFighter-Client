@@ -26,7 +26,9 @@ struct WorldSetup
     bool m_pvp = false;
     // 场景驱动提供的战斗类型编号，供效果区域过滤使用，不从房间主键猜测。
     int32_t m_fightType = 0;
-    // 参与世界配置归档的字段。
+    // 为假时角色更新跳过怪物 AI。驱动开关，不写入回放与快照。
+    bool m_aiEnabled = true;
+    // 参与世界配置归档的字段。m_aiEnabled 故意不在此列。
     MG_REFLECT(WorldSetup, seed, mode, roomId, mapKey, m_pvp, m_fightType)
 };
 // 固定逻辑帧的秒数。

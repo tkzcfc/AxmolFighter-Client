@@ -1,6 +1,7 @@
 #include "Status.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/hit/HitState.h"
+#include "mugen/sim/trace/TraceSink.h"
 
 namespace mugen::sim::status
 {
@@ -57,6 +58,7 @@ bool dealWithStatus(World& world, Entity entity, EntityRoleStatus bits, int32_t 
     case S::Death:
         role.eEntityStatus                      = S::Death;
         role.entityParams.death_displacement_id = id;
+        trace::noteDeath(world, entity);
         break;
     case S::Jostled:
         role.entityParams.displacement_id = id;

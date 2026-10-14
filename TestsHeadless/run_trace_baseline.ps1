@@ -1,6 +1,9 @@
 param(
     [string]$Revision = '',
-    [string]$OutDir = ''
+    [string]$OutDir = '',
+    [ValidateSet('full', 'effects')]
+    [string]$Mode = 'full',
+    [switch]$AiOff
 )
 
 $ErrorActionPreference = 'Stop'
@@ -9,7 +12,8 @@ $clientRoot = Split-Path -Parent $root
 $cli        = Join-Path $root 'build/mugen_sim_cli'
 $replayDir  = Join-Path $root 'data/replays'
 $scenarioDir = Join-Path $root 'data/scenarios'
-$traceDir   = if ($OutDir) { $OutDir } else { Join-Path $replayDir 'traces' }
+$traceName  = if ($Mode -eq 'effects') { 'effects' } else { 'traces' }
+$traceDir   = if ($OutDir) { $OutDir } else { Join-Path $replayDir $traceName }
 
 if (-not (Test-Path -LiteralPath $cli)) {
     Write-Error "mugen_sim_cli not found; build it first (Release)"
@@ -22,10 +26,12 @@ if (-not $Revision) {
 if (-not (Test-Path -LiteralPath $traceDir)) {
     New-Item -ItemType Directory -Force -Path $traceDir | Out-Null
 }
+$ai = @()
+if ($AiOff) { $ai = @('--ai', 'off') }
 
 # 回放基线：三个 .mgrp 回放。
 foreach ($name in @('arena30002', 'copy101_room2010101', 'defense2071501')) {
-    & $cli replay (Join-Path $replayDir "$name.mgrp") --trace (Join-Path $traceDir "$name.trace") --revision $Revision | Out-Null
+    & $cli replay (Join-Path $replayDir "$name.mgrp") @ai --trace (Join-Path $traceDir "$name.trace") --revision $Revision | Out-Null
     if ($LASTEXITCODE -ne 0) { Write-Error "replay baseline failed: $name"; exit $LASTEXITCODE }
 }
 
@@ -41,6 +47,6 @@ foreach ($spec in @(
     $name = $spec[0]; $occ = $spec[1]; $room = $spec[2]
     $script = Join-Path $scenarioDir "$name.script"
     if (-not (Test-Path -LiteralPath $script)) { Write-Error "scenario script missing: $script"; exit 1 }
-    & $cli run-room $room --frames 700 --class $occ --level 1000 --script $script --trace (Join-Path $traceDir "$name.trace") --revision $Revision | Out-Null
+    & $cli run-room $room --frames 700 --class $occ --level 1000 --script $script @ai --trace (Join-Path $traceDir "$name.trace") --revision $Revision | Out-Null
     if ($LASTEXITCODE -ne 0) { Write-Error "scenario baseline failed: $name"; exit $LASTEXITCODE }
 }

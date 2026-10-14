@@ -260,4 +260,68 @@ void emitFrame(TraceSink& sink, World& world)
     for (const auto& event : world.ecs().singleton<PresentationEvents>().events)
         emitEvent(sink, world, event);
 }
+
+namespace
+{
+// 未挂载追踪时不拼接文本，避免战斗热路径产生额外开销。
+bool tracing(const World& world) { return world.trace() != nullptr; }
+
+void writeEvent(World& world, const std::string& line)
+{
+    world.trace()->write(line);
+}
+}  // namespace
+
+void noteCast(World& world, Entity entity, int32_t configId, std::string_view slot, int32_t pipe)
+{
+    if (!tracing(world))
+        return;
+    const auto name = slot.empty() ? std::string_view{"-"} : slot;
+    writeEvent(world, "cast " + entityKey(world, entity) + ' ' + std::to_string(configId) + ' ' + std::string(name) +
+                          ' ' + std::to_string(pipe));
+}
+
+void noteCastEnd(World& world, Entity entity, int32_t configId)
+{
+    if (!tracing(world))
+        return;
+    writeEvent(world, "castend " + entityKey(world, entity) + ' ' + std::to_string(configId));
+}
+
+void noteDamage(World& world, Entity attacker, Entity target, int32_t sourceConfigId, int64_t value, bool critical)
+{
+    if (!tracing(world))
+        return;
+    writeEvent(world, "dmg " + entityKey(world, attacker) + ' ' + entityKey(world, target) + ' ' +
+                          std::to_string(sourceConfigId) + ' ' + std::to_string(value) + ' ' +
+                          std::to_string(critical ? 1 : 0));
+}
+
+void noteBuffAdd(World& world, Entity entity, int32_t buffId)
+{
+    if (!tracing(world))
+        return;
+    writeEvent(world, "buff + " + entityKey(world, entity) + ' ' + std::to_string(buffId));
+}
+
+void noteBuffRemove(World& world, Entity entity, int32_t buffId)
+{
+    if (!tracing(world))
+        return;
+    writeEvent(world, "buff - " + entityKey(world, entity) + ' ' + std::to_string(buffId));
+}
+
+void noteSpawn(World& world, Entity owner, int32_t effectConfigId)
+{
+    if (!tracing(world))
+        return;
+    writeEvent(world, "spawn " + entityKey(world, owner) + ' ' + std::to_string(effectConfigId));
+}
+
+void noteDeath(World& world, Entity entity)
+{
+    if (!tracing(world))
+        return;
+    writeEvent(world, "death " + entityKey(world, entity));
+}
 }  // namespace mugen::sim::trace

@@ -4,6 +4,7 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/status/Status.h"
 #include "mugen/sim/skill/Skill.h"
+#include "mugen/sim/trace/TraceSink.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/BattleConst.h"
 
@@ -286,7 +287,14 @@ void hitTarget(World& world, Entity effectEntity, Entity target, const conf::Eff
         ecs.get<RoleHitState>(target).m_beCritical = data.m_critical;
         if (checkHurtPermit(world, target, effectEntity, HurtPermit::Hp) &&
             !world.hitHooks().m_replaceDamage(world, target, data.m_damage))
+        {
+            const int32_t sourceConfig = ecs.get<EffectState>(effectEntity).m_configId;
+            const auto applied         = data.m_damage.toInt();
+            const bool critical        = data.m_critical;
+            const auto attacker        = data.m_attacker;
+            trace::noteDamage(world, attacker, target, sourceConfig, applied, critical);
             modifyHp(world, target, -data.m_damage, effectEntity);
+        }
         hitReaction(world, target, data, *hitRow);
         world.hitHooks().m_ability(world, data.m_attacker, HitAbilityEvent::Anger, data, data.m_skillId);
         endHit(world, target, data, row);

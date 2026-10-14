@@ -1,4 +1,5 @@
 #include "support/ScenarioHarness.h"
+#include "support/TraceDiff.h"
 #include "mugen/conf/ConfigFormat.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/sim/Replay.h"
@@ -12,11 +13,20 @@
 #include <iostream>
 #include <sstream>
 #include <string_view>
+#include <vector>
 
 namespace
 {
 using namespace mugen;
 using namespace mugen::sim;
+bool aiEnabledFlag(std::string_view text)
+{
+    if (text == "on")
+        return true;
+    if (text == "off")
+        return false;
+    throw std::invalid_argument("Expected --ai on|off");
+}
 uint64_t number(std::string_view text)
 {
     uint64_t value          = 0;
@@ -168,11 +178,12 @@ int main(int argc, char** argv)
             std::string compare;
             std::string tracePath;
             std::string revision;
+            bool aiEnabled = true;
             for (int index = 3; index < argc; index += 2)
             {
                 if (index + 1 >= argc)
                     throw std::invalid_argument(
-                        "Expected replay <file> [--hash-every N] [--compare hashfile] [--trace file] [--revision rev]");
+                        "Expected replay <file> [--hash-every N] [--compare hashfile] [--trace file] [--revision rev] [--ai on|off]");
                 if (std::string_view(argv[index]) == "--hash-every")
                     every = number(argv[index + 1]);
                 else if (std::string_view(argv[index]) == "--compare")
@@ -181,9 +192,11 @@ int main(int argc, char** argv)
                     tracePath = argv[index + 1];
                 else if (std::string_view(argv[index]) == "--revision")
                     revision = argv[index + 1];
+                else if (std::string_view(argv[index]) == "--ai")
+                    aiEnabled = aiEnabledFlag(argv[index + 1]);
                 else
                     throw std::invalid_argument(
-                        "Expected replay <file> [--hash-every N] [--compare hashfile] [--trace file] [--revision rev]");
+                        "Expected replay <file> [--hash-every N] [--compare hashfile] [--trace file] [--revision rev] [--ai on|off]");
             }
             if (every == 0)
                 throw std::invalid_argument("Hash interval must be positive");
@@ -194,6 +207,7 @@ int main(int argc, char** argv)
             if (!replay.load(argv[2], conf::configSchemaHash(), error))
                 throw std::runtime_error(error);
             World world = recordedWorld(replay.setup);
+            world.setAiEnabled(aiEnabled);
             trace::TraceSink sink;
             if (!tracePath.empty())
             {
@@ -227,16 +241,24 @@ int main(int argc, char** argv)
             }
             return 0;
         }
-        if (argc == 6 && std::string_view(argv[1]) == "record-room" && std::string_view(argv[3]) == "--frames")
+        if (argc >= 6 && std::string_view(argv[1]) == "record-room" && std::string_view(argv[3]) == "--frames")
         {
             const auto roomId = number(argv[2]);
             const auto frames = number(argv[4]);
             if (roomId > INT32_MAX || frames == 0 || std::string_view(argv[5]).empty())
-                throw std::invalid_argument("Expected record-room <roomId> --frames N <file>");
+                throw std::invalid_argument("Expected record-room <roomId> --frames N <file> [--ai on|off]");
+            bool aiEnabled = true;
+            for (int index = 6; index < argc; index += 2)
+            {
+                if (index + 1 >= argc || std::string_view(argv[index]) != "--ai")
+                    throw std::invalid_argument("Expected record-room <roomId> --frames N <file> [--ai on|off]");
+                aiEnabled = aiEnabledFlag(argv[index + 1]);
+            }
             Replay replay;
             replay.schemaHash = conf::configSchemaHash();
             replay.setup      = test::ScenarioHarness::roomSetup(static_cast<int32_t>(roomId), 31);
             World world       = recordedWorld(replay.setup);
+            world.setAiEnabled(aiEnabled);
             for (uint64_t frame = 1; frame <= frames; ++frame)
             {
                 auto input = recordedInput(world);
@@ -255,7 +277,7 @@ int main(int argc, char** argv)
             if (room > INT32_MAX || std::string_view(argv[3]) != "--frames")
                 throw std::invalid_argument(
                     "Expected run-room <roomId> --frames N [--class 1-4] [--seed N] [--script file] [--trace file] "
-                    "[--revision rev]");
+                    "[--revision rev] [--ai on|off]");
             const auto frames = number(argv[4]);
             std::map<uint64_t, FrameInput> inputs;
             std::string tracePath;
@@ -263,12 +285,13 @@ int main(int argc, char** argv)
             int32_t occupation = 0;
             uint64_t seed      = 31;
             int32_t level      = 1;
+            bool aiEnabled     = true;
             for (int index = 5; index < argc; index += 2)
             {
                 if (index + 1 >= argc)
                     throw std::invalid_argument(
                         "Expected run-room <roomId> --frames N [--class 1-4] [--seed N] [--level N] [--script file] "
-                        "[--trace file] [--revision rev]");
+                        "[--trace file] [--revision rev] [--ai on|off]");
                 if (std::string_view(argv[index]) == "--script")
                     inputs = loadScript(argv[index + 1], frames);
                 else if (std::string_view(argv[index]) == "--trace")
@@ -281,16 +304,19 @@ int main(int argc, char** argv)
                     seed = number(argv[index + 1]);
                 else if (std::string_view(argv[index]) == "--level")
                     level = static_cast<int32_t>(number(argv[index + 1]));
+                else if (std::string_view(argv[index]) == "--ai")
+                    aiEnabled = aiEnabledFlag(argv[index + 1]);
                 else
                     throw std::invalid_argument(
                         "Expected run-room <roomId> --frames N [--class 1-4] [--seed N] [--level N] [--script file] "
-                        "[--trace file] [--revision rev]");
+                        "[--trace file] [--revision rev] [--ai on|off]");
             }
             World world;
             if (occupation >= 1 && occupation <= 4)
                 world = combatWorld(static_cast<int32_t>(room), seed, occupation, level);
             else
                 world.init(test::ScenarioHarness::roomSetup(static_cast<int32_t>(room), seed));
+            world.setAiEnabled(aiEnabled);
             trace::TraceSink sink;
             if (!tracePath.empty())
             {
@@ -328,14 +354,66 @@ int main(int argc, char** argv)
         }
         if (argc >= 4 && std::string_view(argv[1]) == "trace-diff")
         {
-            const std::string first = argv[2];
-            const std::string second = argv[3];
-            std::ifstream fa(first);
-            std::ifstream fb(second);
+            std::string mode = "full";
+            std::string allowPath;
+            std::vector<std::string> files;
+            for (int index = 2; index < argc; ++index)
+            {
+                const std::string_view arg(argv[index]);
+                if (arg == "--mode" || arg == "--allow")
+                {
+                    if (index + 1 >= argc)
+                        throw std::invalid_argument(
+                            "Expected trace-diff [--mode full|effects] [--allow file] <a.trace> <b.trace>");
+                    if (arg == "--mode")
+                        mode = argv[++index];
+                    else
+                        allowPath = argv[++index];
+                }
+                else
+                    files.emplace_back(argv[index]);
+            }
+            if (files.size() != 2 || (mode != "full" && mode != "effects"))
+                throw std::invalid_argument(
+                    "Expected trace-diff [--mode full|effects] [--allow file] <a.trace> <b.trace>");
+            if (mode == "full" && !allowPath.empty())
+                throw std::invalid_argument("Allow list requires --mode effects");
+            const auto readText = [](const std::string& path) {
+                std::ifstream file(path);
+                if (!file)
+                    throw std::runtime_error("Cannot open trace file: " + path);
+                std::ostringstream buffer;
+                buffer << file.rdbuf();
+                return buffer.str();
+            };
+            if (mode == "effects")
+            {
+                std::vector<std::string> patterns;
+                if (!allowPath.empty())
+                {
+                    std::ifstream file(allowPath);
+                    if (!file)
+                        throw std::runtime_error("Cannot open allow file: " + allowPath);
+                    std::string line;
+                    while (std::getline(file, line))
+                    {
+                        if (!line.empty() && line.back() == '\r')
+                            line.pop_back();
+                        if (line.empty() || line.front() == '#')
+                            continue;
+                        patterns.push_back(line);
+                    }
+                }
+                const auto diff = effects_trace::diffEffects(readText(files[0]), readText(files[1]), patterns);
+                std::cout << diff.report;
+                return diff.matched ? 0 : 1;
+            }
+            std::ifstream fa(files[0]);
+            std::ifstream fb(files[1]);
             if (!fa)
-                throw std::runtime_error("Cannot open trace file: " + first);
+                throw std::runtime_error("Cannot open trace file: " + files[0]);
             if (!fb)
-                throw std::runtime_error("Cannot open trace file: " + second);
+                throw std::runtime_error("Cannot open trace file: " + files[1]);
             std::string la, lb;
             uint64_t lineNumber = 0;
             int printed = 0;
@@ -359,10 +437,10 @@ int main(int argc, char** argv)
             }
             return printed == 0 ? 0 : 1;
         }
-        std::cerr << "usage: mugen_sim_cli --version | trace-diff <a.trace> <b.trace> | "
-                     "replay <file> [--hash-every N] [--compare hashfile] [--trace file] [--revision rev] | "
-                     "record-room <roomId> --frames N <file> | "
-                     "run-room <roomId> --frames N [--script file] [--trace file] [--revision rev]\n"
+        std::cerr << "usage: mugen_sim_cli --version | trace-diff [--mode full|effects] [--allow file] <a.trace> <b.trace> | "
+                     "replay <file> [--hash-every N] [--compare hashfile] [--trace file] [--revision rev] [--ai on|off] | "
+                     "record-room <roomId> --frames N <file> [--ai on|off] | "
+                     "run-room <roomId> --frames N [--script file] [--trace file] [--revision rev] [--ai on|off]\n"
                      "script rows: frame slot controlEvent quadrant angleX1000 pressType\n";
         return 1;
     }

@@ -1,21 +1,25 @@
 param(
-    [string]$Revision = ''
+    [string]$Revision = '',
+    [ValidateSet('full', 'effects')]
+    [string]$Mode = 'full',
+    [switch]$AiOff
 )
 
 $ErrorActionPreference = 'Stop'
 $root      = Split-Path -Parent $MyInvocation.MyCommand.Path
 $cli       = Join-Path $root 'build/mugen_sim_cli'
-$committed = Join-Path $root 'data/replays/traces'
-$tmp       = Join-Path $root 'build/trace_check'
+$traceName = if ($Mode -eq 'effects') { 'effects' } else { 'traces' }
+$committed = Join-Path $root "data/replays/$traceName"
+$tmp       = Join-Path $root "build/trace_check_$Mode"
 
 if (-not (Test-Path -LiteralPath $cli)) {
     Write-Error "mugen_sim_cli not found; build it first (Release)"
     exit 1
 }
 
-# 在临时目录重新生成全部基线，再与已提交基线逐行对比。
+# 在临时目录重新生成全部基线，再与已提交基线对比。
 Remove-Item -Recurse -Force -LiteralPath $tmp -ErrorAction SilentlyContinue
-& (Join-Path $root 'run_trace_baseline.ps1') -Revision $Revision -OutDir $tmp
+& (Join-Path $root 'run_trace_baseline.ps1') -Revision $Revision -OutDir $tmp -Mode $Mode -AiOff:$AiOff
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 $failed = $false
@@ -26,8 +30,14 @@ foreach ($file in (Get-ChildItem -LiteralPath $committed -Filter *.trace)) {
         $failed = $true
         continue
     }
-    & $cli trace-diff $candidate $file.FullName
+    if ($Mode -eq 'effects') {
+        & $cli trace-diff --mode effects $candidate $file.FullName
+    }
+    else {
+        & $cli trace-diff $candidate $file.FullName
+    }
     if ($LASTEXITCODE -ne 0) {
+        Write-Output "FAIL: $($file.Name)"
         $failed = $true
     }
     else {

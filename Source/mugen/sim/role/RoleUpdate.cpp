@@ -43,8 +43,13 @@ void crazyUpdate(World& world, Entity entity) { skill::updateCrazy(world, entity
 void rageUpdate(World&, Entity) {}
 // 推进受击保护流程。
 void hitProtectUpdate(World& world, Entity entity) { hit::dealHitProtectUpdate(world, entity); }
-// 推进 AI 决策流程。
-void aiUpdate(World& world, Entity entity) { ai::update(world, entity); }
+// 推进 AI 决策流程。驱动关闭时怪物不再做决策。
+void aiUpdate(World& world, Entity entity)
+{
+    if (!world.setup().m_aiEnabled)
+        return;
+    ai::update(world, entity);
+}
 // 消费本帧控制命令。
 void controlEventsUpdate(World& world, Entity entity) { role::brain::consumeControl(world, entity); }
 // 推进角色状态机（房间切换首帧先进入再更新一次）。

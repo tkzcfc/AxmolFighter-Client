@@ -1,5 +1,7 @@
 #pragma once
 
+#include "mugen/core/ecs/Entity.h"
+#include <cstdint>
 #include <string>
 #include <string_view>
 
@@ -27,4 +29,19 @@ private:
 };
 // 在一帧结束时输出帧边界、各实体状态行与表现事件行。
 void emitFrame(TraceSink& sink, World& world);
+// 事实发生当下追加一行，不改变逐帧状态行。未挂载追踪时直接返回。
+// cast <实体> <技能配置> <槽名> <管线>
+void noteCast(World& world, Entity entity, int32_t configId, std::string_view slot, int32_t pipe);
+// castend <实体> <技能配置>
+void noteCastEnd(World& world, Entity entity, int32_t configId);
+// dmg <攻击者> <目标> <命中来源配置> <伤害> <暴击 0/1>
+void noteDamage(World& world, Entity attacker, Entity target, int32_t sourceConfigId, int64_t value, bool critical);
+// buff + <实体> <效果配置>
+void noteBuffAdd(World& world, Entity entity, int32_t buffId);
+// buff - <实体> <效果配置>
+void noteBuffRemove(World& world, Entity entity, int32_t buffId);
+// spawn <主人> <特效配置>
+void noteSpawn(World& world, Entity owner, int32_t effectConfigId);
+// death <实体>
+void noteDeath(World& world, Entity entity);
 }  // namespace mugen::sim::trace

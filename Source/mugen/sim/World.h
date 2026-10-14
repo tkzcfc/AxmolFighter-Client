@@ -77,6 +77,10 @@ public:
     void emit(Entity entity, PresentationPayload payload);
     // 挂载语义追踪输出，传入空指针即关闭追踪。
     void setTrace(trace::TraceSink* sink) { m_trace = sink; }
+    // 返回当前追踪输出，未挂载时为空。
+    trace::TraceSink* trace() const { return m_trace; }
+    // 开关怪物 AI。不改变回放与快照格式。
+    void setAiEnabled(bool enabled) { m_setup.m_aiEnabled = enabled; }
     // 返回实体创建时分配的稳定生成序号，未记录返回 0。
     uint64_t spawnSeq(Entity entity) const
     {
