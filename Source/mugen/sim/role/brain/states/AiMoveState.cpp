@@ -97,7 +97,7 @@ BTStatus AiMove::update(RoleContext& ctx, Param type, State& state)
     state.m_timeMs += ctx.dtMs();
     if (type == behavior::ActionType::Patrol)
     {
-        if (ai::checkTarget(ctx.world(), ctx.entity()) == ai::Result::Success)
+        if (ai::AiDriver(ctx.world(), ctx.entity()).checkTarget() == ai::Result::Success)
             return BTStatus::Success;
     }
     else if (ctx.get<RoleStatus>().isAttack())

@@ -1,7 +1,14 @@
 #pragma once
+#include "AiRules.h"
 #include "DecisionTree.h"
 #include "mugen/core/ecs/Entity.h"
 #include "mugen/core/math/FixedVec3.h"
+#include <vector>
+
+namespace mugen::conf
+{
+struct AiConfig;
+}
 
 namespace mugen::sim
 {
@@ -29,19 +36,63 @@ struct AiAgent
 };
 namespace ai
 {
-// 在角色 AI 更新阶段执行决策、嘲讽和十秒仇恨切换。
-void update(World& world, Entity entity);
-// 分派生产怪物方法，供决策树和动作叶子共用。
-Result invoke(World& world, Entity entity, Method method);
-// 每帧巡逻索敌；使用带符号的视野区间。
-Result checkTarget(World& world, Entity entity);
-// 记录命中伤害，不为非 AI 角色创建状态。
-void addThreat(World& world, Entity entity, Entity source, Fixed damage);
-// 选择严格高于当前目标权重的有效攻击者，然后清空本周期记录。
-void changeTarget(World& world, Entity entity);
-// 按地图四侧边界和角色半径修正目标点。
-FixedVec3 calcPos(World& world, Entity entity, FixedVec3 point);
-// 以固定创建顺序收集存活、启用且可命中的敌对阵营组角色。
-std::vector<Entity> candidates(World& world, Entity entity);
-}
-}
+// AI 实体的临时视图，不存入组件、不拥有资源，生命周期限于单次调用。
+class AiDriver
+{
+public:
+    // 构造指向指定世界实例中某个 AI 实体的视图。
+    AiDriver(World& world, Entity entity);
+    // 在角色 AI 更新阶段执行决策、嘲讽和十秒仇恨切换。
+    void update();
+    // 分派生产怪物方法，供决策树和动作叶子共用。
+    Result invoke(Method method);
+    // 每帧巡逻索敌；使用带符号的视野区间。
+    Result checkTarget();
+    // 记录命中伤害，不为非 AI 角色创建状态。
+    void addThreat(Entity source, Fixed damage);
+    // 选择严格高于当前目标权重的有效攻击者，然后清空本周期记录。
+    void changeTarget();
+    // 按地图四侧边界和角色半径修正目标点。
+    FixedVec3 calcPos(FixedVec3 point) const;
+    // 以固定创建顺序收集存活、启用且可命中的敌对阵营组角色。
+    std::vector<Entity> candidates() const;
+    // 从当前组件和 AI 配置生成决策快照；不改状态，也不消耗随机数。
+    AiFacts gather() const;
+    // 将无捕获函数指针转接到生产分派。
+    static Result dispatch(void* value, Method method);
+
+private:
+    // 存活句柄和死亡状态共同限制跨实体访问。
+    bool _alive(Entity entity) const;
+    // 不可命中状态不参与普通 AI 目标选择。
+    bool _hittable(Entity entity) const;
+    // 获取当前角色配置，悬空引用由入口拒绝。
+    const conf::AiConfig* _config() const;
+    // 死亡、受击和失控时不能执行主动决策动作。
+    bool _canAct() const;
+    // 先设置技能控制角，成功释放后再更新角色朝向。
+    void _direction(bool apply);
+    // 目标失效时从稳定候选数组随机重选；无目标使用自身哨兵。
+    Result _checkAttack();
+    // 受击结束只在目标句柄缺失时补选，不重置警戒。
+    Result _checkHitEnd();
+    // 原始追击条件保留坐标轴为零时的特殊分支。
+    Result _checkChase(const conf::AiConfig& row);
+    // X/Z 使用手动施放门槛，已有技能时续接原槽。
+    Result _specialAttack(bool first);
+    // 普通槽按优先级降序、原索引升序检查，成功后重置同优先级间隔。
+    Result _executeAttack(const conf::AiConfig& row);
+    // 巡逻和游走先抽 X 再抽 Z；追击不消耗随机流。
+    Result _move(Method method, const conf::AiConfig& row);
+    // 受击、仇恨记录或有效嘲讽都算激怒。
+    bool _provoked() const;
+    // 索敌使用带符号的视野区间，先看已锁定目标再看候选者。
+    bool _inSight(const conf::AiConfig& row) const;
+    // 追击范围全零、重合或落在范围内时都不算范围外。
+    bool _outsideChase(Entity target, const conf::AiConfig& row) const;
+
+    World& m_world;
+    Entity m_entity{};
+};
+}  // namespace ai
+}  // namespace mugen::sim

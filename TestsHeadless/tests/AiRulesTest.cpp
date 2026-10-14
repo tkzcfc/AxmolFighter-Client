@@ -150,7 +150,7 @@ TEST_CASE("Ai rules gather reads an offline scenario monster")
         if (monster.value == 0) monster = entity;
     });
     REQUIRE(monster.value != 0);
-    const auto facts  = gather(world, monster);
+    const auto facts  = AiDriver(world, monster).gather();
     const auto& state = world.ecs().get<RoleStatus>(monster);
     const auto& agent = world.ecs().get<AiAgent>(monster);
     const auto& pool  = world.ecs().get<SkillPool>(monster);

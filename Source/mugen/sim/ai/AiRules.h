@@ -1,6 +1,5 @@
 #pragma once
 
-#include "mugen/core/ecs/Entity.h"
 #include "mugen/core/math/Fixed.h"
 #include <array>
 #include <cstdint>
@@ -11,7 +10,6 @@ namespace mugen
 class Random;
 namespace sim
 {
-class World;
 namespace ai
 {
 // 怪物条件表使用的原子判断。ChancePercent 必须是一行的最后一项。
@@ -135,8 +133,6 @@ struct AiFacts
     // 角色正处于攻击状态。
     bool m_inAttack = false;
 };
-// 从当前组件和 AI 配置生成快照；不改状态，也不消耗随机数。
-AiFacts gather(World& world, Entity entity);
 // 返回第一条命中且未在冷却的规则下标；攻击中或没有更高优先级可抢占时返回 -1。
 int8_t pickRule(const AiFacts& facts, std::span<const AiRule> rules, std::span<const Fixed> ruleCooldownMs, Random& rng);
 // 把每行剩余冷却减去一帧时长，不会减到零以下。

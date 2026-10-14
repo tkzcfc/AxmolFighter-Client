@@ -211,7 +211,7 @@ void HitResolver::_endHit(Entity target, HitTrigger data, const conf::EffectConf
     if (DamageCalculator(m_world).checkHurtPermit(target, data.m_effect, HurtPermit::Number))
         m_world.emit(target, HurtNumber{data.m_damage.toInt()});
     const auto owner = DamageCalculator(m_world).finalOwner(data.m_attacker);
-    ai::addThreat(m_world, target, data.m_attacker, data.m_damage);
+    ai::AiDriver(m_world, target).addThreat(data.m_attacker, data.m_damage);
     if (const auto* combo = ecs.tryGet<RoleHitState>(owner))
         ecs.get<RoleHitState>(owner).m_comboExp += row.comboExp * combo->m_comboScale;
     const auto maxHp = ecs.get<Vitals>(target).maxHp;

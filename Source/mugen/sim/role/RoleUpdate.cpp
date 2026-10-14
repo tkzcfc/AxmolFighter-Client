@@ -47,7 +47,7 @@ void aiUpdate(World& world, Entity entity)
 {
     if (!world.setup().m_aiEnabled)
         return;
-    ai::update(world, entity);
+    ai::AiDriver(world, entity).update();
 }
 // 消费本帧控制命令。
 void controlEventsUpdate(World& world, Entity entity) { role::brain::consumeControl(world, entity); }

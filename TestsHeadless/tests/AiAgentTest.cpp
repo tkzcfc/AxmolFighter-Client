@@ -144,24 +144,24 @@ TEST_CASE("Ai monster hit recovery casts X before Alert and nonalert attack uses
     SUBCASE("hit X path")
     {
         ecs.get<RoleStatus>(f.monster).eEntityStatus = EntityRoleStatus::Idle | EntityRoleStatus::Hit;
-        ai::update(f.world, f.monster);
+        ai::AiDriver(f.world, f.monster).update();
         CHECK(pool.m_current == kNoSkill);
         ecs.get<RoleStatus>(f.monster).eEntityStatus = EntityRoleStatus::Idle;
-        ai::update(f.world, f.monster);
+        ai::AiDriver(f.world, f.monster).update();
         REQUIRE(pool.m_current != kNoSkill);
         CHECK(skill::baseSlot(pool, pool.m_skills[pool.m_current]) == "X");
         CHECK(ecs.get<RoleStatus>(f.monster).isAttack());
         CHECK(ecs.get<AiAgent>(f.monster).m_tree.m_alert == ai::AlertStatus::NoAlert);
         skill::SkillCaster(f.world, f.monster).castBegan(pool.m_current);
-        ai::update(f.world, f.monster);
+        ai::AiDriver(f.world, f.monster).update();
         CHECK(ecs.get<AiAgent>(f.monster).m_tree.m_alert == ai::AlertStatus::NoAlert);
         idle(f.world, f.monster);
-        ai::update(f.world, f.monster);
+        ai::AiDriver(f.world, f.monster).update();
         CHECK(ecs.get<AiAgent>(f.monster).m_tree.m_alert == ai::AlertStatus::Alert);
     }
     SUBCASE("Z ignores auto gating")
     {
-        CHECK(ai::invoke(f.world, f.monster, ai::Method::ExecuteRandAttack) == ai::Result::Running);
+        CHECK(ai::AiDriver(f.world, f.monster).invoke(ai::Method::ExecuteRandAttack) == ai::Result::Running);
         REQUIRE(pool.m_current != kNoSkill);
         CHECK(skill::baseSlot(pool, pool.m_skills[pool.m_current]) == "Z");
     }
@@ -197,13 +197,13 @@ TEST_CASE("Ai monster selects priority then index resets peers and consumes Skil
     f.load();
     auto& pool = f.world.ecs().get<SkillPool>(f.monster);
     pool.m_target = target;
-    CHECK(ai::invoke(f.world, f.monster, ai::Method::ExecuteAttack) == ai::Result::Success);
+    CHECK(ai::AiDriver(f.world, f.monster).invoke(ai::Method::ExecuteAttack) == ai::Result::Success);
     REQUIRE(pool.m_aiSkillCastInterval.size() == 3);
     CHECK(pool.m_aiSkillCastInterval[1] == "200"_fx);
     pool.m_aiSkillCastInterval = {Fixed{}, Fixed{}, Fixed{}};
     SUBCASE("equal priority uses original index")
     {
-        REQUIRE(ai::invoke(f.world, f.monster, ai::Method::ExecuteAttack) == ai::Result::Running);
+        REQUIRE(ai::AiDriver(f.world, f.monster).invoke(ai::Method::ExecuteAttack) == ai::Result::Running);
         CHECK(skill::baseSlot(pool, pool.m_skills[pool.m_current]) == "B");
     }
     SUBCASE("SkillAi blocks first ready high priority slot")
@@ -212,7 +212,7 @@ TEST_CASE("Ai monster selects priority then index resets peers and consumes Skil
         REQUIRE(b != kNoSkill);
         pool.m_skills[b].m_ai.m_configId = f.archive.skill_ai.front().id;
         pool.m_skills[b].m_ai.m_loadCd = "1000"_fx;
-        REQUIRE(ai::invoke(f.world, f.monster, ai::Method::ExecuteAttack) == ai::Result::Running);
+        REQUIRE(ai::AiDriver(f.world, f.monster).invoke(ai::Method::ExecuteAttack) == ai::Result::Running);
         CHECK(skill::baseSlot(pool, pool.m_skills[pool.m_current]) == "C");
     }
     CHECK(pool.m_aiSkillCastInterval[0] == Fixed{});
@@ -230,15 +230,15 @@ TEST_CASE("Ai monster retargets dead enemies and preserves Alert with no targets
     const auto second = f.create(false, 4, {"200"_fx, {}, "50"_fx});
     ecs.get<SkillPool>(f.monster).m_target = first;
     ecs.get<Vitals>(first).hp = {};
-    REQUIRE(ai::invoke(f.world, f.monster, ai::Method::CheckAttack) == ai::Result::Success);
+    REQUIRE(ai::AiDriver(f.world, f.monster).invoke(ai::Method::CheckAttack) == ai::Result::Success);
     CHECK(ecs.get<SkillPool>(f.monster).m_target == second);
     ecs.get<Vitals>(second).hp = {};
     ecs.get<AiAgent>(f.monster).m_tree.m_alert = ai::AlertStatus::Alert;
-    ai::update(f.world, f.monster);
+    ai::AiDriver(f.world, f.monster).update();
     CHECK(ecs.get<SkillPool>(f.monster).m_target == f.monster);
     CHECK(ecs.get<AiAgent>(f.monster).m_tree.m_alert == ai::AlertStatus::Alert);
     CHECK_FALSE(ecs.get<RoleStatus>(f.monster).isPatrol());
-    CHECK(ai::candidates(f.world, f.monster).empty());
+    CHECK(ai::AiDriver(f.world, f.monster).candidates().empty());
 }
 
 TEST_CASE("Ai monster threat changes every ten seconds and taunt forces target before sight")
@@ -249,20 +249,20 @@ TEST_CASE("Ai monster threat changes every ten seconds and taunt forces target b
     const auto second = f.create(false, 4, {"200"_fx, {}, "50"_fx});
     ecs.get<SkillPool>(f.monster).m_target = first;
     ecs.get<AiAgent>(f.monster).m_tree.m_alert = ai::AlertStatus::Alert;
-    ai::addThreat(f.world, f.monster, first, "10"_fx);
-    ai::addThreat(f.world, f.monster, second, "20"_fx);
+    ai::AiDriver(f.world, f.monster).addThreat(first, "10"_fx);
+    ai::AiDriver(f.world, f.monster).addThreat(second, "20"_fx);
     ecs.get<AiAgent>(f.monster).m_changeTargetMs = "10000"_fx - ecs.singleton<WorldClock>().dtMs * "2"_fx;
-    ai::update(f.world, f.monster);
+    ai::AiDriver(f.world, f.monster).update();
     CHECK(ecs.get<SkillPool>(f.monster).m_target == first);
-    ai::update(f.world, f.monster);
+    ai::AiDriver(f.world, f.monster).update();
     CHECK(ecs.get<SkillPool>(f.monster).m_target == second);
     CHECK(ecs.get<AiAgent>(f.monster).m_threat.empty());
     ecs.get<RoleTimers>(f.monster).m_sneerRecounts = {{first, "100"_fx}, {second, "1"_fx}};
     REQUIRE(buff::BuffHolder(f.world, f.monster).sneerTarget() == first);
-    CHECK(ai::checkTarget(f.world, f.monster) == ai::Result::Success);
+    CHECK(ai::AiDriver(f.world, f.monster).checkTarget() == ai::Result::Success);
     CHECK(ecs.get<SkillPool>(f.monster).m_target == first);
     const auto elapsed = ecs.get<AiAgent>(f.monster).m_changeTargetMs;
-    ai::update(f.world, f.monster);
+    ai::AiDriver(f.world, f.monster).update();
     CHECK(ecs.get<SkillPool>(f.monster).m_target == first);
     CHECK(ecs.get<AiAgent>(f.monster).m_changeTargetMs == elapsed);
 }
