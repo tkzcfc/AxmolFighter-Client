@@ -126,12 +126,28 @@ World combatWorld(int32_t roomId, uint64_t seed, int32_t occupation, int32_t lev
     const auto* config = conf::Config::instance().find<conf::RoomConfig>(roomId);
     if (!config || !sim::room::enter(world, *config, 0, 0))
         throw std::runtime_error("Cannot enter room " + std::to_string(roomId));
-    if (const char* dbg = std::getenv("MUGEN_TRACE_DUMP_SKILLS"))
+    if (std::getenv("MUGEN_TRACE_DUMP_SKILLS"))
     {
-        world.ecs().each<RoleIdentity, SkillPool>([&](Entity e, const RoleIdentity& id, const SkillPool& pool) {
-            std::cerr << "[dump] role " << id.roleId << " slots=" << pool.m_slots.size() << " skills=" << pool.m_skills.size();
-            for (const auto& s : pool.m_slots) std::cerr << " '" << s.m_name << "'";
-            std::cerr << '\n';
+        world.ecs().each<RoleIdentity, SkillPool, Vitals>([&](Entity, const RoleIdentity& id, const SkillPool& pool,
+                                                               const Vitals& vitals) {
+            std::cerr << "[dump] role " << id.roleId << " ep=" << vitals.ep.toInt() << "/" << vitals.maxEp.toInt()
+                      << " crystals=" << pool.m_crystals << '\n';
+            for (size_t s = 0; s < pool.m_slots.size(); ++s)
+            {
+                std::cerr << "  slot '" << pool.m_slots[s].m_name << "':";
+                for (const auto& idx : pool.m_index)
+                    if (idx.m_address.m_slot == s)
+                    {
+                        const auto& sk = pool.m_skills[idx.m_skill];
+                        const auto* row = conf::Config::instance().find<conf::SkillAttackConfig>(sk.m_configId);
+                        std::cerr << " [" << idx.m_address.m_index << "." << idx.m_address.m_mode << "."
+                                  << idx.m_address.m_step << " cfg=" << sk.m_configId << " mp=" << (row ? row->mp : -1)
+                                  << " ep=" << (row ? row->ep : -1) << " crystal=" << (row ? row->crystal : -1)
+                                  << " rage=" << (row ? row->rage : -1) << " type=" << (row ? row->type : -1)
+                                  << " press=" << (row ? row->pressTime : -1) << "]";
+                    }
+                std::cerr << '\n';
+            }
         });
     }
     return world;
@@ -290,13 +306,14 @@ int main(int argc, char** argv)
                 auto input = inputs.extract(frame);
                 world.tick(input.empty() ? FrameInput{frame, {}, {}, {}} : input.mapped());
                 if (std::getenv("MUGEN_DUMP_FRAME"))
-                    world.ecs().each<RoleIdentity, RoleStatus, SkillPool, EntityGroup, ControlEventQueue>(
+                    world.ecs().each<RoleIdentity, RoleStatus, SkillPool, EntityGroup, ControlEventQueue, Vitals>(
                         [&](Entity, const RoleIdentity& id, const RoleStatus& st, const SkillPool& pool,
-                            const EntityGroup& g, const ControlEventQueue& q) {
-                            if (id.roleId == 101)
-                                std::cerr << "[f" << frame << "] st=" << static_cast<uint32_t>(st.eEntityStatus)
-                                          << " cur=" << pool.m_current << " susp=" << g.suspended << " q=" << q.commands.size()
-                                          << '\n';
+                            const EntityGroup& g, const ControlEventQueue& q, const Vitals& vitals) {
+                            if (id.roleId == 101 || id.roleId == 102 || id.roleId == 104)
+                                std::cerr << "[f" << frame << "] role=" << id.roleId
+                                          << " st=" << static_cast<uint32_t>(st.eEntityStatus) << " cur=" << pool.m_current
+                                          << " ep=" << vitals.ep.toInt() << " mp=" << vitals.mp.toInt()
+                                          << " susp=" << g.suspended << '\n';
                         });
             }
             printHash(world);

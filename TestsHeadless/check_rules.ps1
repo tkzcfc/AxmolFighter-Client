@@ -158,6 +158,9 @@ function Test-Directive {
             if ($name -eq 'defined') { return $name }
             if (Test-MacroDefined $name) { '1' } else { '0' }
         })
+    # 比较运算符必须优先于裸 > < 转换，且先于 ! 的替换，避免把 > 误作 PowerShell 重定向。
+    $defined = $defined -replace '>=', '-ge' -replace '<=', '-le' -replace '!=', '-ne' -replace '==', '-eq' `
+                        -replace '>', '-gt' -replace '<', '-lt'
     $defined = $defined -replace '&&', '-and' -replace '\|\|', '-or' -replace '!', '-not '
     try {
         return [bool](Invoke-Expression $defined)

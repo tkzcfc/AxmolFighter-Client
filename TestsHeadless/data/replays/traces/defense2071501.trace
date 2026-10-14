@@ -1,5 +1,5 @@
 # mugen_sim_cli trace v1
-# revision d552082
+# revision c9321cf
 # room 2071501 seed 31
 frame 1
 ent 1 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -

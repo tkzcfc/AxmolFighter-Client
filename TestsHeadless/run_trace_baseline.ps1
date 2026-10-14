@@ -28,11 +28,18 @@ foreach ($name in @('arena30002', 'copy101_room2010101', 'defense2071501')) {
     if ($LASTEXITCODE -ne 0) { Write-Error "replay baseline failed: $name"; exit $LASTEXITCODE }
 }
 
-# 战斗场景基线：防御房间内按职业脚本驱动。
-foreach ($spec in @(@('class1_swordman', 1), @('class2_ranger', 2), @('class4_mage', 4))) {
-    $name = $spec[0]; $occ = $spec[1]
+# 战斗场景基线：按职业脚本驱动（防御房），另加副本/竞技场房间。
+foreach ($spec in @(
+    @('class1_swordman', 1, 2071501),
+    @('class2_ranger', 2, 2071501),
+    @('class3_fighter', 3, 2071501),
+    @('class4_mage', 4, 2071501),
+    @('copy_room_class1', 1, 2010101),
+    @('arena_room_class1', 1, 30002)
+)) {
+    $name = $spec[0]; $occ = $spec[1]; $room = $spec[2]
     $script = Join-Path $scenarioDir "$name.script"
     if (-not (Test-Path -LiteralPath $script)) { Write-Error "scenario script missing: $script"; exit 1 }
-    & $cli run-room 2071501 --frames 700 --class $occ --level 1000 --script $script --trace (Join-Path $traceDir "$name.trace") --revision $Revision | Out-Null
+    & $cli run-room $room --frames 700 --class $occ --level 1000 --script $script --trace (Join-Path $traceDir "$name.trace") --revision $Revision | Out-Null
     if ($LASTEXITCODE -ne 0) { Write-Error "scenario baseline failed: $name"; exit $LASTEXITCODE }
 }
