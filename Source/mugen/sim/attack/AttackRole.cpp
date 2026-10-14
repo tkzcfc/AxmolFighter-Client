@@ -14,9 +14,9 @@ namespace
 {
 using namespace behavior;
 /// 从攻击叶参数查询对应的动作配置。
-const conf::ActionConfig* config(const Param& param)
+const conf::ActionConfig* config(const behavior::AttackAction& param)
 {
-    return conf::Config::instance().find<conf::ActionConfig>(std::get<AttackAction>(param).actionId);
+    return conf::Config::instance().find<conf::ActionConfig>(param.actionId);
 }
 /// 返回当前连段首段的技能配置 id。
 int32_t baseSkill(const SkillPool& pool, int32_t index)
@@ -60,24 +60,22 @@ void interrupt(World& world, Entity entity, int32_t index, bool extra, ActionAtt
     }
     if (!extra) pool.m_allowInterrupt = true;
 }
-}
+}  // namespace
+
 /// 初始化攻击动作并应用其开始帧副作用。
-void enter(behavior::BTCtx& ctx, const behavior::Param& param, behavior::LeafState& state)
+void AttackAction::enter(role::brain::RoleContext& ctx, Param source, State& leaf)
 {
     Fixed resetAt;
     bool wasStatic = false;
-    if (const auto* previous = std::get_if<AttackRole>(&state))
-    { resetAt = previous->m_staticResetAt; wasStatic = previous->m_static; }
-    state = AttackRole{};
-    auto& leaf = std::get<AttackRole>(state);
+    { resetAt = leaf.m_staticResetAt; wasStatic = leaf.m_static; }
+    leaf = AttackRole{};
     leaf.m_staticResetAt = resetAt;
     leaf.m_static = wasStatic;
-    const auto* row = config(param);
+    const auto* row = config(source);
     if (!row) { leaf.m_action.m_finished = true; return; }
-    auto& world = ctx.world;
+    auto& world = ctx.world();
     auto& ecs = world.ecs();
-    const auto entity = ctx.entity;
-    const auto source = std::get<behavior::AttackAction>(param);
+    const auto entity = ctx.entity();
     auto& pool = ecs.get<SkillPool>(entity);
     pool.m_allowInterrupt = pool.m_allowExtraInterrupt = false;
     buff::trigger(world, entity, BFEvent::BehaviorStateStart, {source.skill, {}, row->id});
@@ -109,7 +107,7 @@ void enter(behavior::BTCtx& ctx, const behavior::Param& param, behavior::LeafSta
     motion.loop = row->loop == "-1"_fx || row->loop > "1"_fx;
     motion.playing = true;
     displacement::reset(world, entity);
-    displacement::set(world, entity, row->displacementId, ctx.m_node);
+    displacement::set(world, entity, row->displacementId, ctx.node());
     const auto first = baseSkill(pool, source.skill);
     for (const auto id : row->buffIds) if (id != -1) buff::addActionBuff(world, entity, id, first);
     if (row->ghost != -1) world.emit(entity, Ghost{"-1"_fx});
@@ -121,17 +119,16 @@ void enter(behavior::BTCtx& ctx, const behavior::Param& param, behavior::LeafSta
     leaf.m_action.m_spawned.resize(row->effectIds.size());
     leaf.m_action.m_shaken.resize(row->cameraFrame.size());
 }
+
 /// 推进攻击动作的时序事件并在完成时结束叶子。
-BTStatus tick(behavior::BTCtx& ctx, const behavior::Param& param, behavior::LeafState& state)
+BTStatus AttackAction::update(role::brain::RoleContext& ctx, Param source, State& leaf)
 {
-    auto& leaf = std::get<AttackRole>(state);
     auto& action = leaf.m_action;
-    const auto* row = config(param);
+    const auto* row = config(source);
     if (!row) return BTStatus::Success;
-    auto& world = ctx.world;
+    auto& world = ctx.world();
     auto& ecs = world.ecs();
-    const auto entity = ctx.entity;
-    const auto source = std::get<behavior::AttackAction>(param);
+    const auto entity = ctx.entity();
     action.m_time += ecs.singleton<WorldClock>().dtMs;
     const auto at = [&](int32_t frame) { return action.m_interval * Fixed::fromInt(frame); };
     if (!leaf.m_displayed && action.m_time >= at(row->displaySpineFrame))
@@ -184,18 +181,16 @@ BTStatus tick(behavior::BTCtx& ctx, const behavior::Param& param, behavior::Leaf
     }
     return action.m_finished ? BTStatus::Success : BTStatus::Running;
 }
+
 /// 撤销攻击动作施加的临时资源与表现状态。
-void exit(behavior::BTCtx& ctx, const behavior::Param& param, behavior::LeafState& state)
+void AttackAction::exit(role::brain::RoleContext& ctx, Param source, State& leaf)
 {
-    auto* leaf = std::get_if<AttackRole>(&state);
-    if (!leaf) return;
-    const auto* row = config(param);
+    const auto* row = config(source);
     if (!row) return;
-    auto& world = ctx.world;
-    const auto entity = ctx.entity;
-    const auto source = std::get<behavior::AttackAction>(param);
+    auto& world = ctx.world();
+    const auto entity = ctx.entity();
     buff::trigger(world, entity, BFEvent::BehaviorStateEnd, {source.skill, {}, row->id});
-    clearEffects(world, entity, leaf->m_action);
+    clearEffects(world, entity, leaf.m_action);
     buff::trigger(world, entity, BFEvent::AfterRoleSkillAction, {source.skill, {}, row->id});
     auto& pool = world.ecs().get<SkillPool>(entity);
     pool.m_allowInterrupt = true;
@@ -206,13 +201,15 @@ void exit(behavior::BTCtx& ctx, const behavior::Param& param, behavior::LeafStat
     if (row->ghost != -1) world.emit(entity, Ghost{});
     world.emit(entity, Sound{0, {}, true, row->id});
 }
+
 /// 由行为树分派当前攻击的位移事件。
-bool onDisplacementEvent(behavior::BTCtx& ctx, const behavior::Param& param, behavior::LeafState& state)
+bool AttackAction::onDisplacement(role::brain::RoleContext& ctx, Param source, State& leaf)
 {
-    const auto* row = config(param);
+    const auto* row = config(source);
     if (!row) return false;
-    return displacementEvent(ctx.world, ctx.entity, std::get<AttackRole>(state).m_action, *row, ctx.event);
+    return displacementEvent(ctx.world(), ctx.entity(), leaf.m_action, *row, ctx.event());
 }
+
 /// 同步动画循环结束到所有仍在运行的攻击状态。
 void animationComplete(World& world, Entity entity, int64_t loops)
 {
@@ -222,9 +219,9 @@ void animationComplete(World& world, Entity entity, int64_t loops)
     {
         const auto& node = def.topology().node(i);
         if (node.type != BTNodeType::Action || node.leafTypeId != behavior::kAttackLeaf || tree.instance.nodes[i].status != BTStatus::Running) continue;
-        const auto* row = config(def.param(node.paramIndex));
+        const auto* row = config(std::get<behavior::AttackAction>(def.param(node.paramIndex)));
         auto& action = std::get<AttackRole>(tree.instance.leaves[def.topology().leafIndex(i)]).m_action;
         if (row) completeAnimation(action, *row, loops);
     }
 }
-}
+}  // namespace mugen::sim::attack

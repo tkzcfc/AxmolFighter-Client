@@ -3,7 +3,7 @@
 #include "SkillTestSupport.h"
 #include "../support/ScenarioHarness.h"
 #include "mugen/sim/attack/AttackRole.h"
-#include "mugen/sim/bt/HitActions.h"
+#include "mugen/sim/role/brain/states/HitStates.h"
 #include "mugen/sim/bt/RoleTree.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "mugen/sim/room/RoomFlow.h"
@@ -86,14 +86,14 @@ TEST_CASE("Attack leaf enter preserves static timer left by previous run of same
     tree.defKey = behavior::definitionKey(world, entity);
     world.ecs().add(entity, tree);
     const behavior::Param param = behavior::AttackAction{row.id, 1, 0};
-    behavior::LeafState state;
-    behavior::BTCtx ctx{world, entity};
-    attack::enter(ctx, param, state);
+    behavior::LeafState state   = attack::AttackRole{};
+    role::brain::RoleContext rc{world, entity};
+    attack::AttackAction::enter(rc, std::get<behavior::AttackAction>(param), std::get<attack::AttackRole>(state));
     auto& leaf                        = std::get<attack::AttackRole>(state);
     leaf.m_static                    = true;
     leaf.m_staticResetAt             = "123"_fx;
-    attack::exit(ctx, param, state);
-    attack::enter(ctx, param, state);
+    attack::AttackAction::exit(rc, std::get<behavior::AttackAction>(param), std::get<attack::AttackRole>(state));
+    attack::AttackAction::enter(rc, std::get<behavior::AttackAction>(param), std::get<attack::AttackRole>(state));
     const auto& again = std::get<attack::AttackRole>(state);
     CHECK(again.m_static);
     CHECK(again.m_staticResetAt == "123"_fx);
@@ -147,21 +147,20 @@ TEST_CASE("Hit state exit resets displacement only for Death and landing Hit")
             break;
         }
     REQUIRE(hitRow != nullptr);
-    behavior::BTCtx ctx{world, entity};
-    behavior::LeafState state;
+    role::brain::RoleContext rc{world, entity};
     {  // Hit (landing) -> exit resets displacement
-        behavior::Param param = behavior::ActionType::Hit;
-        behavior::hit_actions::enter(ctx, param, state);
+        behavior::LeafState state = behavior::HitActionState{};
+        role::brain::states::HitState::enter(rc, behavior::ActionType::Hit, std::get<behavior::HitActionState>(state));
         std::get<behavior::HitActionState>(state).m_hitId = hitRow->id;
         disp.listenerNode                               = 7;
-        behavior::hit_actions::exit(ctx, param, state);
+        role::brain::states::HitState::exit(rc, behavior::ActionType::Hit, std::get<behavior::HitActionState>(state));
         CHECK(disp.listenerNode == -1);
     }
     {  // HitUp -> exit does not reset displacement
-        behavior::Param param = behavior::ActionType::HitUp;
-        behavior::hit_actions::enter(ctx, param, state);
+        behavior::LeafState state = behavior::HitActionState{};
+        role::brain::states::HitState::enter(rc, behavior::ActionType::HitUp, std::get<behavior::HitActionState>(state));
         disp.listenerNode = 7;
-        behavior::hit_actions::exit(ctx, param, state);
+        role::brain::states::HitState::exit(rc, behavior::ActionType::HitUp, std::get<behavior::HitActionState>(state));
         CHECK(disp.listenerNode == 7);
     }
     conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin");

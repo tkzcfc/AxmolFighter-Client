@@ -1,4 +1,5 @@
 #include "RoleTree.h"
+#include "RoleTreeBridge.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/status/Status.h"
 #include "mugen/conf/ReflectedConfig.h"
@@ -7,8 +8,9 @@
 #include "mugen/sim/skill/Skill.h"
 #include "mugen/core/bt/BTDefCache.h"
 #include "mugen/sim/attack/AttackRole.h"
-#include "HitActions.h"
-#include "mugen/sim/ai/MovementLeaves.h"
+#include "mugen/sim/role/brain/states/AiMoveState.h"
+#include "mugen/sim/role/brain/states/HitStates.h"
+#include "mugen/sim/role/brain/states/LocomotionStates.h"
 
 namespace mugen::sim::behavior
 {
@@ -116,176 +118,6 @@ void condExit(BTCtx& ctx, const Param& param)
         resetSkill(ctx.world, ctx.entity);
     if (guard.status != S::Idle && guard.status != S::Revive)
         status::abortStatus(ctx.world.ecs().get<RoleStatus>(ctx.entity), guard.status);
-}
-/// 为行走和跑动叶子发出配置的脚步声。
-void footstep(BTCtx& ctx, ActionType type)
-{
-    if (type != ActionType::Walk && type != ActionType::Run)
-        return;
-    const auto* row =
-        conf::Config::instance().find<conf::RoleConfig>(ctx.world.ecs().get<RoleIdentity>(ctx.entity).roleId);
-    const size_t index = type == ActionType::Walk ? 0 : 1;
-    if (row && index < row->soundId.size() && row->soundId[index] != -1)
-        ctx.world.emit(ctx.entity, Sound{row->soundId[index]});
-}
-/// 初始化普通动作叶子的动画与状态。
-void enter(BTCtx& ctx, const Param& param, LeafState& state)
-{
-    state           = ActionState{};
-    const auto type = std::get<ActionType>(param);
-    behaviorStateStart(ctx.world, ctx.entity, type);
-    auto& motion       = ctx.world.ecs().get<MotionState>(ctx.entity);
-    motion.motionName  = animationName(type);
-    motion.timeMs      = {};
-    motion.m_completedLoops = 0;
-    motion.loop        = true;
-    motion.playing     = true;
-    motion.actionScale = type == ActionType::Walk  ? conf::kWalkScaleTime
-                         : type == ActionType::Run ? conf::kRunScaleTime
-                                                   : conf::kIdleScaleTime;
-    if (type == ActionType::Idle)
-        displacement::reset(ctx.world, ctx.entity);
-    footstep(ctx, type);
-}
-/// 推进普通动作叶子的移动和循环检测。
-BTStatus tick(BTCtx& ctx, const Param& param, LeafState& state)
-{
-    auto& action = std::get<ActionState>(state);
-    auto& ecs    = ctx.world.ecs();
-    action.fTime += ecs.singleton<WorldClock>().dtMs;
-    const auto type    = std::get<ActionType>(param);
-    const auto& motion = ecs.get<MotionState>(ctx.entity);
-    if (motion.timeMs < action.lastMotionTime)
-        footstep(ctx, type);
-    action.lastMotionTime = motion.timeMs;
-    if (ecs.get<RoleIdentity>(ctx.entity).roleType == 1 && ecs.get<RoleHitState>(ctx.entity).m_hitProtectExecuted)
-    {
-        status::mixStatus(ecs.get<RoleStatus>(ctx.entity), S::HitDown);
-        return BTStatus::Success;
-    }
-    if (type == ActionType::Idle)
-        return BTStatus::Running;
-    const auto command = ecs.get<RoleTree>(ctx.entity).control;
-    auto& t            = ecs.get<Transform>(ctx.entity);
-    auto& v            = ecs.get<RoleHitState>(ctx.entity).forceVelocity;
-    if (command.quadrant == 0)
-    {
-        v.x = v.z = {};
-        return BTStatus::Running;
-    }
-    const Fixed angle = Fixed::ratio(command.angle, 1000);
-    if (command.angle != 90000)
-    {
-        t.towardX = command.quadrant <= 2 ? 1 : -1;
-        t.vectorX = Fixed::fromInt(t.towardX);
-    }
-    if (command.angle != 0)
-        t.vectorZ = Fixed::fromInt(command.quadrant == 1 || command.quadrant == 4 ? 1 : -1);
-    const auto* row = conf::Config::instance().find<conf::RoleConfig>(ecs.get<RoleIdentity>(ctx.entity).roleId);
-    if (row)
-    {
-        const Fixed speed = row->velocity * (type == ActionType::Run ? conf::kRunRate : conf::kWalkRate);
-        v.x               = FixedMath::cosDeg(angle) * speed * t.vectorX;
-        v.z               = FixedMath::sinDeg(angle) * speed * t.vectorZ;
-    }
-    return BTStatus::Running;
-}
-/// 通知普通动作叶子结束。
-void exit(BTCtx& ctx, const Param& param, LeafState&)
-{
-    behaviorStateEnd(ctx.world, ctx.entity, std::get<ActionType>(param));
-}
-// 推挤以配置速度决定是否翻转显示朝向，移动向量仍由位移系统读取。
-void jostledEnter(BTCtx& ctx, const Param&, LeafState& state)
-{
-    auto& ecs = ctx.world.ecs();
-    const auto id = ecs.get<RoleStatus>(ctx.entity).entityParams.displacement_id;
-    state = JostledState{id, false};
-    behaviorStateStart(ctx.world, ctx.entity, ActionType::Jostled);
-    auto& motion = ecs.get<MotionState>(ctx.entity);
-    motion.motionName = animationName(ActionType::Jostled);
-    motion.timeMs = {};
-    motion.m_completedLoops = 0;
-    motion.loop = motion.playing = true;
-    motion.actionScale = conf::kWalkScaleTime;
-    const auto* row = conf::Config::instance().find<conf::DisplacementConfig>(id);
-    if (row && !row->velocity.empty() && row->velocity[0] != Fixed{})
-        ecs.get<Transform>(ctx.entity).towardX *= -1;
-    displacement::set(ctx.world, ctx.entity, id, ctx.m_node);
-}
-// 制动后由行为树正常退出守卫并清除推挤状态。
-BTStatus jostledUpdate(BTCtx&, const Param&, LeafState& state)
-{
-    return std::get<JostledState>(state).m_complete ? BTStatus::Success : BTStatus::Running;
-}
-// 推挤结束时撤销位移监听和剩余速度。
-void jostledExit(BTCtx& ctx, const Param&, LeafState&)
-{
-    behaviorStateEnd(ctx.world, ctx.entity, ActionType::Jostled);
-    displacement::reset(ctx.world, ctx.entity);
-}
-// 仅首次制动翻转横向移动向量，纵向门保持方向不变。
-bool jostledEvent(BTCtx& ctx, const Param&, LeafState& state)
-{
-    auto& action = std::get<JostledState>(state);
-    if (ctx.event == DisplacementEvent::Brake && !action.m_complete)
-    {
-        action.m_complete = true;
-        const auto* row = conf::Config::instance().find<conf::DisplacementConfig>(action.m_displacementId);
-        if (row && !row->velocity.empty() && row->velocity[0] != Fixed{})
-        {
-            auto& transform = ctx.world.ecs().get<Transform>(ctx.entity);
-            transform.vectorX = -transform.vectorX;
-        }
-    }
-    return false;
-}
-// 寻路使用目标点和世界模式决定走跑，不依赖 AI 目标。
-void findingEnter(BTCtx& ctx, const Param&, LeafState& state)
-{
-    (enter)(ctx, Param{ctx.world.setup().mode == WorldMode::Town ? ActionType::Run : ActionType::Walk}, state);
-    displacement::reset(ctx.world, ctx.entity);
-}
-// 到达路径终点后停止速度，由守卫退出撤销 Finding 位。
-BTStatus findingUpdate(BTCtx& ctx, const Param&, LeafState&)
-{
-    auto& ecs = ctx.world.ecs();
-    const auto* row = conf::Config::instance().find<conf::RoleConfig>(ecs.get<RoleIdentity>(ctx.entity).roleId);
-    if (!row) return BTStatus::Success;
-    auto& transform = ecs.get<Transform>(ctx.entity);
-    auto& params = ecs.get<RoleStatus>(ctx.entity).entityParams;
-    const auto goal = params.m_path.empty() ? params.move_pos : params.m_path.front();
-    const auto x = goal.x - transform.position.x, z = goal.z - transform.position.z;
-    const auto distance = FixedMath::sqrt(x * x + z * z);
-    const auto speed = row->velocity * (ctx.world.setup().mode == WorldMode::Town ? conf::kRunRate : conf::kWalkRate);
-    const auto angle = FixedMath::atan2Deg(z, x);
-    auto& velocity = ecs.get<RoleHitState>(ctx.entity).forceVelocity;
-    velocity.x = FixedMath::cosDeg(angle) * speed;
-    velocity.z = FixedMath::sinDeg(angle) * speed;
-    const auto step = Fixed::ratio(1000, 60) * FixedMath::sqrt(velocity.x * velocity.x + velocity.z * velocity.z * conf::kZRate * conf::kZRate);
-    if (distance <= step)
-    {
-        transform.position.x = goal.x; transform.position.z = goal.z;
-        velocity = {};
-        if (!params.m_path.empty())
-        {
-            params.m_path.erase(params.m_path.begin());
-            if (!params.m_path.empty()) return BTStatus::Running;
-        }
-        auto& motion = ecs.get<MotionState>(ctx.entity);
-        motion.motionName = "stand"; motion.timeMs = {}; motion.actionScale = conf::kIdleScaleTime;
-        return BTStatus::Success;
-    }
-    if (x != Fixed{}) transform.towardX = x < Fixed{} ? -1 : 1;
-    transform.vectorX = Fixed::fromInt(transform.towardX);
-    transform.vectorZ = z < Fixed{} ? "-1"_fx : "1"_fx;
-    return BTStatus::Running;
-}
-// 寻路退出时配对走跑行为通知并清除剩余位移。
-void findingExit(BTCtx& ctx, const Param&, LeafState& state)
-{
-    (exit)(ctx, Param{ctx.world.setup().mode == WorldMode::Town ? ActionType::Run : ActionType::Walk}, state);
-    displacement::reset(ctx.world, ctx.entity);
 }
 /// 未实现叶子的空进入回调。
 void unimplementedEnter(BTCtx&, const Param&, LeafState&) {}
@@ -556,14 +388,14 @@ const Def& definition(const DefinitionKey& key)
 const Registry& registry()
 {
     static const Registry value({{unimplementedEnter, unimplementedUpdate, unimplementedExit},
-                                 {enter, tick, exit},
-                                 {enter, tick, exit},
-                                 {enter, tick, exit},
-                                 {attack::enter, attack::tick, attack::exit, attack::onDisplacementEvent},
-                                 {hit_actions::enter, hit_actions::tick, hit_actions::exit, hit_actions::onDisplacementEvent},
-                                 {ai::movement::enter, ai::movement::tick, ai::movement::exit, ai::movement::onDisplacementEvent},
-                                 {jostledEnter, jostledUpdate, jostledExit, jostledEvent},
-                                 {findingEnter, findingUpdate, findingExit}},
+                                 bridge::leafCallbacks<role::brain::states::Locomotion>(),
+                                 bridge::leafCallbacks<role::brain::states::Locomotion>(),
+                                 bridge::leafCallbacks<role::brain::states::Locomotion>(),
+                                 bridge::leafCallbacks<attack::AttackAction>(),
+                                 bridge::leafCallbacks<role::brain::states::HitState>(),
+                                 bridge::leafCallbacks<role::brain::states::AiMove>(),
+                                 bridge::leafCallbacks<role::brain::states::Jostled>(),
+                                 bridge::leafCallbacks<role::brain::states::Finding>()},
                                 {{check, condEnter, condExit}});
     return value;
 }

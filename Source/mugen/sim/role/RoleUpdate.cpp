@@ -4,7 +4,7 @@
 #include "mugen/conf/BattleConst.h"
 #include "mugen/sim/skill/Skill.h"
 #include "mugen/sim/attack/AttackRole.h"
-#include "mugen/sim/bt/HitActions.h"
+#include "mugen/sim/role/brain/states/HitStates.h"
 #include "mugen/sim/hit/HitState.h"
 #include "mugen/sim/buff/BuffPool.h"
 #include "mugen/sim/ability/AbilityPool.h"
@@ -73,7 +73,7 @@ void motionUpdate(World& world, Entity entity)
             else
             {
                 attack::animationComplete(world, entity, motion.m_completedLoops);
-                behavior::hit_actions::animationComplete(world, entity);
+                role::brain::states::animationComplete(world, entity);
             }
         }
         motion.timeMs =

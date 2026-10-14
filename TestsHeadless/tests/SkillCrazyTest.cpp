@@ -1,7 +1,7 @@
 #include "doctest.h"
 #include "SkillTestSupport.h"
 #include "mugen/sim/skill/Skill.h"
-#include "mugen/sim/bt/HitActions.h"
+#include "mugen/sim/role/brain/states/HitStates.h"
 #include "mugen/sim/bt/RoleTree.h"
 #include <filesystem>
 #include <fstream>
@@ -125,9 +125,9 @@ TEST_CASE("Death during crazy zeroes EP and exits crazy")
     pool.m_crazy      = true;
     pool.m_slotChanged = true;
     world.ecs().get<Vitals>(entity).ep = "500"_fx;
-    behavior::BTCtx ctx{world, entity};
-    behavior::LeafState state;
-    behavior::hit_actions::enter(ctx, behavior::ActionType::Death, state);
+    role::brain::RoleContext rc{world, entity};
+    behavior::LeafState state = behavior::HitActionState{};
+    role::brain::states::HitState::enter(rc, behavior::ActionType::Death, std::get<behavior::HitActionState>(state));
     CHECK(world.ecs().get<Vitals>(entity).ep == Fixed{});
     CHECK_FALSE(pool.m_crazy);
     reloadConfig();

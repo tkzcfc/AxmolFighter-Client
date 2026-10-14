@@ -58,15 +58,16 @@ struct Fixture
     }
     void enter()
     {
-        behavior::BTCtx ctx{world, entity};
-        attack::enter(ctx, param, state);
+        state = attack::AttackRole{};
+        role::brain::RoleContext rc{world, entity};
+        attack::AttackAction::enter(rc, std::get<behavior::AttackAction>(param), std::get<attack::AttackRole>(state));
     }
     BTStatus tick(Fixed time)
     {
         world.ecs().singleton<WorldClock>().dtMs            = {};
         std::get<attack::AttackRole>(state).m_action.m_time = time;
-        behavior::BTCtx ctx{world, entity};
-        return attack::tick(ctx, param, state);
+        role::brain::RoleContext rc{world, entity};
+        return attack::AttackAction::update(rc, std::get<behavior::AttackAction>(param), std::get<attack::AttackRole>(state));
     }
     ~Fixture() { conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin"); }
 };
