@@ -16,7 +16,8 @@ if (-not (Test-Path -LiteralPath $cli)) {
     exit 1
 }
 if (-not $Revision) {
-    $Revision = (& git -C $clientRoot rev-parse --short HEAD).Trim()
+    # 基线头固定记录产生 trace 的 mugen 代码提交；随 HEAD 漂移会破坏字节一致性。
+    $Revision = 'c9321cf'
 }
 if (-not (Test-Path -LiteralPath $traceDir)) {
     New-Item -ItemType Directory -Force -Path $traceDir | Out-Null
