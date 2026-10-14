@@ -17,10 +17,11 @@ $ninja = Get-Command ninja -ErrorAction SilentlyContinue
 $configureArgs = @(
     '-S', $root,
     '-B', $buildDir,
-    "-DAX_ROOT=$($env:AX_ROOT)"
+    "-DAX_ROOT=$($env:AX_ROOT)",
+    "-DCMAKE_BUILD_TYPE=$Config"
 )
 if ($ninja) {
-    $configureArgs += @('-G', 'Ninja', "-DCMAKE_BUILD_TYPE=$Config")
+    $configureArgs += @('-G', 'Ninja')
 }
 
 & cmake @configureArgs
@@ -28,20 +29,24 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
-$buildArgs = @('--build', $buildDir, '--config', $Config, '--target', 'mugen_tests')
-if ($ninja) {
-    $buildArgs += @('--parallel')
-}
+$buildArgs = @('--build', $buildDir, '--config', $Config, '--target', 'mugen_tests', '--parallel')
 & cmake @buildArgs
 if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
-$testExe = Join-Path $buildDir "mugen_tests.exe"
-if (-not (Test-Path -LiteralPath $testExe)) {
-    $testExe = Join-Path $buildDir "$Config\mugen_tests.exe"
+$testName = if ($IsWindows) { 'mugen_tests.exe' } else { 'mugen_tests' }
+$testExe = $null
+foreach ($candidate in @(
+    (Join-Path $buildDir "$Config\$testName"),
+    (Join-Path $buildDir $testName)
+)) {
+    if (Test-Path -LiteralPath $candidate) {
+        $testExe = $candidate
+        break
+    }
 }
-if (-not (Test-Path -LiteralPath $testExe)) {
+if (-not $testExe) {
     Write-Error "mugen_tests executable not found under $buildDir"
     exit 1
 }

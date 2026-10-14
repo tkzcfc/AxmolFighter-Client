@@ -6,6 +6,11 @@
 #include <cstdlib>
 #include <filesystem>
 
+namespace ecs_test
+{
+extern std::string executablePath;
+}
+
 using namespace bt_test;
 
 namespace
@@ -139,11 +144,16 @@ TEST_CASE("BT ready snapshot preserves monostate alternatives and their schema i
 TEST_CASE("BT definition rejects malformed DFS and pool references before execution")
 {
 #if !defined(NDEBUG)
-    const std::filesystem::path executable = std::filesystem::absolute("mugen_tests.exe");
+    const std::string executable = ecs_test::executablePath;
+#if defined(_WIN32)
+    const std::string nullDevice = "NUL";
+#else
+    const std::string nullDevice = "/dev/null";
+#endif
     for (int probe = 0; probe < 7; ++probe)
     {
         const std::string command =
-            "\"" + executable.string() + "\" --bt-invalid-probe " + std::to_string(probe) + " > NUL 2>&1";
+            "\"" + executable + "\" --bt-invalid-probe " + std::to_string(probe) + " > " + nullDevice + " 2>&1";
         CHECK(std::system(command.c_str()) != 0);
     }
 #else

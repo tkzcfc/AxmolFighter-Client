@@ -5,6 +5,11 @@
 #include <fstream>
 #include <sstream>
 #include <cmath>
+#include <cstdlib>
+#include <csignal>
+#if !defined(_WIN32)
+#    include <sys/wait.h>
+#endif
 #include "mugen/avatar/data/AvatarAssetCache.h"
 
 namespace ecs_test
@@ -143,6 +148,12 @@ TEST_CASE("Spawn invalid role asserts in Debug")
 {
     const std::string executable = "\"" + ecs_test::executablePath + "\"";
     REQUIRE(std::system((executable + " --ecs-probe-ok").c_str()) == 0);
-    CHECK(std::system((executable + " --spawn-invalid-role-probe").c_str()) == 3);
+    const int status = std::system((executable + " --spawn-invalid-role-probe").c_str());
+#if defined(_WIN32)
+    CHECK(status == 3);
+#else
+    CHECK(WIFSIGNALED(status));
+    CHECK(WTERMSIG(status) == SIGABRT);
+#endif
 }
 #endif

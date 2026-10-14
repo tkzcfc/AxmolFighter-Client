@@ -7,6 +7,11 @@
 #include <cstdlib>
 #include <filesystem>
 
+namespace ecs_test
+{
+extern std::string executablePath;
+}
+
 using namespace mugen;
 using namespace mugen::sim;
 
@@ -154,8 +159,12 @@ TEST_CASE("Timer exact frame loop remainder event sequence and unscaled clock")
     timers.resetTimes();
     CHECK(timers.entries[0].elapsedMs == Fixed{});
 #if !defined(NDEBUG)
-    const std::filesystem::path executable = std::filesystem::absolute("mugen_tests.exe");
-    const std::string timerProbe           = "\"" + executable.string() + "\" --world-invalid-probe 0 > NUL 2>&1";
+    const std::string executable = ecs_test::executablePath;
+#if defined(_WIN32)
+    const std::string timerProbe = "\"" + executable + "\" --world-invalid-probe 0 > NUL 2>&1";
+#else
+    const std::string timerProbe = "\"" + executable + "\" --world-invalid-probe 0 > /dev/null 2>&1";
+#endif
     CHECK(std::system(timerProbe.c_str()) != 0);
 #endif
 }
@@ -210,8 +219,12 @@ TEST_CASE("World input queues preserve ordering and reject frames transactionall
     CHECK(world.ecs().singleton<sim::RoomState>().reviveRequests[0].slot == 4);
     const auto before = world.hash();
 #if !defined(NDEBUG)
-    const std::filesystem::path executable = std::filesystem::absolute("mugen_tests.exe");
-    const std::string frameProbe           = "\"" + executable.string() + "\" --world-invalid-probe 1 > NUL 2>&1";
+    const std::string executable = ecs_test::executablePath;
+#if defined(_WIN32)
+    const std::string frameProbe = "\"" + executable + "\" --world-invalid-probe 1 > NUL 2>&1";
+#else
+    const std::string frameProbe = "\"" + executable + "\" --world-invalid-probe 1 > /dev/null 2>&1";
+#endif
     CHECK(std::system(frameProbe.c_str()) != 0);
 #endif
     CHECK(world.hash() == before);

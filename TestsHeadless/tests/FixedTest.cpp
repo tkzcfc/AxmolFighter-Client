@@ -9,6 +9,11 @@
 #include <filesystem>
 #include <limits>
 
+namespace ecs_test
+{
+extern std::string executablePath;
+}
+
 using namespace mugen;
 
 TEST_CASE("Fixed literal and rounding semantics")
@@ -69,8 +74,12 @@ TEST_CASE("Fixed vectors use deterministic component math")
 #if !defined(NDEBUG)
 TEST_CASE("Fixed multiplication overflow fires MG_ASSERT in debug")
 {
-    const std::filesystem::path executable = std::filesystem::absolute("mugen_tests.exe");
-    const std::string command = "\"" + executable.string() + "\" --fixed-overflow-probe > NUL 2>&1";
+    const std::string executable = ecs_test::executablePath;
+#if defined(_WIN32)
+    const std::string command = "\"" + executable + "\" --fixed-overflow-probe > NUL 2>&1";
+#else
+    const std::string command = "\"" + executable + "\" --fixed-overflow-probe > /dev/null 2>&1";
+#endif
     CHECK(std::system(command.c_str()) != 0);
 }
 #endif
