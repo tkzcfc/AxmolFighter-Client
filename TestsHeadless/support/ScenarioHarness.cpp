@@ -4,7 +4,7 @@
 #include "mugen/core/io/FileUtils.h"
 #include "mugen/sim/room/RoomFlow.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
-#include "mugen/sim/hit/Hit.h"
+#include "mugen/sim/role/Role.h"
 #include <filesystem>
 
 namespace mugen::test
@@ -22,7 +22,7 @@ void recordedRole(sim::World& world, Entity entity)
                 [&](Entity target, const sim::RoleIdentity& role, sim::Vitals& vitals) {
                     if (role.roleType >= 2 && role.roleType <= 4)
                     {
-                        sim::hit::modifyHp(world, target, -vitals.hp, {}, true);
+                        sim::Role(world, target).modifyHp(-vitals.hp, {}, true);
                         world.destroy(target);
                     }
                 });

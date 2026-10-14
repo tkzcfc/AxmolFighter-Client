@@ -4,8 +4,7 @@
 #include "mugen/core/math/Random.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/buff/BuffRules.h"
-#include "mugen/sim/hit/Hit.h"
-#include "mugen/sim/status/Status.h"
+#include "mugen/sim/role/Role.h"
 #include <limits>
 
 namespace mugen::sim::ai
@@ -28,7 +27,7 @@ bool contains(const std::vector<int32_t>& range, Fixed value)
 bool living(World& world, Entity entity)
 {
     const auto* state = world.ecs().tryGet<RoleStatus>(entity);
-    return state && !state->isDeath() && !hit::isDead(world, entity);
+    return state && !state->isDeath() && !Role(world, entity).isDead();
 }
 // 受击、仇恨记录或有效嘲讽都算激怒。
 bool provoked(World& world, Entity entity)

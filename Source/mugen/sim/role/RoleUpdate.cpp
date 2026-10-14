@@ -6,10 +6,9 @@
 #include "mugen/sim/attack/AttackRole.h"
 #include "mugen/sim/role/brain/states/HitStates.h"
 #include "mugen/sim/role/brain/RoleBrainRunner.h"
-#include "mugen/sim/hit/HitState.h"
+#include "mugen/sim/role/Role.h"
 #include "mugen/sim/buff/BuffPool.h"
 #include "mugen/sim/ability/AbilityPool.h"
-#include "mugen/sim/status/Status.h"
 #include <algorithm>
 
 namespace mugen::sim::role
@@ -34,7 +33,7 @@ void summonUpdate(World& world, Entity entity)
     {
         remaining = "-1"_fx;
         world.ecs().get<Vitals>(entity).hp = {};
-        status::dealWithStatus(world, entity, EntityRoleStatus::Death);
+        Role(world, entity).changeStatus(EntityRoleStatus::Death);
     }
 }
 // 推进角色狂暴技能流程。
@@ -42,7 +41,7 @@ void crazyUpdate(World& world, Entity entity) { skill::updateCrazy(world, entity
 // 推进怒气流程。
 void rageUpdate(World&, Entity) {}
 // 推进受击保护流程。
-void hitProtectUpdate(World& world, Entity entity) { hit::dealHitProtectUpdate(world, entity); }
+void hitProtectUpdate(World& world, Entity entity) { Role(world, entity).updateHitProtect(); }
 // 推进 AI 决策流程。驱动关闭时怪物不再做决策。
 void aiUpdate(World& world, Entity entity)
 {

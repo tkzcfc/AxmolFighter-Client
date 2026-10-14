@@ -1,7 +1,6 @@
 #include "BuffCondition.h"
 #include "mugen/sim/World.h"
-#include "mugen/sim/hit/Hit.h"
-#include "mugen/sim/status/Status.h"
+#include "mugen/sim/role/Role.h"
 #include "mugen/sim/skill/Skill.h"
 #include "mugen/conf/ReflectedConfig.h"
 
@@ -90,7 +89,7 @@ bool checkOne(World& world, Entity entity, const BuffInstance& instance, int32_t
     switch (condition)
     {
     case 0: return true;
-    case 1: return world.ecs().has<Vitals>(target) && hit::isDead(world, target);
+    case 1: return world.ecs().has<Vitals>(target) && Role(world, target).isDead();
     case 2: {
         const auto* state = world.ecs().tryGet<RoleHitState>(entity);
         return state && state->m_critical;

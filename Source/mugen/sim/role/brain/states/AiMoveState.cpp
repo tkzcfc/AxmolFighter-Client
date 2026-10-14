@@ -5,7 +5,6 @@
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/core/math/FixedMath.h"
 #include "mugen/sim/World.h"
-#include "mugen/sim/status/Status.h"
 
 namespace mugen::sim::role::brain::states
 {

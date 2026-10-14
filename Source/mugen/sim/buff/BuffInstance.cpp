@@ -1,7 +1,7 @@
 #include "BuffInstance.h"
 #include "BuffPresentation.h"
 #include "BuffCondition.h"
-#include "mugen/sim/hit/Hit.h"
+#include "mugen/sim/role/Role.h"
 #include "mugen/sim/World.h"
 #include "mugen/conf/ReflectedConfig.h"
 
@@ -82,7 +82,7 @@ void resetInstance(World& world, Entity entity, uint64_t serial, const conf::Buf
                 instance->m_triggered = false;
         }
         if (execute(instance->m_lifecycle, oldConfig->executeType) == LifecycleAction::Enter &&
-            (oldConfig->addType == 1 || !hit::isDead(world, entity)) && checkConditions(world, entity, *instance))
+            (oldConfig->addType == 1 || !Role(world, entity).isDead()) && checkConditions(world, entity, *instance))
             invokeRule(world, entity, serial, RuleHook::Enter);
     }
     instance = findInstance(world, entity, serial);

@@ -4,7 +4,7 @@
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/sim/role/brain/RoleBrainRunner.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
-#include "mugen/sim/status/Status.h"
+#include "mugen/sim/role/Role.h"
 
 using namespace mugen;
 using namespace mugen::sim;
@@ -27,7 +27,7 @@ TEST_CASE("Portal Finding consumes ordered path points before returning Idle")
     const FixedVec3 first{step / "2"_fx, {}, {}};
     const FixedVec3 last{step, {}, {}};
     ecs.get<RoleStatus>(entity).entityParams.m_path = {first, last};
-    REQUIRE(status::dealWithStatus(world, entity, EntityRoleStatus::Finding));
+    REQUIRE(Role(world, entity).changeStatus(EntityRoleStatus::Finding));
     for (int i = 0; i < 8 && !ecs.get<RoleStatus>(entity).entityParams.m_path.empty(); ++i)
         role::brain::update(ecs.get<RoleBrain>(entity), world, entity, false);
     CHECK(ecs.get<RoleStatus>(entity).entityParams.m_path.empty());

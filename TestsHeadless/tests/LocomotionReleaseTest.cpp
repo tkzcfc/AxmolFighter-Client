@@ -1,7 +1,6 @@
 #include "doctest.h"
 #include "mugen/sim/input/ControlManagerCore.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
-#include "mugen/sim/status/Status.h"
 
 using namespace mugen;
 using namespace mugen::sim;

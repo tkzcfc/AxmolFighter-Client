@@ -5,7 +5,7 @@
 #include "BuffInstance.h"
 #include "BuffPresentation.h"
 #include "mugen/sim/World.h"
-#include "mugen/sim/hit/Hit.h"
+#include "mugen/sim/role/Role.h"
 #include "mugen/sim/hit/HitSeams.h"
 #include "mugen/sim/skill/Skill.h"
 #include "mugen/sim/skill/SkillComponents.h"
@@ -548,7 +548,7 @@ void hpEnter(World& world, Entity entity, uint64_t serial, Fixed)
         value *= vitals.maxHp;
     if (value < Fixed{} && config.paramValue.size() > 1 && config.paramValue[1] > Fixed{})
         value = std::max(value, config.paramValue[1] - vitals.hp);
-    hit::modifyHp(world, entity, value, {}, value < Fixed{} && config.paramValue.size() > 1 && config.paramValue[1] > Fixed{});
+    Role(world, entity).modifyHp(value, {}, value < Fixed{} && config.paramValue.size() > 1 && config.paramValue[1] > Fixed{});
 }
 void epEnter(World& world, Entity entity, uint64_t serial, Fixed)
 {

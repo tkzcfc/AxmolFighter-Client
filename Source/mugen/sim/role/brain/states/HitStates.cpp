@@ -3,11 +3,8 @@
 #include "mugen/conf/BattleConst.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/sim/World.h"
-#include "mugen/sim/hit/Hit.h"
-#include "mugen/sim/hit/HitState.h"
 #include "mugen/sim/role/brain/RoleBranches.h"
 #include "mugen/sim/skill/Skill.h"
-#include "mugen/sim/status/Status.h"
 
 namespace mugen::sim::role::brain::states
 {
@@ -46,12 +43,12 @@ void transition(RoleContext& ctx, behavior::HitActionState& leaf, S next)
 void death(RoleContext& ctx, behavior::HitActionState& leaf, int32_t displacement = -1)
 {
     leaf.m_finished = true;
-    status::dealWithStatus(ctx.world(), ctx.entity(), S::Death, displacement);
+    ctx.role().changeStatus(S::Death, displacement);
 }
 // 挣脱及普通硬直结束共用清位移和硬直逻辑。
 void success(RoleContext& ctx, behavior::HitActionState& leaf, S next)
 {
-    if (hit::isDead(ctx.world(), ctx.entity()))
+    if (ctx.role().isDead())
     {
         const auto* row = role(ctx);
         death(ctx, leaf, row ? row->deathDisplacementId : -1);
@@ -107,7 +104,7 @@ void completed(RoleContext& ctx, A type, behavior::HitActionState& leaf)
     case A::HitSwitch:
         leaf.m_animationEnd = leaf.m_finished = true;
         ctx.get<RoleStatus>().abort(S::HitSwitch);
-        if (hit::isDead(ctx.world(), ctx.entity()))
+        if (ctx.role().isDead())
             death(ctx, leaf);
         break;
     case A::HitUp:
@@ -125,12 +122,12 @@ void completed(RoleContext& ctx, A type, behavior::HitActionState& leaf)
     case A::HitFloor:
         leaf.m_animationEnd = true;
         leaf.m_time         = {};
-        if (leaf.m_displacementEnd && hit::isDead(ctx.world(), ctx.entity()))
+        if (leaf.m_displacementEnd && ctx.role().isDead())
             death(ctx, leaf);
         break;
     case A::GetUp:
         leaf.m_animationEnd = true;
-        if (hit::isDead(ctx.world(), ctx.entity()))
+        if (ctx.role().isDead())
             death(ctx, leaf, row ? row->deathDisplacementId : -1);
         else
             transition(ctx, leaf, S::Wake);
@@ -181,7 +178,7 @@ void airChase(RoleContext& ctx, A type, behavior::HitActionState& leaf, const co
     leaf.m_displacementId = data.hitType == 0 ? data.airDisplacementId : data.displacementId;
     displacement::set(ctx.world(), ctx.entity(), leaf.m_displacementId, ctx.node());
     if (data.hitType != 1)
-        hit::dealWithWeight(ctx.world(), ctx.entity(), data.hitRigidity);
+        ctx.role().applyWeight(data.hitRigidity);
     if (type == A::HitUp)
     {
         if (data.hitType == 1 && !leaf.m_break)
@@ -192,7 +189,7 @@ void airChase(RoleContext& ctx, A type, behavior::HitActionState& leaf, const co
     }
     const bool knockDown = type == A::HitFloor && data.hitType == 1 && !leaf.m_break;
     const bool relaunch  = (data.hitType == 0 || data.hitType == 2) &&
-        !hit::isRigidity(ctx.world(), ctx.entity()) && !leaf.m_break;
+        !ctx.role().isRigidity() && !leaf.m_break;
     if (knockDown)
         transition(ctx, leaf, S::HitDown);
     if (relaunch)
@@ -234,7 +231,7 @@ void HitState::enter(RoleContext& ctx, Param type, State& leaf)
         if (row)
             ctx.get<RoleHitState>().rigidity = Fixed::fromInt(row->rigidity);
         if (hero)
-            hit::resetHitProtect(ctx.world(), ctx.entity());
+            ctx.role().resetHitProtect();
         return;
     }
     if (type == A::GetUp)
@@ -282,7 +279,7 @@ BTStatus HitState::update(RoleContext& ctx, Param type, State& leaf)
         return BTStatus::Running;
     if (type == A::Wake)
     {
-        if (hit::isDead(ctx.world(), ctx.entity()))
+        if (ctx.role().isDead())
         {
             const auto* row = role(ctx);
             death(ctx, leaf, row ? row->deathDisplacementId : -1);
@@ -342,16 +339,16 @@ BTStatus HitState::update(RoleContext& ctx, Param type, State& leaf)
         const auto* row  = role(ctx);
         if (data && row && (data->hitType == 0 || leaf.m_displacementId == -1 || row->hitDisplacementId != -1) &&
             leaf.m_animationEnd && (leaf.m_displacementEnd || leaf.m_displacementId == -1) &&
-            leaf.m_time >= hit::getStiffTime(ctx.world(), ctx.entity()))
+            leaf.m_time >= ctx.role().getStiffTime())
         {
             success(ctx, leaf, S::HitSwitch);
             timed = true;
         }
     }
     if (type == A::HitFloor && leaf.m_animationEnd && leaf.m_displacementEnd && !leaf.m_break &&
-        leaf.m_time >= hit::getStiffTime(ctx.world(), ctx.entity()))
+        leaf.m_time >= ctx.role().getStiffTime())
     {
-        if (hit::isDead(ctx.world(), ctx.entity()))
+        if (ctx.role().isDead())
             death(ctx, leaf);
         else
             transition(ctx, leaf, S::GetUp);
@@ -415,7 +412,7 @@ bool HitState::onDisplacement(RoleContext& ctx, Param type, State& leaf)
         if (event == DisplacementEvent::Left || event == DisplacementEvent::Right ||
             event == DisplacementEvent::Top || event == DisplacementEvent::Bottom)
             return false;
-        return hit::isRigidity(ctx.world(), ctx.entity());
+        return ctx.role().isRigidity();
     }
     else if (type == A::HitFloor || type == A::Death)
     {
@@ -423,11 +420,11 @@ bool HitState::onDisplacement(RoleContext& ctx, Param type, State& leaf)
         {
             leaf.m_displacementEnd = true;
             leaf.m_time            = {};
-            if (type == A::HitFloor && leaf.m_animationEnd && hit::isDead(ctx.world(), ctx.entity()))
+            if (type == A::HitFloor && leaf.m_animationEnd && ctx.role().isDead())
                 death(ctx, leaf);
         }
         else if (type == A::HitFloor && event == DisplacementEvent::Floor)
-            return hit::isRigidity(ctx.world(), ctx.entity());
+            return ctx.role().isRigidity();
     }
     return false;
 }

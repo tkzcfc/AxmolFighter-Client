@@ -1,6 +1,6 @@
 #include "doctest.h"
 #include "mugen/sim/World.h"
-#include "mugen/sim/status/Status.h"
+#include "mugen/sim/role/Role.h"
 
 TEST_CASE("Status attack refuses walk hit resets and death is terminal")
 {
@@ -11,18 +11,18 @@ TEST_CASE("Status attack refuses walk hit resets and death is terminal")
     const auto entity = world.create(GroupKind::Role);
     world.ecs().add(entity, RoleStatus{});
     world.ecs().add(entity, RoleHitState{});
-    CHECK(status::dealWithStatus(world, entity, EntityRoleStatus::Attack));
-    CHECK_FALSE(status::dealWithStatus(world, entity, EntityRoleStatus::Walk));
-    CHECK(status::dealWithStatus(world, entity, EntityRoleStatus::Hit, 42));
+    CHECK(Role(world, entity).changeStatus(EntityRoleStatus::Attack));
+    CHECK_FALSE(Role(world, entity).changeStatus(EntityRoleStatus::Walk));
+    CHECK(Role(world, entity).changeStatus(EntityRoleStatus::Hit, 42));
     auto& state = world.ecs().get<RoleStatus>(entity);
     CHECK(state.eEntityStatus == (EntityRoleStatus::Idle | EntityRoleStatus::Hit));
     CHECK(state.entityParams.hit_id == 42);
     CHECK(state.entityParams.hit_counts == 1);
     CHECK(state.isCanBreak());
-    CHECK(status::dealWithStatus(world, entity, EntityRoleStatus::Death, 133));
-    CHECK_FALSE(status::dealWithStatus(world, entity, EntityRoleStatus::Attack));
-    CHECK_FALSE(status::dealWithStatus(world, entity, EntityRoleStatus::Hit));
-    CHECK_FALSE(status::dealWithStatus(world, entity, EntityRoleStatus::Idle));
+    CHECK(Role(world, entity).changeStatus(EntityRoleStatus::Death, 133));
+    CHECK_FALSE(Role(world, entity).changeStatus(EntityRoleStatus::Attack));
+    CHECK_FALSE(Role(world, entity).changeStatus(EntityRoleStatus::Hit));
+    CHECK_FALSE(Role(world, entity).changeStatus(EntityRoleStatus::Idle));
     CHECK(state.eEntityStatus == EntityRoleStatus::Death);
     CHECK(state.entityParams.death_displacement_id == 133);
     ByteBuffer bytes;

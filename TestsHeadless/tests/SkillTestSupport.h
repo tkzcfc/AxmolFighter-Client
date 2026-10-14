@@ -3,7 +3,6 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/skill/Skill.h"
 #include "mugen/conf/ReflectedConfig.h"
-#include "mugen/sim/status/Status.h"
 #include "mugen/core/serialize/BinaryArchive.h"
 
 namespace skill_test

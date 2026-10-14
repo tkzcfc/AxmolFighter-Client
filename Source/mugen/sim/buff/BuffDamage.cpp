@@ -1,6 +1,7 @@
 #include "BuffDamage.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/hit/Hit.h"
+#include "mugen/sim/role/Role.h"
 #include "mugen/conf/BattleConst.h"
 #include "mugen/conf/ReflectedConfig.h"
 
@@ -31,7 +32,7 @@ Fixed getAttackValue(World& world, Entity entity, const BuffInstance& instance)
 void dealBuffDamage(World& world, Entity entity, Entity attacker, Fixed attackValue)
 {
     if (auto* state = world.ecs().tryGet<RoleHitState>(attacker)) state->m_dps -= attackValue;
-    hit::modifyHp(world, entity, attackValue);
+    Role(world, entity).modifyHp(attackValue);
     world.emit(entity, HurtNumber{(-attackValue).toInt()});
 }
 }

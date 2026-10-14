@@ -1,7 +1,6 @@
 #include "Effect.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/attack/ActionAttack.h"
-#include "mugen/sim/status/Status.h"
 #include "mugen/sim/skill/SkillTriggers.h"
 #include "mugen/avatar/AvatarPaths.h"
 #include "mugen/avatar/MotionPlayer.h"

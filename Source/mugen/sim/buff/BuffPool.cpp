@@ -3,7 +3,7 @@
 #include "BuffCondition.h"
 #include "BuffEvents.h"
 #include "BuffPresentation.h"
-#include "mugen/sim/hit/Hit.h"
+#include "mugen/sim/role/Role.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/trace/TraceSink.h"
 #include "mugen/conf/ReflectedConfig.h"
@@ -82,7 +82,7 @@ std::optional<uint64_t> addBuff(World& world, Entity entity, int32_t id,
         beginPresentation(world, entity, *serial);
         auto* added = findInstance(world, entity, *serial);
         const auto action = execute(added->m_lifecycle, config->executeType);
-        if (action == LifecycleAction::Enter && (config->addType == 1 || !hit::isDead(world, entity)) &&
+        if (action == LifecycleAction::Enter && (config->addType == 1 || !Role(world, entity).isDead()) &&
             checkConditions(world, entity, *added)) invokeRule(world, entity, *serial, RuleHook::Enter);
     }
     else resetInstance(world, entity, *serial, *config);
@@ -135,10 +135,10 @@ void update(World& world, Entity entity)
         if (!instance) continue;
         const auto* config = conf::Config::instance().find<conf::BuffConfig>(instance->m_id);
         if (!config) continue;
-        const bool dead = hit::isDead(world, entity);
+        const bool dead = Role(world, entity).isDead();
         const auto applicator = instance->m_context.m_applicator;
         if (config->addType == 2 && (dead ||
-            (world.ecs().has<Vitals>(applicator) && hit::isDead(world, applicator))))
+            (world.ecs().has<Vitals>(applicator) && Role(world, applicator).isDead())))
         {
             destroyBuff(world, entity, instance->m_id);
             continue;

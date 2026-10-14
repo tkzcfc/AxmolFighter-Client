@@ -1,6 +1,5 @@
 #include "doctest.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
-#include "mugen/sim/status/Status.h"
 #include "mugen/sim/input/ControlManagerCore.h"
 #include "mugen/conf/BattleConst.h"
 #include <fstream>

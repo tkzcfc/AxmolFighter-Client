@@ -1,5 +1,6 @@
 #include "SkillTestSupport.h"
 #include "mugen/sim/hit/Hit.h"
+#include "mugen/sim/role/Role.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include <iostream>
 
@@ -229,21 +230,21 @@ TEST_CASE("Hp shield absorption break equality scale and lock")
     HitHooks hooks; hooks.m_trigger = observe;
     HitFixture f(hooks); auto& ecs = f.m_world.ecs();
     auto& v = ecs.get<Vitals>(f.m_monster); v.hp = "100"_fx; v.m_shield = "50"_fx;
-    hit::modifyHp(f.m_world,f.m_monster,"-20"_fx);
+    Role(f.m_world,f.m_monster).modifyHp("-20"_fx);
     CHECK(v.hp == "100"_fx); CHECK(v.m_shield == "30"_fx);
-    hit::modifyHp(f.m_world,f.m_monster,"-40"_fx);
+    Role(f.m_world,f.m_monster).modifyHp("-40"_fx);
     CHECK(v.hp == "90"_fx); CHECK(v.m_shield == Fixed{});
     v.m_shield = "10"_fx;
-    hit::modifyHp(f.m_world,f.m_monster,"-10"_fx);
+    Role(f.m_world,f.m_monster).modifyHp("-10"_fx);
     CHECK(v.hp == "90"_fx); CHECK(v.m_shield == Fixed{});
     v.m_shield = "50"_fx; v.m_shieldConsumeScale = "2"_fx;
-    hit::modifyHp(f.m_world,f.m_monster,"-30"_fx);
+    Role(f.m_world,f.m_monster).modifyHp("-30"_fx);
     CHECK(v.hp == "90"_fx); CHECK(v.m_shield == Fixed{});
     v.m_hpLock = "3"_fx;
-    hit::modifyHp(f.m_world,f.m_monster,"-1000"_fx);
-    CHECK(v.hp == "3"_fx); CHECK_FALSE(hit::isDead(f.m_world,f.m_monster));
+    Role(f.m_world,f.m_monster).modifyHp("-1000"_fx);
+    CHECK(v.hp == "3"_fx); CHECK_FALSE(Role(f.m_world,f.m_monster).isDead());
     v.m_shield = "50"_fx; v.m_hpLock = {};
-    hit::modifyHp(f.m_world,f.m_monster,"-1"_fx,{},true);
+    Role(f.m_world,f.m_monster).modifyHp("-1"_fx,{},true);
     CHECK(v.hp == "2"_fx); CHECK(v.m_shield == "50"_fx);
 }
 
@@ -254,7 +255,7 @@ TEST_CASE("Hp BEFORE_DEATH ordering rescue and death")
     {
         HitHooks hooks; hooks.m_trigger = observe;
         HitFixture f(hooks);
-        hit::modifyHp(f.m_world,f.m_monster,"-200000"_fx);
+        Role(f.m_world,f.m_monster).modifyHp("-200000"_fx);
         CHECK(f.m_world.ecs().get<RoleStatus>(f.m_monster).isDeath());
         CHECK(messages(f.m_world,f.m_monster) == std::vector<std::string>{"BF:17", "BF:14"});
     }
@@ -262,7 +263,7 @@ TEST_CASE("Hp BEFORE_DEATH ordering rescue and death")
     {
         HitHooks hooks; hooks.m_trigger = rescue;
         HitFixture f(hooks);
-        hit::modifyHp(f.m_world,f.m_monster,"-200000"_fx);
+        Role(f.m_world,f.m_monster).modifyHp("-200000"_fx);
         CHECK(f.m_world.ecs().get<Vitals>(f.m_monster).hp == "7"_fx);
         CHECK_FALSE(f.m_world.ecs().get<RoleStatus>(f.m_monster).isDeath());
         CHECK(messages(f.m_world,f.m_monster) == std::vector<std::string>{"BF:17", "BF:14", "BF:21"});
@@ -276,21 +277,21 @@ TEST_CASE("Hp chill healing change and shield layer seams")
     {
         HitHooks hooks; hooks.m_modifiers = chilled; HitFixture f(hooks);
         f.m_world.ecs().get<Vitals>(f.m_monster).hp = "100"_fx;
-        hit::modifyHp(f.m_world,f.m_monster,"20"_fx);
+        Role(f.m_world,f.m_monster).modifyHp("20"_fx);
         CHECK(f.m_world.ecs().get<Vitals>(f.m_monster).hp == "100"_fx);
     }
     SUBCASE("healing")
     {
         HitHooks hooks; hooks.m_modifiers = healing; HitFixture f(hooks);
         f.m_world.ecs().get<Vitals>(f.m_monster).hp = "100"_fx;
-        hit::modifyHp(f.m_world,f.m_monster,"20"_fx);
+        Role(f.m_world,f.m_monster).modifyHp("20"_fx);
         CHECK(f.m_world.ecs().get<Vitals>(f.m_monster).hp == "130"_fx);
     }
     SUBCASE("last shield layer")
     {
         HitHooks hooks; hooks.m_shieldLayer = lastShield; HitFixture f(hooks);
         f.m_world.ecs().get<Vitals>(f.m_monster).m_shield = "100"_fx;
-        hit::modifyHp(f.m_world,f.m_monster,"-1"_fx);
+        Role(f.m_world,f.m_monster).modifyHp("-1"_fx);
         CHECK(f.m_world.ecs().get<Vitals>(f.m_monster).m_shield == Fixed{});
         CHECK(f.m_world.ecs().get<Vitals>(f.m_monster).hp == "100000"_fx);
     }

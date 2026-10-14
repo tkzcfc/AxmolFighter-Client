@@ -1,8 +1,7 @@
 #include "Hit.h"
 #include "HitSeams.h"
-#include "HitState.h"
 #include "mugen/sim/World.h"
-#include "mugen/sim/status/Status.h"
+#include "mugen/sim/role/Role.h"
 #include "mugen/sim/skill/Skill.h"
 #include "mugen/sim/trace/TraceSink.h"
 #include "mugen/conf/ReflectedConfig.h"
@@ -124,8 +123,8 @@ bool beforeHit(World& world,
         if (count == -1)
             return false;
         --count;
-        if (isDead(world, target) && (!state.isTobeHit() || state.isHit()))
-            status::dealWithStatus(world, target, EntityRoleStatus::Death);
+        if (Role(world, target).isDead() && (!state.isTobeHit() || state.isHit()))
+            Role(world, target).changeStatus(EntityRoleStatus::Death);
         return true;
     }
     const bool floor = state.isHitFloor() && ecs.get<Transform>(target).position.y == Fixed{};
@@ -145,10 +144,10 @@ void hitReaction(World& world, Entity target, const HitTrigger& data, const conf
     const auto deathId  = role ? role->deathDisplacementId : -1;
     if (ecs.get<ExtraState>(target).active(mugen::ExtraState::SuperArmor))
     {
-        if (ecs.get<Transform>(target).position.y == Fixed{} && isDead(world, target))
-            status::dealWithStatus(world, target, EntityRoleStatus::Death, deathId);
+        if (ecs.get<Transform>(target).position.y == Fixed{} && Role(world, target).isDead())
+            Role(world, target).changeStatus(EntityRoleStatus::Death, deathId);
         else
-            hitProtectInit(world, target);
+            Role(world, target).initHitProtect();
         return;
     }
     const auto freeze = Fixed::fromInt(hitRow.freezeTime);
@@ -172,22 +171,22 @@ void hitReaction(World& world, Entity target, const HitTrigger& data, const conf
         reaction.stiffTime = Fixed::fromInt(role->hitStiffTime) * scale;
     if (state.isTobeHit())
     {
-        if ((identity.roleType != 1 && identity.roleType != 4) || !isDead(world, target))
+        if ((identity.roleType != 1 && identity.roleType != 4) || !Role(world, target).isDead())
         {
             auto& params  = ecs.get<RoleStatus>(target).entityParams;
             params.hit_id = hitRow.id;
-            if (isRigidity(world, target))
+            if (Role(world, target).isRigidity())
                 ++reaction.hitCounts;
             params.hit_counts = reaction.hitCounts;
         }
-        updateHitProtectTime(world, target);
+        Role(world, target).refreshHitProtect();
     }
-    else if (isDead(world, target))
-        status::dealWithStatus(world, target, EntityRoleStatus::Death, deathId);
+    else if (Role(world, target).isDead())
+        Role(world, target).changeStatus(EntityRoleStatus::Death, deathId);
     else
     {
         skill::forcedInterrupt(world, target);
-        status::dealWithStatus(world, target, EntityRoleStatus::Hit, hitRow.id);
+        Role(world, target).changeStatus(EntityRoleStatus::Hit, hitRow.id);
     }
 }
 // 非爆发状态按命中或受击回复能量。
@@ -215,7 +214,7 @@ void endHit(World& world, Entity target, HitTrigger data, const conf::EffectConf
     const auto maxHp = ecs.get<Vitals>(target).maxHp;
     if (maxHp > Fixed{})
         recoverEp(world, target, std::min("100"_fx * data.m_damage / maxHp, "100"_fx) * conf::kCrazyFromHurtValue);
-    if (!isDead(world, target))
+    if (!Role(world, target).isDead())
         buff::trigger(world, target, BFEvent::AfterToBeHit, data);
     ecs.get<RoleHitState>(target).m_beHitEffect = {};
     auto& attack                                = ecs.get<RoleHitState>(data.m_attacker);
@@ -238,7 +237,7 @@ void hitTarget(World& world, Entity effectEntity, Entity target, const conf::Eff
         return;
     auto& source = ecs.get<EffectState>(effectEntity);
     if (source.m_hitInterval > Fixed{} || (hitRow->hitCounts != -1 && source.m_hitCount >= hitRow->hitCounts) ||
-        isDead(world, target) || !ecs.get<Vitals>(target).m_beHitEnabled)
+        Role(world, target).isDead() || !ecs.get<Vitals>(target).m_beHitEnabled)
         return;
     if (hitRow->hitInterval == -1)
     {
@@ -293,7 +292,7 @@ void hitTarget(World& world, Entity effectEntity, Entity target, const conf::Eff
             const bool critical        = data.m_critical;
             const auto attacker        = data.m_attacker;
             trace::noteDamage(world, attacker, target, sourceConfig, applied, critical);
-            modifyHp(world, target, -data.m_damage, effectEntity);
+            Role(world, target).modifyHp(-data.m_damage, effectEntity);
         }
         hitReaction(world, target, data, *hitRow);
         world.hitHooks().m_ability(world, data.m_attacker, HitAbilityEvent::Anger, data, data.m_skillId);

@@ -1,4 +1,5 @@
 #include "SkillTestSupport.h"
+#include "mugen/sim/role/Role.h"
 #include "mugen/sim/role/brain/RoleBrain.h"
 #include "mugen/sim/role/brain/states/CastState.h"
 #include "mugen/sim/trace/TraceSink.h"
@@ -42,7 +43,7 @@ struct CastFixture
     int32_t beginCast()
     {
         REQUIRE(skill::presetSkill(world, entity, "A"));
-        REQUIRE(status::dealWithStatus(world, entity, EntityRoleStatus::Attack));
+        REQUIRE(Role(world, entity).changeStatus(EntityRoleStatus::Attack));
         REQUIRE(states::CastState::enter(brain(), world, entity));
         return world.ecs().get<SkillPool>(entity).m_current;
     }
@@ -96,7 +97,7 @@ TEST_CASE("CastState builds a plan from the current skill")
     const auto pipeBefore = pool.m_skills.at(index).m_pipe;
     const auto& row =
         conf::Config::instance().get<conf::SkillAttackConfig>(pool.m_skills.at(index).m_configId);
-    REQUIRE(status::dealWithStatus(f.world, f.entity, EntityRoleStatus::Attack));
+    REQUIRE(Role(f.world, f.entity).changeStatus(EntityRoleStatus::Attack));
     REQUIRE(states::CastState::enter(f.brain(), f.world, f.entity));
     auto& plan = f.brain().m_cast;
     CHECK(plan.m_skill == index);

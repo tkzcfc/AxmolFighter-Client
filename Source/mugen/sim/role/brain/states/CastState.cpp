@@ -3,7 +3,6 @@
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/sim/attack/AttackRole.h"
 #include "mugen/sim/skill/Skill.h"
-#include "mugen/sim/status/Status.h"
 #include <array>
 #include <optional>
 #include <utility>

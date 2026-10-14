@@ -2,7 +2,7 @@
 #include "mugen/sim/room/RoomFlow.h"
 #include "mugen/sim/obstacle/Obstacle.h"
 #include "mugen/sim/hit/Hit.h"
-#include "mugen/sim/status/Status.h"
+#include "mugen/sim/role/Role.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "../support/ScenarioHarness.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
@@ -43,7 +43,7 @@ void scriptedRole(World& world, Entity entity)
             ecs.each<RoleIdentity, Vitals>([&](Entity target, const RoleIdentity& role, Vitals& vitals) {
                 if (role.roleType >= 2 && role.roleType <= 4)
                 {
-                    hit::modifyHp(world, target, -vitals.hp, {}, true);
+                    Role(world, target).modifyHp(-vitals.hp, {}, true);
                     world.destroy(target);
                 }
             });
@@ -176,7 +176,7 @@ TEST_CASE("Goods monster Death drops Spurt item and Idle pickup applies configur
         { world.ecs().get<MotionState>(enemy).motionFile = path; break; }
     world.ecs().add(enemy, DropGoods{{6}, {}, {}});
     world.ecs().get<Vitals>(enemy).hp = {};
-    status::dealWithStatus(world, enemy, EntityRoleStatus::Death, -1);
+    Role(world, enemy).changeStatus(EntityRoleStatus::Death, -1);
     Entity item;
     for (int i = 0; i < 180 && item.value == 0; ++i)
     {

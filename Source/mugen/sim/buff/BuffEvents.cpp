@@ -3,7 +3,7 @@
 #include "BuffPresentation.h"
 #include "BuffInstance.h"
 #include "mugen/sim/World.h"
-#include "mugen/sim/hit/Hit.h"
+#include "mugen/sim/role/Role.h"
 #include "mugen/conf/ReflectedConfig.h"
 
 namespace mugen::sim::buff
@@ -75,7 +75,7 @@ void dispatchEvent(World& world, Entity entity, BFEvent event, const BuffContext
         }
         instance->m_lifecycle.m_active = true;
         const bool ended = static_cast<int32_t>(event) == initial->ended;
-        if (!ended && (!permitted || (config->addType != 1 && hit::isDead(world, entity)))) continue;
+        if (!ended && (!permitted || (config->addType != 1 && Role(world, entity).isDead()))) continue;
         invokeRule(world, entity, serial, ended ? RuleHook::End : RuleHook::Begin);
         if (config->eventParam.size() > 1 && config->eventParam[1] == 1 && (ended || config->ended == -1))
             exitInstance(world, entity, serial);

@@ -5,7 +5,6 @@
 #include "mugen/sim/role/brain/RoleBrain.h"
 #include "mugen/sim/skill/Skill.h"
 #include "mugen/sim/skill/SkillTriggers.h"
-#include "mugen/sim/status/Status.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/BattleConst.h"
 

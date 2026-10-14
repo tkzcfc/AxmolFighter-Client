@@ -1,6 +1,5 @@
 #include "Skill.h"
 #include "mugen/sim/World.h"
-#include "mugen/sim/status/Status.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include <algorithm>
 #include <limits>

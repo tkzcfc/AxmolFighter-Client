@@ -1,7 +1,6 @@
 #include "Displacement.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/role/brain/RoleBrainRunner.h"
-#include "mugen/sim/status/Status.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/BattleConst.h"
 #include "mugen/core/math/FixedMath.h"

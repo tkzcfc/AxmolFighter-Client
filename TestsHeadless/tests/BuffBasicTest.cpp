@@ -1,7 +1,7 @@
 #include "doctest.h"
 #include "SkillTestSupport.h"
 #include "mugen/sim/buff/BuffRules.h"
-#include "mugen/sim/hit/Hit.h"
+#include "mugen/sim/role/Role.h"
 
 namespace
 {
@@ -42,7 +42,7 @@ TEST_CASE("BuffBasic Shield numeric absorption")
     dispatch.m_hooks[static_cast<size_t>(buff::RuleHook::Enter)](world, entity, instance.m_serial, {});
     const Fixed shield = vitals.m_shield;
     CHECK(shield >= Fixed{});
-    hit::modifyHp(world, entity, -Fixed::fromInt(1));
+    Role(world, entity).modifyHp(-Fixed::fromInt(1));
     CHECK(vitals.hp >= Fixed::fromInt(999));
     dispatch.m_hooks[static_cast<size_t>(buff::RuleHook::Exit)](world, entity, instance.m_serial, {});
     CHECK(vitals.m_shield == Fixed{});
@@ -71,7 +71,7 @@ TEST_CASE("BuffBasic HPLock damage and cooldown modifiers")
     const auto& cdDispatch = buff::ruleDispatch(conf::BuffRuleId::BuffCDSkill);
     lockDispatch.m_hooks[0](world, entity, lock.m_serial, {});
     const Fixed floor = vitals.m_hpLock;
-    hit::modifyHp(world, entity, -vitals.maxHp);
+    Role(world, entity).modifyHp(-vitals.maxHp);
     CHECK(vitals.hp >= floor);
     hurtDispatch.m_hooks[0](world, entity, hurt.m_serial, {});
     CHECK(world.ecs().get<Attributes>(entity).extended(100) >= Fixed{});

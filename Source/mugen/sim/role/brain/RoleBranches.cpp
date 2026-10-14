@@ -2,7 +2,6 @@
 
 #include "mugen/sim/World.h"
 #include "mugen/sim/skill/Skill.h"
-#include "mugen/sim/status/Status.h"
 
 namespace mugen::sim::role::brain
 {

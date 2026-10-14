@@ -5,6 +5,28 @@
 
 namespace mugen::sim::hit
 {
+namespace
+{
+// 根据角色身份读取配置，悬空配置引用不强取。
+const conf::RoleConfig* roleData(World& world, Entity entity)
+{
+    const auto* identity = world.ecs().tryGet<RoleIdentity>(entity);
+    return identity ? conf::Config::instance().find<conf::RoleConfig>(identity->roleId) : nullptr;
+}
+// 缺省或负一许可系数等价于一。
+int64_t permitValue(const conf::RoleConfig* row, size_t index)
+{
+    if (!row || index >= row->hitRestrain.size() || row->hitRestrain[index] == -1) return 1;
+    return row->hitRestrain[index];
+}
+}  // namespace
+// 攻击许可与目标对应系数乘积必须严格大于零。
+bool checkHurtPermit(World& world, Entity target, Entity effect, HurtPermit permit)
+{
+    const auto* state    = world.ecs().tryGet<EffectState>(effect);
+    const auto* attacker = state ? roleData(world, state->m_owner) : nullptr;
+    return permitValue(attacker, 0) * permitValue(roleData(world, target), static_cast<size_t>(permit)) > 0;
+}
 // 使用实体句柄解析最终主人，循环归属不参与伤害计算。
 Entity finalOwner(World& world, Entity entity)
 {

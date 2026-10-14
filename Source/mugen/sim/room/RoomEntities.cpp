@@ -1,7 +1,7 @@
 #include "RoomEntities.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
-#include "mugen/sim/status/Status.h"
+#include "mugen/sim/role/Role.h"
 #include "mugen/sim/ability/AbilityPool.h"
 #include "mugen/sim/obstacle/Obstacle.h"
 #include "mugen/avatar/AvatarPaths.h"
@@ -328,7 +328,7 @@ void collision(World& world, Entity entity, Entity other, CollisionEvent event)
             play(world, entity, portalMotion(*row, portal->m_phase), false);
         }
         else if (portal->m_phase == PortalPhase::Close && event == CollisionEvent::Began && !row->closeSystemPx.empty())
-            status::dealWithStatus(world, other, EntityRoleStatus::Jostled, row->closeSystemPx[0]);
+            Role(world, other).changeStatus(EntityRoleStatus::Jostled, row->closeSystemPx[0]);
     }
     else if (auto* state = ecs.tryGet<GoodsState>(entity))
     {

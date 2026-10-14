@@ -1,7 +1,7 @@
 #include "RoomFlow.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
-#include "mugen/sim/status/Status.h"
+#include "mugen/sim/role/Role.h"
 #include "mugen/sim/skill/Skill.h"
 #include <algorithm>
 
@@ -254,7 +254,7 @@ void update(World& world)
             world.ecs().each<RoleIdentity, Vitals>([&](Entity entity, const RoleIdentity& role, Vitals& vitals) {
                 if (!enemy(world, role)) vitals.m_beHitEnabled = false;
                 else if (role.roleType == 2 || role.roleType == 3 || role.roleType == 5)
-                { vitals.hp = {}; status::dealWithStatus(world, entity, EntityRoleStatus::Death); }
+                { vitals.hp = {}; Role(world, entity).changeStatus(EntityRoleStatus::Death); }
             });
         }
     }

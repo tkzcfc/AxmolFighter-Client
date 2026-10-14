@@ -4,6 +4,7 @@
 #include "mugen/core/math/Fixed.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/motion/Displacement.h"
+#include "mugen/sim/role/Role.h"
 #include "mugen/sim/role/RoleComponents.h"
 
 namespace mugen::sim
@@ -29,8 +30,10 @@ public:
     Entity entity() const { return m_entity; }
     // 当前逻辑帧毫秒时长。
     Fixed dtMs() const { return m_world.ecs().singleton<WorldClock>().dtMs; }
+    // 返回指向自身实体的轻量角色视图。
+    Role role() const { return Role(m_world, m_entity); }
     // 是否为英雄角色。
-    bool isHero() const { return m_world.ecs().get<RoleIdentity>(m_entity).roleType == 1; }
+    bool isHero() const { return role().getIdentity().roleType == 1; }
     // 当前行为树节点标识，用于位移监听登记。
     int32_t node() const { return m_node; }
     // 当前分派的位移事件。

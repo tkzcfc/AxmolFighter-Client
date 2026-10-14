@@ -2,7 +2,7 @@
 
 #include "mugen/sim/World.h"
 #include "mugen/sim/skill/Skill.h"
-#include "mugen/sim/status/Status.h"
+#include "mugen/sim/role/Role.h"
 
 namespace mugen::sim::role::brain
 {
@@ -36,14 +36,14 @@ void consumeControl(World& world, Entity entity, RoleControl& control)
         if (static_cast<int32_t>(command.controlEvent) >= static_cast<int32_t>(ControlEvent::CTR_ATKA))
             skillEvent(world, entity, command);
         else if (command.controlEvent == ControlEvent::CTR_IDLE)
-            status::dealWithStatus(world, entity, EntityRoleStatus::Idle);
+            Role(world, entity).changeStatus(EntityRoleStatus::Idle);
         else if (command.controlEvent == ControlEvent::CTR_RUN)
         {
             skill::interruptRun(world, entity);
-            status::dealWithStatus(world, entity, EntityRoleStatus::Run);
+            Role(world, entity).changeStatus(EntityRoleStatus::Run);
         }
         else if (command.controlEvent == ControlEvent::CTR_WALK)
-            status::dealWithStatus(world, entity, EntityRoleStatus::Walk);
+            Role(world, entity).changeStatus(EntityRoleStatus::Walk);
     }
     queue.clear();
 }

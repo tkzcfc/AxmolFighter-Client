@@ -1,5 +1,5 @@
 #include <doctest/doctest.h>
-#include "mugen/sim/hit/HitState.h"
+#include "mugen/sim/role/Role.h"
 #include "SkillTestSupport.h"
 #include "mugen/sim/role/brain/RoleBranches.h"
 #include "mugen/sim/role/brain/states/HitStates.h"
@@ -269,13 +269,13 @@ TEST_CASE("HitState exhausted rigidity accelerates falling and reduces stun")
     state.hitCounts = 2;
     state.fatigue = "10"_fx;
     state.stiffTime = "100"_fx;
-    CHECK(hit::dealWithWeight(f.m_world, f.m_entity, "2"_fx));
+    CHECK(Role(f.m_world, f.m_entity).applyWeight("2"_fx));
     CHECK(state.forceVelocity.y == -state.weight * "2"_fx);
-    CHECK(hit::getStiffTime(f.m_world, f.m_entity) == "80"_fx);
+    CHECK(Role(f.m_world, f.m_entity).getStiffTime() == "80"_fx);
     const auto velocity = state.forceVelocity.y;
-    CHECK(hit::dealWithWeight(f.m_world, f.m_entity, "1"_fx));
+    CHECK(Role(f.m_world, f.m_entity).applyWeight("1"_fx));
     CHECK(state.forceVelocity.y < velocity);
-    CHECK(hit::getStiffTime(f.m_world, f.m_entity) == "60"_fx);
+    CHECK(Role(f.m_world, f.m_entity).getStiffTime() == "60"_fx);
 }
 
 // 在受击叶子运行期间通过技能施放入口选择挣脱槽。
@@ -357,29 +357,29 @@ TEST_CASE("HitState PVP protection threshold refresh and expiry")
     world.ecs().add(entity, vitals);
     world.ecs().add(entity, RoleHitState{});
     world.ecs().add(entity, RoleStatus{});
-    hit::hitProtectInit(world, entity);
+    Role(world, entity).initHitProtect();
     auto& state = world.ecs().get<RoleHitState>(entity);
     REQUIRE(state.m_hitProtectHp.has_value());
     const auto threshold = *state.m_hitProtectHp;
     CHECK(threshold > "549"_fx);
     CHECK(threshold < "551"_fx);
     const auto initialTime = state.m_hitProtectTime;
-    hit::dealHitProtectUpdate(world, entity);
+    Role(world, entity).updateHitProtect();
     CHECK(state.m_hitProtectTime < initialTime);
-    hit::updateHitProtectTime(world, entity);
+    Role(world, entity).refreshHitProtect();
     CHECK(state.m_hitProtectTime == initialTime);
     world.ecs().get<Vitals>(entity).hp = threshold;
-    hit::dealHitProtectUpdate(world, entity);
+    Role(world, entity).updateHitProtect();
     CHECK(state.m_hitProtectExecuted);
     const auto executedTime = state.m_hitProtectTime;
-    hit::updateHitProtectTime(world, entity);
+    Role(world, entity).refreshHitProtect();
     CHECK(state.m_hitProtectTime == executedTime);
-    hit::resetHitProtect(world, entity);
+    Role(world, entity).resetHitProtect();
     CHECK_FALSE(state.m_hitProtectHp.has_value());
     CHECK_FALSE(state.m_hitProtectExecuted);
-    hit::hitProtectInit(world, entity);
+    Role(world, entity).initHitProtect();
     state.m_hitProtectTime = world.ecs().singleton<WorldClock>().dtMs;
-    hit::dealHitProtectUpdate(world, entity);
+    Role(world, entity).updateHitProtect();
     CHECK_FALSE(state.m_hitProtectHp.has_value());
 }
 

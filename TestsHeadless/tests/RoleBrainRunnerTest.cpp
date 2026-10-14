@@ -6,7 +6,7 @@
 #include "mugen/sim/role/brain/RoleBranches.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "mugen/sim/room/RoomFlow.h"
-#include "mugen/sim/status/Status.h"
+#include "mugen/sim/role/Role.h"
 
 using namespace mugen;
 using namespace mugen::sim;
@@ -49,10 +49,10 @@ TEST_CASE("RoleBrain standalone selects cyclically Run then Idle")
 {
     BrainFixture f;
     REQUIRE(role::brain::enterFirst(f.brain, f.world, f.entity, false));
-    status::dealWithStatus(f.world, f.entity, EntityRoleStatus::Run);
+    Role(f.world, f.entity).changeStatus(EntityRoleStatus::Run);
     role::brain::update(f.brain, f.world, f.entity, false);
     CHECK(f.brain.m_branch == role::brain::RoleBranch::Run);
-    status::dealWithStatus(f.world, f.entity, EntityRoleStatus::Idle);
+    Role(f.world, f.entity).changeStatus(EntityRoleStatus::Idle);
     role::brain::update(f.brain, f.world, f.entity, false);
     CHECK(f.brain.m_branch == role::brain::RoleBranch::Idle);
 }

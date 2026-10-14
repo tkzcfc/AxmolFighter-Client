@@ -1,7 +1,7 @@
 #include "Skill.h"
 #include "SkillTriggers.h"
 #include "mugen/sim/World.h"
-#include "mugen/sim/status/Status.h"
+#include "mugen/sim/role/Role.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/BattleConst.h"
 #include <algorithm>
@@ -91,7 +91,7 @@ bool dealButtonEvent(World& world, Entity entity, ControlEvent event, bool up, b
     if (state.isDeath() || world.ecs().get<Vitals>(entity).hp <= Fixed{} ||
         !world.ecs().get<ExtraState>(entity).isCanControl() || state.isJostled()) return false;
     if (world.ecs().get<SkillPool>(entity).m_angerRecover) return false;
-    return dealWithButton(world, entity, event, up, autoCast) && status::dealWithStatus(world, entity, EntityRoleStatus::Attack);
+    return dealWithButton(world, entity, event, up, autoCast) && Role(world, entity).changeStatus(EntityRoleStatus::Attack);
 }
 void interruptRun(World& world, Entity entity)
 {

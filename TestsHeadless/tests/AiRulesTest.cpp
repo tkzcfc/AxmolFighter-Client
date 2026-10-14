@@ -3,7 +3,6 @@
 #include "mugen/core/math/Random.h"
 #include "mugen/sim/ai/AiAgent.h"
 #include "mugen/sim/ai/AiRules.h"
-#include "mugen/sim/status/Status.h"
 #include <array>
 
 using namespace mugen;

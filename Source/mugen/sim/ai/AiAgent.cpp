@@ -1,8 +1,7 @@
 #include "AiAgent.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/skill/Skill.h"
-#include "mugen/sim/status/Status.h"
-#include "mugen/sim/hit/Hit.h"
+#include "mugen/sim/role/Role.h"
 #include "mugen/sim/buff/BuffRules.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/BattleConst.h"
@@ -35,7 +34,7 @@ bool enabled(const EntityGroup& group)
 bool alive(World& world, Entity entity)
 {
     const auto* state = world.ecs().tryGet<RoleStatus>(entity);
-    return state && !state->isDeath() && !hit::isDead(world, entity);
+    return state && !state->isDeath() && !Role(world, entity).isDead();
 }
 // 不可命中状态不参与普通 AI 目标选择。
 bool hittable(World& world, Entity entity)
@@ -141,7 +140,7 @@ Result specialAttack(World& world, Entity entity, bool first)
     const std::string slot = pool.m_current == kNoSkill ? (first ? "X" : "Z") :
         pool.m_slots[pool.m_skills[pool.m_current].m_address.m_slot].m_name;
     if (!skill::presetSkill(world, entity, slot, false)) return Result::Success;
-    status::dealWithStatus(world, entity, EntityRoleStatus::Attack);
+    Role(world, entity).changeStatus(EntityRoleStatus::Attack);
     if (first) direction(world, entity, true);
     return Result::Running;
 }
@@ -161,7 +160,7 @@ Result executeAttack(World& world, Entity entity, const conf::AiConfig& row)
     {
         const auto slot = pool.m_slots[pool.m_skills[pool.m_current].m_address.m_slot].m_name;
         if (!skill::presetSkill(world, entity, slot, true)) return Result::Success;
-        status::dealWithStatus(world, entity, EntityRoleStatus::Attack);
+        Role(world, entity).changeStatus(EntityRoleStatus::Attack);
         return Result::Running;
     }
     if (pool.m_aiSkillCastInterval.empty())
@@ -178,7 +177,7 @@ Result executeAttack(World& world, Entity entity, const conf::AiConfig& row)
     {
         const std::string slot(1, static_cast<char>('A' + index));
         if (!skill::presetSkill(world, entity, slot, true)) continue;
-        status::dealWithStatus(world, entity, EntityRoleStatus::Attack);
+        Role(world, entity).changeStatus(EntityRoleStatus::Attack);
         const auto priority = firstValue(row.skillPriorityLevel, index, 1);
         auto& intervals = world.ecs().get<SkillPool>(entity).m_aiSkillCastInterval;
         for (size_t i = 0; i < row.skillPriorityLevel.size(); ++i)
@@ -216,8 +215,8 @@ Result move(World& world, Entity entity, Method method, const conf::AiConfig& ro
     if (!chase && abs(x) < radius && abs(z) < radius) return Result::Failure;
     center.x += !patrol && center.x > self.x ? -x : x;
     center.z += !patrol && center.z > self.z ? -z : z;
-    status::dealWithStatus(world, entity, patrol ? EntityRoleStatus::Patrol : chase ? EntityRoleStatus::Chase : EntityRoleStatus::Alert,
-                          -1, calcPos(world, entity, center));
+    Role(world, entity).changeStatus(patrol ? EntityRoleStatus::Patrol : chase ? EntityRoleStatus::Chase : EntityRoleStatus::Alert,
+                                    -1, calcPos(world, entity, center));
     return Result::Success;
 }
 // 瞬时上下文不进入组件快照。
