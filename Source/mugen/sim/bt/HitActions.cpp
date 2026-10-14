@@ -18,16 +18,6 @@ const conf::RoleConfig* role(BTCtx& ctx)
 {
     return conf::Config::instance().find<conf::RoleConfig>(ctx.world.ecs().get<RoleIdentity>(ctx.entity).roleId);
 }
-// 按叶状态地址找到位移监听节点。
-int32_t nodeFor(BTCtx& ctx, LeafState& state)
-{
-    auto& tree = ctx.world.ecs().get<RoleTree>(ctx.entity);
-    const auto& topology = definition(tree.defKey).topology();
-    for (uint32_t i = 0; i < topology.nodes().size(); ++i)
-        if (topology.node(i).type == BTNodeType::Action && &tree.instance.leaves[topology.leafIndex(i)] == &state)
-            return static_cast<int32_t>(i);
-    return -1;
-}
 // 每次重新播放都重置动画完成计数。
 void play(BTCtx& ctx, A type, HitActionState& leaf)
 {
@@ -162,14 +152,14 @@ void groundChase(BTCtx& ctx, LeafState& state, const conf::SkillHitConfig& data)
         if (leaf.m_displacementId == 0) leaf.m_displacementId = -1;
         else if (data.hitType == 0) leaf.m_displacementId = data.displacementId;
     }
-    displacement::set(ctx.world, ctx.entity, leaf.m_displacementId, nodeFor(ctx, state));
+    displacement::set(ctx.world, ctx.entity, leaf.m_displacementId, ctx.m_node);
 }
 // 浮空和倒地追击先重设位移再扣浮空值，最后决定能否再次挑起。
 void airChase(BTCtx& ctx, A type, LeafState& state, const conf::SkillHitConfig& data)
 {
     auto& leaf = std::get<HitActionState>(state);
     leaf.m_displacementId = data.hitType == 0 ? data.airDisplacementId : data.displacementId;
-    displacement::set(ctx.world, ctx.entity, leaf.m_displacementId, nodeFor(ctx, state));
+    displacement::set(ctx.world, ctx.entity, leaf.m_displacementId, ctx.m_node);
     if (data.hitType != 1) hit::dealWithWeight(ctx.world, ctx.entity, data.hitRigidity);
     if (type == A::HitUp)
     {
@@ -243,7 +233,7 @@ void enter(BTCtx& ctx, const Param& param, LeafState& state)
             skill::updateCrazy(ctx.world, ctx.entity);
         }
     }
-    displacement::set(ctx.world, ctx.entity, leaf.m_displacementId, nodeFor(ctx, state));
+    displacement::set(ctx.world, ctx.entity, leaf.m_displacementId, ctx.m_node);
 }
 // 每帧按原始顺序处理挣脱、硬直完成和追击。
 BTStatus tick(BTCtx& ctx, const Param& param, LeafState& state)

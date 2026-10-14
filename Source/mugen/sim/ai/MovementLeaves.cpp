@@ -59,16 +59,6 @@ void advance(behavior::BTCtx& ctx, ActionMove& action)
         transform.vectorZ = target->position.z > transform.position.z ? "1"_fx : "-1"_fx;
     }
 }
-// 根据叶状态所在的 DFS 节点登记位移监听器。
-int32_t nodeFor(behavior::BTCtx& ctx, behavior::LeafState& state)
-{
-    auto& tree = ctx.world.ecs().get<RoleTree>(ctx.entity);
-    const auto& topology = behavior::definition(tree.defKey).topology();
-    for (uint32_t i = 0; i < topology.nodes().size(); ++i)
-        if (topology.node(i).type == BTNodeType::Action && &tree.instance.leaves[topology.leafIndex(i)] == &state)
-            return static_cast<int32_t>(i);
-    return -1;
-}
 }
 
 void enter(behavior::BTCtx& ctx, const behavior::Param& param, behavior::LeafState& state)
@@ -85,7 +75,7 @@ void enter(behavior::BTCtx& ctx, const behavior::Param& param, behavior::LeafSta
         inside = inside || (range.x <= goal.x && goal.x <= range.x + range.width &&
                             range.y <= goal.z && goal.z <= range.y + range.height);
     if (!inside) { action.m_complete = true; return; }
-    displacement::set(ctx.world, ctx.entity, -1, nodeFor(ctx, state));
+    displacement::set(ctx.world, ctx.entity, -1, ctx.m_node);
     const auto* row = conf::Config::instance().find<conf::AiConfig>(ecs.get<RoleIdentity>(ctx.entity).aiId);
     if (row)
     {

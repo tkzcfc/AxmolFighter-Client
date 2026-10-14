@@ -18,17 +18,6 @@ const conf::ActionConfig* config(const Param& param)
 {
     return conf::Config::instance().find<conf::ActionConfig>(std::get<AttackAction>(param).actionId);
 }
-/// 查找保存指定叶状态的行为树节点编号。
-int32_t nodeFor(World& world, Entity entity, const LeafState& state)
-{
-    auto& tree = world.ecs().get<RoleTree>(entity);
-    const auto& topology = definition(tree.defKey).topology();
-    for (uint32_t i = 0; i < topology.nodes().size(); ++i)
-        if (topology.node(i).type == BTNodeType::Action &&
-            &tree.instance.leaves[topology.leafIndex(i)] == &state)
-            return static_cast<int32_t>(i);
-    return -1;
-}
 /// 返回当前连段首段的技能配置 id。
 int32_t baseSkill(const SkillPool& pool, int32_t index)
 {
@@ -120,7 +109,7 @@ void enter(behavior::BTCtx& ctx, const behavior::Param& param, behavior::LeafSta
     motion.loop = row->loop == "-1"_fx || row->loop > "1"_fx;
     motion.playing = true;
     displacement::reset(world, entity);
-    displacement::set(world, entity, row->displacementId, nodeFor(world, entity, state));
+    displacement::set(world, entity, row->displacementId, ctx.m_node);
     const auto first = baseSkill(pool, source.skill);
     for (const auto id : row->buffIds) if (id != -1) buff::addActionBuff(world, entity, id, first);
     if (row->ghost != -1) world.emit(entity, Ghost{"-1"_fx});

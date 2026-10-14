@@ -210,6 +210,8 @@ struct BTCtx
     Entity entity;
     /// 当前分派的位移事件。
     DisplacementEvent event = DisplacementEvent::Brake;
+    /// 由执行器在进入/更新/退出叶子和分派位移事件前写入的当前节点标识。
+    int32_t m_node = -1;
 };
 /// 角色行为树使用的叶子和条件回调表。
 using Registry = BTRegistry<BTCtx, Param, LeafState>;

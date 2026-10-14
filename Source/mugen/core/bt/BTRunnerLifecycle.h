@@ -40,6 +40,7 @@ bool BTRunner<C, P, S>::enterNode(C& ctx, uint32_t id)
     {
     case BTNodeType::Action:
         state.status = BTStatus::Running;
+        ctx.m_node   = static_cast<int32_t>(id);
         m_registry.leaf(node.leafTypeId)
             .onEnter(ctx, m_def.param(node.paramIndex), m_instance.leaves[m_def.topology().leafIndex(id)]);
         return true;
@@ -115,8 +116,11 @@ void BTRunner<C, P, S>::exitNode(C& ctx, uint32_t id)
     const auto& node = m_def.topology().node(id);
     auto& state      = m_instance.nodes[id];
     if (node.type == BTNodeType::Action)
+    {
+        ctx.m_node = static_cast<int32_t>(id);
         m_registry.leaf(node.leafTypeId)
             .onExit(ctx, m_def.param(node.paramIndex), m_instance.leaves[m_def.topology().leafIndex(id)]);
+    }
     else if (state.status == BTStatus::Running)
         exitChildren(ctx, id);
     state.currentIndex = -1;

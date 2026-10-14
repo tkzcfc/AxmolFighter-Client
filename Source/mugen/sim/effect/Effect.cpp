@@ -56,6 +56,8 @@ struct Context
     Entity m_entity;
     /// 本次运行的树实例。
     EffectTree& m_tree;
+    /// 由执行器写入的当前节点标识。
+    int32_t m_node = -1;
 };
 /// 特效树节点参数为动作配置标识。
 using Def = BTDef<int32_t>;

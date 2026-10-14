@@ -211,13 +211,7 @@ void jostledEnter(BTCtx& ctx, const Param&, LeafState& state)
     const auto* row = conf::Config::instance().find<conf::DisplacementConfig>(id);
     if (row && !row->velocity.empty() && row->velocity[0] != Fixed{})
         ecs.get<Transform>(ctx.entity).towardX *= -1;
-    auto& tree = ecs.get<RoleTree>(ctx.entity);
-    const auto& topology = definition(tree.defKey).topology();
-    int32_t listener = -1;
-    for (uint32_t i = 0; i < topology.nodes().size(); ++i)
-        if (topology.node(i).type == BTNodeType::Action && &tree.instance.leaves[topology.leafIndex(i)] == &state)
-            listener = static_cast<int32_t>(i);
-    displacement::set(ctx.world, ctx.entity, id, listener);
+    displacement::set(ctx.world, ctx.entity, id, ctx.m_node);
 }
 // 制动后由行为树正常退出守卫并清除推挤状态。
 BTStatus jostledUpdate(BTCtx&, const Param&, LeafState& state)
@@ -623,6 +617,7 @@ bool onDisplacementEvent(World& world, Entity entity, DisplacementEvent event)
     if (!callback)
         return false;
     BTCtx ctx{world, entity, event};
+    ctx.m_node = nodeId;
     return callback(ctx, def.param(node.paramIndex),
                     tree.instance.leaves[def.topology().leafIndex(static_cast<uint32_t>(nodeId))]);
 }

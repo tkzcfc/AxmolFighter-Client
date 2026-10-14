@@ -39,6 +39,7 @@ struct Ctx
     uint32_t bits = 0;
     std::vector<std::pair<BTStatus, int16_t>> parentsAtExit{};
     std::vector<BTStatus> conditionsAtExit{};
+    int32_t m_node = -1;
 };
 
 inline void leafEnter(Ctx& ctx, const Param& param, State& state)
