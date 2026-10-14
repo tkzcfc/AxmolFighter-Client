@@ -56,7 +56,7 @@ TEST_CASE("Locomotion run right thirty frames stops at map edge and release retu
     advance(world, entity, ControlEvent::CTR_RUN);
     CHECK(world.ecs().get<Transform>(entity).position.x == "200"_fx - world.ecs().get<ColliderState>(entity).radius);
     advance(world, entity, ControlEvent::CTR_IDLE);
-    CHECK(world.ecs().get<RoleTree>(entity).instance.nodes[0].currentIndex == 17);
+    CHECK(world.ecs().get<RoleBrain>(entity).m_branch == role::brain::RoleBranch::Idle);
     CHECK(world.ecs().get<MotionState>(entity).motionName == "stand");
     CHECK(world.ecs().get<RoleHitState>(entity).forceVelocity.x == Fixed{});
     auto clone = world.clone();
@@ -111,7 +111,7 @@ TEST_CASE("Locomotion applies ControlManager arrow commands to player movement")
     input.players.push_back({0, std::move(commands)});
     world.tick(input);
     CHECK(world.ecs().singleton<PlayerSlots>().entities.contains(0));
-    CHECK(world.ecs().get<RoleTree>(entity).control.quadrant == quadrant);
+    CHECK(world.ecs().get<RoleControl>(entity).m_last.quadrant == quadrant);
     CHECK(status::isStatus(world.ecs().get<RoleStatus>(entity), EntityRoleStatus::Run));
     for (uint32_t frame = 0; frame < 2; ++frame)
     {
@@ -142,14 +142,8 @@ TEST_CASE("Displacement zero VelocityScale preserves falling height")
         displacement::update(world, entity);
     CHECK(world.ecs().get<Transform>(entity).position.y == Fixed{});
 }
-TEST_CASE("RoleTree templates preserve branches and attack mount and playback mapping")
+TEST_CASE("Action animation names and playback mapping")
 {
-    const auto& role = behavior::definition({behavior::Template::Role, {}});
-    CHECK(role.topology().node(0).childCount == 19);
-    const auto& attack = role.topology().node(role.topology().child(0, 9));
-    CHECK(attack.type == BTNodeType::Selector);
-    CHECK(attack.childCount == 0);
-    CHECK(behavior::definition({behavior::Template::City, {}}).topology().node(0).childCount == 2);
     CHECK(std::string(behavior::animationName(behavior::ActionType::Run)) == "walk");
     CHECK(std::string(behavior::animationName(behavior::ActionType::Walk)) == "running");
     World world;

@@ -124,8 +124,8 @@ std::vector<int32_t> sounds(World& world, Entity entity, const conf::ActionEffec
 PlayerCommand control(World& world, Entity entity)
 {
     const auto owner = world.ecs().get<EffectState>(entity).m_owner;
-    const auto* tree = world.ecs().tryGet<RoleTree>(owner);
-    return tree ? tree->control : PlayerCommand{};
+    const auto* control = world.ecs().tryGet<RoleControl>(owner);
+    return control ? control->m_last : PlayerCommand{};
 }
 /// 将施法者摇杆方向应用于特效。
 void direction(World& world, Entity entity, bool facing)

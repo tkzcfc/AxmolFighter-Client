@@ -7,6 +7,8 @@
 #include "mugen/sim/role/brain/states/AiMoveState.h"
 #include "mugen/sim/role/brain/states/HitStates.h"
 #include "mugen/sim/role/brain/states/LocomotionStates.h"
+#include "mugen/sim/skill/Skill.h"
+#include "mugen/sim/status/Status.h"
 
 namespace mugen::sim::role::brain
 {
@@ -48,9 +50,51 @@ void resetData(RoleBrain& brain)
         break;
     }
 }
+// 分支是否会登记位移监听（进入时调用 displacement::set/reset）。
+bool registersListener(RoleBranch branch)
+{
+    switch (branch)
+    {
+    case RoleBranch::Death:
+    case RoleBranch::Hit:
+    case RoleBranch::Controlled:
+    case RoleBranch::HitUp:
+    case RoleBranch::HitDown:
+    case RoleBranch::HitFloor:
+    case RoleBranch::Jostled:
+    case RoleBranch::Patrol:
+    case RoleBranch::Chase:
+    case RoleBranch::Alert:
+    case RoleBranch::Idle:
+    case RoleBranch::Attack:
+        return true;
+    default:
+        return false;
+    }
+}
+// 将技能控制命令转换为方向角并交给技能系统。
+void skillEvent(World& world, Entity entity, const PlayerCommand& command)
+{
+    auto* pool = world.ecs().tryGet<SkillPool>(entity);
+    if (!pool)
+        return;
+    if (command.quadrant == 0)
+        pool->m_controlAngle.reset();
+    else
+    {
+        const auto angle     = Fixed::ratio(command.angle, 1000);
+        pool->m_controlAngle = command.quadrant == 1   ? "90"_fx - angle
+                               : command.quadrant == 2 ? "90"_fx + angle
+                               : command.quadrant == 3 ? "270"_fx - angle
+                                                       : "270"_fx + angle;
+    }
+    skill::dealButtonEvent(world, entity, command.controlEvent, command.pressType == 2);
+}
 // 进入当前分支的叶子；返回是否成功（仅 Attack 可能失败）。
 bool enterState(RoleBrain& brain, World& world, Entity entity)
 {
+    if (registersListener(brain.m_branch))
+        brain.m_detached.m_active = false;
     RoleContext rc{world, entity};
     rc.setNode(static_cast<int32_t>(brain.m_branch));
     const auto action = branchAction(brain.m_branch);
@@ -86,7 +130,7 @@ bool enterState(RoleBrain& brain, World& world, Entity entity)
         return true;
     case RoleBranch::Attack:
     {
-        const auto& def        = behavior::attackDefinition(brain.m_attackLayout);
+        const auto def         = behavior::attackDefinition(brain.m_attackLayout);
         brain.m_cast.m_instance = BTInstance<behavior::LeafState>(def);
         behavior::BTCtx ctx{world, entity};
         return BTRunner<behavior::BTCtx, behavior::Param, behavior::LeafState>(def, behavior::registry(),
@@ -140,7 +184,7 @@ StateStep updateState(RoleBrain& brain, World& world, Entity entity)
         return step(states::Locomotion::update(rc, action, std::get<behavior::ActionState>(brain.m_data)));
     case RoleBranch::Attack:
     {
-        const auto& def = behavior::attackDefinition(brain.m_attackLayout);
+        const auto def  = behavior::attackDefinition(brain.m_attackLayout);
         behavior::BTCtx ctx{world, entity};
         BTRunner<behavior::BTCtx, behavior::Param, behavior::LeafState>(def, behavior::registry(),
                                                                         brain.m_cast.m_instance)
@@ -174,6 +218,13 @@ void exitState(RoleBrain& brain, World& world, Entity entity)
             states::HitState::exit(rc, action, std::get<behavior::HitActionState>(brain.m_data));
         else
             states::HitState::exit(rc, behavior::ActionType::Destroy, std::get<behavior::HitActionState>(brain.m_data));
+        // 退出未清监听（非 Death/落地 Hit）时，把受击状态存为遗留监听。
+        if (world.ecs().get<Displacement>(entity).listenerNode == static_cast<int32_t>(brain.m_branch))
+        {
+            brain.m_detached.m_type   = action;
+            brain.m_detached.m_state  = std::get<behavior::HitActionState>(brain.m_data);
+            brain.m_detached.m_active = true;
+        }
         break;
     case RoleBranch::Jostled:
         states::Jostled::exit(rc, action, std::get<behavior::JostledState>(brain.m_data));
@@ -193,7 +244,7 @@ void exitState(RoleBrain& brain, World& world, Entity entity)
         break;
     case RoleBranch::Attack:
     {
-        const auto& def = behavior::attackDefinition(brain.m_attackLayout);
+        const auto def  = behavior::attackDefinition(brain.m_attackLayout);
         behavior::BTCtx ctx{world, entity};
         BTRunner<behavior::BTCtx, behavior::Param, behavior::LeafState>(def, behavior::registry(),
                                                                         brain.m_cast.m_instance)
@@ -217,6 +268,45 @@ bool tryEnter(RoleBrain& brain, RoleBranch branch, World& world, Entity entity, 
     brain.m_phase = BrainPhase::Running;
     return true;
 }
+// 分派位移事件到当前分支的叶子。
+bool dispatchDisplacement(RoleBrain& brain, World& world, Entity entity, DisplacementEvent event)
+{
+    RoleContext rc{world, entity};
+    rc.setNode(static_cast<int32_t>(brain.m_branch));
+    rc.setEvent(event);
+    const auto action = branchAction(brain.m_branch);
+    switch (brain.m_branch)
+    {
+    case RoleBranch::Death:
+    case RoleBranch::Hit:
+    case RoleBranch::Controlled:
+    case RoleBranch::HitUp:
+    case RoleBranch::HitDown:
+    case RoleBranch::HitFloor:
+        return states::HitState::onDisplacement(rc, action, std::get<behavior::HitActionState>(brain.m_data));
+    case RoleBranch::Jostled:
+        return states::Jostled::onDisplacement(rc, action, std::get<behavior::JostledState>(brain.m_data));
+    case RoleBranch::Patrol:
+    case RoleBranch::Chase:
+    case RoleBranch::Alert:
+        return states::AiMove::onDisplacement(rc, action, std::get<ai::ActionMove>(brain.m_data));
+    default:
+        return false;
+    }
+}
+// 分派攻击子树的位移事件（桥接 B，沿用子树节点 id）。
+bool attackDisplacement(RoleBrain& brain, World& world, Entity entity, DisplacementEvent event, int32_t node)
+{
+    const auto def  = behavior::attackDefinition(brain.m_attackLayout);
+    const auto& bnode = def.topology().node(static_cast<uint32_t>(node));
+    const auto callback = behavior::registry().leaf(bnode.leafTypeId).onDisplacementEvent;
+    if (!callback)
+        return false;
+    behavior::BTCtx ctx{world, entity, event};
+    ctx.m_node = node;
+    return callback(ctx, def.param(bnode.paramIndex),
+                    brain.m_cast.m_instance.leaves[def.topology().leafIndex(static_cast<uint32_t>(node))]);
+}
 }  // namespace
 
 bool enterFirst(RoleBrain& brain, World& world, Entity entity, bool city)
@@ -232,6 +322,30 @@ bool enterFirst(RoleBrain& brain, World& world, Entity entity, bool city)
     }
     brain.m_phase = BrainPhase::Stopped;
     return false;
+}
+
+void consumeControl(World& world, Entity entity)
+{
+    auto& ecs   = world.ecs();
+    auto& queue = ecs.get<ControlEventQueue>(entity).commands;
+    for (const auto& command : queue)
+    {
+        if (!ecs.get<ExtraState>(entity).isCanControl() || status::isJostledStatus(ecs.get<RoleStatus>(entity)))
+            continue;
+        ecs.get<RoleControl>(entity).m_last = command;
+        if (static_cast<int32_t>(command.controlEvent) >= static_cast<int32_t>(ControlEvent::CTR_ATKA))
+            skillEvent(world, entity, command);
+        else if (command.controlEvent == ControlEvent::CTR_IDLE)
+            status::dealWithStatus(world, entity, EntityRoleStatus::Idle);
+        else if (command.controlEvent == ControlEvent::CTR_RUN)
+        {
+            skill::interruptRun(world, entity);
+            status::dealWithStatus(world, entity, EntityRoleStatus::Run);
+        }
+        else if (command.controlEvent == ControlEvent::CTR_WALK)
+            status::dealWithStatus(world, entity, EntityRoleStatus::Walk);
+    }
+    queue.clear();
 }
 
 void update(RoleBrain& brain, World& world, Entity entity, bool city)
@@ -272,5 +386,25 @@ void exitBranch(RoleBrain& brain, World& world, Entity entity)
     exitState(brain, world, entity);
     exitGuard(brain.m_branch, world, entity);
     brain.m_phase = BrainPhase::NotEntered;
+}
+
+bool onDisplacementEvent(World& world, Entity entity, DisplacementEvent event)
+{
+    auto& brain        = world.ecs().get<RoleBrain>(entity);
+    const int32_t node = world.ecs().get<Displacement>(entity).listenerNode;
+    if (node < 0)
+        return false;
+    if (brain.m_phase == BrainPhase::Running && brain.m_branch == RoleBranch::Attack)
+        return attackDisplacement(brain, world, entity, event, node);
+    const auto branch = static_cast<RoleBranch>(node);
+    if (branch == brain.m_branch)
+        return dispatchDisplacement(brain, world, entity, event);
+    if (brain.m_detached.m_active)
+    {
+        RoleContext rc{world, entity};
+        rc.setEvent(event);
+        return states::HitState::onDisplacement(rc, brain.m_detached.m_type, brain.m_detached.m_state);
+    }
+    return false;
 }
 }  // namespace mugen::sim::role::brain

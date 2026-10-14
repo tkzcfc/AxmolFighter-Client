@@ -16,18 +16,9 @@
 using namespace mugen;
 using namespace mugen::sim;
 
-// 表征测试：固定当前旧 BT 代码的行为，供后续状态机重构做行为等价对照。
+// 表征测试：固定角色脑状态机与旧 BT 代码的行为，供后续重构做行为等价对照。
 namespace
 {
-// 查找第一个 Running 的指定叶子类型节点，返回节点 id（-1 未找到）。
-int32_t runningLeaf(const RoleTree& tree, const behavior::Def& def, behavior::Leaf leafType)
-{
-    for (uint32_t i = 0; i < tree.instance.nodes.size(); ++i)
-        if (def.topology().node(i).type == BTNodeType::Action && def.topology().node(i).leafTypeId == leafType &&
-            tree.instance.nodes[i].status == BTStatus::Running)
-            return static_cast<int32_t>(i);
-    return -1;
-}
 }  // namespace
 
 TEST_CASE("Root selector picks next branch cyclically skipping the finished one")
@@ -85,9 +76,10 @@ TEST_CASE("Attack leaf enter preserves static timer left by previous run of same
     world.ecs().add(entity, RoleTimers{});
     world.ecs().add(entity, Displacement{});
     world.ecs().add(entity, ColliderState{});
-    RoleTree tree;
-    tree.defKey = behavior::definitionKey(world, entity);
-    world.ecs().add(entity, tree);
+    RoleBrain brain;
+    brain.m_attackLayout = behavior::definitionKey(world, entity);
+    world.ecs().add(entity, brain);
+    world.ecs().add(entity, RoleControl{});
     const behavior::Param param = behavior::AttackAction{row.id, 1, 0};
     behavior::LeafState state   = attack::AttackRole{};
     role::brain::RoleContext rc{world, entity};
@@ -113,15 +105,12 @@ TEST_CASE("First frame after spawn only enters, first tick updates once")
     player.playerSlot = 0;
     const auto entity = sim::spawnPlayer(world, CharacterClass::kSwordman, player);
     REQUIRE(entity.value != 0);
-    auto& tree        = world.ecs().get<RoleTree>(entity);
-    const auto& def   = behavior::definition(tree.defKey);
-    REQUIRE_FALSE(tree.instance.nodes.empty());
-    const auto idleNode = runningLeaf(tree, def, behavior::kIdleLeaf);
-    REQUIRE(idleNode >= 0);
-    const auto leafIdx = def.topology().leafIndex(static_cast<uint32_t>(idleNode));
-    CHECK(std::get<behavior::ActionState>(tree.instance.leaves[leafIdx]).fTime == Fixed{});
+    auto& brain = world.ecs().get<RoleBrain>(entity);
+    REQUIRE(brain.m_phase == role::brain::BrainPhase::Running);
+    CHECK(brain.m_branch == role::brain::RoleBranch::Idle);
+    CHECK(std::get<behavior::ActionState>(brain.m_data).fTime == Fixed{});
     world.tick({1, {}, {}, {}});
-    CHECK(std::get<behavior::ActionState>(tree.instance.leaves[leafIdx]).fTime == kLogicDtMs);
+    CHECK(std::get<behavior::ActionState>(brain.m_data).fTime == kLogicDtMs);
 }
 
 TEST_CASE("Interrupt window pins per-frame skill address and pipe timeline")
@@ -172,9 +161,10 @@ TEST_CASE("Interrupt window pins per-frame skill address and pipe timeline")
     ecs.add(entity, Displacement{});
     ecs.add(entity, ColliderState{});
     ecs.add(entity, ControlEventQueue{});
-    RoleTree tree;
-    tree.defKey = behavior::definitionKey(world, entity);
-    ecs.add(entity, tree);
+    RoleBrain brain;
+    brain.m_attackLayout = behavior::definitionKey(world, entity);
+    ecs.add(entity, brain);
+    ecs.add(entity, RoleControl{});
     ecs.singleton<PlayerSlots>().entities[0] = entity;
     // 每帧记录 (当前技能 configId.step, 管线, 上次施放技能 configId)。
     auto key = [&]() {
@@ -239,29 +229,20 @@ TEST_CASE("Room change exits previous leaf and enters plus updates once")
     const auto* config = conf::Config::instance().find<conf::RoomConfig>(2071501);
     REQUIRE(config);
     REQUIRE(sim::room::enter(world, *config, 0, 0));
-    auto& tree        = world.ecs().get<RoleTree>(entity);
-    const auto& def   = behavior::definition(tree.defKey);
-    REQUIRE_FALSE(tree.instance.nodes.empty());
+    REQUIRE(world.ecs().get<RoleBrain>(entity).m_phase == role::brain::BrainPhase::Running);
     // 触发房间切换（传送到另一个房间）。
     world.ecs().singleton<sim::RoomState>().m_transferRoom = 2010101;
     world.tick({1, {}, {}, {}});
-    // 切换后：旧叶子已退出，实例被清空，控制被清除。
-    auto& afterTree = world.ecs().get<RoleTree>(entity);
-    CHECK(afterTree.instance.nodes.empty());
-    CHECK(afterTree.control.controlEvent == ControlEvent::CTR_NONE);
+    // 切换后：旧分支已退出，阶段重置，控制被清除。
+    CHECK(world.ecs().get<RoleBrain>(entity).m_phase == role::brain::BrainPhase::NotEntered);
+    CHECK(world.ecs().get<RoleControl>(entity).m_last.controlEvent == ControlEvent::CTR_NONE);
     // 切换会挂起角色，解除挂起后首帧：进入并更新一次（待机叶时间为一帧）。
     world.ecs().get<EntityGroup>(entity).suspended = false;
     world.tick({2, {}, {}, {}});
-    auto& finalTree = world.ecs().get<RoleTree>(entity);
-    REQUIRE_FALSE(finalTree.instance.nodes.empty());
-    int32_t idleNode = -1;
-    for (uint32_t i = 0; i < finalTree.instance.nodes.size(); ++i)
-        if (def.topology().node(i).type == BTNodeType::Action && def.topology().node(i).leafTypeId == behavior::kIdleLeaf &&
-            finalTree.instance.nodes[i].status == BTStatus::Running)
-            idleNode = static_cast<int32_t>(i);
-    REQUIRE(idleNode >= 0);
-    const auto leafIdx = def.topology().leafIndex(static_cast<uint32_t>(idleNode));
-    CHECK(std::get<behavior::ActionState>(finalTree.instance.leaves[leafIdx]).fTime == kLogicDtMs);
+    auto& finalBrain = world.ecs().get<RoleBrain>(entity);
+    CHECK(finalBrain.m_phase == role::brain::BrainPhase::Running);
+    CHECK(finalBrain.m_branch == role::brain::RoleBranch::Idle);
+    CHECK(std::get<behavior::ActionState>(finalBrain.m_data).fTime == kLogicDtMs);
 }
 
 TEST_CASE("Hit state exit resets displacement only for Death and landing Hit")
@@ -275,11 +256,10 @@ TEST_CASE("Hit state exit resets displacement only for Death and landing Hit")
     world.ecs().add(entity, RoleTimers{});
     world.ecs().add(entity, Displacement{});
     world.ecs().add(entity, ColliderState{});
-    RoleTree tree;
-    tree.defKey   = behavior::definitionKey(world, entity);
-    world.ecs().add(entity, tree);
-    auto& rt      = world.ecs().get<RoleTree>(entity);
-    rt.instance   = BTInstance<behavior::LeafState>(behavior::definition(rt.defKey));
+    RoleBrain brain;
+    brain.m_attackLayout = behavior::definitionKey(world, entity);
+    world.ecs().add(entity, brain);
+    world.ecs().add(entity, RoleControl{});
     auto& disp    = world.ecs().get<Displacement>(entity);
     world.ecs().get<Transform>(entity).position.y = Fixed{};
     const conf::SkillHitConfig* hitRow = nullptr;

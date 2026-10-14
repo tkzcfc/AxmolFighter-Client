@@ -76,9 +76,9 @@ struct MonsterFixture
         ecs.add(entity, vitals); ecs.add(entity, transform); ecs.add(entity, RoleHitState{});
         ecs.add(entity, RoleTimers{}); ecs.add(entity, Attributes{}); ecs.add(entity, ColliderState{{}, {}, 0, "1"_fx});
         ecs.add(entity, Displacement{}); ecs.add(entity, MotionState{}); ecs.add(entity, ControlEventQueue{});
-        ecs.add(entity, SkillPool{}); ecs.add(entity, RoleTree{});
+        ecs.add(entity, SkillPool{}); ecs.add(entity, RoleBrain{}); ecs.add(entity, RoleControl{});
         if (aiEnabled) ecs.add(entity, AiAgent{});
-        ecs.get<RoleTree>(entity).defKey = behavior::definitionKey(world, entity);
+        ecs.get<RoleBrain>(entity).m_attackLayout = behavior::definitionKey(world, entity);
         return entity;
     }
     void tick()
@@ -96,8 +96,7 @@ struct MonsterFixture
     }
     ai::ActionMove* movement()
     {
-        for (auto& leaf : world.ecs().get<RoleTree>(monster).instance.leaves)
-            if (auto* move = std::get_if<ai::ActionMove>(&leaf)) return move;
+        if (auto* move = std::get_if<ai::ActionMove>(&world.ecs().get<RoleBrain>(monster).m_data)) return move;
         return nullptr;
     }
 };

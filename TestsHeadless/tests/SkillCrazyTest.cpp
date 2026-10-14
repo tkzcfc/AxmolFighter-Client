@@ -25,9 +25,10 @@ Entity fullActor(World& world, CharacterClass occupation = CharacterClass::kSwor
     world.ecs().add(entity, RoleTimers{});
     world.ecs().add(entity, Displacement{});
     world.ecs().add(entity, ColliderState{});
-    RoleTree tree;
-    tree.defKey = behavior::definitionKey(world, entity);
-    world.ecs().add(entity, tree);
+    RoleBrain brain;
+    brain.m_attackLayout = behavior::definitionKey(world, entity);
+    world.ecs().add(entity, brain);
+    world.ecs().add(entity, RoleControl{});
     return entity;
 }
 void reloadConfig()

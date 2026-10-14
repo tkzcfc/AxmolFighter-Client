@@ -25,7 +25,7 @@ TEST_CASE("Town puppet updates synchronize position, facing, and motion")
     CHECK(world.ecs().get<RoleStatus>(puppet).eEntityStatus == EntityRoleStatus::Walk);
     CHECK(world.ecs().get<MotionState>(puppet).motionName == "running");
     CHECK(world.ecs().has<Puppet>(puppet));
-    CHECK_FALSE(world.ecs().has<RoleTree>(puppet));
+    CHECK_FALSE(world.ecs().has<RoleBrain>(puppet));
 }
 
 TEST_CASE("Town ignores a puppet update for an entity that does not exist")

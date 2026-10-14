@@ -25,7 +25,7 @@ void dealWithTime(ActionAttack& action, const conf::ActionConfig& row)
 /// 将控制象限转换为角色朝向和移动向量。
 void dealWithDirection(World& world, Entity entity, bool facing)
 {
-    const auto& command = world.ecs().get<RoleTree>(entity).control;
+    const auto& command = world.ecs().get<RoleControl>(entity).m_last;
     auto& transform = world.ecs().get<Transform>(entity);
     if (command.quadrant == 0)
         return;
@@ -47,7 +47,7 @@ void dealWithControl(World& world, Entity entity, const conf::ActionConfig& row)
     else if ((row.control == 0 || row.control == 3) && row.displacementId == -1)
     {
         dealWithDirection(world, entity, row.control == 0);
-        const auto& command = ecs.get<RoleTree>(entity).control;
+        const auto& command = ecs.get<RoleControl>(entity).m_last;
         const auto& t = ecs.get<Transform>(entity);
         auto& velocity = ecs.get<RoleHitState>(entity).forceVelocity;
         const auto angle = Fixed::ratio(command.angle, 1000);

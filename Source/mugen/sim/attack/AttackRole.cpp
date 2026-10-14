@@ -213,14 +213,14 @@ bool AttackAction::onDisplacement(role::brain::RoleContext& ctx, Param source, S
 /// 同步动画循环结束到所有仍在运行的攻击状态。
 void animationComplete(World& world, Entity entity, int64_t loops)
 {
-    auto& tree = world.ecs().get<RoleTree>(entity);
-    const auto& def = behavior::definition(tree.defKey);
-    for (uint32_t i = 0; i < tree.instance.nodes.size(); ++i)
+    auto& brain     = world.ecs().get<RoleBrain>(entity);
+    const auto def  = behavior::attackDefinition(brain.m_attackLayout);
+    for (uint32_t i = 0; i < brain.m_cast.m_instance.nodes.size(); ++i)
     {
         const auto& node = def.topology().node(i);
-        if (node.type != BTNodeType::Action || node.leafTypeId != behavior::kAttackLeaf || tree.instance.nodes[i].status != BTStatus::Running) continue;
+        if (node.type != BTNodeType::Action || node.leafTypeId != behavior::kAttackLeaf || brain.m_cast.m_instance.nodes[i].status != BTStatus::Running) continue;
         const auto* row = config(std::get<behavior::AttackAction>(def.param(node.paramIndex)));
-        auto& action = std::get<AttackRole>(tree.instance.leaves[def.topology().leafIndex(i)]).m_action;
+        auto& action = std::get<AttackRole>(brain.m_cast.m_instance.leaves[def.topology().leafIndex(i)]).m_action;
         if (row) completeAnimation(action, *row, loops);
     }
 }

@@ -1,5 +1,6 @@
 #include "SkillTestSupport.h"
 #include "mugen/sim/bt/RoleTree.h"
+#include "mugen/sim/role/brain/RoleBrainRunner.h"
 
 using namespace skill_test;
 
@@ -11,9 +12,10 @@ void prepareTree(World& world, Entity entity)
     world.ecs().add(entity, RoleHitState{});
     world.ecs().add(entity, ControlEventQueue{});
     world.ecs().add(entity, Displacement{});
-    RoleTree tree;
-    tree.defKey = behavior::definitionKey(world, entity);
-    world.ecs().add(entity, std::move(tree));
+    RoleBrain brain;
+    brain.m_attackLayout = behavior::definitionKey(world, entity);
+    world.ecs().add(entity, std::move(brain));
+    world.ecs().add(entity, RoleControl{});
 }
 
 void enterAttack(World& world, Entity entity)
@@ -22,7 +24,7 @@ void enterAttack(World& world, Entity entity)
     REQUIRE(skill::presetSkill(world, entity, "A"));
     REQUIRE(status::dealWithStatus(world, entity, EntityRoleStatus::Attack));
     prepareTree(world, entity);
-    behavior::update(world, entity);
+    role::brain::update(world.ecs().get<RoleBrain>(entity), world, entity, false);
     CHECK(pool.m_current != kNoSkill);
 }
 }  // namespace
@@ -37,13 +39,11 @@ TEST_CASE("AttackTree A1 A2 builds slot step pipe sequence")
     World world;
     const auto entity = actor(world);
     slots(world, entity, {id});
-    const auto key  = behavior::definitionKey(world, entity);
-    const auto& def = behavior::definition(key);
+    const auto key = behavior::definitionKey(world, entity);
+    const auto def = behavior::attackDefinition(key);
     CHECK(key.skills.size() >= 2);
-    CHECK(def.topology().node(0).childCount == 19);
-    const auto attack = def.topology().child(0, 9);
-    CHECK(def.topology().node(attack).childCount == 1);
-    const auto slot = def.topology().child(attack, 0);
+    CHECK(def.topology().node(0).childCount == 1);
+    const auto slot = def.topology().child(0, 0);
     CHECK(def.topology().node(slot).childCount >= 2);
 }
 
@@ -63,7 +63,7 @@ TEST_CASE("AttackTree pipe cast lifecycle runs once and clears attack on failure
     CHECK(pool.m_running.size() == 1);
     const auto current                                = pool.m_current;
     world.ecs().get<RoleStatus>(entity).eEntityStatus = EntityRoleStatus::Idle;
-    behavior::update(world, entity);
+    role::brain::update(world.ecs().get<RoleBrain>(entity), world, entity, false);
     CHECK(pool.m_running.size() == 1);
     CHECK(pool.m_current == kNoSkill);
     CHECK_FALSE(status::isAttackStatus(world.ecs().get<RoleStatus>(entity)));
@@ -90,11 +90,11 @@ TEST_CASE("AttackTree release on lift selects up action branch")
     pool.m_skills.at(pool.m_current).m_upTouch = true;
     REQUIRE(status::dealWithStatus(world, entity, EntityRoleStatus::Attack));
     prepareTree(world, entity);
-    behavior::update(world, entity);
+    role::brain::update(world.ecs().get<RoleBrain>(entity), world, entity, false);
     CHECK(pool.m_skills.at(pool.m_current).m_enoughRelease);
 }
 
-TEST_CASE("AttackTree identical skill sources share definition")
+TEST_CASE("AttackTree identical skill sources produce identical keys")
 {
     loadConfig();
     const auto id = findSkill([](const auto& row) { return row.cd == 0 && !row.actionIds.empty(); });
@@ -106,5 +106,4 @@ TEST_CASE("AttackTree identical skill sources share definition")
     const auto firstKey  = behavior::definitionKey(world, first);
     const auto secondKey = behavior::definitionKey(world, second);
     CHECK(firstKey == secondKey);
-    CHECK(&behavior::definition(firstKey) == &behavior::definition(secondKey));
 }

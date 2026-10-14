@@ -1,6 +1,7 @@
 #include "RoleSpawn.h"
 #include "mugen/avatar/AvatarPaths.h"
 #include "mugen/conf/TypeConversions.h"
+#include "mugen/sim/role/brain/RoleBrainRunner.h"
 #include "mugen/sim/skill/Skill.h"
 #include "mugen/sim/buff/BuffPool.h"
 
@@ -195,8 +196,8 @@ Entity spawnRole(World& world, const RoleSpawnParams& params)
     ecs.add(entity, ExtraState{});
     ecs.add(entity, ControlEventQueue{});
     ecs.add(entity, Displacement{});
-    RoleTree tree;
-    ecs.add(entity, std::move(tree));
+    ecs.add(entity, RoleBrain{});
+    ecs.add(entity, RoleControl{});
     if (world.setup().mode != WorldMode::Town)
     {
         const auto occupation = type_conversions::toCharacterClass(params.roleId);
@@ -207,14 +208,9 @@ Entity spawnRole(World& world, const RoleSpawnParams& params)
     }
     if (params.isAi && world.setup().mode != WorldMode::Town && row->roleType != 12)
         ecs.add(entity, AiAgent{});
-    auto& behaviorTree     = ecs.get<RoleTree>(entity);
-    behaviorTree.defKey    = behavior::definitionKey(world, entity);
-    const auto& definition = behavior::definition(behaviorTree.defKey);
-    behaviorTree.instance  = BTInstance<behavior::LeafState>(definition);
-    behavior::BTCtx context{world, entity};
-    BTRunner<behavior::BTCtx, behavior::Param, behavior::LeafState>(definition, behavior::registry(),
-                                                                    behaviorTree.instance)
-        .enter(context);
+    auto& brain            = ecs.get<RoleBrain>(entity);
+    brain.m_attackLayout   = behavior::definitionKey(world, entity);
+    role::brain::enterFirst(brain, world, entity, world.setup().mode == WorldMode::Town);
     if (params.playerSlot.has_value())
         ecs.singleton<PlayerSlots>().entities.emplace(*params.playerSlot, entity);
     if (world.setup().mode != WorldMode::Town)

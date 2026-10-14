@@ -1,6 +1,7 @@
 #include "World.h"
 #include "buff/BuffPool.h"
 #include "room/RoomFlow.h"
+#include "role/brain/RoleBrainRunner.h"
 #include "trace/TraceSink.h"
 #include "mugen/conf/ReflectedConfig.h"
 
@@ -243,14 +244,15 @@ bool World::changeRoom(int32_t id, FixedVec3 position, int32_t toward)
     });
     for (const auto entity : retained)
     {
-        if (auto* tree = m_ecs.tryGet<RoleTree>(entity))
+        if (auto* brain = m_ecs.tryGet<RoleBrain>(entity))
         {
-            const auto& definition = behavior::definition(tree->defKey);
-            behavior::BTCtx context{*this, entity};
-            BTRunner<behavior::BTCtx, behavior::Param, behavior::LeafState>(definition, behavior::registry(), tree->instance).exit(context);
-            m_ecs.get<RoleTree>(entity).instance = {};
-            m_ecs.get<RoleTree>(entity).control = {};
+            if (brain->m_phase == role::brain::BrainPhase::Running)
+                role::brain::exitBranch(*brain, *this, entity);
+            brain->m_phase             = role::brain::BrainPhase::NotEntered;
+            brain->m_detached.m_active = false;
         }
+        if (auto* control = m_ecs.tryGet<RoleControl>(entity))
+            control->m_last = {};
         if (m_ecs.has<Displacement>(entity)) displacement::reset(*this, entity);
         if (auto* status = m_ecs.tryGet<RoleStatus>(entity))
         {

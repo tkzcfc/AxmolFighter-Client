@@ -32,9 +32,10 @@ struct Fixture
         ecs.add(entity, RoleTimers{});
         ecs.add(entity, Displacement{});
         ecs.add(entity, ColliderState{});
-        RoleTree tree;
-        tree.defKey = behavior::definitionKey(world, entity);
-        ecs.add(entity, tree);
+        RoleBrain brain;
+        brain.m_attackLayout = behavior::definitionKey(world, entity);
+        ecs.add(entity, brain);
+        ecs.add(entity, RoleControl{});
         param                                = behavior::AttackAction{row.id, 1, 0};
         ecs.get<SkillPool>(entity).m_current = 0;
     }
@@ -117,7 +118,7 @@ TEST_CASE("AttackRole control zero moves control two only turns")
     f.replace();
     f.enter();
     auto& ecs                                    = f.world.ecs();
-    ecs.get<RoleTree>(f.entity).control.quadrant = 3;
+    ecs.get<RoleControl>(f.entity).m_last.quadrant = 3;
     f.tick({});
     CHECK(ecs.get<RoleHitState>(f.entity).forceVelocity.x == "-2"_fx);
     CHECK(ecs.get<Transform>(f.entity).towardX == -1);
@@ -125,7 +126,7 @@ TEST_CASE("AttackRole control zero moves control two only turns")
     f.row.displacementId = 0;
     f.replace();
     f.enter();
-    ecs.get<RoleTree>(f.entity).control.quadrant  = 1;
+    ecs.get<RoleControl>(f.entity).m_last.quadrant = 1;
     ecs.get<RoleHitState>(f.entity).forceVelocity = {};
     f.tick({});
     CHECK(ecs.get<Transform>(f.entity).towardX == 1);
@@ -228,22 +229,23 @@ TEST_CASE("AttackRole World input enters registered leaf and freeze preserves pr
     PlayerCommand command;
     command.controlEvent = ControlEvent::CTR_ATKA;
     f.world.tick({1, {{0, {command}}}, {}, {}});
-    auto& tree      = ecs.get<RoleTree>(f.entity);
-    const auto& def = behavior::definition(tree.defKey);
-    int32_t active  = -1;
-    for (uint32_t i = 0; i < tree.instance.nodes.size(); ++i)
+    auto& brain = ecs.get<RoleBrain>(f.entity);
+    REQUIRE(brain.m_branch == role::brain::RoleBranch::Attack);
+    const auto def = behavior::attackDefinition(brain.m_attackLayout);
+    int32_t active = -1;
+    for (uint32_t i = 0; i < brain.m_cast.m_instance.nodes.size(); ++i)
         if (def.topology().node(i).leafTypeId == behavior::kAttackLeaf &&
-            tree.instance.nodes[i].status == BTStatus::Running)
+            brain.m_cast.m_instance.nodes[i].status == BTStatus::Running)
             active = static_cast<int32_t>(i);
     REQUIRE(active >= 0);
     const auto index = def.topology().leafIndex(static_cast<uint32_t>(active));
-    const auto time  = std::get<attack::AttackRole>(tree.instance.leaves[index]).m_action.m_time;
+    const auto time  = std::get<attack::AttackRole>(brain.m_cast.m_instance.leaves[index]).m_action.m_time;
     CHECK(time == kLogicDtMs);
     ecs.get<RoleTimers>(f.entity).freezeMs = kLogicDtMs * "3"_fx;
     f.world.tick({2, {}, {}, {}});
-    CHECK(std::get<attack::AttackRole>(tree.instance.leaves[index]).m_action.m_time == time);
+    CHECK(std::get<attack::AttackRole>(brain.m_cast.m_instance.leaves[index]).m_action.m_time == time);
     CHECK(ecs.get<Displacement>(f.entity).listenerNode == active);
     f.world.tick({3, {}, {}, {}});
     f.world.tick({4, {}, {}, {}});
-    CHECK(std::get<attack::AttackRole>(tree.instance.leaves[index]).m_action.m_time == time + kLogicDtMs);
+    CHECK(std::get<attack::AttackRole>(brain.m_cast.m_instance.leaves[index]).m_action.m_time == time + kLogicDtMs);
 }

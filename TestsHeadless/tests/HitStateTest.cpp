@@ -1,6 +1,7 @@
 #include <doctest/doctest.h>
 #include "mugen/sim/hit/HitState.h"
 #include "SkillTestSupport.h"
+#include "mugen/sim/role/brain/RoleBranches.h"
 #include "mugen/sim/role/brain/states/HitStates.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
 #include <iostream>
@@ -55,7 +56,8 @@ struct HitStateWorld
         ecs.add(m_entity, ColliderState{});
         ecs.add(m_entity, ControlEventQueue{});
         ecs.add(m_entity, Attributes{});
-        ecs.add(m_entity, RoleTree{});
+        ecs.add(m_entity, RoleBrain{});
+        ecs.add(m_entity, RoleControl{});
     }
     // 通过唯一帧入口运行完整角色管线。
     void tick()
@@ -67,15 +69,12 @@ struct HitStateWorld
     // 返回正在运行的叶子动作，而不是根据状态位猜测。
     behavior::ActionType active()
     {
-        auto& tree = m_world.ecs().get<RoleTree>(m_entity);
-        const auto& def = behavior::definition(tree.defKey);
-        for (uint32_t i = 0; i < tree.instance.nodes.size(); ++i)
-        {
-            const auto& node = def.topology().node(i);
-            if (node.type == BTNodeType::Action && tree.instance.nodes[i].status == BTStatus::Running)
-                if (const auto* type = std::get_if<behavior::ActionType>(&def.param(node.paramIndex))) return *type;
-        }
-        return behavior::ActionType::None;
+        auto& brain = m_world.ecs().get<RoleBrain>(m_entity);
+        if (brain.m_phase != role::brain::BrainPhase::Running)
+            return behavior::ActionType::None;
+        if (brain.m_branch == role::brain::RoleBranch::Death && brain.m_destroyStage == 1)
+            return behavior::ActionType::Destroy;
+        return role::brain::branchAction(brain.m_branch);
     }
 };
 // 直接驱动受击叶：构造临时视图并解包叶子状态。
@@ -279,17 +278,6 @@ TEST_CASE("HitState exhausted rigidity accelerates falling and reduces stun")
     CHECK(hit::getStiffTime(f.m_world, f.m_entity) == "60"_fx);
 }
 
-// 每个受击与生命周期分支都必须注册真实叶子。
-TEST_CASE("HitState ROLE branches contain no unimplemented leaves")
-{
-    skill_test::loadConfig();
-    const auto& topology = behavior::definition({}).topology();
-    int implemented = 0;
-    for (const auto& node : topology.nodes())
-        if (node.type == BTNodeType::Action && node.leafTypeId == behavior::kHitStateLeaf) ++implemented;
-    CHECK(implemented == 11);
-}
-
 // 在受击叶子运行期间通过技能施放入口选择挣脱槽。
 TEST_CASE("HitState breakaway cast exits hit leaf into Attack")
 {
@@ -318,7 +306,7 @@ TEST_CASE("HitState breakaway cast exits hit leaf into Attack")
     loadout[0].resize(12);
     loadout[0][11] = {{{id, -1}}};
     skill::loadSkill(f.m_world, f.m_entity, loadout);
-    ecs.get<RoleTree>(f.m_entity).defKey = behavior::definitionKey(f.m_world, f.m_entity);
+    ecs.get<RoleBrain>(f.m_entity).m_attackLayout = behavior::definitionKey(f.m_world, f.m_entity);
     ecs.get<RoleStatus>(f.m_entity).eEntityStatus = EntityRoleStatus::Idle | EntityRoleStatus::HitUp;
     ecs.get<Transform>(f.m_entity).position.y = "100"_fx;
     f.tick();
@@ -332,11 +320,7 @@ TEST_CASE("HitState breakaway cast exits hit leaf into Attack")
     bool attackRunning = false;
     for (int frame = 0; frame < 4 && !attackRunning; ++frame)
     {
-        const auto& tree = ecs.get<RoleTree>(f.m_entity);
-        const auto& topology = behavior::definition(tree.defKey).topology();
-        for (uint32_t i = 0; i < tree.instance.nodes.size(); ++i)
-            if (topology.node(i).type == BTNodeType::Action && topology.node(i).leafTypeId == behavior::kAttackLeaf &&
-                tree.instance.nodes[i].status == BTStatus::Running) attackRunning = true;
+        attackRunning = ecs.get<RoleBrain>(f.m_entity).m_branch == role::brain::RoleBranch::Attack;
         if (!attackRunning) f.tick();
     }
     CHECK(attackRunning);

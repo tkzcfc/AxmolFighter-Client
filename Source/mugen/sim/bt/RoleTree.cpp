@@ -1,40 +1,18 @@
 #include "RoleTree.h"
-#include "RoleTreeBridge.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/status/Status.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/BattleConst.h"
 #include "mugen/core/math/FixedMath.h"
 #include "mugen/sim/skill/Skill.h"
-#include "mugen/core/bt/BTDefCache.h"
 #include "mugen/sim/attack/AttackRole.h"
-#include "mugen/sim/role/brain/states/AiMoveState.h"
-#include "mugen/sim/role/brain/states/HitStates.h"
-#include "mugen/sim/role/brain/states/LocomotionStates.h"
+#include "mugen/sim/role/brain/RoleContext.h"
 
 namespace mugen::sim::behavior
 {
 namespace
 {
 using S = EntityRoleStatus;
-/// 将技能控制命令转换为方向角并交给技能系统。
-void skillEvent(World& world, Entity entity, const PlayerCommand& command)
-{
-    auto* pool = world.ecs().tryGet<SkillPool>(entity);
-    if (!pool)
-        return;
-    if (command.quadrant == 0)
-        pool->m_controlAngle.reset();
-    else
-    {
-        const auto angle     = Fixed::ratio(command.angle, 1000);
-        pool->m_controlAngle = command.quadrant == 1   ? "90"_fx - angle
-                               : command.quadrant == 2 ? "90"_fx + angle
-                               : command.quadrant == 3 ? "270"_fx - angle
-                                                       : "270"_fx + angle;
-    }
-    skill::dealButtonEvent(world, entity, command.controlEvent, command.pressType == 2);
-}
 /// 在攻击守卫退出时复位当前技能。
 void resetSkill(World& world, Entity entity)
 {
@@ -261,77 +239,6 @@ void addAttackTree(std::vector<BTNodeDef>& nodes,
         begin = end;
     }
 }
-/// 根据模板和已加载技能构建不可变 DFS 行为树拓扑。
-Def build(const DefinitionKey& key, const conf::Config& config)
-{
-    constexpr std::array statuses{S::Death,     S::Revive, S::Wake,   S::GetUp,   S::HitFloor,  S::HitDown, S::HitUp,
-                                  S::HitSwitch, S::Hit,    S::Attack, S::Jostled, S::Patrol,    S::Chase,   S::Alert,
-                                  S::Finding,   S::Run,    S::Walk,   S::Idle,    S::Controlled};
-    constexpr std::array actions{
-        ActionType::Death,   ActionType::Revive, ActionType::Wake,      ActionType::GetUp,     ActionType::HitFloor,
-        ActionType::HitDown, ActionType::HitUp,  ActionType::HitSwitch, ActionType::Hit,       ActionType::None,
-        ActionType::Jostled, ActionType::Patrol, ActionType::Chase,     ActionType::Alert,     ActionType::Move,
-        ActionType::Run,     ActionType::Walk,   ActionType::Idle,      ActionType::Controlled};
-    const bool city = key.tree == Template::City;
-    std::vector<BTNodeDef> nodes;
-    std::vector<BTCondDef> conditions;
-    std::vector<Param> params{std::monostate{}};
-    BTNodeDef root;
-    root.type       = BTNodeType::Selector;
-    root.childCount = city ? 2 : 19;
-    nodes.push_back(root);
-    for (uint16_t i = 0; i < root.childCount; ++i)
-    {
-        const S status          = city ? (i == 0 ? S::Finding : S::Idle) : statuses[i];
-        const ActionType action = city ? (i == 0 ? ActionType::Move : ActionType::Idle) : actions[i];
-        BTNodeDef branch;
-        branch.type       = status == S::Death    ? BTNodeType::Sequence
-                            : status == S::Attack ? BTNodeType::Selector
-                                                  : BTNodeType::Parallel;
-        branch.childCount = status == S::Attack  ? static_cast<uint16_t>(key.skills.empty() ? 0 : 1)
-                            : status == S::Death ? 2
-                                                 : 1;
-        addCondition(conditions, params, branch, Guard{status, city});
-        nodes.push_back(branch);
-        if (status == S::Attack)
-        {
-            if (!key.skills.empty())
-            {
-                uint16_t slots = 0;
-                for (size_t index = 0; index < key.skills.size();)
-                {
-                    const auto slot = key.skills[index].slot;
-                    bool valid      = false;
-                    while (index < key.skills.size() && key.skills[index].slot == slot)
-                    {
-                        valid = valid || config.find<conf::SkillAttackConfig>(key.skills[index].configId);
-                        ++index;
-                    }
-                    if (valid)
-                        ++slots;
-                }
-                nodes.back().childCount = slots;
-                addAttackTree(nodes, conditions, params, key, config);
-            }
-            continue;
-        }
-        for (uint16_t j = 0; j < branch.childCount; ++j)
-        {
-            BTNodeDef leaf;
-            leaf.leafTypeId = action == ActionType::Idle   ? kIdleLeaf
-                              : action == ActionType::Walk ? kWalkLeaf
-                              : action == ActionType::Run  ? kRunLeaf
-                              : action == ActionType::Jostled ? kJostledLeaf
-                              : action == ActionType::Patrol || action == ActionType::Chase || action == ActionType::Alert ? kAiMoveLeaf
-                              : !city && (i <= 8 || status == S::Controlled) ? kHitStateLeaf
-                                                           : kFindingLeaf;
-            leaf.paramIndex = static_cast<uint32_t>(params.size());
-            params.emplace_back(j == 0 ? action : ActionType::Destroy);
-            nodes.push_back(leaf);
-        }
-    }
-    return Def(std::move(nodes), std::move(conditions), std::move(params));
-}
 }  // namespace
 /// 查表取得普通动作的动画名称。
 const char* animationName(ActionType type)
@@ -378,12 +285,6 @@ DefinitionKey definitionKey(World& world, Entity entity)
                               skill.m_address.m_step, skill.m_configId, skill.m_releaseMax});
     return key;
 }
-/// 从只读缓存获取或构建行为树定义。
-const Def& definition(const DefinitionKey& key)
-{
-    static BTDefCache<DefinitionKey, Param, conf::Config> cache(conf::Config::instance(), build);
-    return cache.get(key);
-}
 /// 构建仅含攻击子树的定义，供新状态机桥接 B 复用，不复制构建逻辑。
 Def buildAttackOnly(const DefinitionKey& key, const conf::Config& config)
 {
@@ -410,79 +311,54 @@ Def buildAttackOnly(const DefinitionKey& key, const conf::Config& config)
     addAttackTree(nodes, conditions, params, key, config);
     return Def(std::move(nodes), std::move(conditions), std::move(params));
 }
-/// 从只读缓存获取攻击子树定义。
-const Def& attackDefinition(const DefinitionKey& key)
+/// 按缓存键重建攻击子树定义（无进程级缓存，桥接 B 每次调用重建）。
+Def attackDefinition(const DefinitionKey& key)
 {
-    static BTDefCache<DefinitionKey, Param, conf::Config> cache(conf::Config::instance(), buildAttackOnly);
-    return cache.get(key);
+    return buildAttackOnly(key, conf::Config::instance());
 }
-/// 返回共享且只读的角色行为树回调表。
+// 临时桥接，阶段 3 删除：为攻击子树构造攻击叶回调。
+BTLeafCallbacks<BTCtx, Param, LeafState> attackLeafCallbacks()
+{
+    BTLeafCallbacks<BTCtx, Param, LeafState> result;
+    result.onEnter = [](BTCtx& ctx, const Param& param, LeafState& state) {
+        if (!std::holds_alternative<attack::AttackRole>(state))
+            state = attack::AttackRole{};
+        role::brain::RoleContext rc{ctx.world, ctx.entity};
+        rc.setNode(ctx.m_node);
+        attack::AttackAction::enter(rc, std::get<AttackAction>(param), std::get<attack::AttackRole>(state));
+    };
+    result.onUpdate = [](BTCtx& ctx, const Param& param, LeafState& state) {
+        role::brain::RoleContext rc{ctx.world, ctx.entity};
+        rc.setNode(ctx.m_node);
+        return attack::AttackAction::update(rc, std::get<AttackAction>(param), std::get<attack::AttackRole>(state));
+    };
+    result.onExit = [](BTCtx& ctx, const Param& param, LeafState& state) {
+        role::brain::RoleContext rc{ctx.world, ctx.entity};
+        rc.setNode(ctx.m_node);
+        attack::AttackAction::exit(rc, std::get<AttackAction>(param), std::get<attack::AttackRole>(state));
+    };
+    result.onDisplacementEvent = [](BTCtx& ctx, const Param& param, LeafState& state) {
+        role::brain::RoleContext rc{ctx.world, ctx.entity};
+        rc.setNode(ctx.m_node);
+        rc.setEvent(ctx.event);
+        return attack::AttackAction::onDisplacement(rc, std::get<AttackAction>(param),
+                                                    std::get<attack::AttackRole>(state));
+    };
+    return result;
+}
+/// 返回共享且只读的回调表（桥接 B 阶段仅攻击子树使用 kAttackLeaf）。
 const Registry& registry()
 {
     static const Registry value({{unimplementedEnter, unimplementedUpdate, unimplementedExit},
-                                 bridge::leafCallbacks<role::brain::states::Locomotion>(),
-                                 bridge::leafCallbacks<role::brain::states::Locomotion>(),
-                                 bridge::leafCallbacks<role::brain::states::Locomotion>(),
-                                 bridge::leafCallbacks<attack::AttackAction>(),
-                                 bridge::leafCallbacks<role::brain::states::HitState>(),
-                                 bridge::leafCallbacks<role::brain::states::AiMove>(),
-                                 bridge::leafCallbacks<role::brain::states::Jostled>(),
-                                 bridge::leafCallbacks<role::brain::states::Finding>()},
+                                 {unimplementedEnter, unimplementedUpdate, unimplementedExit},
+                                 {unimplementedEnter, unimplementedUpdate, unimplementedExit},
+                                 {unimplementedEnter, unimplementedUpdate, unimplementedExit},
+                                 attackLeafCallbacks(),
+                                 {unimplementedEnter, unimplementedUpdate, unimplementedExit},
+                                 {unimplementedEnter, unimplementedUpdate, unimplementedExit},
+                                 {unimplementedEnter, unimplementedUpdate, unimplementedExit},
+                                 {unimplementedEnter, unimplementedUpdate, unimplementedExit}},
                                 {{check, condEnter, condExit}});
     return value;
-}
-/// 首次创建实例后执行一帧行为树。
-void update(World& world, Entity entity)
-{
-    auto& tree      = world.ecs().get<RoleTree>(entity);
-    const auto& def = definition(tree.defKey);
-    BTCtx ctx{world, entity};
-    if (tree.instance.nodes.empty())
-    {
-        tree.instance = BTInstance<LeafState>(def);
-        BTRunner<BTCtx, Param, LeafState>(def, registry(), tree.instance).enter(ctx);
-    }
-    BTRunner<BTCtx, Param, LeafState>(def, registry(), tree.instance).update(ctx);
-}
-/// 依次处理本帧控制队列并清空队列。
-void consumeControl(World& world, Entity entity)
-{
-    auto& ecs   = world.ecs();
-    auto& queue = ecs.get<ControlEventQueue>(entity).commands;
-    for (const auto& command : queue)
-    {
-        if (!ecs.get<ExtraState>(entity).isCanControl() || status::isJostledStatus(ecs.get<RoleStatus>(entity)))
-            continue;
-        ecs.get<RoleTree>(entity).control = command;
-        if (static_cast<int32_t>(command.controlEvent) >= static_cast<int32_t>(ControlEvent::CTR_ATKA))
-            skillEvent(world, entity, command);
-        else if (command.controlEvent == ControlEvent::CTR_IDLE)
-            status::dealWithStatus(world, entity, S::Idle);
-        else if (command.controlEvent == ControlEvent::CTR_RUN)
-        {
-            skill::interruptRun(world, entity);
-            status::dealWithStatus(world, entity, S::Run);
-        }
-        else if (command.controlEvent == ControlEvent::CTR_WALK)
-            status::dealWithStatus(world, entity, S::Walk);
-    }
-    queue.clear();
-}
-/// 将位移事件精确派发给登记的监听节点。
-bool onDisplacementEvent(World& world, Entity entity, DisplacementEvent event)
-{
-    const int32_t nodeId = world.ecs().get<Displacement>(entity).listenerNode;
-    if (nodeId < 0)
-        return false;
-    auto& tree          = world.ecs().get<RoleTree>(entity);
-    const auto& def     = definition(tree.defKey);
-    const auto& node    = def.topology().node(static_cast<uint32_t>(nodeId));
-    const auto callback = registry().leaf(node.leafTypeId).onDisplacementEvent;
-    if (!callback)
-        return false;
-    BTCtx ctx{world, entity, event};
-    ctx.m_node = nodeId;
-    return callback(ctx, def.param(node.paramIndex),
-                    tree.instance.leaves[def.topology().leafIndex(static_cast<uint32_t>(nodeId))]);
 }
 }  // namespace mugen::sim::behavior

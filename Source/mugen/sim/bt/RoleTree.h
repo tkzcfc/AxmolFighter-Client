@@ -220,38 +220,19 @@ struct BTCtx
 };
 /// 角色行为树使用的叶子和条件回调表。
 using Registry = BTRegistry<BTCtx, Param, LeafState>;
-/// 获取与缓存键对应的不可变行为树定义。
-const Def& definition(const DefinitionKey& key);
 /// 构建仅含攻击子树的定义（供新状态机桥接 B 复用，不复制构建逻辑）。
 Def buildAttackOnly(const DefinitionKey& key, const conf::Config& config);
-/// 从只读缓存获取攻击子树定义。
-const Def& attackDefinition(const DefinitionKey& key);
+/// 按缓存键重建攻击子树定义（无进程级缓存）。
+Def attackDefinition(const DefinitionKey& key);
 /// 从实体已加载的技能构造行为树缓存键。
 DefinitionKey definitionKey(World& world, Entity entity);
 /// 获取角色行为树的回调注册表。
 const Registry& registry();
 /// 返回动作类型对应的动画名称。
 const char* animationName(ActionType type);
-/// 初始化并推进实体的行为树实例。
-void update(World& world, Entity entity);
-/// 消费实体本帧的控制命令。
-void consumeControl(World& world, Entity entity);
-/// 将位移事件路由到监听它的叶子。
-bool onDisplacementEvent(World& world, Entity entity, DisplacementEvent event);
 /// 通知普通动作叶子开始。
 void behaviorStateStart(World& world, Entity entity, ActionType type);
 /// 通知普通动作叶子结束。
 void behaviorStateEnd(World& world, Entity entity, ActionType type);
 }  // namespace behavior
-/// 附着在角色实体上的行为树定义、实例和最新输入。
-struct RoleTree
-{
-    /// 查找不可变拓扑的缓存键。
-    behavior::DefinitionKey defKey;
-    /// 可序列化的节点与叶子状态。
-    BTInstance<behavior::LeafState> instance;
-    /// 供移动和技能分支读取的最新命令。
-    PlayerCommand control;
-    MG_REFLECT(RoleTree, defKey, instance, control)
-};
 }  // namespace mugen::sim

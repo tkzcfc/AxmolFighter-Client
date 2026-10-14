@@ -5,6 +5,7 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/hit/Hit.h"
 #include "mugen/sim/hit/HitState.h"
+#include "mugen/sim/role/brain/RoleBranches.h"
 #include "mugen/sim/skill/Skill.h"
 #include "mugen/sim/status/Status.h"
 
@@ -431,21 +432,34 @@ bool HitState::onDisplacement(RoleContext& ctx, Param type, State& leaf)
     return false;
 }
 
-// 只向当前运行的受击叶子发送真实动画完成通知。
+// 只向当前运行的受击分支发送真实动画完成通知。
 void animationComplete(World& world, Entity entity)
 {
-    auto& tree        = world.ecs().get<RoleTree>(entity);
-    const auto& def   = behavior::definition(tree.defKey);
-    const auto& topology = def.topology();
-    RoleContext ctx{world, entity};
-    for (uint32_t i = 0; i < topology.nodes().size(); ++i)
+    auto& brain = world.ecs().get<RoleBrain>(entity);
+    if (brain.m_phase != BrainPhase::Running)
+        return;
+    switch (brain.m_branch)
     {
-        const auto& node = topology.node(i);
-        if (node.type != BTNodeType::Action || node.leafTypeId != behavior::kHitStateLeaf ||
-            tree.instance.nodes[i].status != BTStatus::Running)
-            continue;
-        auto& leaf = std::get<behavior::HitActionState>(tree.instance.leaves[topology.leafIndex(i)]);
-        completed(ctx, std::get<A>(def.param(node.paramIndex)), leaf);
+    case RoleBranch::Death:
+    case RoleBranch::Revive:
+    case RoleBranch::Wake:
+    case RoleBranch::GetUp:
+    case RoleBranch::HitFloor:
+    case RoleBranch::HitDown:
+    case RoleBranch::HitUp:
+    case RoleBranch::HitSwitch:
+    case RoleBranch::Hit:
+    case RoleBranch::Controlled:
+    {
+        RoleContext ctx{world, entity};
+        const A type = brain.m_branch == RoleBranch::Death && brain.m_destroyStage == 1
+                           ? A::Destroy
+                           : branchAction(brain.m_branch);
+        completed(ctx, type, std::get<behavior::HitActionState>(brain.m_data));
+        break;
+    }
+    default:
+        break;
     }
 }
 }  // namespace mugen::sim::role::brain::states

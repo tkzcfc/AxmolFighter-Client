@@ -57,7 +57,7 @@ BTStatus Locomotion::update(RoleContext& ctx, Param type, State& state)
     }
     if (type == behavior::ActionType::Idle)
         return BTStatus::Running;
-    const auto command = ctx.get<RoleTree>().control;
+    const auto command = ctx.get<RoleControl>().m_last;
     auto& t            = ctx.get<Transform>();
     auto& v            = ctx.get<RoleHitState>().forceVelocity;
     if (command.quadrant == 0)

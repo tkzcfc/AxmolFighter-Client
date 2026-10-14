@@ -5,6 +5,7 @@
 #include "mugen/sim/skill/Skill.h"
 #include "mugen/sim/attack/AttackRole.h"
 #include "mugen/sim/role/brain/states/HitStates.h"
+#include "mugen/sim/role/brain/RoleBrainRunner.h"
 #include "mugen/sim/hit/HitState.h"
 #include "mugen/sim/buff/BuffPool.h"
 #include "mugen/sim/ability/AbilityPool.h"
@@ -45,9 +46,13 @@ void hitProtectUpdate(World& world, Entity entity) { hit::dealHitProtectUpdate(w
 // 推进 AI 决策流程。
 void aiUpdate(World& world, Entity entity) { ai::update(world, entity); }
 // 消费本帧控制命令。
-void controlEventsUpdate(World& world, Entity entity) { behavior::consumeControl(world, entity); }
-// 推进角色行为树。
-void behaviorTreeUpdate(World& world, Entity entity) { behavior::update(world, entity); }
+void controlEventsUpdate(World& world, Entity entity) { role::brain::consumeControl(world, entity); }
+// 推进角色状态机（房间切换首帧先进入再更新一次）。
+void behaviorTreeUpdate(World& world, Entity entity)
+{
+    auto& brain = world.ecs().get<RoleBrain>(entity);
+    role::brain::update(brain, world, entity, world.setup().mode == WorldMode::Town);
+}
 // 推进角色位移。
 void displacementUpdate(World& world, Entity entity) { displacement::update(world, entity); }
 // 更新角色碰撞体流程。

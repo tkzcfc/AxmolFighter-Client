@@ -64,9 +64,10 @@ struct WorldAttack
         ecs.add(entity, Displacement{});
         ecs.add(entity, ColliderState{});
         ecs.add(entity, ControlEventQueue{});
-        RoleTree tree;
-        tree.defKey = behavior::definitionKey(world, entity);
-        ecs.add(entity, tree);
+        RoleBrain brain;
+        brain.m_attackLayout = behavior::definitionKey(world, entity);
+        ecs.add(entity, brain);
+        ecs.add(entity, RoleControl{});
         ecs.singleton<PlayerSlots>().entities[0] = entity;
     }
     void tick(bool press = false)
@@ -83,20 +84,23 @@ struct WorldAttack
     }
     int32_t active() const
     {
-        const auto& tree     = world.ecs().get<RoleTree>(entity);
-        const auto& topology = behavior::definition(tree.defKey).topology();
-        for (uint32_t i = 0; i < tree.instance.nodes.size(); ++i)
-            if (topology.node(i).type == BTNodeType::Action && topology.node(i).leafTypeId == behavior::kAttackLeaf &&
-                tree.instance.nodes[i].status == BTStatus::Running)
+        auto& brain = world.ecs().get<RoleBrain>(entity);
+        if (brain.m_branch != role::brain::RoleBranch::Attack)
+            return -1;
+        const auto def = behavior::attackDefinition(brain.m_attackLayout);
+        for (uint32_t i = 0; i < brain.m_cast.m_instance.nodes.size(); ++i)
+            if (def.topology().node(i).type == BTNodeType::Action &&
+                def.topology().node(i).leafTypeId == behavior::kAttackLeaf &&
+                brain.m_cast.m_instance.nodes[i].status == BTStatus::Running)
                 return static_cast<int32_t>(i);
         return -1;
     }
     const attack::ActionAttack& state(int32_t node) const
     {
-        const auto& tree = world.ecs().get<RoleTree>(entity);
+        auto& brain     = world.ecs().get<RoleBrain>(entity);
+        const auto def  = behavior::attackDefinition(brain.m_attackLayout);
         return std::get<attack::AttackRole>(
-                   tree.instance.leaves.at(
-                       behavior::definition(tree.defKey).topology().leafIndex(static_cast<uint32_t>(node))))
+                   brain.m_cast.m_instance.leaves.at(def.topology().leafIndex(static_cast<uint32_t>(node))))
             .m_action;
     }
     void overrideAction()
@@ -136,11 +140,11 @@ TEST_CASE("AttackRole World buffered FrameInput chains running leaf")
     REQUIRE(f.active() >= 0);
     CHECK(f.active() != first);
     CHECK(f.world.ecs().get<SkillPool>(f.entity).m_current != oldSkill);
-    const auto& tree = f.world.ecs().get<RoleTree>(f.entity);
-    const auto& def  = behavior::definition(tree.defKey);
     f.tick();
     REQUIRE(f.active() >= 0);
-    const auto next = std::get<behavior::AttackAction>(def.param(def.topology().node(f.active()).paramIndex));
+    auto& brain        = f.world.ecs().get<RoleBrain>(f.entity);
+    const auto def     = behavior::attackDefinition(brain.m_attackLayout);
+    const auto next    = std::get<behavior::AttackAction>(def.param(def.topology().node(static_cast<uint32_t>(f.active())).paramIndex));
     CHECK(next.skill != oldSkill);
     std::cout << "AttackRole World buffered skill=" << f.skillId << " first_action=" << f.action.id
               << " next_action=" << next.actionId << " tick=" << f.frame << '\n';
@@ -311,7 +315,8 @@ TEST_CASE("AttackRole World static targets expire reset and pause leaf")
             ecs.add(e, Displacement{});
             ecs.add(e, ColliderState{});
             ecs.add(e, ControlEventQueue{});
-            ecs.add(e, RoleTree{});
+            ecs.add(e, RoleBrain{});
+            ecs.add(e, RoleControl{});
             return e;
         };
         const auto enemy = add(EntityCamp::Enemy), friendEnemy = add(EntityCamp::EnemyFriend),
