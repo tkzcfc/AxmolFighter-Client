@@ -1,7 +1,7 @@
 #include "SkillTestSupport.h"
 #include "mugen/sim/effect/Effect.h"
 #include "mugen/sim/skill/SkillTriggers.h"
-#include "mugen/sim/hit/Hit.h"
+#include "mugen/sim/hit/DamageCalculator.h"
 
 using namespace skill_test;
 namespace
@@ -108,10 +108,10 @@ TEST_CASE("Summon effect frame creates once and recursively uses owner standard 
     CHECK(f.world.ecs().get<DropGoods>(child).m_epRate == "40"_fx);
     CHECK(f.world.ecs().get<RoleTimers>(child).summonMs == "100"_fx);
     CHECK(f.world.ecs().get<Transform>(child).position.x == f.world.ecs().get<Transform>(effect).position.x);
-    CHECK(hit::standardHurt(f.world, child) == hit::standardHurt(f.world, f.owner));
-    const auto old = hit::standardHurt(f.world, child);
+    CHECK(hit::DamageCalculator(f.world).standardHurt(child) == hit::DamageCalculator(f.world).standardHurt(f.owner));
+    const auto old = hit::DamageCalculator(f.world).standardHurt(child);
     f.world.ecs().get<Attributes>(f.owner).basic[5] += "77"_fx;
-    CHECK(hit::standardHurt(f.world, child) == old + "77"_fx);
+    CHECK(hit::DamageCalculator(f.world).standardHurt(child) == old + "77"_fx);
     for (int i = 0; i < 6; ++i) f.tick();
     collect(); CHECK(count == 1);
     f.world.ecs().get<EntityGroup>(f.owner).suspended = true;

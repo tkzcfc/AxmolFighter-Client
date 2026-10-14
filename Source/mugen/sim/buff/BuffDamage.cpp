@@ -1,6 +1,6 @@
 #include "BuffDamage.h"
 #include "mugen/sim/World.h"
-#include "mugen/sim/hit/Hit.h"
+#include "mugen/sim/hit/DamageCalculator.h"
 #include "mugen/sim/role/Role.h"
 #include "mugen/conf/BattleConst.h"
 #include "mugen/conf/ReflectedConfig.h"
@@ -24,7 +24,7 @@ Fixed getAttackValue(World& world, Entity entity, const BuffInstance& instance)
     if (config->hurtType == 1 && instance.m_context.m_skillAttribute.value != 0)
         level = world.hitHooks().m_damageLevel(world, source, instance.m_context.m_skillAttribute);
     const Fixed addition = std::max(Fixed{}, level) * conf::kBuffHurtDefaultAddition;
-    return calculateBuffDamage(hit::standardHurt(world, source), config->paramValue.front(), addition)
+    return calculateBuffDamage(hit::DamageCalculator(world).standardHurt(source), config->paramValue.front(), addition)
         * Fixed::fromInt(instance.m_lifecycle.m_repeat);
 }
 

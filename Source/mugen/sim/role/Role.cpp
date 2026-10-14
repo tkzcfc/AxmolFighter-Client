@@ -1,7 +1,7 @@
 #include "Role.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/effect/Effect.h"
-#include "mugen/sim/hit/Hit.h"
+#include "mugen/sim/hit/DamageCalculator.h"
 #include "mugen/sim/hit/HitSeams.h"
 #include "mugen/sim/trace/TraceSink.h"
 #include "mugen/conf/ReflectedConfig.h"
@@ -68,7 +68,7 @@ void Role::modifyHp(Fixed delta, Entity effect, bool noShield)
         delta = std::max(Fixed{}, delta * ("1"_fx + modifiers.m_healingChange));
     }
     const bool wasDead = isDead();
-    if (delta >= Fixed{} || hit::checkHurtPermit(m_world, m_entity, effect, hit::HurtPermit::Hp))
+    if (delta >= Fixed{} || hit::DamageCalculator(m_world).checkHurtPermit(m_entity, effect, hit::HurtPermit::Hp))
     {
         if (!noShield && delta < Fixed{}) delta = _absorbShield(delta);
         auto& vitals = ecs.get<Vitals>(m_entity);

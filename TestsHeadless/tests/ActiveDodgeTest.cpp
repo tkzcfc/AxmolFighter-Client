@@ -1,6 +1,8 @@
 #include "SkillTestSupport.h"
 #include "mugen/sim/effect/Effect.h"
 #include "mugen/sim/hit/Hit.h"
+#include "mugen/sim/hit/Damage.h"
+#include "mugen/sim/hit/DamageCalculator.h"
 #include <algorithm>
 
 namespace
@@ -142,7 +144,7 @@ struct DodgeHit
             m_world.ecs().singleton<RngState>().random.seed(seed);
             auto clone = m_world.clone();
             hit::DamageInput input;
-            REQUIRE(hit::damageInput(clone, m_effect, m_monster, input));
+            REQUIRE(hit::DamageCalculator(clone).damageInput(m_effect, m_monster, input));
             if (!hit::attributeDodge(input, hit::damageDraw(clone.ecs().singleton<RngState>().random)))
                 return;
         }

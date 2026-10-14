@@ -1,5 +1,7 @@
 #include "SkillTestSupport.h"
 #include "mugen/sim/hit/Hit.h"
+#include "mugen/sim/hit/Damage.h"
+#include "mugen/sim/hit/DamageCalculator.h"
 #include "mugen/sim/role/Role.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include <iostream>
@@ -136,7 +138,7 @@ struct HitFixture
     {
         auto clone = m_world.clone();
         hit::DamageInput input;
-        REQUIRE(hit::damageInput(clone, m_effect, target, input));
+        REQUIRE(hit::DamageCalculator(clone).damageInput(m_effect, target, input));
         auto draw = hit::damageDraw(clone.ecs().singleton<RngState>().random);
         return hit::attributeDodge(input, draw) ? Fixed{} : hit::calculateDamage(input, draw).m_damage;
     }
@@ -362,12 +364,12 @@ TEST_CASE("Damage real config standard hurt and summon ownership")
 {
     HitFixture f; auto& ecs = f.m_world.ecs();
     const auto& row = conf::Config::instance().get<conf::SkillHurtConfig>(1);
-    CHECK(hit::standardHurt(f.m_world,f.m_hero) == "800"_fx + Fixed::fromInt(row.hurt));
+    CHECK(hit::DamageCalculator(f.m_world).standardHurt(f.m_hero) == "800"_fx + Fixed::fromInt(row.hurt));
     ecs.get<Attributes>(f.m_monster).basic[15] = "17"_fx;
-    CHECK(hit::standardHurt(f.m_world,f.m_monster) == "17"_fx + Fixed::fromInt(row.monsterHurt));
+    CHECK(hit::DamageCalculator(f.m_world).standardHurt(f.m_monster) == "17"_fx + Fixed::fromInt(row.monsterHurt));
     ecs.get<RoleIdentity>(f.m_monster).roleType = 5;
     ecs.get<RoleIdentity>(f.m_monster).m_owner = f.m_hero;
-    CHECK(hit::standardHurt(f.m_world,f.m_monster) == hit::standardHurt(f.m_world,f.m_hero));
+    CHECK(hit::DamageCalculator(f.m_world).standardHurt(f.m_monster) == hit::DamageCalculator(f.m_world).standardHurt(f.m_hero));
     ecs.get<RoleIdentity>(f.m_monster).m_owner = {};
-    CHECK(hit::standardHurt(f.m_world,f.m_monster) == Fixed{});
+    CHECK(hit::DamageCalculator(f.m_world).standardHurt(f.m_monster) == Fixed{});
 }
