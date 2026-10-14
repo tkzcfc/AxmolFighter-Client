@@ -6,6 +6,7 @@
 #include "mugen/sim/attack/AttackRole.h"
 #include "mugen/sim/role/brain/states/HitStates.h"
 #include "mugen/sim/role/brain/RoleBrainRunner.h"
+#include "mugen/sim/role/brain/RoleContext.h"
 #include "mugen/sim/role/Role.h"
 #include "mugen/sim/buff/BuffHolder.h"
 #include "mugen/sim/ability/AbilityHolder.h"
@@ -50,7 +51,7 @@ void aiUpdate(World& world, Entity entity)
     ai::AiDriver(world, entity).update();
 }
 // 消费本帧控制命令。
-void controlEventsUpdate(World& world, Entity entity) { role::brain::consumeControl(world, entity); }
+void controlEventsUpdate(World& world, Entity entity) { role::brain::RoleContext(world, entity).consumeControl(); }
 // 推进角色状态机（房间切换首帧先进入再更新一次）。
 void behaviorTreeUpdate(World& world, Entity entity)
 {

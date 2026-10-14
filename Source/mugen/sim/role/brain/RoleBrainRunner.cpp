@@ -8,8 +8,6 @@
 #include "mugen/sim/role/brain/states/CastState.h"
 #include "mugen/sim/role/brain/states/HitStates.h"
 #include "mugen/sim/role/brain/states/LocomotionStates.h"
-#include "mugen/sim/skill/SkillCaster.h"
-#include "mugen/sim/role/Role.h"
 
 namespace mugen::sim::role::brain
 {
@@ -50,24 +48,6 @@ void resetData(RoleBrain& brain)
     case RoleBranch::Attack:
         break;
     }
-}
-// 将技能控制命令转换为方向角并交给技能系统。
-void skillEvent(World& world, Entity entity, const PlayerCommand& command)
-{
-    auto* pool = world.ecs().tryGet<SkillPool>(entity);
-    if (!pool)
-        return;
-    if (command.quadrant == 0)
-        pool->m_controlAngle.reset();
-    else
-    {
-        const auto angle     = Fixed::ratio(command.angle, 1000);
-        pool->m_controlAngle = command.quadrant == 1   ? "90"_fx - angle
-                               : command.quadrant == 2 ? "90"_fx + angle
-                               : command.quadrant == 3 ? "270"_fx - angle
-                                                       : "270"_fx + angle;
-    }
-    skill::SkillCaster(world, entity).dealButtonEvent(command.controlEvent, command.pressType == 2);
 }
 // 进入当前分支的叶子；返回是否成功（仅 Attack 可能失败）。
 bool enterState(RoleBrain& brain, World& world, Entity entity)
@@ -275,30 +255,6 @@ bool enterFirst(RoleBrain& brain, World& world, Entity entity, bool city)
     return fallbackToIdle(brain, world, entity, city);
 }
 
-void consumeControl(World& world, Entity entity)
-{
-    auto& ecs   = world.ecs();
-    auto& queue = ecs.get<ControlEventQueue>(entity).commands;
-    for (const auto& command : queue)
-    {
-        if (!ecs.get<ExtraState>(entity).isCanControl() || ecs.get<RoleStatus>(entity).isJostled())
-            continue;
-        ecs.get<RoleControl>(entity).m_last = command;
-        if (static_cast<int32_t>(command.controlEvent) >= static_cast<int32_t>(ControlEvent::CTR_ATKA))
-            skillEvent(world, entity, command);
-        else if (command.controlEvent == ControlEvent::CTR_IDLE)
-            Role(world, entity).changeStatus(EntityRoleStatus::Idle);
-        else if (command.controlEvent == ControlEvent::CTR_RUN)
-        {
-            skill::SkillCaster(world, entity).interruptRun();
-            Role(world, entity).changeStatus(EntityRoleStatus::Run);
-        }
-        else if (command.controlEvent == ControlEvent::CTR_WALK)
-            Role(world, entity).changeStatus(EntityRoleStatus::Walk);
-    }
-    queue.clear();
-}
-
 void update(RoleBrain& brain, World& world, Entity entity, bool city)
 {
     if (brain.m_phase == BrainPhase::NotEntered)
@@ -339,14 +295,14 @@ void exitBranch(RoleBrain& brain, World& world, Entity entity)
     brain.m_phase = BrainPhase::NotEntered;
 }
 
-bool onDisplacementEvent(World& world, Entity entity, DisplacementEvent event)
+bool RoleContext::onDisplacementEvent(DisplacementEvent event)
 {
-    auto& brain        = world.ecs().get<RoleBrain>(entity);
-    const int32_t node = world.ecs().get<Displacement>(entity).listenerNode;
+    auto& brain        = m_world.ecs().get<RoleBrain>(m_entity);
+    const int32_t node = m_world.ecs().get<Displacement>(m_entity).listenerNode;
     if (node < 0)
         return false;
     if (static_cast<RoleBranch>(node) == brain.m_branch)
-        return dispatchDisplacement(brain, world, entity, event);
+        return dispatchDisplacement(brain, m_world, m_entity, event);
     return false;
 }
 }  // namespace mugen::sim::role::brain

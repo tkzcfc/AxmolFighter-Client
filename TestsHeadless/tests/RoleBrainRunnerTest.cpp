@@ -3,6 +3,7 @@
 #include "../support/ScenarioHarness.h"
 #include "mugen/sim/role/brain/RoleBrain.h"
 #include "mugen/sim/role/brain/RoleBrainRunner.h"
+#include "mugen/sim/role/brain/RoleContext.h"
 #include "mugen/sim/role/brain/RoleBranches.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "mugen/sim/room/RoomFlow.h"
@@ -80,14 +81,14 @@ TEST_CASE("RoleBrain branch selection follows movement commands")
     walk.controlEvent = ControlEvent::CTR_WALK;
     walk.quadrant     = 3;
     f.world.ecs().get<ControlEventQueue>(f.entity).commands.push_back(walk);
-    role::brain::consumeControl(f.world, f.entity);
+    role::brain::RoleContext(f.world, f.entity).consumeControl();
     role::brain::update(f.brain, f.world, f.entity, false);
     CHECK(f.brain.m_branch == role::brain::RoleBranch::Walk);
     // 待机命令回到 Idle 分支。
     PlayerCommand idle;
     idle.controlEvent = ControlEvent::CTR_IDLE;
     f.world.ecs().get<ControlEventQueue>(f.entity).commands.push_back(idle);
-    role::brain::consumeControl(f.world, f.entity);
+    role::brain::RoleContext(f.world, f.entity).consumeControl();
     role::brain::update(f.brain, f.world, f.entity, false);
     CHECK(f.brain.m_branch == role::brain::RoleBranch::Idle);
     // 跑动命令进入 Run 分支。
@@ -95,7 +96,7 @@ TEST_CASE("RoleBrain branch selection follows movement commands")
     run.controlEvent = ControlEvent::CTR_RUN;
     run.quadrant     = 3;
     f.world.ecs().get<ControlEventQueue>(f.entity).commands.push_back(run);
-    role::brain::consumeControl(f.world, f.entity);
+    role::brain::RoleContext(f.world, f.entity).consumeControl();
     role::brain::update(f.brain, f.world, f.entity, false);
     CHECK(f.brain.m_branch == role::brain::RoleBranch::Run);
 }

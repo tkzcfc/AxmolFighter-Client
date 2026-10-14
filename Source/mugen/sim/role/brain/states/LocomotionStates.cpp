@@ -26,7 +26,7 @@ void footstep(RoleContext& ctx, behavior::ActionType type)
 void Locomotion::enter(RoleContext& ctx, Param type, State& state)
 {
     state = behavior::ActionState{};
-    behavior::behaviorStateStart(ctx.world(), ctx.entity(), type);
+    ctx.notifyActionStart(type);
     auto& motion                 = ctx.get<MotionState>();
     motion.motionName            = behavior::animationName(type);
     motion.timeMs                = {};
@@ -84,14 +84,14 @@ BTStatus Locomotion::update(RoleContext& ctx, Param type, State& state)
 
 void Locomotion::exit(RoleContext& ctx, Param type, State&)
 {
-    behavior::behaviorStateEnd(ctx.world(), ctx.entity(), type);
+    ctx.notifyActionEnd(type);
 }
 
 void Jostled::enter(RoleContext& ctx, Param, State& state)
 {
     const auto id = ctx.get<RoleStatus>().entityParams.displacement_id;
     state         = behavior::JostledState{id, false};
-    behavior::behaviorStateStart(ctx.world(), ctx.entity(), behavior::ActionType::Jostled);
+    ctx.notifyActionStart(behavior::ActionType::Jostled);
     auto& motion            = ctx.get<MotionState>();
     motion.motionName       = behavior::animationName(behavior::ActionType::Jostled);
     motion.timeMs           = {};
@@ -111,7 +111,7 @@ BTStatus Jostled::update(RoleContext&, Param, State& state)
 
 void Jostled::exit(RoleContext& ctx, Param, State&)
 {
-    behavior::behaviorStateEnd(ctx.world(), ctx.entity(), behavior::ActionType::Jostled);
+    ctx.notifyActionEnd(behavior::ActionType::Jostled);
     displacement::DisplacementDriver(ctx.world(), ctx.entity()).reset();
 }
 

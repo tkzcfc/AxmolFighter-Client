@@ -93,8 +93,4 @@ struct JostledState
 };
 // 返回动作类型对应的动画名称。
 const char* animationName(ActionType type);
-// 通知普通动作叶子开始。
-void behaviorStateStart(World& world, Entity entity, ActionType type);
-// 通知普通动作叶子结束。
-void behaviorStateEnd(World& world, Entity entity, ActionType type);
 }  // namespace mugen::sim::behavior

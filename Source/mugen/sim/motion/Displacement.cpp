@@ -1,6 +1,7 @@
 #include "Displacement.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/role/brain/RoleBrainRunner.h"
+#include "mugen/sim/role/brain/RoleContext.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/BattleConst.h"
 #include "mugen/core/math/FixedMath.h"
@@ -168,7 +169,7 @@ void DisplacementDriver::update()
     const auto event = [&](DisplacementEvent e) {
         if (ecs.has<ObstacleState>(m_entity)) return room_entities::displacementEvent(m_world, m_entity, e);
         return ecs.has<EffectTree>(m_entity) ? effect::EffectActor(m_world, m_entity).onDisplacementEvent(e)
-                                          : role::brain::onDisplacementEvent(m_world, m_entity, e);
+                                          : role::brain::RoleContext(m_world, m_entity).onDisplacementEvent(e);
     };
     if (velocity.x == Fixed{} && velocity.y == Fixed{} && velocity.z == Fixed{})
         event(DisplacementEvent::Brake);

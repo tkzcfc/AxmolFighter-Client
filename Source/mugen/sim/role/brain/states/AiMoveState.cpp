@@ -66,7 +66,7 @@ void advance(RoleContext& ctx, ai::ActionMove& action)
 void AiMove::enter(RoleContext& ctx, Param type, State& state)
 {
     state = ai::ActionMove{};
-    behavior::behaviorStateStart(ctx.world(), ctx.entity(), type);
+    ctx.notifyActionStart(type);
     auto& ecs   = ctx.world().ecs();
     const auto goal = ctx.get<RoleStatus>().entityParams.move_pos;
     const auto& ranges = ecs.singleton<MapRegion>().moveRanges;
@@ -110,7 +110,7 @@ void AiMove::exit(RoleContext& ctx, Param type, State&)
 {
     ctx.get<Displacement>().listenerNode = -1;
     ctx.get<RoleHitState>().forceVelocity = {};
-    behavior::behaviorStateEnd(ctx.world(), ctx.entity(), type);
+    ctx.notifyActionEnd(type);
 }
 
 bool AiMove::onDisplacement(RoleContext& ctx, Param, State& state)

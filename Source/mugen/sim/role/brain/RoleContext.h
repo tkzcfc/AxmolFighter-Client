@@ -3,9 +3,11 @@
 #include "mugen/core/ecs/Entity.h"
 #include "mugen/core/math/Fixed.h"
 #include "mugen/sim/World.h"
+#include "mugen/sim/input/PlayerCommand.h"
 #include "mugen/sim/motion/Displacement.h"
 #include "mugen/sim/role/Role.h"
 #include "mugen/sim/role/RoleComponents.h"
+#include "mugen/sim/role/brain/RoleAction.h"
 
 namespace mugen::sim
 {
@@ -14,7 +16,7 @@ class World;
 
 namespace mugen::sim::role::brain
 {
-// 临时视图：供行为叶子静态结构读取战斗状态，不存入组件、不拥有资源、生命周期仅限单次回调。
+// 角色行为的临时视图，不存入组件、不拥有资源，生命周期限于单次调用。
 class RoleContext
 {
 public:
@@ -43,7 +45,19 @@ public:
     void setNode(int32_t node) { m_node = node; }
     void setEvent(DisplacementEvent event) { m_event = event; }
 
+    // 通知普通动作叶子开始。
+    void notifyActionStart(behavior::ActionType type);
+    // 通知普通动作叶子结束。
+    void notifyActionEnd(behavior::ActionType type);
+    // 消费本帧控制命令并写入 RoleControl.m_last。
+    void consumeControl();
+    // 分派位移事件到当前分支的叶子。
+    bool onDisplacementEvent(DisplacementEvent event);
+
 private:
+    // 将技能控制命令转换为方向角并交给技能系统。
+    void _skillEvent(const PlayerCommand& command);
+
     World& m_world;
     Entity m_entity;
     int32_t m_node = -1;

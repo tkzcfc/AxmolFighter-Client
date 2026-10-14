@@ -204,7 +204,7 @@ void HitState::enter(RoleContext& ctx, Param type, State& leaf)
 {
     leaf = behavior::HitActionState{};
     const auto* row = role(ctx);
-    behavior::behaviorStateStart(ctx.world(), ctx.entity(), type);
+    ctx.notifyActionStart(type);
     if (type == A::Destroy)
     {
         ctx.world().destroy(ctx.entity());
@@ -380,7 +380,7 @@ void HitState::exit(RoleContext& ctx, Param type, State& leaf)
     if (type == A::Death || ((type == A::Hit || type == A::Controlled) && data && data->hitType == 0 &&
         ctx.get<Transform>().position.y == Fixed{}))
         displacement::DisplacementDriver(ctx.world(), ctx.entity()).reset();
-    behavior::behaviorStateEnd(ctx.world(), ctx.entity(), type);
+    ctx.notifyActionEnd(type);
 }
 
 bool HitState::onDisplacement(RoleContext& ctx, Param type, State& leaf)
