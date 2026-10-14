@@ -1,7 +1,7 @@
 #include "SkillTriggers.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/buff/BuffHolder.h"
-#include "mugen/sim/ability/AbilityPool.h"
+#include "mugen/sim/ability/AbilityHolder.h"
 
 // 技能触发接缝的空入口：Buff、能力与效果三类触发器分别由后续待办补齐实现。
 namespace mugen::sim
@@ -25,6 +25,6 @@ void ability::trigger(World& world, Entity entity, SkillEvent event, SkillTrigge
     if (const auto* pool = world.ecs().tryGet<SkillPool>(entity))
         if (source.m_skill >= 0 && static_cast<size_t>(source.m_skill) < pool->m_skills.size())
             context.m_skillId = pool->m_skills[source.m_skill].m_configId;
-    ability::trigger(world, entity, event == SkillEvent::BeforeCastSkill ? Event::BeforeCastSkill : Event::AfterCastSkill, context);
+    ability::AbilityHolder(world, entity).trigger(event == SkillEvent::BeforeCastSkill ? Event::BeforeCastSkill : Event::AfterCastSkill, context);
 }
 }

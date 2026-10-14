@@ -4,7 +4,7 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/buff/BuffHolder.h"
 #include "mugen/conf/ReflectedConfig.h"
-#include "mugen/sim/ability/AbilityPool.h"
+#include "mugen/sim/ability/AbilityHolder.h"
 
 namespace mugen::sim
 {
@@ -98,8 +98,8 @@ void HitHooks::noAbility(World& world, Entity entity, HitAbilityEvent event, con
     case HitAbilityEvent::Crystal: abilityEvent = ability::Event::AfterToBeHit; break;
     case HitAbilityEvent::Obstacle: abilityEvent = ability::Event::AfterHit; break;
     }
-    if (id > 0) ability::triggerId(world, entity, id, abilityEvent, context);
-    else ability::trigger(world, entity, abilityEvent, context);
+    if (id > 0) ability::AbilityHolder(world, entity).triggerId(id, abilityEvent, context);
+    else ability::AbilityHolder(world, entity).trigger(abilityEvent, context);
 }
 // 将 Buff 上下文转换为能力事件，保留技能绑定和目标归属。
 void HitHooks::boundAbility(World& world, Entity entity, int32_t id, BFEvent event, const BuffContext& source)
@@ -116,12 +116,12 @@ void HitHooks::boundAbility(World& world, Entity entity, int32_t id, BFEvent eve
     else if (event == BFEvent::AfterHit) abilityEvent = ability::Event::AfterHit;
     else if (event == BFEvent::BeforeToBeHit) abilityEvent = ability::Event::BeforeToBeHit;
     else if (event == BFEvent::AfterToBeHit) abilityEvent = ability::Event::AfterToBeHit;
-    ability::triggerId(world, entity, id, abilityEvent, context);
+    ability::AbilityHolder(world, entity).triggerId(id, abilityEvent, context);
 }
 // 复活清空旧状态，死亡则同步卸载能力池。
 void HitHooks::roleAbilities(World& world, Entity entity, bool reload)
 {
-    ability::clear(world, entity);
+    ability::AbilityHolder(world, entity).clear();
     if (reload) return;
 }
 // 未配置技能属性时使用角色等级。

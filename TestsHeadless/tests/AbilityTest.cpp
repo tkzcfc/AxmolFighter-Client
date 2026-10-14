@@ -1,5 +1,5 @@
 #include "SkillTestSupport.h"
-#include "mugen/sim/ability/AbilityPool.h"
+#include "mugen/sim/ability/AbilityHolder.h"
 
 namespace
 {
@@ -26,18 +26,18 @@ TEST_CASE("Ability pool dispatches cast and hit events")
     World world;
     const Entity entity = skill_test::actor(world);
     const auto& before = abilityFor(ability::Event::BeforeCastSkill);
-    REQUIRE(ability::add(world, entity, before.id));
-    ability::trigger(world, entity, ability::Event::BeforeCastSkill);
+    REQUIRE(ability::AbilityHolder(world, entity).add(before.id));
+    ability::AbilityHolder(world, entity).trigger(ability::Event::BeforeCastSkill);
     CHECK(world.ecs().get<AbilityPool>(entity).m_instances.front().m_active);
-    ability::clear(world, entity);
+    ability::AbilityHolder(world, entity).clear();
     const auto& after = abilityFor(ability::Event::AfterCastSkill);
-    REQUIRE(ability::add(world, entity, after.id));
-    ability::trigger(world, entity, ability::Event::AfterCastSkill);
+    REQUIRE(ability::AbilityHolder(world, entity).add(after.id));
+    ability::AbilityHolder(world, entity).trigger(ability::Event::AfterCastSkill);
     CHECK(world.ecs().get<AbilityPool>(entity).m_instances.front().m_active);
-    ability::clear(world, entity);
+    ability::AbilityHolder(world, entity).clear();
     const auto& hit = abilityFor(ability::Event::AfterHit);
-    REQUIRE(ability::add(world, entity, hit.id));
-    ability::trigger(world, entity, ability::Event::AfterHit);
+    REQUIRE(ability::AbilityHolder(world, entity).add(hit.id));
+    ability::AbilityHolder(world, entity).trigger(ability::Event::AfterHit);
     CHECK(world.ecs().get<AbilityPool>(entity).m_instances.front().m_active);
 }
 
@@ -51,7 +51,7 @@ TEST_CASE("Ability condition blocks non-critical event")
     conf::SpecialAbilityConfig config;
     config.condition = 1;
     AbilityContext context;
-    CHECK_FALSE(ability::checkConditions(world, entity, config, context));
+    CHECK_FALSE(ability::AbilityHolder(world, entity).checkConditions(config, context));
     context.m_critical = true;
-    CHECK(ability::checkConditions(world, entity, config, context));
+    CHECK(ability::AbilityHolder(world, entity).checkConditions(config, context));
 }

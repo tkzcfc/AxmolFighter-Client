@@ -2,7 +2,7 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "mugen/sim/role/Role.h"
-#include "mugen/sim/ability/AbilityPool.h"
+#include "mugen/sim/ability/AbilityHolder.h"
 #include "mugen/sim/obstacle/Obstacle.h"
 #include "mugen/avatar/AvatarPaths.h"
 #include "mugen/avatar/MotionPlayer.h"
@@ -345,7 +345,7 @@ void collision(World& world, Entity entity, Entity other, CollisionEvent event)
         if (row->buffId != -1)
             buff::addEntityBuff(world, other, row->buffId);
         if (row->specialabilityId != -1)
-            ability::add(world, other, row->specialabilityId);
+            ability::AbilityHolder(world, other).add(row->specialabilityId);
         if (row->soundPick != -1)
             world.emit(entity, Sound{row->soundPick, {}, false, 0});
         if (row->summonId > 0)
