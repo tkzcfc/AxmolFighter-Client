@@ -1,4 +1,5 @@
 #pragma once
+#include <optional>
 #include <vector>
 #include "mugen/sim/role/RoleComponents.h"
 #include "mugen/sim/hit/HitSeams.h"
@@ -14,14 +15,21 @@ namespace mugen::sim
 class World;
 namespace hit
 {
-// 命中求解器：包装一次命中的完整上下文，执行碰撞分派与命中流程，
-// 替代原先散落在 Hit.cpp 匿名命名空间中的自由函数。仅作为临时对象使用，不拥有资源。
+// 命中求解视图：包装世界与绑定实体，执行碰撞命中与 Buff 接缝。
+// 仅作为临时对象使用，不存入组件、不拥有资源，生命周期限于单次调用。
 class HitResolver
 {
 public:
-    HitResolver(World& world, Entity effect, Entity target, FixedVec2 contact);
-    // 按目标类型与攻击者阵营分派，并对角色目标执行完整命中流程。
-    void resolve();
+    // 构造指向指定世界实例中某个实体的视图；命中时该实体为特效。
+    HitResolver(World& world, Entity effect);
+    // 处理特效碰撞状态变化，结束接触不产生打击。
+    void onCollision(Entity other, CollisionEvent event, FixedVec2 contact);
+    // 按配置目标选择接收池并记录保护请求。
+    void addEntityBuff(int32_t id, std::optional<int32_t> boundSkill = {}, std::optional<int32_t> origin = {});
+    // 同步派发命中事件。
+    void trigger(BFEvent event, const HitTrigger& context);
+    // 向绑定实体的 Buff 池施加请求。
+    void dealBuff(const HitBuffApplication& application);
 
 private:
     // 判断实体是否仍可参与逻辑命中。
@@ -49,10 +57,16 @@ private:
     static std::vector<Fixed> _buffIds(const std::vector<int32_t>& ids);
     // 角色目标的完整命中流程。
     void _hitTarget(const conf::EffectConfig& row);
+    // 按目标类型与攻击者阵营分派，并对角色目标执行完整命中流程。
+    void _resolve();
 
+    // 本场战斗世界。
     World& m_world;
+    // 视图绑定的实体；命中时为特效，Buff 接缝时为接收实体。
     Entity m_effect{};
+    // 本次碰撞的对方实体。
     Entity m_target{};
+    // 本次碰撞的平面接触点。
     FixedVec2 m_contact{};
 };
 }  // namespace hit

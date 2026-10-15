@@ -41,7 +41,7 @@ struct WorldHooks
     // 在实体组更新后执行场景阶段回调。
     WorldHook scene = noWorldUpdate;
     // 在场景阶段后执行碰撞阶段回调。
-    WorldHook collision = collision_system::update;
+    WorldHook collision = CollisionSystem::update;
     // 命中涉及的同步外部系统接缝，随世界克隆保留。
     HitHooks m_hit;
 };

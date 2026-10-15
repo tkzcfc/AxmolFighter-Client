@@ -5,6 +5,7 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/role/brain/RoleBranches.h"
 #include "mugen/sim/skill/SkillCaster.h"
+#include "mugen/sim/hit/HitResolver.h"
 
 namespace mugen::sim::role::brain::states
 {
@@ -227,7 +228,7 @@ void HitState::enter(RoleContext& ctx, Param type, State& leaf)
     {
         const int32_t id = hero ? conf::kRoleHeroWakeBuffId : conf::kRoleEnemyWakeBuffId;
         if (id != -1)
-            buff::addEntityBuff(ctx.world(), ctx.entity(), id);
+            hit::HitResolver(ctx.world(), ctx.entity()).addEntityBuff(id);
         if (row)
             ctx.get<RoleHitState>().rigidity = Fixed::fromInt(row->rigidity);
         if (hero)
@@ -238,8 +239,8 @@ void HitState::enter(RoleContext& ctx, Param type, State& leaf)
     {
         if (hero)
         {
-            buff::addEntityBuff(ctx.world(), ctx.entity(), 156);
-            buff::addEntityBuff(ctx.world(), ctx.entity(), 154);
+            hit::HitResolver(ctx.world(), ctx.entity()).addEntityBuff(156);
+            hit::HitResolver(ctx.world(), ctx.entity()).addEntityBuff(154);
         }
         return;
     }

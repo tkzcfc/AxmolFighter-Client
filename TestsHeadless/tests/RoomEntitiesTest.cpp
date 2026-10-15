@@ -1,7 +1,7 @@
 #include "SkillTestSupport.h"
 #include "mugen/sim/room/RoomFlow.h"
 #include "mugen/sim/obstacle/Obstacle.h"
-#include "mugen/sim/hit/Hit.h"
+#include "mugen/sim/hit/HitResolver.h"
 #include "mugen/sim/role/Role.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "../support/ScenarioHarness.h"
@@ -149,13 +149,13 @@ TEST_CASE("Obstacle contact corrects position and friendly effect destroys hit-c
     const auto wall = room_entities::obstacle(world, row->id, {}, 1);
     box(world, player, "-10"_fx); box(world, wall, {});
     world.ecs().get<Transform>(player).position.x = "-5"_fx;
-    obstacle::onCollision(world, player, wall, CollisionEvent::Began, {});
+    obstacle::ObstacleActor(world, wall).onCollision(player, CollisionEvent::Began, {});
     CHECK(world.ecs().get<Transform>(player).position.x == "-15"_fx);
     world.ecs().get<ObstacleState>(wall).m_hits = 1;
     world.ecs().get<MotionState>(wall).motionFile.clear();
     const auto effect = effect::EffectActor::create(world, player, 920000);
     REQUIRE(effect.value != 0);
-    hit::onEffectCollision(world, effect, wall, CollisionEvent::Began, {});
+    hit::HitResolver(world, effect).onCollision(wall, CollisionEvent::Began, {});
     CHECK(world.ecs().get<ObstacleState>(wall).m_hits == 0);
     for (int i = 0; i < 120 && !world.ecs().get<EntityGroup>(wall).destroyRequested; ++i)
         room_entities::RoomEntity::update(world, wall);

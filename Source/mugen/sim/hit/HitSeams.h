@@ -95,13 +95,4 @@ struct HitHooks
     // Buff 绑定能力的同步接缝，能力系统接管实例化与事件处理。
     void (*m_buffAbility)(World&, Entity, int32_t, BFEvent, const BuffContext&) = boundAbility;
 };
-namespace buff
-{
-// 记录角色保护 Buff 请求；生命周期和规则由 Buff 模块实现。
-void addEntityBuff(World&, Entity, int32_t, std::optional<int32_t> boundSkill = {}, std::optional<int32_t> origin = {});
-// 同步命中事件，不实现 BuffPool。
-void trigger(World&, Entity, BFEvent, const HitTrigger&);
-// 目标池施加请求，BuffPool 后续接入。
-void dealBuff(World&, Entity, const HitBuffApplication&);
-}
 }

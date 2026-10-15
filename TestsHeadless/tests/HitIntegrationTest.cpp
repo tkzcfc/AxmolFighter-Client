@@ -1,5 +1,5 @@
 #include "SkillTestSupport.h"
-#include "mugen/sim/hit/Hit.h"
+#include "mugen/sim/hit/HitResolver.h"
 #include "mugen/sim/hit/Damage.h"
 #include "mugen/sim/hit/DamageCalculator.h"
 #include "mugen/sim/role/Role.h"
@@ -222,7 +222,7 @@ TEST_CASE("Hit positive interval multi target and count")
     CHECK(ecs.get<EffectState>(f.m_effect).m_hitCount == 0);
     CHECK(ecs.get<EffectState>(f.m_effect).m_hitInterval > Fixed{});
     const auto hp = ecs.get<Vitals>(f.m_monster).hp;
-    hit::onEffectCollision(f.m_world, f.m_effect, f.m_monster, CollisionEvent::Continue, {});
+    hit::HitResolver(f.m_world, f.m_effect).onCollision(f.m_monster, CollisionEvent::Continue, {});
     CHECK(ecs.get<Vitals>(f.m_monster).hp == hp);
 }
 
@@ -334,9 +334,9 @@ TEST_CASE("Hit delayed freeze timers replacement and snapshot")
     CHECK(ecs.get<RoleHitState>(f.m_monster).m_freezeTimer == 0);
     CHECK(restored.hash() == f.m_world.hash());
     f.hitRow().hitInterval = 0; f.load();
-    hit::onEffectCollision(f.m_world,f.m_effect,f.m_monster,CollisionEvent::Continue,{});
+    hit::HitResolver(f.m_world, f.m_effect).onCollision(f.m_monster, CollisionEvent::Continue, {});
     const auto old = ecs.get<RoleHitState>(f.m_monster).m_freezeTimer;
-    hit::onEffectCollision(f.m_world,f.m_effect,f.m_monster,CollisionEvent::Continue,{});
+    hit::HitResolver(f.m_world, f.m_effect).onCollision(f.m_monster, CollisionEvent::Continue, {});
     CHECK(ecs.get<RoleHitState>(f.m_monster).m_freezeTimer != old);
     CHECK(ecs.singleton<LogicTimers>().entries.size() == 1);
 }
@@ -349,10 +349,10 @@ TEST_CASE("Hit same camp buff payload and enemy debuff")
     f.effectRow().hitTarget = -1; f.effectRow().buffAllId = std::vector<int32_t>{123};
     f.effectRow().buffId = {"456"_fx}; f.effectRow().debuffId = {789}; f.load();
     const auto ally = f.role(1,2);
-    hit::onEffectCollision(f.m_world,f.m_effect,ally,CollisionEvent::Began,{});
+    hit::HitResolver(f.m_world, f.m_effect).onCollision(ally, CollisionEvent::Began, {});
     CHECK(messages(f.m_world,f.m_hero) == std::vector<std::string>{"ADD:123"});
     CHECK(messages(f.m_world,ally) == std::vector<std::string>{"BF:3","BF:4"});
-    hit::onEffectCollision(f.m_world,f.m_effect,f.m_hero,CollisionEvent::Began,{});
+    hit::HitResolver(f.m_world, f.m_effect).onCollision(f.m_hero, CollisionEvent::Began, {});
     CHECK(messages(f.m_world,f.m_hero).at(1) == "ADD:456");
     f.tick();
     const auto targetMessages = messages(f.m_world,f.m_monster);

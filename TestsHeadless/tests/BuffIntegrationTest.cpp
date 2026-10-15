@@ -1,5 +1,6 @@
 #include "SkillTestSupport.h"
 #include "mugen/sim/buff/BuffHolder.h"
+#include "mugen/sim/hit/HitResolver.h"
 
 // 命中事件必须通过真实接缝过滤绑定技能，再激活池内实例。
 TEST_CASE("BuffIntegration hit trigger binding gates activation")
@@ -15,7 +16,7 @@ TEST_CASE("BuffIntegration hit trigger binding gates activation")
     world.ecs().add(entity, RoleTimers{});
     BuffContext source;
     source.m_boundSkill = 920000;
-    buff::addEntityBuff(world, entity, 1, 920000, 42);
+    hit::HitResolver(world, entity).addEntityBuff(1, 920000, 42);
     REQUIRE(world.ecs().has<BuffPool>(entity));
     REQUIRE(world.ecs().get<BuffPool>(entity).m_instances.size() == 1);
     const auto serial = std::optional<uint64_t>{world.ecs().get<BuffPool>(entity).m_instances.front().m_serial};
@@ -24,10 +25,10 @@ TEST_CASE("BuffIntegration hit trigger binding gates activation")
     HitTrigger event;
     event.m_target = Entity{1048577};
     event.m_baseSkillId = 920001;
-    buff::trigger(world, entity, BFEvent::AfterHit, event);
+    hit::HitResolver(world, entity).trigger(BFEvent::AfterHit, event);
     CHECK_FALSE(buff::BuffHolder(world, entity).findInstance(*serial)->m_lifecycle.m_active);
     event.m_baseSkillId = 920000;
-    buff::trigger(world, entity, BFEvent::AfterHit, event);
+    hit::HitResolver(world, entity).trigger(BFEvent::AfterHit, event);
     CHECK(buff::BuffHolder(world, entity).findInstance(*serial)->m_lifecycle.m_active);
     CHECK(buff::BuffHolder(world, entity).findInstance(*serial)->m_context.m_currentSkill == 920000);
 }
@@ -106,7 +107,7 @@ TEST_CASE("BuffIntegration real invincibility application removal and update")
     World world;
     const auto entity = skill_test::actor(world);
     world.ecs().add(entity, RoleHitState{});
-    buff::addEntityBuff(world, entity, 201);
+    hit::HitResolver(world, entity).addEntityBuff(201);
     REQUIRE(world.ecs().has<BuffPool>(entity));
     REQUIRE(world.hitHooks().m_hasBuff(world, entity, 201));
     CHECK(world.ecs().get<sim::ExtraState>(entity).active(mugen::ExtraState::Invincible));
@@ -127,7 +128,7 @@ TEST_CASE("BuffIntegration hit application reaches pool and clones deterministic
     world.ecs().add(entity, RoleHitState{});
     HitBuffApplication application;
     application.m_buffId = "201"_fx;
-    buff::dealBuff(world, entity, application);
+    hit::HitResolver(world, entity).dealBuff(application);
     REQUIRE(buff::BuffHolder(world, entity).hasBuff(201));
     auto clone = world.clone();
     for (int frame = 0; frame < 100; ++frame)

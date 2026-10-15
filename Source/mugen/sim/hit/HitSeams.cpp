@@ -3,38 +3,12 @@
 
 #include "mugen/sim/World.h"
 #include "mugen/sim/buff/BuffHolder.h"
-#include "mugen/conf/ReflectedConfig.h"
 #include "mugen/sim/ability/AbilityHolder.h"
 
 namespace mugen::sim
 {
 // 默认死亡回调转入物品系统，不在命中模块保存掉落状态。
 void HitHooks::dropGoods(World& world, Entity entity) { room_entities::drop(world, entity); }
-// 按配置目标选择接收池，实体遍历保持世界创建顺序。
-void buff::addEntityBuff(World& world, Entity entity, int32_t id,
-                         std::optional<int32_t> boundSkill, std::optional<int32_t> origin)
-{
-    const auto* config = conf::Config::instance().find<conf::BuffConfig>(id);
-    if (!config) return;
-    if (auto* state = world.ecs().tryGet<RoleHitState>(entity)) state->m_protectionBuffRequests.push_back(id);
-    HitBuffApplication request;
-    request.m_buffId = Fixed::fromInt(id);
-    request.m_origin = origin;
-    if (config->target == 1)
-    {
-        if (config->binding != 0) request.m_boundSkill = boundSkill;
-        world.hitHooks().m_apply(world, entity, request);
-        return;
-    }
-    const auto identity = world.ecs().get<RoleIdentity>(entity);
-    world.ecs().each<RoleIdentity>([&](Entity target, const RoleIdentity& other) {
-        const bool enemy = (identity.hostileCamp & other.camp) != 0;
-        const bool selected = config->target == 9 || (config->target == 4 && !enemy) ||
-            (config->target == 5 && enemy) || (config->target == 6 && other.roleType == 4) ||
-            (config->target == 7 && (other.roleType == 2 || other.roleType == 3));
-        if (selected) world.hitHooks().m_apply(world, target, request);
-    });
-}
 // 命中上下文转换为值实例事件，目标分类独立于阵营位掩码。
 void HitHooks::poolTrigger(World& world, Entity entity, BFEvent event, const HitTrigger& source)
 {
@@ -128,15 +102,5 @@ void HitHooks::roleAbilities(World& world, Entity entity, bool reload)
 Fixed HitHooks::roleDamageLevel(World& world, Entity entity, Entity)
 {
     return Fixed::fromInt(world.ecs().get<RoleIdentity>(entity).level);
-}
-// 同步分派给世界实例的 Buff 接缝，允许在返回前执行免死。
-void buff::trigger(World& world, Entity entity, BFEvent event, const HitTrigger& context)
-{
-    world.hitHooks().m_trigger(world, entity, event, context);
-}
-// 转交施加请求，不在命中层建立 Buff 池。
-void buff::dealBuff(World& world, Entity entity, const HitBuffApplication& application)
-{
-    world.hitHooks().m_apply(world, entity, application);
 }
 }
