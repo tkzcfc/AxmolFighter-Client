@@ -57,6 +57,14 @@ No compatibility shim. Interfaces can change. Do not null-check a value the type
 - Composites are Selector, Sequence, and Parallel. A guard failure makes the composite return Success. A Selector does not preempt a running child. The root does not restart itself.
 - Leaves and conditions register function pointers on `BTRegistry`. An unported leaf is `kUnimplementedLeaf`. Nothing else is a placeholder.
 
+## Monster AI
+
+- Monster decisions are the constexpr rule table `kMonsterRules` in `sim/ai/AiRules.h`. Each row has up to three tests, one action, an optional alert flag and an optional cooldown. Add behaviour by adding a row, an `AiCondition` or an `AiAction`; do not add a tree.
+- `AiDriver::update` selects the target in code, builds a read-only `AiFacts` with `gather()`, and runs the first matching row from `pickRule`. No decision is made during an attack. While a move runs, only a higher-priority row may preempt it.
+- Actions only start a status through `Role::changeStatus`. The role state machine (`CastState`, `AiMove`) executes them.
+- `ChancePercent` must be the last test of its row, so failed tests never consume the random stream.
+- `WorldSetup::m_aiEnabled` (`mugen_sim_cli --ai off`) turns monster decisions off. It is not part of the archived setup.
+
 ## Config
 
 - `MG_CONFIG_TABLES` in `conf/ConfigTables.h` is the only table registry. `MG_CONFIG_REFS` declares cross-table references.
