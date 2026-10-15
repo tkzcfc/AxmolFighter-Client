@@ -29,7 +29,7 @@ void BattleDebugPanel::render(mugen::sim::World& world, bool& paused, bool& sing
     {
         const auto& identity  = world.ecs().get<mugen::sim::RoleIdentity>(player);
         const auto occupation = mugen::type_conversions::toCharacterClass(identity.roleId);
-        const auto rows       = mugen::sim::skill::offlineKitRows(occupation);
+        const auto rows       = mugen::sim::skill::SkillAssembly::offlineKitRows(occupation);
         if (rows.empty())
             ImGui::TextUnformatted(mugen::sim::skill::kNoProfessionTree.data());
         else

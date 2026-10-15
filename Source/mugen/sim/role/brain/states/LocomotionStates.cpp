@@ -28,7 +28,7 @@ void Locomotion::enter(RoleContext& ctx, Param type, State& state)
     state = behavior::ActionState{};
     ctx.notifyActionStart(type);
     auto& motion                 = ctx.get<MotionState>();
-    motion.motionName            = behavior::animationName(type);
+    motion.motionName            = behavior::ActionNames::animationName(type);
     motion.timeMs                = {};
     motion.m_completedLoops      = 0;
     motion.loop                  = true;
@@ -93,7 +93,7 @@ void Jostled::enter(RoleContext& ctx, Param, State& state)
     state         = behavior::JostledState{id, false};
     ctx.notifyActionStart(behavior::ActionType::Jostled);
     auto& motion            = ctx.get<MotionState>();
-    motion.motionName       = behavior::animationName(behavior::ActionType::Jostled);
+    motion.motionName       = behavior::ActionNames::animationName(behavior::ActionType::Jostled);
     motion.timeMs           = {};
     motion.m_completedLoops = 0;
     motion.loop = motion.playing = true;

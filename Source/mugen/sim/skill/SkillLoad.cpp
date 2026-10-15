@@ -78,8 +78,8 @@ void SkillCaster::loadSkill(const SkillLoadout& loadout)
                         skill.m_releaseMax   = row->cdCount == -1 ? 1 : std::max(1, row->cdCount);
                         skill.m_releaseCount = skill.m_releaseMax;
                         skill.m_crystal      = row->crystal;
-                        refreshSkillPipe(skill);
-                        dealWithCoolDown(skill);
+                        skill.refreshSkillPipe();
+                        skill.dealWithCoolDown();
                         skill.m_cd     = {};
                         skill.m_timing = false;
                         if (const auto* ai = config.find<conf::SkillAiConfig>(m == 0 ? entry.m_aiId : -1))
@@ -110,13 +110,7 @@ void SkillCaster::loadSkill(const SkillLoadout& loadout)
 // 从角色 AI 配置取得默认装配并加载技能池。
 void SkillCaster::loadSkill()
 {
-    loadSkill(monsterLoadout(m_world.ecs().get<RoleIdentity>(m_entity).aiId));
-}
-// 返回技能槽位名中不包含模式后缀的基础部分。
-std::string_view baseSlot(const SkillPool& pool, const SkillBase& skill)
-{
-    const std::string_view name = pool.m_slots.at(skill.m_address.m_slot).m_name;
-    return name.substr(0, name.find('^'));
+    loadSkill(SkillAssembly::monsterLoadout(m_world.ecs().get<RoleIdentity>(m_entity).aiId));
 }
 // 通过完整技能地址查找索引，并在允许时回退到基础槽位名。
 int32_t getGivenSkill(const SkillPool& pool, std::string_view slot, int32_t index, int32_t mode, int32_t step, bool raw)
@@ -138,17 +132,27 @@ int32_t getGivenSkill(const SkillPool& pool, std::string_view slot, int32_t inde
         std::find_if(pool.m_index.begin(), pool.m_index.end(), [&](const auto& e) { return e.m_address == address; });
     return entry == pool.m_index.end() ? kNoSkill : entry->m_skill;
 }
+}  // namespace mugen::sim::skill
+
+namespace mugen::sim
+{
+// 返回技能槽位名中不包含模式后缀的基础部分。
+std::string_view SkillPool::baseSlot(const SkillBase& skill) const
+{
+    const std::string_view name = m_slots.at(skill.m_address.m_slot).m_name;
+    return name.substr(0, name.find('^'));
+}
 // 结合当前连段状态和输入槽位解析下一个可选技能。
-int32_t getFightSkill(const SkillPool& pool, std::string_view input)
+int32_t SkillPool::getFightSkill(std::string_view input) const
 {
     const auto split        = input.find('_');
     const auto slot         = input.substr(0, split);
-    const int32_t inputMode = split == std::string_view::npos ? (pool.m_change > 2 ? pool.m_change : 1) : 2;
+    const int32_t inputMode = split == std::string_view::npos ? (m_change > 2 ? m_change : 1) : 2;
     int32_t index = 1, mode = inputMode, step = 1;
-    if (pool.m_current != kNoSkill)
+    if (m_current != kNoSkill)
     {
-        const auto& current = pool.m_skills.at(pool.m_current);
-        if (slot == baseSlot(pool, current))
+        const auto& current = m_skills.at(m_current);
+        if (slot == baseSlot(current))
         {
             index = current.m_address.m_index;
             mode  = current.m_address.m_mode;
@@ -166,9 +170,9 @@ int32_t getFightSkill(const SkillPool& pool, std::string_view input)
             }
         }
     }
-    auto result = getGivenSkill(pool, slot, index, mode, step);
-    if (result == kNoSkill && mode == 2 && getGivenSkill(pool, slot, index, 2) == kNoSkill)
-        result = getGivenSkill(pool, slot, index);
+    auto result = skill::getGivenSkill(*this, slot, index, mode, step);
+    if (result == kNoSkill && mode == 2 && skill::getGivenSkill(*this, slot, index, 2) == kNoSkill)
+        result = skill::getGivenSkill(*this, slot, index);
     return result;
 }
-}  // namespace mugen::sim::skill
+}  // namespace mugen::sim

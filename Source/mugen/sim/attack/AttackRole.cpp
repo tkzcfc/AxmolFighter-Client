@@ -4,7 +4,6 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/role/brain/RoleBrain.h"
 #include "mugen/sim/skill/SkillCaster.h"
-#include "mugen/sim/skill/SkillTriggers.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/BattleConst.h"
 
@@ -36,17 +35,17 @@ void interrupt(World& world, Entity entity, int32_t index, bool extra, ActionAtt
     {
         const auto& candidate = pool.m_skills.at(next);
         if (candidate.m_group == 2 && !pool.m_crazy)
-            next = skill::getGivenSkill(pool, skill::baseSlot(pool, candidate).substr(0, 1));
+            next = skill::getGivenSkill(pool, pool.baseSlot(candidate).substr(0, 1));
         if (next != kNoSkill)
         {
             const auto& target = pool.m_skills.at(next);
             const bool sameSlot = target.m_address.m_slot == source.m_address.m_slot;
-            bool allow = sameSlot || skill::isPriority(target, source);
+            bool allow = sameSlot || target.isPriority(source);
             if (extra)
             {
                 const auto& types = conf::Config::instance().get<conf::SkillAttackConfig>(target.m_configId).sorderControlType;
                 allow = sameSlot ? (target.m_address != source.m_address &&
-                    std::find(types.begin(), types.end(), 2) != types.end()) : skill::isSuperPriority(pool, next, index);
+                    std::find(types.begin(), types.end(), 2) != types.end()) : pool.isSuperPriority(next, index);
             }
             if (allow && skill::SkillCaster(world, entity).dealWithNextSkillBase()) action.m_finished = true;
         }
@@ -77,7 +76,7 @@ void AttackAction::enter(role::brain::RoleContext& ctx, Param source, State& lea
     const auto entity = ctx.entity();
     auto& pool = ecs.get<SkillPool>(entity);
     pool.m_allowInterrupt = pool.m_allowExtraInterrupt = false;
-    buff::trigger(world, entity, BFEvent::BehaviorStateStart, {source.m_skill, {}, row->id});
+    skill::SkillCaster(world, entity).trigger(BFEvent::BehaviorStateStart, {source.m_skill, {}, row->id});
     if (row->control == 1) ActionAttackDriver(world, entity, leaf.m_action).dealWithDirection(true);
     auto& transform = ecs.get<Transform>(entity);
     if (row->relativeActionPos.size() >= 3)
@@ -93,7 +92,7 @@ void AttackAction::enter(role::brain::RoleContext& ctx, Param source, State& lea
     if (row->actionOrientation == 0) transform.towardX = -1;
     else if (row->actionOrientation == 1) transform.towardX = 1;
     transform.vectorX = Fixed::fromInt(transform.towardX);
-    buff::trigger(world, entity, BFEvent::BeforeRoleSkillAction, {source.m_skill, {}, row->id});
+    skill::SkillCaster(world, entity).trigger(BFEvent::BeforeRoleSkillAction, {source.m_skill, {}, row->id});
     auto& motion = ecs.get<MotionState>(entity);
     motion.actionScale = row->actionScaleTime * ecs.get<RoleHitState>(entity).m_actionScale;
     MG_ASSERT(motion.actionScale > Fixed{} && "Attack animation scale must be positive");
@@ -108,7 +107,7 @@ void AttackAction::enter(role::brain::RoleContext& ctx, Param source, State& lea
     displacement::DisplacementDriver(world, entity).reset();
     displacement::DisplacementDriver(world, entity).set(row->displacementId, ctx.node());
     const auto first = baseSkill(pool, source.m_skill);
-    for (const auto id : row->buffIds) if (id != -1) buff::addActionBuff(world, entity, id, first);
+    for (const auto id : row->buffIds) if (id != -1) AttackSeam(world, entity).addActionBuff(id, first);
     if (row->ghost != -1) world.emit(entity, Ghost{"-1"_fx});
     if (row->tipsShow != -1) world.emit(entity, Tips{std::to_string(row->tipsShow)});
     if (row->dialogShow != -1) world.emit(entity, Bubble{row->dialogShow});
@@ -157,7 +156,7 @@ BTStatus AttackAction::update(role::brain::RoleContext& ctx, Param source, State
         if (row->customVec.size() >= 3)
             request.m_vector = {Fixed::fromInt(row->customVec[0]), Fixed::fromInt(row->customVec[1]), Fixed::fromInt(row->customVec[2])};
         action.m_spawned[i] = 1;
-        action.m_effects[i] = effect::spawnFromRole(world, entity, request);
+        action.m_effects[i] = AttackSeam(world, entity).spawnFromRole(request);
     }
     ActionAttackDriver(world, entity, action).dealWithShake(*row);
     if (!leaf.m_transformLogged && row->transformId != -1 && action.m_time >= at(row->transformFrame) &&
@@ -188,15 +187,15 @@ void AttackAction::exit(role::brain::RoleContext& ctx, Param source, State& leaf
     if (!row) return;
     auto& world = ctx.world();
     const auto entity = ctx.entity();
-    buff::trigger(world, entity, BFEvent::BehaviorStateEnd, {source.m_skill, {}, row->id});
+    skill::SkillCaster(world, entity).trigger(BFEvent::BehaviorStateEnd, {source.m_skill, {}, row->id});
     ActionAttackDriver(world, entity, leaf.m_action).clearEffects();
-    buff::trigger(world, entity, BFEvent::AfterRoleSkillAction, {source.m_skill, {}, row->id});
+    skill::SkillCaster(world, entity).trigger(BFEvent::AfterRoleSkillAction, {source.m_skill, {}, row->id});
     auto& pool = world.ecs().get<SkillPool>(entity);
     pool.m_allowInterrupt = true;
     pool.m_allowExtraInterrupt = false;
     world.ecs().get<MotionState>(entity).actionScale = conf::kIdleScaleTime;
     displacement::DisplacementDriver(world, entity).reset();
-    for (const auto id : row->buffIds) if (id != -1) buff::removeActionBuff(world, entity, id);
+    for (const auto id : row->buffIds) if (id != -1) AttackSeam(world, entity).removeActionBuff(id);
     if (row->ghost != -1) world.emit(entity, Ghost{});
     world.emit(entity, Sound{0, {}, true, row->id});
 }
@@ -210,7 +209,7 @@ bool AttackAction::onDisplacement(role::brain::RoleContext& ctx, Param source, S
 }
 
 // 同步动画循环结束到当前施法中的攻击叶。
-void animationComplete(World& world, Entity entity, int64_t loops)
+void AttackAction::animationComplete(World& world, Entity entity, int64_t loops)
 {
     auto& brain = world.ecs().get<RoleBrain>(entity);
     auto& plan  = brain.m_cast;

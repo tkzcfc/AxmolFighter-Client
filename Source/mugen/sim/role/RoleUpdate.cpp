@@ -56,7 +56,7 @@ void controlEventsUpdate(World& world, Entity entity) { role::brain::RoleContext
 void behaviorTreeUpdate(World& world, Entity entity)
 {
     auto& brain = world.ecs().get<RoleBrain>(entity);
-    role::brain::update(brain, world, entity, world.setup().mode == WorldMode::Town);
+    role::brain::RoleBrainDriver(world, entity, brain, world.setup().mode == WorldMode::Town).update();
 }
 // 推进角色位移。
 void displacementUpdate(World& world, Entity entity) { displacement::DisplacementDriver(world, entity).update(); }
@@ -82,8 +82,8 @@ void motionUpdate(World& world, Entity entity)
                 effect::EffectActor(world, entity).animationComplete(motion.m_completedLoops);
             else
             {
-                attack::animationComplete(world, entity, motion.m_completedLoops);
-                role::brain::states::animationComplete(world, entity);
+                attack::AttackAction::animationComplete(world, entity, motion.m_completedLoops);
+                role::brain::states::HitState::animationComplete(world, entity);
             }
         }
         motion.timeMs =
@@ -97,15 +97,20 @@ void motionUpdate(World& world, Entity entity)
     collider.attack.clear();
     collider.damage.clear();
     for (const auto* box : attack)
-        collider.attack.push_back(transformBox(*box, transform));
+        collider.attack.push_back(RoleActor::transformBox(*box, transform));
     for (const auto* box : damage)
-        collider.damage.push_back(transformBox(*box, transform));
+        collider.damage.push_back(RoleActor::transformBox(*box, transform));
 }
 }  // namespace
+// 构造角色视图，只保存世界与实体句柄。
+RoleActor::RoleActor(World& world, Entity entity) : m_world(world), m_entity(entity) {}
+// 实体组回调转入实例更新。
+void RoleActor::update(World& world, Entity entity) { RoleActor(world, entity).update(); }
 // 复用同一动画时间和碰撞框采样实现。
-void updateMotion(World& world, Entity entity) { motionUpdate(world, entity); }
+void RoleActor::updateMotion(World& world, Entity entity) { RoleActor(world, entity).updateMotion(); }
+void RoleActor::updateMotion() { motionUpdate(m_world, m_entity); }
 // 按朝向和缩放把局部伤害框转换为世界框。
-WorldBox transformBox(const DamageBox& box, const Transform& t)
+WorldBox RoleActor::transformBox(const DamageBox& box, const Transform& t)
 {
     WorldBox result;
     result.size        = {Fixed::fromInt(box.size.x) * t.scale, Fixed::fromInt(box.size.y) * t.scale,
@@ -117,25 +122,25 @@ WorldBox transformBox(const DamageBox& box, const Transform& t)
     return result;
 }
 // 依固定顺序推进角色资源、状态、控制、行为、位移和动作。
-void update(World& world, Entity entity)
+void RoleActor::update()
 {
-    if (!world.ecs().has<RoleIdentity>(entity) || world.ecs().has<Puppet>(entity))
+    if (!m_world.ecs().has<RoleIdentity>(m_entity) || m_world.ecs().has<Puppet>(m_entity))
         return;
-    skillPoolUpdate(world, entity);
-    buffPoolUpdate(world, entity);
-    abilityPoolUpdate(world, entity);
-    hurtNumberComboUpdate(world, entity);
-    auto& vitals   = world.ecs().get<Vitals>(entity);
-    const Fixed dt = world.ecs().singleton<WorldClock>().dtMs;
+    skillPoolUpdate(m_world, m_entity);
+    buffPoolUpdate(m_world, m_entity);
+    abilityPoolUpdate(m_world, m_entity);
+    hurtNumberComboUpdate(m_world, m_entity);
+    auto& vitals   = m_world.ecs().get<Vitals>(m_entity);
+    const Fixed dt = m_world.ecs().singleton<WorldClock>().dtMs;
     vitals.mp      = std::min(vitals.maxMp, vitals.mp + dt * conf::kMpIncreaseBasicValue * vitals.mpRecoveryScale);
-    summonUpdate(world, entity);
-    auto& timers    = world.ecs().get<RoleTimers>(entity);
+    summonUpdate(m_world, m_entity);
+    auto& timers    = m_world.ecs().get<RoleTimers>(m_entity);
     timers.freezeMs = std::max(Fixed{}, timers.freezeMs - dt);
     timers.staticMs = std::max(Fixed{}, timers.staticMs - dt);
-    crazyUpdate(world, entity);
-    rageUpdate(world, entity);
-    hitProtectUpdate(world, entity);
-    auto& sampledVitals = world.ecs().get<Vitals>(entity);
+    crazyUpdate(m_world, m_entity);
+    rageUpdate(m_world, m_entity);
+    hitProtectUpdate(m_world, m_entity);
+    auto& sampledVitals = m_world.ecs().get<Vitals>(m_entity);
     sampledVitals.m_lostHp = sampledVitals.m_previousHp > sampledVitals.hp;
     sampledVitals.m_recoveredHp = sampledVitals.m_previousHp < sampledVitals.hp;
     sampledVitals.m_hpChangePercent = sampledVitals.hp == Fixed{} ? Fixed{} :
@@ -144,20 +149,20 @@ void update(World& world, Entity entity)
     sampledVitals.m_recoveredEp = sampledVitals.m_previousEp < sampledVitals.ep;
     sampledVitals.m_previousHp = sampledVitals.hp;
     sampledVitals.m_previousEp = sampledVitals.ep;
-    const auto& sampledStatus = world.ecs().get<RoleStatus>(entity);
+    const auto& sampledStatus = m_world.ecs().get<RoleStatus>(m_entity);
     const auto sampleSeconds = dt / "1000"_fx;
     timers.m_movedSeconds = sampledStatus.eEntityStatus == EntityRoleStatus::Run ?
         timers.m_movedSeconds + sampleSeconds : Fixed{};
     timers.m_standingSeconds = sampledStatus.eEntityStatus == EntityRoleStatus::Idle ?
         timers.m_standingSeconds + sampleSeconds : Fixed{};
-    if (world.ecs().get<RoleIdentity>(entity).isAi && world.ecs().get<ExtraState>(entity).isCanControl())
-        aiUpdate(world, entity);
+    if (m_world.ecs().get<RoleIdentity>(m_entity).isAi && m_world.ecs().get<ExtraState>(m_entity).isCanControl())
+        aiUpdate(m_world, m_entity);
     if (timers.freezeMs > Fixed{} || timers.staticMs > Fixed{})
         return;
-    controlEventsUpdate(world, entity);
-    behaviorTreeUpdate(world, entity);
-    displacementUpdate(world, entity);
-    motionUpdate(world, entity);
-    collisionBodyUpdate(world, entity);
+    controlEventsUpdate(m_world, m_entity);
+    behaviorTreeUpdate(m_world, m_entity);
+    displacementUpdate(m_world, m_entity);
+    motionUpdate(m_world, m_entity);
+    collisionBodyUpdate(m_world, m_entity);
 }
 }  // namespace mugen::sim::role

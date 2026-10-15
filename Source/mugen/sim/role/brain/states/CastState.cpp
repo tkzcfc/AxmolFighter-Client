@@ -114,7 +114,7 @@ bool CastState::enter(RoleBrain& brain, World& world, Entity entity)
     const auto* row = conf::Config::instance().find<conf::SkillAttackConfig>(skill.m_configId);
     if (!row)
         return false;
-    const bool release = row->skillType == 1 && skill::canUpRelease(skill);
+    const bool release = row->skillType == 1 && skill.canUpRelease();
     const auto& columns = release ? row->upActionIds : row->actionIds;
     const auto toward = previewToward(pool, skill, *row);
     if (!columnUsable(columns, toward))

@@ -1,5 +1,4 @@
 #include "SkillCaster.h"
-#include "SkillTriggers.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/role/Role.h"
 #include "mugen/conf/ReflectedConfig.h"
@@ -8,7 +7,7 @@
 
 namespace mugen::sim::skill
 {
-std::string eventSlot(ControlEvent event)
+std::string SkillAssembly::eventSlot(ControlEvent event)
 {
     const auto value = static_cast<int32_t>(event);
     /// 控制事件编码连续排列，转换为配置使用的槽位名。
@@ -23,29 +22,29 @@ std::string eventSlot(ControlEvent event)
 bool SkillCaster::presetSkill(std::string_view slot, bool autoCast)
 {
     auto& pool = m_world.ecs().get<SkillPool>(m_entity);
-    const auto next = getFightSkill(pool, slot);
+    const auto next = pool.getFightSkill(slot);
     if (next == kNoSkill) return false;
     auto& candidate = pool.m_skills.at(next);
     candidate.m_upTouch = false;
     candidate.m_skillTime = {};
     if (!isAllowCast(next, autoCast)) return false;
     if (candidate.m_group == 3 || candidate.m_group == 4) candidate.m_controlAngle = pool.m_controlAngle;
-    buff::trigger(m_world, m_entity, BFEvent::BeforePrepareSkill, {next});
+    trigger(BFEvent::BeforePrepareSkill, {next});
     if (pool.m_current == kNoSkill)
     {
-        setSkillBase(pool, next);
+        pool.setSkillBase(next);
         pool.m_slotChanged = true;
         return true;
     }
     auto& current = pool.m_skills.at(pool.m_current);
-    const bool same = slot == baseSlot(pool, current);
-    if (pool.m_allowInterrupt && isPriority(candidate, current)) setSkillBase(pool, next);
+    const bool same = slot == pool.baseSlot(current);
+    if (pool.m_allowInterrupt && candidate.isPriority(current)) pool.setSkillBase(next);
     else
     {
         if (same && slot == "F") return false;
-        const auto currentSlot = baseSlot(pool, current);
+        const auto currentSlot = pool.baseSlot(current);
         for (auto& other : pool.m_skills)
-            if (baseSlot(pool, other) == currentSlot && other.m_address.m_index == current.m_address.m_index &&
+            if (pool.baseSlot(other) == currentSlot && other.m_address.m_index == current.m_address.m_index &&
                 other.m_address.m_mode == current.m_address.m_mode && other.m_address.m_step == current.m_address.m_step)
                 other.m_nextSkill = next;
     }
@@ -55,18 +54,18 @@ bool SkillCaster::presetSkill(std::string_view slot, bool autoCast)
 bool SkillCaster::dealWithButton(ControlEvent event, bool up, bool autoCast)
 {
     auto& pool = m_world.ecs().get<SkillPool>(m_entity);
-    auto slot = eventSlot(event);
+    auto slot = SkillAssembly::eventSlot(event);
     if (slot.empty()) return false;
     if (up)
     {
-        auto next = getFightSkill(pool, slot);
+        auto next = pool.getFightSkill(slot);
         if (next == kNoSkill) next = pool.m_current;
         if (next != kNoSkill) pool.m_skills[next].m_upTouch = true;
         return false;
     }
     if (slot == "A" && pool.m_canSprint)
     {
-        const bool sprint = pool.m_current != kNoSkill && baseSlot(pool, pool.m_skills[pool.m_current]) == "Y" &&
+        const bool sprint = pool.m_current != kNoSkill && pool.baseSlot(pool.m_skills[pool.m_current]) == "Y" &&
                             !pool.m_skills[pool.m_current].m_finally;
         if (sprint || m_world.ecs().get<RoleStatus>(m_entity).isRun()) slot = "Y";
     }
@@ -76,11 +75,11 @@ bool SkillCaster::dealWithButton(ControlEvent event, bool up, bool autoCast)
         if (joy == kNoSkill) slot = "A";
         else
         {
-            buff::trigger(m_world, m_entity, BFEvent::BeforePrepareSkill, {joy});
+            trigger(BFEvent::BeforePrepareSkill, {joy});
             if (!isAllowCast(joy)) slot = "A";
         }
     }
-    if (slot == "E" && (pool.m_crazy || (pool.m_current != kNoSkill && baseSlot(pool, pool.m_skills[pool.m_current]) == "E"))) return false;
+    if (slot == "E" && (pool.m_crazy || (pool.m_current != kNoSkill && pool.baseSlot(pool.m_skills[pool.m_current]) == "E"))) return false;
     if (pool.m_crazy && getGivenSkill(pool, slot + '+') != kNoSkill) slot += '+';
     if (!m_world.ecs().get<RoleStatus>(m_entity).isAttack()) resetSkill();
     return presetSkill(slot, autoCast);

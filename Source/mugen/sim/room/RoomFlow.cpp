@@ -201,7 +201,7 @@ void commands(World& world, const FrameInput& input)
                         entry.m_cd = {};
                         entry.m_timing = false;
                         entry.m_releaseCount = entry.m_releaseMax;
-                        skill::refreshSkillPipe(entry);
+                        entry.refreshSkillPipe();
                     }
                     skill::SkillCaster(world, found->second).resetSkill();
                     hit::HitResolver(world, found->second).addEntityBuff(202);

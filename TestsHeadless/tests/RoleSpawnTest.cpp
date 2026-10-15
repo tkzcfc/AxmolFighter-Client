@@ -87,9 +87,9 @@ TEST_CASE("Collider mirrors scaled box about role position")
     t.position = {Fixed::fromInt(100), Fixed::fromInt(10), Fixed::fromInt(20)};
     t.scale    = Fixed::fromInt(2);
     DamageBox box{{3, 4, 5}, {7, 8, 9}};
-    const auto right = sim::role::transformBox(box, t);
+    const auto right = sim::role::RoleActor::transformBox(box, t);
     t.towardX        = -1;
-    const auto left  = sim::role::transformBox(box, t);
+    const auto left  = sim::role::RoleActor::transformBox(box, t);
     CHECK(right.pos.x == Fixed::fromInt(106));
     CHECK(left.pos.x == Fixed::fromInt(80));
     CHECK(left.size.x == right.size.x);

@@ -37,12 +37,6 @@ struct PlayerSkill
     // 标识是否使用暴走技能变体。
     bool m_crazy = false;
 };
-// 从 AI 配置构建怪物角色的技能装配。
-SkillLoadout monsterLoadout(int32_t aiId);
-// 从玩家技能列表构建可加载的技能装配。
-SkillLoadout playerLoadout(const std::vector<PlayerSkill>& skills);
-// 按职业专属技能树构建离线玩家的技能列表。
-std::vector<PlayerSkill> offlineKit(CharacterClass occupation);
 // 离线调试面板一行技能装配信息。
 struct OfflineKitRow
 {
@@ -63,8 +57,21 @@ struct OfflineKitRow
 };
 // 无职业树时调试面板显示的英文提示。
 inline constexpr std::string_view kNoProfessionTree = "no profession tree";
-// 按职业生成离线调试面板的技能行。
-std::vector<OfflineKitRow> offlineKitRows(CharacterClass occupation);
+// 技能装配与控制槽位名的纯配置构造，不持有战斗状态。
+class SkillAssembly
+{
+public:
+    // 从 AI 配置构建怪物角色的技能装配。
+    static SkillLoadout monsterLoadout(int32_t aiId);
+    // 从玩家技能列表构建可加载的技能装配。
+    static SkillLoadout playerLoadout(const std::vector<PlayerSkill>& skills);
+    // 按职业专属技能树构建离线玩家的技能列表。
+    static std::vector<PlayerSkill> offlineKit(CharacterClass occupation);
+    // 按职业生成离线调试面板的技能行。
+    static std::vector<OfflineKitRow> offlineKitRows(CharacterClass occupation);
+    // 将控制事件转换为技能输入槽位名称。
+    static std::string eventSlot(ControlEvent event);
+};
 // 按槽位、索引、模式和步骤查找技能池条目。
 int32_t getGivenSkill(const SkillPool& pool,
                       std::string_view slot,
@@ -72,35 +79,5 @@ int32_t getGivenSkill(const SkillPool& pool,
                       int32_t mode  = 1,
                       int32_t step  = 1,
                       bool raw      = false);
-// 根据当前连招状态解析本次输入可施放的技能。
-int32_t getFightSkill(const SkillPool& pool, std::string_view slot);
-// 去除模式后缀并取得技能槽位基础名称。
-std::string_view baseSlot(const SkillPool& pool, const SkillBase& skill);
-// 将控制事件转换为技能输入槽位名称。
-std::string eventSlot(ControlEvent event);
-// 判断技能是否仍处于冷却阶段。
-bool isCooling(const SkillBase& skill);
-// 比较两个技能的普通施放优先级。
-bool isPriority(const SkillBase& next, const SkillBase& current);
-// 比较技能池中两个技能的超级优先级。
-bool isSuperPriority(const SkillPool& pool, int32_t next, int32_t current);
-// 计算施放技能需要消耗的法力值。
-Fixed mpCost(const SkillPool& pool, const SkillBase& skill);
-// 计算施放技能需要消耗的能量值。
-Fixed epCost(const SkillPool& pool, const SkillBase& skill);
-// 将技能池当前技能切换为指定索引。
-void setSkillBase(SkillPool& pool, int32_t index);
-// 更新技能池记录的方向输入。
-void dealWithDirection(SkillPool& pool, int32_t index);
-// 根据配置刷新技能的施放管线字段。
-void refreshSkillPipe(SkillBase& skill);
-// 增加技能剩余可释放次数。
-void addSkillReleaseCount(SkillBase& skill);
-// 初始化或重置技能冷却状态。
-void dealWithCoolDown(SkillBase& skill);
-// 为技能冷却累计逻辑时间。
-void addColdTime(SkillBase& skill, Fixed time);
-// 判断技能是否允许在松开输入后释放。
-bool canUpRelease(const SkillBase& skill);
 }  // namespace skill
 }  // namespace mugen::sim

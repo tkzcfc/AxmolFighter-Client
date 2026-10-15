@@ -1,38 +1,41 @@
 #include "SkillCaster.h"
-#include "SkillTriggers.h"
 #include "mugen/sim/World.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/BattleConst.h"
 #include <algorithm>
 #include <limits>
 
-namespace mugen::sim::skill
+namespace mugen::sim
 {
-void dealWithCoolDown(SkillBase& skill)
+void SkillBase::dealWithCoolDown()
 {
-    const auto cd = conf::Config::instance().get<conf::SkillAttackConfig>(skill.m_configId).cd;
-    skill.m_coldMaxTime = Fixed::fromInt(std::clamp(cd, int64_t{0}, std::numeric_limits<int64_t>::max() / Fixed::kOne)) * skill.m_coldScale;
-    skill.m_timing = true;
-    if (!(skill.m_cd > Fixed{} && skill.m_releaseMax > 1)) skill.m_cd = skill.m_coldMaxTime;
+    const auto cd = conf::Config::instance().get<conf::SkillAttackConfig>(m_configId).cd;
+    m_coldMaxTime = Fixed::fromInt(std::clamp(cd, int64_t{0}, std::numeric_limits<int64_t>::max() / Fixed::kOne)) * m_coldScale;
+    m_timing = true;
+    if (!(m_cd > Fixed{} && m_releaseMax > 1)) m_cd = m_coldMaxTime;
 }
-void addColdTime(SkillBase& skill, Fixed time)
+void SkillBase::addColdTime(Fixed time)
 {
     time *= conf::kColdTimeSale;
-    skill.m_timing = true;
-    skill.m_cd += time;
-    skill.m_coldMaxTime += time;
+    m_timing = true;
+    m_cd += time;
+    m_coldMaxTime += time;
 }
-void addSkillReleaseCount(SkillBase& skill)
+void SkillBase::addSkillReleaseCount()
 {
-    skill.m_releaseCount = std::min(skill.m_releaseCount + 1, skill.m_releaseMax);
-    if (skill.m_releaseCount < skill.m_releaseMax) dealWithCoolDown(skill);
+    m_releaseCount = std::min(m_releaseCount + 1, m_releaseMax);
+    if (m_releaseCount < m_releaseMax) dealWithCoolDown();
 }
-void refreshSkillPipe(SkillBase& skill)
+void SkillBase::refreshSkillPipe()
 {
-    skill.m_previousPipe = skill.m_releaseMax + 1;
-    skill.m_pipe = skill.m_releaseMax;
-    skill.m_expectedPipe = skill.m_releaseMax;
+    m_previousPipe = m_releaseMax + 1;
+    m_pipe = m_releaseMax;
+    m_expectedPipe = m_releaseMax;
 }
+}  // namespace mugen::sim
+
+namespace mugen::sim::skill
+{
 void SkillCaster::update()
 {
     auto* pool = m_world.ecs().tryGet<SkillPool>(m_entity);
@@ -43,18 +46,18 @@ void SkillCaster::update()
         auto& skill = pool->m_skills[i];
         if (skill.m_timing)
         {
-            const bool cooling = isCooling(skill);
+            const bool cooling = skill.isCooling();
             skill.m_skillTime += dt;
             skill.m_cd = std::max(Fixed{}, skill.m_cd - dt);
             if (skill.m_cd == Fixed{})
             {
-                dealWithCoolDown(skill);
+                skill.dealWithCoolDown();
                 skill.m_cd = {};
                 skill.m_timing = false;
-                addSkillReleaseCount(skill);
+                skill.addSkillReleaseCount();
                 if (cooling)
                 {
-                    buff::trigger(m_world, m_entity, BFEvent::SkillColdEnd, {static_cast<int32_t>(i)});
+                    trigger(BFEvent::SkillColdEnd, {static_cast<int32_t>(i)});
                     skill.m_enoughRelease = false;
                 }
             }
@@ -78,11 +81,11 @@ void SkillCaster::update()
         if (pool->m_beforeTime == Fixed{}) pool->m_before = kNoSkill;
     }
     pool->m_coolingSlots.clear();
-    std::erase_if(pool->m_running, [&](int32_t i) { return !isCooling(pool->m_skills.at(i)); });
+    std::erase_if(pool->m_running, [&](int32_t i) { return !pool->m_skills.at(i).isCooling(); });
     for (const auto i : pool->m_running)
     {
         const auto& skill = pool->m_skills.at(i);
-        const auto slot = baseSlot(*pool, skill);
+        const auto slot = pool->baseSlot(skill);
         /// 仅这三类基础槽位需要向表现层汇总冷却状态。
         if (slot != "B" && slot != "C" && slot != "D") continue;
         const auto code = skill.m_address.m_slot;
@@ -104,7 +107,7 @@ void SkillCaster::updateCrazy()
     if (vitals.ep == Fixed{} && pool->m_slotChanged)
     {
         pool->m_crazy = false;
-        buff::trigger(m_world, m_entity, BFEvent::AfterCrazy);
+        trigger(BFEvent::AfterCrazy);
     }
 }
 }  // namespace mugen::sim::skill

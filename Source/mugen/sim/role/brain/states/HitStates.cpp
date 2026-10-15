@@ -3,7 +3,7 @@
 #include "mugen/conf/BattleConst.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/sim/World.h"
-#include "mugen/sim/role/brain/RoleBranches.h"
+#include "mugen/sim/role/brain/RoleBrainRunner.h"
 #include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/hit/HitResolver.h"
 
@@ -22,7 +22,7 @@ const conf::RoleConfig* role(RoleContext& ctx)
 void play(RoleContext& ctx, A type, behavior::HitActionState& leaf)
 {
     auto& motion         = ctx.get<MotionState>();
-    motion.motionName    = behavior::animationName(type);
+    motion.motionName    = behavior::ActionNames::animationName(type);
     motion.timeMs        = {};
     motion.m_completedLoops = 0;
     motion.playing       = true;
@@ -76,7 +76,7 @@ bool breakaway(RoleContext& ctx)
     if (!pool)
         return false;
     for (const auto index : {pool->m_current, pool->m_before})
-        if (index != kNoSkill && skill::baseSlot(*pool, pool->m_skills.at(index)) == "L")
+        if (index != kNoSkill && pool->baseSlot(pool->m_skills.at(index)) == "L")
             return true;
     return false;
 }
@@ -431,7 +431,7 @@ bool HitState::onDisplacement(RoleContext& ctx, Param type, State& leaf)
 }
 
 // 只向当前运行的受击分支发送真实动画完成通知。
-void animationComplete(World& world, Entity entity)
+void HitState::animationComplete(World& world, Entity entity)
 {
     auto& brain = world.ecs().get<RoleBrain>(entity);
     if (brain.m_phase != BrainPhase::Running)
@@ -452,7 +452,7 @@ void animationComplete(World& world, Entity entity)
         RoleContext ctx{world, entity};
         const A type = brain.m_branch == RoleBranch::Death && brain.m_destroyStage == 1
                            ? A::Destroy
-                           : branchAction(brain.m_branch);
+                           : RoleBrainDriver(world, entity, brain, false).currentAction();
         completed(ctx, type, std::get<behavior::HitActionState>(brain.m_data));
         break;
     }

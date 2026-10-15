@@ -108,7 +108,7 @@ TEST_CASE("Collision uses motion mirroring world boxes")
     DamageBox local;
     local.pos = {3, 999999, 2};
     local.size = {2, 999999, 2};
-    const auto mirrored = role::transformBox(local, facing);
+    const auto mirrored = role::RoleActor::transformBox(local, facing);
     CHECK(mirrored.pos.x == "5"_fx);
     CHECK(mirrored.pos.z == "2"_fx);
 }

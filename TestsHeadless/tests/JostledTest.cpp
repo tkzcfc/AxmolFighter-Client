@@ -30,10 +30,10 @@ TEST_CASE("Portal Finding consumes ordered path points before returning Idle")
     ecs.get<RoleStatus>(entity).entityParams.m_path = {first, last};
     REQUIRE(Role(world, entity).changeStatus(EntityRoleStatus::Finding));
     for (int i = 0; i < 8 && !ecs.get<RoleStatus>(entity).entityParams.m_path.empty(); ++i)
-        role::brain::update(ecs.get<RoleBrain>(entity), world, entity, false);
+        role::brain::RoleBrainDriver(world, entity, ecs.get<RoleBrain>(entity), false).update();
     CHECK(ecs.get<RoleStatus>(entity).entityParams.m_path.empty());
     CHECK(ecs.get<Transform>(entity).position.x == last.x);
-    role::brain::update(ecs.get<RoleBrain>(entity), world, entity, false);
+    role::brain::RoleBrainDriver(world, entity, ecs.get<RoleBrain>(entity), false).update();
     CHECK_FALSE(ecs.get<RoleStatus>(entity).isFinding());
     CHECK(ecs.get<RoleHitState>(entity).forceVelocity.x == Fixed{});
 }
@@ -70,7 +70,7 @@ TEST_CASE("Portal Jostled registered leaf completes on brake and resets displace
         ecs.add(entity, RoleControl{});
         ecs.add(entity, sim::ExtraState{});
         ecs.add(entity, ControlEventQueue{});
-        role::brain::update(ecs.get<RoleBrain>(entity), world, entity, false);
+        role::brain::RoleBrainDriver(world, entity, ecs.get<RoleBrain>(entity), false).update();
         CHECK(ecs.get<Transform>(entity).towardX == (horizontal ? -1 : 1));
         CHECK(ecs.get<Transform>(entity).vectorX == "1"_fx);
         CHECK(ecs.get<MotionState>(entity).motionName == "running");
@@ -88,7 +88,7 @@ TEST_CASE("Portal Jostled registered leaf completes on brake and resets displace
         CHECK(ecs.get<Transform>(entity).vectorX == expected);
         CHECK_FALSE(role::brain::RoleContext(world, entity).onDisplacementEvent(DisplacementEvent::Brake));
         CHECK(ecs.get<Transform>(entity).vectorX == expected);
-        role::brain::update(ecs.get<RoleBrain>(entity), world, entity, false);
+        role::brain::RoleBrainDriver(world, entity, ecs.get<RoleBrain>(entity), false).update();
         CHECK(ecs.get<Displacement>(entity).listenerNode == -1);
         CHECK(ecs.get<RoleHitState>(entity).forceVelocity.x == Fixed{});
     }

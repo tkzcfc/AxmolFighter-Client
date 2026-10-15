@@ -1,6 +1,7 @@
 #pragma once
 #include "mugen/core/ecs/Entity.h"
 #include "mugen/core/math/FixedVec3.h"
+#include <vector>
 
 namespace mugen::sim
 {
@@ -24,17 +25,29 @@ struct RoleSpawn
     /// 自定义生成向量。
     FixedVec3 m_vector;
 };
-/// 效果模块负责效果归属、跟随规则和自动释放筛选。
-/// 使用动作上下文生成角色效果。
-Entity spawnFromRole(World&, Entity, const RoleSpawn&);
-/// 清理由动作拥有的一组效果实体。
-void clearActionEffects(World&, Entity, const std::vector<Entity>&);
 }
-namespace buff
+namespace attack
 {
-/// 为动作期间添加的 Buff 建立来源关系。
-void addActionBuff(World&, Entity, int32_t buffId, int32_t baseSkillId);
-/// 移除动作结束后不再生效的 Buff。
-void removeActionBuff(World&, Entity, int32_t buffId);
+// 动作与效果、Buff 之间的临时接缝视图，不存入组件、不拥有资源，生命周期限于单次调用。
+class AttackSeam
+{
+public:
+    // 构造指向指定世界实例中某个实体的视图。
+    AttackSeam(World& world, Entity entity);
+    // 使用动作上下文生成角色效果。
+    Entity spawnFromRole(const effect::RoleSpawn& request);
+    // 清理由动作拥有的一组效果实体。
+    void clearActionEffects(const std::vector<Entity>& effects);
+    // 为动作期间添加的 Buff 建立来源关系。
+    void addActionBuff(int32_t buffId, int32_t baseSkillId);
+    // 移除动作结束后不再生效的 Buff。
+    void removeActionBuff(int32_t buffId);
+
+private:
+    // 本场战斗世界。
+    World& m_world;
+    // 视图绑定的实体。
+    Entity m_entity{};
+};
 }
 }

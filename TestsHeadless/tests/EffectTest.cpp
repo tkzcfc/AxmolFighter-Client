@@ -1,6 +1,6 @@
 #include "SkillTestSupport.h"
 #include "mugen/sim/effect/Effect.h"
-#include "mugen/sim/skill/SkillTriggers.h"
+#include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/hit/DamageCalculator.h"
 
 using namespace skill_test;
@@ -65,7 +65,7 @@ struct Fixture
         REQUIRE(conf::Config::instance().loadBytes({bytes.getBuffer(), bytes.getBuffer() + bytes.getSize()}));
     }
     conf::EffectConfig& row(int index) { return archive.effect[archive.effect.size() - 6 + index]; }
-    Entity spawn(int index = 0) { return effect::spawnFromRole(world, owner, {200000001 + index, 12, 11, 2}); }
+    Entity spawn(int index = 0) { return attack::AttackSeam(world, owner).spawnFromRole({200000001 + index, 12, 11, 2}); }
     void tick() { FrameInput input; input.frame = world.ecs().singleton<WorldClock>().frame + 1; world.tick(input); }
     ~Fixture() { conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin"); }
 };
@@ -115,7 +115,7 @@ TEST_CASE("Summon effect frame creates once and recursively uses owner standard 
     for (int i = 0; i < 6; ++i) f.tick();
     collect(); CHECK(count == 1);
     f.world.ecs().get<EntityGroup>(f.owner).suspended = true;
-    for (int i = 0; i < 4; ++i) role::update(f.world, child);
+    for (int i = 0; i < 4; ++i) role::RoleActor::update(f.world, child);
     CHECK(f.world.ecs().get<Vitals>(child).hp == Fixed{});
     CHECK(f.world.ecs().get<RoleTimers>(child).summonMs == "-1"_fx);
 }
@@ -144,7 +144,7 @@ TEST_CASE("Effect positions follow shared owner and action cleanup")
     f.world.ecs().get<Transform>(f.owner).position.x = "150"_fx;
     f.tick();
     CHECK(f.world.ecs().get<Transform>(follow).position.x == "140"_fx);
-    effect::clearActionEffects(f.world, f.owner, {zero, follow});
+    attack::AttackSeam(f.world, f.owner).clearActionEffects({zero, follow});
     f.tick();
     CHECK_FALSE(f.world.ecs().alive(zero));
     CHECK(f.world.ecs().alive(follow));
@@ -169,9 +169,9 @@ TEST_CASE("Effect next lifecycle owner loss freeze and snapshot")
     f.tick();
     CHECK(std::get<AttackEffect>(f.world.ecs().get<EffectTree>(orphan).m_instance.leaves[0]).m_action.m_time == time);
     f.world.destroy(f.owner);
-    effect::clearSkillEffectsByInterrupt(f.world, f.owner, 12);
+    skill::SkillCaster(f.world, f.owner).clearSkillEffectsByInterrupt(12);
     CHECK_FALSE(f.world.ecs().get<EntityGroup>(first).destroyRequested);
-    effect::clearSkillEffectsByInterrupt(f.world, f.owner, 11);
+    skill::SkillCaster(f.world, f.owner).clearSkillEffectsByInterrupt(11);
     f.tick();
     CHECK_FALSE(f.world.ecs().alive(first));
     CHECK(f.world.ecs().alive(orphan));

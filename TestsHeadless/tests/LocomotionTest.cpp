@@ -143,8 +143,8 @@ TEST_CASE("Displacement zero VelocityScale preserves falling height")
 }
 TEST_CASE("Action animation names and playback mapping")
 {
-    CHECK(std::string(behavior::animationName(behavior::ActionType::Run)) == "walk");
-    CHECK(std::string(behavior::animationName(behavior::ActionType::Walk)) == "running");
+    CHECK(std::string(behavior::ActionNames::animationName(behavior::ActionType::Run)) == "walk");
+    CHECK(std::string(behavior::ActionNames::animationName(behavior::ActionType::Walk)) == "running");
     World world;
     const auto entity = setup(world);
     advance(world, entity, ControlEvent::CTR_WALK);

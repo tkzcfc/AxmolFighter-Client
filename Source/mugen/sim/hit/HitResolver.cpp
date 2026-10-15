@@ -69,7 +69,7 @@ bool HitResolver::_enabled(Entity entity) const
 bool HitResolver::_dodging(Entity entity) const
 {
     const auto* pool = m_world.ecs().tryGet<SkillPool>(entity);
-    return pool && pool->m_current != kNoSkill && skill::baseSlot(*pool, pool->m_skills.at(pool->m_current)) == "F";
+    return pool && pool->m_current != kNoSkill && pool->baseSlot(pool->m_skills.at(pool->m_current)) == "F";
 }
 
 HitTrigger HitResolver::_context(Entity effect, Entity target) const

@@ -245,7 +245,7 @@ TEST_CASE("Hit state exit resets displacement only for Death and landing Hit")
     skill_test::loadConfig();
     World world;
     const auto entity = skill_test::actor(world);
-    skill::SkillCaster(world, entity).loadSkill(skill::playerLoadout(skill::offlineKit(CharacterClass::kSwordman)));
+    skill::SkillCaster(world, entity).loadSkill(skill::SkillAssembly::playerLoadout(skill::SkillAssembly::offlineKit(CharacterClass::kSwordman)));
     world.ecs().add(entity, MotionState{});
     world.ecs().add(entity, RoleHitState{});
     world.ecs().add(entity, RoleTimers{});

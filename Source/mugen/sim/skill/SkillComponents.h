@@ -1,6 +1,7 @@
 #pragma once
 #include "mugen/core/ecs/Entity.h"
 #include "mugen/core/reflect/Reflect.h"
+#include <string_view>
 
 namespace mugen::sim
 {
@@ -127,6 +128,21 @@ struct SkillBase
                m_releaseCount, m_releaseMax, m_timing, m_upTouch, m_enoughRelease, m_skillTime,
                m_pipe, m_previousPipe, m_expectedPipe, m_toward, m_vector, m_actionCount,
                m_finally, m_nextRun, m_nextSkill, m_controlAngle, m_groupTime, m_changeTime, m_ai)
+
+    /// 判断技能是否仍处于冷却阶段。
+    bool isCooling() const;
+    /// 比较本技能是否优先于当前技能。
+    bool isPriority(const SkillBase& current) const;
+    /// 根据配置刷新施放管线字段。
+    void refreshSkillPipe();
+    /// 增加剩余可释放次数。
+    void addSkillReleaseCount();
+    /// 初始化或重置冷却状态。
+    void dealWithCoolDown();
+    /// 为冷却累计逻辑时间。
+    void addColdTime(Fixed time);
+    /// 判断是否允许在松开输入后释放。
+    bool canUpRelease() const;
 };
 /// 可启用或禁用的一类技能槽位。
 struct SkillSlot
@@ -203,5 +219,20 @@ struct SkillPool
                m_running, m_coolingSlots, m_target, m_allowInterrupt,
                m_allowExtraInterrupt, m_slotChanged, m_crazy, m_canSprint, m_angerRecover, m_autoCast,
                m_group, m_change, m_crystals, m_mpScale, m_epScale, m_epPlus, m_cpScale, m_controlAngle)
+
+    /// 去除模式后缀并取得技能槽位基础名称。
+    std::string_view baseSlot(const SkillBase& skill) const;
+    /// 根据当前连招状态解析本次输入可施放的技能。
+    int32_t getFightSkill(std::string_view slot) const;
+    /// 比较技能池中两个技能的超级优先级。
+    bool isSuperPriority(int32_t next, int32_t current) const;
+    /// 计算施放技能需要消耗的法力值。
+    Fixed mpCost(const SkillBase& skill) const;
+    /// 计算施放技能需要消耗的能量值。
+    Fixed epCost(const SkillBase& skill) const;
+    /// 将当前技能切换为指定索引。
+    void setSkillBase(int32_t index);
+    /// 更新记录的方向输入。
+    void dealWithDirection(int32_t index);
 };
 } // namespace mugen::sim

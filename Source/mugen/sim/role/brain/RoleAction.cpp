@@ -5,7 +5,7 @@
 namespace mugen::sim::behavior
 {
 // 查表取得普通动作的动画名称。
-const char* animationName(ActionType type)
+const char* ActionNames::animationName(ActionType type)
 {
     constexpr std::array names{"",        "death",   "getup",   "toground", "flydown",  "flyup", "hitswitch",
                                "hit",     "flydown", "running", "running",  "running",  "walk",  "running",

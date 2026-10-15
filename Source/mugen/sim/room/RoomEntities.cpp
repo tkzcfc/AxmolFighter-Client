@@ -1,5 +1,6 @@
 #include "RoomEntities.h"
 #include "mugen/sim/World.h"
+#include "mugen/sim/attack/AttackSeams.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "mugen/sim/role/Role.h"
 #include "mugen/sim/ability/AbilityHolder.h"
@@ -227,7 +228,7 @@ void RoomEntity::update()
             {
                 effect::RoleSpawn request;
                 request.m_effectId = row->deathEffectId;
-                effect::spawnFromRole(m_world, m_entity, request);
+                attack::AttackSeam(m_world, m_entity).spawnFromRole(request);
             }
             m_world.destroy(m_entity);
         }
@@ -395,9 +396,9 @@ bool RoomEntity::_animate()
     collider.damage.clear();
     const auto transform = ecs.get<Transform>(m_entity);
     for (const auto* box : attack)
-        collider.attack.push_back(role::transformBox(*box, transform));
+        collider.attack.push_back(role::RoleActor::transformBox(*box, transform));
     for (const auto* box : damage)
-        collider.damage.push_back(role::transformBox(*box, transform));
+        collider.damage.push_back(role::RoleActor::transformBox(*box, transform));
     return complete;
 }
 

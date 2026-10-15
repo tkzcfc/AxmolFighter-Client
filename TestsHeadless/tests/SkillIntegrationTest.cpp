@@ -80,7 +80,7 @@ TEST_CASE("Skill cast synchronizes modes and forced interrupt clears cached next
     const auto normal = skill::getGivenSkill(pool, "A");
     const auto alternate = skill::getGivenSkill(pool, "A", 1, 2);
     REQUIRE(alternate != kNoSkill);
-    skill::setSkillBase(pool, normal);
+    pool.setSkillBase(normal);
     skill::SkillCaster(world, entity).castBegan(normal);
     CHECK(pool.m_skills[normal].m_cd == pool.m_skills[alternate].m_cd);
     CHECK(pool.m_skills[normal].m_releaseCount == pool.m_skills[alternate].m_releaseCount);

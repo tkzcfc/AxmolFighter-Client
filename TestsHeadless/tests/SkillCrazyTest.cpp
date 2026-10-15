@@ -18,7 +18,7 @@ Entity fullActor(World& world, CharacterClass occupation = CharacterClass::kSwor
 {
     skill_test::loadConfig();
     const auto entity = skill_test::actor(world);
-    skill::SkillCaster(world, entity).loadSkill(skill::playerLoadout(skill::offlineKit(occupation)));
+    skill::SkillCaster(world, entity).loadSkill(skill::SkillAssembly::playerLoadout(skill::SkillAssembly::offlineKit(occupation)));
     world.ecs().add(entity, MotionState{});
     world.ecs().add(entity, RoleHitState{});
     world.ecs().add(entity, RoleTimers{});
@@ -41,13 +41,13 @@ TEST_CASE("Crazy slot rejects when EP below epCost and emits body-shake tip")
     auto& pool        = world.ecs().get<SkillPool>(entity);
     int32_t crazyIdx  = kNoSkill;
     for (int32_t i = 0; i < static_cast<int32_t>(pool.m_skills.size()); ++i)
-        if (skill::epCost(pool, pool.m_skills[static_cast<size_t>(i)]) > Fixed{})
+        if (pool.epCost(pool.m_skills[static_cast<size_t>(i)]) > Fixed{})
         {
             crazyIdx = i;
             break;
         }
     REQUIRE(crazyIdx != kNoSkill);
-    const auto cost = skill::epCost(pool, pool.m_skills[static_cast<size_t>(crazyIdx)]);
+    const auto cost = pool.epCost(pool.m_skills[static_cast<size_t>(crazyIdx)]);
     CHECK(cost == Fixed::fromInt(
                       conf::Config::instance().get<conf::SkillAttackConfig>(pool.m_skills[static_cast<size_t>(crazyIdx)].m_configId).ep));
     auto& vitals            = world.ecs().get<Vitals>(entity);
@@ -68,7 +68,7 @@ TEST_CASE("castBegan skips MP and EP deduction while crazy")
     auto& pool        = world.ecs().get<SkillPool>(entity);
     int32_t mpIdx     = kNoSkill;
     for (int32_t i = 0; i < static_cast<int32_t>(pool.m_skills.size()); ++i)
-        if (skill::mpCost(pool, pool.m_skills[static_cast<size_t>(i)]) > Fixed{})
+        if (pool.mpCost(pool.m_skills[static_cast<size_t>(i)]) > Fixed{})
         {
             mpIdx = i;
             break;
@@ -111,7 +111,7 @@ TEST_CASE("A input becomes A+ while crazy")
     skill::SkillCaster(world, entity).resetSkill();
     REQUIRE(skill::SkillCaster(world, entity).dealWithButton(ControlEvent::CTR_ATKA));
     REQUIRE(pool.m_current != kNoSkill);
-    CHECK(skill::baseSlot(pool, pool.m_skills[static_cast<size_t>(pool.m_current)]) == "A+");
+    CHECK(pool.baseSlot(pool.m_skills[static_cast<size_t>(pool.m_current)]) == "A+");
     reloadConfig();
 }
 
@@ -165,19 +165,19 @@ TEST_CASE("Skill slot-name round trip matches golden list")
     std::set<std::string> names;
     for (int occ = 1; occ <= 4; ++occ)
     {
-        const auto skills = skill::offlineKit(static_cast<CharacterClass>(occ));
+        const auto skills = skill::SkillAssembly::offlineKit(static_cast<CharacterClass>(occ));
         if (skills.empty())
             continue;
         World world;
         const auto entity = skill_test::actor(world);
-        skill::SkillCaster(world, entity).loadSkill(skill::playerLoadout(skills));
+        skill::SkillCaster(world, entity).loadSkill(skill::SkillAssembly::playerLoadout(skills));
         for (const auto& slot : world.ecs().get<SkillPool>(entity).m_slots)
             names.insert(slot.m_name);
     }
     for (int i = static_cast<int>(ControlEvent::CTR_JOY1); i <= static_cast<int>(ControlEvent::CTR_JOY12); ++i)
-        names.insert(skill::eventSlot(static_cast<ControlEvent>(i)));
+        names.insert(skill::SkillAssembly::eventSlot(static_cast<ControlEvent>(i)));
     for (int i = static_cast<int>(ControlEvent::CTR_JOYB); i <= static_cast<int>(ControlEvent::CTR_JOYD); ++i)
-        names.insert(skill::eventSlot(static_cast<ControlEvent>(i)));
+        names.insert(skill::SkillAssembly::eventSlot(static_cast<ControlEvent>(i)));
     std::string actual;
     for (const auto& name : names)
     {

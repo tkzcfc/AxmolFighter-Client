@@ -98,7 +98,7 @@ bool ActionAttackDriver::onDisplacementEvent(const conf::ActionConfig& row, Disp
 /// 清理动作结束时仍由本动作持有的效果。
 void ActionAttackDriver::clearEffects()
 {
-    effect::clearActionEffects(m_world, m_entity, m_action.m_effects);
+    AttackSeam(m_world, m_entity).clearActionEffects(m_action.m_effects);
     m_action.m_effects.clear();
 }
 }

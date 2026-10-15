@@ -17,11 +17,6 @@ struct SkillTrigger
     /// 关联动作配置 id。
     int32_t m_actionId = -1;
 };
-namespace buff
-{
-/// 向实体的 Buff 系统派发技能事件。
-void trigger(World&, Entity, BFEvent, SkillTrigger = {});
-}
 namespace ability
 {
     /// 技能施放生命周期中的能力事件类型。
@@ -31,12 +26,5 @@ namespace ability
         /// 在技能施放结束后触发。
         AfterCastSkill
     };
-    /// 向实体的能力系统派发技能生命周期事件。
-    void trigger(World&, Entity, SkillEvent, SkillTrigger = {});
-}
-namespace effect
-{
-/// 清理被技能打断时必须移除的表现效果。
-void clearSkillEffectsByInterrupt(World&, Entity, int32_t skillId);
 }
 }

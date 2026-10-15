@@ -1,7 +1,7 @@
 #include <doctest/doctest.h>
 #include "mugen/sim/role/Role.h"
 #include "SkillTestSupport.h"
-#include "mugen/sim/role/brain/RoleBranches.h"
+#include "mugen/sim/role/brain/RoleBrainRunner.h"
 #include "mugen/sim/role/brain/states/HitStates.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
 #include <iostream>
@@ -74,7 +74,7 @@ struct HitStateWorld
             return behavior::ActionType::None;
         if (brain.m_branch == role::brain::RoleBranch::Death && brain.m_destroyStage == 1)
             return behavior::ActionType::Destroy;
-        return role::brain::branchAction(brain.m_branch);
+        return role::brain::RoleBrainDriver(m_world, m_entity, brain, false).currentAction();
     }
 };
 // 直接驱动受击叶：构造临时视图并解包叶子状态。

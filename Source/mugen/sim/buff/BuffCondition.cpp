@@ -119,7 +119,7 @@ bool checkOne(World& world, Entity entity, const BuffInstance& instance, int32_t
             for (const auto& value : pool->m_skills)
                 if (value.m_configId == *instance.m_context.m_boundSkill) { selected = &value; break; }
         }
-        return selected && vitals->mp >= skill::mpCost(*pool, *selected) * parameter(params);
+        return selected && vitals->mp >= pool->mpCost(*selected) * parameter(params);
     }
     case 10: case 161: case 162: {
         const auto* pool = world.ecs().tryGet<BuffPool>(condition == 161 ? entity : target);
@@ -246,7 +246,7 @@ bool checkOne(World& world, Entity entity, const BuffInstance& instance, int32_t
         const auto* pool = world.ecs().tryGet<SkillPool>(entity);
         const auto* skill = currentSkill(world, entity, instance);
         if (!pool || !skill) return false;
-        const auto slot = skill::baseSlot(*pool, *skill);
+        const auto slot = pool->baseSlot(*skill);
         for (const auto value : params)
         {
             if (value == "-1"_fx) return true;

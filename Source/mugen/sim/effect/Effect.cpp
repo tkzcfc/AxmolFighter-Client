@@ -253,7 +253,7 @@ const Registry& registry()
     return value;
 }
 /// 将动画推进和碰撞框采样交给与角色共用的运动入口。
-void motionUpdate(World& world, Entity entity) { role::updateMotion(world, entity); }
+void motionUpdate(World& world, Entity entity) { role::RoleActor::updateMotion(world, entity); }
 }
 
 // 创建基础组件；属性始终通过所属实体读取。

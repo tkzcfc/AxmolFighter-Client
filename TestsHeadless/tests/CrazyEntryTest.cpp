@@ -43,7 +43,7 @@ void expectCurrent(World& world, Entity entity, std::string_view slot, int32_t c
     const auto& pool = world.ecs().get<SkillPool>(entity);
     REQUIRE(pool.m_current != kNoSkill);
     const auto& skill = pool.m_skills[pool.m_current];
-    CHECK(skill::baseSlot(pool, skill) == slot);
+    CHECK(pool.baseSlot(skill) == slot);
     CHECK(skill.m_configId == configId);
     CHECK(pool.m_current == skill::getGivenSkill(pool, slot));
 }

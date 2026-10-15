@@ -16,7 +16,7 @@ struct HitState
     static BTStatus update(RoleContext&, Param, State&);
     static void exit(RoleContext&, Param, State&);
     static bool onDisplacement(RoleContext&, Param, State&);
+    // 动画系统在完成真实动作时通知受击叶子。
+    static void animationComplete(World&, Entity);
 };
-// 动画系统在完成真实动作时通知受击叶子。
-void animationComplete(World&, Entity);
 }  // namespace mugen::sim::role::brain::states

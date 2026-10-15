@@ -50,7 +50,7 @@ void expectCurrent(World& world, Entity entity, ExpectedSlot expected)
     const auto& pool = world.ecs().get<SkillPool>(entity);
     REQUIRE(pool.m_current != kNoSkill);
     const auto& skill = pool.m_skills[pool.m_current];
-    CHECK(skill::baseSlot(pool, skill) == expected.m_slot);
+    CHECK(pool.baseSlot(skill) == expected.m_slot);
     CHECK(skill.m_configId == expected.m_configId);
 }
 }  // namespace
@@ -104,7 +104,7 @@ TEST_CASE("Sprint attack A during a non-final Y skill selects Y")
     const auto y                                      = skill::getGivenSkill(pool, "Y");
     REQUIRE(y != kNoSkill);
     REQUIRE_FALSE(pool.m_skills[y].m_finally);
-    skill::setSkillBase(pool, y);
+    pool.setSkillBase(y);
     REQUIRE_FALSE(world.ecs().get<RoleStatus>(entity).isRun());
 
     REQUIRE(skill::SkillCaster(world, entity).dealButtonEvent(ControlEvent::CTR_ATKA));

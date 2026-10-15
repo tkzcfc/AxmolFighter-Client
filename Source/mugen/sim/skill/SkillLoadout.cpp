@@ -5,7 +5,7 @@
 
 namespace mugen::sim::skill
 {
-SkillLoadout monsterLoadout(int32_t aiId)
+SkillLoadout SkillAssembly::monsterLoadout(int32_t aiId)
 {
     SkillLoadout result(5);
     const auto* ai = conf::Config::instance().find<conf::AiConfig>(aiId);
@@ -28,7 +28,7 @@ SkillLoadout monsterLoadout(int32_t aiId)
     return result;
 }
 
-SkillLoadout playerLoadout(const std::vector<PlayerSkill>& skills)
+SkillLoadout SkillAssembly::playerLoadout(const std::vector<PlayerSkill>& skills)
 {
     SkillLoadout result(5, SkillGroup(16));
     result[4].resize(3);
@@ -85,7 +85,7 @@ SkillLoadout playerLoadout(const std::vector<PlayerSkill>& skills)
     return result;
 }
 
-std::vector<PlayerSkill> offlineKit(CharacterClass occupation)
+std::vector<PlayerSkill> SkillAssembly::offlineKit(CharacterClass occupation)
 {
     std::vector<PlayerSkill> result;
     const int32_t profession = static_cast<int32_t>(occupation);
@@ -251,7 +251,7 @@ OfflineKitRow makeRow(EnumSkillSlot slot, int32_t leafId, int32_t skillId, int32
 }  // namespace
 
 // 按职业树生成离线调试面板行，无树时返回空表。
-std::vector<OfflineKitRow> offlineKitRows(CharacterClass occupation)
+std::vector<OfflineKitRow> SkillAssembly::offlineKitRows(CharacterClass occupation)
 {
     std::vector<OfflineKitRow> result;
     const int32_t profession = static_cast<int32_t>(occupation);

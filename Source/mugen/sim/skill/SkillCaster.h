@@ -1,5 +1,6 @@
 #pragma once
 #include "Skill.h"
+#include "SkillTriggers.h"
 
 namespace mugen::sim
 {
@@ -49,6 +50,12 @@ public:
     void dealWithCastPipeEnded(int32_t index);
     // 中断角色正在进行的跑步技能。
     void interruptRun();
+    // 向实体的 Buff 系统派发技能事件。
+    void trigger(BFEvent event, SkillTrigger source = {});
+    // 向实体的能力系统派发技能生命周期事件。
+    void trigger(ability::SkillEvent event, SkillTrigger source = {});
+    // 清理被技能打断时必须移除的表现效果。
+    void clearSkillEffectsByInterrupt(int32_t skillId);
 
 private:
     // 按配置条件编号验证自动施放前提。

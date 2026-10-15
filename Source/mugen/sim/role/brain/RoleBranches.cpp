@@ -1,4 +1,5 @@
 #include "RoleBranches.h"
+#include "RoleBrainRunner.h"
 
 #include "mugen/sim/World.h"
 #include "mugen/sim/skill/SkillCaster.h"
@@ -24,15 +25,15 @@ constexpr std::array<behavior::ActionType, kBranchCount> kBranchActions = {
     behavior::ActionType::Controlled};
 }  // namespace
 
-behavior::ActionType branchAction(RoleBranch branch)
+behavior::ActionType RoleBrainDriver::_branchAction(RoleBranch branch) const
 {
     return kBranchActions[static_cast<size_t>(branch)];
 }
 
-bool guardHolds(RoleBranch branch, World& world, Entity entity, bool city)
+bool RoleBrainDriver::_guardHolds(RoleBranch branch) const
 {
     const auto status = kBranchStatuses[static_cast<size_t>(branch)];
-    const auto& r     = world.ecs().get<RoleStatus>(entity);
+    const auto& r     = m_world.ecs().get<RoleStatus>(m_entity);
     if (!r.has(status))
         return false;
     switch (status)
@@ -43,7 +44,7 @@ bool guardHolds(RoleBranch branch, World& world, Entity entity, bool city)
     case S::Walk:
         return !r.isAttack() && !r.isJostled();
     case S::Idle:
-        if (city)
+        if (m_city)
             return !r.isMove();
         return !r.isAttack() && !r.isWake() && !r.isTobeHit() &&
                !r.isMove() && !r.isJostled();
@@ -52,12 +53,17 @@ bool guardHolds(RoleBranch branch, World& world, Entity entity, bool city)
     }
 }
 
-void exitGuard(RoleBranch branch, World& world, Entity entity)
+void RoleBrainDriver::_exitGuard(RoleBranch branch)
 {
     const auto status = kBranchStatuses[static_cast<size_t>(branch)];
     if (status == S::Attack)
-        skill::SkillCaster(world, entity).resetSkill();
+        skill::SkillCaster(m_world, m_entity).resetSkill();
     if (status != S::Idle && status != S::Revive)
-        world.ecs().get<RoleStatus>(entity).abort(status);
+        m_world.ecs().get<RoleStatus>(m_entity).abort(status);
+}
+
+behavior::ActionType RoleBrainDriver::currentAction() const
+{
+    return _branchAction(m_brain.m_branch);
 }
 }  // namespace mugen::sim::role::brain

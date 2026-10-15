@@ -13,7 +13,7 @@ namespace
 void play(RoleContext& ctx, behavior::ActionType type)
 {
     auto& motion         = ctx.get<MotionState>();
-    motion.motionName    = behavior::animationName(type);
+    motion.motionName    = behavior::ActionNames::animationName(type);
     motion.timeMs        = {};
     motion.m_completedLoops = 0;
     motion.loop = motion.playing = true;

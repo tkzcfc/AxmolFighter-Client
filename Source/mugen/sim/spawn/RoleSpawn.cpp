@@ -202,14 +202,14 @@ Entity spawnRole(World& world, const RoleSpawnParams& params)
     {
         const auto occupation = type_conversions::toCharacterClass(params.roleId);
         if (occupation != CharacterClass::kUnknown)
-            skill::SkillCaster(world, entity).loadSkill(skill::playerLoadout(skill::offlineKit(occupation)));
+            skill::SkillCaster(world, entity).loadSkill(skill::SkillAssembly::playerLoadout(skill::SkillAssembly::offlineKit(occupation)));
         else
             skill::SkillCaster(world, entity).loadSkill();
     }
     if (params.isAi && world.setup().mode != WorldMode::Town && row->roleType != 12)
         ecs.add(entity, AiAgent{});
     auto& brain = ecs.get<RoleBrain>(entity);
-    role::brain::enterFirst(brain, world, entity, world.setup().mode == WorldMode::Town);
+    role::brain::RoleBrainDriver(world, entity, brain, world.setup().mode == WorldMode::Town).enterFirst();
     if (params.playerSlot.has_value())
         ecs.singleton<PlayerSlots>().entities.emplace(*params.playerSlot, entity);
     if (world.setup().mode != WorldMode::Town)

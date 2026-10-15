@@ -132,8 +132,8 @@ struct DodgeHit
         auto& pool       = m_world.ecs().get<SkillPool>(m_monster);
         const auto index = skill::getGivenSkill(pool, slot);
         REQUIRE(index != kNoSkill);
-        skill::setSkillBase(pool, index);
-        REQUIRE(skill::baseSlot(pool, pool.m_skills.at(pool.m_current)) == slot);
+        pool.setSkillBase(index);
+        REQUIRE(pool.baseSlot(pool.m_skills.at(pool.m_current)) == slot);
     }
 
     // 闪避率为零时仍可能抽到零并判定闪避，因此选一个首次抽样失败的种子。

@@ -38,7 +38,7 @@ TEST_CASE("PlayerKit mage spawn loads profession tree skill 980000")
 TEST_CASE("PlayerKit mage attack input maps to action 10100")
 {
     loadConfig();
-    CHECK(skill::eventSlot(ControlEvent::CTR_ATKA) == "A");
+    CHECK(skill::SkillAssembly::eventSlot(ControlEvent::CTR_ATKA) == "A");
     const auto* skill = conf::Config::instance().find<conf::SkillAttackConfig>(980000);
     REQUIRE(skill != nullptr);
     REQUIRE(!skill->actionIds.empty());
@@ -66,7 +66,7 @@ TEST_CASE("PlayerKit harness role zero keeps monster kit")
     World scratch;
     const auto expectedEntity = actor(scratch);
     scratch.ecs().get<RoleIdentity>(expectedEntity).roleId = 0;
-    skill::SkillCaster(scratch, expectedEntity).loadSkill(skill::monsterLoadout(identity.aiId));
+    skill::SkillCaster(scratch, expectedEntity).loadSkill(skill::SkillAssembly::monsterLoadout(identity.aiId));
     const auto& expected = scratch.ecs().get<SkillPool>(expectedEntity);
     REQUIRE(!expected.m_skills.empty());
     CHECK(pool.m_skills.size() == expected.m_skills.size());
@@ -90,7 +90,7 @@ TEST_CASE("PlayerKit monster spawn keeps AI skill ids")
     World scratch;
     const auto expectedEntity = actor(scratch);
     scratch.ecs().get<RoleIdentity>(expectedEntity).roleId = 261;
-    skill::SkillCaster(scratch, expectedEntity).loadSkill(skill::monsterLoadout(identity.aiId));
+    skill::SkillCaster(scratch, expectedEntity).loadSkill(skill::SkillAssembly::monsterLoadout(identity.aiId));
     const auto& expected = scratch.ecs().get<SkillPool>(expectedEntity);
     REQUIRE(!expected.m_skills.empty());
     CHECK(pool.m_skills.size() == expected.m_skills.size());
@@ -100,18 +100,18 @@ TEST_CASE("PlayerKit monster spawn keeps AI skill ids")
 TEST_CASE("PlayerKit fighter occupation returns empty kit")
 {
     loadConfig();
-    const auto kit = skill::offlineKit(CharacterClass::kFighter);
+    const auto kit = skill::SkillAssembly::offlineKit(CharacterClass::kFighter);
     CHECK(kit.empty());
 }
 
 TEST_CASE("PlayerKit swordman and ranger trees produce leaf attack skills")
 {
     loadConfig();
-    const auto sword = skill::offlineKit(CharacterClass::kSwordman);
+    const auto sword = skill::SkillAssembly::offlineKit(CharacterClass::kSwordman);
     REQUIRE(!sword.empty());
     CHECK(sword.front().m_slot == EnumSkillSlot::Attack);
     CHECK(sword.front().m_baseId == 920000);
-    const auto ranger = skill::offlineKit(CharacterClass::kRanger);
+    const auto ranger = skill::SkillAssembly::offlineKit(CharacterClass::kRanger);
     REQUIRE(!ranger.empty());
     CHECK(ranger.front().m_slot == EnumSkillSlot::Attack);
     CHECK(ranger.front().m_baseId == 930030);

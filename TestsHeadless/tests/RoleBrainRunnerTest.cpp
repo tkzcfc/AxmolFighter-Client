@@ -38,10 +38,10 @@ struct BrainFixture
 TEST_CASE("RoleBrain standalone first enter picks Idle and updates once")
 {
     BrainFixture f;
-    REQUIRE(role::brain::enterFirst(f.brain, f.world, f.entity, false));
+    REQUIRE(role::brain::RoleBrainDriver(f.world, f.entity, f.brain, false).enterFirst());
     CHECK(f.brain.m_phase == role::brain::BrainPhase::Running);
     CHECK(f.brain.m_branch == role::brain::RoleBranch::Idle);
-    role::brain::update(f.brain, f.world, f.entity, false);
+    role::brain::RoleBrainDriver(f.world, f.entity, f.brain, false).update();
     CHECK(f.brain.m_branch == role::brain::RoleBranch::Idle);
     CHECK(std::get<behavior::ActionState>(f.brain.m_data).fTime == kLogicDtMs);
 }
@@ -49,25 +49,25 @@ TEST_CASE("RoleBrain standalone first enter picks Idle and updates once")
 TEST_CASE("RoleBrain standalone selects cyclically Run then Idle")
 {
     BrainFixture f;
-    REQUIRE(role::brain::enterFirst(f.brain, f.world, f.entity, false));
+    REQUIRE(role::brain::RoleBrainDriver(f.world, f.entity, f.brain, false).enterFirst());
     Role(f.world, f.entity).changeStatus(EntityRoleStatus::Run);
-    role::brain::update(f.brain, f.world, f.entity, false);
+    role::brain::RoleBrainDriver(f.world, f.entity, f.brain, false).update();
     CHECK(f.brain.m_branch == role::brain::RoleBranch::Run);
     Role(f.world, f.entity).changeStatus(EntityRoleStatus::Idle);
-    role::brain::update(f.brain, f.world, f.entity, false);
+    role::brain::RoleBrainDriver(f.world, f.entity, f.brain, false).update();
     CHECK(f.brain.m_branch == role::brain::RoleBranch::Idle);
 }
 
 TEST_CASE("RoleBrain with no enterable branch falls back to Idle")
 {
     BrainFixture f;
-    REQUIRE(role::brain::enterFirst(f.brain, f.world, f.entity, false));
+    REQUIRE(role::brain::RoleBrainDriver(f.world, f.entity, f.brain, false).enterFirst());
     // 无任何状态位时所有守卫都不成立，回退到待机分支。
     f.world.ecs().get<RoleStatus>(f.entity).eEntityStatus = EntityRoleStatus::None;
-    role::brain::update(f.brain, f.world, f.entity, false);
+    role::brain::RoleBrainDriver(f.world, f.entity, f.brain, false).update();
     CHECK(f.brain.m_branch == role::brain::RoleBranch::Idle);
     CHECK(f.brain.m_phase == role::brain::BrainPhase::Running);
-    role::brain::update(f.brain, f.world, f.entity, false);
+    role::brain::RoleBrainDriver(f.world, f.entity, f.brain, false).update();
     CHECK(f.brain.m_branch == role::brain::RoleBranch::Idle);
     CHECK(f.brain.m_phase == role::brain::BrainPhase::Running);
 }
@@ -75,21 +75,21 @@ TEST_CASE("RoleBrain with no enterable branch falls back to Idle")
 TEST_CASE("RoleBrain branch selection follows movement commands")
 {
     BrainFixture f;
-    REQUIRE(role::brain::enterFirst(f.brain, f.world, f.entity, false));
+    REQUIRE(role::brain::RoleBrainDriver(f.world, f.entity, f.brain, false).enterFirst());
     // 行走命令进入 Walk 分支。
     PlayerCommand walk;
     walk.controlEvent = ControlEvent::CTR_WALK;
     walk.quadrant     = 3;
     f.world.ecs().get<ControlEventQueue>(f.entity).commands.push_back(walk);
     role::brain::RoleContext(f.world, f.entity).consumeControl();
-    role::brain::update(f.brain, f.world, f.entity, false);
+    role::brain::RoleBrainDriver(f.world, f.entity, f.brain, false).update();
     CHECK(f.brain.m_branch == role::brain::RoleBranch::Walk);
     // 待机命令回到 Idle 分支。
     PlayerCommand idle;
     idle.controlEvent = ControlEvent::CTR_IDLE;
     f.world.ecs().get<ControlEventQueue>(f.entity).commands.push_back(idle);
     role::brain::RoleContext(f.world, f.entity).consumeControl();
-    role::brain::update(f.brain, f.world, f.entity, false);
+    role::brain::RoleBrainDriver(f.world, f.entity, f.brain, false).update();
     CHECK(f.brain.m_branch == role::brain::RoleBranch::Idle);
     // 跑动命令进入 Run 分支。
     PlayerCommand run;
@@ -97,6 +97,6 @@ TEST_CASE("RoleBrain branch selection follows movement commands")
     run.quadrant     = 3;
     f.world.ecs().get<ControlEventQueue>(f.entity).commands.push_back(run);
     role::brain::RoleContext(f.world, f.entity).consumeControl();
-    role::brain::update(f.brain, f.world, f.entity, false);
+    role::brain::RoleBrainDriver(f.world, f.entity, f.brain, false).update();
     CHECK(f.brain.m_branch == role::brain::RoleBranch::Run);
 }

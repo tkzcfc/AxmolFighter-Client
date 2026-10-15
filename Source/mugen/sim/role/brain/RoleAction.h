@@ -91,6 +91,10 @@ struct JostledState
     bool m_complete = false;
     MG_REFLECT(JostledState, m_displacementId, m_complete)
 };
-// 返回动作类型对应的动画名称。
-const char* animationName(ActionType type);
+// 动作类型到动画名称的查表。
+struct ActionNames
+{
+    // 返回动作类型对应的动画名称。
+    static const char* animationName(ActionType type);
+};
 }  // namespace mugen::sim::behavior

@@ -15,7 +15,7 @@ TEST_CASE("Skill zero cooldown basic attack casts ten times without a tick")
         REQUIRE(skill::SkillCaster(world, entity).dealButtonEvent(ControlEvent::CTR_ATKA));
         auto& pool = world.ecs().get<SkillPool>(entity);
         skill::SkillCaster(world, entity).dealWithCastPipeBegan(pool.m_current);
-        CHECK_FALSE(skill::isCooling(pool.m_skills[pool.m_current]));
+        CHECK_FALSE(pool.m_skills[pool.m_current].isCooling());
     }
 }
 

@@ -113,7 +113,7 @@ void expectCurrent(World& world, Entity entity, ExpectedCast expected)
     const auto& pool = world.ecs().get<SkillPool>(entity);
     REQUIRE(pool.m_current != kNoSkill);
     const auto& current = pool.m_skills[pool.m_current];
-    CHECK(skill::baseSlot(pool, current) == expected.m_slot);
+    CHECK(pool.baseSlot(current) == expected.m_slot);
     CHECK(current.m_configId == expected.m_configId);
     CHECK(current.m_address.m_mode == expected.m_mode);
 }
@@ -158,7 +158,7 @@ TEST_CASE("SkillButton JOY1 selects the rock skill through dealWithButton")
     const auto entity = actor(world);
     loadRock(world, entity, ids);
     const auto& pool = world.ecs().get<SkillPool>(entity);
-    REQUIRE(skill::eventSlot(ControlEvent::CTR_JOY1) == "1+");
+    REQUIRE(skill::SkillAssembly::eventSlot(ControlEvent::CTR_JOY1) == "1+");
     REQUIRE(skill::getGivenSkill(pool, "1+") != kNoSkill);
     // 下、左、上、右、下再接攻击 A 之后，输入层发出 CTR_JOY1。
     press(world, entity, {ControlEvent::CTR_JOY1, {"1+", ids.m_rock, 1}});

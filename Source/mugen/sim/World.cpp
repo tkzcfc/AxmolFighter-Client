@@ -247,7 +247,7 @@ bool World::changeRoom(int32_t id, FixedVec3 position, int32_t toward)
         if (auto* brain = m_ecs.tryGet<RoleBrain>(entity))
         {
             if (brain->m_phase == role::brain::BrainPhase::Running)
-                role::brain::exitBranch(*brain, *this, entity);
+                role::brain::RoleBrainDriver(*this, entity, *brain, m_setup.mode == WorldMode::Town).exitBranch();
             brain->m_phase = role::brain::BrainPhase::NotEntered;
         }
         if (auto* control = m_ecs.tryGet<RoleControl>(entity))

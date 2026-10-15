@@ -151,7 +151,7 @@ TEST_CASE("Ai monster hit recovery casts X and alerts, nonalert idle skill uses 
         ai::AiDriver(f.world, f.monster).addThreat(target, "1"_fx);
         ai::AiDriver(f.world, f.monster).update();
         REQUIRE(pool.m_current != kNoSkill);
-        CHECK(skill::baseSlot(pool, pool.m_skills[pool.m_current]) == "X");
+        CHECK(pool.baseSlot(pool.m_skills[pool.m_current]) == "X");
         CHECK(ecs.get<RoleStatus>(f.monster).isAttack());
         CHECK(agent.m_alerted);
     }
@@ -160,7 +160,7 @@ TEST_CASE("Ai monster hit recovery casts X and alerts, nonalert idle skill uses 
         agent.m_lastAction = ai::AiAction::Patrol;
         ai::AiDriver(f.world, f.monster).update();
         REQUIRE(pool.m_current != kNoSkill);
-        CHECK(skill::baseSlot(pool, pool.m_skills[pool.m_current]) == "Z");
+        CHECK(pool.baseSlot(pool.m_skills[pool.m_current]) == "Z");
     }
 }
 
@@ -200,7 +200,7 @@ TEST_CASE("Ai monster selects priority then index resets peers and consumes Skil
     agent.m_skillIntervalMs = {Fixed{}, Fixed{}, Fixed{}};
     ai::AiDriver(f.world, f.monster).update();
     REQUIRE(pool.m_current != kNoSkill);
-    CHECK(skill::baseSlot(pool, pool.m_skills[pool.m_current]) == "B");
+    CHECK(pool.baseSlot(pool.m_skills[pool.m_current]) == "B");
     CHECK(agent.m_skillIntervalMs[0] == Fixed{});
     CHECK(agent.m_skillIntervalMs[1] == "200"_fx);
     CHECK(agent.m_skillIntervalMs[2] == "300"_fx);
@@ -214,7 +214,7 @@ TEST_CASE("Ai monster selects priority then index resets peers and consumes Skil
         agent.m_skillIntervalMs = {Fixed{}, Fixed{}, Fixed{}};
         ai::AiDriver(f.world, f.monster).update();
         REQUIRE(pool.m_current != kNoSkill);
-        CHECK(skill::baseSlot(pool, pool.m_skills[pool.m_current]) == "C");
+        CHECK(pool.baseSlot(pool.m_skills[pool.m_current]) == "C");
     }
     ai::AiDriver(f.world, f.monster).update();
     CHECK(agent.m_skillIntervalMs[1] < "200"_fx);
