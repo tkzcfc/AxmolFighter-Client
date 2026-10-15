@@ -59,15 +59,33 @@ void load(World&, const conf::RoomConfig&);
 Entity goods(World&, int32_t, Transform, bool spurt);
 // 创建房间障碍物。
 Entity obstacle(World&, int32_t, Transform, int32_t level);
-// 为三种非角色实体推进状态。
-void update(World&, Entity);
-// 按类型处理碰撞，结束接触不产生行为。
-void collision(World&, Entity, Entity, CollisionEvent);
 // 完成清场后开放本地房间门。
 void openPortals(World&);
 // 执行角色死亡掉落。
 void drop(World&, Entity);
-// 障碍物死亡等待共享位移系统的完成事件。
-bool displacementEvent(World&, Entity, DisplacementEvent);
+// 单个房间实体的临时视图，不存入组件、不拥有资源，生命周期限于单次调用。
+class RoomEntity
+{
+public:
+    // 实体组回调，须保持 void(World&, Entity) 签名以注册到 WorldHooks。
+    static void update(World& world, Entity entity);
+    // 构造指向指定世界实例中某个房间实体的视图。
+    RoomEntity(World& world, Entity entity);
+    // 为三种非角色实体推进状态。
+    void update();
+    // 按类型处理碰撞，结束接触不产生行为。
+    void onCollision(Entity other, CollisionEvent event);
+    // 障碍物死亡等待共享位移系统的完成事件。
+    bool onDisplacementEvent(DisplacementEvent event);
+
+private:
+    // 非角色动画独立采样，不调用角色攻击树完成回调。
+    bool _animate();
+    // 没有战斗动作时间轴时，按当前位置和配置半径写受击盒。
+    void _writeRadiusDamage();
+
+    World& m_world;
+    Entity m_entity{};
+};
 }
 }

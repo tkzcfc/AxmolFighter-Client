@@ -22,16 +22,6 @@ int32_t first(const std::vector<std::vector<int32_t>>& list, size_t i, int32_t f
 {
     return i < list.size() ? at(list[i], 0, fallback) : fallback;
 }
-// 没有战斗动作时间轴时，按当前位置和配置半径写受击盒。
-void writeRadiusDamage(World& world, Entity entity)
-{
-    auto& ecs           = world.ecs();
-    auto& collider      = ecs.get<ColliderState>(entity);
-    const auto position = ecs.get<Transform>(entity).position;
-    const auto radius   = collider.radius;
-    collider.damage     = {
-        {{position.x - radius, {}, position.y + position.z - radius}, {radius * "2"_fx, {}, radius * "2"_fx}}};
-}
 // 切换动作时清除循环计数，供完成门控读取。
 void play(World& world, Entity entity, const std::string& name, bool loop)
 {
@@ -41,42 +31,6 @@ void play(World& world, Entity entity, const std::string& name, bool loop)
     motion.m_completedLoops = 0;
     motion.loop             = loop;
     motion.playing          = true;
-}
-// 非角色动画独立采样，不调用角色攻击树完成回调。
-bool animate(World& world, Entity entity)
-{
-    auto& ecs    = world.ecs();
-    auto& motion = ecs.get<MotionState>(entity);
-    MotionPlayer player;
-    if (motion.motionFile.empty() || !player.bind(motion.motionFile) ||
-        !player.play(motion.motionName, {}, motion.loop))
-    {
-        writeRadiusDamage(world, entity);
-        return true;
-    }
-    const auto duration = Fixed::fromInt(player.getDurationMs());
-    motion.timeMs += ecs.singleton<WorldClock>().dtMs * motion.actionScale;
-    const bool complete = duration <= Fixed{} || motion.timeMs >= duration;
-    if (complete)
-    {
-        ++motion.m_completedLoops;
-        if (motion.loop && duration > Fixed{})
-            motion.timeMs = Fixed::fromRaw(motion.timeMs.raw % duration.raw);
-        else
-            motion.timeMs = duration;
-    }
-    player.seek(static_cast<int32_t>(motion.timeMs.toInt()));
-    std::vector<const DamageBox*> attack, damage;
-    player.boxesAt(attack, damage);
-    auto& collider = ecs.get<ColliderState>(entity);
-    collider.attack.clear();
-    collider.damage.clear();
-    const auto transform = ecs.get<Transform>(entity);
-    for (const auto* box : attack)
-        collider.attack.push_back(role::transformBox(*box, transform));
-    for (const auto* box : damage)
-        collider.damage.push_back(role::transformBox(*box, transform));
-    return complete;
 }
 // 生成房间实体所需的基础组件，碰撞形状由逻辑动画采样。
 Entity base(World& world, GroupKind group, Transform transform, int32_t spineId, int32_t radius)
@@ -217,15 +171,16 @@ void openPortals(World& world)
     });
 }
 
-void update(World& world, Entity entity)
+// 为三种非角色实体推进状态。
+void RoomEntity::update()
 {
-    auto& ecs     = world.ecs();
+    auto& ecs     = m_world.ecs();
     const auto dt = ecs.singleton<WorldClock>().dtMs;
-    if (auto* state = ecs.tryGet<GoodsState>(entity))
+    if (auto* state = ecs.tryGet<GoodsState>(m_entity))
     {
         if (state->m_phase == GoodsPhase::Spurt)
         {
-            auto& position      = ecs.get<Transform>(entity).position;
+            auto& position      = ecs.get<Transform>(m_entity).position;
             const auto previous = position;
             const auto step     = displacement::integrate({}, state->m_velocity.y, {}, {}, {}, dt, conf::kGravity);
             position.x += state->m_velocity.x * dt;
@@ -241,16 +196,16 @@ void update(World& world, Entity entity)
                 {
                     state->m_phase    = GoodsPhase::Idle;
                     state->m_velocity = {};
-                    play(world, entity, "stand", true);
+                    play(m_world, m_entity, "stand", true);
                 }
             }
-            ecs.get<Displacement>(entity).offset = position - previous;
+            ecs.get<Displacement>(m_entity).offset = position - previous;
         }
         const auto phase = state->m_phase;
-        if (animate(world, entity) && phase == GoodsPhase::Collect)
-            world.destroy(entity);
+        if (_animate() && phase == GoodsPhase::Collect)
+            m_world.destroy(m_entity);
     }
-    else if (auto* state = ecs.tryGet<ObstacleState>(entity))
+    else if (auto* state = ecs.tryGet<ObstacleState>(m_entity))
     {
         const auto* row = conf::Config::instance().find<conf::ObstacleConfig>(state->m_id);
         if (state->m_hits == 0 && !state->m_deathStarted)
@@ -258,30 +213,30 @@ void update(World& world, Entity entity)
             state->m_deathStarted    = true;
             state->m_displacementEnd = !row || row->deathDisplacementId == -1;
             if (row)
-                displacement::DisplacementDriver(world, entity).set(row->deathDisplacementId);
+                displacement::DisplacementDriver(m_world, m_entity).set(row->deathDisplacementId);
         }
         if (state->m_deathStarted && !state->m_displacementEnd)
-            displacement::DisplacementDriver(world, entity).update();
+            displacement::DisplacementDriver(m_world, m_entity).update();
         state->m_time += dt;
-        const bool complete = animate(world, entity);
+        const bool complete = _animate();
         if (state->m_hits == 0 && state->m_displacementEnd && complete && state->m_time > Fixed{})
         {
-            drop(world, entity);
+            drop(m_world, m_entity);
             if (row && row->deathEffectId != -1)
             {
                 effect::RoleSpawn request;
                 request.m_effectId = row->deathEffectId;
-                effect::spawnFromRole(world, entity, request);
+                effect::spawnFromRole(m_world, m_entity, request);
             }
-            world.destroy(entity);
+            m_world.destroy(m_entity);
         }
-        else if (complete && ecs.get<MotionState>(entity).motionName == "hit")
-            play(world, entity, "stand", true);
+        else if (complete && ecs.get<MotionState>(m_entity).motionName == "hit")
+            play(m_world, m_entity, "stand", true);
     }
-    else if (const auto* portal = ecs.tryGet<PortalState>(entity))
+    else if (const auto* portal = ecs.tryGet<PortalState>(m_entity))
     {
         const auto state = *portal;
-        writeRadiusDamage(world, entity);
+        _writeRadiusDamage();
         if (state.m_phase == PortalPhase::Transfer)
         {
             auto& room = ecs.singleton<RoomState>();
@@ -295,16 +250,17 @@ void update(World& world, Entity entity)
     }
 }
 
-void collision(World& world, Entity entity, Entity other, CollisionEvent event)
+// 按类型处理碰撞，结束接触不产生行为。
+void RoomEntity::onCollision(Entity other, CollisionEvent event)
 {
     if (event == CollisionEvent::End)
         return;
-    auto& ecs = world.ecs();
-    if (ecs.get<EntityGroup>(entity).destroyRequested || ecs.get<EntityGroup>(other).suspended)
+    auto& ecs = m_world.ecs();
+    if (ecs.get<EntityGroup>(m_entity).destroyRequested || ecs.get<EntityGroup>(other).suspended)
         return;
-    if (ecs.has<GoodsState>(entity) && ecs.has<ObstacleState>(other))
+    if (ecs.has<GoodsState>(m_entity) && ecs.has<ObstacleState>(other))
     {
-        obstacle::onCollision(world, entity, other, event, {});
+        obstacle::onCollision(m_world, m_entity, other, event, {});
         return;
     }
     const auto* identity = ecs.tryGet<RoleIdentity>(other);
@@ -317,7 +273,7 @@ void collision(World& world, Entity entity, Entity other, CollisionEvent event)
         return;
     if (const auto* status = ecs.tryGet<RoleStatus>(other); status && status->isDeath())
         return;
-    if (auto* portal = ecs.tryGet<PortalState>(entity))
+    if (auto* portal = ecs.tryGet<PortalState>(m_entity))
     {
         const auto* row = conf::Config::instance().find<conf::PortalConfig>(portal->m_id);
         if (!row)
@@ -325,12 +281,12 @@ void collision(World& world, Entity entity, Entity other, CollisionEvent event)
         if (portal->m_phase == PortalPhase::Active && ecs.singleton<RoomState>().m_victory)
         {
             portal->m_phase = PortalPhase::Transfer;
-            play(world, entity, portalMotion(*row, portal->m_phase), false);
+            play(m_world, m_entity, portalMotion(*row, portal->m_phase), false);
         }
         else if (portal->m_phase == PortalPhase::Close && event == CollisionEvent::Began && !row->closeSystemPx.empty())
-            Role(world, other).changeStatus(EntityRoleStatus::Jostled, row->closeSystemPx[0]);
+            Role(m_world, other).changeStatus(EntityRoleStatus::Jostled, row->closeSystemPx[0]);
     }
-    else if (auto* state = ecs.tryGet<GoodsState>(entity))
+    else if (auto* state = ecs.tryGet<GoodsState>(m_entity))
     {
         if (state->m_phase != GoodsPhase::Idle)
             return;
@@ -339,15 +295,15 @@ void collision(World& world, Entity entity, Entity other, CollisionEvent event)
             return;
         state->m_phase       = GoodsPhase::Collect;
         state->m_collector   = other;
-        const auto transform = ecs.get<Transform>(entity);
+        const auto transform = ecs.get<Transform>(m_entity);
         const auto own       = *identity;
-        play(world, entity, "death", false);
+        play(m_world, m_entity, "death", false);
         if (row->buffId != -1)
-            buff::addEntityBuff(world, other, row->buffId);
+            buff::addEntityBuff(m_world, other, row->buffId);
         if (row->specialabilityId != -1)
-            ability::AbilityHolder(world, other).add(row->specialabilityId);
+            ability::AbilityHolder(m_world, other).add(row->specialabilityId);
         if (row->soundPick != -1)
-            world.emit(entity, Sound{row->soundPick, {}, false, 0});
+            m_world.emit(m_entity, Sound{row->soundPick, {}, false, 0});
         if (row->summonId > 0)
         {
             RoleSpawnParams params;
@@ -358,7 +314,7 @@ void collision(World& world, Entity entity, Entity other, CollisionEvent event)
             params.isAi     = true;
             params.position = transform.position;
             params.toward   = ecs.get<Transform>(other).towardX;
-            spawnRole(world, params);
+            spawnRole(m_world, params);
         }
     }
 }
@@ -389,11 +345,69 @@ void drop(World& world, Entity entity)
             goods(world, 7, transform, true);
     }
 }
-bool displacementEvent(World& world, Entity entity, DisplacementEvent event)
+// 障碍物死亡等待共享位移系统的完成事件。
+bool RoomEntity::onDisplacementEvent(DisplacementEvent event)
 {
-    auto& state = world.ecs().get<ObstacleState>(entity);
+    auto& state = m_world.ecs().get<ObstacleState>(m_entity);
     if (event == DisplacementEvent::Brake || event == DisplacementEvent::Lie)
         state.m_displacementEnd = true;
     return false;
+}
+
+// 实体组回调，构造临时视图后推进单实体状态。
+void RoomEntity::update(World& world, Entity entity)
+{
+    RoomEntity(world, entity).update();
+}
+
+// 构造房间实体视图，只保存世界与实体句柄。
+RoomEntity::RoomEntity(World& world, Entity entity) : m_world(world), m_entity(entity) {}
+
+// 非角色动画独立采样，不调用角色攻击树完成回调。
+bool RoomEntity::_animate()
+{
+    auto& ecs    = m_world.ecs();
+    auto& motion = ecs.get<MotionState>(m_entity);
+    MotionPlayer player;
+    if (motion.motionFile.empty() || !player.bind(motion.motionFile) ||
+        !player.play(motion.motionName, {}, motion.loop))
+    {
+        _writeRadiusDamage();
+        return true;
+    }
+    const auto duration = Fixed::fromInt(player.getDurationMs());
+    motion.timeMs += ecs.singleton<WorldClock>().dtMs * motion.actionScale;
+    const bool complete = duration <= Fixed{} || motion.timeMs >= duration;
+    if (complete)
+    {
+        ++motion.m_completedLoops;
+        if (motion.loop && duration > Fixed{})
+            motion.timeMs = Fixed::fromRaw(motion.timeMs.raw % duration.raw);
+        else
+            motion.timeMs = duration;
+    }
+    player.seek(static_cast<int32_t>(motion.timeMs.toInt()));
+    std::vector<const DamageBox*> attack, damage;
+    player.boxesAt(attack, damage);
+    auto& collider = ecs.get<ColliderState>(m_entity);
+    collider.attack.clear();
+    collider.damage.clear();
+    const auto transform = ecs.get<Transform>(m_entity);
+    for (const auto* box : attack)
+        collider.attack.push_back(role::transformBox(*box, transform));
+    for (const auto* box : damage)
+        collider.damage.push_back(role::transformBox(*box, transform));
+    return complete;
+}
+
+// 没有战斗动作时间轴时，按当前位置和配置半径写受击盒。
+void RoomEntity::_writeRadiusDamage()
+{
+    auto& ecs           = m_world.ecs();
+    auto& collider      = ecs.get<ColliderState>(m_entity);
+    const auto position = ecs.get<Transform>(m_entity).position;
+    const auto radius   = collider.radius;
+    collider.damage     = {
+        {{position.x - radius, {}, position.y + position.z - radius}, {radius * "2"_fx, {}, radius * "2"_fx}}};
 }
 }  // namespace mugen::sim::room_entities

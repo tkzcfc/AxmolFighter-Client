@@ -167,7 +167,7 @@ void DisplacementDriver::update()
     d.offset = {x.offset, y.offset, z.offset * conf::kZRate};
     const auto offset = d.offset;
     const auto event = [&](DisplacementEvent e) {
-        if (ecs.has<ObstacleState>(m_entity)) return room_entities::displacementEvent(m_world, m_entity, e);
+        if (ecs.has<ObstacleState>(m_entity)) return room_entities::RoomEntity(m_world, m_entity).onDisplacementEvent(e);
         return ecs.has<EffectTree>(m_entity) ? effect::EffectActor(m_world, m_entity).onDisplacementEvent(e)
                                           : role::brain::RoleContext(m_world, m_entity).onDisplacementEvent(e);
     };

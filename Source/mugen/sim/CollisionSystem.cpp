@@ -47,7 +47,7 @@ void dispatch(World& world, Entity collider, Entity other, CollisionEvent event,
     if (colliderGroup == GroupKind::Effect)
         hit::onEffectCollision(world, collider, other, event, point);
     else if (colliderGroup == GroupKind::Portal || colliderGroup == GroupKind::Goods)
-        room_entities::collision(world, collider, other, event);
+        room_entities::RoomEntity(world, collider).onCollision(other, event);
     else if ((colliderGroup == GroupKind::Role && otherGroup == GroupKind::Obstacle) ||
              (colliderGroup == GroupKind::Obstacle && otherGroup == GroupKind::Role))
         obstacle::onCollision(world, colliderGroup == GroupKind::Role ? collider : other,

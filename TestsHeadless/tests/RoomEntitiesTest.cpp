@@ -109,7 +109,7 @@ TEST_CASE("Portal Closed rejects contact then FightEnd opens and transfer preser
     world.ecs().each<PortalState>([&](Entity entity, const PortalState&) { door = entity; });
     REQUIRE(door.value != 0);
     world.ecs().get<EntityGroup>(player).suspended = false;
-    room_entities::collision(world, door, player, CollisionEvent::Continue);
+    room_entities::RoomEntity(world, door).onCollision(player, CollisionEvent::Continue);
     CHECK(world.ecs().get<PortalState>(door).m_phase == PortalPhase::Close);
     CHECK(world.ecs().singleton<sim::RoomState>().m_transferRoom == 0);
     for (int i = 0; i < 12; ++i) tick(world);
@@ -158,7 +158,7 @@ TEST_CASE("Obstacle contact corrects position and friendly effect destroys hit-c
     hit::onEffectCollision(world, effect, wall, CollisionEvent::Began, {});
     CHECK(world.ecs().get<ObstacleState>(wall).m_hits == 0);
     for (int i = 0; i < 120 && !world.ecs().get<EntityGroup>(wall).destroyRequested; ++i)
-        room_entities::update(world, wall);
+        room_entities::RoomEntity::update(world, wall);
     CHECK(world.ecs().get<EntityGroup>(wall).destroyRequested);
 }
 TEST_CASE("Goods monster Death drops Spurt item and Idle pickup applies configured buff")
@@ -185,13 +185,13 @@ TEST_CASE("Goods monster Death drops Spurt item and Idle pickup applies configur
     }
     REQUIRE(item.value != 0);
     CHECK(world.ecs().get<GoodsState>(item).m_phase == GoodsPhase::Spurt);
-    room_entities::collision(world, item, player, CollisionEvent::Began);
+    room_entities::RoomEntity(world, item).onCollision(player, CollisionEvent::Began);
     CHECK(world.ecs().get<GoodsState>(item).m_phase == GoodsPhase::Spurt);
     for (int i = 0; i < 120 && world.ecs().get<GoodsState>(item).m_phase == GoodsPhase::Spurt; ++i)
-        room_entities::update(world, item);
+        room_entities::RoomEntity::update(world, item);
     REQUIRE(world.ecs().get<GoodsState>(item).m_phase == GoodsPhase::Idle);
     world.ecs().get<Vitals>(player).hp = "1"_fx;
-    room_entities::collision(world, item, player, CollisionEvent::Began);
+    room_entities::RoomEntity(world, item).onCollision(player, CollisionEvent::Began);
     CHECK(world.ecs().get<GoodsState>(item).m_phase == GoodsPhase::Collect);
     CHECK(world.ecs().get<GoodsState>(item).m_collector == player);
     CHECK(world.ecs().get<Vitals>(player).hp > "1"_fx);
