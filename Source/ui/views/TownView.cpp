@@ -57,6 +57,8 @@ TownView::TownView()
     m_boot.townId = DEFAULT_TOWN_ID;
 }
 
+TownView::~TownView() = default;
+
 TownView::TownView(TownBootParams boot) : m_boot(std::move(boot))
 {
     if (m_boot.townId <= 0)

@@ -36,6 +36,7 @@ public:
 public:
     TownView();
     explicit TownView(TownBootParams boot);
+    ~TownView() override;
 
     virtual void onEnter() override;
     virtual void onExit() override;

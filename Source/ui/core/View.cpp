@@ -107,7 +107,7 @@ void View::_destroy()
         onExit();
 
         // Active 状态时，loadingRoot 和加载界面应该已经被释放
-        ASSERT(m_loadingRoot == nullptr && m_loadingLayer == nullptr);
+        AXASSERT(m_loadingRoot == nullptr && m_loadingLayer == nullptr, "loading state must be released before an active view unloads");
 
         if (m_root)
         {
