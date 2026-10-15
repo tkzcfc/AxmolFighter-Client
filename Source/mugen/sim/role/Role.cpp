@@ -118,7 +118,7 @@ bool Role::changeStatus(EntityRoleStatus bits, int32_t id, FixedVec3 movePos)
     case S::Death:
         role.eEntityStatus                      = S::Death;
         role.entityParams.death_displacement_id = id;
-        trace::noteDeath(m_world, m_entity);
+        trace::TraceRecorder(m_world).noteDeath(m_entity);
         break;
     case S::Jostled:
         role.entityParams.displacement_id = id;

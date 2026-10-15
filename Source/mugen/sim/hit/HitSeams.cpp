@@ -1,5 +1,5 @@
 #include "HitSeams.h"
-#include "mugen/sim/room/RoomEntities.h"
+#include "mugen/sim/room/RoomDirector.h"
 
 #include "mugen/sim/World.h"
 #include "mugen/sim/buff/BuffHolder.h"
@@ -8,7 +8,7 @@
 namespace mugen::sim
 {
 // 默认死亡回调转入物品系统，不在命中模块保存掉落状态。
-void HitHooks::dropGoods(World& world, Entity entity) { room_entities::drop(world, entity); }
+void HitHooks::dropGoods(World& world, Entity entity) { room::RoomDirector(world).drop(entity); }
 // 命中上下文转换为值实例事件，目标分类独立于阵营位掩码。
 void HitHooks::poolTrigger(World& world, Entity entity, BFEvent event, const HitTrigger& source)
 {

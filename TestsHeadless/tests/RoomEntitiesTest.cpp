@@ -1,5 +1,5 @@
 #include "SkillTestSupport.h"
-#include "mugen/sim/room/RoomFlow.h"
+#include "mugen/sim/room/RoomDirector.h"
 #include "mugen/sim/obstacle/Obstacle.h"
 #include "mugen/sim/hit/HitResolver.h"
 #include "mugen/sim/role/Role.h"
@@ -21,7 +21,7 @@ Entity hero(World& world)
     params.roleId = 0;
     params.camp = 2;
     params.playerSlot = 0;
-    return spawnRole(world, params);
+    return RoleSpawner(world).spawnRole(params);
 }
 void box(World& world, Entity entity, Fixed x)
 {
@@ -71,7 +71,7 @@ TEST_CASE("Portal hook-driven room-flow integration copy101 stage40101 visits bo
     const auto& stage = conf::Config::instance().get<conf::StageConfig>(copy.stageId);
     REQUIRE(stage.id == 40101);
     REQUIRE(stage.roomId == 2010101);
-    REQUIRE(room::enter(world, conf::Config::instance().get<conf::RoomConfig>(stage.roomId), stage.id, copy.id));
+    REQUIRE(room::RoomDirector(world).enter(conf::Config::instance().get<conf::RoomConfig>(stage.roomId), stage.id, copy.id));
     for (int i = 0; i < 240; ++i)
     {
         FrameInput input;
@@ -104,7 +104,7 @@ TEST_CASE("Portal Closed rejects contact then FightEnd opens and transfer preser
     config.id = 20001;
     config.portalIds = {101}; config.portalDestType = {2};
     config.portalDestRoomIds = {{20002}}; config.portalDestPosX = {{400}}; config.portalDestPosZ = {{220}};
-    REQUIRE(room::enter(world, config, 0, 0));
+    REQUIRE(room::RoomDirector(world).enter(config, 0, 0));
     Entity door;
     world.ecs().each<PortalState>([&](Entity entity, const PortalState&) { door = entity; });
     REQUIRE(door.value != 0);
@@ -146,7 +146,7 @@ TEST_CASE("Obstacle contact corrects position and friendly effect destroys hit-c
     const auto& rows = conf::Config::instance().table<conf::ObstacleConfig>();
     const auto row = std::find_if(rows.begin(), rows.end(), [](const auto& value) { return value.hitCounts > 0; });
     REQUIRE(row != rows.end());
-    const auto wall = room_entities::obstacle(world, row->id, {}, 1);
+    const auto wall = room::RoomDirector(world).obstacle(row->id, {}, 1);
     box(world, player, "-10"_fx); box(world, wall, {});
     world.ecs().get<Transform>(player).position.x = "-5"_fx;
     obstacle::ObstacleActor(world, wall).onCollision(player, CollisionEvent::Began, {});
@@ -169,7 +169,7 @@ TEST_CASE("Goods monster Death drops Spurt item and Idle pickup applies configur
     const auto player = hero(world);
     RoleSpawnParams params;
     params.roleId = 2223;
-    const auto enemy = spawnRole(world, params);
+    const auto enemy = RoleSpawner(world).spawnRole(params);
     REQUIRE(enemy.value != 0);
     for (const auto& [path, map] : AvatarAssetCache::getInstance()->motionMaps)
         if (const auto* motion = map.findMotion("death"); motion && motion->durationMs() > 0)

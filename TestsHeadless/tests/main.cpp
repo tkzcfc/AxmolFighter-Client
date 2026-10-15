@@ -27,7 +27,7 @@ int main(int argc, char** argv)
         world.init({});
         mugen::sim::RoleSpawnParams params;
         params.roleId = -123456;
-        mugen::sim::spawnRole(world, params);
+        mugen::sim::RoleSpawner(world).spawnRole(params);
         return 0;
     }
     if (argc == 2 && std::strcmp(argv[1], "--ecs-probe-ok") == 0)

@@ -82,6 +82,17 @@ struct LogicTimers
     void resetTimes();
     MG_REFLECT(LogicTimers, entries, nextId)
 };
-// 推进世界定时器并派发本帧到期载荷。
-void updateLogicTimers(World& world);
+// 推进单场世界的逻辑定时器，不持有定时器存储。
+class LogicTimerDriver
+{
+public:
+    // 构造指向指定世界实例的定时器视图。
+    explicit LogicTimerDriver(World& world);
+    // 推进世界定时器并派发本帧到期载荷。
+    void update();
+
+private:
+    // 本场战斗世界。
+    World& m_world;
+};
 }  // namespace mugen::sim

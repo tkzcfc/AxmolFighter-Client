@@ -1,4 +1,5 @@
 #include "RoomEntities.h"
+#include "RoomDirector.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "mugen/sim/role/Role.h"
@@ -9,7 +10,7 @@
 #include "mugen/avatar/MotionPlayer.h"
 #include "mugen/conf/BattleConst.h"
 
-namespace mugen::sim::room_entities
+namespace mugen::sim
 {
 namespace
 {
@@ -77,7 +78,9 @@ std::string portalMotion(const conf::PortalConfig& row, PortalPhase phase)
 }
 }  // namespace
 
-Entity goods(World& world, int32_t id, Transform transform, bool spurt)
+namespace room
+{
+Entity RoomDirector::goods(int32_t id, Transform transform, bool spurt)
 {
     const auto* row = conf::Config::instance().find<conf::GoodsConfig>(id);
     if (!row || id <= 0)
@@ -85,37 +88,37 @@ Entity goods(World& world, int32_t id, Transform transform, bool spurt)
     transform.position.y = {};
     transform.position.x += Fixed::fromInt(at(row->relativePosition, 0) * transform.towardX);
     transform.position.z += Fixed::fromInt(at(row->relativePosition, 2));
-    const auto entity = base(world, GroupKind::Goods, transform, row->resSpineId, row->radius);
+    const auto entity = base(m_world, GroupKind::Goods, transform, row->resSpineId, row->radius);
     GoodsState state;
     state.m_id    = id;
     state.m_phase = spurt ? GoodsPhase::Spurt : GoodsPhase::Idle;
     if (spurt)
     {
-        auto& random     = world.ecs().singleton<RngState>().random;
+        auto& random     = m_world.ecs().singleton<RngState>().random;
         state.m_velocity = {random.randomF("-0.3"_fx, "0.3"_fx), "0.8"_fx, random.randomF("-0.16"_fx, "0.16"_fx)};
-        play(world, entity, "spurt", true);
+        play(m_world, entity, "spurt", true);
     }
-    world.ecs().add(entity, state);
+    m_world.ecs().add(entity, state);
     return entity;
 }
 
-Entity obstacle(World& world, int32_t id, Transform transform, int32_t level)
+Entity RoomDirector::obstacle(int32_t id, Transform transform, int32_t level)
 {
     const auto* row = conf::Config::instance().find<conf::ObstacleConfig>(id);
     if (!row || id <= 0)
         return {};
-    const auto entity = base(world, GroupKind::Obstacle, transform, row->resSpineId, row->radius);
-    world.ecs().add(entity, ObstacleState{id, row->hitCounts, {}});
+    const auto entity = base(m_world, GroupKind::Obstacle, transform, row->resSpineId, row->radius);
+    m_world.ecs().add(entity, ObstacleState{id, row->hitCounts, {}});
     conf::RoleConfig attributes;
     attributes.roleType = 2;
     for (const auto value : row->attributeRate)
         attributes.attributeRate.push_back(Fixed::fromInt(value));
-    world.ecs().add(entity, loadAttributes(attributes, level));
-    world.ecs().add(entity, DropGoods{});
+    m_world.ecs().add(entity, RoleSpawner::loadAttributes(attributes, level));
+    m_world.ecs().add(entity, DropGoods{});
     return entity;
 }
 
-void load(World& world, const conf::RoomConfig& room)
+void RoomDirector::load(const conf::RoomConfig& room)
 {
     for (size_t i = 0; i < room.obstacleIds.size(); ++i)
     {
@@ -128,7 +131,7 @@ void load(World& world, const conf::RoomConfig& room)
                 Fixed::fromInt(at(room.obstaclePos[i], 0)), {}, Fixed::fromInt(at(room.obstaclePos[i], 1))};
         transform.towardX = at(room.obstacleVectorX, i, 1);
         transform.vectorX = Fixed::fromInt(transform.towardX);
-        obstacle(world, row->id, transform,
+        obstacle(row->id, transform,
                  at(room.obstacleLevel, static_cast<size_t>(std::max(1, row->obstacleType) - 1), 1));
     }
     for (size_t i = 0; i < room.goodIds.size(); ++i)
@@ -138,7 +141,7 @@ void load(World& world, const conf::RoomConfig& room)
             transform.position = {Fixed::fromInt(at(room.goodPos[i], 0)), {}, Fixed::fromInt(at(room.goodPos[i], 1))};
         transform.towardX = at(room.goodVectorX, i, 1);
         transform.vectorX = Fixed::fromInt(transform.towardX);
-        goods(world, room.goodIds[i], transform, false);
+        goods(room.goodIds[i], transform, false);
     }
     for (size_t i = 0; i < room.portalIds.size(); ++i)
     {
@@ -147,7 +150,7 @@ void load(World& world, const conf::RoomConfig& room)
             continue;
         Transform transform;
         transform.position = {Fixed::fromInt(at(room.portalPosX, i)), {}, Fixed::fromInt(at(room.portalPosZ, i))};
-        const auto entity  = base(world, GroupKind::Portal, transform, row->resSpineId, row->radius);
+        const auto entity  = base(m_world, GroupKind::Portal, transform, row->resSpineId, row->radius);
         PortalState state;
         state.m_id          = row->id;
         state.m_room        = first(room.portalDestRoomIds, i);
@@ -155,23 +158,27 @@ void load(World& world, const conf::RoomConfig& room)
         state.m_limit       = at(room.portalLimitType, i);
         state.m_destination = {
             Fixed::fromInt(first(room.portalDestPosX, i)), {}, Fixed::fromInt(first(room.portalDestPosZ, i))};
-        world.ecs().add(entity, state);
-        play(world, entity, portalMotion(*row, state.m_phase), true);
+        m_world.ecs().add(entity, state);
+        play(m_world, entity, portalMotion(*row, state.m_phase), true);
     }
 }
 
-void openPortals(World& world)
+void RoomDirector::openPortals()
 {
-    world.ecs().each<PortalState>([&](Entity entity, PortalState& state) {
+    m_world.ecs().each<PortalState>([&](Entity entity, PortalState& state) {
         if (state.m_phase != PortalPhase::Close)
             return;
         state.m_phase   = PortalPhase::Active;
         const auto* row = conf::Config::instance().find<conf::PortalConfig>(state.m_id);
         if (row)
-            play(world, entity, portalMotion(*row, state.m_phase), true);
+            play(m_world, entity, portalMotion(*row, state.m_phase), true);
     });
 }
 
+}  // namespace room
+
+namespace room_entities
+{
 // 为三种非角色实体推进状态。
 void RoomEntity::update()
 {
@@ -222,7 +229,7 @@ void RoomEntity::update()
         const bool complete = _animate();
         if (state->m_hits == 0 && state->m_displacementEnd && complete && state->m_time > Fixed{})
         {
-            drop(m_world, m_entity);
+            room::RoomDirector(m_world).drop(m_entity);
             if (row && row->deathEffectId != -1)
             {
                 effect::RoleSpawn request;
@@ -315,14 +322,18 @@ void RoomEntity::onCollision(Entity other, CollisionEvent event)
             params.isAi     = true;
             params.position = transform.position;
             params.toward   = ecs.get<Transform>(other).towardX;
-            spawnRole(m_world, params);
+            RoleSpawner(m_world).spawnRole(params);
         }
     }
 }
 
-void drop(World& world, Entity entity)
+}  // namespace room_entities
+
+namespace room
 {
-    auto& ecs            = world.ecs();
+void RoomDirector::drop(Entity entity)
+{
+    auto& ecs            = m_world.ecs();
     const auto transform = ecs.get<Transform>(entity);
     const auto* identity = ecs.tryGet<RoleIdentity>(entity);
     const auto roleType  = identity ? identity->roleType : 0;
@@ -331,21 +342,25 @@ void drop(World& world, Entity entity)
     const auto* drops = ecs.tryGet<DropGoods>(entity);
     const auto data   = drops ? *drops : DropGoods{};
     for (const auto id : data.m_goods)
-        goods(world, id, transform, true);
+        goods(id, transform, true);
     if (ecs.has<ObstacleState>(entity))
         return;
     auto& random = ecs.singleton<RngState>().random;
     if (const auto* attributes = ecs.tryGet<Attributes>(entity))
         if (attributes->extend[8] > Fixed{} && random.randomF({}, "100"_fx) < attributes->extend[8])
-            goods(world, 6, transform, true);
+            goods(6, transform, true);
     if (roleType >= 2 && roleType <= 4)
     {
         if (data.m_hpRate > Fixed{} && random.randomF({}, "100"_fx) < data.m_hpRate)
-            goods(world, 6, transform, true);
+            goods(6, transform, true);
         if (data.m_epRate > Fixed{} && random.randomF({}, "100"_fx) < data.m_epRate)
-            goods(world, 7, transform, true);
+            goods(7, transform, true);
     }
 }
+}  // namespace room
+
+namespace room_entities
+{
 // 障碍物死亡等待共享位移系统的完成事件。
 bool RoomEntity::onDisplacementEvent(DisplacementEvent event)
 {
@@ -411,4 +426,5 @@ void RoomEntity::_writeRadiusDamage()
     collider.damage     = {
         {{position.x - radius, {}, position.y + position.z - radius}, {radius * "2"_fx, {}, radius * "2"_fx}}};
 }
-}  // namespace mugen::sim::room_entities
+}  // namespace room_entities
+}  // namespace mugen::sim

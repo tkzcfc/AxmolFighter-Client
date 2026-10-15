@@ -53,16 +53,6 @@ struct DropGoods
 };
 namespace room_entities
 {
-// 装配房间非角色实体。
-void load(World&, const conf::RoomConfig&);
-// 创建可直接拾取或抛射的掉落物。
-Entity goods(World&, int32_t, Transform, bool spurt);
-// 创建房间障碍物。
-Entity obstacle(World&, int32_t, Transform, int32_t level);
-// 完成清场后开放本地房间门。
-void openPortals(World&);
-// 执行角色死亡掉落。
-void drop(World&, Entity);
 // 单个房间实体的临时视图，不存入组件、不拥有资源，生命周期限于单次调用。
 class RoomEntity
 {

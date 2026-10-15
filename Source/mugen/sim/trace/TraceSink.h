@@ -27,21 +27,37 @@ public:
 private:
     std::string m_text;
 };
-// 在一帧结束时输出帧边界、各实体状态行与表现事件行。
-void emitFrame(TraceSink& sink, World& world);
-// 事实发生当下追加一行，不改变逐帧状态行。未挂载追踪时直接返回。
-// cast <实体> <技能配置> <槽名> <管线>
-void noteCast(World& world, Entity entity, int32_t configId, std::string_view slot, int32_t pipe);
-// castend <实体> <技能配置>
-void noteCastEnd(World& world, Entity entity, int32_t configId);
-// dmg <攻击者> <目标> <命中来源配置> <伤害> <暴击 0/1>
-void noteDamage(World& world, Entity attacker, Entity target, int32_t sourceConfigId, int64_t value, bool critical);
-// buff + <实体> <效果配置>
-void noteBuffAdd(World& world, Entity entity, int32_t buffId);
-// buff - <实体> <效果配置>
-void noteBuffRemove(World& world, Entity entity, int32_t buffId);
-// spawn <主人> <特效配置>
-void noteSpawn(World& world, Entity owner, int32_t effectConfigId);
-// death <实体>
-void noteDeath(World& world, Entity entity);
+// 追踪记录的临时视图，不存入组件、不拥有输出缓冲，生命周期限于单次调用。
+class TraceRecorder
+{
+public:
+    // 构造指向指定世界实例的追踪视图。
+    explicit TraceRecorder(World& world);
+    // 在一帧结束时输出帧边界、各实体状态行与表现事件行。
+    void emitFrame();
+    // 事实发生当下追加一行，不改变逐帧状态行。未挂载追踪时直接返回。
+    // cast <实体> <技能配置> <槽名> <管线>
+    void noteCast(Entity entity, int32_t configId, std::string_view slot, int32_t pipe);
+    // castend <实体> <技能配置>
+    void noteCastEnd(Entity entity, int32_t configId);
+    // dmg <攻击者> <目标> <命中来源配置> <伤害> <暴击 0/1>
+    void noteDamage(Entity attacker, Entity target, int32_t sourceConfigId, int64_t value, bool critical);
+    // buff + <实体> <效果配置>
+    void noteBuffAdd(Entity entity, int32_t buffId);
+    // buff - <实体> <效果配置>
+    void noteBuffRemove(Entity entity, int32_t buffId);
+    // spawn <主人> <特效配置>
+    void noteSpawn(Entity owner, int32_t effectConfigId);
+    // death <实体>
+    void noteDeath(Entity entity);
+
+private:
+    // 未挂载追踪时不拼接文本。
+    bool _tracing() const;
+    // 向已挂载的追踪追加一行。
+    void _writeEvent(const std::string& line);
+
+    // 本场战斗世界。
+    World& m_world;
+};
 }  // namespace mugen::sim::trace

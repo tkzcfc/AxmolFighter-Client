@@ -6,7 +6,7 @@
 #include "mugen/render/battle/WorldPresenter.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "ui/battle/LocalRoleUtils.h"
-#include "mugen/sim/room/RoomFlow.h"
+#include "mugen/sim/room/RoomDirector.h"
 #include "imgui.h"
 
 #include <algorithm>
@@ -53,14 +53,14 @@ bool LocalBattleMode::init()
     m_world.init({1, mugen::sim::WorldMode::Battle, m_roomId, room->mapKey});
     const int32_t roleId = m_roleId > 0 ? m_roleId : resolveLocalPlayerRoleId();
     const auto characterClass = mugen::type_conversions::toCharacterClass(roleId);
-    const mugen::Entity player = mugen::sim::spawnPlayer(
-        m_world, characterClass, {.roleId = roleId, .level = 1, .playerSlot = 0, .isAi = false});
+    const mugen::Entity player = mugen::sim::RoleSpawner(m_world).spawnPlayer(
+        characterClass, {.roleId = roleId, .level = 1, .playerSlot = 0, .isAi = false});
     int32_t stageId = 0, copyId = 0;
     for (const auto& stage : config.table<mugen::conf::StageConfig>())
         if (stage.roomId == m_roomId) { stageId = stage.id; break; }
     for (const auto& copy : config.table<mugen::conf::CopyConfig>())
         if (copy.stageId == stageId) { copyId = copy.id; break; }
-    if (!mugen::sim::room::enter(m_world, *room, stageId, copyId)) return false;
+    if (!mugen::sim::room::RoomDirector(m_world).enter(*room, stageId, copyId)) return false;
     auto* scene = ax::Director::getInstance()->getRunningScene();
     auto* root  = ax::Node::create();
     scene->addChild(root, 10);

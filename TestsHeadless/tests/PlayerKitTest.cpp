@@ -11,7 +11,7 @@ TEST_CASE("PlayerKit mage spawn loads profession tree skill 980000")
     RoleSpawnParams params;
     params.roleId     = 104;
     params.playerSlot = 0;
-    const auto entity = spawnRole(world, params);
+    const auto entity = RoleSpawner(world).spawnRole(params);
     const auto& pool  = world.ecs().get<SkillPool>(entity);
     const auto index  = skill::getGivenSkill(pool, "A");
     REQUIRE(index != kNoSkill);
@@ -56,7 +56,7 @@ TEST_CASE("PlayerKit harness role zero keeps monster kit")
     RoleSpawnParams params;
     params.roleId     = 0;
     params.playerSlot = 0;
-    const auto entity = spawnRole(world, params);
+    const auto entity = RoleSpawner(world).spawnRole(params);
     const auto& identity = world.ecs().get<RoleIdentity>(entity);
     CHECK(identity.roleId == 0);
     const auto& pool = world.ecs().get<SkillPool>(entity);
@@ -81,7 +81,7 @@ TEST_CASE("PlayerKit monster spawn keeps AI skill ids")
     RoleSpawnParams params;
     params.roleId = 261;
     params.isAi   = true;
-    const auto entity = spawnRole(world, params);
+    const auto entity = RoleSpawner(world).spawnRole(params);
     CHECK(world.ecs().tryGet<AiAgent>(entity) != nullptr);
     const auto& identity = world.ecs().get<RoleIdentity>(entity);
     const auto& pool     = world.ecs().get<SkillPool>(entity);

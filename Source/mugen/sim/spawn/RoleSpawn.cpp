@@ -7,10 +7,8 @@
 
 namespace mugen::sim
 {
-namespace
-{
 // 将配置中的基础属性按运行时属性槽位顺序转换为 Fixed 数组。
-std::array<Fixed, 16> values(const conf::AttributeConfig& a)
+std::array<Fixed, 16> RoleSpawner::_values(const conf::AttributeConfig& a)
 {
     return {Fixed::fromInt(a.sourceForce),
             Fixed::fromInt(a.agility),
@@ -30,7 +28,7 @@ std::array<Fixed, 16> values(const conf::AttributeConfig& a)
             Fixed::fromInt(a.baseDamage)};
 }
 // 将阵营位掩码转换为可碰撞的敌对阵营掩码。
-int32_t hostile(int32_t camp)
+int32_t RoleSpawner::_hostile(int32_t camp)
 {
     switch (camp)
     {
@@ -48,9 +46,10 @@ int32_t hostile(int32_t camp)
         return 0;
     }
 }
-}  // namespace
+// 构造角色出生视图，只保存世界引用。
+RoleSpawner::RoleSpawner(World& world) : m_world(world) {}
 // 按角色类型、等级和属性倍率计算初始战斗属性。
-Attributes loadAttributes(const conf::RoleConfig& role, int32_t level)
+Attributes RoleSpawner::loadAttributes(const conf::RoleConfig& role, int32_t level)
 {
     const bool validAttributes = level > 0 && level < 10000 && role.attributeRate.size() == 16;
     if (!validAttributes)
@@ -67,7 +66,7 @@ Attributes loadAttributes(const conf::RoleConfig& role, int32_t level)
         const auto* row = config.find<conf::AttributeConfig>(10000 + level);
         if (!row)
             row = &config.get<conf::AttributeConfig>(10000);
-        result.basic = values(*row);
+        result.basic = _values(*row);
     }
     else
     {
@@ -75,12 +74,12 @@ Attributes loadAttributes(const conf::RoleConfig& role, int32_t level)
                                : role.roleType == 4 ? 160000
                                : role.roleType == 5 ? 70000
                                                     : 140000;
-        const auto initial   = values(config.get<conf::AttributeConfig>(140000));
+        const auto initial   = _values(config.get<conf::AttributeConfig>(140000));
         const auto& current  = config.get<conf::AttributeConfig>(140000 + level / 100);
-        const auto cur       = values(current);
+        const auto cur       = _values(current);
         const int32_t units  = level % 100;
         const auto& endpoint = units != 0 ? config.get<conf::AttributeConfig>(140001 + level / 100) : current;
-        const auto next      = values(endpoint);
+        const auto next      = _values(endpoint);
         for (size_t i = 0; i < result.basic.size(); ++i)
         {
             const size_t source = i == 4 ? 15 : i == 15 ? 4 : i;
@@ -115,7 +114,7 @@ Attributes loadAttributes(const conf::RoleConfig& role, int32_t level)
     return result;
 }
 // 依据配置创建战斗角色、技能池和行为树实例。
-Entity spawnRole(World& world, const RoleSpawnParams& params)
+Entity RoleSpawner::spawnRole(const RoleSpawnParams& params)
 {
     const auto& config = conf::Config::instance();
     const auto* row    = config.find<conf::RoleConfig>(params.roleId);
@@ -148,7 +147,7 @@ Entity spawnRole(World& world, const RoleSpawnParams& params)
         MG_LOG_W("Role {} references missing AI {}", params.roleId, aiId);
     const int32_t camp = params.camp.value_or(row->monsterCamps);
     RoleIdentity identity{params.roleId, row->roleType, params.level,     aiId, params.aiDifficulty, camp,
-                          hostile(camp), params.isAi,   params.playerSlot, params.m_owner};
+                          _hostile(camp), params.isAi,   params.playerSlot, params.m_owner};
     RoleTimers timers;
     if (row->timeRage.size() > 2 && !row->timeRage[1].empty())
     {
@@ -157,7 +156,7 @@ Entity spawnRole(World& world, const RoleSpawnParams& params)
     }
     auto attributes = loadAttributes(*row, params.level);
     if (row->roleType == static_cast<int32_t>(EntityRoleType::kSummon))
-        if (const auto* owner = world.ecs().tryGet<Attributes>(params.m_owner))
+        if (const auto* owner = m_world.ecs().tryGet<Attributes>(params.m_owner))
             for (size_t i = 0; i < attributes.basic.size(); ++i)
                 attributes.basic[i] = owner->value(i) * (i < row->attributeRate.size() ? row->attributeRate[i] : "1"_fx);
     Transform transform{params.position, params.toward, Fixed::fromInt(params.toward), {}, Fixed::fromInt(1)};
@@ -167,7 +166,7 @@ Entity spawnRole(World& world, const RoleSpawnParams& params)
         motion.motionFile = AvatarPaths::motionFileFromSpine(spine->fileName);
         transform.scale   = spine->scale;
     }
-    auto& ecs = world.ecs();
+    auto& ecs = m_world.ecs();
     const bool playerSlotFree =
         !params.playerSlot || !ecs.singleton<PlayerSlots>().entities.contains(*params.playerSlot);
     if (!playerSlotFree)
@@ -176,7 +175,7 @@ Entity spawnRole(World& world, const RoleSpawnParams& params)
         MG_ASSERT(playerSlotFree && "Player slot is already occupied");
         return {};
     }
-    const Entity entity = world.create(GroupKind::Role);
+    const Entity entity = m_world.create(GroupKind::Role);
     ecs.add(entity, identity);
     ecs.add(entity, RoleStatus{});
     ecs.add(entity, timers);
@@ -198,32 +197,32 @@ Entity spawnRole(World& world, const RoleSpawnParams& params)
     ecs.add(entity, Displacement{});
     ecs.add(entity, RoleBrain{});
     ecs.add(entity, RoleControl{});
-    if (world.setup().mode != WorldMode::Town)
+    if (m_world.setup().mode != WorldMode::Town)
     {
         const auto occupation = type_conversions::toCharacterClass(params.roleId);
         if (occupation != CharacterClass::kUnknown)
-            skill::SkillCaster(world, entity).loadSkill(skill::playerLoadout(skill::offlineKit(occupation)));
+            skill::SkillCaster(m_world, entity).loadSkill(skill::playerLoadout(skill::offlineKit(occupation)));
         else
-            skill::SkillCaster(world, entity).loadSkill();
+            skill::SkillCaster(m_world, entity).loadSkill();
     }
-    if (params.isAi && world.setup().mode != WorldMode::Town && row->roleType != 12)
+    if (params.isAi && m_world.setup().mode != WorldMode::Town && row->roleType != 12)
         ecs.add(entity, AiAgent{});
     auto& brain = ecs.get<RoleBrain>(entity);
-    role::brain::enterFirst(brain, world, entity, world.setup().mode == WorldMode::Town);
+    role::brain::enterFirst(brain, m_world, entity, m_world.setup().mode == WorldMode::Town);
     if (params.playerSlot.has_value())
         ecs.singleton<PlayerSlots>().entities.emplace(*params.playerSlot, entity);
-    if (world.setup().mode != WorldMode::Town)
-        buff::BuffHolder(world, entity).loadBuffs(params.m_buffs);
+    if (m_world.setup().mode != WorldMode::Town)
+        buff::BuffHolder(m_world, entity).loadBuffs(params.m_buffs);
     return entity;
 }
 // 将职业映射为角色配置后复用标准角色创建流程。
-Entity spawnPlayer(World& world, CharacterClass occupation, RoleSpawnParams params)
+Entity RoleSpawner::spawnPlayer(CharacterClass occupation, RoleSpawnParams params)
 {
     params.roleId = type_conversions::toRoleConfigId(occupation);
-    return spawnRole(world, params);
+    return spawnRole(params);
 }
 // 创建由外部帧同步驱动、没有行为树的城镇木偶。
-Entity spawnPuppet(World& world, int64_t playerId, int32_t roleId, FixedVec3 position, int32_t toward)
+Entity RoleSpawner::spawnPuppet(int64_t playerId, int32_t roleId, FixedVec3 position, int32_t toward)
 {
     const auto* row = conf::Config::instance().find<conf::RoleConfig>(roleId);
     if (!row)
@@ -246,8 +245,8 @@ Entity spawnPuppet(World& world, int64_t playerId, int32_t roleId, FixedVec3 pos
         motion.motionFile = AvatarPaths::motionFileFromSpine(spine->fileName);
         transform.scale   = spine->scale;
     }
-    auto& ecs           = world.ecs();
-    const Entity entity = world.create(GroupKind::Role);
+    auto& ecs           = m_world.ecs();
+    const Entity entity = m_world.create(GroupKind::Role);
     RoleIdentity identity;
     identity.roleId   = roleId;
     identity.roleType = row->roleType;

@@ -5,7 +5,7 @@
 #include "mugen/sim/attack/AttackRole.h"
 #include "mugen/sim/role/brain/states/HitStates.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
-#include "mugen/sim/room/RoomFlow.h"
+#include "mugen/sim/room/RoomDirector.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include <fstream>
@@ -100,7 +100,7 @@ TEST_CASE("First frame after spawn only enters, first tick updates once")
     sim::RoleSpawnParams player;
     player.camp       = 2;
     player.playerSlot = 0;
-    const auto entity = sim::spawnPlayer(world, CharacterClass::kSwordman, player);
+    const auto entity = sim::RoleSpawner(world).spawnPlayer(CharacterClass::kSwordman, player);
     REQUIRE(entity.value != 0);
     auto& brain = world.ecs().get<RoleBrain>(entity);
     REQUIRE(brain.m_phase == role::brain::BrainPhase::Running);
@@ -219,11 +219,11 @@ TEST_CASE("Room change exits previous leaf and enters plus updates once")
     sim::RoleSpawnParams player;
     player.camp       = 2;
     player.playerSlot = 0;
-    const auto entity = sim::spawnPlayer(world, CharacterClass::kSwordman, player);
+    const auto entity = sim::RoleSpawner(world).spawnPlayer(CharacterClass::kSwordman, player);
     REQUIRE(entity.value != 0);
     const auto* config = conf::Config::instance().find<conf::RoomConfig>(2071501);
     REQUIRE(config);
-    REQUIRE(sim::room::enter(world, *config, 0, 0));
+    REQUIRE(sim::room::RoomDirector(world).enter(*config, 0, 0));
     REQUIRE(world.ecs().get<RoleBrain>(entity).m_phase == role::brain::BrainPhase::Running);
     // 触发房间切换（传送到另一个房间）。
     world.ecs().singleton<sim::RoomState>().m_transferRoom = 2010101;

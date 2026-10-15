@@ -118,7 +118,7 @@ bool TownView::initTown()
     m_world.init({1, sim::WorldMode::Town, m_boot.townId, town->mapKey});
     const int32_t spawnX = m_boot.spawnX >= 0 ? m_boot.spawnX : town->actorPosX;
     const int32_t spawnZ = m_boot.spawnZ >= 0 ? m_boot.spawnZ : town->actorPosZ;
-    m_localEntity = sim::spawnRole(m_world, {.roleId = resolveLocalPlayerRoleId(),
+    m_localEntity = sim::RoleSpawner(m_world).spawnRole({.roleId = resolveLocalPlayerRoleId(),
                                              .level = 1,
                                              .position = {Fixed::fromInt(spawnX), {}, Fixed::fromInt(spawnZ)},
                                              .toward = m_boot.facing < 0 ? -1 : 1,
@@ -338,7 +338,7 @@ void TownView::addOrUpdateRemotePlayer(const PB::Types::PlayerState& state)
     if (inserted)
     {
         const int32_t roleId = type_conversions::toRoleConfigId(static_cast<CharacterClass>(state.class_id()));
-        it->second = sim::spawnPuppet(m_world, state.player_id(), roleId, {}, 1);
+        it->second = sim::RoleSpawner(m_world).spawnPuppet(state.player_id(), roleId, {}, 1);
     }
     queuePuppetUpdate(it->second, state);
 }

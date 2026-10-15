@@ -356,7 +356,7 @@ void HitResolver::_hitTarget(const conf::EffectConfig& row)
             const auto applied         = data.m_damage.toInt();
             const bool critical        = data.m_critical;
             const auto attacker        = data.m_attacker;
-            trace::noteDamage(m_world, attacker, m_target, sourceConfig, applied, critical);
+            trace::TraceRecorder(m_world).noteDamage(attacker, m_target, sourceConfig, applied, critical);
             Role(m_world, m_target).modifyHp(-data.m_damage, m_effect);
         }
         _hitReaction(m_target, data, *hitRow);

@@ -35,10 +35,12 @@ void LogicTimers::resetTimes()
     for (auto& timer : entries)
         timer.elapsedMs = {};
 }
+// 构造定时器视图，只保存世界引用。
+LogicTimerDriver::LogicTimerDriver(World& world) : m_world(world) {}
 // 以逻辑帧步长推进定时器，并安全处理派发时的集合修改。
-void updateLogicTimers(World& world)
+void LogicTimerDriver::update()
 {
-    auto& timers = world.ecs().singleton<LogicTimers>();
+    auto& timers = m_world.ecs().singleton<LogicTimers>();
     // IDs remain stable if dispatch mutates the timer pool; newly registered timers wait.
     std::vector<uint64_t> ids;
     for (const auto& timer : timers.entries)
@@ -50,7 +52,7 @@ void updateLogicTimers(World& world)
         if (found == timers.entries.end())
             continue;
         if (std::holds_alternative<RoomWaveReady>(found->payload) &&
-            (world.ecs().singleton<RoomState>().m_reviving || world.ecs().singleton<RoomState>().paused))
+            (m_world.ecs().singleton<RoomState>().m_reviving || m_world.ecs().singleton<RoomState>().paused))
             continue;
         found->elapsedMs += kLogicDtMs;
         if (found->elapsedMs < found->intervalMs)
@@ -63,27 +65,27 @@ void updateLogicTimers(World& world)
         switch (firing.payload.index())
         {
         case 0:
-            world.emit(firing.owner, std::get<EmitPresentation>(firing.payload).payload);
+            m_world.emit(firing.owner, std::get<EmitPresentation>(firing.payload).payload);
             break;
         case 1:
-            world.destroy(std::get<DestroyEntity>(firing.payload).target);
+            m_world.destroy(std::get<DestroyEntity>(firing.payload).target);
             break;
         case 2:
-            if (auto* roleTimers = world.ecs().tryGet<RoleTimers>(firing.owner))
+            if (auto* roleTimers = m_world.ecs().tryGet<RoleTimers>(firing.owner))
             {
                 roleTimers->freezeMs = std::get<HitFreeze>(firing.payload).m_duration;
-                world.ecs().get<RoleHitState>(firing.owner).m_freezeTimer = 0;
+                m_world.ecs().get<RoleHitState>(firing.owner).m_freezeTimer = 0;
             }
             break;
         case 3:
-            buff::BuffHolder(world, firing.owner).finishExit(std::get<BuffExit>(firing.payload).m_serial);
+            buff::BuffHolder(m_world, firing.owner).finishExit(std::get<BuffExit>(firing.payload).m_serial);
             break;
         case 4:
-            buff::BuffHolder(world, firing.owner).continuePresentation(std::get<BuffContinue>(firing.payload).m_serial);
+            buff::BuffHolder(m_world, firing.owner).continuePresentation(std::get<BuffContinue>(firing.payload).m_serial);
             break;
         case 5:
-            if (world.ecs().singleton<RoomState>().roomId == std::get<RoomWaveReady>(firing.payload).m_roomId)
-                world.ecs().singleton<RoomState>().m_waveReady = true;
+            if (m_world.ecs().singleton<RoomState>().roomId == std::get<RoomWaveReady>(firing.payload).m_roomId)
+                m_world.ecs().singleton<RoomState>().m_waveReady = true;
             break;
         }
     }

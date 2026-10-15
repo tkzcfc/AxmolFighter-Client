@@ -4,7 +4,7 @@
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/sim/Replay.h"
 #include "mugen/sim/World.h"
-#include "mugen/sim/room/RoomFlow.h"
+#include "mugen/sim/room/RoomDirector.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "mugen/sim/trace/TraceSink.h"
 #include <filesystem>
@@ -98,10 +98,10 @@ TEST_CASE("Trace combat scenario captures skill cast and is deterministic")
         sim::RoleSpawnParams player;
         player.camp       = 2;
         player.playerSlot = 0;
-        sim::spawnPlayer(world, CharacterClass::kSwordman, std::move(player));
+        sim::RoleSpawner(world).spawnPlayer(CharacterClass::kSwordman, std::move(player));
         const auto* config = conf::Config::instance().find<conf::RoomConfig>(roomId);
         REQUIRE(config);
-        REQUIRE(sim::room::enter(world, *config, 0, 0));
+        REQUIRE(sim::room::RoomDirector(world).enter(*config, 0, 0));
         return world;
     };
     auto drive = [](World& world) {
