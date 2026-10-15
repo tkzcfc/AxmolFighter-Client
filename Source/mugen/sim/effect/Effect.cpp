@@ -291,7 +291,7 @@ Entity EffectActor::create(World& world, Entity owner, int32_t id)
     ecs.add(entity, identity);
     ecs.add(entity, ColliderState{{}, {}, ecs.singleton<WorldClock>().frame, Fixed::fromInt(row->radius)});
     ecs.add(entity, CollisionState{});
-    trace::noteSpawn(world, owner, id);
+    trace::TraceRecorder(world).noteSpawn(owner, id);
     return entity;
 }
 
@@ -379,7 +379,7 @@ void EffectActor::summon(int32_t roleId, int64_t lifetime)
     const auto& levels = ecs.singleton<RoomState>().m_config.monsterLevels;
     if (row->roleType >= 2 && row->roleType <= 4 && static_cast<size_t>(row->roleType - 2) < levels.size())
         params.level = levels[row->roleType - 2] + ecs.singleton<RoomState>().m_levelBonus;
-    const auto entity = spawnRole(m_world, params);
+    const auto entity = RoleSpawner(m_world).spawnRole(params);
     if (entity.value == 0) return;
     if (const auto* drops = ecs.tryGet<DropGoods>(owner)) ecs.add(entity, *drops);
     ecs.get<RoleTimers>(entity).summonMs = Fixed::fromInt(lifetime);

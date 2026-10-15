@@ -18,7 +18,7 @@ Entity setupHero(World& world)
     params.roleId                                 = role.id;
     params.level                                  = 100;
     params.playerSlot                             = 0;
-    const Entity entity                           = spawnRole(world, params);
+    const Entity entity                           = RoleSpawner(world).spawnRole(params);
     world.ecs().singleton<MapRegion>().moveRanges = {{"-10000"_fx, "-10000"_fx, "20000"_fx, "20000"_fx}};
     return entity;
 }

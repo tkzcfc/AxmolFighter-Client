@@ -28,7 +28,7 @@ Entity setup(World& world, bool moving = false)
     }
     params.level      = 100;
     params.playerSlot = 0;
-    return spawnRole(world, params);
+    return RoleSpawner(world).spawnRole(params);
 }
 void advance(World& world, Entity entity, ControlEvent event)
 {

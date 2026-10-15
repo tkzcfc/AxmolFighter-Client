@@ -15,7 +15,7 @@ TEST_CASE("Skill cooldown advances before frozen role input and survives snapsho
     RoleSpawnParams params;
     params.roleId = role->id;
     params.playerSlot = 0;
-    const auto entity = spawnRole(world, params);
+    const auto entity = RoleSpawner(world).spawnRole(params);
     slots(world, entity, {id});
     world.ecs().get<Vitals>(entity).mp = "100"_fx;
     auto& pool = world.ecs().get<SkillPool>(entity);
@@ -51,7 +51,7 @@ TEST_CASE("Skill FrameInput reaches attack control seam and resource hint")
     RoleSpawnParams params;
     params.roleId = role->id;
     params.playerSlot = 0;
-    const auto entity = spawnRole(world, params);
+    const auto entity = RoleSpawner(world).spawnRole(params);
     slots(world, entity, {id});
     world.ecs().get<Vitals>(entity).ep = {};
     FrameInput input;

@@ -3,7 +3,7 @@
 #include "mugen/conf/ConfigFormat.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/sim/Replay.h"
-#include "mugen/sim/room/RoomFlow.h"
+#include "mugen/sim/room/RoomDirector.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "mugen/sim/trace/TraceSink.h"
 #include <charconv>
@@ -132,9 +132,9 @@ World combatWorld(int32_t roomId, uint64_t seed, int32_t occupation, int32_t lev
     player.camp       = 2;
     player.playerSlot = 0;
     player.level      = level;
-    sim::spawnPlayer(world, static_cast<CharacterClass>(occupation), std::move(player));
+    sim::RoleSpawner(world).spawnPlayer(static_cast<CharacterClass>(occupation), std::move(player));
     const auto* config = conf::Config::instance().find<conf::RoomConfig>(roomId);
-    if (!config || !sim::room::enter(world, *config, 0, 0))
+    if (!config || !sim::room::RoomDirector(world).enter(*config, 0, 0))
         throw std::runtime_error("Cannot enter room " + std::to_string(roomId));
     if (std::getenv("MUGEN_TRACE_DUMP_SKILLS"))
     {

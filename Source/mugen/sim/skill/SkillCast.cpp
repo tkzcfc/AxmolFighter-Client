@@ -125,7 +125,7 @@ void SkillCaster::dealWithCastPipeBegan(int32_t index)
             trigger(BFEvent::BeforeNextSkill, {index});
     }
     castBegan(index);
-    trace::noteCast(m_world, m_entity, skill.m_configId, pool.m_slots[skill.m_address.m_slot].m_name, skill.m_pipe);
+    trace::TraceRecorder(m_world).noteCast(m_entity, skill.m_configId, pool.m_slots[skill.m_address.m_slot].m_name, skill.m_pipe);
     const auto first = getGivenSkill(pool, pool.m_slots[skill.m_address.m_slot].m_name, skill.m_address.m_index, skill.m_address.m_mode, 1, true);
     trigger(BFEvent::BeforeCastSkill, {first});
     trigger(ability::SkillEvent::BeforeCastSkill, {first});
@@ -135,7 +135,7 @@ void SkillCaster::dealWithCastPipeEnded(int32_t index)
 {
     auto& pool = m_world.ecs().get<SkillPool>(m_entity);
     const auto& skill = pool.m_skills.at(index);
-    trace::noteCastEnd(m_world, m_entity, skill.m_configId);
+    trace::TraceRecorder(m_world).noteCastEnd(m_entity, skill.m_configId);
     const auto first = getGivenSkill(pool, pool.m_slots[skill.m_address.m_slot].m_name, skill.m_address.m_index, skill.m_address.m_mode, 1, true);
     trigger(BFEvent::AfterCastSkill, {first});
     if (skill.m_address.m_step == skill.m_stepCount) trigger(BFEvent::AfterNextSkill, {index});

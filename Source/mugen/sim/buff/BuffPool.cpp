@@ -91,7 +91,7 @@ std::optional<uint64_t> BuffHolder::addBuff(int32_t id, const BuffContext& conte
         event.m_target = m_entity;
         dispatchEvent(BFEvent::AddBuff, event, 8);
     }
-    trace::noteBuffAdd(m_world, m_entity, id);
+    trace::TraceRecorder(m_world).noteBuffAdd(m_entity, id);
     return serial;
 }
 
@@ -158,7 +158,7 @@ void BuffHolder::update()
     if (!pool) return;
     for (const auto& instance : pool->m_instances)
         if (instance.m_lifecycle.m_destroy)
-            trace::noteBuffRemove(m_world, m_entity, instance.m_id);
+            trace::TraceRecorder(m_world).noteBuffRemove(m_entity, instance.m_id);
     std::erase_if(pool->m_instances, [](const BuffInstance& instance) { return instance.m_lifecycle.m_destroy; });
     pool->updateCooldowns(seconds);
 }
@@ -186,7 +186,7 @@ void BuffHolder::_destroySerial(uint64_t serial, bool byRule)
     const auto before = pool->m_instances.size();
     std::erase_if(pool->m_instances, [serial](const BuffInstance& value) { return value.m_serial == serial; });
     if (removed && pool->m_instances.size() < before)
-        trace::noteBuffRemove(m_world, m_entity, removedId);
+        trace::TraceRecorder(m_world).noteBuffRemove(m_entity, removedId);
 }
 
 // 先保存逆序实例标识，退出回调改变数组时不会误删其他实例。

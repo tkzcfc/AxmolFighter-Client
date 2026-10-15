@@ -1,6 +1,6 @@
 #include <doctest.h>
 #include "../support/ScenarioHarness.h"
-#include "mugen/sim/room/RoomFlow.h"
+#include "mugen/sim/room/RoomDirector.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 
 using namespace mugen;
@@ -37,7 +37,7 @@ struct RoomFixture
         conf::RoomConfig config;
         config.id = 30002; config.battleRuleType = rule;
         config.battleRuleParam = rule == 3 ? std::vector<int32_t>{1} : std::vector<int32_t>{};
-        REQUIRE(room::enter(m_world, config, 0, 0));
+        REQUIRE(room::RoomDirector(m_world).enter(config, 0, 0));
         ticks(6);
         REQUIRE(state().m_state == mugen::RoomState::Process);
     }
@@ -160,13 +160,13 @@ TEST_CASE("Room FrameInput revive reaches ActionRevive in real role pipeline")
     RoleSpawnParams params;
     params.roleId = 261;
     params.playerSlot = 0;
-    const auto entity = spawnRole(world, params);
+    const auto entity = RoleSpawner(world).spawnRole(params);
     world.ecs().get<RoleIdentity>(entity).roleType = 1;
     conf::RoomConfig config;
     config.id = 30002;
     config.battleRuleType = 3;
     config.battleRuleParam = {100};
-    REQUIRE(room::enter(world, config, 0, 0));
+    REQUIRE(room::RoomDirector(world).enter(config, 0, 0));
     auto& state = world.ecs().singleton<sim::RoomState>();
     state.m_maxRevives = 1;
     state.m_reviving = true;
@@ -183,8 +183,8 @@ TEST_CASE("Room FrameInput revive reaches ActionRevive in real role pipeline")
 TEST_CASE("Room transition waits once and return command is slot validated")
 {
     RoomFixture f;
-    room::setExpectRoomState(f.m_world, mugen::RoomState::FightVictory);
-    room::setExpectRoomState(f.m_world, mugen::RoomState::FightVictory);
+    room::RoomDirector(f.m_world).setExpectRoomState(mugen::RoomState::FightVictory);
+    room::RoomDirector(f.m_world).setExpectRoomState(mugen::RoomState::FightVictory);
     CHECK(f.state().m_pending.size() == 1);
     CHECK(f.state().m_state == mugen::RoomState::Check);
     CHECK(f.state().m_waitMs == "30"_fx);

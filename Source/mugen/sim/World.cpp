@@ -1,6 +1,6 @@
 #include "World.h"
 #include "buff/BuffHolder.h"
-#include "room/RoomFlow.h"
+#include "room/RoomDirector.h"
 #include "role/brain/RoleBrainRunner.h"
 #include "trace/TraceSink.h"
 #include "mugen/conf/ReflectedConfig.h"
@@ -186,9 +186,9 @@ void World::tick(const FrameInput& input)
 
     ++clock.frame;
     m_ecs.singleton<PresentationEvents>().events.clear();
-    updateLogicTimers(*this);
+    LogicTimerDriver(*this).update();
     applyInput(input);
-    room::commands(*this, input);
+    room::RoomDirector(*this).commands(input);
     m_hooks.camera(*this);
     auto& slow        = m_ecs.singleton<SlowMotion>();
     const bool koActive = slow.m_ko.m_active;
@@ -206,7 +206,7 @@ void World::tick(const FrameInput& input)
     for (GroupKind kind : kGroupOrder)
         updateGroup(kind);
     m_hooks.scene(*this);
-    room::update(*this);
+    room::RoomDirector(*this).update();
     m_hooks.collision(*this);
     m_ecs.flushDestroyed();
     const auto transfer = m_ecs.singleton<RoomState>();
@@ -214,7 +214,7 @@ void World::tick(const FrameInput& input)
         changeRoom(transfer.m_transferRoom, transfer.m_transferPosition, transfer.m_transferToward);
     ++m_hashSequence;
     if (m_trace)
-        trace::emitFrame(*m_trace, *this);
+        trace::TraceRecorder(*this).emitFrame();
 }
 
 // 保留实体句柄和池状态，仅回收旧房间拥有的实体与定时器。
@@ -283,7 +283,7 @@ bool World::changeRoom(int32_t id, FixedVec3 position, int32_t toward)
     m_ecs.singleton<MapRegion>().mapKey = config->mapKey;
     if (!config->mapKey.empty()) m_ecs.singleton<MapRegion>().load("mugen/map/" + config->mapKey + ".layer");
     m_ecs.each<CollisionState>([](Entity, CollisionState& collision) { collision.contacts.clear(); });
-    if (!room::enter(*this, *config, previous.m_stageId, previous.m_copyId)) return false;
+    if (!room::RoomDirector(*this).enter(*config, previous.m_stageId, previous.m_copyId)) return false;
     for (const auto& [slot, entity] : m_ecs.singleton<PlayerSlots>().entities)
     {
         auto& transform = m_ecs.get<Transform>(entity);

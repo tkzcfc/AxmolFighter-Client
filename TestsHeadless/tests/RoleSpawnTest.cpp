@@ -38,7 +38,7 @@ TEST_CASE("Attribute golden compares three role curves at two levels")
         int id, level;
         REQUIRE(static_cast<bool>(input >> id >> level));
         const auto actual =
-            mugen::sim::loadAttributes(mugen::conf::Config::instance().get<mugen::conf::RoleConfig>(id), level);
+            mugen::sim::RoleSpawner::loadAttributes(mugen::conf::Config::instance().get<mugen::conf::RoleConfig>(id), level);
         for (const auto value : actual.basic)
         {
             double expected;
@@ -65,7 +65,7 @@ TEST_CASE("Spawn freezes component stage while MP regeneration continues")
     params.level      = 100;
     params.isAi       = true;
     params.playerSlot = 0;
-    const auto entity = spawnRole(world, params);
+    const auto entity = RoleSpawner(world).spawnRole(params);
     auto& vitals      = world.ecs().get<Vitals>(entity);
     CHECK(vitals.hp == vitals.maxHp);
     CHECK(vitals.mp == Fixed::fromInt(100));
@@ -109,7 +109,7 @@ TEST_CASE("Collider real motion advances after freeze expires and restores ident
     RoleSpawnParams params;
     params.roleId                                = 261;
     params.level                                 = 100;
-    const auto entity                            = spawnRole(world, params);
+    const auto entity                            = RoleSpawner(world).spawnRole(params);
     auto& motion                                 = world.ecs().get<MotionState>(entity);
     motion.motionFile                            = "mugen/motion/hero/rw_newzhujue_lilimu.motion";
     motion.motionName                            = "101";

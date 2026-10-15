@@ -252,76 +252,86 @@ void TraceSink::write(std::string_view line)
     m_text.push_back('\n');
 }
 
-void emitFrame(TraceSink& sink, World& world)
-{
-    const uint64_t frame = world.ecs().singleton<WorldClock>().frame;
-    sink.write("frame " + std::to_string(frame));
-    world.ecs().each<EntityGroup>([&](Entity entity, const EntityGroup&) { emitEntity(sink, world, entity, frame); });
-    for (const auto& event : world.ecs().singleton<PresentationEvents>().events)
-        emitEvent(sink, world, event);
-}
+// 构造追踪视图，只保存世界引用。
+TraceRecorder::TraceRecorder(World& world) : m_world(world) {}
 
-namespace
-{
 // 未挂载追踪时不拼接文本，避免战斗热路径产生额外开销。
-bool tracing(const World& world) { return world.trace() != nullptr; }
+bool TraceRecorder::_tracing() const { return m_world.trace() != nullptr; }
 
-void writeEvent(World& world, const std::string& line)
+// 向已挂载的追踪追加一行。
+void TraceRecorder::_writeEvent(const std::string& line)
 {
-    world.trace()->write(line);
+    m_world.trace()->write(line);
 }
-}  // namespace
 
-void noteCast(World& world, Entity entity, int32_t configId, std::string_view slot, int32_t pipe)
+// 在一帧结束时输出帧边界、各实体状态行与表现事件行。
+void TraceRecorder::emitFrame()
 {
-    if (!tracing(world))
+    TraceSink& sink = *m_world.trace();
+    const uint64_t frame = m_world.ecs().singleton<WorldClock>().frame;
+    sink.write("frame " + std::to_string(frame));
+    m_world.ecs().each<EntityGroup>([&](Entity entity, const EntityGroup&) { emitEntity(sink, m_world, entity, frame); });
+    for (const auto& event : m_world.ecs().singleton<PresentationEvents>().events)
+        emitEvent(sink, m_world, event);
+}
+
+// cast <实体> <技能配置> <槽名> <管线>
+void TraceRecorder::noteCast(Entity entity, int32_t configId, std::string_view slot, int32_t pipe)
+{
+    if (!_tracing())
         return;
     const auto name = slot.empty() ? std::string_view{"-"} : slot;
-    writeEvent(world, "cast " + entityKey(world, entity) + ' ' + std::to_string(configId) + ' ' + std::string(name) +
-                          ' ' + std::to_string(pipe));
+    _writeEvent("cast " + entityKey(m_world, entity) + ' ' + std::to_string(configId) + ' ' + std::string(name) +
+                ' ' + std::to_string(pipe));
 }
 
-void noteCastEnd(World& world, Entity entity, int32_t configId)
+// castend <实体> <技能配置>
+void TraceRecorder::noteCastEnd(Entity entity, int32_t configId)
 {
-    if (!tracing(world))
+    if (!_tracing())
         return;
-    writeEvent(world, "castend " + entityKey(world, entity) + ' ' + std::to_string(configId));
+    _writeEvent("castend " + entityKey(m_world, entity) + ' ' + std::to_string(configId));
 }
 
-void noteDamage(World& world, Entity attacker, Entity target, int32_t sourceConfigId, int64_t value, bool critical)
+// dmg <攻击者> <目标> <命中来源配置> <伤害> <暴击 0/1>
+void TraceRecorder::noteDamage(Entity attacker, Entity target, int32_t sourceConfigId, int64_t value, bool critical)
 {
-    if (!tracing(world))
+    if (!_tracing())
         return;
-    writeEvent(world, "dmg " + entityKey(world, attacker) + ' ' + entityKey(world, target) + ' ' +
-                          std::to_string(sourceConfigId) + ' ' + std::to_string(value) + ' ' +
-                          std::to_string(critical ? 1 : 0));
+    _writeEvent("dmg " + entityKey(m_world, attacker) + ' ' + entityKey(m_world, target) + ' ' +
+                std::to_string(sourceConfigId) + ' ' + std::to_string(value) + ' ' +
+                std::to_string(critical ? 1 : 0));
 }
 
-void noteBuffAdd(World& world, Entity entity, int32_t buffId)
+// buff + <实体> <效果配置>
+void TraceRecorder::noteBuffAdd(Entity entity, int32_t buffId)
 {
-    if (!tracing(world))
+    if (!_tracing())
         return;
-    writeEvent(world, "buff + " + entityKey(world, entity) + ' ' + std::to_string(buffId));
+    _writeEvent("buff + " + entityKey(m_world, entity) + ' ' + std::to_string(buffId));
 }
 
-void noteBuffRemove(World& world, Entity entity, int32_t buffId)
+// buff - <实体> <效果配置>
+void TraceRecorder::noteBuffRemove(Entity entity, int32_t buffId)
 {
-    if (!tracing(world))
+    if (!_tracing())
         return;
-    writeEvent(world, "buff - " + entityKey(world, entity) + ' ' + std::to_string(buffId));
+    _writeEvent("buff - " + entityKey(m_world, entity) + ' ' + std::to_string(buffId));
 }
 
-void noteSpawn(World& world, Entity owner, int32_t effectConfigId)
+// spawn <主人> <特效配置>
+void TraceRecorder::noteSpawn(Entity owner, int32_t effectConfigId)
 {
-    if (!tracing(world))
+    if (!_tracing())
         return;
-    writeEvent(world, "spawn " + entityKey(world, owner) + ' ' + std::to_string(effectConfigId));
+    _writeEvent("spawn " + entityKey(m_world, owner) + ' ' + std::to_string(effectConfigId));
 }
 
-void noteDeath(World& world, Entity entity)
+// death <实体>
+void TraceRecorder::noteDeath(Entity entity)
 {
-    if (!tracing(world))
+    if (!_tracing())
         return;
-    writeEvent(world, "death " + entityKey(world, entity));
+    _writeEvent("death " + entityKey(m_world, entity));
 }
 }  // namespace mugen::sim::trace

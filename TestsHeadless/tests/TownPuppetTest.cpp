@@ -10,7 +10,7 @@ TEST_CASE("Town puppet updates synchronize position, facing, and motion")
     REQUIRE(conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin"));
     World world;
     world.init({1, WorldMode::Town, 41, {}});
-    const Entity puppet = spawnPuppet(world, 77, 261, {}, 1);
+    const Entity puppet = RoleSpawner(world).spawnPuppet(77, 261, {}, 1);
 
     FrameInput input;
     input.frame = 1;

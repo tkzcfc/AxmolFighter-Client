@@ -6,7 +6,7 @@
 #include "mugen/sim/role/brain/RoleContext.h"
 #include "mugen/sim/role/brain/RoleBranches.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
-#include "mugen/sim/room/RoomFlow.h"
+#include "mugen/sim/room/RoomDirector.h"
 #include "mugen/sim/role/Role.h"
 
 using namespace mugen;
@@ -29,7 +29,7 @@ struct BrainFixture
         sim::RoleSpawnParams p;
         p.camp       = 2;
         p.playerSlot = 0;
-        entity       = sim::spawnPlayer(world, CharacterClass::kSwordman, p);
+        entity       = sim::RoleSpawner(world).spawnPlayer(CharacterClass::kSwordman, p);
         REQUIRE(entity.value != 0);
     }
 };

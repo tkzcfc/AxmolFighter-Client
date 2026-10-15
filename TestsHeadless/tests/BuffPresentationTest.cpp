@@ -53,15 +53,15 @@ TEST_CASE("BuffPresentation resolved motion schedules appearance and disappearan
     buff::BuffHolder(world, entity).beginPresentation(1);
     REQUIRE(world.ecs().singleton<LogicTimers>().entries.size() == 1);
     CHECK(world.ecs().singleton<LogicTimers>().entries.front().intervalMs == "50"_fx);
-    updateLogicTimers(world);
-    updateLogicTimers(world);
+    LogicTimerDriver(world).update();
+    LogicTimerDriver(world).update();
     CHECK(std::get<BuffSpine>(world.ecs().singleton<PresentationEvents>().events.back().payload).m_stage == 2);
     buff::BuffHolder(world, entity).exitInstance(1);
     REQUIRE(world.ecs().singleton<LogicTimers>().entries.size() == 1);
     CHECK_FALSE(buff::BuffHolder(world, entity).findInstance(1)->m_lifecycle.m_destroy);
-    updateLogicTimers(world);
+    LogicTimerDriver(world).update();
     CHECK_FALSE(buff::BuffHolder(world, entity).findInstance(1)->m_lifecycle.m_destroy);
-    updateLogicTimers(world);
+    LogicTimerDriver(world).update();
     CHECK(buff::BuffHolder(world, entity).findInstance(1)->m_lifecycle.m_destroy);
 }
 
@@ -80,7 +80,7 @@ TEST_CASE("BuffPresentation continuation timer is cancelled by exit")
     pool.m_instances.push_back(instance);
     world.ecs().add(entity, pool);
     world.ecs().singleton<LogicTimers>().add(entity, kLogicDtMs, false, BuffContinue{1});
-    updateLogicTimers(world);
+    LogicTimerDriver(world).update();
     const auto& events = world.ecs().singleton<PresentationEvents>().events;
     REQUIRE(events.size() == 1);
     REQUIRE(std::holds_alternative<BuffSpine>(events.front().payload));
@@ -161,12 +161,12 @@ TEST_CASE("BuffPresentation exit timer dispatch survives world clone")
     world.ecs().add(entity, pool);
     world.ecs().singleton<LogicTimers>().add(entity, kLogicDtMs * "2"_fx, false, BuffExit{7});
     auto clone = world.clone();
-    updateLogicTimers(world);
+    LogicTimerDriver(world).update();
     CHECK_FALSE(buff::BuffHolder(world, entity).findInstance(7)->m_lifecycle.m_destroy);
-    updateLogicTimers(world);
+    LogicTimerDriver(world).update();
     CHECK(buff::BuffHolder(world, entity).findInstance(7)->m_lifecycle.m_destroy);
-    updateLogicTimers(clone);
-    updateLogicTimers(clone);
+    LogicTimerDriver(clone).update();
+    LogicTimerDriver(clone).update();
     CHECK(clone.hash() == world.hash());
     CHECK(world.ecs().singleton<LogicTimers>().entries.empty());
 }

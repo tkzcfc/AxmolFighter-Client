@@ -22,7 +22,7 @@ TEST_CASE("Portal Finding consumes ordered path points before returning Idle")
     });
     REQUIRE(row != rows.end());
     params.roleId = row->id;
-    const auto entity = spawnRole(world, params);
+    const auto entity = RoleSpawner(world).spawnRole(params);
     auto& ecs = world.ecs();
     const auto step = row->velocity * Fixed::ratio(1000, 60);
     const FixedVec3 first{step / "2"_fx, {}, {}};

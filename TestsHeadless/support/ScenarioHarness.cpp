@@ -2,7 +2,7 @@
 #include "mugen/avatar/data/AvatarAssetCache.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/core/io/FileUtils.h"
-#include "mugen/sim/room/RoomFlow.h"
+#include "mugen/sim/room/RoomDirector.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "mugen/sim/role/Role.h"
 #include <filesystem>
@@ -73,9 +73,9 @@ sim::World ScenarioHarness::roomWorld(int32_t roomId, uint64_t seed)
     player.roleId     = 0;
     player.camp       = 2;
     player.playerSlot = 0;
-    spawnRole(world, player);
+    sim::RoleSpawner(world).spawnRole(player);
     const auto* config = conf::Config::instance().find<conf::RoomConfig>(roomId);
-    if (!config || !sim::room::enter(world, *config, 0, 0))
+    if (!config || !sim::room::RoomDirector(world).enter(*config, 0, 0))
         MG_LOG_E("Cannot enter recorded room {}", roomId);
     return world;
 }
