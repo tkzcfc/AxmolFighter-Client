@@ -1,6 +1,6 @@
 #include "SkillTestSupport.h"
 #include "mugen/sim/effect/Effect.h"
-#include "mugen/sim/hit/Hit.h"
+#include "mugen/sim/hit/HitResolver.h"
 #include "mugen/sim/hit/Damage.h"
 #include "mugen/sim/hit/DamageCalculator.h"
 #include <algorithm>
@@ -151,7 +151,7 @@ struct DodgeHit
         REQUIRE(false);
     }
 
-    void strike() { hit::onEffectCollision(m_world, m_effect, m_monster, CollisionEvent::Began, {}); }
+    void strike() { hit::HitResolver(m_world, m_effect).onCollision(m_monster, CollisionEvent::Began, {}); }
 
     bool tip(std::string_view text) const
     {

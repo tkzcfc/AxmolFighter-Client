@@ -11,9 +11,53 @@
 
 namespace mugen::sim::hit
 {
-HitResolver::HitResolver(World& world, Entity effect, Entity target, FixedVec2 contact)
-    : m_world(world), m_effect(effect), m_target(target), m_contact(contact)
+HitResolver::HitResolver(World& world, Entity effect) : m_world(world), m_effect(effect) {}
+
+// 碰撞分派按目标类型与攻击者阵营过滤，End 事件不产生打击。
+void HitResolver::onCollision(Entity other, CollisionEvent event, FixedVec2 contact)
 {
+    if (event == CollisionEvent::End)
+        return;
+    m_target  = other;
+    m_contact = contact;
+    _resolve();
+}
+
+// 按配置目标选择接收池，实体遍历保持世界创建顺序。
+void HitResolver::addEntityBuff(int32_t id, std::optional<int32_t> boundSkill, std::optional<int32_t> origin)
+{
+    const auto* config = conf::Config::instance().find<conf::BuffConfig>(id);
+    if (!config) return;
+    if (auto* state = m_world.ecs().tryGet<RoleHitState>(m_effect)) state->m_protectionBuffRequests.push_back(id);
+    HitBuffApplication request;
+    request.m_buffId = Fixed::fromInt(id);
+    request.m_origin = origin;
+    if (config->target == 1)
+    {
+        if (config->binding != 0) request.m_boundSkill = boundSkill;
+        m_world.hitHooks().m_apply(m_world, m_effect, request);
+        return;
+    }
+    const auto identity = m_world.ecs().get<RoleIdentity>(m_effect);
+    m_world.ecs().each<RoleIdentity>([&](Entity target, const RoleIdentity& other) {
+        const bool enemy = (identity.hostileCamp & other.camp) != 0;
+        const bool selected = config->target == 9 || (config->target == 4 && !enemy) ||
+            (config->target == 5 && enemy) || (config->target == 6 && other.roleType == 4) ||
+            (config->target == 7 && (other.roleType == 2 || other.roleType == 3));
+        if (selected) m_world.hitHooks().m_apply(m_world, target, request);
+    });
+}
+
+// 同步分派给世界实例的 Buff 接缝，允许在返回前执行免死。
+void HitResolver::trigger(BFEvent event, const HitTrigger& context)
+{
+    m_world.hitHooks().m_trigger(m_world, m_effect, event, context);
+}
+
+// 转交施加请求，不在命中层建立 Buff 池。
+void HitResolver::dealBuff(const HitBuffApplication& application)
+{
+    m_world.hitHooks().m_apply(m_world, m_effect, application);
 }
 
 bool HitResolver::_enabled(Entity entity) const
@@ -46,7 +90,7 @@ HitTrigger HitResolver::_context(Entity effect, Entity target) const
 
 void HitResolver::_dodge(Entity target, const HitTrigger& data, bool passive)
 {
-    buff::trigger(m_world, target, passive ? BFEvent::AttackMiss : BFEvent::EvadeSuccess, data);
+    HitResolver(m_world, target).trigger(passive ? BFEvent::AttackMiss : BFEvent::EvadeSuccess, data);
     m_world.emit(target, Tips{passive ? "MISS" : "DODGE"});
 }
 
@@ -114,7 +158,7 @@ bool HitResolver::_beforeHit(Entity target,
         ecs.get<RoleStatus>(target).isGetUp() && hitRow.hitMust != 1)
         return false;
     ecs.get<RoleHitState>(target).m_beHitEffect = data.m_effect;
-    buff::trigger(m_world, target, BFEvent::BeforeToBeHit, data);
+    HitResolver(m_world, target).trigger(BFEvent::BeforeToBeHit, data);
     if (hitRow.hitType == -1)
         return true;
     const auto state = ecs.get<RoleStatus>(target);
@@ -218,7 +262,7 @@ void HitResolver::_endHit(Entity target, HitTrigger data, const conf::EffectConf
     if (maxHp > Fixed{})
         _recoverEp(target, std::min("100"_fx * data.m_damage / maxHp, "100"_fx) * conf::kCrazyFromHurtValue);
     if (!Role(m_world, target).isDead())
-        buff::trigger(m_world, target, BFEvent::AfterToBeHit, data);
+        HitResolver(m_world, target).trigger(BFEvent::AfterToBeHit, data);
     ecs.get<RoleHitState>(target).m_beHitEffect = {};
     auto& attack                                = ecs.get<RoleHitState>(data.m_attacker);
     attack.m_damage                             = data.m_damage;
@@ -228,7 +272,7 @@ void HitResolver::_endHit(Entity target, HitTrigger data, const conf::EffectConf
                row.energy * (ecs.get<RoleIdentity>(target).roleType == 4 ? "1.5"_fx : "1"_fx));
     if (!capability)
         m_world.hitHooks().m_ability(m_world, data.m_attacker, HitAbilityEvent::AfterHit, data, -1);
-    buff::trigger(m_world, data.m_attacker, BFEvent::AfterHit, data);
+    HitResolver(m_world, data.m_attacker).trigger(BFEvent::AfterHit, data);
 }
 
 void HitResolver::_applyBuffs(Entity pool, const std::vector<Fixed>& ids, HitTrigger data)
@@ -237,7 +281,7 @@ void HitResolver::_applyBuffs(Entity pool, const std::vector<Fixed>& ids, HitTri
         return;
     data.m_target = {};
     for (const auto id : ids)
-        buff::dealBuff(m_world, pool, {id, data});
+        HitResolver(m_world, pool).dealBuff({id, data});
 }
 
 std::vector<Fixed> HitResolver::_buffIds(const std::vector<int32_t>& ids)
@@ -294,7 +338,7 @@ void HitResolver::_hitTarget(const conf::EffectConfig& row)
     const bool accepted = _beforeHit(m_target, data, row, *hitRow, m_contact);
     if (accepted && hitRow->hitType != -1)
     {
-        buff::trigger(m_world, data.m_attacker, BFEvent::BeforeHit, data);
+        HitResolver(m_world, data.m_attacker).trigger(BFEvent::BeforeHit, data);
         if (!ecs.get<EffectState>(m_effect).m_capabilityTrigger)
             m_world.hitHooks().m_ability(m_world, data.m_attacker, HitAbilityEvent::BeforeHit, data, -1);
         // 前置事件可以改变属性，伤害阶段重新解析而不重复抽闪避。
@@ -328,7 +372,7 @@ void HitResolver::_hitTarget(const conf::EffectConfig& row)
         _hitEffects(m_effect, m_target, m_contact);
 }
 
-void HitResolver::resolve()
+void HitResolver::_resolve()
 {
     auto& ecs = m_world.ecs();
     if (!_enabled(m_target))
@@ -413,8 +457,8 @@ void HitResolver::resolve()
         _applyBuffs(source.m_owner, ids, data);
         data.m_target   = source.m_owner;
         data.m_teammate = true;
-        buff::trigger(m_world, m_target, BFEvent::BeforeHit, data);
-        buff::trigger(m_world, m_target, BFEvent::AfterHit, data);
+        HitResolver(m_world, m_target).trigger(BFEvent::BeforeHit, data);
+        HitResolver(m_world, m_target).trigger(BFEvent::AfterHit, data);
         if (row->specialabilityId != -1)
         {
             m_world.hitHooks().m_ability(m_world, source.m_owner, HitAbilityEvent::SameCamp, data, row->specialabilityId);

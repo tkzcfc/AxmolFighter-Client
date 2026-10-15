@@ -3,6 +3,7 @@
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/buff/BuffComponents.h"
+#include "mugen/sim/hit/HitResolver.h"
 #include "mugen/sim/effect/Effect.h"
 #include "mugen/sim/skill/SkillComponents.h"
 
@@ -49,7 +50,7 @@ void addBuffs(World& world, Entity entity, const conf::SpecialAbilityConfig& con
         if (id <= 0) continue;
         const int32_t targetType = index < config.bindBuffType.size() ? config.bindBuffType[index] : 1;
         const Entity target = targetType == 1 ? entity : context.m_target;
-        if (target.value != 0) buff::addEntityBuff(world, target, id);
+        if (target.value != 0) hit::HitResolver(world, target).addEntityBuff(id);
     }
 }
 }

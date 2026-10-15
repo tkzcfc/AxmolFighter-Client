@@ -2,7 +2,7 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/effect/Effect.h"
 #include "mugen/sim/hit/DamageCalculator.h"
-#include "mugen/sim/hit/HitSeams.h"
+#include "mugen/sim/hit/HitResolver.h"
 #include "mugen/sim/trace/TraceSink.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/BattleConst.h"
@@ -53,7 +53,7 @@ Fixed Role::_absorbShield(Fixed delta)
 void Role::_cleanShield()
 {
     m_world.ecs().get<Vitals>(m_entity).cleanShield();
-    buff::trigger(m_world, m_entity, BFEvent::ShieldClean, HitTrigger{});
+    hit::HitResolver(m_world, m_entity).trigger(BFEvent::ShieldClean, HitTrigger{});
 }
 
 // 治疗修正、护盾和锁血依次生效；死亡事件先于死亡判定和状态转换。
@@ -77,7 +77,7 @@ void Role::modifyHp(Fixed delta, Entity effect, bool noShield)
     HitTrigger context;
     context.m_target = m_entity;
     context.m_effect = effect;
-    if (ecs.get<Vitals>(m_entity).hp <= Fixed{}) buff::trigger(m_world, m_entity, BFEvent::BeforeDeath, context);
+    if (ecs.get<Vitals>(m_entity).hp <= Fixed{}) hit::HitResolver(m_world, m_entity).trigger(BFEvent::BeforeDeath, context);
     if (!wasDead && isDead())
     {
         const auto* row   = roleData(m_world, m_entity);
@@ -95,7 +95,7 @@ void Role::modifyHp(Fixed delta, Entity effect, bool noShield)
         }
         m_world.hitHooks().m_ability(m_world, m_entity, HitAbilityEvent::Death, context, -1);
     }
-    if (!isDead()) buff::trigger(m_world, m_entity, BFEvent::HpChange, context);
+    if (!isDead()) hit::HitResolver(m_world, m_entity).trigger(BFEvent::HpChange, context);
 }
 
 // 按状态机规则应用转换，死亡角色拒绝后续转换。
@@ -179,8 +179,8 @@ bool Role::applyWeight(Fixed amount, bool hitProtect)
         const auto query = m_world.hitHooks().m_hasBuff;
         if (!query || (!query(m_world, m_entity, 155) && !query(m_world, m_entity, 173)))
         {
-            buff::addEntityBuff(m_world, m_entity, hitProtect ? 173 : 155);
-            buff::addEntityBuff(m_world, m_entity, 154);
+            hit::HitResolver(m_world, m_entity).addEntityBuff(hitProtect ? 173 : 155);
+            hit::HitResolver(m_world, m_entity).addEntityBuff(154);
         }
     }
     return true;

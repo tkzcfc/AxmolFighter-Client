@@ -3,6 +3,7 @@
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "mugen/sim/role/Role.h"
 #include "mugen/sim/skill/SkillCaster.h"
+#include "mugen/sim/hit/HitResolver.h"
 #include <algorithm>
 
 namespace mugen::sim::room
@@ -157,7 +158,7 @@ bool enter(World& world, const conf::RoomConfig& config, int32_t stageId, int32_
         auto& transform = world.ecs().get<Transform>(entity);
         transform.position = {Fixed::fromInt(value(config.actorPosX, index, 0)), {}, Fixed::fromInt(value(config.actorPosZ, index, 0))};
         transform.towardX = value(config.actorVectorX, index++, 1) < 0 ? -1 : 1;
-        for (int32_t id : config.actorBuffIds) if (id != -1) buff::addEntityBuff(world, entity, id);
+        for (int32_t id : config.actorBuffIds) if (id != -1) hit::HitResolver(world, entity).addEntityBuff(id);
     }
     if (std::find(room.m_clearedRooms.begin(), room.m_clearedRooms.end(), config.id) == room.m_clearedRooms.end())
         spawn(world, config);
@@ -203,7 +204,7 @@ void commands(World& world, const FrameInput& input)
                         skill::refreshSkillPipe(entry);
                     }
                     skill::SkillCaster(world, found->second).resetSkill();
-                    buff::addEntityBuff(world, found->second, 202);
+                    hit::HitResolver(world, found->second).addEntityBuff(202);
                 }
                 ++room.m_usedRevives;
                 room.m_reviving = false;

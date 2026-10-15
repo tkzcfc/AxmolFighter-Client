@@ -1,6 +1,7 @@
 #include "BuffHolder.h"
 #include "BuffCondition.h"
 #include "mugen/sim/role/Role.h"
+#include "mugen/sim/hit/HitResolver.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/trace/TraceSink.h"
 #include "mugen/conf/ReflectedConfig.h"
@@ -44,13 +45,13 @@ void BuffHolder::loadBuffs(const std::vector<LoadEntry>& additional)
     const auto* row = conf::Config::instance().find<conf::RoleConfig>(identity.roleId);
     if (!row) return;
     for (const auto id : row->buffIds)
-        if (id != -1) addEntityBuff(m_world, m_entity, id);
+        if (id != -1) hit::HitResolver(m_world, m_entity).addEntityBuff(id);
     for (const auto& entry : additional)
-        if (entry.m_id > 0) addEntityBuff(m_world, m_entity, entry.m_id, entry.m_skill, entry.m_origin);
+        if (entry.m_id > 0) hit::HitResolver(m_world, m_entity).addEntityBuff(entry.m_id, entry.m_skill, entry.m_origin);
     if (identity.roleType == static_cast<int32_t>(EntityRoleType::kHero))
         if (const auto* room = conf::Config::instance().find<conf::RoomConfig>(m_world.setup().roomId))
             for (const auto id : room->actorBuffIds)
-                if (id != -1) addEntityBuff(m_world, m_entity, id);
+                if (id != -1) hit::HitResolver(m_world, m_entity).addEntityBuff(id);
 }
 
 // 概率只从世界唯一随机源抽取，未通过准入检查时不消耗随机数。

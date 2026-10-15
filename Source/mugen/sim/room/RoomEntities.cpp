@@ -3,6 +3,7 @@
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "mugen/sim/role/Role.h"
 #include "mugen/sim/ability/AbilityHolder.h"
+#include "mugen/sim/hit/HitResolver.h"
 #include "mugen/sim/obstacle/Obstacle.h"
 #include "mugen/avatar/AvatarPaths.h"
 #include "mugen/avatar/MotionPlayer.h"
@@ -260,7 +261,7 @@ void RoomEntity::onCollision(Entity other, CollisionEvent event)
         return;
     if (ecs.has<GoodsState>(m_entity) && ecs.has<ObstacleState>(other))
     {
-        obstacle::onCollision(m_world, m_entity, other, event, {});
+        obstacle::ObstacleActor(m_world, other).onCollision(m_entity, event, {});
         return;
     }
     const auto* identity = ecs.tryGet<RoleIdentity>(other);
@@ -299,7 +300,7 @@ void RoomEntity::onCollision(Entity other, CollisionEvent event)
         const auto own       = *identity;
         play(m_world, m_entity, "death", false);
         if (row->buffId != -1)
-            buff::addEntityBuff(m_world, other, row->buffId);
+            hit::HitResolver(m_world, other).addEntityBuff(row->buffId);
         if (row->specialabilityId != -1)
             ability::AbilityHolder(m_world, other).add(row->specialabilityId);
         if (row->soundPick != -1)

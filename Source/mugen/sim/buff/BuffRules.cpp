@@ -5,7 +5,7 @@
 #include "BuffHolder.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/role/Role.h"
-#include "mugen/sim/hit/HitSeams.h"
+#include "mugen/sim/hit/HitResolver.h"
 #include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/skill/SkillComponents.h"
 #include "mugen/conf/ReflectedConfig.h"
@@ -428,7 +428,7 @@ void loopCheck(World& world, Entity entity, uint64_t serial, Fixed, bool latched
         if (id <= 0)
             continue;
         if (!passed)
-            addEntityBuff(world, entity, id);
+            hit::HitResolver(world, entity).addEntityBuff(id);
         else
             BuffHolder(world, entity).removeBuff(id, true);
     }
@@ -617,7 +617,7 @@ void shieldChange(World& world, Entity entity, uint64_t serial, bool entering)
         Fixed value = config.paramValue[0];
         vitals.m_shield = value > "1"_fx ? value : vitals.maxHp * value;
         if (config.paramValue.size() > 1 && config.paramValue[1].toInt() > 0)
-            addEntityBuff(world, entity, config.paramValue[1].toInt());
+            hit::HitResolver(world, entity).addEntityBuff(config.paramValue[1].toInt());
         auto* refreshed = BuffHolder(world, entity).findInstance(serial);
         if (refreshed && config.paramValue.size() > 3 && config.paramValue[3] > Fixed{})
             refreshed->m_lifecycle.m_repeat = config.paramValue[3].toInt();
@@ -628,7 +628,7 @@ void shieldChange(World& world, Entity entity, uint64_t serial, bool entering)
         if (config.paramValue.size() > 1 && config.paramValue[1].toInt() > 0)
             BuffHolder(world, entity).removeBuff(config.paramValue[1].toInt(), true);
         if (config.paramValue.size() > 2 && config.paramValue[2].toInt() > 0)
-            addEntityBuff(world, entity, config.paramValue[2].toInt());
+            hit::HitResolver(world, entity).addEntityBuff(config.paramValue[2].toInt());
     }
 }
 void shieldEnter(World& w, Entity e, uint64_t s, Fixed) { shieldChange(w, e, s, true); }
@@ -715,7 +715,7 @@ void addApplicator(World& world, Entity entity, uint64_t serial, Fixed)
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
     for (const auto value : config.paramValue)
         if (value.toInt() > 0)
-            addEntityBuff(world, entity, value.toInt(), instance->m_context.m_boundSkill, instance->m_source);
+            hit::HitResolver(world, entity).addEntityBuff(value.toInt(), instance->m_context.m_boundSkill, instance->m_source);
 }
 void removeApplicator(World& world, Entity entity, uint64_t serial, Fixed)
 {
@@ -736,7 +736,7 @@ void addToApplicator(World& world, Entity entity, uint64_t serial, Fixed)
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
     for (const auto value : config.paramValue)
         if (value.toInt() > 0)
-            addEntityBuff(world, instance->m_context.m_applicator, value.toInt());
+            hit::HitResolver(world, instance->m_context.m_applicator).addEntityBuff(value.toInt());
 }
 // 范围检测只对满足阵营和二维距离限制的角色施加后续效果。
 void detectorApply(World& world, Entity entity, uint64_t serial)
@@ -764,7 +764,7 @@ void detectorApply(World& world, Entity entity, uint64_t serial)
             return;
         for (size_t index = 3; index < config.paramValue.size(); ++index)
             if (config.paramValue[index].toInt() > 0)
-                addEntityBuff(world, candidate, config.paramValue[index].toInt());
+                hit::HitResolver(world, candidate).addEntityBuff(config.paramValue[index].toInt());
     });
 }
 void detectorEnter(World& w, Entity e, uint64_t s, Fixed) { detectorApply(w, e, s); }
