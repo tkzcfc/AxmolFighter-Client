@@ -29,12 +29,9 @@
 #include "ui/core/ViewManager.h"
 #include "ui/views/GameView.h"
 #include "ui/views/LaunchView.h"
+#include "LaunchOptions.h"
 
 #include <charconv>
-
-#if AX_TARGET_PLATFORM == AX_PLATFORM_WIN32
-#    include <windows.h>
-#endif
 
 const std::string_view IMGUI_LOOP_ID = "#MainScene";
 
@@ -78,22 +75,10 @@ void MainScene::onEnter()
 
 bool MainScene::parseOfflineLaunch()
 {
-#if AX_TARGET_PLATFORM != AX_PLATFORM_WIN32
-    return false;
-#else
-    const std::string commandLine = GetCommandLineA();
-    const auto readValue = [&commandLine](std::string_view name) -> std::string {
-        const size_t begin = commandLine.find(name);
-        if (begin == std::string::npos)
-            return {};
-        const size_t valueBegin = begin + name.size();
-        const size_t valueEnd = commandLine.find_first_of(" \t", valueBegin);
-        return commandLine.substr(valueBegin, valueEnd - valueBegin);
-    };
-    const std::string room = readValue("--offline-room=");
+    const std::string_view room = LaunchOptions::get("offline-room");
     if (room.empty())
         return false;
-    const auto parseInt = [](const std::string& value, int32_t& result) {
+    const auto parseInt = [](std::string_view value, int32_t& result) {
         const auto [end, error] = std::from_chars(value.data(), value.data() + value.size(), result);
         return error == std::errc{} && end == value.data() + value.size();
     };
@@ -102,7 +87,7 @@ bool MainScene::parseOfflineLaunch()
         AXLOGE("Invalid offline room argument");
         return false;
     }
-    const std::string role = readValue("--offline-role=");
+    const std::string_view role = LaunchOptions::get("offline-role");
     if (!role.empty())
     {
         if (!parseInt(role, m_offline.roleId))
@@ -119,10 +104,10 @@ bool MainScene::parseOfflineLaunch()
             {
                 AXLOGE("Invalid offline role argument");
                 return false;
-            } 
+            }
         }
     }
-    const std::string frames = readValue("--autotest-frames=");
+    const std::string_view frames = LaunchOptions::get("autotest-frames");
     if (!frames.empty() && (!parseInt(frames, m_offline.autotestFrames) || m_offline.autotestFrames <= 0))
     {
         AXLOGE("Invalid autotest frame argument");
@@ -130,7 +115,6 @@ bool MainScene::parseOfflineLaunch()
     }
     m_offlineRequested = true;
     return true;
-#endif
 }
 
 void MainScene::startOfflineBattle()

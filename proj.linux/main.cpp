@@ -24,6 +24,7 @@
  ****************************************************************************/
 
 #include "AppDelegate.h"
+#include "LaunchOptions.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -41,6 +42,8 @@ int axmol_main()
 
 int main(int argc, char** argv)
 {
+    LaunchOptions::init(argc, argv);
+
 #if _AX_TESTS
     AppDelegate app;
     return app.run(argc, argv);

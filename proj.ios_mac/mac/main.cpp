@@ -26,6 +26,7 @@
 
 #include "AppDelegate.h"
 #include "axmol.h"
+#include "LaunchOptions.h"
 
 using namespace ax;
 
@@ -38,6 +39,8 @@ int axmol_main()
 
 int main(int argc, char* argv[])
 {
+    LaunchOptions::init(argc, argv);
+
 #if _AX_TESTS
     AppDelegate app;
     return app.run(argc, argv);

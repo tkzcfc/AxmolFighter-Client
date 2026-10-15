@@ -26,6 +26,7 @@
 #include "main.h"
 #include "AppDelegate.h"
 #include "platform/Application.h"
+#include "LaunchOptions.h"
 
 // Uncomment to enable win32 console
 #define USE_WIN32_CONSOLE
@@ -45,6 +46,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
+    LaunchOptions::initFromWin32CommandLine();
+
 #ifdef USE_WIN32_CONSOLE
 #    include "platform/win32/EmbedConsole.h"
 #endif
@@ -59,6 +62,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 }
 #else
 int main(int argc, char** argv) {
+    LaunchOptions::init(argc, argv);
+
 #if _AX_TESTS
     AppDelegate app;
     return app.run(argc, argv);

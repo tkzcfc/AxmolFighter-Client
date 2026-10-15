@@ -1,6 +1,12 @@
 # Launch the built client with Content as working directory.
-# usage: pwsh run.ps1 [-Config Debug|Release|MinSizeRel|RelWithDebInfo]
-param([string]$Config)
+# usage: pwsh run.ps1 [-Config Debug|Release|MinSizeRel|RelWithDebInfo] [app args...]
+# Extra arguments are forwarded to the executable, e.g.
+#   pwsh run.ps1 -Config Debug --offline-room=<roomId> --offline-role=swordman --autotest-frames=300
+[CmdletBinding(PositionalBinding = $false)]
+param(
+    [string]$Config,
+    [Parameter(ValueFromRemainingArguments = $true)][string[]]$AppArgs
+)
 $ErrorActionPreference = 'Stop'
 $AppName = 'AxmolFighter-Client'
 $cacheFile = Join-Path $PSScriptRoot 'run.ps1.txt'
@@ -27,5 +33,11 @@ foreach ($dir in $buildDirs) {
 }
 if (-not $exe) { throw "Cannot find built $AppName ($Config) under build*/bin/$AppName. Run build.ps1 first." }
 
-Write-Host "Launching $exe (cwd: $content)"
-Start-Process -FilePath $exe -WorkingDirectory $content
+Write-Host "Launching $exe $($AppArgs -join ' ') (cwd: $content)"
+# On macOS the binary inside the .app bundle is started directly, so arguments reach argv without `open --args`.
+$startArgs = @{ FilePath = $exe; WorkingDirectory = $content }
+if ($AppArgs) {
+    # Start-Process joins ArgumentList with spaces, so quote arguments that contain whitespace.
+    $startArgs.ArgumentList = @($AppArgs | ForEach-Object { if ($_ -match '\s') { '"' + ($_ -replace '"', '\"') + '"' } else { $_ } })
+}
+Start-Process @startArgs
