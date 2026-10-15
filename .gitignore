@@ -235,3 +235,4 @@ tests/*-tests/build_*
 .gitee
 release_note_draft.txt
 /replays/
+run.ps1.txt
