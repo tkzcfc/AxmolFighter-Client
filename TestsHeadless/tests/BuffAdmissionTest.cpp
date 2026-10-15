@@ -17,18 +17,18 @@ TEST_CASE("BuffAdmission immunity cooldown and area checks")
     config.ruleId = 3;
     config.areaSetting = {-1};
     CHECK(buff::BuffHolder(world, entity).buffCheck(config, 8));
-    buff::setImmune(pool, 3, true);
-    buff::setImmune(pool, 3, true);
+    pool.setImmune(3, true);
+    pool.setImmune(3, true);
     CHECK(pool.m_immunity.size() == 1);
     CHECK_FALSE(buff::BuffHolder(world, entity).buffCheck(config, 8));
-    buff::setImmune(pool, 3, false);
-    buff::setImmune(pool, -1, true);
+    pool.setImmune(3, false);
+    pool.setImmune(-1, true);
     CHECK_FALSE(buff::BuffHolder(world, entity).buffCheck(config, 8));
-    buff::setImmune(pool, -1, false);
+    pool.setImmune(-1, false);
     pool.m_cooldowns.push_back({11, "0.1"_fx});
-    buff::updateCooldowns(pool, "0.1"_fx);
+    pool.updateCooldowns("0.1"_fx);
     CHECK_FALSE(buff::BuffHolder(world, entity).buffCheck(config, 8));
-    buff::updateCooldowns(pool, "0.1"_fx);
+    pool.updateCooldowns("0.1"_fx);
     CHECK(buff::BuffHolder(world, entity).buffCheck(config, 8));
     config.areaSetting = {0, 8};
     CHECK_FALSE(buff::BuffHolder(world, entity).buffCheck(config, 8));
@@ -48,8 +48,8 @@ TEST_CASE("BuffAdmission probability repeat uses first matching stack")
     config.probability = "20"_fx;
     config.probabilityRepeat = 1;
     BuffPool pool;
-    CHECK(buff::probabilityPass(pool, config, "19"_fx));
-    CHECK_FALSE(buff::probabilityPass(pool, config, "20"_fx));
+    CHECK(pool.probabilityPass(config, "19"_fx));
+    CHECK_FALSE(pool.probabilityPass(config, "20"_fx));
     BuffInstance instance;
     instance.m_id = 1;
     instance.m_serial = 1;
@@ -58,12 +58,12 @@ TEST_CASE("BuffAdmission probability repeat uses first matching stack")
     instance.m_serial = 2;
     instance.m_lifecycle.m_repeat = 5;
     pool.m_instances.push_back(instance);
-    CHECK(buff::probabilityPass(pool, config, "59"_fx));
-    CHECK_FALSE(buff::probabilityPass(pool, config, "60"_fx));
+    CHECK(pool.probabilityPass(config, "59"_fx));
+    CHECK_FALSE(pool.probabilityPass(config, "60"_fx));
     config.probabilityRepeat = 0;
-    CHECK_FALSE(buff::probabilityPass(pool, config, "59"_fx));
+    CHECK_FALSE(pool.probabilityPass(config, "59"_fx));
     config.probability = Fixed{};
-    CHECK_FALSE(buff::probabilityPass(pool, config, Fixed{}));
+    CHECK_FALSE(pool.probabilityPass(config, Fixed{}));
 }
 
 // 减益免疫由池内规则身份决定，不要求该具体规则已移植。

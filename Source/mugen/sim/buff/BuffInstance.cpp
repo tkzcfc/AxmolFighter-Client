@@ -1,5 +1,4 @@
 #include "BuffHolder.h"
-#include "BuffCondition.h"
 #include "mugen/sim/role/Role.h"
 #include "mugen/sim/World.h"
 #include "mugen/conf/ReflectedConfig.h"
@@ -80,14 +79,14 @@ void BuffHolder::resetInstance(uint64_t serial, const conf::BuffConfig& config)
             if (instance->m_triggered && oldConfig->ended == -1)
                 instance->m_triggered = false;
         }
-        if (execute(instance->m_lifecycle, oldConfig->executeType) == LifecycleAction::Enter &&
-            (oldConfig->addType == 1 || !Role(m_world, m_entity).isDead()) && checkConditions(m_world, m_entity, *instance))
+        if (instance->m_lifecycle.execute(oldConfig->executeType) == LifecycleAction::Enter &&
+            (oldConfig->addType == 1 || !Role(m_world, m_entity).isDead()) && checkConditions(*instance))
             invokeRule(serial, RuleHook::Enter);
     }
     instance = findInstance(serial);
     if (!instance) return;
     auto& state = instance->m_lifecycle;
-    resetCounters(state, config.resetType);
+    state.resetCounters(config.resetType);
     if (!sustain || config.times == -1 ||
         (state.m_maxTimes != -1 && state.m_maxTimes - state.m_times < config.times))
     {

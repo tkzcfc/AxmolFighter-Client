@@ -22,10 +22,20 @@ struct Lifecycle
     bool m_active = false, m_exit = false, m_destroy = false;
     MG_REFLECT(Lifecycle, m_repeat, m_times, m_interval, m_maxInterval, m_maxTimes,
                m_innerElapsed, m_innerCd, m_active, m_exit, m_destroy)
+
+    // 从配置初始化计时状态；内部冷却初始为已满足。
+    static Lifecycle fromConfig(const conf::BuffConfig& config);
+    // 执行模式一立即计次，模式二仅激活，模式三等待事件。
+    LifecycleAction execute(int32_t executeType);
+    // 周期检查先于累加，达到阈值的下一帧才执行；每帧最多一次。
+    LifecycleAction advance(Fixed dtSeconds);
+    // ENTER 回调完成后判断有限次数终点，保留先执行后移层的顺序。
+    bool finishEnter();
+    // 重置计时部分；叠层及重新执行由调用者先行处理。
+    void resetCounters(int32_t resetType);
 };
 
-// 从配置初始化计时状态；内部冷却初始为已满足。
-inline Lifecycle makeLifecycle(const conf::BuffConfig& config)
+inline Lifecycle Lifecycle::fromConfig(const conf::BuffConfig& config)
 {
     Lifecycle state;
     state.m_maxInterval = config.interval;
@@ -35,75 +45,71 @@ inline Lifecycle makeLifecycle(const conf::BuffConfig& config)
     return state;
 }
 
-// 执行模式一立即计次，模式二仅激活，模式三等待事件。
-inline LifecycleAction execute(Lifecycle& state, int32_t executeType)
+inline LifecycleAction Lifecycle::execute(int32_t executeType)
 {
     if (executeType == 1)
     {
-        state.m_active = true;
-        if (state.m_maxTimes > 0)
-            ++state.m_times;
+        m_active = true;
+        if (m_maxTimes > 0)
+            ++m_times;
         return LifecycleAction::Enter;
     }
     if (executeType == 2)
-        state.m_active = true;
+        m_active = true;
     else if (executeType == 3)
-        state.m_active = false;
+        m_active = false;
     return LifecycleAction::None;
 }
 
-// 周期检查先于累加，达到阈值的下一帧才执行；每帧最多一次。
-inline LifecycleAction advance(Lifecycle& state, Fixed dtSeconds)
+inline LifecycleAction Lifecycle::advance(Fixed dtSeconds)
 {
-    if (state.m_repeat == 0 || !state.m_active || state.m_exit ||
-        state.m_maxTimes < -1 || state.m_maxInterval < Fixed{} ||
-        (state.m_maxTimes == 0 && state.m_maxInterval == Fixed{}))
+    if (m_repeat == 0 || !m_active || m_exit ||
+        m_maxTimes < -1 || m_maxInterval < Fixed{} ||
+        (m_maxTimes == 0 && m_maxInterval == Fixed{}))
         return LifecycleAction::None;
 
-    if (state.m_maxInterval > Fixed{})
+    if (m_maxInterval > Fixed{})
     {
-        if (state.m_interval < state.m_maxInterval)
+        if (m_interval < m_maxInterval)
         {
-            state.m_interval += dtSeconds;
+            m_interval += dtSeconds;
             return LifecycleAction::None;
         }
-        state.m_interval -= state.m_maxInterval;
+        m_interval -= m_maxInterval;
     }
 
-    if (state.m_maxTimes == -1)
+    if (m_maxTimes == -1)
     {
-        if (state.m_innerCd > Fixed{})
+        if (m_innerCd > Fixed{})
         {
-            state.m_innerElapsed += dtSeconds;
-            if (state.m_innerElapsed < state.m_innerCd)
+            m_innerElapsed += dtSeconds;
+            if (m_innerElapsed < m_innerCd)
                 return LifecycleAction::None;
-            state.m_innerElapsed = Fixed{};
+            m_innerElapsed = Fixed{};
         }
         return LifecycleAction::Update;
     }
-    if (state.m_maxTimes == 0)
+    if (m_maxTimes == 0)
         return LifecycleAction::RemoveRepeat;
-    ++state.m_times;
+    ++m_times;
     return LifecycleAction::Enter;
 }
 
-// ENTER 回调完成后判断有限次数终点，保留先执行后移层的顺序。
-inline bool finishEnter(Lifecycle& state)
+inline bool Lifecycle::finishEnter()
 {
-    if (state.m_maxTimes > 0 && state.m_times >= state.m_maxTimes)
+    if (m_maxTimes > 0 && m_times >= m_maxTimes)
     {
-        state.m_times = 0;
+        m_times = 0;
         return true;
     }
     return false;
 }
 
-// 重置计时部分；叠层及重新执行由调用者先行处理。
-inline void resetCounters(Lifecycle& state, int32_t resetType)
+inline void Lifecycle::resetCounters(int32_t resetType)
 {
     if (resetType == 1 || resetType == 2 || resetType == 6 || resetType == 7)
-        state.m_times = 0;
+        m_times = 0;
     if (resetType == 1 || resetType == 3 || resetType == 5 || resetType == 7)
-        state.m_interval = Fixed{};
+        m_interval = Fixed{};
 }
 }  // namespace mugen::sim::buff

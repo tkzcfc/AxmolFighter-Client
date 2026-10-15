@@ -87,5 +87,14 @@ struct BuffPool
     // 下一个实例标识，零值不分配。
     uint64_t m_nextSerial = 1;
     MG_REFLECT(BuffPool, m_instances, m_immunity, m_cooldowns, m_ruleCounters, m_nextSerial)
+
+    // 更新添加冷却，调用者明确传入秒而非毫秒。
+    void updateCooldowns(Fixed dtSeconds);
+    // 增删规则免疫集合，重复添加不累积引用。
+    void setImmune(int32_t ruleId, bool immune);
+    // 根据现有同类层数计算概率，严格小于判定消耗调用方提供的抽样。
+    bool probabilityPass(const conf::BuffConfig& config, Fixed draw) const;
+    // 按配置规则和子类型返回首个实例的稳定序号。
+    std::optional<uint64_t> findByType(int32_t ruleId, int32_t subType) const;
 };
 }  // namespace mugen::sim

@@ -57,6 +57,18 @@ public:
     Entity sneerTarget() const;
     // 判断角色是否处于持续移动状态。
     bool isMoved() const;
+    // 按配置顺序短路计算条件，返回真表示全部通过。
+    bool checkConditions(const BuffInstance& instance) const;
+    // 使用已解析配置计算条件，供重置和配置验证复用同一入口。
+    bool checkConditions(const BuffInstance& instance, const conf::BuffConfig& config) const;
+    // 从施加者或受益者解析标准伤害并在取整后乘层数。
+    Fixed getAttackValue(const BuffInstance& instance) const;
+    // 通过统一生命入口结算周期变化，并发送伤害数字。
+    void dealBuffDamage(Entity attacker, Fixed attackValue);
+    // 计算带符号的周期生命变化，不经过防御、暴击或随机浮动。
+    static Fixed calculateBuffDamage(Fixed standardHurt, Fixed parameter, Fixed addition);
+    // 返回已绑定逻辑动作的毫秒时长；缺失时返回空值而不是猜测。
+    static std::optional<Fixed> disappearDuration(int32_t spineId);
 
 private:
     // 强制删除不等待表现，回调后重新取得组件以规避扩容失效。

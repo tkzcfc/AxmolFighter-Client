@@ -1,6 +1,4 @@
 #include "BuffRules.h"
-#include "BuffCondition.h"
-#include "BuffDamage.h"
 #include "BuffPool.h"
 #include "BuffHolder.h"
 #include "mugen/sim/World.h"
@@ -271,7 +269,7 @@ void dotEnter(World& world, Entity entity, uint64_t serial, Fixed)
     const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
-    dealBuffDamage(world, entity, instance->m_context.m_applicator, getAttackValue(world, entity, *instance));
+    BuffHolder(world, entity).dealBuffDamage(instance->m_context.m_applicator, BuffHolder(world, entity).getAttackValue(*instance));
 }
 // 锁血按配置比例或绝对值叠加到生命限制。
 void hpLockChange(World& world, Entity entity, uint64_t serial, bool entering)
@@ -398,7 +396,7 @@ void separateEnter(World& world, Entity entity, uint64_t serial, Fixed)
 {
     const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (instance && BuffHolder(world, entity).isMoved())
-        dealBuffDamage(world, entity, instance->m_context.m_applicator, getAttackValue(world, entity, *instance));
+        BuffHolder(world, entity).dealBuffDamage(instance->m_context.m_applicator, BuffHolder(world, entity).getAttackValue(*instance));
 }
 // 白帧只发出表现事件，表现层不得回写模拟状态。
 void whiteFrameEnter(World& world, Entity entity, uint64_t, Fixed)
@@ -415,7 +413,7 @@ void loopCheck(World& world, Entity entity, uint64_t serial, Fixed, bool latched
     auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
-    const bool passed = checkConditions(world, entity, *instance);
+    const bool passed = BuffHolder(world, entity).checkConditions(*instance);
     if (latched && instance->m_triggered == passed)
         return;
     instance->m_triggered = passed;
@@ -780,7 +778,7 @@ void coldEnter(World& world, Entity entity, uint64_t serial, Fixed)
 {
     const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (instance)
-        dealBuffDamage(world, entity, instance->m_context.m_applicator, getAttackValue(world, entity, *instance));
+        BuffHolder(world, entity).dealBuffDamage(instance->m_context.m_applicator, BuffHolder(world, entity).getAttackValue(*instance));
 }
 // 类型渐进规则依赖完整池筛选，暂以进入时快照写入并在结束时精确撤销。
 void damageTypeGradationChange(World& world, Entity entity, uint64_t serial, bool entering)

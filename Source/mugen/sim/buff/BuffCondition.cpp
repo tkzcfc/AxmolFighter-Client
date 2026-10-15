@@ -1,4 +1,4 @@
-#include "BuffCondition.h"
+#include "BuffHolder.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/role/Role.h"
 #include "mugen/sim/skill/Skill.h"
@@ -309,18 +309,18 @@ bool checkOne(World& world, Entity entity, const BuffInstance& instance, int32_t
 }
 }
 // 条件按源顺序短路，参数不够时提供空数组而不读取越界。
-bool checkConditions(World& world, Entity entity, const BuffInstance& instance)
+bool BuffHolder::checkConditions(const BuffInstance& instance) const
 {
     const auto* config = conf::Config::instance().find<conf::BuffConfig>(instance.m_id);
     if (!config) return false;
-    return checkConditions(world, entity, instance, *config);
+    return checkConditions(instance, *config);
 }
 // 允许调用者携带待应用配置，避免测试或重置修改全局配置归档。
-bool checkConditions(World& world, Entity entity, const BuffInstance& instance, const conf::BuffConfig& config)
+bool BuffHolder::checkConditions(const BuffInstance& instance, const conf::BuffConfig& config) const
 {
     const std::vector<Fixed> empty;
     for (size_t index = 0; index < config.condition.size(); ++index)
-        if (!checkOne(world, entity, instance, config.condition[index],
+        if (!checkOne(m_world, m_entity, instance, config.condition[index],
                       index < config.conditionParam.size() ? config.conditionParam[index] : empty)) return false;
     return true;
 }

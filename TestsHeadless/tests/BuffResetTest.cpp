@@ -54,7 +54,7 @@ TEST_CASE("BuffReset all eight policies update instance counters and stacks")
         BuffInstance instance;
         instance.m_id = selected->id;
         instance.m_serial = 1;
-        instance.m_lifecycle = buff::makeLifecycle(*selected);
+        instance.m_lifecycle = buff::Lifecycle::fromConfig(*selected);
         instance.m_lifecycle.m_times = 3;
         instance.m_lifecycle.m_interval = "2"_fx;
         pool.m_instances.push_back(instance);
@@ -89,7 +89,7 @@ TEST_CASE("BuffReset stacking does not enter invincibility on a dead role")
         BuffInstance instance;
         instance.m_id = instance.m_initialId = config.id;
         instance.m_serial = 1;
-        instance.m_lifecycle = buff::makeLifecycle(config);
+        instance.m_lifecycle = buff::Lifecycle::fromConfig(config);
         pool.m_instances.push_back(instance);
         world.ecs().add(entity, pool);
         auto incoming = config;

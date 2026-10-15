@@ -1,4 +1,3 @@
-#include "BuffPresentation.h"
 #include "BuffHolder.h"
 #include "mugen/sim/event/LogicTimers.h"
 #include "mugen/sim/World.h"
@@ -50,7 +49,7 @@ void BuffHolder::beginPresentation(uint64_t serial)
 }
 
 // 只读已加载的逻辑动作资源，不访问 Spine 渲染后端。
-std::optional<Fixed> disappearDuration(int32_t spineId)
+std::optional<Fixed> BuffHolder::disappearDuration(int32_t spineId)
 {
     const auto* row = conf::Config::instance().find<conf::ResSpineConfig>(spineId);
     if (!row) return std::nullopt;

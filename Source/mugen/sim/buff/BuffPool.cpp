@@ -1,5 +1,4 @@
 #include "BuffHolder.h"
-#include "BuffCondition.h"
 #include "mugen/sim/role/Role.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/trace/TraceSink.h"
@@ -64,8 +63,8 @@ std::optional<uint64_t> BuffHolder::addBuff(int32_t id, const BuffContext& conte
     if (!m_world.ecs().has<BuffPool>(m_entity)) m_world.ecs().add(m_entity, BuffPool{});
     auto& pool = m_world.ecs().get<BuffPool>(m_entity);
     const auto draw = m_world.ecs().singleton<RngState>().random.randomF("0"_fx, "100"_fx);
-    if (!probabilityPass(pool, *config, draw)) return std::nullopt;
-    auto serial = findByType(pool, config->ruleId, config->subType);
+    if (!pool.probabilityPass(*config, draw)) return std::nullopt;
+    auto serial = pool.findByType(config->ruleId, config->subType);
     if (!serial || config->subType == -1)
     {
         BuffInstance instance;
@@ -73,14 +72,14 @@ std::optional<uint64_t> BuffHolder::addBuff(int32_t id, const BuffContext& conte
         instance.m_id = instance.m_initialId = id;
         instance.m_context = context;
         instance.m_source = context.m_origin;
-        instance.m_lifecycle = makeLifecycle(*config);
+        instance.m_lifecycle = Lifecycle::fromConfig(*config);
         serial = instance.m_serial;
         pool.m_instances.push_back(instance);
         beginPresentation(*serial);
         auto* added = findInstance(*serial);
-        const auto action = execute(added->m_lifecycle, config->executeType);
+        const auto action = added->m_lifecycle.execute(config->executeType);
         if (action == LifecycleAction::Enter && (config->addType == 1 || !Role(m_world, m_entity).isDead()) &&
-            checkConditions(m_world, m_entity, *added)) invokeRule(*serial, RuleHook::Enter);
+            checkConditions(*added)) invokeRule(*serial, RuleHook::Enter);
     }
     else resetInstance(*serial, *config);
     const auto cd = m_world.setup().m_pvp ? config->cdPvp : config->cd;
@@ -143,15 +142,15 @@ void BuffHolder::update()
         if (dead && config->addType != 1) continue;
         if (instance->m_lifecycle.m_maxInterval < Fixed{} || instance->m_lifecycle.m_maxTimes < -1)
             continue;
-        const auto action = advance(instance->m_lifecycle, seconds);
-        if (action == LifecycleAction::Enter && checkConditions(m_world, m_entity, *instance))
+        const auto action = instance->m_lifecycle.advance(seconds);
+        if (action == LifecycleAction::Enter && checkConditions(*instance))
             invokeRule(serial, RuleHook::Enter);
         else if (action == LifecycleAction::Update)
             invokeRule(serial, RuleHook::Update, seconds);
         instance = findInstance(serial);
         if (!instance) continue;
         if (action == LifecycleAction::RemoveRepeat ||
-            (instance->m_lifecycle.m_active && !instance->m_lifecycle.m_exit && finishEnter(instance->m_lifecycle)))
+            (instance->m_lifecycle.m_active && !instance->m_lifecycle.m_exit && instance->m_lifecycle.finishEnter()))
             removeRepeat(serial);
     }
     pool = m_world.ecs().tryGet<BuffPool>(m_entity);
@@ -160,7 +159,7 @@ void BuffHolder::update()
         if (instance.m_lifecycle.m_destroy)
             trace::noteBuffRemove(m_world, m_entity, instance.m_id);
     std::erase_if(pool->m_instances, [](const BuffInstance& instance) { return instance.m_lifecycle.m_destroy; });
-    updateCooldowns(*pool, seconds);
+    pool->updateCooldowns(seconds);
 }
 
 // 强制删除不等待表现，回调后重新取得组件以规避扩容失效。
@@ -214,36 +213,6 @@ void BuffHolder::destroyBuffByRule(int32_t ruleId)
     for (const auto serial : serials) _destroySerial(serial, true);
 }
 
-// 同类匹配不排除退出标记，物理删除由池更新负责。
-std::optional<uint64_t> findByType(const BuffPool& pool, int32_t ruleId, int32_t subType)
-{
-    for (const auto& instance : pool.m_instances)
-    {
-        const auto* row = conf::Config::instance().find<conf::BuffConfig>(instance.m_id);
-        if (row && row->ruleId == ruleId && row->subType == subType)
-            return instance.m_serial;
-    }
-    return std::nullopt;
-}
-
-// 重复概率乘现有层数；没有同类实例时仍使用基础概率。
-bool probabilityPass(const BuffPool& pool, const conf::BuffConfig& config, Fixed draw)
-{
-    Fixed probability = config.probability;
-    if (config.probabilityRepeat == 1)
-    {
-        const auto serial = findByType(pool, config.ruleId, config.subType);
-        if (serial)
-            for (const auto& instance : pool.m_instances)
-                if (instance.m_serial == *serial)
-                {
-                    probability *= Fixed::fromInt(instance.m_lifecycle.m_repeat);
-                    break;
-                }
-    }
-    return draw < probability;
-}
-
 // 保留池中的实例可被查询，销毁实例由更新阶段统一移除。
 bool BuffHolder::hasBuff(int32_t id) const
 {
@@ -251,29 +220,6 @@ bool BuffHolder::hasBuff(int32_t id) const
     if (!pool) return false;
     return std::any_of(pool->m_instances.begin(), pool->m_instances.end(),
                        [id](const BuffInstance& instance) { return instance.m_id == id; });
-}
-
-// 免疫集合按首次插入顺序维护，负一由检查入口解释为全部免疫。
-void setImmune(BuffPool& pool, int32_t ruleId, bool immune)
-{
-    const auto found = std::find(pool.m_immunity.begin(), pool.m_immunity.end(), ruleId);
-    if (immune && found == pool.m_immunity.end()) pool.m_immunity.push_back(ruleId);
-    else if (!immune && found != pool.m_immunity.end()) pool.m_immunity.erase(found);
-}
-
-// 冷却先检查再递减，刚减到零的条目仍阻止本帧再次添加。
-void updateCooldowns(BuffPool& pool, Fixed dtSeconds)
-{
-    for (size_t index = 0; index < pool.m_cooldowns.size();)
-    {
-        if (pool.m_cooldowns[index].m_seconds <= Fixed{})
-            pool.m_cooldowns.erase(pool.m_cooldowns.begin() + index);
-        else
-        {
-            pool.m_cooldowns[index].m_seconds -= dtSeconds;
-            ++index;
-        }
-    }
 }
 
 // 配置链可能悬空，减益规则查询使用可空查找。
@@ -305,3 +251,59 @@ bool BuffHolder::buffCheck(const conf::BuffConfig& config, int32_t fightType) co
     return true;
 }
 }  // namespace mugen::sim::buff
+
+namespace mugen::sim
+{
+// 同类匹配不排除退出标记，物理删除由池更新负责。
+std::optional<uint64_t> BuffPool::findByType(int32_t ruleId, int32_t subType) const
+{
+    for (const auto& instance : m_instances)
+    {
+        const auto* row = conf::Config::instance().find<conf::BuffConfig>(instance.m_id);
+        if (row && row->ruleId == ruleId && row->subType == subType)
+            return instance.m_serial;
+    }
+    return std::nullopt;
+}
+
+// 重复概率乘现有层数；没有同类实例时仍使用基础概率。
+bool BuffPool::probabilityPass(const conf::BuffConfig& config, Fixed draw) const
+{
+    Fixed probability = config.probability;
+    if (config.probabilityRepeat == 1)
+    {
+        const auto serial = findByType(config.ruleId, config.subType);
+        if (serial)
+            for (const auto& instance : m_instances)
+                if (instance.m_serial == *serial)
+                {
+                    probability *= Fixed::fromInt(instance.m_lifecycle.m_repeat);
+                    break;
+                }
+    }
+    return draw < probability;
+}
+
+// 免疫集合按首次插入顺序维护，负一由检查入口解释为全部免疫。
+void BuffPool::setImmune(int32_t ruleId, bool immune)
+{
+    const auto found = std::find(m_immunity.begin(), m_immunity.end(), ruleId);
+    if (immune && found == m_immunity.end()) m_immunity.push_back(ruleId);
+    else if (!immune && found != m_immunity.end()) m_immunity.erase(found);
+}
+
+// 冷却先检查再递减，刚减到零的条目仍阻止本帧再次添加。
+void BuffPool::updateCooldowns(Fixed dtSeconds)
+{
+    for (size_t index = 0; index < m_cooldowns.size();)
+    {
+        if (m_cooldowns[index].m_seconds <= Fixed{})
+            m_cooldowns.erase(m_cooldowns.begin() + index);
+        else
+        {
+            m_cooldowns[index].m_seconds -= dtSeconds;
+            ++index;
+        }
+    }
+}
+}  // namespace mugen::sim

@@ -150,7 +150,7 @@ TEST_CASE("Golden buff tick timing")
         int expectedTick = 0;
         REQUIRE(static_cast<bool>(row >> frame >> expectedTick));
         CAPTURE(frame);
-        CHECK(buff::advance(lifecycle, kLogicDtSec) ==
+        CHECK(lifecycle.advance(kLogicDtSec) ==
               (expectedTick != 0 ? buff::LifecycleAction::Update : buff::LifecycleAction::None));
         ++rows;
     }

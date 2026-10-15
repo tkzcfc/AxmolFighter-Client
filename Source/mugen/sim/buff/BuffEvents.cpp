@@ -1,6 +1,5 @@
 #include "BuffEvents.h"
 #include "BuffHolder.h"
-#include "BuffCondition.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/role/Role.h"
 #include "mugen/conf/ReflectedConfig.h"
@@ -57,7 +56,7 @@ void BuffHolder::dispatchEvent(BFEvent event, const BuffContext& context, int32_
         instance->m_context.m_boundSkill = bound;
         instance->m_context.m_frontSkill = front;
         instance->m_context.m_applicator = applicator;
-        const bool permitted = checkConditions(m_world, m_entity, *instance);
+        const bool permitted = checkConditions(*instance);
         if (static_cast<int32_t>(event) == 9)
         {
             if (instance->m_lifecycle.m_active && !permitted) exitInstance(serial);

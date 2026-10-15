@@ -1,6 +1,5 @@
 #include "doctest.h"
 #include "SkillTestSupport.h"
-#include "mugen/sim/buff/BuffPresentation.h"
 #include "mugen/sim/buff/BuffHolder.h"
 #include "mugen/avatar/AvatarPaths.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
@@ -42,7 +41,7 @@ TEST_CASE("BuffPresentation resolved motion schedules appearance and disappearan
                 {"disappear", {{"disappear", MotionEntryType::kSpine, spine.fileName, "test.box"}}}};
     REQUIRE(map.bindTimelines([&](const std::string&) { return &timeline; }));
     MotionOverride override(AvatarPaths::motionFileFromSpine(spine.fileName), map);
-    REQUIRE(buff::disappearDuration(2214) == "50"_fx);
+    REQUIRE(buff::BuffHolder::disappearDuration(2214) == "50"_fx);
     World world;
     const auto entity = skill_test::actor(world);
     BuffPool pool;
@@ -119,7 +118,7 @@ TEST_CASE("BuffPresentation production disappearance resolves or exits immediate
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(25);
     const auto& spine = conf::Config::instance().get<conf::ResSpineConfig>(config.spineId);
     const auto path = AvatarPaths::motionFileFromSpine(spine.fileName);
-    const auto duration = buff::disappearDuration(config.spineId);
+    const auto duration = buff::BuffHolder::disappearDuration(config.spineId);
     std::cout << "Buff disappearance mapping: spine=" << config.spineId << " path=" << path
               << " clip=disappear durationMs=" << (duration ? duration->toInt() : -1) << '\n';
     buff::BuffHolder(world, entity).exitInstance(1);
