@@ -141,8 +141,6 @@ struct SkillPool
     int32_t m_before = kNoSkill;
     /// 保留技能仍有效的剩余时间。
     Fixed m_beforeTime;
-    /// 各自动施放槽位的公共间隔。
-    std::vector<Fixed> m_aiSkillCastInterval;
     /// 正在冷却的技能下标。
     std::vector<int32_t> m_running;
     /// 需要对外展示冷却的基础槽位。
@@ -180,7 +178,7 @@ struct SkillPool
     /// 最近一次控制方向角。
     std::optional<Fixed> m_controlAngle;
     MG_REFLECT(SkillPool, m_slots, m_index, m_skills, m_current, m_previous, m_before, m_beforeTime,
-               m_aiSkillCastInterval, m_running, m_coolingSlots, m_target, m_allowInterrupt,
+               m_running, m_coolingSlots, m_target, m_allowInterrupt,
                m_allowExtraInterrupt, m_slotChanged, m_crazy, m_canSprint, m_angerRecover, m_autoCast,
                m_group, m_change, m_crystals, m_mpScale, m_epScale, m_epPlus, m_cpScale, m_controlAngle)
 };

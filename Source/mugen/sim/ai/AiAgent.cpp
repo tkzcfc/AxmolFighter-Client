@@ -45,12 +45,12 @@ int32_t firstValue(const std::vector<std::vector<int32_t>>& values, size_t index
 {
     return index < values.size() && !values[index].empty() ? values[index][0] : fallback;
 }
-// 只读施法间隔：尚未写入池子时用配置里的初始冷却判断。
-bool skillReady(const SkillPool& pool, const conf::AiConfig* row)
+// 只读施法间隔：尚未写入时用配置里的初始冷却判断。
+bool skillReady(const std::vector<Fixed>& intervals, const conf::AiConfig* row)
 {
-    if (!pool.m_aiSkillCastInterval.empty())
+    if (!intervals.empty())
     {
-        for (const Fixed value : pool.m_aiSkillCastInterval)
+        for (const Fixed value : intervals)
             if (value <= Fixed{}) return true;
         return false;
     }
@@ -80,11 +80,6 @@ int32_t hpPercent(const Vitals& vitals)
     if (vitals.maxHp <= Fixed{}) return 0;
     return static_cast<int32_t>((vitals.hp * Fixed::fromInt(100) / vitals.maxHp).toInt());
 }
-// 攻击状态视为已经开始的动作；其余非移动状态记为待机。
-AiAction finishedAction(const RoleStatus& state)
-{
-    return state.isAttack() ? AiAction::CastBestSkill : AiAction::Idle;
-}
 }
 
 AiDriver::AiDriver(World& world, Entity entity) : m_world(world), m_entity(entity) {}
@@ -96,58 +91,35 @@ void AiDriver::update()
     const auto* agent = ecs.tryGet<AiAgent>(m_entity);
     if (!agent || !agent->m_enabled || !ecs.get<RoleIdentity>(m_entity).isAi ||
         !enabled(ecs.get<EntityGroup>(m_entity)) || !ecs.get<ExtraState>(m_entity).isCanControl() || !_config()) return;
-    tickEntityTree(ecs.get<AiAgent>(m_entity).m_tree, this, dispatch);
+    auto& state = ecs.get<AiAgent>(m_entity);
+    const auto dt = ecs.singleton<WorldClock>().dtMs;
+    for (auto& interval : state.m_skillIntervalMs) interval = std::max(Fixed{}, interval - dt);
+    tickRuleCooldowns(state.m_ruleCooldownMs, dt);
+    const auto& row = *_config();
+    _selectTarget(row);
+    if (_canAct())
+    {
+        const auto facts = gather();
+        auto& rng       = ecs.singleton<RngState>().random;
+        const auto idx  = pickRule(facts, kMonsterRules, state.m_ruleCooldownMs, rng);
+        if (idx >= 0)
+        {
+            const auto& rule   = kMonsterRules[idx];
+            const bool started = _run(rule.m_action, row);
+            if (rule.m_setsAlert) state.m_alerted = true;
+            state.m_lastAction = started ? rule.m_action : AiAction::Idle;
+            if (rule.m_cooldownMs > 0)
+            {
+                if (state.m_ruleCooldownMs.size() < kMonsterRules.size()) state.m_ruleCooldownMs.resize(kMonsterRules.size());
+                state.m_ruleCooldownMs[static_cast<size_t>(idx)] = Fixed::fromInt(rule.m_cooldownMs);
+            }
+        }
+    }
     const auto taunt = buff::BuffHolder(m_world, m_entity).sneerTarget();
     if (_alive(taunt)) { ecs.get<SkillPool>(m_entity).m_target = taunt; return; }
-    auto& elapsed = ecs.get<AiAgent>(m_entity).m_changeTargetMs;
-    elapsed += ecs.singleton<WorldClock>().dtMs;
+    auto& elapsed = state.m_changeTargetMs;
+    elapsed += dt;
     if (elapsed >= "10000"_fx) { elapsed -= "10000"_fx; changeTarget(); }
-}
-
-// 分派生产怪物方法，供决策树和动作叶子共用。
-Result AiDriver::invoke(Method method)
-{
-    const auto* row = _config();
-    if (!row) return Result::Failure;
-    const auto& state = m_world.ecs().get<RoleStatus>(m_entity);
-    switch (method)
-    {
-    case Method::CheckAttack: return _checkAttack();
-    case Method::CheckAttackEnd: return state.isAttack() ? Result::Running : Result::Success;
-    case Method::CheckHit: return state.isTobeHit() ? Result::Success : Result::Failure;
-    case Method::CheckHitEnd: return _checkHitEnd();
-    case Method::CheckChase: return _checkChase(*row);
-    case Method::CheckMoveEnd:
-        if (state.isMove()) return Result::Running;
-        return m_world.ecs().get<SkillPool>(m_entity).m_target == m_entity ? Result::Success : Result::Failure;
-    case Method::CheckTarget: return checkTarget();
-    case Method::ExecuteRandAttack: return _specialAttack(false);
-    case Method::ExecuteFirstAttack: return _specialAttack(true);
-    case Method::ExecuteAttack: return _executeAttack(*row);
-    case Method::ExecuteChase: case Method::ExecuteAlert: case Method::ExecutePatrol: return _move(method, *row);
-    }
-    MG_ASSERT(false && "Invalid AI method");
-    return Result::Failure;
-}
-
-// 每帧巡逻索敌；使用带符号的视野区间。
-Result AiDriver::checkTarget()
-{
-    if (m_world.ecs().get<RoleStatus>(m_entity).isDeath()) return Result::Failure;
-    auto& target = m_world.ecs().get<SkillPool>(m_entity).m_target;
-    const auto taunt = buff::BuffHolder(m_world, m_entity).sneerTarget();
-    if (_alive(taunt)) { target = taunt; return Result::Success; }
-    target = m_entity;
-    const auto* row = _config();
-    if (!row) return Result::Failure;
-    const auto self = m_world.ecs().get<Transform>(m_entity).position;
-    for (const auto other : candidates())
-    {
-        const auto pos = m_world.ecs().get<Transform>(other).position;
-        if (contains(row->targetScopeX, self.x - pos.x) && contains(row->targetScopeZ, self.z - pos.z))
-        { target = other; return Result::Success; }
-    }
-    return Result::Failure;
 }
 
 // 记录命中伤害，不为非 AI 角色创建状态。
@@ -163,7 +135,7 @@ void AiDriver::addThreat(Entity source, Fixed damage)
 // 选择严格高于当前目标权重的有效攻击者，然后清空本周期记录。
 void AiDriver::changeTarget()
 {
-    auto& agent = m_world.ecs().get<AiAgent>(m_entity);
+    auto& agent  = m_world.ecs().get<AiAgent>(m_entity);
     auto& target = m_world.ecs().get<SkillPool>(m_entity).m_target;
     Fixed best;
     for (const auto& value : agent.m_threat) if (value.m_source == target) best = value.m_damage;
@@ -219,25 +191,20 @@ AiFacts AiDriver::gather() const
     const auto& state  = ecs.get<RoleStatus>(m_entity);
     const auto& vitals = ecs.get<Vitals>(m_entity);
     const auto& pool   = ecs.get<SkillPool>(m_entity);
+    const auto& agent  = ecs.get<AiAgent>(m_entity);
     const auto* row    = conf::Config::instance().find<conf::AiConfig>(ecs.get<RoleIdentity>(m_entity).aiId);
     AiFacts facts;
-    facts.m_alerted            = ecs.get<AiAgent>(m_entity).m_tree.m_alert == AlertStatus::Alert;
+    facts.m_alerted            = agent.m_alerted;
     facts.m_provoked           = _provoked();
     facts.m_hasTarget          = pool.m_target != m_entity && ecs.tryGet<Transform>(pool.m_target) != nullptr;
-    facts.m_targetInSight      = row && _inSight(*row);
+    facts.m_targetInSight      = row && _sightTarget(*row) != m_entity;
     facts.m_targetOutsideChase = row && facts.m_hasTarget && _outsideChase(pool.m_target, *row);
-    facts.m_skillReady         = skillReady(pool, row);
+    facts.m_skillReady         = pool.m_current != kNoSkill || skillReady(agent.m_skillIntervalMs, row);
     facts.m_movingRule         = movingRule(state);
-    facts.m_lastAction         = facts.m_movingRule >= 0 ? AiAction::Idle : finishedAction(state);
+    facts.m_lastAction         = facts.m_movingRule >= 0 ? AiAction::Idle : agent.m_lastAction;
     facts.m_hpPercent          = hpPercent(vitals);
     facts.m_inAttack           = state.isAttack();
     return facts;
-}
-
-// 将无捕获函数指针转接到生产分派。
-Result AiDriver::dispatch(void* value, Method method)
-{
-    return static_cast<AiDriver*>(value)->invoke(method);
 }
 
 // 存活句柄和死亡状态共同限制跨实体访问。
@@ -288,91 +255,91 @@ void AiDriver::_direction(bool apply)
     }
 }
 
-// 目标失效时从稳定候选数组随机重选；无目标使用自身哨兵。
-Result AiDriver::_checkAttack()
+// 按警戒、激怒和候选者选择索敌目标。
+void AiDriver::_selectTarget(const conf::AiConfig& row)
 {
-    if (m_world.ecs().get<RoleStatus>(m_entity).isDeath()) return Result::Failure;
     auto& target = m_world.ecs().get<SkillPool>(m_entity).m_target;
     const auto taunt = buff::BuffHolder(m_world, m_entity).sneerTarget();
-    if (_alive(taunt)) { target = taunt; return Result::Success; }
-    if (!_hittable(target))
+    if (_alive(taunt)) { target = taunt; return; }
+    if (!m_world.ecs().get<AiAgent>(m_entity).m_alerted && !_provoked())
     {
-        const auto enemies = candidates();
-        if (enemies.empty()) { target = m_entity; return Result::Failure; }
-        const auto index = m_world.ecs().singleton<RngState>().random.randomN(0, static_cast<int32_t>(enemies.size() - 1));
-        target = enemies[index];
+        target = _sightTarget(row);
+        return;
     }
-    return Result::Success;
+    if (_hittable(target)) return;
+    const auto enemies = candidates();
+    if (enemies.empty()) { target = m_entity; return; }
+    target = enemies[m_world.ecs().singleton<RngState>().random.randomN(0, static_cast<int32_t>(enemies.size() - 1))];
 }
 
-// 受击结束只在目标句柄缺失时补选，不重置警戒。
-Result AiDriver::_checkHitEnd()
+// 先看已锁定目标再按创建顺序看候选者，用带符号的索敌区间；没有目标时返回自身哨兵。
+Entity AiDriver::_sightTarget(const conf::AiConfig& row) const
 {
-    if (m_world.ecs().get<RoleStatus>(m_entity).isTobeHit()) return Result::Running;
-    auto& target = m_world.ecs().get<SkillPool>(m_entity).m_target;
-    if (!m_world.ecs().tryGet<RoleIdentity>(target))
+    const auto origin = m_world.ecs().get<Transform>(m_entity).position;
+    const auto locked = m_world.ecs().get<SkillPool>(m_entity).m_target;
+    if (const auto* other = m_world.ecs().tryGet<Transform>(locked))
+        if (locked != m_entity && contains(row.targetScopeX, origin.x - other->position.x) &&
+            contains(row.targetScopeZ, origin.z - other->position.z))
+            return locked;
+    for (const auto other : candidates())
     {
-        const auto enemies = candidates();
-        if (enemies.empty()) return Result::Failure;
-        target = enemies[m_world.ecs().singleton<RngState>().random.randomN(0, static_cast<int32_t>(enemies.size() - 1))];
+        const auto pos = m_world.ecs().get<Transform>(other).position;
+        if (contains(row.targetScopeX, origin.x - pos.x) && contains(row.targetScopeZ, origin.z - pos.z)) return other;
     }
-    return Result::Success;
+    return m_entity;
 }
 
-// 原始追击条件保留坐标轴为零时的特殊分支。
-Result AiDriver::_checkChase(const conf::AiConfig& row)
+// 执行命中规则的动作，返回动作是否真的启动。
+bool AiDriver::_run(AiAction action, const conf::AiConfig& row)
 {
-    const auto* target = m_world.ecs().tryGet<Transform>(m_world.ecs().get<SkillPool>(m_entity).m_target);
-    if (!target || !_canAct()) return Result::Failure;
-    if (bound(row.chaseScopeX, 0) == Fixed{} && bound(row.chaseScopeX, 1) == Fixed{} &&
-        bound(row.chaseScopeZ, 0) == Fixed{} && bound(row.chaseScopeZ, 1) == Fixed{}) return Result::Failure;
-    const auto self = m_world.ecs().get<Transform>(m_entity).position;
-    const Fixed x = self.x - target->position.x, z = self.z - target->position.z;
-    if (x == Fixed{} && z == Fixed{}) return Result::Failure;
-    if (x != Fixed{} && z != Fixed{} && contains(row.chaseScopeX, abs(x)) && contains(row.chaseScopeZ, abs(z)))
-        return Result::Failure;
-    return Result::Success;
+    switch (action)
+    {
+    case AiAction::Idle: return false;
+    case AiAction::CastWakeSkill: return _castSpecial(true);
+    case AiAction::CastIdleSkill: return _castSpecial(false);
+    case AiAction::CastBestSkill: return _castBest(row);
+    case AiAction::Patrol: case AiAction::Chase: case AiAction::Wander: return _move(action, row);
+    }
+    MG_ASSERT(false && "Invalid AI action");
+    return false;
 }
 
 // X/Z 使用手动施放门槛，已有技能时续接原槽。
-Result AiDriver::_specialAttack(bool first)
+bool AiDriver::_castSpecial(bool first)
 {
-    if (!_canAct()) return Result::Failure;
-    if (!first && candidates().empty())
-    {
-        m_world.ecs().get<SkillPool>(m_entity).m_target = m_entity;
-        return Result::Running;
-    }
+    if (!_canAct()) return false;
+    if (!first && candidates().empty()) return false;
     if (first) _direction(false);
     const auto& pool = m_world.ecs().get<SkillPool>(m_entity);
     const std::string slot = pool.m_current == kNoSkill ? (first ? "X" : "Z") :
         pool.m_slots[pool.m_skills[pool.m_current].m_address.m_slot].m_name;
-    if (!skill::SkillCaster(m_world, m_entity).presetSkill(slot, false)) return Result::Success;
+    if (!skill::SkillCaster(m_world, m_entity).presetSkill(slot, false)) return false;
     Role(m_world, m_entity).changeStatus(EntityRoleStatus::Attack);
     if (first) _direction(true);
-    return Result::Running;
+    return true;
 }
 
 // 普通槽按优先级降序、原索引升序检查，成功后重置同优先级间隔。
-Result AiDriver::_executeAttack(const conf::AiConfig& row)
+bool AiDriver::_castBest(const conf::AiConfig& row)
 {
     if (candidates().empty() || !_canAct() ||
-        !m_world.ecs().tryGet<Transform>(m_world.ecs().get<SkillPool>(m_entity).m_target)) return Result::Failure;
+        !m_world.ecs().tryGet<Transform>(m_world.ecs().get<SkillPool>(m_entity).m_target)) return false;
     _direction(false);
     auto& pool = m_world.ecs().get<SkillPool>(m_entity);
     if (pool.m_current != kNoSkill)
     {
         const auto slot = pool.m_slots[pool.m_skills[pool.m_current].m_address.m_slot].m_name;
-        if (!skill::SkillCaster(m_world, m_entity).presetSkill(slot, true)) return Result::Success;
+        if (!skill::SkillCaster(m_world, m_entity).presetSkill(slot, true)) return false;
         Role(m_world, m_entity).changeStatus(EntityRoleStatus::Attack);
-        return Result::Running;
+        return true;
     }
-    if (pool.m_aiSkillCastInterval.empty())
+    auto& intervals = m_world.ecs().get<AiAgent>(m_entity).m_skillIntervalMs;
+    if (intervals.empty())
         for (const auto& values : row.skillPriorityLevelCd)
-            pool.m_aiSkillCastInterval.push_back(Fixed::fromInt(values.empty() ? row.skillInterval : values[0]));
+            intervals.push_back(Fixed::fromInt(values.empty() ? row.skillInterval : values[0]));
     std::vector<size_t> ready;
-    for (size_t i = 0; i < pool.m_aiSkillCastInterval.size(); ++i)
-        if (pool.m_aiSkillCastInterval[i] <= Fixed{}) ready.push_back(i);
+    for (size_t i = 0; i < intervals.size(); ++i)
+        if (intervals[i] <= Fixed{}) ready.push_back(i);
     std::sort(ready.begin(), ready.end(), [&](size_t a, size_t b) {
         const auto pa = firstValue(row.skillPriorityLevel, a, 1), pb = firstValue(row.skillPriorityLevel, b, 1);
         return pa == pb ? a < b : pa > pb;
@@ -383,7 +350,6 @@ Result AiDriver::_executeAttack(const conf::AiConfig& row)
         if (!skill::SkillCaster(m_world, m_entity).presetSkill(slot, true)) continue;
         Role(m_world, m_entity).changeStatus(EntityRoleStatus::Attack);
         const auto priority = firstValue(row.skillPriorityLevel, index, 1);
-        auto& intervals = m_world.ecs().get<SkillPool>(m_entity).m_aiSkillCastInterval;
         for (size_t i = 0; i < row.skillPriorityLevel.size(); ++i)
             if (firstValue(row.skillPriorityLevel, i, 1) == priority)
             {
@@ -391,24 +357,24 @@ Result AiDriver::_executeAttack(const conf::AiConfig& row)
                 intervals[i] = Fixed::fromInt(firstValue(row.skillPriorityLevelCd, i, row.skillInterval));
             }
         _direction(true);
-        return Result::Running;
+        return true;
     }
-    return Result::Success;
+    return false;
 }
 
 // 巡逻和游走先抽 X 再抽 Z；追击不消耗随机流。
-Result AiDriver::_move(Method method, const conf::AiConfig& row)
+bool AiDriver::_move(AiAction action, const conf::AiConfig& row)
 {
-    const bool patrol = method == Method::ExecutePatrol, chase = method == Method::ExecuteChase;
+    const bool patrol = action == AiAction::Patrol, chase = action == AiAction::Chase;
     if (!chase && m_world.ecs().get<RoleStatus>(m_entity).isMove())
-        return patrol ? Result::Running : Result::Success;
-    if (!_canAct()) return Result::Failure;
+        return patrol;
+    if (!_canAct()) return false;
     const auto self = m_world.ecs().get<Transform>(m_entity).position;
     FixedVec3 center = self;
     if (!patrol)
     {
         const auto* target = m_world.ecs().tryGet<Transform>(m_world.ecs().get<SkillPool>(m_entity).m_target);
-        if (!target) return Result::Failure;
+        if (!target) return false;
         center = target->position;
     }
     auto& rng = m_world.ecs().singleton<RngState>().random;
@@ -417,12 +383,12 @@ Result AiDriver::_move(Method method, const conf::AiConfig& row)
     const Fixed x = chase ? bound(xs, 1) : rng.randomF(bound(xs, 0), bound(xs, 1));
     const Fixed z = chase ? bound(zs, 1) : rng.randomF(bound(zs, 0), bound(zs, 1));
     const auto radius = m_world.ecs().get<ColliderState>(m_entity).radius;
-    if (!chase && abs(x) < radius && abs(z) < radius) return Result::Failure;
+    if (!chase && abs(x) < radius && abs(z) < radius) return false;
     center.x += !patrol && center.x > self.x ? -x : x;
     center.z += !patrol && center.z > self.z ? -z : z;
     Role(m_world, m_entity).changeStatus(patrol ? EntityRoleStatus::Patrol : chase ? EntityRoleStatus::Chase : EntityRoleStatus::Alert,
                                         -1, calcPos(center));
-    return Result::Success;
+    return true;
 }
 
 // 受击、仇恨记录或有效嘲讽都算激怒。
@@ -431,23 +397,6 @@ bool AiDriver::_provoked() const
     if (m_world.ecs().get<RoleStatus>(m_entity).isTobeHit()) return true;
     if (!m_world.ecs().get<AiAgent>(m_entity).m_threat.empty()) return true;
     return _alive(buff::BuffHolder(m_world, m_entity).sneerTarget());
-}
-
-// 索敌使用带符号的视野区间，先看已锁定目标再看候选者。
-bool AiDriver::_inSight(const conf::AiConfig& row) const
-{
-    const auto origin = m_world.ecs().get<Transform>(m_entity).position;
-    const auto locked = m_world.ecs().get<SkillPool>(m_entity).m_target;
-    if (const auto* other = m_world.ecs().tryGet<Transform>(locked))
-        if (locked != m_entity && contains(row.targetScopeX, origin.x - other->position.x) &&
-            contains(row.targetScopeZ, origin.z - other->position.z))
-            return true;
-    for (const auto other : candidates())
-    {
-        const auto pos = m_world.ecs().get<Transform>(other).position;
-        if (contains(row.targetScopeX, origin.x - pos.x) && contains(row.targetScopeZ, origin.z - pos.z)) return true;
-    }
-    return false;
 }
 
 // 追击范围全零、重合或落在范围内时都不算范围外。

@@ -267,25 +267,10 @@ void update(RoleBrain& brain, World& world, Entity entity, bool city)
     // 仅重查当前分支守卫（Selector 非抢占）。
     if (guardHolds(brain.m_branch, world, entity, city) && updateState(brain, world, entity) == StateStep::Running)
         return;
-    // 守卫失效或叶子完成：先退叶子再退守卫，然后循环选择下一分支（仅进入，本帧不更新）。
+    // 守卫失效或叶子完成：先退叶子再退守卫，然后按优先级从零重选分支（仅进入，本帧不更新）。
     exitState(brain, world, entity);
     exitGuard(brain.m_branch, world, entity);
-    const size_t count = city ? kTownBranchCount : kBranchCount;
-    const auto current = static_cast<size_t>(brain.m_branch);
-    bool entered       = false;
-    for (size_t k = 1; k <= count; ++k)
-    {
-        const size_t idx = (current + k) % count;
-        const RoleBranch branch = city ? (idx == 0 ? RoleBranch::Finding : RoleBranch::Idle)
-                                       : static_cast<RoleBranch>(idx);
-        if (tryEnter(brain, branch, world, entity, city))
-        {
-            entered = true;
-            break;
-        }
-    }
-    if (!entered)
-        fallbackToIdle(brain, world, entity, city);
+    enterFirst(brain, world, entity, city);
 }
 
 void exitBranch(RoleBrain& brain, World& world, Entity entity)

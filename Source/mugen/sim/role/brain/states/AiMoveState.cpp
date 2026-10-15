@@ -1,6 +1,5 @@
 #include "AiMoveState.h"
 
-#include "mugen/sim/ai/AiAgent.h"
 #include "mugen/conf/BattleConst.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/core/math/FixedMath.h"
@@ -92,15 +91,10 @@ void AiMove::enter(RoleContext& ctx, Param type, State& state)
     advance(ctx, state);
 }
 
-BTStatus AiMove::update(RoleContext& ctx, Param type, State& state)
+BTStatus AiMove::update(RoleContext& ctx, Param, State& state)
 {
     state.m_timeMs += ctx.dtMs();
-    if (type == behavior::ActionType::Patrol)
-    {
-        if (ai::AiDriver(ctx.world(), ctx.entity()).checkTarget() == ai::Result::Success)
-            return BTStatus::Success;
-    }
-    else if (ctx.get<RoleStatus>().isAttack())
+    if (ctx.get<RoleStatus>().isAttack())
         return BTStatus::Success;
     advance(ctx, state);
     return state.m_complete && state.m_timeMs > state.m_delayMs ? BTStatus::Success : BTStatus::Running;

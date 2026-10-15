@@ -72,7 +72,6 @@ void SkillCaster::update()
             if (skill.m_changeTime == Fixed{}) pool->m_change = 1;
         }
     }
-    for (auto& interval : pool->m_aiSkillCastInterval) interval = std::max(Fixed{}, interval - dt);
     if (pool->m_beforeTime > Fixed{})
     {
         pool->m_beforeTime = std::max(Fixed{}, pool->m_beforeTime - dt);

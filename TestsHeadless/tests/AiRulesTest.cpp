@@ -33,23 +33,24 @@ AiFacts factsFor(int row)
     switch (row)
     {
     case 0: facts.m_provoked = true; break;
-    case 1: facts.m_lastAction = AiAction::Patrol; break;
-    case 2: break;
-    case 3:
+    case 1: facts.m_targetInSight = true; break;
+    case 2: facts.m_lastAction = AiAction::Patrol; break;
+    case 3: break;
+    case 4:
         facts.m_alerted    = true;
         facts.m_hasTarget  = true;
         facts.m_skillReady = true;
         break;
-    case 4:
+    case 5:
         facts.m_alerted            = true;
         facts.m_hasTarget          = true;
         facts.m_targetOutsideChase = true;
         break;
-    case 5:
+    case 6:
         facts.m_alerted   = true;
         facts.m_hasTarget = true;
         break;
-    case 6: facts.m_alerted = true; break;
+    case 7: facts.m_alerted = true; break;
     default: break;
     }
     return facts;
@@ -69,23 +70,25 @@ TEST_CASE("Ai rules select the first matching monster row")
 {
     Random rng(1);
     const auto before = rngWords(rng);
-    for (int row = 0; row < 7; ++row)
+    for (int row = 0; row < 8; ++row)
         CHECK(pickRule(factsFor(row), kMonsterRules, {}, rng) == static_cast<int8_t>(row));
     CHECK(rngWords(rng) == before);
     CHECK(kMonsterRules[0].m_setsAlert);
     CHECK(kMonsterRules[0].m_action == AiAction::CastWakeSkill);
-    CHECK(kMonsterRules[1].m_action == AiAction::CastIdleSkill);
+    CHECK(kMonsterRules[1].m_action == AiAction::CastWakeSkill);
+    CHECK(kMonsterRules[1].m_setsAlert);
+    CHECK(kMonsterRules[2].m_action == AiAction::CastIdleSkill);
 }
 
 TEST_CASE("Ai rules skip a cooling row and tick its cooldown")
 {
     Random rng(1);
-    std::array<Fixed, 7> cooldown{};
+    std::array<Fixed, 8> cooldown{};
     cooldown[2] = Fixed::fromInt(100);
-    CHECK(pickRule(factsFor(2), kMonsterRules, cooldown, rng) == 6);
+    CHECK(pickRule(factsFor(2), kMonsterRules, cooldown, rng) == 3);
     tickRuleCooldowns(cooldown, Fixed::fromInt(40));
     CHECK(cooldown[2] == Fixed::fromInt(60));
-    CHECK(pickRule(factsFor(2), kMonsterRules, cooldown, rng) == 6);
+    CHECK(pickRule(factsFor(2), kMonsterRules, cooldown, rng) == 3);
     tickRuleCooldowns(cooldown, Fixed::fromInt(60));
     CHECK(cooldown[2] == Fixed{});
     CHECK(pickRule(factsFor(2), kMonsterRules, cooldown, rng) == 2);
@@ -95,11 +98,11 @@ TEST_CASE("Ai rules preempt a running move only with an earlier row")
 {
     Random rng(1);
     auto wake = factsFor(0);
-    wake.m_movingRule = 2;
+    wake.m_movingRule = 3;
     CHECK(pickRule(wake, kMonsterRules, {}, rng) == 0);
 
-    auto chase = factsFor(4);
-    chase.m_movingRule = 4;
+    auto chase = factsFor(5);
+    chase.m_movingRule = 5;
     CHECK(pickRule(chase, kMonsterRules, {}, rng) == -1);
 
     auto attacking = factsFor(0);
@@ -155,7 +158,7 @@ TEST_CASE("Ai rules gather reads an offline scenario monster")
     const auto& agent = world.ecs().get<AiAgent>(monster);
     const auto& pool  = world.ecs().get<SkillPool>(monster);
     const auto& vitals = world.ecs().get<Vitals>(monster);
-    CHECK(facts.m_alerted == (agent.m_tree.m_alert == AlertStatus::Alert));
+    CHECK(facts.m_alerted == agent.m_alerted);
     CHECK(facts.m_inAttack == state.isAttack());
     CHECK(facts.m_hasTarget == (pool.m_target != monster && world.ecs().tryGet<Transform>(pool.m_target) != nullptr));
     REQUIRE(vitals.maxHp > Fixed{});

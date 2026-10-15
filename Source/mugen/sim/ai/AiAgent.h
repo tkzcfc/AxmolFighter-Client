@@ -1,6 +1,5 @@
 #pragma once
 #include "AiRules.h"
-#include "DecisionTree.h"
 #include "mugen/core/ecs/Entity.h"
 #include "mugen/core/math/FixedVec3.h"
 #include <vector>
@@ -21,18 +20,24 @@ struct AiThreat
     Fixed m_damage;
     MG_REFLECT(AiThreat, m_source, m_damage)
 };
-// 每个怪物独占的决策状态；目标和施法间隔由 SkillPool 持有。
+// 每个怪物独占的决策状态；目标由 SkillPool 持有。
 struct AiAgent
 {
-    // 可恢复的决策调用栈。
-    ai::DecisionState m_tree;
+    // 进入警戒后不再清除。
+    bool m_alerted = false;
+    // 上次启动的规则动作。
+    ai::AiAction m_lastAction = ai::AiAction::Idle;
+    // 每行规则剩余冷却，按需扩展到 kMonsterRules.size()。
+    std::vector<Fixed> m_ruleCooldownMs;
+    // 各自动施放槽位的公共间隔。
+    std::vector<Fixed> m_skillIntervalMs;
     // 换目标累计毫秒。
-    Fixed m_changeTargetMs;
+    Fixed m_changeTargetMs{};
     // 稳定顺序的仇恨记录。
     std::vector<AiThreat> m_threat;
-    // 引导可暂停本角色的 AI，不影响动作树。
+    // 引导可暂停本角色的 AI。
     bool m_enabled = true;
-    MG_REFLECT(AiAgent, m_tree, m_changeTargetMs, m_threat, m_enabled)
+    MG_REFLECT(AiAgent, m_alerted, m_lastAction, m_ruleCooldownMs, m_skillIntervalMs, m_changeTargetMs, m_threat, m_enabled)
 };
 namespace ai
 {
@@ -44,10 +49,6 @@ public:
     AiDriver(World& world, Entity entity);
     // 在角色 AI 更新阶段执行决策、嘲讽和十秒仇恨切换。
     void update();
-    // 分派生产怪物方法，供决策树和动作叶子共用。
-    Result invoke(Method method);
-    // 每帧巡逻索敌；使用带符号的视野区间。
-    Result checkTarget();
     // 记录命中伤害，不为非 AI 角色创建状态。
     void addThreat(Entity source, Fixed damage);
     // 选择严格高于当前目标权重的有效攻击者，然后清空本周期记录。
@@ -58,8 +59,6 @@ public:
     std::vector<Entity> candidates() const;
     // 从当前组件和 AI 配置生成决策快照；不改状态，也不消耗随机数。
     AiFacts gather() const;
-    // 将无捕获函数指针转接到生产分派。
-    static Result dispatch(void* value, Method method);
 
 private:
     // 存活句柄和死亡状态共同限制跨实体访问。
@@ -72,22 +71,20 @@ private:
     bool _canAct() const;
     // 先设置技能控制角，成功释放后再更新角色朝向。
     void _direction(bool apply);
-    // 目标失效时从稳定候选数组随机重选；无目标使用自身哨兵。
-    Result _checkAttack();
-    // 受击结束只在目标句柄缺失时补选，不重置警戒。
-    Result _checkHitEnd();
-    // 原始追击条件保留坐标轴为零时的特殊分支。
-    Result _checkChase(const conf::AiConfig& row);
+    // 按警戒、激怒和候选者选择索敌目标。
+    void _selectTarget(const conf::AiConfig& row);
+    // 先看已锁定目标再按创建顺序看候选者，用带符号的索敌区间；没有目标时返回自身哨兵。
+    Entity _sightTarget(const conf::AiConfig& row) const;
+    // 执行命中规则的动作，返回动作是否真的启动。
+    bool _run(AiAction action, const conf::AiConfig& row);
     // X/Z 使用手动施放门槛，已有技能时续接原槽。
-    Result _specialAttack(bool first);
+    bool _castSpecial(bool first);
     // 普通槽按优先级降序、原索引升序检查，成功后重置同优先级间隔。
-    Result _executeAttack(const conf::AiConfig& row);
+    bool _castBest(const conf::AiConfig& row);
     // 巡逻和游走先抽 X 再抽 Z；追击不消耗随机流。
-    Result _move(Method method, const conf::AiConfig& row);
+    bool _move(AiAction action, const conf::AiConfig& row);
     // 受击、仇恨记录或有效嘲讽都算激怒。
     bool _provoked() const;
-    // 索敌使用带符号的视野区间，先看已锁定目标再看候选者。
-    bool _inSight(const conf::AiConfig& row) const;
     // 追击范围全零、重合或落在范围内时都不算范围外。
     bool _outsideChase(Entity target, const conf::AiConfig& row) const;
 

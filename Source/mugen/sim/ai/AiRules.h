@@ -27,7 +27,7 @@ enum class AiCondition : uint8_t
     TargetInSight,
     // 当前目标落在追击范围外。
     TargetOutsideChase,
-    // 自动施放间隔已经结束。
+    // 自动施放间隔已经结束，或连段技能仍在等待续接。
     SkillReady,
     // 上次动作等于 m_value 中的 AiAction。
     LastActionIs,
@@ -89,9 +89,11 @@ constexpr AiRule makeRule(AiTest first, AiTest second, AiTest third, uint8_t cou
     return rule;
 }
 // 怪物默认条件表，按优先级从高到低排列。
-inline constexpr std::array<AiRule, 7> kMonsterRules = {
+inline constexpr std::array<AiRule, 8> kMonsterRules = {
     // 未警戒且被激怒时释放醒技能，并进入警戒。
     makeRule({AiCondition::Alerted, true}, {AiCondition::Provoked}, {}, 2, AiAction::CastWakeSkill, true),
+    // 未警戒且索敌范围内发现目标时释放醒技能，并进入警戒。
+    makeRule({AiCondition::Alerted, true}, {AiCondition::TargetInSight}, {}, 2, AiAction::CastWakeSkill, true),
     // 未警戒且上次动作是巡逻时释放待机技能。
     makeRule({AiCondition::Alerted, true},
              {AiCondition::LastActionIs, false, static_cast<int32_t>(AiAction::Patrol)},
@@ -122,7 +124,7 @@ struct AiFacts
     bool m_targetInSight = false;
     // 当前目标不在追击范围内。
     bool m_targetOutsideChase = false;
-    // 至少一个自动施放间隔已经到点。
+    // 至少一个自动施放间隔已经到点，或连段技能仍在等待续接。
     bool m_skillReady = false;
     // 上一次已经结束的动作；正在跑的移动不算。
     AiAction m_lastAction = AiAction::Idle;
