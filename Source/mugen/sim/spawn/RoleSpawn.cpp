@@ -1,7 +1,7 @@
 #include "RoleSpawn.h"
 #include "mugen/avatar/AvatarPaths.h"
 #include "mugen/conf/TypeConversions.h"
-#include "mugen/sim/role/brain/RoleBrainRunner.h"
+#include "mugen/sim/role/brain/RoleBrainDriver.h"
 #include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/buff/BuffHolder.h"
 

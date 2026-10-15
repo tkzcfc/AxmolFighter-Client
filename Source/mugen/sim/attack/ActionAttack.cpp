@@ -1,5 +1,5 @@
 #include "ActionAttack.h"
-#include "AttackSeams.h"
+#include "AttackSeam.h"
 #include "mugen/sim/World.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/core/math/FixedMath.h"

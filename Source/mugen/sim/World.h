@@ -2,7 +2,7 @@
 #include "Components.h"
 #include "Singletons.h"
 #include "mugen/core/ecs/ECSManager.h"
-#include "role/RoleUpdate.h"
+#include "role/RoleActor.h"
 #include "collision/Collision.h"
 #include "hit/HitSeams.h"
 #include <map>

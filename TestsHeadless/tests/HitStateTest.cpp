@@ -1,7 +1,7 @@
 #include <doctest/doctest.h>
 #include "mugen/sim/role/Role.h"
 #include "SkillTestSupport.h"
-#include "mugen/sim/role/brain/RoleBrainRunner.h"
+#include "mugen/sim/role/brain/RoleBrainDriver.h"
 #include "mugen/sim/role/brain/states/HitStates.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
 #include <iostream>

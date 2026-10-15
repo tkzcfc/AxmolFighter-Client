@@ -1,7 +1,7 @@
 #include "RoomEntities.h"
 #include "RoomDirector.h"
 #include "mugen/sim/World.h"
-#include "mugen/sim/attack/AttackSeams.h"
+#include "mugen/sim/attack/AttackSeam.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "mugen/sim/role/Role.h"
 #include "mugen/sim/ability/AbilityHolder.h"

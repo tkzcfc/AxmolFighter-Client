@@ -2,7 +2,7 @@
 #include "../support/ScenarioHarness.h"
 #include "mugen/sim/World.h"
 #include "mugen/conf/ReflectedConfig.h"
-#include "mugen/sim/role/brain/RoleBrainRunner.h"
+#include "mugen/sim/role/brain/RoleBrainDriver.h"
 #include "mugen/sim/role/brain/RoleContext.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "mugen/sim/role/Role.h"

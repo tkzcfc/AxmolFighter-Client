@@ -1,7 +1,7 @@
 #include "World.h"
 #include "buff/BuffHolder.h"
 #include "room/RoomDirector.h"
-#include "role/brain/RoleBrainRunner.h"
+#include "role/brain/RoleBrainDriver.h"
 #include "trace/TraceSink.h"
 #include "mugen/conf/ReflectedConfig.h"
 

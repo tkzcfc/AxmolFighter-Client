@@ -2,7 +2,7 @@
 #include "SkillTestSupport.h"
 #include "../support/ScenarioHarness.h"
 #include "mugen/sim/role/brain/RoleBrain.h"
-#include "mugen/sim/role/brain/RoleBrainRunner.h"
+#include "mugen/sim/role/brain/RoleBrainDriver.h"
 #include "mugen/sim/role/brain/RoleContext.h"
 #include "mugen/sim/role/brain/RoleBranches.h"
 #include "mugen/sim/spawn/RoleSpawn.h"

@@ -1,6 +1,6 @@
 #include "AttackRole.h"
 #include "ActionAttack.h"
-#include "AttackSeams.h"
+#include "AttackSeam.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/role/brain/RoleBrain.h"
 #include "mugen/sim/skill/SkillCaster.h"

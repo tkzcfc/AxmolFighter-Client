@@ -3,7 +3,7 @@
 #include "mugen/conf/BattleConst.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/sim/World.h"
-#include "mugen/sim/role/brain/RoleBrainRunner.h"
+#include "mugen/sim/role/brain/RoleBrainDriver.h"
 #include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/hit/HitResolver.h"
 

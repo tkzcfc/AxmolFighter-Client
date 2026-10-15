@@ -1,6 +1,6 @@
 #pragma once
 #include "mugen/core/bt/BTRunner.h"
-#include "mugen/sim/attack/AttackSeams.h"
+#include "mugen/sim/attack/AttackSeam.h"
 #include "mugen/sim/attack/AttackState.h"
 #include "mugen/sim/motion/Displacement.h"
 

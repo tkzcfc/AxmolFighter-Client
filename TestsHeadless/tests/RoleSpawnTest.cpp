@@ -1,6 +1,6 @@
 #include "doctest.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
-#include "mugen/sim/role/RoleUpdate.h"
+#include "mugen/sim/role/RoleActor.h"
 #include <filesystem>
 #include <fstream>
 #include <sstream>

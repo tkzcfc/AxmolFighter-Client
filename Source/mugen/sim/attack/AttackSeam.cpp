@@ -1,4 +1,4 @@
-#include "AttackSeams.h"
+#include "AttackSeam.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/effect/Effect.h"
 #include "mugen/conf/ReflectedConfig.h"
