@@ -20,6 +20,28 @@ struct SkillAddress
     friend bool operator==(const SkillAddress&, const SkillAddress&) = default;
     MG_REFLECT(SkillAddress, m_slot, m_index, m_mode, m_step)
 };
+/// 自动施放条件编号，取值与 skill_ai.lua 的 composition 条件一致。
+enum class SkillAiCondition : int32_t
+{
+    OppDistanceX = 1,  // 目标横向距离范围，对应 oppDisX。
+    OppDistanceZ = 2,  // 目标纵向距离范围，对应 oppDisZ。
+    OppStatus = 3,     // 目标状态，对应 oppStatus。
+    OppCombo = 4,      // 目标连段阶段，对应 oppCombo。
+    OppSkill = 5,      // 目标当前技能，对应 oppSkillId。
+    SelfHpPercent = 6, // 自身生命百分比，对应 selfHp。
+    SelfStatus = 7,    // 自身状态，对应 selfStatus。
+};
+/// 自动施放状态编号，取值与 skill_ai.lua 的 oppStatus/selfStatus 字段一致。
+enum class SkillAiStatus : int32_t
+{
+    Any = -1,      // 不限制状态，对应 -1。
+    Hit = 1,       // 受击状态，对应 EntityRoleStatus::Hit。
+    HitUp = 2,     // 上挑受击状态，对应 EntityRoleStatus::HitUp。
+    HitDown = 3,   // 击倒受击状态，对应 EntityRoleStatus::HitDown。
+    HitFloor = 4,  // 倒地状态，对应 EntityRoleStatus::HitFloor。
+    Wake = 5,      // 起身状态，对应 EntityRoleStatus::Wake。
+    Attack = 6,    // 攻击状态，对应 EntityRoleStatus::Attack。
+};
 /// 单个技能的自动施放运行状态。
 struct SkillAi
 {

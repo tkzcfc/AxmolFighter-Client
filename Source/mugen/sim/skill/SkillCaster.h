@@ -52,7 +52,7 @@ public:
 
 private:
     // 按配置条件编号验证自动施放前提。
-    bool _checkCondition(const SkillAi& ai, int32_t condition) const;
+    bool _checkCondition(const SkillAi& ai, SkillAiCondition condition) const;
 
     World& m_world;
     Entity m_entity{};
