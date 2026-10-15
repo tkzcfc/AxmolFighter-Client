@@ -196,19 +196,19 @@ TEST_CASE("AttackRole animation completion counts loops and resets delay once")
     f.row.actionDelayTime = 100;
     attack::ActionAttack action;
     action.m_time = "200"_fx;
-    attack::completeAnimation(action, f.row, 2);
+    action.completeAnimation(f.row, 2);
     CHECK_FALSE(action.m_animationEnd);
     CHECK(action.m_time == "200"_fx);
-    attack::completeAnimation(action, f.row, 3);
+    action.completeAnimation(f.row, 3);
     CHECK(action.m_animationEnd);
     CHECK(action.m_time == Fixed{});
     action.m_time = "99"_fx;
-    attack::completeAnimation(action, f.row, 4);
+    action.completeAnimation(f.row, 4);
     CHECK(action.m_time == "99"_fx);
-    attack::dealWithTime(action, f.row);
+    action.dealWithTime(f.row);
     CHECK_FALSE(action.m_finished);
     action.m_time = "100"_fx;
-    attack::dealWithTime(action, f.row);
+    action.dealWithTime(f.row);
     CHECK(action.m_finished);
 }
 

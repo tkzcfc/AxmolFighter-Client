@@ -187,7 +187,7 @@ BTStatus actionTick(Context& ctx, const int32_t& id, std::variant<AttackEffect>&
     auto& action = state.m_action;
     action.m_time += world.ecs().singleton<WorldClock>().dtMs;
     const auto shared = common(*row);
-    attack::dealWithTime(action, shared);
+    action.dealWithTime(shared);
     moveControl(world, entity, *row);
     for (size_t i = 0; i < row->effectIds.size() && i < row->effectFrames.size(); ++i)
         if (!action.m_spawned[i] && row->effectIds[i] != -1 && action.m_time > action.m_interval * Fixed::fromInt(row->effectFrames[i]))
@@ -195,7 +195,7 @@ BTStatus actionTick(Context& ctx, const int32_t& id, std::variant<AttackEffect>&
             action.m_spawned[i] = 1;
             action.m_effects[i] = EffectActor(world, entity).spawnChild(row->effectIds[i]);
         }
-    attack::dealWithShake(world, entity, action, shared);
+    attack::ActionAttackDriver(world, entity, action).dealWithShake(shared);
     if (!state.m_summoned && row->summonId != -1 && action.m_time >= action.m_interval * Fixed::fromInt(row->summonFrame))
     {
         state.m_summoned = true;
@@ -210,7 +210,7 @@ BTStatus actionTick(Context& ctx, const int32_t& id, std::variant<AttackEffect>&
 void actionExit(Context& ctx, const int32_t& id, std::variant<AttackEffect>& value)
 {
     auto& state = std::get<AttackEffect>(value);
-    attack::clearEffects(ctx.m_world, ctx.m_entity, state.m_action);
+    attack::ActionAttackDriver(ctx.m_world, ctx.m_entity, state.m_action).clearEffects();
     ctx.m_world.ecs().get<MotionState>(ctx.m_entity).actionScale = "1"_fx;
     displacement::DisplacementDriver(ctx.m_world, ctx.m_entity).reset();
     const auto* row = conf::Config::instance().find<conf::ActionEffectConfig>(id);
@@ -473,7 +473,7 @@ bool EffectActor::onDisplacementEvent(DisplacementEvent event)
     auto& tree = m_world.ecs().get<EffectTree>(m_entity);
     if (node < 1 || static_cast<size_t>(node) > tree.m_actions.size()) return false;
     const auto* row = conf::Config::instance().find<conf::ActionEffectConfig>(tree.m_actions[node - 1]);
-    return row && attack::displacementEvent(m_world, m_entity, std::get<AttackEffect>(tree.m_instance.leaves[node - 1]).m_action, common(*row), event);
+    return row && attack::ActionAttackDriver(m_world, m_entity, std::get<AttackEffect>(tree.m_instance.leaves[node - 1]).m_action).onDisplacementEvent(common(*row), event);
 }
 
 // 同步实际动画循环计数到当前动作。
@@ -484,7 +484,7 @@ void EffectActor::animationComplete(int64_t loops)
         if (tree.m_instance.nodes[i + 1].status == BTStatus::Running)
         {
             const auto* row = conf::Config::instance().find<conf::ActionEffectConfig>(tree.m_actions[i]);
-            if (row) attack::completeAnimation(std::get<AttackEffect>(tree.m_instance.leaves[i]).m_action, common(*row), loops);
+            if (row) std::get<AttackEffect>(tree.m_instance.leaves[i]).m_action.completeAnimation(common(*row), loops);
         }
 }
 }

@@ -1,6 +1,11 @@
 #pragma once
 #include "mugen/core/ecs/Entity.h"
 
+namespace mugen::conf
+{
+struct ActionConfig;
+}
+
 namespace mugen::sim::attack
 {
 /// 单个动作攻击叶子的逐帧运行状态。
@@ -20,6 +25,10 @@ struct ActionAttack
     std::vector<uint8_t> m_spawned;
     /// 与镜头配置平行的触发标记。
     std::vector<uint8_t> m_shaken;
+    /// 根据动画循环次数标记动作动画结束。
+    void completeAnimation(const conf::ActionConfig& row, int64_t loops);
+    /// 在动画结束后的延迟到期时结束动作。
+    void dealWithTime(const conf::ActionConfig& row);
     MG_REFLECT(ActionAttack, m_time, m_interval, m_animationEnd, m_finished, m_effects, m_spawned, m_shaken)
 };
 /// 攻击行为树叶子保存的动作与静止状态。

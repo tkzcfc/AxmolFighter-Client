@@ -78,7 +78,7 @@ void AttackAction::enter(role::brain::RoleContext& ctx, Param source, State& lea
     auto& pool = ecs.get<SkillPool>(entity);
     pool.m_allowInterrupt = pool.m_allowExtraInterrupt = false;
     buff::trigger(world, entity, BFEvent::BehaviorStateStart, {source.m_skill, {}, row->id});
-    if (row->control == 1) dealWithDirection(world, entity, true);
+    if (row->control == 1) ActionAttackDriver(world, entity, leaf.m_action).dealWithDirection(true);
     auto& transform = ecs.get<Transform>(entity);
     if (row->relativeActionPos.size() >= 3)
     {
@@ -135,7 +135,7 @@ BTStatus AttackAction::update(role::brain::RoleContext& ctx, Param source, State
         leaf.m_displayed = true;
         world.emit(entity, DisplaySpine{0, row->displaySpineIds});
     }
-    dealWithTime(action, *row);
+    action.dealWithTime(*row);
     if (ecs.get<RoleIdentity>(entity).roleType == 1 && ecs.get<RoleHitState>(entity).m_hitProtectExecuted)
     {
         action.m_finished = true;
@@ -146,7 +146,7 @@ BTStatus AttackAction::update(role::brain::RoleContext& ctx, Param source, State
         interrupt(world, entity, source.m_skill, false, action);
     if (!action.m_finished && row->interruptExtraFrame != -1 && action.m_time > at(row->interruptExtraFrame))
         interrupt(world, entity, source.m_skill, true, action);
-    dealWithControl(world, entity, *row);
+    ActionAttackDriver(world, entity, action).dealWithControl(*row);
     const auto& pool = ecs.get<SkillPool>(entity);
     for (size_t i = 0; i < row->effectIds.size(); ++i)
     {
@@ -159,7 +159,7 @@ BTStatus AttackAction::update(role::brain::RoleContext& ctx, Param source, State
         action.m_spawned[i] = 1;
         action.m_effects[i] = effect::spawnFromRole(world, entity, request);
     }
-    dealWithShake(world, entity, action, *row);
+    ActionAttackDriver(world, entity, action).dealWithShake(*row);
     if (!leaf.m_transformLogged && row->transformId != -1 && action.m_time >= at(row->transformFrame) &&
         !ecs.get<RoleStatus>(entity).isDeath())
     {
@@ -189,7 +189,7 @@ void AttackAction::exit(role::brain::RoleContext& ctx, Param source, State& leaf
     auto& world = ctx.world();
     const auto entity = ctx.entity();
     buff::trigger(world, entity, BFEvent::BehaviorStateEnd, {source.m_skill, {}, row->id});
-    clearEffects(world, entity, leaf.m_action);
+    ActionAttackDriver(world, entity, leaf.m_action).clearEffects();
     buff::trigger(world, entity, BFEvent::AfterRoleSkillAction, {source.m_skill, {}, row->id});
     auto& pool = world.ecs().get<SkillPool>(entity);
     pool.m_allowInterrupt = true;
@@ -206,7 +206,7 @@ bool AttackAction::onDisplacement(role::brain::RoleContext& ctx, Param source, S
 {
     const auto* row = config(source);
     if (!row) return false;
-    return displacementEvent(ctx.world(), ctx.entity(), leaf.m_action, *row, ctx.event());
+    return ActionAttackDriver(ctx.world(), ctx.entity(), leaf.m_action).onDisplacementEvent(*row, ctx.event());
 }
 
 // 同步动画循环结束到当前施法中的攻击叶。
@@ -219,6 +219,6 @@ void animationComplete(World& world, Entity entity, int64_t loops)
         return;
     const auto* row = conf::Config::instance().find<conf::ActionConfig>(plan.m_actions[static_cast<size_t>(plan.m_index)]);
     if (row)
-        completeAnimation(plan.m_leaf.m_action, *row, loops);
+        plan.m_leaf.m_action.completeAnimation(*row, loops);
 }
 }  // namespace mugen::sim::attack
