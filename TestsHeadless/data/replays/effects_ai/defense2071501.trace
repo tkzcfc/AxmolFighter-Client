@@ -1,0 +1,2254 @@
+# mugen_sim_cli trace v1
+# revision c238bc1
+# room 2071501 seed 31
+frame 1
+ent 1 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 1 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 1 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ev 1 0 roomstate 1
+frame 2
+ent 2 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 2 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 2 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ev 2 1 roomstate 2
+frame 3
+ent 3 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 3 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 3 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ev 3 2 roomstate 3
+frame 4
+ent 4 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 4 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 4 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ev 4 3 roomstate 4
+ev 4 4 warn id 1 boss 0
+frame 5
+ent 5 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 5 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 5 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ev 5 5 roomstate 5
+ev 5 6 tips gone.0.0 text 300124
+frame 6
+ent 6 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 6 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 6 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ev 6 7 roomstate 6
+frame 7
+ent 7 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 7 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 7 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 8
+ent 8 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 8 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 8 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 9
+ent 9 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 9 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 9 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 10
+ent 10 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 10 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 10 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 11
+ent 11 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 11 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 11 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 12
+ent 12 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 12 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 12 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 13
+ent 13 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 13 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 13 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 14
+ent 14 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 14 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 14 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 15
+ent 15 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 15 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 15 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 16
+ent 16 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 16 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 16 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 17
+ent 17 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 17 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 17 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 18
+ent 18 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 18 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 18 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 19
+ent 19 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 19 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 19 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 20
+ent 20 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 20 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 20 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 21
+ent 21 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 21 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 21 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 22
+ent 22 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 22 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 22 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 23
+ent 23 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 23 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 23 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 24
+ent 24 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 24 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 24 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 25
+ent 25 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 25 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 25 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 26
+ent 26 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 26 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 26 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 27
+ent 27 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 27 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 27 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 28
+ent 28 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 28 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 28 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 29
+ent 29 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 29 role 61300 2 x 1054867456 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 29 role 61320 3 x 1243611136 y 0 z 262144000 face 1 hp 12688902062080 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+death role.61300.2
+spawn role.61300.2 10045
+death role.61320.3
+spawn role.61320.3 10045
+frame 30
+ent 30 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 30 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 34952519 play 1
+ent 30 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 34952519 play 1
+ev 30 8 sound effect.10045.4 id 0
+ev 30 9 sound effect.10045.5 id 0
+ev 30 10 roomstate 9
+frame 31
+ent 31 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 31 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 67807838 play 1
+ent 31 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 67807838 play 1
+frame 32
+ent 32 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 32 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 98565992 play 1
+ent 32 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 98565992 play 1
+frame 33
+ent 33 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 33 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 127226946 play 1
+ent 33 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 127226946 play 1
+frame 34
+ent 34 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 34 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 153790735 play 1
+ent 34 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 153790735 play 1
+frame 35
+ent 35 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 35 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 178257358 play 1
+ent 35 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 178257358 play 1
+frame 36
+ent 36 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 36 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 200626782 play 1
+ent 36 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 200626782 play 1
+frame 37
+ent 37 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 37 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 220899040 play 1
+ent 37 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 220899040 play 1
+frame 38
+ent 38 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 38 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 239074132 play 1
+ent 38 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 239074132 play 1
+frame 39
+ent 39 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 39 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 255152025 play 1
+ent 39 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 255152025 play 1
+frame 40
+ent 40 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 40 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 269132752 play 1
+ent 40 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 269132752 play 1
+frame 41
+ent 41 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 41 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 281016280 play 1
+ent 41 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 281016280 play 1
+frame 42
+ent 42 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 42 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 290802642 play 1
+ent 42 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 290802642 play 1
+frame 43
+ent 43 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 43 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 298491838 play 1
+ent 43 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 298491838 play 1
+frame 44
+ent 44 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 44 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 304083835 play 1
+ent 44 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 304083835 play 1
+frame 45
+ent 45 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 45 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 307579100 play 1
+ent 45 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 307579100 play 1
+frame 46
+ent 46 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 46 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 311074365 play 1
+ent 46 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 311074365 play 1
+frame 47
+ent 47 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 47 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 314569630 play 1
+ent 47 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 314569630 play 1
+frame 48
+ent 48 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 48 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 318064895 play 1
+ent 48 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 318064895 play 1
+frame 49
+ent 49 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 49 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 321560160 play 1
+ent 49 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 321560160 play 1
+frame 50
+ent 50 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 50 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 325055425 play 1
+ent 50 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 325055425 play 1
+frame 51
+ent 51 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 51 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 328550690 play 1
+ent 51 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 328550690 play 1
+frame 52
+ent 52 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 52 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 332045955 play 1
+ent 52 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 332045955 play 1
+frame 53
+ent 53 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 53 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 335541220 play 1
+ent 53 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 335541220 play 1
+frame 54
+ent 54 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 54 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 339036485 play 1
+ent 54 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 339036485 play 1
+frame 55
+ent 55 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 55 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 342531750 play 1
+ent 55 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 342531750 play 1
+frame 56
+ent 56 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 56 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 346027015 play 1
+ent 56 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 346027015 play 1
+frame 57
+ent 57 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 57 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 349522280 play 1
+ent 57 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 349522280 play 1
+frame 58
+ent 58 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 58 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 353017545 play 1
+ent 58 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 353017545 play 1
+frame 59
+ent 59 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 59 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 356512810 play 1
+ent 59 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 356512810 play 1
+frame 60
+ent 60 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 60 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 360008075 play 1
+ent 60 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 360008075 play 1
+frame 61
+ent 61 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 61 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 363503340 play 1
+ent 61 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 363503340 play 1
+frame 62
+ent 62 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 62 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 366998605 play 1
+ent 62 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 366998605 play 1
+frame 63
+ent 63 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 63 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 370493870 play 1
+ent 63 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 370493870 play 1
+frame 64
+ent 64 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 64 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 373989135 play 1
+ent 64 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 373989135 play 1
+frame 65
+ent 65 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 65 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 377484400 play 1
+ent 65 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 377484400 play 1
+frame 66
+ent 66 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 66 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 380979665 play 1
+ent 66 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 380979665 play 1
+frame 67
+ent 67 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 67 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 384474930 play 1
+ent 67 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 384474930 play 1
+frame 68
+ent 68 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 68 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 387970195 play 1
+ent 68 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 387970195 play 1
+frame 69
+ent 69 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 69 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 391465460 play 1
+ent 69 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 391465460 play 1
+frame 70
+ent 70 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 70 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 394960725 play 1
+ent 70 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 394960725 play 1
+frame 71
+ent 71 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 71 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 398455990 play 1
+ent 71 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 398455990 play 1
+frame 72
+ent 72 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 72 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 401951255 play 1
+ent 72 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 401951255 play 1
+frame 73
+ent 73 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 73 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 405446520 play 1
+ent 73 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 405446520 play 1
+frame 74
+ent 74 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 74 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 408941785 play 1
+ent 74 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 408941785 play 1
+frame 75
+ent 75 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 75 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 412437050 play 1
+ent 75 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 412437050 play 1
+frame 76
+ent 76 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 76 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 416980881 play 1
+ent 76 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 416980881 play 1
+frame 77
+ent 77 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 77 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 422573312 play 1
+ent 77 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 422573312 play 1
+frame 78
+ent 78 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 78 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 429214342 play 1
+ent 78 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 429214342 play 1
+frame 79
+ent 79 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 79 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 436903938 play 1
+ent 79 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 436903938 play 1
+frame 80
+ent 80 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 80 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 445642134 play 1
+ent 80 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 445642134 play 1
+frame 81
+ent 81 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 81 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 455428929 play 1
+ent 81 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 455428929 play 1
+frame 82
+ent 82 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 82 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 466264291 play 1
+ent 82 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 466264291 play 1
+frame 83
+ent 83 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 83 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 478148252 play 1
+ent 83 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 478148252 play 1
+frame 84
+ent 84 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 84 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 491080813 play 1
+ent 84 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 491080813 play 1
+frame 85
+ent 85 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 85 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 505061940 play 1
+ent 85 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 505061940 play 1
+frame 86
+ent 86 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 86 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 520091667 play 1
+ent 86 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 520091667 play 1
+frame 87
+ent 87 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 87 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 536169993 play 1
+ent 87 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 536169993 play 1
+frame 88
+ent 88 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 88 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 553296885 play 1
+ent 88 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 553296885 play 1
+frame 89
+ent 89 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 89 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 571472377 play 1
+ent 89 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 571472377 play 1
+frame 90
+ent 90 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 90 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 590696469 play 1
+ent 90 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 590696469 play 1
+frame 91
+ent 91 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 91 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 610969127 play 1
+ent 91 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 610969127 play 1
+frame 92
+ent 92 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 92 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 632290384 play 1
+ent 92 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 632290384 play 1
+frame 93
+ent 93 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 93 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 654660241 play 1
+ent 93 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 654660241 play 1
+frame 94
+ent 94 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 94 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 678078698 play 1
+ent 94 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 678078698 play 1
+frame 95
+ent 95 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 95 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 702545721 play 1
+ent 95 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 702545721 play 1
+frame 96
+ent 96 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 96 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 728061343 play 1
+ent 96 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 728061343 play 1
+frame 97
+ent 97 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 97 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 754625565 play 1
+ent 97 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 754625565 play 1
+frame 98
+ent 98 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 98 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 782238353 play 1
+ent 98 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 782238353 play 1
+frame 99
+ent 99 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 99 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 810899741 play 1
+ent 99 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 810899741 play 1
+frame 100
+ent 100 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 100 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 840609728 play 1
+ent 100 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 840609728 play 1
+frame 101
+ent 101 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 101 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 871368282 play 1
+ent 101 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 871368282 play 1
+frame 102
+ent 102 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 102 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 903175435 play 1
+ent 102 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 903175435 play 1
+frame 103
+ent 103 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 103 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 936031188 play 1
+ent 103 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 936031188 play 1
+frame 104
+ent 104 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 104 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 969935507 play 1
+ent 104 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 969935507 play 1
+frame 105
+ent 105 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 105 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 1004888026 play 1
+ent 105 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 1004888026 play 1
+frame 106
+ent 106 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 106 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 1039840545 play 1
+ent 106 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 1039840545 play 1
+ev 106 11 roomstate 10
+ev 106 12 victory room 2071501
+frame 107
+ent 107 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 107 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 1074793064 play 1
+ent 107 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 1074793064 play 1
+ev 107 13 roomstate 11
+frame 108
+ent 108 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 108 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 1109745583 play 1
+ent 108 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 1109745583 play 1
+ev 108 14 roomstate 12
+frame 109
+ent 109 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 109 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 1144698102 play 1
+ent 109 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 1144698102 play 1
+ev 109 15 roomstate 14
+frame 110
+ent 110 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 110 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 1179650621 play 1
+ent 110 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 1179650621 play 1
+ev 110 16 roomstate 15
+frame 111
+ent 111 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 111 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 1214603140 play 1
+ent 111 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 1214603140 play 1
+frame 112
+ent 112 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 112 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 1249555659 play 1
+ent 112 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 1249555659 play 1
+frame 113
+ent 113 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 113 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 1284508178 play 1
+ent 113 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 1284508178 play 1
+frame 114
+ent 114 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ent 114 effect 10045 4 x 1054867456 y 0 z 261095424 face 1 st Attack ex - act 0 at 1292894208 play 1
+ent 114 effect 10045 5 x 1243611136 y 0 z 261095424 face 1 st Attack ex - act 0 at 1292894208 play 1
+frame 115
+ent 115 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+ev 115 17 sound gone.3.1 id 0
+ev 115 18 sound gone.4.1 id 0
+frame 116
+ent 116 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 117
+ent 117 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 118
+ent 118 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 119
+ent 119 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 120
+ent 120 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 121
+ent 121 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 122
+ent 122 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 123
+ent 123 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 124
+ent 124 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 125
+ent 125 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 126
+ent 126 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 127
+ent 127 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 128
+ent 128 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 129
+ent 129 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 130
+ent 130 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 131
+ent 131 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 132
+ent 132 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 133
+ent 133 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 134
+ent 134 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 135
+ent 135 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 136
+ent 136 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 137
+ent 137 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 138
+ent 138 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 139
+ent 139 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 140
+ent 140 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 141
+ent 141 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 142
+ent 142 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 143
+ent 143 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 144
+ent 144 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 145
+ent 145 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 146
+ent 146 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 147
+ent 147 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 148
+ent 148 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 149
+ent 149 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 150
+ent 150 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 151
+ent 151 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 152
+ent 152 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 153
+ent 153 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 154
+ent 154 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 155
+ent 155 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 156
+ent 156 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 157
+ent 157 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 158
+ent 158 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 159
+ent 159 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 160
+ent 160 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 161
+ent 161 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 162
+ent 162 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 163
+ent 163 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 164
+ent 164 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 165
+ent 165 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 166
+ent 166 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 167
+ent 167 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 168
+ent 168 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 169
+ent 169 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 170
+ent 170 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 171
+ent 171 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 172
+ent 172 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 173
+ent 173 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 174
+ent 174 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 175
+ent 175 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 176
+ent 176 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 177
+ent 177 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 178
+ent 178 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 179
+ent 179 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 180
+ent 180 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 181
+ent 181 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 182
+ent 182 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 183
+ent 183 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 184
+ent 184 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 185
+ent 185 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 186
+ent 186 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 187
+ent 187 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 188
+ent 188 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 189
+ent 189 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 190
+ent 190 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 191
+ent 191 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 192
+ent 192 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 193
+ent 193 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 194
+ent 194 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 195
+ent 195 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 196
+ent 196 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 197
+ent 197 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 198
+ent 198 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 199
+ent 199 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 200
+ent 200 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 201
+ent 201 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 202
+ent 202 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 203
+ent 203 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 204
+ent 204 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 205
+ent 205 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 206
+ent 206 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 207
+ent 207 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 208
+ent 208 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 209
+ent 209 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 210
+ent 210 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 211
+ent 211 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 212
+ent 212 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 213
+ent 213 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 214
+ent 214 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 215
+ent 215 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 216
+ent 216 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 217
+ent 217 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 218
+ent 218 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 219
+ent 219 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 220
+ent 220 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 221
+ent 221 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 222
+ent 222 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 223
+ent 223 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 224
+ent 224 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 225
+ent 225 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 226
+ent 226 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 227
+ent 227 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 228
+ent 228 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 229
+ent 229 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 230
+ent 230 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 231
+ent 231 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 232
+ent 232 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 233
+ent 233 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 234
+ent 234 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 235
+ent 235 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 236
+ent 236 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 237
+ent 237 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 238
+ent 238 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 239
+ent 239 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 240
+ent 240 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 241
+ent 241 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 242
+ent 242 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 243
+ent 243 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 244
+ent 244 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 245
+ent 245 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 246
+ent 246 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 247
+ent 247 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 248
+ent 248 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 249
+ent 249 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 250
+ent 250 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 251
+ent 251 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 252
+ent 252 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 253
+ent 253 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 254
+ent 254 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 255
+ent 255 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 256
+ent 256 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 257
+ent 257 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 258
+ent 258 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 259
+ent 259 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 260
+ent 260 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 261
+ent 261 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 262
+ent 262 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 263
+ent 263 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 264
+ent 264 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 265
+ent 265 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 266
+ent 266 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 267
+ent 267 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 268
+ent 268 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 269
+ent 269 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 270
+ent 270 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 271
+ent 271 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 272
+ent 272 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 273
+ent 273 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 274
+ent 274 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 275
+ent 275 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 276
+ent 276 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 277
+ent 277 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 278
+ent 278 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 279
+ent 279 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 280
+ent 280 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 281
+ent 281 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 282
+ent 282 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 283
+ent 283 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 284
+ent 284 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 285
+ent 285 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 286
+ent 286 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 287
+ent 287 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 288
+ent 288 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 289
+ent 289 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 290
+ent 290 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 291
+ent 291 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 292
+ent 292 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 293
+ent 293 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 294
+ent 294 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 295
+ent 295 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 296
+ent 296 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 297
+ent 297 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 298
+ent 298 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 299
+ent 299 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 300
+ent 300 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 301
+ent 301 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 302
+ent 302 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 303
+ent 303 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 304
+ent 304 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 305
+ent 305 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 306
+ent 306 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 307
+ent 307 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 308
+ent 308 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 309
+ent 309 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 310
+ent 310 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 311
+ent 311 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 312
+ent 312 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 313
+ent 313 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 314
+ent 314 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 315
+ent 315 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 316
+ent 316 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 317
+ent 317 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 318
+ent 318 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 319
+ent 319 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 320
+ent 320 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 321
+ent 321 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 322
+ent 322 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 323
+ent 323 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 324
+ent 324 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 325
+ent 325 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 326
+ent 326 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 327
+ent 327 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 328
+ent 328 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 329
+ent 329 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 330
+ent 330 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 331
+ent 331 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 332
+ent 332 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 333
+ent 333 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 334
+ent 334 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 335
+ent 335 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 336
+ent 336 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 337
+ent 337 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 338
+ent 338 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 339
+ent 339 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 340
+ent 340 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 341
+ent 341 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 342
+ent 342 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 343
+ent 343 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 344
+ent 344 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 345
+ent 345 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 346
+ent 346 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 347
+ent 347 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 348
+ent 348 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 349
+ent 349 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 350
+ent 350 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 351
+ent 351 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 352
+ent 352 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 353
+ent 353 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 354
+ent 354 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 355
+ent 355 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 356
+ent 356 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 357
+ent 357 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 358
+ent 358 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 359
+ent 359 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 360
+ent 360 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 361
+ent 361 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 362
+ent 362 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 363
+ent 363 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 364
+ent 364 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 365
+ent 365 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 366
+ent 366 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 367
+ent 367 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 368
+ent 368 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 369
+ent 369 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 370
+ent 370 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 371
+ent 371 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 372
+ent 372 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 373
+ent 373 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 374
+ent 374 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 375
+ent 375 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 376
+ent 376 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 377
+ent 377 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 378
+ent 378 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 379
+ent 379 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 380
+ent 380 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 381
+ent 381 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 382
+ent 382 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 383
+ent 383 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 384
+ent 384 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 385
+ent 385 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 386
+ent 386 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 387
+ent 387 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 388
+ent 388 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 389
+ent 389 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 390
+ent 390 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 391
+ent 391 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 392
+ent 392 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 393
+ent 393 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 394
+ent 394 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 395
+ent 395 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 396
+ent 396 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 397
+ent 397 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 398
+ent 398 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 399
+ent 399 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 400
+ent 400 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 401
+ent 401 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 402
+ent 402 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 403
+ent 403 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 404
+ent 404 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 405
+ent 405 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 406
+ent 406 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 407
+ent 407 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 408
+ent 408 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 409
+ent 409 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 410
+ent 410 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 411
+ent 411 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 412
+ent 412 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 413
+ent 413 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 414
+ent 414 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 415
+ent 415 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 416
+ent 416 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 417
+ent 417 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 418
+ent 418 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 419
+ent 419 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 420
+ent 420 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 421
+ent 421 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 422
+ent 422 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 423
+ent 423 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 424
+ent 424 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 425
+ent 425 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 426
+ent 426 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 427
+ent 427 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 428
+ent 428 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 429
+ent 429 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 430
+ent 430 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 431
+ent 431 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 432
+ent 432 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 433
+ent 433 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 434
+ent 434 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 435
+ent 435 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 436
+ent 436 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 437
+ent 437 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 438
+ent 438 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 439
+ent 439 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 440
+ent 440 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 441
+ent 441 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 442
+ent 442 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 443
+ent 443 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 444
+ent 444 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 445
+ent 445 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 446
+ent 446 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 447
+ent 447 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 448
+ent 448 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 449
+ent 449 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 450
+ent 450 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 451
+ent 451 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 452
+ent 452 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 453
+ent 453 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 454
+ent 454 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 455
+ent 455 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 456
+ent 456 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 457
+ent 457 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 458
+ent 458 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 459
+ent 459 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 460
+ent 460 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 461
+ent 461 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 462
+ent 462 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 463
+ent 463 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 464
+ent 464 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 465
+ent 465 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 466
+ent 466 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 467
+ent 467 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 468
+ent 468 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 469
+ent 469 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 470
+ent 470 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 471
+ent 471 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 472
+ent 472 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 473
+ent 473 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 474
+ent 474 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 475
+ent 475 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 476
+ent 476 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 477
+ent 477 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 478
+ent 478 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 479
+ent 479 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 480
+ent 480 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 481
+ent 481 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 482
+ent 482 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 483
+ent 483 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 484
+ent 484 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 485
+ent 485 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 486
+ent 486 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 487
+ent 487 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 488
+ent 488 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 489
+ent 489 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 490
+ent 490 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 491
+ent 491 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 492
+ent 492 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 493
+ent 493 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 494
+ent 494 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 495
+ent 495 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 496
+ent 496 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 497
+ent 497 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 498
+ent 498 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 499
+ent 499 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 500
+ent 500 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 501
+ent 501 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 502
+ent 502 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 503
+ent 503 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 504
+ent 504 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 505
+ent 505 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 506
+ent 506 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 507
+ent 507 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 508
+ent 508 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 509
+ent 509 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 510
+ent 510 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 511
+ent 511 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 512
+ent 512 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 513
+ent 513 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 514
+ent 514 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 515
+ent 515 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 516
+ent 516 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 517
+ent 517 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 518
+ent 518 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 519
+ent 519 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 520
+ent 520 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 521
+ent 521 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 522
+ent 522 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 523
+ent 523 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 524
+ent 524 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 525
+ent 525 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 526
+ent 526 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 527
+ent 527 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 528
+ent 528 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 529
+ent 529 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 530
+ent 530 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 531
+ent 531 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 532
+ent 532 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 533
+ent 533 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 534
+ent 534 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 535
+ent 535 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 536
+ent 536 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 537
+ent 537 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 538
+ent 538 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 539
+ent 539 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 540
+ent 540 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 541
+ent 541 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 542
+ent 542 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 543
+ent 543 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 544
+ent 544 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 545
+ent 545 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 546
+ent 546 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 547
+ent 547 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 548
+ent 548 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 549
+ent 549 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 550
+ent 550 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 551
+ent 551 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 552
+ent 552 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 553
+ent 553 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 554
+ent 554 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 555
+ent 555 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 556
+ent 556 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 557
+ent 557 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 558
+ent 558 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 559
+ent 559 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 560
+ent 560 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 561
+ent 561 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 562
+ent 562 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 563
+ent 563 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 564
+ent 564 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 565
+ent 565 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 566
+ent 566 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 567
+ent 567 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 568
+ent 568 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 569
+ent 569 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 570
+ent 570 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 571
+ent 571 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 572
+ent 572 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 573
+ent 573 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 574
+ent 574 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 575
+ent 575 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 576
+ent 576 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 577
+ent 577 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 578
+ent 578 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 579
+ent 579 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 580
+ent 580 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 581
+ent 581 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 582
+ent 582 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 583
+ent 583 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 584
+ent 584 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 585
+ent 585 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 586
+ent 586 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 587
+ent 587 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 588
+ent 588 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 589
+ent 589 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 590
+ent 590 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 591
+ent 591 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 592
+ent 592 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 593
+ent 593 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 594
+ent 594 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 595
+ent 595 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 596
+ent 596 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 597
+ent 597 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 598
+ent 598 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 599
+ent 599 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 600
+ent 600 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 601
+ent 601 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 602
+ent 602 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 603
+ent 603 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 604
+ent 604 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 605
+ent 605 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 606
+ent 606 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 607
+ent 607 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 608
+ent 608 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 609
+ent 609 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 610
+ent 610 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 611
+ent 611 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 612
+ent 612 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 613
+ent 613 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 614
+ent 614 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 615
+ent 615 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 616
+ent 616 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 617
+ent 617 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 618
+ent 618 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 619
+ent 619 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 620
+ent 620 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 621
+ent 621 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 622
+ent 622 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 623
+ent 623 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 624
+ent 624 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 625
+ent 625 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 626
+ent 626 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 627
+ent 627 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 628
+ent 628 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 629
+ent 629 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 630
+ent 630 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 631
+ent 631 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 632
+ent 632 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 633
+ent 633 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 634
+ent 634 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 635
+ent 635 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 636
+ent 636 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 637
+ent 637 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 638
+ent 638 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 639
+ent 639 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 640
+ent 640 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 641
+ent 641 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 642
+ent 642 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 643
+ent 643 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 644
+ent 644 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 645
+ent 645 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 646
+ent 646 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 647
+ent 647 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 648
+ent 648 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 649
+ent 649 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 650
+ent 650 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 651
+ent 651 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 652
+ent 652 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 653
+ent 653 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 654
+ent 654 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 655
+ent 655 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 656
+ent 656 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 657
+ent 657 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 658
+ent 658 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 659
+ent 659 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 660
+ent 660 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 661
+ent 661 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 662
+ent 662 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 663
+ent 663 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 664
+ent 664 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 665
+ent 665 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 666
+ent 666 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 667
+ent 667 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 668
+ent 668 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 669
+ent 669 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 670
+ent 670 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 671
+ent 671 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 672
+ent 672 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 673
+ent 673 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 674
+ent 674 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 675
+ent 675 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 676
+ent 676 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 677
+ent 677 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 678
+ent 678 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 679
+ent 679 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 680
+ent 680 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 681
+ent 681 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 682
+ent 682 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 683
+ent 683 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 684
+ent 684 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 685
+ent 685 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 686
+ent 686 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 687
+ent 687 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 688
+ent 688 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 689
+ent 689 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 690
+ent 690 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 691
+ent 691 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 692
+ent 692 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 693
+ent 693 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 694
+ent 694 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 695
+ent 695 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 696
+ent 696 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 697
+ent 697 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 698
+ent 698 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 699
+ent 699 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 700
+ent 700 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 701
+ent 701 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 702
+ent 702 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 703
+ent 703 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 704
+ent 704 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 705
+ent 705 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 706
+ent 706 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 707
+ent 707 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 708
+ent 708 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 709
+ent 709 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 710
+ent 710 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 711
+ent 711 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 712
+ent 712 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 713
+ent 713 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 714
+ent 714 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 715
+ent 715 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 716
+ent 716 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 717
+ent 717 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 718
+ent 718 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 719
+ent 719 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 720
+ent 720 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 721
+ent 721 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 722
+ent 722 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 723
+ent 723 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 724
+ent 724 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 725
+ent 725 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 726
+ent 726 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 727
+ent 727 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 728
+ent 728 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 729
+ent 729 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 730
+ent 730 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 731
+ent 731 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 732
+ent 732 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 733
+ent 733 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 734
+ent 734 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 735
+ent 735 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 736
+ent 736 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 737
+ent 737 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 738
+ent 738 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 739
+ent 739 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 740
+ent 740 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 741
+ent 741 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 742
+ent 742 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 743
+ent 743 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 744
+ent 744 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 745
+ent 745 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 746
+ent 746 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 747
+ent 747 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 748
+ent 748 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 749
+ent 749 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 750
+ent 750 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 751
+ent 751 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 752
+ent 752 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 753
+ent 753 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 754
+ent 754 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 755
+ent 755 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 756
+ent 756 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 757
+ent 757 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 758
+ent 758 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 759
+ent 759 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 760
+ent 760 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 761
+ent 761 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 762
+ent 762 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 763
+ent 763 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 764
+ent 764 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 765
+ent 765 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 766
+ent 766 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 767
+ent 767 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 768
+ent 768 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 769
+ent 769 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 770
+ent 770 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 771
+ent 771 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 772
+ent 772 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 773
+ent 773 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 774
+ent 774 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 775
+ent 775 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 776
+ent 776 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 777
+ent 777 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 778
+ent 778 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 779
+ent 779 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 780
+ent 780 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 781
+ent 781 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 782
+ent 782 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 783
+ent 783 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 784
+ent 784 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 785
+ent 785 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 786
+ent 786 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 787
+ent 787 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 788
+ent 788 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 789
+ent 789 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 790
+ent 790 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 791
+ent 791 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 792
+ent 792 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 793
+ent 793 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 794
+ent 794 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 795
+ent 795 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 796
+ent 796 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 797
+ent 797 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 798
+ent 798 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 799
+ent 799 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 800
+ent 800 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 801
+ent 801 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 802
+ent 802 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 803
+ent 803 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 804
+ent 804 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 805
+ent 805 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 806
+ent 806 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 807
+ent 807 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 808
+ent 808 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 809
+ent 809 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 810
+ent 810 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 811
+ent 811 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 812
+ent 812 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 813
+ent 813 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 814
+ent 814 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 815
+ent 815 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 816
+ent 816 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 817
+ent 817 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 818
+ent 818 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 819
+ent 819 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 820
+ent 820 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 821
+ent 821 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 822
+ent 822 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 823
+ent 823 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 824
+ent 824 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 825
+ent 825 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 826
+ent 826 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 827
+ent 827 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 828
+ent 828 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 829
+ent 829 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 830
+ent 830 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 831
+ent 831 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 832
+ent 832 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 833
+ent 833 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 834
+ent 834 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 835
+ent 835 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 836
+ent 836 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 837
+ent 837 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 838
+ent 838 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 839
+ent 839 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 840
+ent 840 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 841
+ent 841 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 842
+ent 842 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 843
+ent 843 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 844
+ent 844 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 845
+ent 845 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 846
+ent 846 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 847
+ent 847 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 848
+ent 848 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 849
+ent 849 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 850
+ent 850 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 851
+ent 851 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 852
+ent 852 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 853
+ent 853 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 854
+ent 854 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 855
+ent 855 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 856
+ent 856 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 857
+ent 857 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 858
+ent 858 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 859
+ent 859 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 860
+ent 860 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 861
+ent 861 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 862
+ent 862 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 863
+ent 863 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 864
+ent 864 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 865
+ent 865 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 866
+ent 866 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 867
+ent 867 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 868
+ent 868 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 869
+ent 869 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 870
+ent 870 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 871
+ent 871 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 872
+ent 872 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 873
+ent 873 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 874
+ent 874 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 875
+ent 875 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 876
+ent 876 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 877
+ent 877 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 878
+ent 878 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 879
+ent 879 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 880
+ent 880 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 881
+ent 881 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 882
+ent 882 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 883
+ent 883 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 884
+ent 884 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 885
+ent 885 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 886
+ent 886 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 887
+ent 887 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 888
+ent 888 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 889
+ent 889 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 890
+ent 890 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 891
+ent 891 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 892
+ent 892 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 893
+ent 893 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 894
+ent 894 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 895
+ent 895 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 896
+ent 896 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 897
+ent 897 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 898
+ent 898 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 899
+ent 899 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 900
+ent 900 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 901
+ent 901 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 902
+ent 902 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 903
+ent 903 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 904
+ent 904 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 905
+ent 905 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 906
+ent 906 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 907
+ent 907 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 908
+ent 908 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 909
+ent 909 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 910
+ent 910 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 911
+ent 911 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 912
+ent 912 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 913
+ent 913 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 914
+ent 914 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 915
+ent 915 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 916
+ent 916 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 917
+ent 917 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 918
+ent 918 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 919
+ent 919 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 920
+ent 920 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 921
+ent 921 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 922
+ent 922 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 923
+ent 923 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 924
+ent 924 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 925
+ent 925 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 926
+ent 926 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 927
+ent 927 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 928
+ent 928 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 929
+ent 929 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 930
+ent 930 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 931
+ent 931 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 932
+ent 932 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 933
+ent 933 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 934
+ent 934 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 935
+ent 935 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 936
+ent 936 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 937
+ent 937 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 938
+ent 938 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 939
+ent 939 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 940
+ent 940 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 941
+ent 941 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 942
+ent 942 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 943
+ent 943 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 944
+ent 944 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 945
+ent 945 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 946
+ent 946 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 947
+ent 947 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 948
+ent 948 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 949
+ent 949 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 950
+ent 950 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 951
+ent 951 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 952
+ent 952 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 953
+ent 953 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 954
+ent 954 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 955
+ent 955 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 956
+ent 956 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 957
+ent 957 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 958
+ent 958 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 959
+ent 959 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 960
+ent 960 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 961
+ent 961 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 962
+ent 962 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 963
+ent 963 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 964
+ent 964 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 965
+ent 965 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 966
+ent 966 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 967
+ent 967 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 968
+ent 968 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 969
+ent 969 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 970
+ent 970 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 971
+ent 971 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 972
+ent 972 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 973
+ent 973 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 974
+ent 974 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 975
+ent 975 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 976
+ent 976 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 977
+ent 977 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 978
+ent 978 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 979
+ent 979 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 980
+ent 980 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 981
+ent 981 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 982
+ent 982 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 983
+ent 983 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 984
+ent 984 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 985
+ent 985 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 986
+ent 986 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 987
+ent 987 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 988
+ent 988 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 989
+ent 989 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 990
+ent 990 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 991
+ent 991 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 992
+ent 992 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 993
+ent 993 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 994
+ent 994 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 995
+ent 995 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 996
+ent 996 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 997
+ent 997 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 998
+ent 998 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 999
+ent 999 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
+frame 1000
+ent 1000 role 0 1 x 2135949312 y 0 z 266338304 face -1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -

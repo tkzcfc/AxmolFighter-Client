@@ -8,7 +8,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $root      = Split-Path -Parent $MyInvocation.MyCommand.Path
 $cli       = Join-Path $root 'build/mugen_sim_cli'
-$traceName = if ($Mode -eq 'effects') { 'effects' } else { 'traces' }
+$traceName = if ($Mode -eq 'effects') { if ($AiOff) { 'effects' } else { 'effects_ai' } } else { 'traces' }
 $committed = Join-Path $root "data/replays/$traceName"
 $tmp       = Join-Path $root "build/trace_check_$Mode"
 

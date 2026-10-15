@@ -12,7 +12,7 @@ $clientRoot = Split-Path -Parent $root
 $cli        = Join-Path $root 'build/mugen_sim_cli'
 $replayDir  = Join-Path $root 'data/replays'
 $scenarioDir = Join-Path $root 'data/scenarios'
-$traceName  = if ($Mode -eq 'effects') { 'effects' } else { 'traces' }
+$traceName  = if ($Mode -eq 'effects') { if ($AiOff) { 'effects' } else { 'effects_ai' } } else { 'traces' }
 $traceDir   = if ($OutDir) { $OutDir } else { Join-Path $replayDir $traceName }
 
 if (-not (Test-Path -LiteralPath $cli)) {
@@ -21,7 +21,8 @@ if (-not (Test-Path -LiteralPath $cli)) {
 }
 if (-not $Revision) {
     # 基线头固定记录产生 trace 的 mugen 代码提交；随 HEAD 漂移会破坏字节一致性。
-    $Revision = 'c9321cf'
+    # AI 关闭与完整基线来自 c9321cf；AI 开启的 effects 基线来自 c238bc1（怪物 AI 切换为规则表）。
+    $Revision = if ($Mode -eq 'effects' -and -not $AiOff) { 'c238bc1' } else { 'c9321cf' }
 }
 if (-not (Test-Path -LiteralPath $traceDir)) {
     New-Item -ItemType Directory -Force -Path $traceDir | Out-Null
