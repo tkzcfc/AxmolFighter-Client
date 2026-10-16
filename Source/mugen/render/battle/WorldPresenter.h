@@ -8,6 +8,7 @@
 #    include "mugen/avatar/render/Avatar.h"
 #    include "mugen/render/LayerRuntimeLoader.h"
 #    include "mugen/render/VirtualCamera.h"
+#    include "mugen/render/spine/MgSkeletonAnimation.h"
 
 #    include <map>
 #    include <random>
@@ -19,21 +20,36 @@ class AvatarPresenter
 public:
     explicit AvatarPresenter(ax::Node& root) : m_root(root) {}
 
-    void present(sim::World& world, float alpha);
+    void present(sim::World& world, float alpha, float renderDelta);
     void clear();
 
 private:
+    // 单个实体的渲染状态：外观只在首次出现时解析一次。
     struct AvatarState
     {
+        // 绑定动作文件的实体由 Avatar 按逻辑动作时间摆姿。
         Avatar* avatar = nullptr;
+        // 逻辑侧未绑定动作文件的实体（传送门）直接按动作名播放 Spine 动画。
+        MgSkeletonAnimation* skeleton = nullptr;
+        // 外观已解析；无 Spine 资源的实体两者均为空且不再重试。
+        bool resolved = false;
+        // 配置的 Spine 相对偏移（x 随水平朝向、y 向上、z 随纵深朝向）。
+        std::vector<int32_t> spineOffset;
         sim::Transform previous;
         bool hasPrevious = false;
         std::string motionName;
         std::string entryId;
     };
 
+    // 返回实体当前的显示节点；未创建时为空。
+    static ax::Node* displayNode(const AvatarState& state);
+    // 返回配置层级对应的绘制层，首次使用时按层级值作为 z 序创建。
+    ax::Node& tierLayer(int32_t tier);
+
     ax::Node& m_root;
     std::map<uint32_t, AvatarState> m_avatars;
+    // 配置层级 → 绘制层；层间按层级值排序，层内按纵深排序。
+    std::map<int32_t, ax::Node*> m_tierLayers;
 };
 
 class MapPresenter

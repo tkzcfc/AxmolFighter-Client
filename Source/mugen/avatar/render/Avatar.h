@@ -40,6 +40,9 @@ public:
     // 跳跃到绝对时间点
     void seek(int timeMs);
 
+    // 推进独立挂件的循环动画（战斗中身体时间由 seek 驱动，挂件按渲染帧推进）
+    void stepAccessories(float dtSec);
+
     // 自动播放时步进
     void update(float delta) override;
 

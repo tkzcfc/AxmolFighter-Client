@@ -56,15 +56,23 @@ std::string AvatarPaths::motionFileFromSpine(const std::string& spineSkeleton)
     return path;
 }
 
-// 从角色与骨架配置解析渲染所需路径和缩放。
-RoleSpineInfo AvatarPaths::resolveRoleSpine(int32_t roleId)
+// 按角色配置的 resSpineId 解析渲染所需路径和缩放。
+SpineInfo AvatarPaths::resolveRoleSpine(int32_t roleId)
 {
-    RoleSpineInfo info;
     const auto* role = conf::Config::instance().find<conf::RoleConfig>(roleId);
-    if (!role || role->resSpineId <= 0)
+    if (!role)
+        return {};
+    return resolveSpine(role->resSpineId);
+}
+
+// 从 res_spine 行解析渲染所需路径与缩放。
+SpineInfo AvatarPaths::resolveSpine(int32_t resSpineId)
+{
+    SpineInfo info;
+    if (resSpineId <= 0)
         return info;
 
-    const auto* spine = conf::Config::instance().find<conf::ResSpineConfig>(role->resSpineId);
+    const auto* spine = conf::Config::instance().find<conf::ResSpineConfig>(resSpineId);
     if (!spine || spine->fileName.empty())
         return info;
 

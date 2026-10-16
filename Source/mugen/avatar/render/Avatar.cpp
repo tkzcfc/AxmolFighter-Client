@@ -296,7 +296,12 @@ void Avatar::step(int dtMs)
         applyTime();
     }
 
-    const float dtSec = static_cast<float>(dtMs) / 1000.0f;
+    stepAccessories(static_cast<float>(dtMs) / 1000.0f);
+}
+
+// 推进已加载挂件的独立循环动画。
+void Avatar::stepAccessories(float dtSec)
+{
     for (auto& accessory : m_accessories)
     {
         if (accessory)

@@ -5,9 +5,13 @@
 #    include "audio/AudioEngine.h"
 #    include "mugen/avatar/AvatarPaths.h"
 #    include "mugen/conf/LayerLoader.h"
+#    include "mugen/conf/ReflectedConfig.h"
 #    include "mugen/conf/TypeConversions.h"
+#    include "mugen/sim/effect/Effect.h"
+#    include "mugen/sim/room/RoomEntities.h"
 
 #    include <algorithm>
+#    include <cmath>
 
 NS_MG_BEGIN
 
@@ -29,51 +33,140 @@ ax::Node& createWorldLayer(ax::Node& root)
     return *layer;
 }
 
-Avatar* createAvatar(const sim::RoleIdentity& identity)
+// 实体外观配置：Spine 资源、绘制层级、Spine 相对偏移和挂件职业。
+struct AvatarLook
 {
-    const RoleSpineInfo spine = AvatarPaths::resolveRoleSpine(identity.roleId);
-    if (!spine.valid)
-        return nullptr;
+    int32_t roleId     = 0;
+    int32_t resSpineId = 0;
+    int32_t tier       = 0;
+    std::vector<int32_t> spineOffset;
+    CharacterClass characterClass = CharacterClass::kUnknown;
+};
+
+// 从实体配置行读取共有的外观字段。
+template <class Row>
+AvatarLook lookFromRow(const Row& row)
+{
+    AvatarLook look;
+    look.resSpineId  = row.resSpineId;
+    look.tier        = row.tier;
+    look.spineOffset = row.spineRelativePosition;
+    return look;
+}
+
+// 按实体组找到对应配置行；各组的配置 id 均已在生成时校验。
+AvatarLook resolveLook(sim::World& world, Entity entity, sim::GroupKind kind)
+{
+    auto& ecs          = world.ecs();
+    const auto& config = conf::Config::instance();
+    switch (kind)
+    {
+    case sim::GroupKind::Role:
+    {
+        const int32_t roleId = ecs.get<sim::RoleIdentity>(entity).roleId;
+        AvatarLook look      = lookFromRow(config.get<conf::RoleConfig>(roleId));
+        look.roleId          = roleId;
+        look.characterClass  = type_conversions::toCharacterClass(roleId);
+        return look;
+    }
+    case sim::GroupKind::Effect:
+        return lookFromRow(config.get<conf::EffectConfig>(ecs.get<sim::EffectState>(entity).m_configId));
+    case sim::GroupKind::Obstacle:
+        return lookFromRow(config.get<conf::ObstacleConfig>(ecs.get<sim::ObstacleState>(entity).m_id));
+    case sim::GroupKind::Goods:
+        return lookFromRow(config.get<conf::GoodsConfig>(ecs.get<sim::GoodsState>(entity).m_id));
+    case sim::GroupKind::Portal:
+        return lookFromRow(config.get<conf::PortalConfig>(ecs.get<sim::PortalState>(entity).m_id));
+    case sim::GroupKind::Count:
+        break;
+    }
+    MG_LOG_E("AvatarPresenter: invalid entity group {}", static_cast<int>(kind));
+    MG_ASSERT(false && "Invalid entity group for avatar");
+    return {};
+}
+
+// 按外观配置创建 Avatar，动作文件与逻辑侧绑定的同一份。
+// 职业角色按职业默认外观创建：时装图集与皮肤、默认武器挂件（待机时显示，其余动作嫁接到身体插槽）。
+Avatar* createAvatar(const AvatarLook& look, const SpineInfo& spine, const std::string& motionFile)
+{
+    if (look.characterClass != CharacterClass::kUnknown)
+    {
+        FashionAppearance appearance;
+        appearance.roleId = look.roleId;
+        return Avatar::create(appearance);
+    }
     AvatarDesc desc;
     desc.skeleton       = spine.skeleton;
     desc.atlases        = {spine.atlas};
     desc.scale          = spine.scale;
-    desc.motionFile     = AvatarPaths::motionFileFromSpine(spine.skeleton);
-    desc.characterClass = type_conversions::toCharacterClass(identity.roleId);
+    desc.motionFile     = motionFile;
+    desc.characterClass = look.characterClass;
     return Avatar::create(desc, AvatarLoadMode::kSyncShared);
+}
+
+// 读取偏移分量，配置允许省略尾部分量。
+float offsetAxis(const std::vector<int32_t>& offset, size_t index)
+{
+    return index < offset.size() ? static_cast<float>(offset[index]) : 0.0f;
 }
 }  // namespace
 
-void AvatarPresenter::present(sim::World& world, float alpha)
+void AvatarPresenter::present(sim::World& world, float alpha, float renderDelta)
 {
     std::set<uint32_t> live;
-    world.ecs().each<sim::RoleIdentity, sim::Transform, sim::MotionState>(
-        [&](Entity entity, const sim::RoleIdentity& identity, const sim::Transform& transform,
+    world.ecs().each<sim::EntityGroup, sim::Transform, sim::MotionState>(
+        [&](Entity entity, const sim::EntityGroup& group, const sim::Transform& transform,
             const sim::MotionState& motion) {
         live.insert(entity.value);
         auto& state = m_avatars[entity.value];
-        if (!state.avatar)
+        if (!state.resolved)
         {
-            state.avatar = createAvatar(identity);
-            if (!state.avatar)
+            state.resolved        = true;
+            const AvatarLook look = resolveLook(world, entity, group.kind);
+            const SpineInfo spine = AvatarPaths::resolveSpine(look.resSpineId);
+            if (!spine.valid)
                 return;
-            m_root.addChild(state.avatar);
+            if (motion.motionFile.empty())
+                state.skeleton = MgSkeletonAnimation::createFromCache(look.resSpineId);
+            else
+                state.avatar = createAvatar(look, spine, motion.motionFile);
+            ax::Node* node = displayNode(state);
+            if (!node)
+                return;
+            state.spineOffset = look.spineOffset;
+            tierLayer(look.tier).addChild(node);
         }
+        ax::Node* node = displayNode(state);
+        if (!node)
+            return;
         if (state.motionName != motion.motionName || state.entryId != motion.entryId)
         {
-            state.avatar->setMotion(motion.motionName, motion.entryId, motion.loop);
+            if (state.avatar)
+                state.avatar->setMotion(motion.motionName, motion.entryId, motion.loop);
+            else if (!state.skeleton->setAnimation(0, motion.motionName, motion.loop))
+                MG_LOG_W("AvatarPresenter: spine animation '{}' not found for entity {}", motion.motionName,
+                         entity.value);
             state.motionName = motion.motionName;
             state.entryId    = motion.entryId;
         }
-        state.avatar->seek(static_cast<int>(motion.timeMs.toInt()));
+        if (state.avatar)
+        {
+            state.avatar->seek(static_cast<int>(motion.timeMs.toInt()));
+            state.avatar->stepAccessories(renderDelta);
+        }
 
         const sim::Transform& previous = state.hasPrevious ? state.previous : transform;
         const float x                  = renderValue(previous.position.x) +
                         (renderValue(transform.position.x) - renderValue(previous.position.x)) * alpha;
         const float y = renderValue(previous.position.y) +
                         (renderValue(transform.position.y) - renderValue(previous.position.y)) * alpha;
-        state.avatar->setPosition(x, y + renderValue(transform.position.z));
-        state.avatar->setScaleX(transform.towardX < 0 ? -1.0f : 1.0f);
+        // Spine 偏移：x 随水平朝向翻转，z 随纵深朝向翻转；层内按偏移后的纵深排序。
+        const float towardX = transform.towardX < 0 ? -1.0f : 1.0f;
+        const float towardZ = transform.vectorZ < Fixed{} ? -1.0f : 1.0f;
+        const float depth   = renderValue(transform.position.z) + towardZ * offsetAxis(state.spineOffset, 2);
+        node->setPosition(x + towardX * offsetAxis(state.spineOffset, 0), y + offsetAxis(state.spineOffset, 1) + depth);
+        node->setLocalZOrder(-static_cast<int>(std::floor(depth)));
+        node->setScaleX(towardX);
         state.previous    = transform;
         state.hasPrevious = true;
     });
@@ -81,8 +174,8 @@ void AvatarPresenter::present(sim::World& world, float alpha)
     {
         if (!live.contains(it->first))
         {
-            if (it->second.avatar)
-                it->second.avatar->removeFromParent();
+            if (ax::Node* node = displayNode(it->second))
+                node->removeFromParent();
             it = m_avatars.erase(it);
         }
         else
@@ -90,11 +183,30 @@ void AvatarPresenter::present(sim::World& world, float alpha)
     }
 }
 
+ax::Node* AvatarPresenter::displayNode(const AvatarState& state)
+{
+    if (state.avatar)
+        return state.avatar;
+    return state.skeleton;
+}
+
+ax::Node& AvatarPresenter::tierLayer(int32_t tier)
+{
+    auto& layer = m_tierLayers[tier];
+    if (!layer)
+    {
+        layer = ax::Node::create();
+        layer->setName(fmt::format("tier_{}", tier));
+        m_root.addChild(layer, tier);
+    }
+    return *layer;
+}
+
 void AvatarPresenter::clear()
 {
     for (auto& [_, state] : m_avatars)
-        if (state.avatar)
-            state.avatar->removeFromParent();
+        if (ax::Node* node = displayNode(state))
+            node->removeFromParent();
     m_avatars.clear();
 }
 
@@ -217,7 +329,7 @@ void WorldPresenter::loadMap(const std::string& mapKey)
 
 void WorldPresenter::present(sim::World& world, float interpolationAlpha, float renderDelta)
 {
-    m_avatars.present(world, std::clamp(interpolationAlpha, 0.0f, 1.0f));
+    m_avatars.present(world, std::clamp(interpolationAlpha, 0.0f, 1.0f), renderDelta);
     const auto& events = world.ecs().singleton<sim::PresentationEvents>().events;
     for (const auto& event : events)
     {
