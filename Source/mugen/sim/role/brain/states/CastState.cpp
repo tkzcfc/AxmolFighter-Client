@@ -75,7 +75,7 @@ void enterLeaf(RoleBrain& brain, World& world, Entity entity)
     attack::AttackAction::enter(rc, leafParam(plan), plan.m_leaf);
 }
 
-// 结束已开始的管线：先退攻击叶，再通知管线结束。
+// 结束已开始的管线：先退攻击叶，再通知管线结束；随后离开该技能步骤，重置其管线供下次施放。
 void closePipe(RoleBrain& brain, World& world, Entity entity)
 {
     auto& plan = brain.m_cast;
@@ -85,6 +85,7 @@ void closePipe(RoleBrain& brain, World& world, Entity entity)
     exitLeaf(brain, world, entity);
     plan = {};
     skill::SkillCaster(world, entity).dealWithCastPipeEnded(index);
+    world.ecs().get<SkillPool>(entity).m_skills.at(index).refreshSkillPipe();
 }
 
 // 结束当前管线后，按当前技能决定续接新计划或复位技能。
@@ -108,7 +109,9 @@ bool CastState::enter(RoleBrain& brain, World& world, Entity entity)
     if (pool.m_current == kNoSkill)
         return false;
     const auto index = pool.m_current;
-    const auto& skill = pool.m_skills.at(index);
+    auto& skill      = pool.m_skills.at(index);
+    // 进入技能步骤时重置管线，施放开始的轮换才能落回本步骤的首条管线。
+    skill.refreshSkillPipe();
     if (skill.m_pipe < 1 || skill.m_pipe > skill.m_releaseMax)
         return false;
     const auto* row = conf::Config::instance().find<conf::SkillAttackConfig>(skill.m_configId);

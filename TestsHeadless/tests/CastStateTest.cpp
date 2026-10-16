@@ -121,6 +121,21 @@ TEST_CASE("CastState pairs cast/castend and resets skill on completion")
     CHECK(pool.m_current == kNoSkill);
 }
 
+TEST_CASE("CastState recasts a skill after its previous cast ended")
+{
+    CastFixture f(simpleCastSkill());
+    const auto index = f.beginCast();
+    auto& pool       = f.world.ecs().get<SkillPool>(f.entity);
+    f.brain().m_cast.m_leaf.m_action.m_finished = true;
+    REQUIRE(states::CastState::update(f.brain(), f.world, f.entity) == role::brain::StateStep::Done);
+    // 离开步骤后管线已重置，再次施放仍落在首条管线，动作正常推进而不是立即收束。
+    CHECK(pool.m_skills.at(index).m_pipe == pool.m_skills.at(index).m_releaseMax);
+    CHECK(f.beginCast() == index);
+    CHECK(f.brain().m_cast.m_pipe == pool.m_skills.at(index).m_pipe);
+    CHECK(states::CastState::update(f.brain(), f.world, f.entity) == role::brain::StateStep::Running);
+    CHECK(f.castPairing() == std::pair{2, 1});
+}
+
 TEST_CASE("CastState continues into the queued step when the pipe ends")
 {
     const auto id = chainedCastSkill();
