@@ -20,7 +20,7 @@ std::string makeKey(const ResourcePtr& resource)
 
 float computeEntryProgress(const Entry& e)
 {
-    if (e.finished)
+    if (e.isFinished())
         return 1.0f;
     if (e.children.empty())
         return 0.0f;
@@ -43,7 +43,7 @@ float computeWeightedProgress(const std::vector<Entry*>& roots)
     {
         totalWeight += r->weight;
         sum += r->weight * computeEntryProgress(*r);
-        if (r->finished)
+        if (r->isFinished())
             ++finished;
     }
 
@@ -83,7 +83,7 @@ Entry* LoaderCore::findOrCreateEntry(const ResourcePtr& resource, bool isRoot)
 
 ResourcePtr LoaderCore::addRoot(ResourcePtr resource)
 {
-    AXASSERT(!m_started, "ResourceLoader: add() must be called before start()");
+    AXASSERT(m_phase == LoaderPhase::Idle, "ResourceLoader: add() must be called before start()");
     return findOrCreateEntry(resource, true)->resource;
 }
 
@@ -100,8 +100,8 @@ void LoaderCore::setFrameBudget(float milliseconds)
 void LoaderCore::start(gameres::ResourceLoader::ProgressCallback onProgress,
                        gameres::ResourceLoader::CompleteCallback onComplete)
 {
-    AXASSERT(!m_started, "ResourceLoader::start called more than once");
-    m_started    = true;
+    AXASSERT(m_phase == LoaderPhase::Idle, "ResourceLoader::start called more than once");
+    m_phase      = LoaderPhase::Running;
     m_onProgress = std::move(onProgress);
     m_onComplete = std::move(onComplete);
 }
@@ -115,7 +115,7 @@ void LoaderCore::cancel()
     m_mainThreadJobs.clear();
     for (auto& e : m_entries)
     {
-        if (!e->finished)
+        if (!e->isFinished())
             e->resource->markCancelled();
     }
 }
@@ -163,7 +163,7 @@ void LoaderCore::runMainThreadWork()
 
 void LoaderCore::startEntry(Entry* e)
 {
-    e->started   = true;
+    e->status    = EntryStatus::Loading;
     e->holdsSlot = true;
     ++m_inFlight;
     e->resource->markLoading();
@@ -191,11 +191,10 @@ void LoaderCore::failEntry(Entry* e, std::string error)
 
 void LoaderCore::finishEntry(Entry* e, bool success, std::string error)
 {
-    if (e->finished)
+    if (e->isFinished())
         return;
 
-    e->finished = true;
-    e->success  = success;
+    e->status = success ? EntryStatus::Succeeded : EntryStatus::Failed;
     ++m_finishedEntries;
     if (success)
     {
@@ -244,14 +243,15 @@ void LoaderCore::setOnChildrenDone(Entry* parent, std::function<void()> fn)
 
 bool LoaderCore::anyChildFailed(const Entry* parent) const
 {
-    return std::any_of(parent->children.begin(), parent->children.end(), [](const Entry* c) { return !c->success; });
+    return std::any_of(parent->children.begin(), parent->children.end(),
+                       [](const Entry* c) { return !c->succeeded(); });
 }
 
 void LoaderCore::checkChildrenDone(Entry* parent)
 {
-    if (parent->finished || parent->childrenNotified || !parent->onChildrenDoneFn)
+    if (parent->isFinished() || parent->childrenNotified || !parent->onChildrenDoneFn)
         return;
-    if (!std::all_of(parent->children.begin(), parent->children.end(), [](const Entry* c) { return c->finished; }))
+    if (!std::all_of(parent->children.begin(), parent->children.end(), [](const Entry* c) { return c->isFinished(); }))
         return;
 
     // 收尾回调可能很重（例如 FGUI 接管纹理、解析 plist），排队到 tick 的时间预算内执行
@@ -272,7 +272,7 @@ float LoaderCore::getProgress() const
 
 bool LoaderCore::isFinished() const
 {
-    return std::all_of(m_roots.begin(), m_roots.end(), [](const Entry* r) { return r->finished; });
+    return std::all_of(m_roots.begin(), m_roots.end(), [](const Entry* r) { return r->isFinished(); });
 }
 
 std::vector<ResourcePtr> LoaderCore::getFailedResources() const
@@ -280,7 +280,7 @@ std::vector<ResourcePtr> LoaderCore::getFailedResources() const
     std::vector<ResourcePtr> result;
     for (auto* r : m_roots)
     {
-        if (r->finished && !r->success)
+        if (r->isFinished() && !r->succeeded())
             result.push_back(r->resource);
     }
     return result;
@@ -291,7 +291,7 @@ std::vector<ResourcePtr> LoaderCore::collectHeldResources() const
     std::vector<ResourcePtr> result;
     for (auto& e : m_entries)
     {
-        if (e->started)
+        if (e->isStarted())
             result.push_back(e->resource);
     }
     return result;
@@ -305,16 +305,16 @@ void LoaderCore::reportProgress()
     m_reportedEntries = m_finishedEntries;
 
     LoadProgress progress;
-    progress.percent    = getProgress();
-    progress.totalCount = m_roots.size();
-    progress.finishedCount =
-        static_cast<size_t>(std::count_if(m_roots.begin(), m_roots.end(), [](const Entry* r) { return r->finished; }));
+    progress.percent       = getProgress();
+    progress.totalCount    = m_roots.size();
+    progress.finishedCount = static_cast<size_t>(
+        std::count_if(m_roots.begin(), m_roots.end(), [](const Entry* r) { return r->isFinished(); }));
     m_onProgress(progress);
 }
 
 void LoaderCore::tick(float /*dt*/)
 {
-    if (m_cancelled || m_completedCalled)
+    if (m_cancelled || m_phase == LoaderPhase::Completed)
         return;
 
     runMainThreadWork();
@@ -322,11 +322,11 @@ void LoaderCore::tick(float /*dt*/)
 
     if (isFinished())
     {
-        m_completedCalled = true;
+        m_phase = LoaderPhase::Completed;
         std::vector<ResourcePtr> failed;
         for (auto* r : m_roots)
         {
-            if (!r->success)
+            if (!r->succeeded())
                 failed.push_back(r->resource);
         }
         if (m_onComplete)

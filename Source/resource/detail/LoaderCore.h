@@ -21,6 +21,14 @@
 namespace gameres::detail
 {
 
+enum class EntryStatus : uint8_t
+{
+    Pending,
+    Loading,
+    Succeeded,
+    Failed,
+};
+
 struct Entry
 {
     ResourcePtr resource;
@@ -30,9 +38,11 @@ struct Entry
     bool isRoot  = false;
     float weight = 1.0f;
 
-    bool started  = false;  // 加载函数是否已经被调用过
-    bool finished = false;
-    bool success  = false;
+    EntryStatus status = EntryStatus::Pending;
+
+    bool isStarted() const { return status != EntryStatus::Pending; }
+    bool isFinished() const { return status == EntryStatus::Succeeded || status == EntryStatus::Failed; }
+    bool succeeded() const { return status == EntryStatus::Succeeded; }
 
     // 是否占用一个并发名额。条目一旦 spawn 子条目就让出名额，只等子条目完成，
     // 否则等子条目的父条目占满名额时子条目永远排不上号。
@@ -110,11 +120,11 @@ private:
     std::deque<Entry*> m_pending;
     std::deque<std::function<void()>> m_mainThreadJobs;
     // 正在加载中的条目数（含子条目），用于判断是否达到并发上限
-    size_t m_inFlight      = 0;
+    size_t m_inFlight = 0;
     // 同时处于加载中的任务数上限，避免大量纹理在同一帧内一起创建 Texture2D 造成卡顿。
     size_t m_maxConcurrent = 8;
     // 每帧主线程工作时间预算（毫秒），超过这个时间就延后到下一帧继续执行；默认 8ms，约 120fps。
-    float m_frameBudgetMs  = 8.0f;
+    float m_frameBudgetMs = 8.0f;
 
     // 已结束的条目数（含子条目），用于判断是否需要上报进度
     size_t m_finishedEntries = 0;
@@ -122,9 +132,15 @@ private:
 
     gameres::ResourceLoader::ProgressCallback m_onProgress;
     gameres::ResourceLoader::CompleteCallback m_onComplete;
-    bool m_started         = false;
-    bool m_cancelled       = false;
-    bool m_completedCalled = false;
+
+    enum class LoaderPhase : uint8_t
+    {
+        Idle,
+        Running,
+        Completed,
+    };
+    LoaderPhase m_phase = LoaderPhase::Idle;
+    bool m_cancelled    = false;
 };
 
 }  // namespace gameres::detail

@@ -5,15 +5,16 @@
 using gameres::detail::computeEntryProgress;
 using gameres::detail::computeWeightedProgress;
 using gameres::detail::Entry;
+using gameres::detail::EntryStatus;
 
 namespace
 {
-// computeEntryProgress/computeWeightedProgress 只读取 finished/weight/children，不会访问 resource。
+// computeEntryProgress/computeWeightedProgress 只读取 status/weight/children，不会访问 resource。
 Entry makeLeaf(bool finished, float weight = 1.0f)
 {
     Entry e;
-    e.finished = finished;
-    e.weight   = weight;
+    e.status = finished ? EntryStatus::Succeeded : EntryStatus::Pending;
+    e.weight = weight;
     return e;
 }
 }  // namespace
