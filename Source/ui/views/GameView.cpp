@@ -1,8 +1,11 @@
 #include "GameView.h"
 
 #include "TownView.h"
+#include "mugen/conf/ReflectedConfig.h"
+#include "resource/builtin/MapResource.h"
 #include "ui/battle/LocalBattleMode.h"
 #include "ui/core/ViewManager.h"
+#include "ui/widgets/common/MessageDialog.h"
 
 #include "imgui.h"
 
@@ -17,45 +20,55 @@ GameView::~GameView() = default;
 
 void GameView::onPrepareLoad()
 {
-    addLoadStep([this] { return initInput(); });
-    addLoadStep([this] {
-        m_battleMode = createBattleMode();
-        if (!m_battleMode || !m_battleMode->init())
-        {
-            AXLOGE("GameView: battle mode init failed");
-            m_battleMode = nullptr;
-            return false;
-        }
-        return true;
-    });
+    const int32_t roomId = m_local ? m_local->roomId : 0;
+    if (roomId <= 0)
+        return;
+    const auto* room = mugen::conf::Config::instance().find<mugen::conf::RoomConfig>(roomId);
+    if (!room || room->mapKey.empty())
+        return;
+    const std::string layer = room->mapKey.ends_with(".layer") ? room->mapKey : "mugen/map/" + room->mapKey + ".layer";
+    getResourceLoader().add<gameres::MapResource>(layer);
 }
 
 void GameView::onEnter()
 {
     Super::onEnter();
+    if (!initInput())
+    {
+        MessageDialog::showGlobal("初始化失败", []() { ax::Director::getInstance()->end(); });
+        return;
+    }
+    m_battleMode = createBattleMode();
+    if (!m_battleMode || !m_battleMode->init())
+    {
+        AXLOGE("GameView: battle mode init failed");
+        m_battleMode = nullptr;
+        MessageDialog::showGlobal("初始化失败", []() { ax::Director::getInstance()->end(); });
+        return;
+    }
     m_slotMap.clear();
-    using Key = ax::EventKeyboard::KeyCode;
-    using ControlKey = mugen::sim::ControlKey;
-    m_slotMap[Key::KEY_LEFT_ARROW] = static_cast<uint32_t>(ControlKey::Left);
+    using Key                       = ax::EventKeyboard::KeyCode;
+    using ControlKey                = mugen::sim::ControlKey;
+    m_slotMap[Key::KEY_LEFT_ARROW]  = static_cast<uint32_t>(ControlKey::Left);
     m_slotMap[Key::KEY_RIGHT_ARROW] = static_cast<uint32_t>(ControlKey::Right);
-    m_slotMap[Key::KEY_UP_ARROW] = static_cast<uint32_t>(ControlKey::Up);
-    m_slotMap[Key::KEY_DOWN_ARROW] = static_cast<uint32_t>(ControlKey::Down);
-    m_slotMap[Key::KEY_U] = static_cast<uint32_t>(ControlKey::AttackA);
-    m_slotMap[Key::KEY_I] = static_cast<uint32_t>(ControlKey::AttackB);
-    m_slotMap[Key::KEY_O] = static_cast<uint32_t>(ControlKey::AttackC);
-    m_slotMap[Key::KEY_J] = static_cast<uint32_t>(ControlKey::AttackD);
-    m_slotMap[Key::KEY_K] = static_cast<uint32_t>(ControlKey::AttackE);
-    m_slotMap[Key::KEY_L] = static_cast<uint32_t>(ControlKey::AttackF);
-    m_slotMap[Key::KEY_M] = static_cast<uint32_t>(ControlKey::AttackG);
-    m_slotMap[Key::KEY_N] = static_cast<uint32_t>(ControlKey::AttackH);
-    m_slotMap[Key::KEY_8] = static_cast<uint32_t>(ControlKey::AttackI);
-    m_slotMap[Key::KEY_9] = static_cast<uint32_t>(ControlKey::AttackJ);
-    m_slotMap[Key::KEY_0] = static_cast<uint32_t>(ControlKey::AttackK);
-    m_slotMap[Key::KEY_SEMICOLON] = static_cast<uint32_t>(ControlKey::AttackL);
-    m_slotMap[Key::KEY_Y] = static_cast<uint32_t>(ControlKey::AttackM);
-    m_slotMap[Key::KEY_T] = static_cast<uint32_t>(ControlKey::AttackN);
-    m_slotMap[Key::KEY_H] = static_cast<uint32_t>(ControlKey::AttackO);
-    m_slotMap[Key::KEY_Q] = static_cast<uint32_t>(ControlKey::AttackQ);
+    m_slotMap[Key::KEY_UP_ARROW]    = static_cast<uint32_t>(ControlKey::Up);
+    m_slotMap[Key::KEY_DOWN_ARROW]  = static_cast<uint32_t>(ControlKey::Down);
+    m_slotMap[Key::KEY_U]           = static_cast<uint32_t>(ControlKey::AttackA);
+    m_slotMap[Key::KEY_I]           = static_cast<uint32_t>(ControlKey::AttackB);
+    m_slotMap[Key::KEY_O]           = static_cast<uint32_t>(ControlKey::AttackC);
+    m_slotMap[Key::KEY_J]           = static_cast<uint32_t>(ControlKey::AttackD);
+    m_slotMap[Key::KEY_K]           = static_cast<uint32_t>(ControlKey::AttackE);
+    m_slotMap[Key::KEY_L]           = static_cast<uint32_t>(ControlKey::AttackF);
+    m_slotMap[Key::KEY_M]           = static_cast<uint32_t>(ControlKey::AttackG);
+    m_slotMap[Key::KEY_N]           = static_cast<uint32_t>(ControlKey::AttackH);
+    m_slotMap[Key::KEY_8]           = static_cast<uint32_t>(ControlKey::AttackI);
+    m_slotMap[Key::KEY_9]           = static_cast<uint32_t>(ControlKey::AttackJ);
+    m_slotMap[Key::KEY_0]           = static_cast<uint32_t>(ControlKey::AttackK);
+    m_slotMap[Key::KEY_SEMICOLON]   = static_cast<uint32_t>(ControlKey::AttackL);
+    m_slotMap[Key::KEY_Y]           = static_cast<uint32_t>(ControlKey::AttackM);
+    m_slotMap[Key::KEY_T]           = static_cast<uint32_t>(ControlKey::AttackN);
+    m_slotMap[Key::KEY_H]           = static_cast<uint32_t>(ControlKey::AttackO);
+    m_slotMap[Key::KEY_Q]           = static_cast<uint32_t>(ControlKey::AttackQ);
     AXLOGI("GameView: entered (localRoom={})", m_local.has_value() ? m_local->roomId : 0);
 }
 
@@ -161,7 +174,8 @@ void GameView::onImGUIRender()
     ImGui::Begin("副本");
     ImGui::Text("房间 ID: %d", m_local->roomId);
     if (ImGui::Button("返回城镇", ImVec2(-1, 0)))
-        if (auto* local = dynamic_cast<LocalBattleMode*>(m_battleMode.get())) local->requestReturnToTown();
+        if (auto* local = dynamic_cast<LocalBattleMode*>(m_battleMode.get()))
+            local->requestReturnToTown();
     ImGui::End();
 }
 

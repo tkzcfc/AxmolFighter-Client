@@ -58,8 +58,8 @@ public:
     }
 
 protected:
-    // 声明进入本 View 前要准备的资源和初始化步骤；什么都不声明就不会显示加载界面，
-    // 直接创建正式内容。默认空实现。只应该在这个函数里调用下面三个方法。
+    // 声明进入本 View 前要准备的资源；什么都不声明就不会显示加载界面，直接创建正式内容。
+    // 默认空实现。只应该在这个函数里调用 getResourceLoader() / setResourceLoader()。
     virtual void onPrepareLoad() {}
 
     // 本 View 专属的加载器，第一次调用时创建，持有到本 View 销毁为止。
@@ -70,12 +70,8 @@ protected:
     // 不会影响其他持有者继续使用它。
     void setResourceLoader(std::shared_ptr<gameres::ResourceLoader> loader);
 
-    // 资源全部就绪后，每帧在主线程执行一步；返回 false 表示这一步失败——视为致命错误，
-    // 弹出"资源加载失败"对话框并结束程序，不再执行后续步骤。
-    void addLoadStep(std::function<bool()> step);
-
-    // 预加载的资源里有失败项时调用一次。默认打印警告日志并返回 true（不算致命，继续执行
-    // 初始化步骤，运行时按老办法自行处理资源缺失）；返回 false 表示致命，弹窗并结束程序
+    // 预加载的资源里有失败项时调用一次。默认打印警告日志并返回 true（不算致命，继续
+    // 创建正式内容，运行时按老办法自行处理资源缺失）；返回 false 表示致命，弹窗并结束程序
     // （例如 LaunchView 的配置表）。
     virtual bool onResourceLoadFailed(const std::vector<gameres::ResourcePtr>& failedResources);
 
@@ -103,13 +99,11 @@ private:
 
 private:
     // 加载流程：资源加载器持有到本 View 销毁为止（见 getResourceLoader() 的说明）；
-    // 加载界面和初始化步骤只在 Loading 状态存在，完成后立刻释放。
+    // 加载界面只在 Loading 状态存在，完成后立刻释放。
     std::shared_ptr<gameres::ResourceLoader> m_resourceLoader;
     std::unique_ptr<LoadingLayer> m_loadingLayer;
-    std::vector<std::function<bool()>> m_loadSteps;
-    size_t m_loadStepIndex = 0;
-    bool m_resourcesDone   = false;
-    bool m_loadFatal       = false;
+    bool m_resourcesDone = false;
+    bool m_loadFatal     = false;
     // 当前界面状态
     ViewState m_state = ViewState::None;
 };

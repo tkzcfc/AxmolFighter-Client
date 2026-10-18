@@ -6,6 +6,7 @@
 #include "mugen/conf/TypeConversions.h"
 #include "mugen/render/battle/WorldPresenter.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
+#include "resource/builtin/MapResource.h"
 #include "ui/battle/LocalRoleUtils.h"
 #include "ui/widgets/common/MessageDialog.h"
 
@@ -49,7 +50,11 @@ public:
 
 void TownView::onPrepareLoad()
 {
-    addLoadStep([this] { return initTown(); });
+    const auto* town = conf::Config::instance().find<conf::TownConfig>(m_boot.townId);
+    if (!town || town->mapKey.empty())
+        return;
+    const std::string layer = town->mapKey.ends_with(".layer") ? town->mapKey : "mugen/map/" + town->mapKey + ".layer";
+    getResourceLoader().add<gameres::MapResource>(layer);
 }
 
 TownView::TownView()
@@ -68,6 +73,11 @@ TownView::TownView(TownBootParams boot) : m_boot(std::move(boot))
 void TownView::onEnter()
 {
     Super::onEnter();
+    if (!initTown())
+    {
+        MessageDialog::showGlobal("初始化失败", []() { ax::Director::getInstance()->end(); });
+        return;
+    }
     addMessagePushReceiver();
     sendEnterScene();
 }
@@ -88,7 +98,7 @@ void TownView::onUpdate(float delta)
 {
     if (!m_initialized)
         return;
-    m_accumulator = std::min(m_accumulator + delta, 4.0f * LOGIC_DT);
+    m_accumulator    = std::min(m_accumulator + delta, 4.0f * LOGIC_DT);
     uint32_t catchUp = 0;
     while (m_accumulator >= LOGIC_DT && catchUp < 4)
     {
@@ -120,12 +130,13 @@ bool TownView::initTown()
     m_world.init({1, sim::WorldMode::Town, m_boot.townId, town->mapKey});
     const int32_t spawnX = m_boot.spawnX >= 0 ? m_boot.spawnX : town->actorPosX;
     const int32_t spawnZ = m_boot.spawnZ >= 0 ? m_boot.spawnZ : town->actorPosZ;
-    m_localEntity = sim::RoleSpawner(m_world).spawnRole({.roleId = resolveLocalPlayerRoleId(),
-                                             .level = 1,
-                                             .position = {Fixed::fromInt(spawnX), {}, Fixed::fromInt(spawnZ)},
-                                             .toward = m_boot.facing < 0 ? -1 : 1,
+    m_localEntity =
+        sim::RoleSpawner(m_world).spawnRole({.roleId     = resolveLocalPlayerRoleId(),
+                                             .level      = 1,
+                                             .position   = {Fixed::fromInt(spawnX), {}, Fixed::fromInt(spawnZ)},
+                                             .toward     = m_boot.facing < 0 ? -1 : 1,
                                              .playerSlot = 0,
-                                             .isAi = false});
+                                             .isAi       = false});
     auto* scene = ax::Director::getInstance()->getRunningScene();
     auto* root  = ax::Node::create();
     scene->addChild(root, 10);
@@ -295,22 +306,29 @@ bool TownView::initInput()
         AXLOGE("TownView: running scene is null");
         return false;
     }
-    using Key = ax::EventKeyboard::KeyCode;
-    using ControlKey = sim::ControlKey;
-    m_slotMap[Key::KEY_LEFT_ARROW]  = static_cast<uint32_t>(ControlKey::Left);
-    m_slotMap[Key::KEY_RIGHT_ARROW] = static_cast<uint32_t>(ControlKey::Right);
-    m_slotMap[Key::KEY_UP_ARROW]    = static_cast<uint32_t>(ControlKey::Up);
-    m_slotMap[Key::KEY_DOWN_ARROW]  = static_cast<uint32_t>(ControlKey::Down);
-    m_keyboardListener               = ax::EventListenerKeyboard::create();
-    m_keyboardListener->onKeyPressed = AX_CALLBACK_2(TownView::onKeyPressed, this);
+    using Key                         = ax::EventKeyboard::KeyCode;
+    using ControlKey                  = sim::ControlKey;
+    m_slotMap[Key::KEY_LEFT_ARROW]    = static_cast<uint32_t>(ControlKey::Left);
+    m_slotMap[Key::KEY_RIGHT_ARROW]   = static_cast<uint32_t>(ControlKey::Right);
+    m_slotMap[Key::KEY_UP_ARROW]      = static_cast<uint32_t>(ControlKey::Up);
+    m_slotMap[Key::KEY_DOWN_ARROW]    = static_cast<uint32_t>(ControlKey::Down);
+    m_keyboardListener                = ax::EventListenerKeyboard::create();
+    m_keyboardListener->onKeyPressed  = AX_CALLBACK_2(TownView::onKeyPressed, this);
     m_keyboardListener->onKeyReleased = AX_CALLBACK_2(TownView::onKeyReleased, this);
-    ax::Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(m_keyboardListener, scene);
+    ax::Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(m_keyboardListener,
+                                                                                              scene);
     return true;
 }
 
-void TownView::onKeyPressed(ax::EventKeyboard::KeyCode code, ax::Event*) { setInputFromKey(code, true); }
+void TownView::onKeyPressed(ax::EventKeyboard::KeyCode code, ax::Event*)
+{
+    setInputFromKey(code, true);
+}
 
-void TownView::onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event*) { setInputFromKey(code, false); }
+void TownView::onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event*)
+{
+    setInputFromKey(code, false);
+}
 
 void TownView::setInputFromKey(ax::EventKeyboard::KeyCode code, bool pressed)
 {
@@ -319,16 +337,19 @@ void TownView::setInputFromKey(ax::EventKeyboard::KeyCode code, bool pressed)
         m_control.setKey(static_cast<sim::ControlKey>(it->second), pressed);
 }
 
-mugen::Entity TownView::localEntity() const { return m_localEntity; }
+mugen::Entity TownView::localEntity() const
+{
+    return m_localEntity;
+}
 
 void TownView::queuePuppetUpdate(mugen::Entity entity, const PB::Types::PlayerState& state)
 {
-    m_pendingPuppetUpdates.push_back({entity,
-                                      {fixedFromNetwork(state.pos_x()), fixedFromNetwork(state.pos_y()),
-                                       fixedFromNetwork(state.pos_z())},
-                                      state.facing() == 0 ? -1 : 1,
-                                      state.moving() ? EntityRoleStatus::Walk : EntityRoleStatus::Idle,
-                                      state.state()});
+    m_pendingPuppetUpdates.push_back(
+        {entity,
+         {fixedFromNetwork(state.pos_x()), fixedFromNetwork(state.pos_y()), fixedFromNetwork(state.pos_z())},
+         state.facing() == 0 ? -1 : 1,
+         state.moving() ? EntityRoleStatus::Walk : EntityRoleStatus::Idle,
+         state.state()});
 }
 
 void TownView::addOrUpdateRemotePlayer(const PB::Types::PlayerState& state)
@@ -340,7 +361,7 @@ void TownView::addOrUpdateRemotePlayer(const PB::Types::PlayerState& state)
     if (inserted)
     {
         const int32_t roleId = type_conversions::toRoleConfigId(static_cast<CharacterClass>(state.class_id()));
-        it->second = sim::RoleSpawner(m_world).spawnPuppet(state.player_id(), roleId, {}, 1);
+        it->second           = sim::RoleSpawner(m_world).spawnPuppet(state.player_id(), roleId, {}, 1);
     }
     queuePuppetUpdate(it->second, state);
 }

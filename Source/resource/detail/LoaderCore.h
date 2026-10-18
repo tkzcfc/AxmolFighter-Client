@@ -109,8 +109,11 @@ private:
     std::unordered_map<std::string, Entry*> m_byKey;  // "type#key"
     std::deque<Entry*> m_pending;
     std::deque<std::function<void()>> m_mainThreadJobs;
+    // 正在加载中的条目数（含子条目），用于判断是否达到并发上限
     size_t m_inFlight      = 0;
+    // 同时处于加载中的任务数上限，避免大量纹理在同一帧内一起创建 Texture2D 造成卡顿。
     size_t m_maxConcurrent = 8;
+    // 每帧主线程工作时间预算（毫秒），超过这个时间就延后到下一帧继续执行；默认 8ms，约 120fps。
     float m_frameBudgetMs  = 8.0f;
 
     // 已结束的条目数（含子条目），用于判断是否需要上报进度
