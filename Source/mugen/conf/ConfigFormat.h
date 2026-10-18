@@ -29,8 +29,8 @@ struct ConfigArchive
 
     // 反射系统使用的稳定类型名。
     static constexpr std::string_view kMgTypeName = "ConfigArchive";
+
     // 向可写访问器枚举全部配置表字段。
-    // 向只读访问器枚举全部配置表字段。
     template <class V>
     static constexpr void mgReflect(V& visitor, ConfigArchive& self)
     {
@@ -38,6 +38,8 @@ struct ConfigArchive
         MG_CONFIG_TABLES(MG_CONFIG_ARCHIVE_VISIT)
 #undef MG_CONFIG_ARCHIVE_VISIT
     }
+
+    // 向只读访问器枚举全部配置表字段。
     template <class V>
     static constexpr void mgReflect(V& visitor, const ConfigArchive& self)
     {

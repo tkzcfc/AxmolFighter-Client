@@ -3,7 +3,7 @@
 #include "../reflect/Reflect.h"
 #include "ByteBuffer.h"
 
-#include <limits>  // IWYU pragma: keep
+#include <limits>
 
 NS_MG_BEGIN
 

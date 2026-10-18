@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../StdC.h"
-#include "../serialize/ByteBuffer.h"
 #include <string>
 #include <vector>
 
