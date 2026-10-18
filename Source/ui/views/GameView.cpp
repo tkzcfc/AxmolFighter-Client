@@ -53,22 +53,22 @@ void GameView::onEnter()
     m_slotMap[Key::KEY_RIGHT_ARROW] = static_cast<uint32_t>(ControlKey::Right);
     m_slotMap[Key::KEY_UP_ARROW]    = static_cast<uint32_t>(ControlKey::Up);
     m_slotMap[Key::KEY_DOWN_ARROW]  = static_cast<uint32_t>(ControlKey::Down);
-    m_slotMap[Key::KEY_U]           = static_cast<uint32_t>(ControlKey::AttackA);
-    m_slotMap[Key::KEY_I]           = static_cast<uint32_t>(ControlKey::AttackB);
-    m_slotMap[Key::KEY_O]           = static_cast<uint32_t>(ControlKey::AttackC);
-    m_slotMap[Key::KEY_J]           = static_cast<uint32_t>(ControlKey::AttackD);
-    m_slotMap[Key::KEY_K]           = static_cast<uint32_t>(ControlKey::AttackE);
-    m_slotMap[Key::KEY_L]           = static_cast<uint32_t>(ControlKey::AttackF);
-    m_slotMap[Key::KEY_M]           = static_cast<uint32_t>(ControlKey::AttackG);
-    m_slotMap[Key::KEY_N]           = static_cast<uint32_t>(ControlKey::AttackH);
-    m_slotMap[Key::KEY_8]           = static_cast<uint32_t>(ControlKey::AttackI);
-    m_slotMap[Key::KEY_9]           = static_cast<uint32_t>(ControlKey::AttackJ);
-    m_slotMap[Key::KEY_0]           = static_cast<uint32_t>(ControlKey::AttackK);
-    m_slotMap[Key::KEY_SEMICOLON]   = static_cast<uint32_t>(ControlKey::AttackL);
-    m_slotMap[Key::KEY_Y]           = static_cast<uint32_t>(ControlKey::AttackM);
+    m_slotMap[Key::KEY_X]           = static_cast<uint32_t>(ControlKey::AttackA);
+    m_slotMap[Key::KEY_Z]           = static_cast<uint32_t>(ControlKey::AttackB);
+    m_slotMap[Key::KEY_C]           = static_cast<uint32_t>(ControlKey::AttackC);
+    m_slotMap[Key::KEY_A]           = static_cast<uint32_t>(ControlKey::AttackD);
+    m_slotMap[Key::KEY_S]           = static_cast<uint32_t>(ControlKey::AttackE);
+    m_slotMap[Key::KEY_D]           = static_cast<uint32_t>(ControlKey::AttackF);
+    m_slotMap[Key::KEY_F]           = static_cast<uint32_t>(ControlKey::AttackG);
+    m_slotMap[Key::KEY_G]           = static_cast<uint32_t>(ControlKey::AttackH);
+    m_slotMap[Key::KEY_H]           = static_cast<uint32_t>(ControlKey::AttackI);
+    m_slotMap[Key::KEY_Q]           = static_cast<uint32_t>(ControlKey::AttackJ);
+    m_slotMap[Key::KEY_W]           = static_cast<uint32_t>(ControlKey::AttackK);
+    m_slotMap[Key::KEY_E]           = static_cast<uint32_t>(ControlKey::AttackL);
+    m_slotMap[Key::KEY_R]           = static_cast<uint32_t>(ControlKey::AttackM);
     m_slotMap[Key::KEY_T]           = static_cast<uint32_t>(ControlKey::AttackN);
-    m_slotMap[Key::KEY_H]           = static_cast<uint32_t>(ControlKey::AttackO);
-    m_slotMap[Key::KEY_Q]           = static_cast<uint32_t>(ControlKey::AttackQ);
+    m_slotMap[Key::KEY_Y]           = static_cast<uint32_t>(ControlKey::AttackO);
+    m_slotMap[Key::KEY_U]           = static_cast<uint32_t>(ControlKey::AttackQ);
     AXLOGI("GameView: entered (localRoom={})", m_local.has_value() ? m_local->roomId : 0);
 }
 
@@ -86,7 +86,6 @@ void GameView::onExit()
         m_battleMode = nullptr;
     }
 
-    m_placeholder = nullptr;
     Super::onExit();
 }
 
@@ -148,18 +147,6 @@ std::unique_ptr<IBattleMode> GameView::createBattleMode()
     if (m_local)
         return std::make_unique<LocalBattleMode>(*m_local);
     return std::make_unique<LocalBattleMode>();
-}
-
-void GameView::showPlaceholder()
-{
-    auto* scene = ax::Director::getInstance()->getRunningScene();
-    if (!scene)
-        return;
-
-    m_placeholder      = ax::Label::createWithSystemFont("Battle is being rebuilt", "Arial", 28);
-    const auto visible = ax::Director::getInstance()->getVisibleSize();
-    m_placeholder->setPosition(visible.width * 0.5f, visible.height * 0.5f);
-    scene->addChild(m_placeholder, 100);
 }
 
 void GameView::onImGUIRender()

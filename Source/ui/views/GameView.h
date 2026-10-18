@@ -33,14 +33,12 @@ private:
     bool initInput();
     std::unique_ptr<IBattleMode> createBattleMode();
     void setInputFromKey(ax::EventKeyboard::KeyCode code, bool pressed);
-    void showPlaceholder();
 
 private:
     std::optional<LocalBattleParams> m_local;
     std::unique_ptr<IBattleMode> m_battleMode;
     std::map<ax::EventKeyboard::KeyCode, uint32_t> m_slotMap;
     ax::EventListenerKeyboard* m_keyboardListener = nullptr;
-    ax::Label* m_placeholder                      = nullptr;
 };
 
 }  // namespace gameui

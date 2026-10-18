@@ -11,6 +11,7 @@ LoadingLayer::LoadingLayer()
     m_root       = object ? object->as<GComponent>() : nullptr;
     if (m_root)
     {
+        m_root->setSize(GRoot::getInstance()->getWidth(), GRoot::getInstance()->getHeight());
         if (auto* child = m_root->getChild("progressBar"))
             m_progressBar = child->as<GProgressBar>();
         if (m_progressBar)

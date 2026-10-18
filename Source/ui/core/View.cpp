@@ -53,16 +53,9 @@ void View::_createContent()
 {
     FGUIPackageManager::getInstance().load(getPackages());
     GComponent* content = onCreateContent();
-    if (content)
-    {
-        m_root = content;
-    }
-    else
-    {
-        m_root = GComponent::create();
-        m_root->setSize(GRoot::getInstance()->getWidth(), GRoot::getInstance()->getHeight());
-        m_root->addRelation(GRoot::getInstance(), RelationType::Size);
-    }
+    m_root              = content ? content : GComponent::create();
+    m_root->setSize(GRoot::getInstance()->getWidth(), GRoot::getInstance()->getHeight());
+    m_root->addRelation(GRoot::getInstance(), RelationType::Size);
 
     m_state = ViewState::Active;
     onEnter();
