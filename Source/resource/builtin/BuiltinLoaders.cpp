@@ -30,13 +30,6 @@ namespace gameres
 namespace
 {
 
-// 推断 spine atlas 文件名：同名 .atlas。
-std::string deriveFguiSpineAtlas(const std::string& skeletonFile)
-{
-    auto pos = skeletonFile.find_last_of('.');
-    return (pos == std::string::npos ? "" : skeletonFile.substr(0, pos)) + ".atlas";
-}
-
 // 推断 plist 精灵图集的纹理文件名
 std::string deriveSpriteFramesTexture(const std::string& plist)
 {
@@ -145,38 +138,54 @@ void registerFguiPackage(ResourceLoaderRegistry& registry)
             return;
         }
 
-        std::vector<fairygui::PackageItem*> atlasItems;
-        std::vector<fairygui::PackageItem*> spineItems;
-        for (auto* item : pkg->getItems())
+        const bool preloadTextures = res->preloadTextures();
+        const bool preloadSpine    = res->preloadSpine();
+        auto items                 = gameui::FGUIPackageManager::collectPackageItems(pkg);
+
+        bool spawned = false;
+        if (preloadTextures)
         {
-            if (item->type == fairygui::PackageItemType::ATLAS)
+            for (auto* item : items.atlasItems)
             {
-                atlasItems.push_back(item);
+                task->spawn<TextureResource>(item->file);
+                spawned = true;
             }
-            // 此处不管是否开启 fairygui::UIConfig::useSkeletonCache，都预热 spine
-            // 纹理；如果不开启，纹理预热也不会有任何副作用。
-            else if (item->type == fairygui::PackageItemType::SPINE)
-            // else if (item->type == fairygui::PackageItemType::SPINE && fairygui::UIConfig::useSkeletonCache)
+        }
+        if (preloadSpine)
+        {
+            for (auto* item : items.spineItems)
             {
-                spineItems.push_back(item);
+                for (auto& texturePath :
+                     mugen::collectTexturePaths({gameui::FGUIPackageManager::deriveSpineAtlas(item->file)}))
+                {
+                    task->spawn<TextureResource>(texturePath);
+                    spawned = true;
+                }
             }
         }
 
-        for (auto* item : atlasItems)
-            task->spawn<TextureResource>(item->file);
-        for (auto* item : spineItems)
+        if (!spawned)
         {
-            for (auto& texturePath : mugen::collectTexturePaths({deriveFguiSpineAtlas(item->file)}))
-                task->spawn<TextureResource>(texturePath);
+            task->complete();
+            return;
         }
 
-        task->onChildrenDone([task, pkg, atlasItems, spineItems]() {
-            // 纹理已经在 TextureCache 中，FairyGUI 在这里接管它们（见 UIPackage::loadAtlas）
-            for (auto* item : atlasItems)
-                pkg->getItemAsset(item);
-            // 骨架解析在主线程同步执行；纹理已经预热，不会卡在贴图解码上
-            for (auto* item : spineItems)
-                fairygui::GCache::getInstance()->preloadSkeletonData(item->file, deriveFguiSpineAtlas(item->file));
+        task->onChildrenDone([task, pkg, preloadTextures, preloadSpine,
+                              atlasItems = std::move(items.atlasItems),
+                              spineItems = std::move(items.spineItems)]() {
+            if (preloadTextures)
+            {
+                // 纹理已经在 TextureCache 中，FairyGUI 在这里接管它们（见 UIPackage::loadAtlas）
+                for (auto* item : atlasItems)
+                    pkg->getItemAsset(item);
+            }
+            if (preloadSpine)
+            {
+                // 骨架解析在主线程同步执行；纹理已经预热，不会卡在贴图解码上
+                for (auto* item : spineItems)
+                    fairygui::GCache::getInstance()->preloadSkeletonData(
+                        item->file, gameui::FGUIPackageManager::deriveSpineAtlas(item->file));
+            }
 
             if (task->anyChildFailed())
                 task->fail("one or more textures failed to preload");

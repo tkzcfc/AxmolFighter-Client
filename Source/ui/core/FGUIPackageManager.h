@@ -4,8 +4,21 @@
 #include <map>
 #include <vector>
 
+namespace fairygui
+{
+class UIPackage;
+class PackageItem;
+}  // namespace fairygui
+
 namespace gameui
 {
+
+// 与 registerFguiPackage 使用同一套规则收集的包内资源项
+struct FguiPackageItems
+{
+    std::vector<fairygui::PackageItem*> atlasItems;
+    std::vector<fairygui::PackageItem*> spineItems;
+};
 
 // FairyGUI 包管理器
 class FGUIPackageManager
@@ -21,6 +34,12 @@ public:
 
     // 从包路径提取包名，例如 "UI/Common" -> "Common"
     static std::string getPackageName(const std::string& path);
+
+    // 遍历已加载包，收集 ATLAS / SPINE 项
+    static FguiPackageItems collectPackageItems(fairygui::UIPackage* pkg);
+
+    // 推断 spine atlas 文件名：同名 .atlas
+    static std::string deriveSpineAtlas(const std::string& skeletonFile);
 
 private:
     FGUIPackageManager() = default;
