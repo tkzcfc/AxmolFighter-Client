@@ -5,7 +5,13 @@
 namespace mugen::sim::buff
 {
 // 生命周期向规则分派器提交的单次调用，不持有规则对象。
-enum class LifecycleAction : uint8_t { None, Enter, Update, RemoveRepeat };
+enum class LifecycleAction : uint8_t
+{
+    None,
+    Enter,
+    Update,
+    RemoveRepeat
+};
 
 // 单个实例的秒制周期状态，可随实体组件一起序列化。
 struct Lifecycle
@@ -20,8 +26,17 @@ struct Lifecycle
     Fixed m_innerElapsed, m_innerCd;
     // 激活、退出与销毁标记相互独立。
     bool m_active = false, m_exit = false, m_destroy = false;
-    MG_REFLECT(Lifecycle, m_repeat, m_times, m_interval, m_maxInterval, m_maxTimes,
-               m_innerElapsed, m_innerCd, m_active, m_exit, m_destroy)
+    MG_REFLECT(Lifecycle,
+               m_repeat,
+               m_times,
+               m_interval,
+               m_maxInterval,
+               m_maxTimes,
+               m_innerElapsed,
+               m_innerCd,
+               m_active,
+               m_exit,
+               m_destroy)
 
     // 从配置初始化计时状态；内部冷却初始为已满足。
     static Lifecycle fromConfig(const conf::BuffConfig& config);
@@ -38,9 +53,9 @@ struct Lifecycle
 inline Lifecycle Lifecycle::fromConfig(const conf::BuffConfig& config)
 {
     Lifecycle state;
-    state.m_maxInterval = config.interval;
-    state.m_maxTimes = config.times;
-    state.m_innerCd = config.innerCd;
+    state.m_maxInterval  = config.interval;
+    state.m_maxTimes     = config.times;
+    state.m_innerCd      = config.innerCd;
     state.m_innerElapsed = config.innerCd;
     return state;
 }
@@ -63,8 +78,7 @@ inline LifecycleAction Lifecycle::execute(int32_t executeType)
 
 inline LifecycleAction Lifecycle::advance(Fixed dtSeconds)
 {
-    if (m_repeat == 0 || !m_active || m_exit ||
-        m_maxTimes < -1 || m_maxInterval < Fixed{} ||
+    if (m_repeat == 0 || !m_active || m_exit || m_maxTimes < -1 || m_maxInterval < Fixed{} ||
         (m_maxTimes == 0 && m_maxInterval == Fixed{}))
         return LifecycleAction::None;
 

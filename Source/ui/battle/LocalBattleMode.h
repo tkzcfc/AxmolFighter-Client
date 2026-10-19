@@ -39,16 +39,16 @@ public:
     bool returnToTownRequested() const { return m_world.ecs().singleton<mugen::sim::RoomState>().m_returnToTown; }
 
 private:
-    int32_t m_roomId = 0;
-    int32_t m_roleId = 0;
+    int32_t m_roomId         = 0;
+    int32_t m_roleId         = 0;
     int32_t m_autotestFrames = 0;
     mugen::sim::World m_world;
     mugen::sim::ControlManagerCore m_control;
     mugen::sim::Replay m_replay;
     std::string m_replayPath;
-    float m_accumulator = 0.0f;
-    bool m_initialized = false;
-    bool m_debugPaused = false;
+    float m_accumulator    = 0.0f;
+    bool m_initialized     = false;
+    bool m_debugPaused     = false;
     bool m_debugSingleStep = false;
     BattleDebugPanel m_debugPanel;
     // 待提交输入及最近的房间表现消息。

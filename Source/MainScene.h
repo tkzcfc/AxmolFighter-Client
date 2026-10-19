@@ -51,5 +51,5 @@ private:
 
     gameui::LocalBattleParams m_offline;
     bool m_offlineRequested = false;
-    bool m_offlineStarted = false;
+    bool m_offlineStarted   = false;
 };

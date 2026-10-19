@@ -17,7 +17,8 @@ const conf::RoleConfig* roleData(World& world, Entity entity)
 // 缺省或负一许可系数等价于一。
 int64_t permitValue(const conf::RoleConfig* row, size_t index)
 {
-    if (!row || index >= row->hitRestrain.size() || row->hitRestrain[index] == -1) return 1;
+    if (!row || index >= row->hitRestrain.size() || row->hitRestrain[index] == -1)
+        return 1;
     return row->hitRestrain[index];
 }
 }  // namespace
@@ -44,8 +45,10 @@ Entity DamageCalculator::finalOwner(Entity entity) const
             return {};
         }
         visited.push_back(entity);
-        if (identity->roleType != static_cast<int>(EntityRoleType::kSummon)) return entity;
-        if (identity->m_owner == entity) return {};
+        if (identity->roleType != static_cast<int>(EntityRoleType::kSummon))
+            return entity;
+        if (identity->m_owner == entity)
+            return {};
         entity = identity->m_owner;
     }
     return {};
@@ -53,9 +56,10 @@ Entity DamageCalculator::finalOwner(Entity entity) const
 // 英雄使用物攻加等级标准，其他单位使用基础伤害加十级分段标准。
 Fixed DamageCalculator::standardHurt(Entity attacker) const
 {
-    const auto owner      = finalOwner(attacker);
-    const auto* identity  = m_world.ecs().tryGet<RoleIdentity>(owner);
-    if (!identity) return {};
+    const auto owner     = finalOwner(attacker);
+    const auto* identity = m_world.ecs().tryGet<RoleIdentity>(owner);
+    if (!identity)
+        return {};
     const auto& attributes = m_world.ecs().get<Attributes>(owner);
     const bool hero        = identity->roleType == static_cast<int>(EntityRoleType::kHero);
     const int level        = hero ? identity->level : std::max(1, identity->level / 10);
@@ -70,13 +74,15 @@ Fixed DamageCalculator::standardHurt(Entity attacker) const
 // 从真实打击配置读取输入，属性来自攻击者而非特效的中立身份。
 bool DamageCalculator::damageInput(Entity effect, Entity target, DamageInput& input) const
 {
-    const auto source         = m_world.ecs().get<EffectState>(effect);
-    const auto* effectRow     = conf::Config::instance().find<conf::EffectConfig>(source.m_configId);
-    if (!effectRow || effectRow->hitId == -1) return false;
+    const auto source     = m_world.ecs().get<EffectState>(effect);
+    const auto* effectRow = conf::Config::instance().find<conf::EffectConfig>(source.m_configId);
+    if (!effectRow || effectRow->hitId == -1)
+        return false;
     const auto* hitRow  = conf::Config::instance().find<conf::SkillHitConfig>(effectRow->hitId);
     const auto* attack  = m_world.ecs().tryGet<Attributes>(source.m_owner);
     const auto* defense = m_world.ecs().tryGet<Attributes>(target);
-    if (!hitRow || !attack || !defense) return false;
+    if (!hitRow || !attack || !defense)
+        return false;
     input.m_attacker     = *attack;
     input.m_target       = *defense;
     input.m_hit          = *hitRow;

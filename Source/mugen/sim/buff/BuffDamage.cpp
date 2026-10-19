@@ -17,22 +17,26 @@ Fixed BuffHolder::calculateBuffDamage(Fixed standardHurt, Fixed parameter, Fixed
 Fixed BuffHolder::getAttackValue(const BuffInstance& instance) const
 {
     const auto* config = conf::Config::instance().find<conf::BuffConfig>(instance.m_id);
-    if (!config || config->paramValue.empty()) return {};
-    const auto source = m_world.ecs().tryGet<RoleIdentity>(instance.m_context.m_applicator) ?
-        instance.m_context.m_applicator : m_entity;
-    Fixed level = Fixed::fromInt(m_world.ecs().get<RoleIdentity>(source).level);
+    if (!config || config->paramValue.empty())
+        return {};
+    const auto source = m_world.ecs().tryGet<RoleIdentity>(instance.m_context.m_applicator)
+                            ? instance.m_context.m_applicator
+                            : m_entity;
+    Fixed level       = Fixed::fromInt(m_world.ecs().get<RoleIdentity>(source).level);
     if (config->hurtType == 1 && instance.m_context.m_skillAttribute.value != 0)
         level = m_world.hitHooks().m_damageLevel(m_world, source, instance.m_context.m_skillAttribute);
     const Fixed addition = std::max(Fixed{}, level) * conf::kBuffHurtDefaultAddition;
-    return calculateBuffDamage(hit::DamageCalculator(m_world).standardHurt(source), config->paramValue.front(), addition)
-        * Fixed::fromInt(instance.m_lifecycle.m_repeat);
+    return calculateBuffDamage(hit::DamageCalculator(m_world).standardHurt(source), config->paramValue.front(),
+                               addition) *
+           Fixed::fromInt(instance.m_lifecycle.m_repeat);
 }
 
 // 生命变化沿用护盾和死亡事件管线，伤害统计记录原始带符号伤害的相反数。
 void BuffHolder::dealBuffDamage(Entity attacker, Fixed attackValue)
 {
-    if (auto* state = m_world.ecs().tryGet<RoleHitState>(attacker)) state->m_dps -= attackValue;
+    if (auto* state = m_world.ecs().tryGet<RoleHitState>(attacker))
+        state->m_dps -= attackValue;
     Role(m_world, m_entity).modifyHp(attackValue);
     m_world.emit(m_entity, HurtNumber{(-attackValue).toInt()});
 }
-}
+}  // namespace mugen::sim::buff

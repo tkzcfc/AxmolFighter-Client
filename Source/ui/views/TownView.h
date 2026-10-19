@@ -89,8 +89,8 @@ private:
     std::vector<mugen::sim::PuppetUpdate> m_pendingPuppetUpdates;
     std::map<ax::EventKeyboard::KeyCode, uint32_t> m_slotMap;
     ax::EventListenerKeyboard* m_keyboardListener = nullptr;
-    float m_accumulator = 0.0f;
-    bool m_initialized  = false;
+    float m_accumulator                           = 0.0f;
+    bool m_initialized                            = false;
     class WorldPresenterHolder;
     std::unique_ptr<WorldPresenterHolder> m_presenter;
 

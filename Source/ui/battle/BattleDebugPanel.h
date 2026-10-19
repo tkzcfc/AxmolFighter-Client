@@ -9,4 +9,4 @@ class BattleDebugPanel
 public:
     void render(mugen::sim::World& world, bool& paused, bool& singleStep, bool& collisionDebug);
 };
-}
+}  // namespace gameui

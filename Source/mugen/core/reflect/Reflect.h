@@ -119,9 +119,9 @@ struct IsSupported
     : std::bool_constant<
           std::is_same_v<Bare<T>, bool> || (std::is_integral_v<Bare<T>> && sizeof(Bare<T>) <= sizeof(uint64_t)) ||
           std::is_enum_v<Bare<T>> || std::is_same_v<Bare<T>, Fixed> || std::is_same_v<Bare<T>, FixedVec2> ||
-           std::is_same_v<Bare<T>, FixedVec3> || std::is_same_v<Bare<T>, IntVec2> ||
-           std::is_same_v<Bare<T>, IntVec3> || std::is_same_v<Bare<T>, std::string> ||
-          std::is_same_v<Bare<T>, std::monostate> || isReflected<Bare<T>> || IsSupportedContainer<Bare<T>>::value>
+          std::is_same_v<Bare<T>, FixedVec3> || std::is_same_v<Bare<T>, IntVec2> || std::is_same_v<Bare<T>, IntVec3> ||
+          std::is_same_v<Bare<T>, std::string> || std::is_same_v<Bare<T>, std::monostate> || isReflected<Bare<T>> ||
+          IsSupportedContainer<Bare<T>>::value>
 {};
 
 // 提供已去限定类型的支持判断结果。

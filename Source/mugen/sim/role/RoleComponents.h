@@ -69,8 +69,8 @@ struct RoleStatus
     void abort(EntityRoleStatus bits)
     {
         if (has(bits))
-            eEntityStatus = static_cast<EntityRoleStatus>(static_cast<uint32_t>(eEntityStatus) ^
-                                                          static_cast<uint32_t>(bits));
+            eEntityStatus =
+                static_cast<EntityRoleStatus>(static_cast<uint32_t>(eEntityStatus) ^ static_cast<uint32_t>(bits));
     }
     // 为每个状态位生成只读查询函数。
 #define MG_ROLE_STATUS_QUERY(Name) \
@@ -397,10 +397,7 @@ struct RoleHitState
     // 水晶的一次性命中标记。
     bool m_crystalHit = false;
     // 正配置总值耗尽才触发浮空保护，零配置不表示永久保护。
-    bool isRigidity(Fixed configuredRigidity) const
-    {
-        return rigidity <= Fixed{} && configuredRigidity > Fixed{};
-    }
+    bool isRigidity(Fixed configuredRigidity) const { return rigidity <= Fixed{} && configuredRigidity > Fixed{}; }
     // 读取硬直时逐次扣除疲劳，死亡或未触发保护时保持原值。
     Fixed getStiffTime(Fixed configuredRigidity, bool dead)
     {
@@ -411,9 +408,10 @@ struct RoleHitState
     // 首次命中记录当前生命减去最大生命比例后的阈值。
     void initHitProtect(bool pvp, Fixed hp, Fixed maxHp, Fixed hpScale, int32_t cleanTime)
     {
-        if (!pvp || m_hitProtectHp) return;
-        m_hitProtectHp = std::max(Fixed{}, hp - maxHp * hpScale);
-        m_hitProtectTime = Fixed::fromInt(cleanTime);
+        if (!pvp || m_hitProtectHp)
+            return;
+        m_hitProtectHp       = std::max(Fixed{}, hp - maxHp * hpScale);
+        m_hitProtectTime     = Fixed::fromInt(cleanTime);
         m_hitProtectExecuted = false;
     }
     // 已执行的保护不再因追击延长。
@@ -426,7 +424,7 @@ struct RoleHitState
     void resetHitProtect()
     {
         m_hitProtectHp.reset();
-        m_hitProtectTime = {};
+        m_hitProtectTime     = {};
         m_hitProtectExecuted = false;
     }
     // 参与组件快照的受击字段。

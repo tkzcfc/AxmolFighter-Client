@@ -42,8 +42,8 @@ struct EquipConfig
     int32_t randAttributeNum       = 0;
     int32_t randAttributeRefinedId = 0;
     // 精炼道具、材料、属性和权重参数。
-    int32_t refinedItemId          = 0;
-    int32_t refinedItemNum         = 0;
+    int32_t refinedItemId  = 0;
+    int32_t refinedItemNum = 0;
     std::vector<int32_t> refinedMaterials;
     std::vector<int32_t> refinedMaterialsNum;
     std::variant<int32_t, std::vector<int32_t>> refinedValueMax;

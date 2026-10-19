@@ -32,9 +32,9 @@ struct ActionConfig
     std::vector<int32_t> effectFrames;
     std::vector<std::variant<int32_t, std::string>> effectIds;
     // 特效继承方向、贴地与残影标记。
-    int32_t extendRoleVec       = 0;
-    int32_t floor               = 0;
-    int32_t ghost               = 0;
+    int32_t extendRoleVec = 0;
+    int32_t floor         = 0;
+    int32_t ghost         = 0;
     // 配置行 id 与动作打断帧。
     int32_t id                  = 0;
     int32_t interruptExtraFrame = 0;
@@ -52,10 +52,10 @@ struct ActionConfig
     int32_t staticTarget     = 0;
     int32_t staticTime       = 0;
     // 提示显示与变身参数。
-    int32_t tipsShow         = 0;
-    int32_t transformFrame   = 0;
-    int32_t transformId      = 0;
-    int32_t transformType    = 0;
+    int32_t tipsShow       = 0;
+    int32_t transformFrame = 0;
+    int32_t transformId    = 0;
+    int32_t transformType  = 0;
 
     MG_REFLECT(ActionConfig,
                action,
@@ -122,7 +122,7 @@ struct ActionEffectConfig
     int32_t interruptFrame = 0;
     int64_t loop           = 0;
     // 阻挡、阴影及动作音效参数。
-    int32_t obstruct       = 0;
+    int32_t obstruct = 0;
     Fixed shadow;
     std::vector<int32_t> soundId;
     std::variant<std::vector<std::vector<int32_t>>, std::vector<std::vector<std::string>>> soundId2;

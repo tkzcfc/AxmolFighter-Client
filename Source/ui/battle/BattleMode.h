@@ -5,7 +5,6 @@
 namespace gameui
 {
 
-// 战斗模式接口。重写期间只保留本地模式骨架，不再持有世界。
 class IBattleMode
 {
 public:

@@ -31,9 +31,20 @@ struct BuffContext
     bool m_critical = false;
     // 外部装配指定的来源分类，事件触发不修改实例来源。
     std::optional<int32_t> m_origin;
-    MG_REFLECT(BuffContext, m_target, m_applicator, m_skillAttribute, m_boundSkill,
-               m_currentSkill, m_frontSkill, m_artifactId, m_artifactIndex, m_actionId,
-                m_needUseTp, m_damage, m_critical, m_origin)
+    MG_REFLECT(BuffContext,
+               m_target,
+               m_applicator,
+               m_skillAttribute,
+               m_boundSkill,
+               m_currentSkill,
+               m_frontSkill,
+               m_artifactId,
+               m_artifactIndex,
+               m_actionId,
+               m_needUseTp,
+               m_damage,
+               m_critical,
+               m_origin)
 };
 
 // 按插入顺序存储的 Buff 值实例，稳定序号供回调后重新定位。
@@ -52,15 +63,25 @@ struct BuffInstance
     // 原始来源分类，未提供时保持空值。
     std::optional<int32_t> m_source;
     // 规则事件门闩及当前已施加的状态引用数。
-    bool m_triggered = false;
+    bool m_triggered      = false;
     int32_t m_appliedRefs = 0;
     // 规则进入时计算的数值，用于按进入时快照精确撤销。
     Fixed m_ruleValue;
     // 状态施加器最近收到的行为类名与开始结束事件。
     std::string m_behaviorAction;
     BFEvent m_behaviorEvent = BFEvent::BehaviorStateEnd;
-    MG_REFLECT(BuffInstance, m_serial, m_id, m_initialId, m_lifecycle, m_context, m_source,
-                m_triggered, m_appliedRefs, m_ruleValue, m_behaviorAction, m_behaviorEvent)
+    MG_REFLECT(BuffInstance,
+               m_serial,
+               m_id,
+               m_initialId,
+               m_lifecycle,
+               m_context,
+               m_source,
+               m_triggered,
+               m_appliedRefs,
+               m_ruleValue,
+               m_behaviorAction,
+               m_behaviorEvent)
 };
 
 // Buff 添加冷却条目；零值仍保留至下一次冷却更新。

@@ -16,7 +16,7 @@ void footstep(RoleContext& ctx, behavior::ActionType type)
 {
     if (type != behavior::ActionType::Walk && type != behavior::ActionType::Run)
         return;
-    const auto* row = conf::Config::instance().find<conf::RoleConfig>(ctx.get<RoleIdentity>().roleId);
+    const auto* row    = conf::Config::instance().find<conf::RoleConfig>(ctx.get<RoleIdentity>().roleId);
     const size_t index = type == behavior::ActionType::Walk ? 0 : 1;
     if (row && index < row->soundId.size() && row->soundId[index] != -1)
         ctx.world().emit(ctx.entity(), Sound{row->soundId[index]});
@@ -27,15 +27,15 @@ void Locomotion::enter(RoleContext& ctx, Param type, State& state)
 {
     state = behavior::ActionState{};
     ctx.notifyActionStart(type);
-    auto& motion                 = ctx.get<MotionState>();
-    motion.motionName            = behavior::ActionNames::animationName(type);
-    motion.timeMs                = {};
-    motion.m_completedLoops      = 0;
-    motion.loop                  = true;
-    motion.playing               = true;
-    motion.actionScale           = type == behavior::ActionType::Walk  ? conf::kWalkScaleTime
-                                   : type == behavior::ActionType::Run ? conf::kRunScaleTime
-                                                                       : conf::kIdleScaleTime;
+    auto& motion            = ctx.get<MotionState>();
+    motion.motionName       = behavior::ActionNames::animationName(type);
+    motion.timeMs           = {};
+    motion.m_completedLoops = 0;
+    motion.loop             = true;
+    motion.playing          = true;
+    motion.actionScale      = type == behavior::ActionType::Walk  ? conf::kWalkScaleTime
+                              : type == behavior::ActionType::Run ? conf::kRunScaleTime
+                                                                  : conf::kIdleScaleTime;
     if (type == behavior::ActionType::Idle)
         displacement::DisplacementDriver(ctx.world(), ctx.entity()).reset();
     footstep(ctx, type);
@@ -98,7 +98,7 @@ void Jostled::enter(RoleContext& ctx, Param, State& state)
     motion.m_completedLoops = 0;
     motion.loop = motion.playing = true;
     motion.actionScale           = conf::kWalkScaleTime;
-    const auto* row = conf::Config::instance().find<conf::DisplacementConfig>(id);
+    const auto* row              = conf::Config::instance().find<conf::DisplacementConfig>(id);
     if (row && !row->velocity.empty() && row->velocity[0] != Fixed{})
         ctx.get<Transform>().towardX *= -1;
     displacement::DisplacementDriver(ctx.world(), ctx.entity()).set(id, ctx.node());
@@ -120,7 +120,7 @@ bool Jostled::onDisplacement(RoleContext& ctx, Param, State& state)
     if (ctx.event() == DisplacementEvent::Brake && !state.m_complete)
     {
         state.m_complete = true;
-        const auto* row = conf::Config::instance().find<conf::DisplacementConfig>(state.m_displacementId);
+        const auto* row  = conf::Config::instance().find<conf::DisplacementConfig>(state.m_displacementId);
         if (row && !row->velocity.empty() && row->velocity[0] != Fixed{})
             ctx.get<Transform>().vectorX = -ctx.get<Transform>().vectorX;
     }
@@ -129,14 +129,15 @@ bool Jostled::onDisplacement(RoleContext& ctx, Param, State& state)
 
 void Finding::enter(RoleContext& ctx, Param, State& state)
 {
-    const auto type = ctx.world().setup().mode == WorldMode::Town ? behavior::ActionType::Run : behavior::ActionType::Walk;
+    const auto type =
+        ctx.world().setup().mode == WorldMode::Town ? behavior::ActionType::Run : behavior::ActionType::Walk;
     Locomotion::enter(ctx, type, state);
     displacement::DisplacementDriver(ctx.world(), ctx.entity()).reset();
 }
 
 BTStatus Finding::update(RoleContext& ctx, Param, State&)
 {
-    auto& ecs = ctx.world().ecs();
+    auto& ecs       = ctx.world().ecs();
     const auto* row = conf::Config::instance().find<conf::RoleConfig>(ctx.get<RoleIdentity>().roleId);
     if (!row)
         return BTStatus::Success;
@@ -150,7 +151,8 @@ BTStatus Finding::update(RoleContext& ctx, Param, State&)
     auto& velocity   = ctx.get<RoleHitState>().forceVelocity;
     velocity.x       = FixedMath::cosDeg(angle) * speed;
     velocity.z       = FixedMath::sinDeg(angle) * speed;
-    const auto step  = Fixed::ratio(1000, 60) * FixedMath::sqrt(velocity.x * velocity.x + velocity.z * velocity.z * conf::kZRate * conf::kZRate);
+    const auto step  = Fixed::ratio(1000, 60) *
+                      FixedMath::sqrt(velocity.x * velocity.x + velocity.z * velocity.z * conf::kZRate * conf::kZRate);
     if (distance <= step)
     {
         transform.position.x = goal.x;
@@ -162,10 +164,10 @@ BTStatus Finding::update(RoleContext& ctx, Param, State&)
             if (!params.m_path.empty())
                 return BTStatus::Running;
         }
-        auto& motion         = ctx.get<MotionState>();
-        motion.motionName    = "stand";
-        motion.timeMs        = {};
-        motion.actionScale   = conf::kIdleScaleTime;
+        auto& motion       = ctx.get<MotionState>();
+        motion.motionName  = "stand";
+        motion.timeMs      = {};
+        motion.actionScale = conf::kIdleScaleTime;
         return BTStatus::Success;
     }
     if (x != Fixed{})
@@ -177,7 +179,8 @@ BTStatus Finding::update(RoleContext& ctx, Param, State&)
 
 void Finding::exit(RoleContext& ctx, Param, State& state)
 {
-    const auto type = ctx.world().setup().mode == WorldMode::Town ? behavior::ActionType::Run : behavior::ActionType::Walk;
+    const auto type =
+        ctx.world().setup().mode == WorldMode::Town ? behavior::ActionType::Run : behavior::ActionType::Walk;
     Locomotion::exit(ctx, type, state);
     displacement::DisplacementDriver(ctx.world(), ctx.entity()).reset();
 }

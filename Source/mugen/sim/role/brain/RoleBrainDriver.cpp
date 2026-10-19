@@ -93,16 +93,20 @@ StateStep RoleBrainDriver::_updateState()
     RoleContext rc{m_world, m_entity};
     rc.setNode(static_cast<int32_t>(m_brain.m_branch));
     const auto action = _branchAction(m_brain.m_branch);
-    const auto step   = [](BTStatus status) { return status == BTStatus::Running ? StateStep::Running : StateStep::Done; };
+    const auto step   = [](BTStatus status) {
+        return status == BTStatus::Running ? StateStep::Running : StateStep::Done;
+    };
     switch (m_brain.m_branch)
     {
     case RoleBranch::Death:
         if (m_brain.m_destroyStage == 0)
         {
-            if (states::HitState::update(rc, action, std::get<behavior::HitActionState>(m_brain.m_data)) == BTStatus::Running)
+            if (states::HitState::update(rc, action, std::get<behavior::HitActionState>(m_brain.m_data)) ==
+                BTStatus::Running)
                 return StateStep::Running;
             m_brain.m_destroyStage = 1;
-            states::HitState::enter(rc, behavior::ActionType::Destroy, std::get<behavior::HitActionState>(m_brain.m_data));
+            states::HitState::enter(rc, behavior::ActionType::Destroy,
+                                    std::get<behavior::HitActionState>(m_brain.m_data));
             return StateStep::Running;
         }
         return step(states::HitState::update(rc, behavior::ActionType::Destroy,
@@ -155,7 +159,8 @@ void RoleBrainDriver::_exitState()
         if (m_brain.m_destroyStage == 0)
             states::HitState::exit(rc, action, std::get<behavior::HitActionState>(m_brain.m_data));
         else
-            states::HitState::exit(rc, behavior::ActionType::Destroy, std::get<behavior::HitActionState>(m_brain.m_data));
+            states::HitState::exit(rc, behavior::ActionType::Destroy,
+                                   std::get<behavior::HitActionState>(m_brain.m_data));
         // 退出未清监听（非 Death/落地 Hit）时，直接清除位移监听，避免遗留事件路由。
         if (m_world.ecs().get<Displacement>(m_entity).listenerNode == static_cast<int32_t>(m_brain.m_branch))
             m_world.ecs().get<Displacement>(m_entity).listenerNode = -1;
@@ -193,7 +198,7 @@ bool RoleBrainDriver::_tryEnter(RoleBranch branch)
         _exitGuard(branch);
         return false;
     }
-    m_brain.m_phase        = BrainPhase::Running;
+    m_brain.m_phase          = BrainPhase::Running;
     m_brain.m_noBranchLogged = false;
     return true;
 }
@@ -242,8 +247,8 @@ bool RoleBrainDriver::enterFirst()
     for (size_t i = 0; i < count; ++i)
     {
         // 城镇模板分支固定为 Finding、Idle。
-        const RoleBranch branch = m_city ? (i == 0 ? RoleBranch::Finding : RoleBranch::Idle)
-                                       : static_cast<RoleBranch>(i);
+        const RoleBranch branch =
+            m_city ? (i == 0 ? RoleBranch::Finding : RoleBranch::Idle) : static_cast<RoleBranch>(i);
         if (_tryEnter(branch))
             return true;
     }

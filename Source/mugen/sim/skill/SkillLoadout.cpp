@@ -9,7 +9,8 @@ SkillLoadout SkillAssembly::monsterLoadout(int32_t aiId)
 {
     SkillLoadout result(5);
     const auto* ai = conf::Config::instance().find<conf::AiConfig>(aiId);
-    if (!ai) return result;
+    if (!ai)
+        return result;
     const std::array<const std::vector<std::vector<int32_t>>*, 5> groups = {
         &ai->skillIds, &ai->crazySkillIds, &ai->joystickSkillIds, &ai->joystickSkillIds, &ai->otherSkillIds};
     for (size_t g = 0; g < groups.size(); ++g)
@@ -19,9 +20,10 @@ SkillLoadout SkillAssembly::monsterLoadout(int32_t aiId)
         for (size_t s = 0; s < group.size(); ++s)
             for (size_t i = 0; i < group[s].size(); ++i)
             {
-                int32_t aiSkill = -1;
+                int32_t aiSkill   = -1;
                 const auto& aiIds = g == 1 ? ai->crazySkillAiIds : ai->skillAiIds;
-                if (g < 2 && s < aiIds.size() && i < aiIds[s].size()) aiSkill = aiIds[s][i];
+                if (g < 2 && s < aiIds.size() && i < aiIds[s].size())
+                    aiSkill = aiIds[s][i];
                 result[g][s].push_back({{group[s][i], aiSkill}});
             }
     }
@@ -33,37 +35,46 @@ SkillLoadout SkillAssembly::playerLoadout(const std::vector<PlayerSkill>& skills
     SkillLoadout result(5, SkillGroup(16));
     result[4].resize(3);
     /// 配置槽位到装配组内位置的固定映射，-1 表示摇杆指令槽位。
-    constexpr std::array<int32_t, 21> slotMap = {0, 1, 2, 6, 5, 2, 3, 4, -1, -1, -1, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-    const auto& config = conf::Config::instance();
+    constexpr std::array<int32_t, 21> slotMap = {0, 1, 2, 6,  5,  2,  3,  4,  -1, -1, -1,
+                                                 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+    const auto& config                        = conf::Config::instance();
     for (int category = 0; category < 2; ++category)
     {
         for (size_t slot = 1; slot < slotMap.size(); ++slot)
         {
-            if (category == 1 && slot == static_cast<size_t>(EnumSkillSlot::Sprint)) continue;
+            if (category == 1 && slot == static_cast<size_t>(EnumSkillSlot::Sprint))
+                continue;
             bool useCrazy = category == 1 && std::any_of(skills.begin(), skills.end(), [slot](const auto& s) {
                 return s.m_crazy && static_cast<size_t>(s.m_slot) == slot;
             });
             for (const auto& entry : skills)
             {
-                if (static_cast<size_t>(entry.m_slot) != slot || entry.m_crazy != useCrazy) continue;
-                const auto* rock = config.find<conf::SkillRockConfig>(entry.m_rockId);
-                const bool joy = slotMap[slot] == -1;
+                if (static_cast<size_t>(entry.m_slot) != slot || entry.m_crazy != useCrazy)
+                    continue;
+                const auto* rock         = config.find<conf::SkillRockConfig>(entry.m_rockId);
+                const bool joy           = slotMap[slot] == -1;
                 const int32_t targetSlot = joy ? (rock ? rock->commandIndex : 0) : slotMap[slot];
-                if (targetSlot <= 0) continue;
-                const size_t group = slot == static_cast<size_t>(EnumSkillSlot::Sprint) ? 4 :
-                                     static_cast<size_t>((joy ? 2 : 0) + category);
-                auto& targetGroup = result[group];
-                if (targetGroup.size() < static_cast<size_t>(targetSlot)) targetGroup.resize(targetSlot);
+                if (targetSlot <= 0)
+                    continue;
+                const size_t group = slot == static_cast<size_t>(EnumSkillSlot::Sprint)
+                                         ? 4
+                                         : static_cast<size_t>((joy ? 2 : 0) + category);
+                auto& targetGroup  = result[group];
+                if (targetGroup.size() < static_cast<size_t>(targetSlot))
+                    targetGroup.resize(targetSlot);
                 SkillModes modes;
                 const int32_t baseId = joy && entry.m_baseId == -1 && rock ? rock->skillId : entry.m_baseId;
-                if (baseId == -1 && !rock) continue;
+                if (baseId == -1 && !rock)
+                    continue;
                 const auto* base = config.find<conf::SkillAttackConfig>(baseId);
                 modes.push_back({baseId, base ? base->skillAiId : -1});
-                if (rock && !joy) modes.push_back({rock->skillId, -1});
+                if (rock && !joy)
+                    modes.push_back({rock->skillId, -1});
                 targetGroup[targetSlot - 1].push_back(modes);
-                const size_t link = targetGroup[targetSlot - 1].size() - 1;
+                const size_t link  = targetGroup[targetSlot - 1].size() - 1;
                 const auto* change = config.find<conf::SkillChangeSystemConfig>(baseId);
-                if (!change || !config.find<conf::SkillAttackConfig>(change->skillNewId)) continue;
+                if (!change || !config.find<conf::SkillAttackConfig>(change->skillNewId))
+                    continue;
                 if (change->skillChange > 2)
                 {
                     auto& targetModes = result[group][targetSlot - 1][link];
@@ -72,11 +83,14 @@ SkillLoadout SkillAssembly::playerLoadout(const std::vector<PlayerSkill>& skills
                 }
                 if (change->skillGroup > 5)
                 {
-                    if (result.size() < static_cast<size_t>(change->skillGroup)) result.resize(change->skillGroup, SkillGroup(16));
-                    auto& changed = result[change->skillGroup - 1][targetSlot - 1];
+                    if (result.size() < static_cast<size_t>(change->skillGroup))
+                        result.resize(change->skillGroup, SkillGroup(16));
+                    auto& changed      = result[change->skillGroup - 1][targetSlot - 1];
                     const auto& normal = result[0][targetSlot - 1];
-                    while (changed.size() < normal.size()) changed.push_back(normal[changed.size()]);
-                    if (changed.size() <= link) changed.resize(link + 1, modes);
+                    while (changed.size() < normal.size())
+                        changed.push_back(normal[changed.size()]);
+                    if (changed.size() <= link)
+                        changed.resize(link + 1, modes);
                     changed[link][0] = {change->skillNewId, -1};
                 }
             }
@@ -89,17 +103,20 @@ std::vector<PlayerSkill> SkillAssembly::offlineKit(CharacterClass occupation)
 {
     std::vector<PlayerSkill> result;
     const int32_t profession = static_cast<int32_t>(occupation);
-    if (profession < 1 || profession > 4) return result;
+    if (profession < 1 || profession > 4)
+        return result;
     const conf::SkillTreeConfig* tree = nullptr;
     for (const auto& row : conf::Config::instance().table<conf::SkillTreeConfig>())
     {
-        if (row.professionType != profession) continue;
+        if (row.professionType != profession)
+            continue;
         if (row.treeType == 1)
         {
             tree = &row;
             break;
         }
-        if (!tree) tree = &row;
+        if (!tree)
+            tree = &row;
     }
     if (!tree)
     {
@@ -108,16 +125,14 @@ std::vector<PlayerSkill> SkillAssembly::offlineKit(CharacterClass occupation)
     }
     /// 主动叶子按固定顺序映射到输入槽位，溢出叶子改用扩展槽位序列。
     constexpr std::array<EnumSkillSlot, 10> kOrdered = {
-        EnumSkillSlot::Attack, EnumSkillSlot::Sprint, EnumSkillSlot::Dodge, EnumSkillSlot::Crazy,
-        EnumSkillSlot::A,      EnumSkillSlot::B,      EnumSkillSlot::C,     EnumSkillSlot::EA,
-        EnumSkillSlot::EB,     EnumSkillSlot::SUA};
-    constexpr std::array<EnumSkillSlot, 4> kOverflow = {EnumSkillSlot::SUB, EnumSkillSlot::SUC,
-                                                        EnumSkillSlot::Break, EnumSkillSlot::Anger};
+        EnumSkillSlot::Attack, EnumSkillSlot::Sprint, EnumSkillSlot::Dodge, EnumSkillSlot::Crazy, EnumSkillSlot::A,
+        EnumSkillSlot::B,      EnumSkillSlot::C,      EnumSkillSlot::EA,    EnumSkillSlot::EB,    EnumSkillSlot::SUA};
+    constexpr std::array<EnumSkillSlot, 4> kOverflow   = {EnumSkillSlot::SUB, EnumSkillSlot::SUC, EnumSkillSlot::Break,
+                                                          EnumSkillSlot::Anger};
     constexpr std::array<EnumSkillSlot, 3> kJoy        = {EnumSkillSlot::SA, EnumSkillSlot::SB, EnumSkillSlot::SC};
-    constexpr std::array<EnumSkillSlot, 3> kJoyPassive = {EnumSkillSlot::SAP, EnumSkillSlot::SBP,
-                                                          EnumSkillSlot::SCP};
-    const auto& config = conf::Config::instance();
-    auto leafSkill     = [&config](int32_t leafId) -> int32_t {
+    constexpr std::array<EnumSkillSlot, 3> kJoyPassive = {EnumSkillSlot::SAP, EnumSkillSlot::SBP, EnumSkillSlot::SCP};
+    const auto& config                                 = conf::Config::instance();
+    auto leafSkill                                     = [&config](int32_t leafId) -> int32_t {
         const auto* leaf = config.find<conf::SkillLeafConfig>(leafId);
         return leaf ? leaf->skillId : -1;
     };
@@ -125,7 +140,8 @@ std::vector<PlayerSkill> SkillAssembly::offlineKit(CharacterClass occupation)
     for (size_t i = 0; i < tree->leafIds.size(); ++i)
     {
         const int32_t leafId = tree->leafIds[i];
-        if (leafId <= 0) continue;
+        if (leafId <= 0)
+            continue;
         const int32_t skillId = leafSkill(leafId);
         if (skillId <= 0)
         {
@@ -143,8 +159,10 @@ std::vector<PlayerSkill> SkillAssembly::offlineKit(CharacterClass occupation)
     }
     for (const int32_t leafId : tree->leafBuffId)
     {
-        if (leafId <= 0) continue;
-        if (overflow >= kOverflow.size()) break;
+        if (leafId <= 0)
+            continue;
+        if (overflow >= kOverflow.size())
+            break;
         const int32_t skillId = leafSkill(leafId);
         if (skillId <= 0)
         {
@@ -156,7 +174,8 @@ std::vector<PlayerSkill> SkillAssembly::offlineKit(CharacterClass occupation)
     for (size_t i = 0; i < tree->leafRubId.size() && i < kJoy.size(); ++i)
     {
         const int32_t leafId = tree->leafRubId[i];
-        if (leafId <= 0) continue;
+        if (leafId <= 0)
+            continue;
         const int32_t skillId = leafSkill(leafId);
         if (skillId <= 0)
         {
@@ -182,27 +201,48 @@ const char* slotLabel(EnumSkillSlot slot)
 {
     switch (slot)
     {
-    case EnumSkillSlot::Attack: return "Attack";
-    case EnumSkillSlot::Sprint: return "Sprint";
-    case EnumSkillSlot::Dodge:  return "Dodge";
-    case EnumSkillSlot::Crazy:  return "Crazy";
-    case EnumSkillSlot::A:      return "A";
-    case EnumSkillSlot::B:      return "B";
-    case EnumSkillSlot::C:      return "C";
-    case EnumSkillSlot::SA:     return "SA";
-    case EnumSkillSlot::SB:     return "SB";
-    case EnumSkillSlot::SC:     return "SC";
-    case EnumSkillSlot::EA:     return "EA";
-    case EnumSkillSlot::EB:     return "EB";
-    case EnumSkillSlot::SUA:    return "SUA";
-    case EnumSkillSlot::SUB:    return "SUB";
-    case EnumSkillSlot::SUC:    return "SUC";
-    case EnumSkillSlot::Break:  return "Break";
-    case EnumSkillSlot::SAP:    return "SAP";
-    case EnumSkillSlot::SBP:    return "SBP";
-    case EnumSkillSlot::SCP:    return "SCP";
-    case EnumSkillSlot::Anger:  return "Anger";
-    default:                    return "None";
+    case EnumSkillSlot::Attack:
+        return "Attack";
+    case EnumSkillSlot::Sprint:
+        return "Sprint";
+    case EnumSkillSlot::Dodge:
+        return "Dodge";
+    case EnumSkillSlot::Crazy:
+        return "Crazy";
+    case EnumSkillSlot::A:
+        return "A";
+    case EnumSkillSlot::B:
+        return "B";
+    case EnumSkillSlot::C:
+        return "C";
+    case EnumSkillSlot::SA:
+        return "SA";
+    case EnumSkillSlot::SB:
+        return "SB";
+    case EnumSkillSlot::SC:
+        return "SC";
+    case EnumSkillSlot::EA:
+        return "EA";
+    case EnumSkillSlot::EB:
+        return "EB";
+    case EnumSkillSlot::SUA:
+        return "SUA";
+    case EnumSkillSlot::SUB:
+        return "SUB";
+    case EnumSkillSlot::SUC:
+        return "SUC";
+    case EnumSkillSlot::Break:
+        return "Break";
+    case EnumSkillSlot::SAP:
+        return "SAP";
+    case EnumSkillSlot::SBP:
+        return "SBP";
+    case EnumSkillSlot::SCP:
+        return "SCP";
+    case EnumSkillSlot::Anger:
+        return "Anger";
+    default:
+        return "None";
     }
 }
 
@@ -216,23 +256,85 @@ OfflineKitRow makeRow(EnumSkillSlot slot, int32_t leafId, int32_t skillId, int32
     row.skillId  = skillId;
     switch (slot)
     {
-    case EnumSkillSlot::Attack: row.key = "U"; row.poolSlot = "A"; row.hasControlKey = true; break;
-    case EnumSkillSlot::Sprint: row.key = "Y"; row.poolSlot = "Y"; row.hasControlKey = true; break;
-    case EnumSkillSlot::Dodge:  row.key = "L"; row.poolSlot = "F"; row.hasControlKey = true; break;
-    case EnumSkillSlot::Crazy:  row.key = "K"; row.poolSlot = "E"; row.hasControlKey = true; break;
-    case EnumSkillSlot::A:      row.key = "I"; row.poolSlot = "B"; row.hasControlKey = true; break;
-    case EnumSkillSlot::B:      row.key = "O"; row.poolSlot = "C"; row.hasControlKey = true; break;
-    case EnumSkillSlot::C:      row.key = "J"; row.poolSlot = "D"; row.hasControlKey = true; break;
-    case EnumSkillSlot::EA:     row.key = "M"; row.poolSlot = "G"; row.hasControlKey = true; break;
-    case EnumSkillSlot::EB:     row.key = "N"; row.poolSlot = "H"; row.hasControlKey = true; break;
-    case EnumSkillSlot::SUA:    row.key = "8"; row.poolSlot = "I"; row.hasControlKey = true; break;
-    case EnumSkillSlot::SUB:    row.key = "9"; row.poolSlot = "J"; row.hasControlKey = true; break;
-    case EnumSkillSlot::SUC:    row.key = "0"; row.poolSlot = "K"; row.hasControlKey = true; break;
-    case EnumSkillSlot::Break:  row.key = ";"; row.poolSlot = "L"; row.hasControlKey = true; break;
-    case EnumSkillSlot::Anger:  row.key = "T"; row.poolSlot = "P"; row.hasControlKey = true; break;
-    case EnumSkillSlot::SAP:    row.poolSlot = "M"; break;
-    case EnumSkillSlot::SBP:    row.poolSlot = "N"; break;
-    case EnumSkillSlot::SCP:    row.poolSlot = "O"; break;
+    case EnumSkillSlot::Attack:
+        row.key           = "U";
+        row.poolSlot      = "A";
+        row.hasControlKey = true;
+        break;
+    case EnumSkillSlot::Sprint:
+        row.key           = "Y";
+        row.poolSlot      = "Y";
+        row.hasControlKey = true;
+        break;
+    case EnumSkillSlot::Dodge:
+        row.key           = "L";
+        row.poolSlot      = "F";
+        row.hasControlKey = true;
+        break;
+    case EnumSkillSlot::Crazy:
+        row.key           = "K";
+        row.poolSlot      = "E";
+        row.hasControlKey = true;
+        break;
+    case EnumSkillSlot::A:
+        row.key           = "I";
+        row.poolSlot      = "B";
+        row.hasControlKey = true;
+        break;
+    case EnumSkillSlot::B:
+        row.key           = "O";
+        row.poolSlot      = "C";
+        row.hasControlKey = true;
+        break;
+    case EnumSkillSlot::C:
+        row.key           = "J";
+        row.poolSlot      = "D";
+        row.hasControlKey = true;
+        break;
+    case EnumSkillSlot::EA:
+        row.key           = "M";
+        row.poolSlot      = "G";
+        row.hasControlKey = true;
+        break;
+    case EnumSkillSlot::EB:
+        row.key           = "N";
+        row.poolSlot      = "H";
+        row.hasControlKey = true;
+        break;
+    case EnumSkillSlot::SUA:
+        row.key           = "8";
+        row.poolSlot      = "I";
+        row.hasControlKey = true;
+        break;
+    case EnumSkillSlot::SUB:
+        row.key           = "9";
+        row.poolSlot      = "J";
+        row.hasControlKey = true;
+        break;
+    case EnumSkillSlot::SUC:
+        row.key           = "0";
+        row.poolSlot      = "K";
+        row.hasControlKey = true;
+        break;
+    case EnumSkillSlot::Break:
+        row.key           = ";";
+        row.poolSlot      = "L";
+        row.hasControlKey = true;
+        break;
+    case EnumSkillSlot::Anger:
+        row.key           = "T";
+        row.poolSlot      = "P";
+        row.hasControlKey = true;
+        break;
+    case EnumSkillSlot::SAP:
+        row.poolSlot = "M";
+        break;
+    case EnumSkillSlot::SBP:
+        row.poolSlot = "N";
+        break;
+    case EnumSkillSlot::SCP:
+        row.poolSlot = "O";
+        break;
     case EnumSkillSlot::SA:
     case EnumSkillSlot::SB:
     case EnumSkillSlot::SC:
@@ -255,30 +357,32 @@ std::vector<OfflineKitRow> SkillAssembly::offlineKitRows(CharacterClass occupati
 {
     std::vector<OfflineKitRow> result;
     const int32_t profession = static_cast<int32_t>(occupation);
-    if (profession < 1 || profession > 4) return result;
+    if (profession < 1 || profession > 4)
+        return result;
     const conf::SkillTreeConfig* tree = nullptr;
     for (const auto& row : conf::Config::instance().table<conf::SkillTreeConfig>())
     {
-        if (row.professionType != profession) continue;
+        if (row.professionType != profession)
+            continue;
         if (row.treeType == 1)
         {
             tree = &row;
             break;
         }
-        if (!tree) tree = &row;
+        if (!tree)
+            tree = &row;
     }
-    if (!tree) return result;
+    if (!tree)
+        return result;
     constexpr std::array<EnumSkillSlot, 10> kOrdered = {
-        EnumSkillSlot::Attack, EnumSkillSlot::Sprint, EnumSkillSlot::Dodge, EnumSkillSlot::Crazy,
-        EnumSkillSlot::A,      EnumSkillSlot::B,      EnumSkillSlot::C,     EnumSkillSlot::EA,
-        EnumSkillSlot::EB,     EnumSkillSlot::SUA};
-    constexpr std::array<EnumSkillSlot, 4> kOverflow = {EnumSkillSlot::SUB, EnumSkillSlot::SUC,
-                                                        EnumSkillSlot::Break, EnumSkillSlot::Anger};
+        EnumSkillSlot::Attack, EnumSkillSlot::Sprint, EnumSkillSlot::Dodge, EnumSkillSlot::Crazy, EnumSkillSlot::A,
+        EnumSkillSlot::B,      EnumSkillSlot::C,      EnumSkillSlot::EA,    EnumSkillSlot::EB,    EnumSkillSlot::SUA};
+    constexpr std::array<EnumSkillSlot, 4> kOverflow   = {EnumSkillSlot::SUB, EnumSkillSlot::SUC, EnumSkillSlot::Break,
+                                                          EnumSkillSlot::Anger};
     constexpr std::array<EnumSkillSlot, 3> kJoy        = {EnumSkillSlot::SA, EnumSkillSlot::SB, EnumSkillSlot::SC};
-    constexpr std::array<EnumSkillSlot, 3> kJoyPassive = {EnumSkillSlot::SAP, EnumSkillSlot::SBP,
-                                                          EnumSkillSlot::SCP};
-    const auto& config = conf::Config::instance();
-    auto leafSkill     = [&config](int32_t leafId) -> int32_t {
+    constexpr std::array<EnumSkillSlot, 3> kJoyPassive = {EnumSkillSlot::SAP, EnumSkillSlot::SBP, EnumSkillSlot::SCP};
+    const auto& config                                 = conf::Config::instance();
+    auto leafSkill                                     = [&config](int32_t leafId) -> int32_t {
         const auto* leaf = config.find<conf::SkillLeafConfig>(leafId);
         return leaf ? leaf->skillId : -1;
     };
@@ -286,9 +390,11 @@ std::vector<OfflineKitRow> SkillAssembly::offlineKitRows(CharacterClass occupati
     for (size_t i = 0; i < tree->leafIds.size(); ++i)
     {
         const int32_t leafId = tree->leafIds[i];
-        if (leafId <= 0) continue;
+        if (leafId <= 0)
+            continue;
         const int32_t skillId = leafSkill(leafId);
-        if (skillId <= 0) continue;
+        if (skillId <= 0)
+            continue;
         EnumSkillSlot slot;
         if (i < kOrdered.size())
             slot = kOrdered[i];
@@ -300,18 +406,23 @@ std::vector<OfflineKitRow> SkillAssembly::offlineKitRows(CharacterClass occupati
     }
     for (const int32_t leafId : tree->leafBuffId)
     {
-        if (leafId <= 0) continue;
-        if (overflow >= kOverflow.size()) break;
+        if (leafId <= 0)
+            continue;
+        if (overflow >= kOverflow.size())
+            break;
         const int32_t skillId = leafSkill(leafId);
-        if (skillId <= 0) continue;
+        if (skillId <= 0)
+            continue;
         result.push_back(makeRow(kOverflow[overflow++], leafId, skillId, -1));
     }
     for (size_t i = 0; i < tree->leafRubId.size() && i < kJoy.size(); ++i)
     {
         const int32_t leafId = tree->leafRubId[i];
-        if (leafId <= 0) continue;
+        if (leafId <= 0)
+            continue;
         const int32_t skillId = leafSkill(leafId);
-        if (skillId <= 0) continue;
+        if (skillId <= 0)
+            continue;
         int32_t rockId = -1;
         for (const auto& rock : config.table<conf::SkillRockConfig>())
             if (rock.skillId == skillId)
@@ -326,9 +437,12 @@ std::vector<OfflineKitRow> SkillAssembly::offlineKitRows(CharacterClass occupati
     bool usedQ = false;
     for (const auto& row : result)
     {
-        if (row.key == "T") usedT = true;
-        if (row.key == "H") usedH = true;
-        if (row.key == "Q") usedQ = true;
+        if (row.key == "T")
+            usedT = true;
+        if (row.key == "H")
+            usedH = true;
+        if (row.key == "Q")
+            usedQ = true;
     }
     for (auto& row : result)
     {
@@ -355,4 +469,4 @@ std::vector<OfflineKitRow> SkillAssembly::offlineKitRows(CharacterClass occupati
     }
     return result;
 }
-}
+}  // namespace mugen::sim::skill

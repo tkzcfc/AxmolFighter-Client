@@ -12,4 +12,4 @@ struct ActionMove
     Fixed m_delayMs, m_timeMs;
     MG_REFLECT(ActionMove, m_complete, m_delayMs, m_timeMs)
 };
-}
+}  // namespace mugen::sim::ai

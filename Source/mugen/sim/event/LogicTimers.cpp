@@ -81,7 +81,8 @@ void LogicTimerDriver::update()
             buff::BuffHolder(m_world, firing.owner).finishExit(std::get<BuffExit>(firing.payload).m_serial);
             break;
         case 4:
-            buff::BuffHolder(m_world, firing.owner).continuePresentation(std::get<BuffContinue>(firing.payload).m_serial);
+            buff::BuffHolder(m_world, firing.owner)
+                .continuePresentation(std::get<BuffContinue>(firing.payload).m_serial);
             break;
         case 5:
             if (m_world.ecs().singleton<RoomState>().roomId == std::get<RoomWaveReady>(firing.payload).m_roomId)

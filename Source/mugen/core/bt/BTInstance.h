@@ -18,7 +18,7 @@ enum class BTStatus : int8_t
 struct BTNodeState
 {
     // 当前生命周期状态。
-    BTStatus status      = BTStatus::Readied;
+    BTStatus status = BTStatus::Readied;
     // 串行组合节点当前子节点序号，-1 表示无。
     int16_t currentIndex = -1;
     // Parallel 节点仍在运行的子节点序号。

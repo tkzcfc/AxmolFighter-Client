@@ -7,7 +7,12 @@ class World;
 namespace hit
 {
 // 伤害许可在配置三元组中的位置。
-enum class HurtPermit : uint8_t { Attack, Hp, Number };
+enum class HurtPermit : uint8_t
+{
+    Attack,
+    Hp,
+    Number
+};
 // 伤害公式输入；完整定义见 Damage.h。
 struct DamageInput;
 // 伤害计算器：包装世界实例，收拢伤害归属、标准伤害、公式输入与许可查询，

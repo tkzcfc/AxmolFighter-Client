@@ -21,7 +21,8 @@ void BuffHolder::cancelAppearance(uint64_t serial)
 void BuffHolder::continuePresentation(uint64_t serial)
 {
     const auto* instance = findInstance(serial);
-    if (!instance || instance->m_lifecycle.m_exit || instance->m_lifecycle.m_destroy) return;
+    if (!instance || instance->m_lifecycle.m_exit || instance->m_lifecycle.m_destroy)
+        return;
     const auto* row = conf::Config::instance().find<conf::BuffConfig>(instance->m_id);
     if (row && row->spineId != -1 && row->spineStep.size() > 1 && row->spineStep[1] == 1)
         m_world.emit(m_entity, BuffSpine{serial, row->spineId, 2, row->id});
@@ -32,31 +33,41 @@ void BuffHolder::beginPresentation(uint64_t serial)
 {
     cancelAppearance(serial);
     const auto* instance = findInstance(serial);
-    if (!instance) return;
+    if (!instance)
+        return;
     const auto* row = conf::Config::instance().find<conf::BuffConfig>(instance->m_id);
-    if (!row || row->spineId == -1) return;
-    const bool appear = !row->spineStep.empty() && row->spineStep[0] == 1;
+    if (!row || row->spineId == -1)
+        return;
+    const bool appear     = !row->spineStep.empty() && row->spineStep[0] == 1;
     const bool continuing = row->spineStep.size() > 1 && row->spineStep[1] == 1;
     m_world.emit(m_entity, BuffSpine{serial, row->spineId, appear ? 1 : continuing ? 2 : -1, row->id});
-    if (!appear || !continuing) return;
+    if (!appear || !continuing)
+        return;
     const auto* spine = conf::Config::instance().find<conf::ResSpineConfig>(row->spineId);
-    const auto* map = spine ? AvatarAssetCache::getInstance()->getMotionMap(
-        AvatarPaths::motionFileFromSpine(spine->fileName)) : nullptr;
+    const auto* map =
+        spine ? AvatarAssetCache::getInstance()->getMotionMap(AvatarPaths::motionFileFromSpine(spine->fileName))
+              : nullptr;
     const auto* motion = map ? map->findMotion("appear") : nullptr;
-    if (!motion || motion->clipCount() == 0) return;
-    if (motion->durationMs() <= 0) continuePresentation(serial);
-    else m_world.ecs().singleton<LogicTimers>().add(m_entity, Fixed::fromInt(motion->durationMs()), false, BuffContinue{serial});
+    if (!motion || motion->clipCount() == 0)
+        return;
+    if (motion->durationMs() <= 0)
+        continuePresentation(serial);
+    else
+        m_world.ecs().singleton<LogicTimers>().add(m_entity, Fixed::fromInt(motion->durationMs()), false,
+                                                   BuffContinue{serial});
 }
 
 // 只读已加载的逻辑动作资源，不访问 Spine 渲染后端。
 std::optional<Fixed> BuffHolder::disappearDuration(int32_t spineId)
 {
     const auto* row = conf::Config::instance().find<conf::ResSpineConfig>(spineId);
-    if (!row) return std::nullopt;
-    const auto path = AvatarPaths::motionFileFromSpine(row->fileName);
-    const auto* map = AvatarAssetCache::getInstance()->getMotionMap(path);
+    if (!row)
+        return std::nullopt;
+    const auto path    = AvatarPaths::motionFileFromSpine(row->fileName);
+    const auto* map    = AvatarAssetCache::getInstance()->getMotionMap(path);
     const auto* motion = map ? map->findMotion("disappear") : nullptr;
-    if (!motion || motion->clipCount() == 0) return std::nullopt;
+    if (!motion || motion->clipCount() == 0)
+        return std::nullopt;
     return Fixed::fromInt(motion->durationMs());
 }
 
@@ -64,21 +75,24 @@ std::optional<Fixed> BuffHolder::disappearDuration(int32_t spineId)
 void BuffHolder::finishExit(uint64_t serial)
 {
     auto* instance = findInstance(serial);
-    if (!instance || !instance->m_lifecycle.m_exit || instance->m_lifecycle.m_destroy) return;
-    const auto* config = conf::Config::instance().find<conf::BuffConfig>(instance->m_id);
+    if (!instance || !instance->m_lifecycle.m_exit || instance->m_lifecycle.m_destroy)
+        return;
+    const auto* config              = conf::Config::instance().find<conf::BuffConfig>(instance->m_id);
     instance->m_lifecycle.m_destroy = true;
     invokeRule(serial, RuleHook::Exit);
-    if (config && config->spineId != -1) m_world.emit(m_entity, BuffSpine{serial, config->spineId, 0, config->id});
+    if (config && config->spineId != -1)
+        m_world.emit(m_entity, BuffSpine{serial, config->spineId, 0, config->id});
 }
 
 // 消失动画只有可解析的逻辑时长才延迟退出；缺失资源按场次去重记录。
 void BuffHolder::exitInstance(uint64_t serial)
 {
     auto* instance = findInstance(serial);
-    if (!instance || instance->m_lifecycle.m_exit) return;
+    if (!instance || instance->m_lifecycle.m_exit)
+        return;
     cancelAppearance(serial);
     instance->m_lifecycle.m_exit = true;
-    const auto* config = conf::Config::instance().find<conf::BuffConfig>(instance->m_id);
+    const auto* config           = conf::Config::instance().find<conf::BuffConfig>(instance->m_id);
     if (config && config->spineId != -1 && config->spineStep.size() >= 3 && config->spineStep[2] == 1)
     {
         m_world.emit(m_entity, BuffSpine{serial, config->spineId, 3, config->id});

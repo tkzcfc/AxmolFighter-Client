@@ -31,12 +31,18 @@ std::string groupName(GroupKind kind)
 {
     switch (kind)
     {
-    case GroupKind::Role: return "role";
-    case GroupKind::Effect: return "effect";
-    case GroupKind::Obstacle: return "obstacle";
-    case GroupKind::Goods: return "goods";
-    case GroupKind::Portal: return "portal";
-    default: return "?";
+    case GroupKind::Role:
+        return "role";
+    case GroupKind::Effect:
+        return "effect";
+    case GroupKind::Obstacle:
+        return "obstacle";
+    case GroupKind::Goods:
+        return "goods";
+    case GroupKind::Portal:
+        return "portal";
+    default:
+        return "?";
     }
 }
 
@@ -44,16 +50,26 @@ std::string groupName(GroupKind kind)
 std::string statusNames(EntityRoleStatus status)
 {
     static constexpr std::pair<EntityRoleStatus, std::string_view> kBits[] = {
-        {EntityRoleStatus::Birth, "Birth"},          {EntityRoleStatus::Death, "Death"},
-        {EntityRoleStatus::Wake, "Wake"},            {EntityRoleStatus::GetUp, "GetUp"},
-        {EntityRoleStatus::HitFloor, "HitFloor"},    {EntityRoleStatus::HitDown, "HitDown"},
-        {EntityRoleStatus::HitUp, "HitUp"},          {EntityRoleStatus::HitSwitch, "HitSwitch"},
-        {EntityRoleStatus::Hit, "Hit"},              {EntityRoleStatus::Attack, "Attack"},
-        {EntityRoleStatus::Fall, "Fall"},            {EntityRoleStatus::Patrol, "Patrol"},
-        {EntityRoleStatus::Chase, "Chase"},          {EntityRoleStatus::Alert, "Alert"},
-        {EntityRoleStatus::Run, "Run"},              {EntityRoleStatus::Walk, "Walk"},
-        {EntityRoleStatus::Idle, "Idle"},            {EntityRoleStatus::Finding, "Finding"},
-        {EntityRoleStatus::Jostled, "Jostled"},      {EntityRoleStatus::Revive, "Revive"},
+        {EntityRoleStatus::Birth, "Birth"},
+        {EntityRoleStatus::Death, "Death"},
+        {EntityRoleStatus::Wake, "Wake"},
+        {EntityRoleStatus::GetUp, "GetUp"},
+        {EntityRoleStatus::HitFloor, "HitFloor"},
+        {EntityRoleStatus::HitDown, "HitDown"},
+        {EntityRoleStatus::HitUp, "HitUp"},
+        {EntityRoleStatus::HitSwitch, "HitSwitch"},
+        {EntityRoleStatus::Hit, "Hit"},
+        {EntityRoleStatus::Attack, "Attack"},
+        {EntityRoleStatus::Fall, "Fall"},
+        {EntityRoleStatus::Patrol, "Patrol"},
+        {EntityRoleStatus::Chase, "Chase"},
+        {EntityRoleStatus::Alert, "Alert"},
+        {EntityRoleStatus::Run, "Run"},
+        {EntityRoleStatus::Walk, "Walk"},
+        {EntityRoleStatus::Idle, "Idle"},
+        {EntityRoleStatus::Finding, "Finding"},
+        {EntityRoleStatus::Jostled, "Jostled"},
+        {EntityRoleStatus::Revive, "Revive"},
         {EntityRoleStatus::Controlled, "Controlled"},
     };
     std::string out;
@@ -73,10 +89,14 @@ std::string statusNames(EntityRoleStatus status)
 std::string extraStateNames(const ExtraState& extra)
 {
     static constexpr std::pair<mugen::ExtraState, std::string_view> kStates[] = {
-        {mugen::ExtraState::Durance, "Durance"},       {mugen::ExtraState::Palsy, "Palsy"},
-        {mugen::ExtraState::Stun, "Stun"},             {mugen::ExtraState::Silence, "Silence"},
-        {mugen::ExtraState::SuperArmor, "SuperArmor"}, {mugen::ExtraState::Invincible, "Invincible"},
-        {mugen::ExtraState::Stealth, "Stealth"},       {mugen::ExtraState::Frozen, "Frozen"},
+        {mugen::ExtraState::Durance, "Durance"},
+        {mugen::ExtraState::Palsy, "Palsy"},
+        {mugen::ExtraState::Stun, "Stun"},
+        {mugen::ExtraState::Silence, "Silence"},
+        {mugen::ExtraState::SuperArmor, "SuperArmor"},
+        {mugen::ExtraState::Invincible, "Invincible"},
+        {mugen::ExtraState::Stealth, "Stealth"},
+        {mugen::ExtraState::Frozen, "Frozen"},
     };
     std::string out;
     for (const auto& [state, name] : kStates)
@@ -117,7 +137,8 @@ int32_t entityId(const World& world, Entity entity, GroupKind kind)
         if (const auto* state = ecs.tryGet<PortalState>(entity))
             return state->m_id;
         break;
-    default: break;
+    default:
+        break;
     }
     return 0;
 }
@@ -135,11 +156,11 @@ std::string entityKey(const World& world, Entity entity)
 // 输出单个实体的语义状态行。
 void emitEntity(TraceSink& sink, const World& world, Entity entity, uint64_t frame)
 {
-    const auto& ecs     = world.ecs();
-    const auto* group   = ecs.tryGet<EntityGroup>(entity);
+    const auto& ecs   = world.ecs();
+    const auto* group = ecs.tryGet<EntityGroup>(entity);
     if (!group)
         return;
-    std::string line    = "ent " + std::to_string(frame) + ' ' + groupName(group->kind) + ' ' +
+    std::string line = "ent " + std::to_string(frame) + ' ' + groupName(group->kind) + ' ' +
                        std::to_string(entityId(world, entity, group->kind)) + ' ' +
                        std::to_string(world.spawnSeq(entity));
     if (const auto* t = ecs.tryGet<Transform>(entity))
@@ -202,46 +223,43 @@ void emitEntity(TraceSink& sink, const World& world, Entity entity, uint64_t fra
 // 输出单个表现事件行，行为级事件按载荷种类命名。
 void emitEvent(TraceSink& sink, const World& world, const PresentationEvent& event)
 {
-    std::string line    = "ev " + std::to_string(event.frame) + ' ' + std::to_string(event.seq);
+    std::string line      = "ev " + std::to_string(event.frame) + ' ' + std::to_string(event.seq);
     const std::string key = entityKey(world, event.entity);
-    std::visit(
-        [&](const auto& payload) {
-            using T = std::decay_t<decltype(payload)>;
-            if constexpr (std::is_same_v<T, Sound>)
-                line += " sound " + key + " id " + std::to_string(payload.id);
-            else if constexpr (std::is_same_v<T, CameraShake>)
-                line += " shake " + key + " d " + fixedStr(payload.durationMs);
-            else if constexpr (std::is_same_v<T, DisplaySpine>)
-                line += " spine " + key + " id " + std::to_string(payload.id);
-            else if constexpr (std::is_same_v<T, HurtNumber>)
-                line += " damage " + key + " value " + std::to_string(payload.value);
-            else if constexpr (std::is_same_v<T, Ghost>)
-                line += " ghost " + key;
-            else if constexpr (std::is_same_v<T, Bubble>)
-                line += " bubble " + key + " id " + std::to_string(payload.id);
-            else if constexpr (std::is_same_v<T, Tips>)
-                line += " tips " + key + " text " + payload.text;
-            else if constexpr (std::is_same_v<T, RoomStateChanged>)
-                line += " roomstate " + std::to_string(payload.state);
-            else if constexpr (std::is_same_v<T, Victory>)
-                line += " victory room " + std::to_string(payload.roomId);
-            else if constexpr (std::is_same_v<T, Failure>)
-                line += " failure room " + std::to_string(payload.roomId);
-            else if constexpr (std::is_same_v<T, RoleDeath>)
-                line += " death " + key + " role " + std::to_string(payload.m_roleId);
-            else if constexpr (std::is_same_v<T, RoleIntensity>)
-                line += " intensity " + key + " v " + fixedStr(payload.m_value);
-            else if constexpr (std::is_same_v<T, WhiteFrame>)
-                line += " whiteframe " + key + " on " + std::to_string(payload.m_enabled ? 1 : 0);
-            else if constexpr (std::is_same_v<T, BuffSpine>)
-                line += " buff " + key + " serial " + std::to_string(payload.m_serial) + " spine " +
-                        std::to_string(payload.m_spineId) + " stage " + std::to_string(payload.m_stage) + " buff " +
-                        std::to_string(payload.m_buffId);
-            else if constexpr (std::is_same_v<T, RoomWarning>)
-                line += " warn id " + std::to_string(payload.m_id) + " boss " +
-                        std::to_string(payload.m_boss ? 1 : 0);
-        },
-        event.payload);
+    std::visit([&](const auto& payload) {
+        using T = std::decay_t<decltype(payload)>;
+        if constexpr (std::is_same_v<T, Sound>)
+            line += " sound " + key + " id " + std::to_string(payload.id);
+        else if constexpr (std::is_same_v<T, CameraShake>)
+            line += " shake " + key + " d " + fixedStr(payload.durationMs);
+        else if constexpr (std::is_same_v<T, DisplaySpine>)
+            line += " spine " + key + " id " + std::to_string(payload.id);
+        else if constexpr (std::is_same_v<T, HurtNumber>)
+            line += " damage " + key + " value " + std::to_string(payload.value);
+        else if constexpr (std::is_same_v<T, Ghost>)
+            line += " ghost " + key;
+        else if constexpr (std::is_same_v<T, Bubble>)
+            line += " bubble " + key + " id " + std::to_string(payload.id);
+        else if constexpr (std::is_same_v<T, Tips>)
+            line += " tips " + key + " text " + payload.text;
+        else if constexpr (std::is_same_v<T, RoomStateChanged>)
+            line += " roomstate " + std::to_string(payload.state);
+        else if constexpr (std::is_same_v<T, Victory>)
+            line += " victory room " + std::to_string(payload.roomId);
+        else if constexpr (std::is_same_v<T, Failure>)
+            line += " failure room " + std::to_string(payload.roomId);
+        else if constexpr (std::is_same_v<T, RoleDeath>)
+            line += " death " + key + " role " + std::to_string(payload.m_roleId);
+        else if constexpr (std::is_same_v<T, RoleIntensity>)
+            line += " intensity " + key + " v " + fixedStr(payload.m_value);
+        else if constexpr (std::is_same_v<T, WhiteFrame>)
+            line += " whiteframe " + key + " on " + std::to_string(payload.m_enabled ? 1 : 0);
+        else if constexpr (std::is_same_v<T, BuffSpine>)
+            line += " buff " + key + " serial " + std::to_string(payload.m_serial) + " spine " +
+                    std::to_string(payload.m_spineId) + " stage " + std::to_string(payload.m_stage) + " buff " +
+                    std::to_string(payload.m_buffId);
+        else if constexpr (std::is_same_v<T, RoomWarning>)
+            line += " warn id " + std::to_string(payload.m_id) + " boss " + std::to_string(payload.m_boss ? 1 : 0);
+    }, event.payload);
     sink.write(line);
 }
 }  // namespace
@@ -256,7 +274,10 @@ void TraceSink::write(std::string_view line)
 TraceRecorder::TraceRecorder(World& world) : m_world(world) {}
 
 // 未挂载追踪时不拼接文本，避免战斗热路径产生额外开销。
-bool TraceRecorder::_tracing() const { return m_world.trace() != nullptr; }
+bool TraceRecorder::_tracing() const
+{
+    return m_world.trace() != nullptr;
+}
 
 // 向已挂载的追踪追加一行。
 void TraceRecorder::_writeEvent(const std::string& line)
@@ -267,10 +288,11 @@ void TraceRecorder::_writeEvent(const std::string& line)
 // 在一帧结束时输出帧边界、各实体状态行与表现事件行。
 void TraceRecorder::emitFrame()
 {
-    TraceSink& sink = *m_world.trace();
+    TraceSink& sink      = *m_world.trace();
     const uint64_t frame = m_world.ecs().singleton<WorldClock>().frame;
     sink.write("frame " + std::to_string(frame));
-    m_world.ecs().each<EntityGroup>([&](Entity entity, const EntityGroup&) { emitEntity(sink, m_world, entity, frame); });
+    m_world.ecs().each<EntityGroup>(
+        [&](Entity entity, const EntityGroup&) { emitEntity(sink, m_world, entity, frame); });
     for (const auto& event : m_world.ecs().singleton<PresentationEvents>().events)
         emitEvent(sink, m_world, event);
 }
@@ -281,8 +303,8 @@ void TraceRecorder::noteCast(Entity entity, int32_t configId, std::string_view s
     if (!_tracing())
         return;
     const auto name = slot.empty() ? std::string_view{"-"} : slot;
-    _writeEvent("cast " + entityKey(m_world, entity) + ' ' + std::to_string(configId) + ' ' + std::string(name) +
-                ' ' + std::to_string(pipe));
+    _writeEvent("cast " + entityKey(m_world, entity) + ' ' + std::to_string(configId) + ' ' + std::string(name) + ' ' +
+                std::to_string(pipe));
 }
 
 // castend <实体> <技能配置>
@@ -299,8 +321,7 @@ void TraceRecorder::noteDamage(Entity attacker, Entity target, int32_t sourceCon
     if (!_tracing())
         return;
     _writeEvent("dmg " + entityKey(m_world, attacker) + ' ' + entityKey(m_world, target) + ' ' +
-                std::to_string(sourceConfigId) + ' ' + std::to_string(value) + ' ' +
-                std::to_string(critical ? 1 : 0));
+                std::to_string(sourceConfigId) + ' ' + std::to_string(value) + ' ' + std::to_string(critical ? 1 : 0));
 }
 
 // buff + <实体> <效果配置>

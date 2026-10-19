@@ -27,24 +27,28 @@ void HitResolver::onCollision(Entity other, CollisionEvent event, FixedVec2 cont
 void HitResolver::addEntityBuff(int32_t id, std::optional<int32_t> boundSkill, std::optional<int32_t> origin)
 {
     const auto* config = conf::Config::instance().find<conf::BuffConfig>(id);
-    if (!config) return;
-    if (auto* state = m_world.ecs().tryGet<RoleHitState>(m_effect)) state->m_protectionBuffRequests.push_back(id);
+    if (!config)
+        return;
+    if (auto* state = m_world.ecs().tryGet<RoleHitState>(m_effect))
+        state->m_protectionBuffRequests.push_back(id);
     HitBuffApplication request;
     request.m_buffId = Fixed::fromInt(id);
     request.m_origin = origin;
     if (config->target == 1)
     {
-        if (config->binding != 0) request.m_boundSkill = boundSkill;
+        if (config->binding != 0)
+            request.m_boundSkill = boundSkill;
         m_world.hitHooks().m_apply(m_world, m_effect, request);
         return;
     }
     const auto identity = m_world.ecs().get<RoleIdentity>(m_effect);
     m_world.ecs().each<RoleIdentity>([&](Entity target, const RoleIdentity& other) {
-        const bool enemy = (identity.hostileCamp & other.camp) != 0;
+        const bool enemy    = (identity.hostileCamp & other.camp) != 0;
         const bool selected = config->target == 9 || (config->target == 4 && !enemy) ||
-            (config->target == 5 && enemy) || (config->target == 6 && other.roleType == 4) ||
-            (config->target == 7 && (other.roleType == 2 || other.roleType == 3));
-        if (selected) m_world.hitHooks().m_apply(m_world, target, request);
+                              (config->target == 5 && enemy) || (config->target == 6 && other.roleType == 4) ||
+                              (config->target == 7 && (other.roleType == 2 || other.roleType == 3));
+        if (selected)
+            m_world.hitHooks().m_apply(m_world, target, request);
     });
 }
 
@@ -268,8 +272,7 @@ void HitResolver::_endHit(Entity target, HitTrigger data, const conf::EffectConf
     attack.m_damage                             = data.m_damage;
     attack.m_critical                           = data.m_critical;
     attack.m_dps += data.m_damage;
-    _recoverEp(data.m_attacker,
-               row.energy * (ecs.get<RoleIdentity>(target).roleType == 4 ? "1.5"_fx : "1"_fx));
+    _recoverEp(data.m_attacker, row.energy * (ecs.get<RoleIdentity>(target).roleType == 4 ? "1.5"_fx : "1"_fx));
     if (!capability)
         m_world.hitHooks().m_ability(m_world, data.m_attacker, HitAbilityEvent::AfterHit, data, -1);
     HitResolver(m_world, data.m_attacker).trigger(BFEvent::AfterHit, data);
@@ -344,10 +347,10 @@ void HitResolver::_hitTarget(const conf::EffectConfig& row)
         // 前置事件可以改变属性，伤害阶段重新解析而不重复抽闪避。
         if (!DamageCalculator(m_world).damageInput(m_effect, m_target, input))
             return;
-        const auto damage                    = calculateDamage(input, damageDraw(ecs.singleton<RngState>().random));
-        data.m_damage                        = damage.m_damage;
-        data.m_critical                      = damage.m_critical;
-        ecs.get<RoleHitState>(m_target).m_hurt       = data.m_damage;
+        const auto damage                      = calculateDamage(input, damageDraw(ecs.singleton<RngState>().random));
+        data.m_damage                          = damage.m_damage;
+        data.m_critical                        = damage.m_critical;
+        ecs.get<RoleHitState>(m_target).m_hurt = data.m_damage;
         ecs.get<RoleHitState>(m_target).m_beCritical = data.m_critical;
         if (DamageCalculator(m_world).checkHurtPermit(m_target, m_effect, HurtPermit::Hp) &&
             !m_world.hitHooks().m_replaceDamage(m_world, m_target, data.m_damage))
@@ -363,9 +366,9 @@ void HitResolver::_hitTarget(const conf::EffectConfig& row)
         m_world.hitHooks().m_ability(m_world, data.m_attacker, HitAbilityEvent::Anger, data, data.m_skillId);
         _endHit(m_target, data, row);
     }
-    ecs.get<RoleHitState>(m_target).m_hurt         = {};
-    ecs.get<RoleHitState>(m_target).m_beCritical   = false;
-    ecs.get<RoleHitState>(m_target).m_beHitEffect  = {};
+    ecs.get<RoleHitState>(m_target).m_hurt            = {};
+    ecs.get<RoleHitState>(m_target).m_beCritical      = false;
+    ecs.get<RoleHitState>(m_target).m_beHitEffect     = {};
     ecs.get<RoleHitState>(data.m_attacker).m_damage   = {};
     ecs.get<RoleHitState>(data.m_attacker).m_critical = false;
     if (accepted && _enabled(m_effect))
@@ -384,8 +387,8 @@ void HitResolver::_resolve()
     const auto* row   = conf::Config::instance().find<conf::EffectConfig>(source.m_configId);
     if (!row)
         return;
-    const auto kind  = ecs.get<EntityGroup>(m_target).kind;
-    HitTrigger data  = _context(m_effect, m_target);
+    const auto kind = ecs.get<EntityGroup>(m_target).kind;
+    HitTrigger data = _context(m_effect, m_target);
     if (kind == GroupKind::Obstacle)
     {
         const auto camp = ecs.get<RoleIdentity>(source.m_owner).camp;
@@ -461,12 +464,14 @@ void HitResolver::_resolve()
         HitResolver(m_world, m_target).trigger(BFEvent::AfterHit, data);
         if (row->specialabilityId != -1)
         {
-            m_world.hitHooks().m_ability(m_world, source.m_owner, HitAbilityEvent::SameCamp, data, row->specialabilityId);
+            m_world.hitHooks().m_ability(m_world, source.m_owner, HitAbilityEvent::SameCamp, data,
+                                         row->specialabilityId);
             if (row->specialabilityAllId != -1)
             {
                 data.m_target   = m_target;
                 data.m_teammate = false;
-                m_world.hitHooks().m_ability(m_world, m_target, HitAbilityEvent::SameCamp, data, row->specialabilityAllId);
+                m_world.hitHooks().m_ability(m_world, m_target, HitAbilityEvent::SameCamp, data,
+                                             row->specialabilityAllId);
             }
         }
     }

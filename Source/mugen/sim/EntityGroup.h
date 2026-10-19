@@ -21,16 +21,16 @@ enum class GroupKind : uint8_t
 };
 // 世界每帧处理实体组的固定顺序。
 inline constexpr std::array kGroupOrder{GroupKind::Role, GroupKind::Effect, GroupKind::Obstacle, GroupKind::Goods,
-                                         GroupKind::Portal};
+                                        GroupKind::Portal};
 // 标记实体所属组及其生命周期控制状态。
 struct EntityGroup
 {
     // 实体参与的更新组。
-    GroupKind kind        = GroupKind::Role;
+    GroupKind kind = GroupKind::Role;
     // 暂停组内常规更新。
-    bool suspended        = false;
+    bool suspended = false;
     // 终止组内行为但保留实体。
-    bool stopped          = false;
+    bool stopped = false;
     // 已请求在帧末销毁实体。
     bool destroyRequested = false;
     // 参与组件快照的组状态字段。

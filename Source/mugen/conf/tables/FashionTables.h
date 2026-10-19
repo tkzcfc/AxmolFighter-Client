@@ -16,15 +16,15 @@ struct FashionConfig
     std::vector<int32_t> attributeValue;
     std::vector<int32_t> bigType;
     // 交易、状态、文本、销毁与展示参数。
-    int32_t bourseId        = 0;
-    int32_t buff            = 0;
-    int32_t collect         = 0;
-    int32_t descId          = 0;
-    int32_t destoryId       = 0;
-    int32_t destoryNum      = 0;
-    int32_t destoryType     = 0;
-    int32_t discard         = 0;
-    int32_t dropEffect      = 0;
+    int32_t bourseId    = 0;
+    int32_t buff        = 0;
+    int32_t collect     = 0;
+    int32_t descId      = 0;
+    int32_t destoryId   = 0;
+    int32_t destoryNum  = 0;
+    int32_t destoryType = 0;
+    int32_t discard     = 0;
+    int32_t dropEffect  = 0;
     // 模板、物品、图标、标识和时长参数。
     int32_t fashionTemplate = 0;
     int32_t goodsId         = 0;

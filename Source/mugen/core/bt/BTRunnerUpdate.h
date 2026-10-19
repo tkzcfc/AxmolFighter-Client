@@ -15,7 +15,7 @@ void BTRunner<C, P, S>::updateNode(C& ctx, uint32_t id)
     switch (node.type)
     {
     case BTNodeType::Action:
-        ctx.m_node   = static_cast<int32_t>(id);
+        ctx.m_node = static_cast<int32_t>(id);
         state.status =
             m_registry.leaf(node.leafTypeId)
                 .onUpdate(ctx, m_def.param(node.paramIndex), m_instance.leaves[m_def.topology().leafIndex(id)]);

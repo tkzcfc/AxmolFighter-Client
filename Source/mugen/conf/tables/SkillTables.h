@@ -59,19 +59,19 @@ struct SkillAttackConfig
 struct SkillHitConfig
 {
     // 空中、地面和倒地位移配置 id。
-    int32_t airDisplacementId       = 0;
-    int32_t displacementId          = 0;
-    int32_t floorDisplacementId     = 0;
+    int32_t airDisplacementId   = 0;
+    int32_t displacementId      = 0;
+    int32_t floorDisplacementId = 0;
     // 命中冻结时长及受影响对象。
     int32_t freezeTime              = 0;
     int32_t freezeTimeControlEffect = 0;
     int32_t freezeTimeControlRole   = 0;
     int32_t freezeTimeDelay         = 0;
     // 命中条件、次数、间隔、必中和韧性参数。
-    int32_t hitCondition            = 0;
-    int32_t hitCounts               = 0;
-    int32_t hitInterval             = 0;
-    int32_t hitMust                 = 0;
+    int32_t hitCondition = 0;
+    int32_t hitCounts    = 0;
+    int32_t hitInterval  = 0;
+    int32_t hitMust      = 0;
     Fixed hitRigidity;
     // 击飞类型、伤害倍率、标识与硬直时长。
     int32_t hitType = 0;
@@ -123,8 +123,8 @@ struct SkillAiConfig
     // 检查间隔、条件组合、标识和首次检查冷却。
     int64_t checkCd = 0;
     std::vector<std::vector<int32_t>> composition;
-    int32_t id       = 0;
-    int32_t loadCd   = 0;
+    int32_t id     = 0;
+    int32_t loadCd = 0;
     // 目标状态、距离、技能和概率条件。
     int32_t oppCombo = 0;
     std::vector<int32_t> oppDisX;

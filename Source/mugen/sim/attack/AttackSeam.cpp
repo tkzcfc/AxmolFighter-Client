@@ -11,18 +11,19 @@ AttackSeam::AttackSeam(World& world, Entity entity) : m_world(world), m_entity(e
 Entity AttackSeam::spawnFromRole(const effect::RoleSpawn& request)
 {
     const auto entity = effect::EffectActor::create(m_world, m_entity, request.m_effectId);
-    if (entity.value == 0) return {};
-    auto& state = m_world.ecs().get<EffectState>(entity);
-    state.m_skillId = request.m_skillId;
-    state.m_baseSkillId = request.m_baseSkillId;
-    state.m_slot = request.m_slot;
+    if (entity.value == 0)
+        return {};
+    auto& state               = m_world.ecs().get<EffectState>(entity);
+    state.m_skillId           = request.m_skillId;
+    state.m_baseSkillId       = request.m_baseSkillId;
+    state.m_slot              = request.m_slot;
     state.m_skillAttributeTag = m_entity;
     effect::EffectActor actor(m_world, entity);
     actor.setCustomPosition(m_entity);
     actor.follow();
     if (request.m_customVector)
     {
-        auto& transform = m_world.ecs().get<Transform>(entity);
+        auto& transform   = m_world.ecs().get<Transform>(entity);
         transform.vectorX = request.m_vector.x;
         transform.vectorZ = request.m_vector.z;
     }
@@ -46,5 +47,8 @@ void AttackSeam::addActionBuff(int32_t id, int32_t skillId)
     buff::BuffHolder(m_world, m_entity).addBuff(id, context, m_world.setup().m_fightType);
 }
 // 动作结束沿用普通移除与消失动画计时。
-void AttackSeam::removeActionBuff(int32_t id) { buff::BuffHolder(m_world, m_entity).removeBuff(id); }
+void AttackSeam::removeActionBuff(int32_t id)
+{
+    buff::BuffHolder(m_world, m_entity).removeBuff(id);
 }
+}  // namespace mugen::sim::attack

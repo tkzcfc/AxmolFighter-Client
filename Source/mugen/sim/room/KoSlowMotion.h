@@ -18,7 +18,11 @@ struct KoSlowMotion
     Fixed m_scale = "1"_fx;
 
     // 重新开始半秒降速、一秒保持、一秒恢复的曲线。
-    void start() { *this = {}; m_active = true; }
+    void start()
+    {
+        *this    = {};
+        m_active = true;
+    }
 
     // 使用未缩放的逻辑秒数推进，避免慢放反过来延长自身。
     void update(Fixed dt)
@@ -28,8 +32,7 @@ struct KoSlowMotion
         if (m_fallSeconds < "0.5"_fx)
         {
             m_fallSeconds += dt;
-            m_scale = m_fallSeconds > "0.5"_fx ? "0.1"_fx :
-                "0.1"_fx + ("1"_fx - m_fallSeconds / "0.5"_fx) * "0.9"_fx;
+            m_scale = m_fallSeconds > "0.5"_fx ? "0.1"_fx : "0.1"_fx + ("1"_fx - m_fallSeconds / "0.5"_fx) * "0.9"_fx;
         }
         else if (m_holdSeconds < "1"_fx)
             m_holdSeconds += dt;
@@ -45,4 +48,4 @@ struct KoSlowMotion
     // 快照保存各段独立的累计时间。
     MG_REFLECT(KoSlowMotion, m_active, m_fallSeconds, m_holdSeconds, m_riseSeconds, m_scale)
 };
-}
+}  // namespace mugen::sim::room

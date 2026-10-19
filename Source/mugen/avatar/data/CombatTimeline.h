@@ -21,7 +21,7 @@ struct CombatKey
 {
     // 关键帧时间、框体存在标记与框体数据。
     int32_t timeMs = 0;
-    bool hasBox = false;
+    bool hasBox    = false;
     DamageBox box;
 
     MG_REFLECT(CombatKey, timeMs, hasBox, box)

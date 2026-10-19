@@ -56,10 +56,10 @@ void BattleDebugPanel::render(mugen::sim::World& world, bool& paused, bool& sing
     world.ecs().each<mugen::sim::RoleIdentity, mugen::sim::RoleStatus, mugen::sim::Transform>(
         [](mugen::Entity entity, const mugen::sim::RoleIdentity& identity, const mugen::sim::RoleStatus& status,
            const mugen::sim::Transform& transform) {
-            ImGui::Text("entity=%u role=%d level=%d status=%d pos=(%.2f, %.2f, %.2f)", entity.value, identity.roleId,
-                        identity.level, static_cast<int>(status.eEntityStatus), transform.position.x.toFloatForRender(),
-                        transform.position.y.toFloatForRender(), transform.position.z.toFloatForRender());
-        });
+        ImGui::Text("entity=%u role=%d level=%d status=%d pos=(%.2f, %.2f, %.2f)", entity.value, identity.roleId,
+                    identity.level, static_cast<int>(status.eEntityStatus), transform.position.x.toFloatForRender(),
+                    transform.position.y.toFloatForRender(), transform.position.z.toFloatForRender());
+    });
     ImGui::End();
 }
-}
+}  // namespace gameui

@@ -72,4 +72,4 @@ inline constexpr int32_t kRoomStateInternal = 30;
 inline constexpr Fixed kHitProtectHpScale = "0.45"_fx;
 // 受击保护清理间隔毫秒数。
 inline constexpr int32_t kHitProtectCleanTime = 5000;
-}
+}  // namespace mugen::conf

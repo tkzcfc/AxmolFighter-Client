@@ -21,11 +21,26 @@ const conf::RoleConfig* roleData(World& world, Entity entity)
 
 Role::Role(World& world, Entity entity) : m_world(world), m_entity(entity) {}
 
-Entity Role::getEntity() const { return m_entity; }
-RoleStatus& Role::getStatus() const { return m_world.ecs().get<RoleStatus>(m_entity); }
-Vitals& Role::getVitals() const { return m_world.ecs().get<Vitals>(m_entity); }
-RoleHitState& Role::getHitState() const { return m_world.ecs().get<RoleHitState>(m_entity); }
-RoleIdentity& Role::getIdentity() const { return m_world.ecs().get<RoleIdentity>(m_entity); }
+Entity Role::getEntity() const
+{
+    return m_entity;
+}
+RoleStatus& Role::getStatus() const
+{
+    return m_world.ecs().get<RoleStatus>(m_entity);
+}
+Vitals& Role::getVitals() const
+{
+    return m_world.ecs().get<Vitals>(m_entity);
+}
+RoleHitState& Role::getHitState() const
+{
+    return m_world.ecs().get<RoleHitState>(m_entity);
+}
+RoleIdentity& Role::getIdentity() const
+{
+    return m_world.ecs().get<RoleIdentity>(m_entity);
+}
 
 // 机关按命中次数死亡，其余角色要求最大生命为正。
 bool Role::isDead() const
@@ -42,7 +57,8 @@ Fixed Role::_absorbShield(Fixed delta)
     if (vitals.shieldCovers(delta))
     {
         vitals.absorbShield(delta);
-        if (m_world.hitHooks().m_shieldLayer(m_world, m_entity)) _cleanShield();
+        if (m_world.hitHooks().m_shieldLayer(m_world, m_entity))
+            _cleanShield();
         return {};
     }
     const Fixed rest = vitals.absorbShield(delta);
@@ -60,28 +76,32 @@ void Role::_cleanShield()
 void Role::modifyHp(Fixed delta, Entity effect, bool noShield)
 {
     auto& ecs = m_world.ecs();
-    if (delta < Fixed{} && !ecs.get<Vitals>(m_entity).m_beHitEnabled) return;
+    if (delta < Fixed{} && !ecs.get<Vitals>(m_entity).m_beHitEnabled)
+        return;
     if (delta > Fixed{})
     {
         const auto modifiers = m_world.hitHooks().m_modifiers(m_world, m_entity);
-        if (modifiers.m_chill) return;
+        if (modifiers.m_chill)
+            return;
         delta = std::max(Fixed{}, delta * ("1"_fx + modifiers.m_healingChange));
     }
     const bool wasDead = isDead();
     if (delta >= Fixed{} || hit::DamageCalculator(m_world).checkHurtPermit(m_entity, effect, hit::HurtPermit::Hp))
     {
-        if (!noShield && delta < Fixed{}) delta = _absorbShield(delta);
+        if (!noShield && delta < Fixed{})
+            delta = _absorbShield(delta);
         auto& vitals = ecs.get<Vitals>(m_entity);
-        vitals.hp = std::max(vitals.m_hpLock, std::clamp(vitals.hp + delta, Fixed{}, vitals.maxHp));
+        vitals.hp    = std::max(vitals.m_hpLock, std::clamp(vitals.hp + delta, Fixed{}, vitals.maxHp));
     }
     HitTrigger context;
     context.m_target = m_entity;
     context.m_effect = effect;
-    if (ecs.get<Vitals>(m_entity).hp <= Fixed{}) hit::HitResolver(m_world, m_entity).trigger(BFEvent::BeforeDeath, context);
+    if (ecs.get<Vitals>(m_entity).hp <= Fixed{})
+        hit::HitResolver(m_world, m_entity).trigger(BFEvent::BeforeDeath, context);
     if (!wasDead && isDead())
     {
-        const auto* row   = roleData(m_world, m_entity);
-        const auto state  = ecs.get<RoleStatus>(m_entity);
+        const auto* row  = roleData(m_world, m_entity);
+        const auto state = ecs.get<RoleStatus>(m_entity);
         if (!state.isTobeHit() && !state.isDeath())
             changeStatus(EntityRoleStatus::Death, row ? row->deathDisplacementId : -1);
         if (row && row->koEffectId != -1)
@@ -95,7 +115,8 @@ void Role::modifyHp(Fixed delta, Entity effect, bool noShield)
         }
         m_world.hitHooks().m_ability(m_world, m_entity, HitAbilityEvent::Death, context, -1);
     }
-    if (!isDead()) hit::HitResolver(m_world, m_entity).trigger(BFEvent::HpChange, context);
+    if (!isDead())
+        hit::HitResolver(m_world, m_entity).trigger(BFEvent::HpChange, context);
 }
 
 // 按状态机规则应用转换，死亡角色拒绝后续转换。
@@ -108,10 +129,10 @@ bool Role::changeStatus(EntityRoleStatus bits, int32_t id, FixedVec3 movePos)
     switch (bits)
     {
     case S::Hit:
-        role.eEntityStatus                = S::Idle | S::Hit;
-        role.entityParams.hit_id          = id;
-        role.entityParams.hit_counts      = 1;
-        m_world.ecs().get<RoleHitState>(m_entity).hitCounts = 1;
+        role.eEntityStatus                                      = S::Idle | S::Hit;
+        role.entityParams.hit_id                                = id;
+        role.entityParams.hit_counts                            = 1;
+        m_world.ecs().get<RoleHitState>(m_entity).hitCounts     = 1;
         m_world.ecs().get<RoleHitState>(m_entity).forceVelocity = {};
         initHitProtect();
         break;
@@ -163,16 +184,17 @@ bool Role::isRigidity() const
 Fixed Role::getStiffTime()
 {
     const auto* row = conf::Config::instance().find<conf::RoleConfig>(m_world.ecs().get<RoleIdentity>(m_entity).roleId);
-    return m_world.ecs().get<RoleHitState>(m_entity).getStiffTime(
-        row ? Fixed::fromInt(row->rigidity) : Fixed{}, isDead());
+    return m_world.ecs().get<RoleHitState>(m_entity).getStiffTime(row ? Fixed::fromInt(row->rigidity) : Fixed{},
+                                                                  isDead());
 }
 
 // 耗尽后每次追击都加重下落，保护提示只向 Buff 接缝发送请求。
 bool Role::applyWeight(Fixed amount, bool hitProtect)
 {
-    auto& state = m_world.ecs().get<RoleHitState>(m_entity);
+    auto& state    = m_world.ecs().get<RoleHitState>(m_entity);
     state.rigidity = std::max(Fixed{}, state.rigidity - amount);
-    if (isDead() || !isRigidity()) return false;
+    if (isDead() || !isRigidity())
+        return false;
     state.forceVelocity.y -= state.weight * Fixed::fromInt(state.hitCounts);
     if (m_world.ecs().get<RoleIdentity>(m_entity).roleType == 1)
     {
@@ -189,7 +211,7 @@ bool Role::applyWeight(Fixed amount, bool hitProtect)
 // 首次命中记录当前生命减去最大生命比例后的阈值。
 void Role::initHitProtect()
 {
-    auto& state       = m_world.ecs().get<RoleHitState>(m_entity);
+    auto& state        = m_world.ecs().get<RoleHitState>(m_entity);
     const auto& vitals = m_world.ecs().get<Vitals>(m_entity);
     state.initHitProtect(m_world.setup().m_pvp, vitals.hp, vitals.maxHp, conf::kHitProtectHpScale,
                          conf::kHitProtectCleanTime);
@@ -211,9 +233,14 @@ void Role::resetHitProtect()
 void Role::updateHitProtect()
 {
     auto& state = m_world.ecs().get<RoleHitState>(m_entity);
-    if (!state.m_hitProtectHp || state.m_hitProtectExecuted) return;
+    if (!state.m_hitProtectHp || state.m_hitProtectExecuted)
+        return;
     state.m_hitProtectTime -= m_world.ecs().singleton<WorldClock>().dtMs;
-    if (state.m_hitProtectTime <= Fixed{}) { state.resetHitProtect(); return; }
+    if (state.m_hitProtectTime <= Fixed{})
+    {
+        state.resetHitProtect();
+        return;
+    }
     if (m_world.ecs().get<Vitals>(m_entity).hp <= *state.m_hitProtectHp)
     {
         if (m_world.ecs().get<RoleStatus>(m_entity).isTobeHit())

@@ -269,7 +269,8 @@ void dotEnter(World& world, Entity entity, uint64_t serial, Fixed)
     const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
-    BuffHolder(world, entity).dealBuffDamage(instance->m_context.m_applicator, BuffHolder(world, entity).getAttackValue(*instance));
+    BuffHolder(world, entity)
+        .dealBuffDamage(instance->m_context.m_applicator, BuffHolder(world, entity).getAttackValue(*instance));
 }
 // 锁血按配置比例或绝对值叠加到生命限制。
 void hpLockChange(World& world, Entity entity, uint64_t serial, bool entering)
@@ -396,7 +397,8 @@ void separateEnter(World& world, Entity entity, uint64_t serial, Fixed)
 {
     const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (instance && BuffHolder(world, entity).isMoved())
-        BuffHolder(world, entity).dealBuffDamage(instance->m_context.m_applicator, BuffHolder(world, entity).getAttackValue(*instance));
+        BuffHolder(world, entity)
+            .dealBuffDamage(instance->m_context.m_applicator, BuffHolder(world, entity).getAttackValue(*instance));
 }
 // 白帧只发出表现事件，表现层不得回写模拟状态。
 void whiteFrameEnter(World& world, Entity entity, uint64_t, Fixed)
@@ -449,26 +451,73 @@ void changeExtend(World& world, Entity entity, uint64_t serial, int32_t attribut
     if (config.paramValue.empty())
         return;
     instance->m_triggered = entering;
-    auto& value = world.ecs().get<Attributes>(entity).extended(attribute);
+    auto& value           = world.ecs().get<Attributes>(entity).extended(attribute);
     value += entering ? config.paramValue.front() : -config.paramValue.front();
 }
-void avoidCritEnter(World& w, Entity e, uint64_t s, Fixed) { changeExtend(w, e, s, 103, true); }
-void avoidCritExit(World& w, Entity e, uint64_t s, Fixed) { changeExtend(w, e, s, 103, false); }
-void breakArmorEnter(World& w, Entity e, uint64_t s, Fixed) { changeExtend(w, e, s, 101, true); }
-void breakArmorExit(World& w, Entity e, uint64_t s, Fixed) { changeExtend(w, e, s, 101, false); }
-void critEnter(World& w, Entity e, uint64_t s, Fixed) { changeExtend(w, e, s, 102, true); }
-void critExit(World& w, Entity e, uint64_t s, Fixed) { changeExtend(w, e, s, 102, false); }
-void damageCritEnter(World& w, Entity e, uint64_t s, Fixed) { changeExtend(w, e, s, 112, true); }
-void damageCritExit(World& w, Entity e, uint64_t s, Fixed) { changeExtend(w, e, s, 112, false); }
-void damageReductionEnter(World& w, Entity e, uint64_t s, Fixed) { changeExtend(w, e, s, 101, true); }
-void damageReductionExit(World& w, Entity e, uint64_t s, Fixed) { changeExtend(w, e, s, 101, false); }
-void dodgeEnter(World& w, Entity e, uint64_t s, Fixed) { changeExtend(w, e, s, 109, true); }
-void dodgeExit(World& w, Entity e, uint64_t s, Fixed) { changeExtend(w, e, s, 109, false); }
-void hitEnter(World& w, Entity e, uint64_t s, Fixed) { changeExtend(w, e, s, 111, true); }
-void hitExit(World& w, Entity e, uint64_t s, Fixed) { changeExtend(w, e, s, 111, false); }
+void avoidCritEnter(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeExtend(w, e, s, 103, true);
+}
+void avoidCritExit(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeExtend(w, e, s, 103, false);
+}
+void breakArmorEnter(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeExtend(w, e, s, 101, true);
+}
+void breakArmorExit(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeExtend(w, e, s, 101, false);
+}
+void critEnter(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeExtend(w, e, s, 102, true);
+}
+void critExit(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeExtend(w, e, s, 102, false);
+}
+void damageCritEnter(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeExtend(w, e, s, 112, true);
+}
+void damageCritExit(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeExtend(w, e, s, 112, false);
+}
+void damageReductionEnter(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeExtend(w, e, s, 101, true);
+}
+void damageReductionExit(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeExtend(w, e, s, 101, false);
+}
+void dodgeEnter(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeExtend(w, e, s, 109, true);
+}
+void dodgeExit(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeExtend(w, e, s, 109, false);
+}
+void hitEnter(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeExtend(w, e, s, 111, true);
+}
+void hitExit(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeExtend(w, e, s, 111, false);
+}
 
 // 资源缩放统一在角色池上保存，避免在多个技能实例间重复累积。
-enum class ResourceScale : uint8_t { EpConsume, EpRecovery, TpRecovery };
+enum class ResourceScale : uint8_t
+{
+    EpConsume,
+    EpRecovery,
+    TpRecovery
+};
 void changeResourceScale(World& world, Entity entity, uint64_t serial, ResourceScale kind, bool entering)
 {
     auto* instance = BuffHolder(world, entity).findInstance(serial);
@@ -478,7 +527,7 @@ void changeResourceScale(World& world, Entity entity, uint64_t serial, ResourceS
     if (config.paramValue.empty())
         return;
     instance->m_triggered = entering;
-    const Fixed value = entering ? config.paramValue.front() : -config.paramValue.front();
+    const Fixed value     = entering ? config.paramValue.front() : -config.paramValue.front();
     if (kind == ResourceScale::EpConsume)
         world.ecs().get<SkillPool>(entity).m_epScale += value;
     else if (kind == ResourceScale::EpRecovery)
@@ -486,12 +535,30 @@ void changeResourceScale(World& world, Entity entity, uint64_t serial, ResourceS
     else
         world.ecs().get<Vitals>(entity).mpRecoveryScale += value;
 }
-void epConsumeEnter(World& w, Entity e, uint64_t s, Fixed) { changeResourceScale(w, e, s, ResourceScale::EpConsume, true); }
-void epConsumeExit(World& w, Entity e, uint64_t s, Fixed) { changeResourceScale(w, e, s, ResourceScale::EpConsume, false); }
-void epRecoveryEnter(World& w, Entity e, uint64_t s, Fixed) { changeResourceScale(w, e, s, ResourceScale::EpRecovery, true); }
-void epRecoveryExit(World& w, Entity e, uint64_t s, Fixed) { changeResourceScale(w, e, s, ResourceScale::EpRecovery, false); }
-void tpRecoveryEnter(World& w, Entity e, uint64_t s, Fixed) { changeResourceScale(w, e, s, ResourceScale::TpRecovery, true); }
-void tpRecoveryExit(World& w, Entity e, uint64_t s, Fixed) { changeResourceScale(w, e, s, ResourceScale::TpRecovery, false); }
+void epConsumeEnter(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeResourceScale(w, e, s, ResourceScale::EpConsume, true);
+}
+void epConsumeExit(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeResourceScale(w, e, s, ResourceScale::EpConsume, false);
+}
+void epRecoveryEnter(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeResourceScale(w, e, s, ResourceScale::EpRecovery, true);
+}
+void epRecoveryExit(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeResourceScale(w, e, s, ResourceScale::EpRecovery, false);
+}
+void tpRecoveryEnter(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeResourceScale(w, e, s, ResourceScale::TpRecovery, true);
+}
+void tpRecoveryExit(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeResourceScale(w, e, s, ResourceScale::TpRecovery, false);
+}
 
 // 增伤规则按来源的层数或生命差计算，并在退出时精确撤销已加入的值。
 void damageHurtChange(World& world, Entity entity, uint64_t serial, bool entering, bool repeat, bool lostHp)
@@ -523,12 +590,30 @@ void damageHurtChange(World& world, Entity entity, uint64_t serial, bool enterin
     instance->m_ruleValue = value;
     world.ecs().get<Attributes>(entity).extended(100) += value;
 }
-void damageHurtEnter(World& w, Entity e, uint64_t s, Fixed) { damageHurtChange(w, e, s, true, true, false); }
-void damageHurtExit(World& w, Entity e, uint64_t s, Fixed) { damageHurtChange(w, e, s, false, true, false); }
-void damageHurt2Enter(World& w, Entity e, uint64_t s, Fixed) { damageHurtChange(w, e, s, true, false, false); }
-void damageHurt2Exit(World& w, Entity e, uint64_t s, Fixed) { damageHurtChange(w, e, s, false, false, false); }
-void damageHPLossBegin(World& w, Entity e, uint64_t s, Fixed) { damageHurtChange(w, e, s, true, false, true); }
-void damageHPLossEnd(World& w, Entity e, uint64_t s, Fixed) { damageHurtChange(w, e, s, false, false, true); }
+void damageHurtEnter(World& w, Entity e, uint64_t s, Fixed)
+{
+    damageHurtChange(w, e, s, true, true, false);
+}
+void damageHurtExit(World& w, Entity e, uint64_t s, Fixed)
+{
+    damageHurtChange(w, e, s, false, true, false);
+}
+void damageHurt2Enter(World& w, Entity e, uint64_t s, Fixed)
+{
+    damageHurtChange(w, e, s, true, false, false);
+}
+void damageHurt2Exit(World& w, Entity e, uint64_t s, Fixed)
+{
+    damageHurtChange(w, e, s, false, false, false);
+}
+void damageHPLossBegin(World& w, Entity e, uint64_t s, Fixed)
+{
+    damageHurtChange(w, e, s, true, false, true);
+}
+void damageHPLossEnd(World& w, Entity e, uint64_t s, Fixed)
+{
+    damageHurtChange(w, e, s, false, false, true);
+}
 
 // 立即资源规则使用绝对值或上限比例，均由统一生命修改入口处理。
 void hpEnter(World& world, Entity entity, uint64_t serial, Fixed)
@@ -540,12 +625,13 @@ void hpEnter(World& world, Entity entity, uint64_t serial, Fixed)
     if (config.paramValue.empty())
         return;
     const auto& vitals = world.ecs().get<Vitals>(entity);
-    Fixed value = config.paramValue.front();
+    Fixed value        = config.paramValue.front();
     if (value < "1"_fx && value >= Fixed{})
         value *= vitals.maxHp;
     if (value < Fixed{} && config.paramValue.size() > 1 && config.paramValue[1] > Fixed{})
         value = std::max(value, config.paramValue[1] - vitals.hp);
-    Role(world, entity).modifyHp(value, {}, value < Fixed{} && config.paramValue.size() > 1 && config.paramValue[1] > Fixed{});
+    Role(world, entity)
+        .modifyHp(value, {}, value < Fixed{} && config.paramValue.size() > 1 && config.paramValue[1] > Fixed{});
 }
 void epEnter(World& world, Entity entity, uint64_t serial, Fixed)
 {
@@ -556,7 +642,7 @@ void epEnter(World& world, Entity entity, uint64_t serial, Fixed)
     if (config.paramValue.empty())
         return;
     auto& vitals = world.ecs().get<Vitals>(entity);
-    Fixed value = config.paramValue.front();
+    Fixed value  = config.paramValue.front();
     if (value <= "1"_fx)
         value *= vitals.maxEp;
     vitals.ep = std::clamp(vitals.ep + value, Fixed{}, vitals.maxEp);
@@ -570,7 +656,7 @@ void tpEnter(World& world, Entity entity, uint64_t serial, Fixed)
     if (config.paramValue.empty())
         return;
     auto& vitals = world.ecs().get<Vitals>(entity);
-    Fixed value = config.paramValue.front();
+    Fixed value  = config.paramValue.front();
     if (value <= "1"_fx)
         value *= vitals.maxMp;
     vitals.mp = std::clamp(vitals.mp + value, Fixed{}, vitals.maxMp);
@@ -586,19 +672,31 @@ void changeSkillScale(World& world, Entity entity, uint64_t serial, bool enterin
     if (config.paramValue.empty())
         return;
     instance->m_triggered = entering;
-    const Fixed value = entering ? config.paramValue.front() : -config.paramValue.front();
-    auto& skills = world.ecs().get<SkillPool>(entity);
-    const auto target = instance->m_context.m_boundSkill;
+    const Fixed value     = entering ? config.paramValue.front() : -config.paramValue.front();
+    auto& skills          = world.ecs().get<SkillPool>(entity);
+    const auto target     = instance->m_context.m_boundSkill;
     for (auto& skill : skills.m_skills)
         if (!target || skill.m_configId == *target)
             (cooldown ? skill.m_coldScale : skill.m_mpScale) += value;
     if (!target && !cooldown)
         skills.m_mpScale += value;
 }
-void cdSkillEnter(World& w, Entity e, uint64_t s, Fixed) { changeSkillScale(w, e, s, true, true); }
-void cdSkillExit(World& w, Entity e, uint64_t s, Fixed) { changeSkillScale(w, e, s, false, true); }
-void tpConsumeEnter(World& w, Entity e, uint64_t s, Fixed) { changeSkillScale(w, e, s, true, false); }
-void tpConsumeExit(World& w, Entity e, uint64_t s, Fixed) { changeSkillScale(w, e, s, false, false); }
+void cdSkillEnter(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeSkillScale(w, e, s, true, true);
+}
+void cdSkillExit(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeSkillScale(w, e, s, false, true);
+}
+void tpConsumeEnter(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeSkillScale(w, e, s, true, false);
+}
+void tpConsumeExit(World& w, Entity e, uint64_t s, Fixed)
+{
+    changeSkillScale(w, e, s, false, false);
+}
 
 // 护盾进入可附加效果，退出时清零并应用结束效果。
 void shieldChange(World& world, Entity entity, uint64_t serial, bool entering)
@@ -612,7 +710,7 @@ void shieldChange(World& world, Entity entity, uint64_t serial, bool entering)
     auto& vitals = world.ecs().get<Vitals>(entity);
     if (entering)
     {
-        Fixed value = config.paramValue[0];
+        Fixed value     = config.paramValue[0];
         vitals.m_shield = value > "1"_fx ? value : vitals.maxHp * value;
         if (config.paramValue.size() > 1 && config.paramValue[1].toInt() > 0)
             hit::HitResolver(world, entity).addEntityBuff(config.paramValue[1].toInt());
@@ -629,11 +727,22 @@ void shieldChange(World& world, Entity entity, uint64_t serial, bool entering)
             hit::HitResolver(world, entity).addEntityBuff(config.paramValue[2].toInt());
     }
 }
-void shieldEnter(World& w, Entity e, uint64_t s, Fixed) { shieldChange(w, e, s, true); }
-void shieldExit(World& w, Entity e, uint64_t s, Fixed) { shieldChange(w, e, s, false); }
+void shieldEnter(World& w, Entity e, uint64_t s, Fixed)
+{
+    shieldChange(w, e, s, true);
+}
+void shieldExit(World& w, Entity e, uint64_t s, Fixed)
+{
+    shieldChange(w, e, s, false);
+}
 
 // 移除规则先固定候选序号，避免退出钩子改变当前池的遍历位置。
-enum class RemoveSelector : uint8_t { Id, Rule, Type };
+enum class RemoveSelector : uint8_t
+{
+    Id,
+    Rule,
+    Type
+};
 void removeSelected(World& world, Entity entity, uint64_t serial, RemoveSelector selector, bool partial)
 {
     const auto* instance = BuffHolder(world, entity).findInstance(serial);
@@ -649,12 +758,14 @@ void removeSelected(World& world, Entity entity, uint64_t serial, RemoveSelector
         for (size_t index = 0; index < config.paramValue.size(); ++index)
         {
             const int32_t value = config.paramValue[index].toInt();
-            const bool matches = selector == RemoveSelector::Id ? candidate.m_id == value :
-                selector == RemoveSelector::Rule ? row->ruleId == value : row->buffType == value;
+            const bool matches  = selector == RemoveSelector::Id     ? candidate.m_id == value
+                                  : selector == RemoveSelector::Rule ? row->ruleId == value
+                                                                     : row->buffType == value;
             if (matches)
             {
                 if (partial && index < config.paramValue2.size() && !config.paramValue2[index].empty())
-                    BuffHolder(world, entity).removeRepeat(candidate.m_serial, false, config.paramValue2[index][0].toInt(), true);
+                    BuffHolder(world, entity)
+                        .removeRepeat(candidate.m_serial, false, config.paramValue2[index][0].toInt(), true);
                 else
                     selected.push_back(candidate.m_serial);
                 break;
@@ -671,10 +782,22 @@ void removeSelected(World& world, Entity entity, uint64_t serial, RemoveSelector
     if (self)
         BuffHolder(world, entity).exitInstance(serial);
 }
-void removeByIdEnter(World& w, Entity e, uint64_t s, Fixed) { removeSelected(w, e, s, RemoveSelector::Id, false); }
-void removeById2Enter(World& w, Entity e, uint64_t s, Fixed) { removeSelected(w, e, s, RemoveSelector::Id, true); }
-void removeByRuleEnter(World& w, Entity e, uint64_t s, Fixed) { removeSelected(w, e, s, RemoveSelector::Rule, false); }
-void removeByTypeEnter(World& w, Entity e, uint64_t s, Fixed) { removeSelected(w, e, s, RemoveSelector::Type, false); }
+void removeByIdEnter(World& w, Entity e, uint64_t s, Fixed)
+{
+    removeSelected(w, e, s, RemoveSelector::Id, false);
+}
+void removeById2Enter(World& w, Entity e, uint64_t s, Fixed)
+{
+    removeSelected(w, e, s, RemoveSelector::Id, true);
+}
+void removeByRuleEnter(World& w, Entity e, uint64_t s, Fixed)
+{
+    removeSelected(w, e, s, RemoveSelector::Rule, false);
+}
+void removeByTypeEnter(World& w, Entity e, uint64_t s, Fixed)
+{
+    removeSelected(w, e, s, RemoveSelector::Type, false);
+}
 
 // 连击经验倍率由受击状态保存，退出后恢复默认倍率。
 void comboEnter(World& world, Entity entity, uint64_t serial, Fixed)
@@ -682,9 +805,9 @@ void comboEnter(World& world, Entity entity, uint64_t serial, Fixed)
     const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (!instance)
         return;
-    const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
+    const auto& config   = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
     const auto* external = world.ecs().tryGet<BuffExternalConditions>(entity);
-    const size_t index = static_cast<size_t>(external ? external->m_comboEvaluate : 0);
+    const size_t index   = static_cast<size_t>(external ? external->m_comboEvaluate : 0);
     if (index < config.paramValue.size())
         world.ecs().get<RoleHitState>(entity).m_comboScale = config.paramValue[index];
 }
@@ -710,10 +833,11 @@ void addApplicator(World& world, Entity entity, uint64_t serial, Fixed)
     if (!instance || instance->m_triggered)
         return;
     instance->m_triggered = true;
-    const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
+    const auto& config    = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
     for (const auto value : config.paramValue)
         if (value.toInt() > 0)
-            hit::HitResolver(world, entity).addEntityBuff(value.toInt(), instance->m_context.m_boundSkill, instance->m_source);
+            hit::HitResolver(world, entity)
+                .addEntityBuff(value.toInt(), instance->m_context.m_boundSkill, instance->m_source);
 }
 void removeApplicator(World& world, Entity entity, uint64_t serial, Fixed)
 {
@@ -721,7 +845,7 @@ void removeApplicator(World& world, Entity entity, uint64_t serial, Fixed)
     if (!instance || !instance->m_triggered)
         return;
     instance->m_triggered = false;
-    const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
+    const auto& config    = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
     for (const auto value : config.paramValue)
         if (value.toInt() > 0)
             BuffHolder(world, entity).removeBuff(value.toInt(), true);
@@ -745,17 +869,21 @@ void detectorApply(World& world, Entity entity, uint64_t serial)
     const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
     if (config.paramValue.size() < 4)
         return;
-    const auto identity = world.ecs().get<RoleIdentity>(entity);
-    const auto position = world.ecs().get<Transform>(entity).position;
+    const auto identity  = world.ecs().get<RoleIdentity>(entity);
+    const auto position  = world.ecs().get<Transform>(entity).position;
     const int32_t target = config.paramValue[0].toInt();
-    world.ecs().each<RoleIdentity, Transform>([&](Entity candidate, const RoleIdentity& other, const Transform& transform) {
-        const bool enemy = (identity.hostileCamp & other.camp) != 0;
-        const bool selected = target == 4 ? !enemy : target == 5 ? enemy :
-            target == 6 ? other.roleType == static_cast<int32_t>(EntityRoleType::kBoss) :
-            target == 7 ? other.roleType == static_cast<int32_t>(EntityRoleType::kMonster) || other.roleType == static_cast<int32_t>(EntityRoleType::kElite) :
-            target == 9 ? enemy || candidate != entity : false;
-        const Fixed dx = transform.position.x - position.x;
-        const Fixed dz = transform.position.z - position.z;
+    world.ecs().each<RoleIdentity, Transform>(
+        [&](Entity candidate, const RoleIdentity& other, const Transform& transform) {
+        const bool enemy      = (identity.hostileCamp & other.camp) != 0;
+        const bool selected   = target == 4   ? !enemy
+                                : target == 5 ? enemy
+                                : target == 6 ? other.roleType == static_cast<int32_t>(EntityRoleType::kBoss)
+                                : target == 7 ? other.roleType == static_cast<int32_t>(EntityRoleType::kMonster) ||
+                                                  other.roleType == static_cast<int32_t>(EntityRoleType::kElite)
+                                : target == 9 ? enemy || candidate != entity
+                                              : false;
+        const Fixed dx        = transform.position.x - position.x;
+        const Fixed dz        = transform.position.z - position.z;
         const Fixed distanceX = dx < Fixed{} ? -dx : dx;
         const Fixed distanceZ = dz < Fixed{} ? -dz : dz;
         if (!selected || distanceX > config.paramValue[1] || distanceZ > config.paramValue[2])
@@ -765,8 +893,14 @@ void detectorApply(World& world, Entity entity, uint64_t serial)
                 hit::HitResolver(world, candidate).addEntityBuff(config.paramValue[index].toInt());
     });
 }
-void detectorEnter(World& w, Entity e, uint64_t s, Fixed) { detectorApply(w, e, s); }
-void detectorUpdate(World& w, Entity e, uint64_t s, Fixed) { detectorApply(w, e, s); }
+void detectorEnter(World& w, Entity e, uint64_t s, Fixed)
+{
+    detectorApply(w, e, s);
+}
+void detectorUpdate(World& w, Entity e, uint64_t s, Fixed)
+{
+    detectorApply(w, e, s);
+}
 // 状态施加器在指定行为持续时间达到阈值时添加后续效果。
 void stateBegin(World&, Entity, uint64_t, Fixed) {}
 void stateUpdate(World&, Entity, uint64_t, Fixed) {}
@@ -778,7 +912,8 @@ void coldEnter(World& world, Entity entity, uint64_t serial, Fixed)
 {
     const auto* instance = BuffHolder(world, entity).findInstance(serial);
     if (instance)
-        BuffHolder(world, entity).dealBuffDamage(instance->m_context.m_applicator, BuffHolder(world, entity).getAttackValue(*instance));
+        BuffHolder(world, entity)
+            .dealBuffDamage(instance->m_context.m_applicator, BuffHolder(world, entity).getAttackValue(*instance));
 }
 // 类型渐进规则依赖完整池筛选，暂以进入时快照写入并在结束时精确撤销。
 void damageTypeGradationChange(World& world, Entity entity, uint64_t serial, bool entering)
@@ -800,16 +935,23 @@ void damageTypeGradationChange(World& world, Entity entity, uint64_t serial, boo
     for (const auto& candidate : world.ecs().get<BuffPool>(entity).m_instances)
     {
         const auto* row = conf::Config::instance().find<conf::BuffConfig>(candidate.m_id);
-        if (row && std::find(config.paramValue.begin() + 3, config.paramValue.end(), Fixed::fromInt(row->buffType)) != config.paramValue.end())
+        if (row && std::find(config.paramValue.begin() + 3, config.paramValue.end(), Fixed::fromInt(row->buffType)) !=
+                       config.paramValue.end())
             ++count;
     }
-    const Fixed value = std::min(Fixed::fromInt(count) * config.paramValue[1], config.paramValue[2]);
+    const Fixed value     = std::min(Fixed::fromInt(count) * config.paramValue[1], config.paramValue[2]);
     instance->m_triggered = true;
     instance->m_ruleValue = value;
     world.ecs().get<Attributes>(entity).extended(100) += value;
 }
-void damageTypeGradationBegin(World& w, Entity e, uint64_t s, Fixed) { damageTypeGradationChange(w, e, s, true); }
-void damageTypeGradationEnd(World& w, Entity e, uint64_t s, Fixed) { damageTypeGradationChange(w, e, s, false); }
+void damageTypeGradationBegin(World& w, Entity e, uint64_t s, Fixed)
+{
+    damageTypeGradationChange(w, e, s, true);
+}
+void damageTypeGradationEnd(World& w, Entity e, uint64_t s, Fixed)
+{
+    damageTypeGradationChange(w, e, s, false);
+}
 // 未移植是实现状态，绝不是配置允许的额外类名。
 constexpr RuleDispatch kUnportedRule{{unported, unported, unported, unported, unported}};
 // 在编译期构造完整分派表，只有三个验证规则拥有具体行为。
@@ -880,19 +1022,17 @@ constexpr auto makeDispatch()
         {detectorEnter, noHook, detectorUpdate, detectorEnter, noHook}};
     table[static_cast<size_t>(conf::BuffRuleId::BuffAddByState)] = {
         {noHook, stateExit, stateUpdate, stateBegin, noHook}};
-    table[static_cast<size_t>(conf::BuffRuleId::BuffAngerAdd)] = {
-        {angerAdd, noHook, noHook, angerAdd, noHook}};
+    table[static_cast<size_t>(conf::BuffRuleId::BuffAngerAdd)]  = {{angerAdd, noHook, noHook, angerAdd, noHook}};
     table[static_cast<size_t>(conf::BuffRuleId::BuffAvoidCrit)] = {
         {avoidCritEnter, avoidCritExit, noHook, avoidCritEnter, avoidCritExit}};
     table[static_cast<size_t>(conf::BuffRuleId::BuffBreakArmor)] = {
         {breakArmorEnter, breakArmorExit, noHook, breakArmorEnter, breakArmorExit}};
     table[static_cast<size_t>(conf::BuffRuleId::BuffCDSkill)] = {
         {cdSkillEnter, cdSkillExit, noHook, cdSkillEnter, cdSkillExit}};
-    table[static_cast<size_t>(conf::BuffRuleId::BuffCold)] = {{coldEnter, noHook, noHook, noHook, noHook}};
+    table[static_cast<size_t>(conf::BuffRuleId::BuffCold)]     = {{coldEnter, noHook, noHook, noHook, noHook}};
     table[static_cast<size_t>(conf::BuffRuleId::BuffComboExp)] = {
         {comboEnter, comboExit, noHook, comboEnter, comboExit}};
-    table[static_cast<size_t>(conf::BuffRuleId::BuffCrit)] = {
-        {critEnter, critExit, noHook, critEnter, critExit}};
+    table[static_cast<size_t>(conf::BuffRuleId::BuffCrit)]       = {{critEnter, critExit, noHook, critEnter, critExit}};
     table[static_cast<size_t>(conf::BuffRuleId::BuffDamageCrit)] = {
         {damageCritEnter, damageCritExit, noHook, damageCritEnter, damageCritExit}};
     table[static_cast<size_t>(conf::BuffRuleId::BuffDamageHPLoss)] = {
@@ -905,18 +1045,15 @@ constexpr auto makeDispatch()
         {damageReductionEnter, damageReductionExit, noHook, damageReductionEnter, damageReductionExit}};
     table[static_cast<size_t>(conf::BuffRuleId::BuffDamageTypeGradation)] = {
         {noHook, noHook, noHook, damageTypeGradationBegin, damageTypeGradationEnd}};
-    table[static_cast<size_t>(conf::BuffRuleId::BuffDodge)] = {
-        {dodgeEnter, dodgeExit, noHook, dodgeEnter, dodgeExit}};
-    table[static_cast<size_t>(conf::BuffRuleId::BuffEP)] = {{epEnter, noHook, noHook, epEnter, noHook}};
+    table[static_cast<size_t>(conf::BuffRuleId::BuffDodge)] = {{dodgeEnter, dodgeExit, noHook, dodgeEnter, dodgeExit}};
+    table[static_cast<size_t>(conf::BuffRuleId::BuffEP)]    = {{epEnter, noHook, noHook, epEnter, noHook}};
     table[static_cast<size_t>(conf::BuffRuleId::BuffEPConsumeScale)] = {
         {epConsumeEnter, epConsumeExit, noHook, epConsumeEnter, epConsumeExit}};
     table[static_cast<size_t>(conf::BuffRuleId::BuffEPRecoveryScale)] = {
         {epRecoveryEnter, epRecoveryExit, noHook, epRecoveryEnter, epRecoveryExit}};
-    table[static_cast<size_t>(conf::BuffRuleId::BuffHP)] = {{hpEnter, noHook, hpEnter, hpEnter, noHook}};
-    table[static_cast<size_t>(conf::BuffRuleId::BuffHit)] = {
-        {hitEnter, hitExit, noHook, hitEnter, hitExit}};
-    table[static_cast<size_t>(conf::BuffRuleId::BuffRemoveById)] = {
-        {removeByIdEnter, noHook, noHook, noHook, noHook}};
+    table[static_cast<size_t>(conf::BuffRuleId::BuffHP)]          = {{hpEnter, noHook, hpEnter, hpEnter, noHook}};
+    table[static_cast<size_t>(conf::BuffRuleId::BuffHit)]         = {{hitEnter, hitExit, noHook, hitEnter, hitExit}};
+    table[static_cast<size_t>(conf::BuffRuleId::BuffRemoveById)]  = {{removeByIdEnter, noHook, noHook, noHook, noHook}};
     table[static_cast<size_t>(conf::BuffRuleId::BuffRemoveById2)] = {
         {removeById2Enter, noHook, noHook, noHook, noHook}};
     table[static_cast<size_t>(conf::BuffRuleId::BuffRemoveByRule)] = {
@@ -928,7 +1065,7 @@ constexpr auto makeDispatch()
     table[static_cast<size_t>(conf::BuffRuleId::BuffSign)] = {{noHook, noHook, noHook, noHook, noHook}};
     table[static_cast<size_t>(conf::BuffRuleId::BuffSpecialAbilityApplicator)] = {
         {specialAbilityEnter, noHook, noHook, noHook, noHook}};
-    table[static_cast<size_t>(conf::BuffRuleId::BuffTP)] = {{tpEnter, noHook, noHook, tpEnter, noHook}};
+    table[static_cast<size_t>(conf::BuffRuleId::BuffTP)]             = {{tpEnter, noHook, noHook, tpEnter, noHook}};
     table[static_cast<size_t>(conf::BuffRuleId::BuffTPConsumeScale)] = {
         {tpConsumeEnter, tpConsumeExit, noHook, tpConsumeEnter, tpConsumeExit}};
     table[static_cast<size_t>(conf::BuffRuleId::BuffTPRecoveryScale)] = {

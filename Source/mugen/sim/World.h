@@ -33,9 +33,12 @@ struct WorldHooks
     // 提供不执行世界阶段逻辑的默认回调。
     static void noWorldUpdate(World&);
     // 按实体组顺序保存更新回调。
-    std::array<EntityHook, 5> update{role::RoleActor::update, effect::EffectActor::update, room_entities::RoomEntity::update, room_entities::RoomEntity::update, room_entities::RoomEntity::update};
+    std::array<EntityHook, 5> update{role::RoleActor::update, effect::EffectActor::update,
+                                     room_entities::RoomEntity::update, room_entities::RoomEntity::update,
+                                     room_entities::RoomEntity::update};
     // 按实体组顺序保存移除回调。
-    std::array<EntityHook, 5> remove{effect::EffectActor::removeOwner, effect::EffectActor::remove, noEntityUpdate, noEntityUpdate, noEntityUpdate};
+    std::array<EntityHook, 5> remove{effect::EffectActor::removeOwner, effect::EffectActor::remove, noEntityUpdate,
+                                     noEntityUpdate, noEntityUpdate};
     // 在实体组更新前执行相机阶段回调。
     WorldHook camera = noWorldUpdate;
     // 在实体组更新后执行场景阶段回调。

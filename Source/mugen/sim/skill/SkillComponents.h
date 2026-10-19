@@ -17,31 +17,31 @@ struct SkillAddress
     /// 同一连段可选模式的序号。
     int32_t m_mode = 1;
     /// 当前模式内的步骤序号。
-    int32_t m_step = 1;
+    int32_t m_step                                                   = 1;
     friend bool operator==(const SkillAddress&, const SkillAddress&) = default;
     MG_REFLECT(SkillAddress, m_slot, m_index, m_mode, m_step)
 };
 /// 自动施放条件编号，取值与 skill_ai.lua 的 composition 条件一致。
 enum class SkillAiCondition : int32_t
 {
-    OppDistanceX = 1,  // 目标横向距离范围，对应 oppDisX。
-    OppDistanceZ = 2,  // 目标纵向距离范围，对应 oppDisZ。
-    OppStatus = 3,     // 目标状态，对应 oppStatus。
-    OppCombo = 4,      // 目标连段阶段，对应 oppCombo。
-    OppSkill = 5,      // 目标当前技能，对应 oppSkillId。
-    SelfHpPercent = 6, // 自身生命百分比，对应 selfHp。
-    SelfStatus = 7,    // 自身状态，对应 selfStatus。
+    OppDistanceX  = 1,  // 目标横向距离范围，对应 oppDisX。
+    OppDistanceZ  = 2,  // 目标纵向距离范围，对应 oppDisZ。
+    OppStatus     = 3,  // 目标状态，对应 oppStatus。
+    OppCombo      = 4,  // 目标连段阶段，对应 oppCombo。
+    OppSkill      = 5,  // 目标当前技能，对应 oppSkillId。
+    SelfHpPercent = 6,  // 自身生命百分比，对应 selfHp。
+    SelfStatus    = 7,  // 自身状态，对应 selfStatus。
 };
 /// 自动施放状态编号，取值与 skill_ai.lua 的 oppStatus/selfStatus 字段一致。
 enum class SkillAiStatus : int32_t
 {
-    Any = -1,      // 不限制状态，对应 -1。
-    Hit = 1,       // 受击状态，对应 EntityRoleStatus::Hit。
-    HitUp = 2,     // 上挑受击状态，对应 EntityRoleStatus::HitUp。
-    HitDown = 3,   // 击倒受击状态，对应 EntityRoleStatus::HitDown。
-    HitFloor = 4,  // 倒地状态，对应 EntityRoleStatus::HitFloor。
-    Wake = 5,      // 起身状态，对应 EntityRoleStatus::Wake。
-    Attack = 6,    // 攻击状态，对应 EntityRoleStatus::Attack。
+    Any      = -1,  // 不限制状态，对应 -1。
+    Hit      = 1,   // 受击状态，对应 EntityRoleStatus::Hit。
+    HitUp    = 2,   // 上挑受击状态，对应 EntityRoleStatus::HitUp。
+    HitDown  = 3,   // 击倒受击状态，对应 EntityRoleStatus::HitDown。
+    HitFloor = 4,   // 倒地状态，对应 EntityRoleStatus::HitFloor。
+    Wake     = 5,   // 起身状态，对应 EntityRoleStatus::Wake。
+    Attack   = 6,   // 攻击状态，对应 EntityRoleStatus::Attack。
 };
 /// 单个技能的自动施放运行状态。
 struct SkillAi
@@ -123,11 +123,38 @@ struct SkillBase
     Fixed m_changeTime;
     /// 本技能的自动施放状态。
     SkillAi m_ai;
-    MG_REFLECT(SkillBase, m_address, m_configId, m_group, m_stepCount, m_slotCount,
-               m_cd, m_coldMaxTime, m_coldScale, m_mpScale, m_epScale, m_epPlus, m_crystal,
-               m_releaseCount, m_releaseMax, m_timing, m_upTouch, m_enoughRelease, m_skillTime,
-               m_pipe, m_previousPipe, m_expectedPipe, m_toward, m_vector, m_actionCount,
-               m_finally, m_nextRun, m_nextSkill, m_controlAngle, m_groupTime, m_changeTime, m_ai)
+    MG_REFLECT(SkillBase,
+               m_address,
+               m_configId,
+               m_group,
+               m_stepCount,
+               m_slotCount,
+               m_cd,
+               m_coldMaxTime,
+               m_coldScale,
+               m_mpScale,
+               m_epScale,
+               m_epPlus,
+               m_crystal,
+               m_releaseCount,
+               m_releaseMax,
+               m_timing,
+               m_upTouch,
+               m_enoughRelease,
+               m_skillTime,
+               m_pipe,
+               m_previousPipe,
+               m_expectedPipe,
+               m_toward,
+               m_vector,
+               m_actionCount,
+               m_finally,
+               m_nextRun,
+               m_nextSkill,
+               m_controlAngle,
+               m_groupTime,
+               m_changeTime,
+               m_ai)
 
     /// 判断技能是否仍处于冷却阶段。
     bool isCooling() const;
@@ -215,10 +242,32 @@ struct SkillPool
     Fixed m_cpScale = "1"_fx;
     /// 最近一次控制方向角。
     std::optional<Fixed> m_controlAngle;
-    MG_REFLECT(SkillPool, m_slots, m_index, m_skills, m_current, m_previous, m_before, m_beforeTime,
-               m_running, m_coolingSlots, m_target, m_allowInterrupt,
-               m_allowExtraInterrupt, m_slotChanged, m_crazy, m_canSprint, m_angerRecover, m_autoCast,
-               m_group, m_change, m_crystals, m_mpScale, m_epScale, m_epPlus, m_cpScale, m_controlAngle)
+    MG_REFLECT(SkillPool,
+               m_slots,
+               m_index,
+               m_skills,
+               m_current,
+               m_previous,
+               m_before,
+               m_beforeTime,
+               m_running,
+               m_coolingSlots,
+               m_target,
+               m_allowInterrupt,
+               m_allowExtraInterrupt,
+               m_slotChanged,
+               m_crazy,
+               m_canSprint,
+               m_angerRecover,
+               m_autoCast,
+               m_group,
+               m_change,
+               m_crystals,
+               m_mpScale,
+               m_epScale,
+               m_epPlus,
+               m_cpScale,
+               m_controlAngle)
 
     /// 去除模式后缀并取得技能槽位基础名称。
     std::string_view baseSlot(const SkillBase& skill) const;
@@ -235,4 +284,4 @@ struct SkillPool
     /// 更新记录的方向输入。
     void dealWithDirection(int32_t index);
 };
-} // namespace mugen::sim
+}  // namespace mugen::sim

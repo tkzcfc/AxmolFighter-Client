@@ -46,11 +46,11 @@ private:
     struct Slot
     {
         // 用于拒绝陈旧句柄的当前代数。
-        uint32_t generation       = 1;
+        uint32_t generation = 1;
         // 指示槽位当前是否分配给实体。
-        bool alive                = false;
+        bool alive = false;
         // 保持遍历稳定性的单调创建序号。
-        uint64_t sequence         = 0;
+        uint64_t sequence = 0;
         // 待销毁队列中的一基次序，零表示未标记。
         uint32_t destructionOrder = 0;
         // 各组件类型是否存在的固定宽度位图。

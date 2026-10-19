@@ -79,7 +79,12 @@ struct AiRule
     int32_t m_cooldownMs = 0;
 };
 // 组装一行规则；未计入 m_testCount 的项不参与判断。
-constexpr AiRule makeRule(AiTest first, AiTest second, AiTest third, uint8_t count, AiAction action, bool setsAlert = false)
+constexpr AiRule makeRule(AiTest first,
+                          AiTest second,
+                          AiTest third,
+                          uint8_t count,
+                          AiAction action,
+                          bool setsAlert = false)
 {
     AiRule rule;
     rule.m_tests     = std::array<AiTest, 3>{first, second, third};
@@ -136,7 +141,10 @@ struct AiFacts
     bool m_inAttack = false;
 };
 // 返回第一条命中且未在冷却的规则下标；攻击中或没有更高优先级可抢占时返回 -1。
-int8_t pickRule(const AiFacts& facts, std::span<const AiRule> rules, std::span<const Fixed> ruleCooldownMs, Random& rng);
+int8_t pickRule(const AiFacts& facts,
+                std::span<const AiRule> rules,
+                std::span<const Fixed> ruleCooldownMs,
+                Random& rng);
 // 把每行剩余冷却减去一帧时长，不会减到零以下。
 void tickRuleCooldowns(std::span<Fixed> ruleCooldownMs, Fixed dtMs);
 }  // namespace ai

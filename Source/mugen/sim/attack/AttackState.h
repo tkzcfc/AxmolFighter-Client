@@ -46,4 +46,4 @@ struct AttackRole
     bool m_static = false;
     MG_REFLECT(AttackRole, m_action, m_displayed, m_transformLogged, m_staticResetAt, m_static)
 };
-}
+}  // namespace mugen::sim::attack

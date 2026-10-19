@@ -48,8 +48,8 @@ struct BuffConfig
     int32_t ruleId            = 0;
     int32_t showTips          = 0;
     // 表现 Spine、偏移、层级和目标参数。
-    int32_t spineId           = 0;
-    int32_t spineLayer        = 0;
+    int32_t spineId    = 0;
+    int32_t spineLayer = 0;
     std::vector<int32_t> spineOffsets;
     std::vector<int32_t> spineStep;
     int32_t subType = 0;
@@ -134,17 +134,17 @@ struct SpecialAbilityConfig
     Fixed endedValue;
     std::vector<int32_t> event;
     std::variant<int32_t, std::string> icon;
-    int32_t id         = 0;
+    int32_t id = 0;
     // 周期、文本、数值、优先级、概率及 PVP 参数。
     int64_t interval   = 0;
     int32_t nameId     = 0;
     int32_t paramValue = 0;
     int32_t priority   = 0;
     Fixed probability;
-    int32_t pvpSetting    = 0;
-    int32_t resSoundId    = 0;
-    int32_t ruleId        = 0;
-    int32_t showTips      = 0;
+    int32_t pvpSetting = 0;
+    int32_t resSoundId = 0;
+    int32_t ruleId     = 0;
+    int32_t showTips   = 0;
     // 表现 Spine、规则、提示、偏移与子类型参数。
     int32_t spineId       = 0;
     int32_t spineInterval = 0;

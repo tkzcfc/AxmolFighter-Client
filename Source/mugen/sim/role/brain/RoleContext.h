@@ -60,7 +60,7 @@ private:
 
     World& m_world;
     Entity m_entity;
-    int32_t m_node = -1;
+    int32_t m_node            = -1;
     DisplacementEvent m_event = DisplacementEvent::Brake;
 };
 }  // namespace mugen::sim::role::brain

@@ -11,17 +11,16 @@ namespace
 using S = EntityRoleStatus;
 // 各分支对应的状态守卫，顺序与 RoleBranch 枚举一致。
 constexpr std::array<S, kBranchCount> kBranchStatuses = {
-    S::Death,     S::Revive, S::Wake,    S::GetUp,   S::HitFloor, S::HitDown, S::HitUp,
-    S::HitSwitch, S::Hit,    S::Attack,  S::Jostled, S::Patrol,   S::Chase,   S::Alert,
-    S::Finding,   S::Run,    S::Walk,    S::Idle,    S::Controlled};
+    S::Death,   S::Revive, S::Wake,  S::GetUp, S::HitFloor, S::HitDown, S::HitUp, S::HitSwitch, S::Hit,       S::Attack,
+    S::Jostled, S::Patrol, S::Chase, S::Alert, S::Finding,  S::Run,     S::Walk,  S::Idle,      S::Controlled};
 // 各分支对应的叶子动作类型。
 constexpr std::array<behavior::ActionType, kBranchCount> kBranchActions = {
-    behavior::ActionType::Death,   behavior::ActionType::Revive,    behavior::ActionType::Wake,
-    behavior::ActionType::GetUp,   behavior::ActionType::HitFloor,  behavior::ActionType::HitDown,
-    behavior::ActionType::HitUp,   behavior::ActionType::HitSwitch, behavior::ActionType::Hit,
-    behavior::ActionType::None,    behavior::ActionType::Jostled,   behavior::ActionType::Patrol,
-    behavior::ActionType::Chase,   behavior::ActionType::Alert,     behavior::ActionType::Move,
-    behavior::ActionType::Run,     behavior::ActionType::Walk,      behavior::ActionType::Idle,
+    behavior::ActionType::Death,     behavior::ActionType::Revive,    behavior::ActionType::Wake,
+    behavior::ActionType::GetUp,     behavior::ActionType::HitFloor,  behavior::ActionType::HitDown,
+    behavior::ActionType::HitUp,     behavior::ActionType::HitSwitch, behavior::ActionType::Hit,
+    behavior::ActionType::None,      behavior::ActionType::Jostled,   behavior::ActionType::Patrol,
+    behavior::ActionType::Chase,     behavior::ActionType::Alert,     behavior::ActionType::Move,
+    behavior::ActionType::Run,       behavior::ActionType::Walk,      behavior::ActionType::Idle,
     behavior::ActionType::Controlled};
 }  // namespace
 
@@ -46,8 +45,7 @@ bool RoleBrainDriver::_guardHolds(RoleBranch branch) const
     case S::Idle:
         if (m_city)
             return !r.isMove();
-        return !r.isAttack() && !r.isWake() && !r.isTobeHit() &&
-               !r.isMove() && !r.isJostled();
+        return !r.isAttack() && !r.isWake() && !r.isTobeHit() && !r.isMove() && !r.isJostled();
     default:
         return true;
     }

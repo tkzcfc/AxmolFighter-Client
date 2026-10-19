@@ -11,7 +11,8 @@ class RoleBrainDriver
 public:
     // 构造指向指定世界、实体与脑状态的视图。
     RoleBrainDriver(World& world, Entity entity, RoleBrain& brain, bool city)
-        : m_world(world), m_entity(entity), m_brain(brain), m_city(city) {}
+        : m_world(world), m_entity(entity), m_brain(brain), m_city(city)
+    {}
     // 进入第一个可进入的分支；无可进入则退回待机并记录一次错误。
     bool enterFirst();
     // 推进一帧；NotEntered 时先进入再更新（房间切换首帧语义）。

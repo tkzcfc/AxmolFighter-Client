@@ -170,8 +170,7 @@ void registerFguiPackage(ResourceLoaderRegistry& registry)
             return;
         }
 
-        task->onChildrenDone([task, pkg, preloadTextures, preloadSpine,
-                              atlasItems = std::move(items.atlasItems),
+        task->onChildrenDone([task, pkg, preloadTextures, preloadSpine, atlasItems = std::move(items.atlasItems),
                               spineItems = std::move(items.spineItems)]() {
             if (preloadTextures)
             {

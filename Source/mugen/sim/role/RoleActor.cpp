@@ -17,32 +17,48 @@ namespace mugen::sim::role
 namespace
 {
 // 推进角色技能池。
-void skillPoolUpdate(World& world, Entity entity) { skill::SkillCaster(world, entity).update(); }
+void skillPoolUpdate(World& world, Entity entity)
+{
+    skill::SkillCaster(world, entity).update();
+}
 // 推进角色 Buff 池。
-void buffPoolUpdate(World& world, Entity entity) { buff::BuffHolder(world, entity).update(); }
+void buffPoolUpdate(World& world, Entity entity)
+{
+    buff::BuffHolder(world, entity).update();
+}
 // 推进角色能力池。
-void abilityPoolUpdate(World& world, Entity entity) { ability::AbilityHolder(world, entity).update(); }
+void abilityPoolUpdate(World& world, Entity entity)
+{
+    ability::AbilityHolder(world, entity).update();
+}
 // 推进伤害数字连击流程。
 void hurtNumberComboUpdate(World&, Entity) {}
 // 推进召唤流程。
 void summonUpdate(World& world, Entity entity)
 {
     auto& remaining = world.ecs().get<RoleTimers>(entity).summonMs;
-    if (remaining < Fixed{}) return;
+    if (remaining < Fixed{})
+        return;
     remaining -= world.ecs().singleton<WorldClock>().dtMs;
     if (remaining <= Fixed{})
     {
-        remaining = "-1"_fx;
+        remaining                          = "-1"_fx;
         world.ecs().get<Vitals>(entity).hp = {};
         Role(world, entity).changeStatus(EntityRoleStatus::Death);
     }
 }
 // 推进角色狂暴技能流程。
-void crazyUpdate(World& world, Entity entity) { skill::SkillCaster(world, entity).updateCrazy(); }
+void crazyUpdate(World& world, Entity entity)
+{
+    skill::SkillCaster(world, entity).updateCrazy();
+}
 // 推进怒气流程。
 void rageUpdate(World&, Entity) {}
 // 推进受击保护流程。
-void hitProtectUpdate(World& world, Entity entity) { Role(world, entity).updateHitProtect(); }
+void hitProtectUpdate(World& world, Entity entity)
+{
+    Role(world, entity).updateHitProtect();
+}
 // 推进 AI 决策流程。驱动关闭时怪物不再做决策。
 void aiUpdate(World& world, Entity entity)
 {
@@ -51,7 +67,10 @@ void aiUpdate(World& world, Entity entity)
     ai::AiDriver(world, entity).update();
 }
 // 消费本帧控制命令。
-void controlEventsUpdate(World& world, Entity entity) { role::brain::RoleContext(world, entity).consumeControl(); }
+void controlEventsUpdate(World& world, Entity entity)
+{
+    role::brain::RoleContext(world, entity).consumeControl();
+}
 // 推进角色状态机（房间切换首帧先进入再更新一次）。
 void behaviorTreeUpdate(World& world, Entity entity)
 {
@@ -59,7 +78,10 @@ void behaviorTreeUpdate(World& world, Entity entity)
     role::brain::RoleBrainDriver(world, entity, brain, world.setup().mode == WorldMode::Town).update();
 }
 // 推进角色位移。
-void displacementUpdate(World& world, Entity entity) { displacement::DisplacementDriver(world, entity).update(); }
+void displacementUpdate(World& world, Entity entity)
+{
+    displacement::DisplacementDriver(world, entity).update();
+}
 // 更新角色碰撞体流程。
 void collisionBodyUpdate(World&, Entity) {}
 // 推进动作时间并重新登记本帧碰撞框。
@@ -105,10 +127,19 @@ void motionUpdate(World& world, Entity entity)
 // 构造角色视图，只保存世界与实体句柄。
 RoleActor::RoleActor(World& world, Entity entity) : m_world(world), m_entity(entity) {}
 // 实体组回调转入实例更新。
-void RoleActor::update(World& world, Entity entity) { RoleActor(world, entity).update(); }
+void RoleActor::update(World& world, Entity entity)
+{
+    RoleActor(world, entity).update();
+}
 // 复用同一动画时间和碰撞框采样实现。
-void RoleActor::updateMotion(World& world, Entity entity) { RoleActor(world, entity).updateMotion(); }
-void RoleActor::updateMotion() { motionUpdate(m_world, m_entity); }
+void RoleActor::updateMotion(World& world, Entity entity)
+{
+    RoleActor(world, entity).updateMotion();
+}
+void RoleActor::updateMotion()
+{
+    motionUpdate(m_world, m_entity);
+}
 // 按朝向和缩放把局部伤害框转换为世界框。
 WorldBox RoleActor::transformBox(const DamageBox& box, const Transform& t)
 {
@@ -140,21 +171,21 @@ void RoleActor::update()
     crazyUpdate(m_world, m_entity);
     rageUpdate(m_world, m_entity);
     hitProtectUpdate(m_world, m_entity);
-    auto& sampledVitals = m_world.ecs().get<Vitals>(m_entity);
-    sampledVitals.m_lostHp = sampledVitals.m_previousHp > sampledVitals.hp;
+    auto& sampledVitals         = m_world.ecs().get<Vitals>(m_entity);
+    sampledVitals.m_lostHp      = sampledVitals.m_previousHp > sampledVitals.hp;
     sampledVitals.m_recoveredHp = sampledVitals.m_previousHp < sampledVitals.hp;
-    sampledVitals.m_hpChangePercent = sampledVitals.hp == Fixed{} ? Fixed{} :
-        (sampledVitals.hp - sampledVitals.m_previousHp) / sampledVitals.hp;
-    sampledVitals.m_lostEp = sampledVitals.m_previousEp > sampledVitals.ep;
+    sampledVitals.m_hpChangePercent =
+        sampledVitals.hp == Fixed{} ? Fixed{} : (sampledVitals.hp - sampledVitals.m_previousHp) / sampledVitals.hp;
+    sampledVitals.m_lostEp      = sampledVitals.m_previousEp > sampledVitals.ep;
     sampledVitals.m_recoveredEp = sampledVitals.m_previousEp < sampledVitals.ep;
-    sampledVitals.m_previousHp = sampledVitals.hp;
-    sampledVitals.m_previousEp = sampledVitals.ep;
-    const auto& sampledStatus = m_world.ecs().get<RoleStatus>(m_entity);
-    const auto sampleSeconds = dt / "1000"_fx;
-    timers.m_movedSeconds = sampledStatus.eEntityStatus == EntityRoleStatus::Run ?
-        timers.m_movedSeconds + sampleSeconds : Fixed{};
-    timers.m_standingSeconds = sampledStatus.eEntityStatus == EntityRoleStatus::Idle ?
-        timers.m_standingSeconds + sampleSeconds : Fixed{};
+    sampledVitals.m_previousHp  = sampledVitals.hp;
+    sampledVitals.m_previousEp  = sampledVitals.ep;
+    const auto& sampledStatus   = m_world.ecs().get<RoleStatus>(m_entity);
+    const auto sampleSeconds    = dt / "1000"_fx;
+    timers.m_movedSeconds =
+        sampledStatus.eEntityStatus == EntityRoleStatus::Run ? timers.m_movedSeconds + sampleSeconds : Fixed{};
+    timers.m_standingSeconds =
+        sampledStatus.eEntityStatus == EntityRoleStatus::Idle ? timers.m_standingSeconds + sampleSeconds : Fixed{};
     if (m_world.ecs().get<RoleIdentity>(m_entity).isAi && m_world.ecs().get<ExtraState>(m_entity).isCanControl())
         aiUpdate(m_world, m_entity);
     if (timers.freezeMs > Fixed{} || timers.staticMs > Fixed{})

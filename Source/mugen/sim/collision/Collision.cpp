@@ -17,7 +17,7 @@ CollisionSystem::CollisionSystem(World& world) : m_world(world) {}
 // 判断双方阵营掩码是否互相允许碰撞。
 bool CollisionSystem::_inHostileMasks(const RoleIdentity& first, const RoleIdentity& second)
 {
-    const uint32_t firstCamp = static_cast<uint32_t>(first.camp);
+    const uint32_t firstCamp  = static_cast<uint32_t>(first.camp);
     const uint32_t secondCamp = static_cast<uint32_t>(second.camp);
     return (static_cast<uint32_t>(first.hostileCamp) & secondCamp) != 0 &&
            (static_cast<uint32_t>(second.hostileCamp) & firstCamp) != 0;
@@ -77,17 +77,17 @@ void CollisionSystem::_endMissing(Entity collider, CollisionState& state, const 
 // 以平面框和深度半径检测接触，并维护接触状态机。
 void CollisionSystem::update()
 {
-    auto& ecs = m_world.ecs();
+    auto& ecs            = m_world.ecs();
     const uint64_t frame = ecs.singleton<WorldClock>().frame;
     std::vector<Entity> colliders;
-    ecs.each<EntityGroup, ColliderState, RoleIdentity>([&](Entity entity, const EntityGroup&, const ColliderState&, const RoleIdentity&) {
-        colliders.push_back(entity);
-    });
+    ecs.each<EntityGroup, ColliderState, RoleIdentity>([&](Entity entity, const EntityGroup&, const ColliderState&,
+                                                           const RoleIdentity&) { colliders.push_back(entity); });
     for (const Entity collider : colliders)
     {
         // 回调可能生成特效并扩容组件池，检测使用值快照。
         const auto source = ecs.get<ColliderState>(collider);
-        if (!ecs.has<CollisionState>(collider)) ecs.add(collider, CollisionState{});
+        if (!ecs.has<CollisionState>(collider))
+            ecs.add(collider, CollisionState{});
         auto state = ecs.get<CollisionState>(collider);
         std::vector<CollisionContact> active;
         if (source.registrationFrame != frame)
@@ -95,17 +95,19 @@ void CollisionSystem::update()
             {
                 if (collider == other)
                     continue;
-                const auto& target = ecs.get<ColliderState>(other);
-                const auto sourceKind = ecs.get<EntityGroup>(collider).kind;
-                const auto targetKind = ecs.get<EntityGroup>(other).kind;
+                const auto& target     = ecs.get<ColliderState>(other);
+                const auto sourceKind  = ecs.get<EntityGroup>(collider).kind;
+                const auto targetKind  = ecs.get<EntityGroup>(other).kind;
                 const bool interaction = (sourceKind == GroupKind::Portal || sourceKind == GroupKind::Goods) &&
                                          (targetKind == GroupKind::Role || targetKind == GroupKind::Obstacle);
-                if (target.registrationFrame == frame || (!interaction && !_inHostileMasks(ecs.get<RoleIdentity>(collider), ecs.get<RoleIdentity>(other))))
+                if (target.registrationFrame == frame ||
+                    (!interaction && !_inHostileMasks(ecs.get<RoleIdentity>(collider), ecs.get<RoleIdentity>(other))))
                     continue;
                 const auto& sourceTransform = ecs.get<Transform>(collider);
                 const auto& targetTransform = ecs.get<Transform>(other);
-                const Fixed deltaZ = sourceTransform.position.z >= targetTransform.position.z
-                    ? sourceTransform.position.z - targetTransform.position.z : targetTransform.position.z - sourceTransform.position.z;
+                const Fixed deltaZ          = sourceTransform.position.z >= targetTransform.position.z
+                                                  ? sourceTransform.position.z - targetTransform.position.z
+                                                  : targetTransform.position.z - sourceTransform.position.z;
                 if (deltaZ >= source.radius + target.radius)
                     continue;
                 FixedVec2 point;
@@ -117,10 +119,11 @@ void CollisionSystem::update()
                 if (!touching)
                     continue;
                 active.push_back({other, point});
-                const auto old = std::find_if(state.contacts.begin(), state.contacts.end(), [other](const CollisionContact& contact) {
-                    return contact.other == other;
-                });
-                _dispatch(collider, other, old == state.contacts.end() ? CollisionEvent::Began : CollisionEvent::Continue, point);
+                const auto old =
+                    std::find_if(state.contacts.begin(), state.contacts.end(),
+                                 [other](const CollisionContact& contact) { return contact.other == other; });
+                _dispatch(collider, other,
+                          old == state.contacts.end() ? CollisionEvent::Began : CollisionEvent::Continue, point);
             }
         _endMissing(collider, state, active);
         ecs.get<CollisionState>(collider).contacts = std::move(active);

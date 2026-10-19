@@ -14,7 +14,13 @@ struct HitActionState
     bool m_animationEnd = false, m_displacementEnd = false, m_finished = false;
     // 挣脱是否已被本叶子观察。
     bool m_break = false;
-    MG_REFLECT(HitActionState, m_time, m_hitId, m_displacementId, m_animationEnd,
-               m_displacementEnd, m_finished, m_break)
+    MG_REFLECT(HitActionState,
+               m_time,
+               m_hitId,
+               m_displacementId,
+               m_animationEnd,
+               m_displacementEnd,
+               m_finished,
+               m_break)
 };
-}
+}  // namespace mugen::sim::behavior

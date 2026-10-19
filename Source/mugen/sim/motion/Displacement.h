@@ -8,7 +8,17 @@ namespace mugen::sim
 // 位移系统所更新的世界实例。
 class World;
 // 位移过程中通知行为系统的状态变化。
-enum class DisplacementEvent : uint8_t { Brake, Air, Floor, Lie, Left, Right, Top, Bottom };
+enum class DisplacementEvent : uint8_t
+{
+    Brake,
+    Air,
+    Floor,
+    Lie,
+    Left,
+    Right,
+    Top,
+    Bottom
+};
 // 角色位移的可快照动力学状态。
 struct Displacement
 {
@@ -29,16 +39,34 @@ struct Displacement
     // 接收位移事件的行为树节点标识。
     int32_t listenerNode = -1;
     // 参与组件快照的位移字段。
-    MG_REFLECT(Displacement, elapsedMs, velocityTime, acceleration, accelerationTime, offset,
-               velocityScale, defaultVelocityScale, gravity, bounces, extraTimeScale, listenerNode)
+    MG_REFLECT(Displacement,
+               elapsedMs,
+               velocityTime,
+               acceleration,
+               accelerationTime,
+               offset,
+               velocityScale,
+               defaultVelocityScale,
+               gravity,
+               bounces,
+               extraTimeScale,
+               listenerNode)
 };
 namespace displacement
 {
 // 单轴积分后得到的位移和下一速度。
-struct AxisStep { Fixed offset, velocity; };
+struct AxisStep
+{
+    Fixed offset, velocity;
+};
 // 按加速度、速度时长和重力积分单轴运动。
-AxisStep integrate(Fixed time, Fixed velocity, Fixed acceleration, Fixed accelerationTime,
-                    Fixed velocityTime, Fixed dt, Fixed gravity = {});
+AxisStep integrate(Fixed time,
+                   Fixed velocity,
+                   Fixed acceleration,
+                   Fixed accelerationTime,
+                   Fixed velocityTime,
+                   Fixed dt,
+                   Fixed gravity = {});
 // 实体位移的临时视图，不存入组件、不拥有资源，生命周期限于单次调用。
 class DisplacementDriver
 {
@@ -60,5 +88,5 @@ private:
     World& m_world;
     Entity m_entity{};
 };
-}
-}
+}  // namespace displacement
+}  // namespace mugen::sim

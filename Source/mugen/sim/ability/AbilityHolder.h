@@ -11,8 +11,20 @@ namespace ability
 // 特殊能力的配置事件编号。
 enum class Event : int32_t
 {
-    BeforeCastSkill = 1, AfterCastSkill, BeforeHit, AfterHit, BeforeToBeHit, AfterToBeHit,
-    BeforeCrazy, AfterCrazy, Time, InitAbility, GetUp, HitRepel, HitFly, ArtifactButton
+    BeforeCastSkill = 1,
+    AfterCastSkill,
+    BeforeHit,
+    AfterHit,
+    BeforeToBeHit,
+    AfterToBeHit,
+    BeforeCrazy,
+    AfterCrazy,
+    Time,
+    InitAbility,
+    GetUp,
+    HitRepel,
+    HitFly,
+    ArtifactButton
 };
 // 特殊能力持有者的临时视图，不存入组件、不拥有资源，生命周期限于单次调用。
 class AbilityHolder

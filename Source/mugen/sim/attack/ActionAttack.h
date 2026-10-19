@@ -26,4 +26,4 @@ private:
     Entity m_entity{};
     ActionAttack& m_action;
 };
-}
+}  // namespace mugen::sim::attack

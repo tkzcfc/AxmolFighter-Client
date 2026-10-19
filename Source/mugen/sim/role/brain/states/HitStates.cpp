@@ -21,16 +21,19 @@ const conf::RoleConfig* role(RoleContext& ctx)
 // 每次重新播放都重置动画完成计数。
 void play(RoleContext& ctx, A type, behavior::HitActionState& leaf)
 {
-    auto& motion         = ctx.get<MotionState>();
-    motion.motionName    = behavior::ActionNames::animationName(type);
-    motion.timeMs        = {};
+    auto& motion            = ctx.get<MotionState>();
+    motion.motionName       = behavior::ActionNames::animationName(type);
+    motion.timeMs           = {};
     motion.m_completedLoops = 0;
-    motion.playing       = true;
-    motion.loop          = type == A::Idle;
-    motion.actionScale   = type == A::HitUp ? conf::kHitUpScaleTime : type == A::HitDown ? conf::kHitDownScaleTime :
-        type == A::HitFloor ? conf::kHitFloorScaleTime : type == A::GetUp ? conf::kGetUpScaleTime :
-        type == A::Hit || type == A::HitSwitch || type == A::Controlled ? conf::kHitScaleTime : "1"_fx;
-    leaf.m_animationEnd = false;
+    motion.playing          = true;
+    motion.loop             = type == A::Idle;
+    motion.actionScale      = type == A::HitUp      ? conf::kHitUpScaleTime
+                              : type == A::HitDown  ? conf::kHitDownScaleTime
+                              : type == A::HitFloor ? conf::kHitFloorScaleTime
+                              : type == A::GetUp    ? conf::kGetUpScaleTime
+                              : type == A::Hit || type == A::HitSwitch || type == A::Controlled ? conf::kHitScaleTime
+                                                                                                : "1"_fx;
+    leaf.m_animationEnd     = false;
     if (type == A::Hit || type == A::Controlled)
         ctx.world().emit(ctx.entity(), RoleIntensity{"1.3"_fx});
 }
@@ -64,7 +67,7 @@ void success(RoleContext& ctx, behavior::HitActionState& leaf, S next)
 // 读取后清空待处理打击，配置零标识与无待处理记录严格区分。
 const conf::SkillHitConfig* consumeHit(RoleContext& ctx)
 {
-    auto& id = ctx.get<RoleStatus>().entityParams.hit_id;
+    auto& id         = ctx.get<RoleStatus>().entityParams.hit_id;
     const auto value = id;
     id.reset();
     return value ? conf::Config::instance().find<conf::SkillHitConfig>(*value) : nullptr;
@@ -147,9 +150,9 @@ void groundChase(RoleContext& ctx, behavior::HitActionState& leaf, const conf::S
     const auto* row = role(ctx);
     if (!row)
         return;
-    leaf.m_hitId          = data.id;
+    leaf.m_hitId           = data.id;
     leaf.m_displacementEnd = false;
-    leaf.m_displacementId = row->hitDisplacementId;
+    leaf.m_displacementId  = row->hitDisplacementId;
     if (leaf.m_displacementId == -1)
     {
         leaf.m_displacementId = data.displacementId;
@@ -189,21 +192,20 @@ void airChase(RoleContext& ctx, A type, behavior::HitActionState& leaf, const co
         return;
     }
     const bool knockDown = type == A::HitFloor && data.hitType == 1 && !leaf.m_break;
-    const bool relaunch  = (data.hitType == 0 || data.hitType == 2) &&
-        !ctx.role().isRigidity() && !leaf.m_break;
+    const bool relaunch  = (data.hitType == 0 || data.hitType == 2) && !ctx.role().isRigidity() && !leaf.m_break;
     if (knockDown)
         transition(ctx, leaf, S::HitDown);
     if (relaunch)
         transition(ctx, leaf, S::HitUp);
     if (type == A::HitFloor && (knockDown || relaunch))
-        ctx.get<RoleHitState>().stiffTime = Fixed::fromInt(data.stiffTime) *
-            ("1"_fx + ctx.get<Attributes>().extend[15]);
+        ctx.get<RoleHitState>().stiffTime =
+            Fixed::fromInt(data.stiffTime) * ("1"_fx + ctx.get<Attributes>().extend[15]);
 }
 }  // namespace
 
 void HitState::enter(RoleContext& ctx, Param type, State& leaf)
 {
-    leaf = behavior::HitActionState{};
+    leaf            = behavior::HitActionState{};
     const auto* row = role(ctx);
     ctx.notifyActionStart(type);
     if (type == A::Destroy)
@@ -215,8 +217,8 @@ void HitState::enter(RoleContext& ctx, Param type, State& leaf)
     {
         if (ctx.world().hitHooks().m_roleAbilities)
             ctx.world().hitHooks().m_roleAbilities(ctx.world(), ctx.entity(), true);
-        auto& vitals = ctx.get<Vitals>();
-        vitals.hp    = vitals.maxHp;
+        auto& vitals                        = ctx.get<Vitals>();
+        vitals.hp                           = vitals.maxHp;
         ctx.get<RoleStatus>().eEntityStatus = S::Idle;
         return;
     }
@@ -252,8 +254,9 @@ void HitState::enter(RoleContext& ctx, Param type, State& leaf)
         if (row && data)
         {
             leaf.m_hitId          = data->id;
-            leaf.m_displacementId = row->hitDisplacementId == 0 ? -1 :
-                row->hitDisplacementId == -1 || data->hitType == 0 ? data->displacementId : row->hitDisplacementId;
+            leaf.m_displacementId = row->hitDisplacementId == 0                          ? -1
+                                    : row->hitDisplacementId == -1 || data->hitType == 0 ? data->displacementId
+                                                                                         : row->hitDisplacementId;
         }
     }
     if (type == A::Death)
@@ -301,14 +304,15 @@ BTStatus HitState::update(RoleContext& ctx, Param type, State& leaf)
                 if (row && row->deathEffectId != -1)
                 {
                     const auto source = ctx.get<Transform>();
-                    const auto effectEntity = effect::EffectActor::create(ctx.world(), ctx.entity(), row->deathEffectId);
+                    const auto effectEntity =
+                        effect::EffectActor::create(ctx.world(), ctx.entity(), row->deathEffectId);
                     if (effectEntity.value != 0)
                     {
-                        auto& target             = ctx.world().ecs().get<Transform>(effectEntity);
-                        target.position          = source.position;
-                        target.towardX           = source.towardX;
-                        target.vectorX           = Fixed::fromInt(source.towardX);
-                        target.vectorZ           = "1"_fx;
+                        auto& target          = ctx.world().ecs().get<Transform>(effectEntity);
+                        target.position       = source.position;
+                        target.towardX        = source.towardX;
+                        target.vectorX        = Fixed::fromInt(source.towardX);
+                        target.vectorZ        = "1"_fx;
                         const auto& effectRow = conf::Config::instance().get<conf::EffectConfig>(row->deathEffectId);
                         if (effectRow.relativePosition.size() >= 3)
                         {
@@ -354,13 +358,14 @@ BTStatus HitState::update(RoleContext& ctx, Param type, State& leaf)
         else
             transition(ctx, leaf, S::GetUp);
         ctx.get<RoleHitState>().stiffTime = {};
-        timed = true;
+        timed                             = true;
     }
     if (!timed && ctx.get<RoleStatus>().entityParams.hit_id.has_value())
     {
         if (type == A::HitSwitch)
             transition(ctx, leaf, S::Hit);
-        else if (type == A::Hit || type == A::Controlled || type == A::HitUp || type == A::HitDown || type == A::HitFloor)
+        else if (type == A::Hit || type == A::Controlled || type == A::HitUp || type == A::HitDown ||
+                 type == A::HitFloor)
         {
             const auto* data = consumeHit(ctx);
             if (data)
@@ -379,7 +384,7 @@ void HitState::exit(RoleContext& ctx, Param type, State& leaf)
 {
     const auto* data = conf::Config::instance().find<conf::SkillHitConfig>(leaf.m_hitId);
     if (type == A::Death || ((type == A::Hit || type == A::Controlled) && data && data->hitType == 0 &&
-        ctx.get<Transform>().position.y == Fixed{}))
+                             ctx.get<Transform>().position.y == Fixed{}))
         displacement::DisplacementDriver(ctx.world(), ctx.entity()).reset();
     ctx.notifyActionEnd(type);
 }
@@ -410,8 +415,8 @@ bool HitState::onDisplacement(RoleContext& ctx, Param type, State& leaf)
             if (leaf.m_animationEnd && !leaf.m_break)
                 transition(ctx, leaf, type == A::HitUp ? S::HitDown : S::HitFloor);
         }
-        if (event == DisplacementEvent::Left || event == DisplacementEvent::Right ||
-            event == DisplacementEvent::Top || event == DisplacementEvent::Bottom)
+        if (event == DisplacementEvent::Left || event == DisplacementEvent::Right || event == DisplacementEvent::Top ||
+            event == DisplacementEvent::Bottom)
             return false;
         return ctx.role().isRigidity();
     }

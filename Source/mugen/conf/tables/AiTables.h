@@ -52,4 +52,4 @@ struct AiConfig
                targetScopeX,
                targetScopeZ)
 };
-}
+}  // namespace mugen::conf

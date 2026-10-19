@@ -20,7 +20,7 @@ struct WorldClock
     // 当前逻辑帧的秒时长。
     Fixed dtSec = kLogicDtSec;
     // 当前逻辑帧的毫秒时长。
-    Fixed dtMs  = kLogicDtMs;
+    Fixed dtMs = kLogicDtMs;
     // 参与世界快照的时钟字段。
     MG_REFLECT(WorldClock, frame, elapsedMs, dtSec, dtMs)
 };
@@ -36,7 +36,7 @@ struct RngState
 struct SlowMotion
 {
     // 应用于逻辑时间的缩放倍率。
-    Fixed scale              = Fixed::fromInt(1);
+    Fixed scale = Fixed::fromInt(1);
     // 仍需保持缩放的逻辑帧数。
     uint32_t remainingFrames = 0;
     // 房间 KO 曲线独立于外部指定的定长慢放。
@@ -63,7 +63,7 @@ struct RoomState
     // 已清理房间不重复生成敌人。
     std::vector<int32_t> m_clearedRooms;
     // 是否暂停推进世界。
-    bool paused    = false;
+    bool paused = false;
     // 召唤接缝告警按场次去重。
     bool m_summonLogged = false;
     // 尚未移植的 Buff 配置标识按场次去重告警。
@@ -85,9 +85,9 @@ struct RoomState
     // 状态等待毫秒、战斗经过秒数和限时。
     Fixed m_waitMs, m_gameSeconds, m_limitSeconds;
     // 当前波次、定时器编号及到期标记。
-    int32_t m_wave = 0;
+    int32_t m_wave       = 0;
     uint64_t m_waveTimer = 0;
-    bool m_waveReady = false;
+    bool m_waveReady     = false;
     // 副本等级增幅和复活预算。
     int32_t m_levelBonus = 0, m_maxRevives = 0, m_usedRevives = 0;
     // 首领、KO 和等待复活标记。
@@ -95,9 +95,41 @@ struct RoomState
     // 最终结果和返回城镇请求。
     bool m_victory = false, m_failure = false, m_returnToTown = false;
     // 参与世界快照的房间字段。
-    MG_REFLECT(RoomState, roomId, m_transferRoom, m_transferToward, m_stageId, m_copyId, m_transferPosition, m_clearedRooms, paused, m_summonLogged, reviveRequests, puppetUpdates, m_roleDeaths, m_unportedBuffIds, m_missingBuffMotionIds,
-        m_enabled, m_config, m_state, m_pending, m_recorded, m_waitMs, m_gameSeconds, m_limitSeconds, m_wave,
-        m_waveTimer, m_waveReady, m_levelBonus, m_maxRevives, m_usedRevives, m_haveBoss, m_ko, m_reviving, m_victory, m_failure, m_returnToTown)
+    MG_REFLECT(RoomState,
+               roomId,
+               m_transferRoom,
+               m_transferToward,
+               m_stageId,
+               m_copyId,
+               m_transferPosition,
+               m_clearedRooms,
+               paused,
+               m_summonLogged,
+               reviveRequests,
+               puppetUpdates,
+               m_roleDeaths,
+               m_unportedBuffIds,
+               m_missingBuffMotionIds,
+               m_enabled,
+               m_config,
+               m_state,
+               m_pending,
+               m_recorded,
+               m_waitMs,
+               m_gameSeconds,
+               m_limitSeconds,
+               m_wave,
+               m_waveTimer,
+               m_waveReady,
+               m_levelBonus,
+               m_maxRevives,
+               m_usedRevives,
+               m_haveBoss,
+               m_ko,
+               m_reviving,
+               m_victory,
+               m_failure,
+               m_returnToTown)
 };
 }  // namespace mugen::sim
 // 生产世界允许保存的单例注册表，顺序固定类型标识。

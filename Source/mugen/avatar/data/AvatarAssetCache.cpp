@@ -84,8 +84,8 @@ bool AvatarAssetCache::load(const std::string& path)
 
     ByteBuffer buffer;
     buffer.fastSet(raw, static_cast<uint32_t>(size));
-    uint8_t magic[4]{};  // 魔数，固定为 MGAV
-    uint32_t version = 0;  // 归档格式版本
+    uint8_t magic[4]{};       // 魔数，固定为 MGAV
+    uint32_t version    = 0;  // 归档格式版本
     uint64_t schemaHash = 0;  // 缓存结构的哈希，用于拒绝不兼容数据
     // 头部至少 4+4+8 字节；逐字段读取失败同样视为格式错误。
     if (size < 16 || !buffer.getByte(magic[0]) || !buffer.getByte(magic[1]) || !buffer.getByte(magic[2]) ||

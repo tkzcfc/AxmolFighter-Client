@@ -11,9 +11,9 @@ struct Entity
     uint32_t value = 0;
 
     // 句柄中索引字段的位数。
-    static constexpr uint32_t kIndexBits     = 20;
+    static constexpr uint32_t kIndexBits = 20;
     // 索引字段掩码。
-    static constexpr uint32_t kIndexMask     = (1U << kIndexBits) - 1;
+    static constexpr uint32_t kIndexMask = (1U << kIndexBits) - 1;
     // 代数达到此值后槽位永久退役。
     static constexpr uint32_t kMaxGeneration = (1U << 12) - 1;
 

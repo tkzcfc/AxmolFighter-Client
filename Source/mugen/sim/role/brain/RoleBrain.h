@@ -47,8 +47,8 @@ enum class StateStep : uint8_t
     Done
 };
 // 叶子状态数据；攻击叶放在施法计划里。
-using RoleStateData = std::variant<std::monostate, behavior::ActionState, behavior::JostledState,
-                                   behavior::HitActionState, ai::ActionMove>;
+using RoleStateData = std::
+    variant<std::monostate, behavior::ActionState, behavior::JostledState, behavior::HitActionState, ai::ActionMove>;
 // 一次施法的动作序列与当前攻击叶。
 struct CastPlan
 {
@@ -69,7 +69,7 @@ struct CastPlan
 // 角色脑组件：枚举状态机驱动的战斗脑。
 struct RoleBrain
 {
-    BrainPhase m_phase = BrainPhase::NotEntered;
+    BrainPhase m_phase  = BrainPhase::NotEntered;
     RoleBranch m_branch = RoleBranch::Idle;
     // Death 序列的第二段（销毁叶）。
     int32_t m_destroyStage = 0;

@@ -13,16 +13,25 @@ namespace mugen::sim::ai
 namespace
 {
 // 定点绝对值不经过宿主浮点重载。
-Fixed abs(Fixed value) { return value < Fixed{} ? -value : value; }
+Fixed abs(Fixed value)
+{
+    return value < Fixed{} ? -value : value;
+}
 // 阵营组而非攻击掩码决定 AI 的候选范围。
 int campGroup(int camp)
 {
     switch (camp)
     {
-    case 1: return 1;
-    case 2: case 4: return 2;
-    case 8: case 16: return 3;
-    default: return 0;
+    case 1:
+        return 1;
+    case 2:
+    case 4:
+        return 2;
+    case 8:
+    case 16:
+        return 3;
+    default:
+        return 0;
     }
 }
 // 组暂停对应逻辑禁用，销毁请求也不再参与索敌。
@@ -51,84 +60,109 @@ bool skillReady(const std::vector<Fixed>& intervals, const conf::AiConfig* row)
     if (!intervals.empty())
     {
         for (const Fixed value : intervals)
-            if (value <= Fixed{}) return true;
+            if (value <= Fixed{})
+                return true;
         return false;
     }
-    if (!row) return false;
+    if (!row)
+        return false;
     for (const auto& values : row->skillPriorityLevelCd)
-        if ((values.empty() ? row->skillInterval : values.front()) <= 0) return true;
+        if ((values.empty() ? row->skillInterval : values.front()) <= 0)
+            return true;
     return false;
 }
 // 巡逻、追击和游走对应条件表中的移动行。
 int8_t ruleIndex(AiAction action)
 {
     for (size_t index = 0; index < kMonsterRules.size(); ++index)
-        if (kMonsterRules[index].m_action == action) return static_cast<int8_t>(index);
+        if (kMonsterRules[index].m_action == action)
+            return static_cast<int8_t>(index);
     return -1;
 }
 // 当前移动状态映射到正在跑的规则；没有移动时为 -1。
 int8_t movingRule(const RoleStatus& state)
 {
-    if (state.isPatrol()) return ruleIndex(AiAction::Patrol);
-    if (state.isChase()) return ruleIndex(AiAction::Chase);
-    if (state.isAlert()) return ruleIndex(AiAction::Wander);
+    if (state.isPatrol())
+        return ruleIndex(AiAction::Patrol);
+    if (state.isChase())
+        return ruleIndex(AiAction::Chase);
+    if (state.isAlert())
+        return ruleIndex(AiAction::Wander);
     return -1;
 }
 // 生命上限不为正时百分比为零。
 int32_t hpPercent(const Vitals& vitals)
 {
-    if (vitals.maxHp <= Fixed{}) return 0;
+    if (vitals.maxHp <= Fixed{})
+        return 0;
     return static_cast<int32_t>((vitals.hp * Fixed::fromInt(100) / vitals.maxHp).toInt());
 }
-}
+}  // namespace
 
 AiDriver::AiDriver(World& world, Entity entity) : m_world(world), m_entity(entity) {}
 
 // 在角色 AI 更新阶段执行决策、嘲讽和十秒仇恨切换。
 void AiDriver::update()
 {
-    auto& ecs = m_world.ecs();
+    auto& ecs         = m_world.ecs();
     const auto* agent = ecs.tryGet<AiAgent>(m_entity);
     if (!agent || !agent->m_enabled || !ecs.get<RoleIdentity>(m_entity).isAi ||
-        !enabled(ecs.get<EntityGroup>(m_entity)) || !ecs.get<ExtraState>(m_entity).isCanControl() || !_config()) return;
-    auto& state = ecs.get<AiAgent>(m_entity);
+        !enabled(ecs.get<EntityGroup>(m_entity)) || !ecs.get<ExtraState>(m_entity).isCanControl() || !_config())
+        return;
+    auto& state   = ecs.get<AiAgent>(m_entity);
     const auto dt = ecs.singleton<WorldClock>().dtMs;
-    for (auto& interval : state.m_skillIntervalMs) interval = std::max(Fixed{}, interval - dt);
+    for (auto& interval : state.m_skillIntervalMs)
+        interval = std::max(Fixed{}, interval - dt);
     tickRuleCooldowns(state.m_ruleCooldownMs, dt);
     const auto& row = *_config();
     _selectTarget(row);
     if (_canAct())
     {
         const auto facts = gather();
-        auto& rng       = ecs.singleton<RngState>().random;
-        const auto idx  = pickRule(facts, kMonsterRules, state.m_ruleCooldownMs, rng);
+        auto& rng        = ecs.singleton<RngState>().random;
+        const auto idx   = pickRule(facts, kMonsterRules, state.m_ruleCooldownMs, rng);
         if (idx >= 0)
         {
             const auto& rule   = kMonsterRules[idx];
             const bool started = _run(rule.m_action, row);
-            if (rule.m_setsAlert) state.m_alerted = true;
+            if (rule.m_setsAlert)
+                state.m_alerted = true;
             state.m_lastAction = started ? rule.m_action : AiAction::Idle;
             if (rule.m_cooldownMs > 0)
             {
-                if (state.m_ruleCooldownMs.size() < kMonsterRules.size()) state.m_ruleCooldownMs.resize(kMonsterRules.size());
+                if (state.m_ruleCooldownMs.size() < kMonsterRules.size())
+                    state.m_ruleCooldownMs.resize(kMonsterRules.size());
                 state.m_ruleCooldownMs[static_cast<size_t>(idx)] = Fixed::fromInt(rule.m_cooldownMs);
             }
         }
     }
     const auto taunt = buff::BuffHolder(m_world, m_entity).sneerTarget();
-    if (_alive(taunt)) { ecs.get<SkillPool>(m_entity).m_target = taunt; return; }
+    if (_alive(taunt))
+    {
+        ecs.get<SkillPool>(m_entity).m_target = taunt;
+        return;
+    }
     auto& elapsed = state.m_changeTargetMs;
     elapsed += dt;
-    if (elapsed >= "10000"_fx) { elapsed -= "10000"_fx; changeTarget(); }
+    if (elapsed >= "10000"_fx)
+    {
+        elapsed -= "10000"_fx;
+        changeTarget();
+    }
 }
 
 // 记录命中伤害，不为非 AI 角色创建状态。
 void AiDriver::addThreat(Entity source, Fixed damage)
 {
     auto* agent = m_world.ecs().tryGet<AiAgent>(m_entity);
-    if (!agent) return;
+    if (!agent)
+        return;
     for (auto& record : agent->m_threat)
-        if (record.m_source == source) { record.m_damage = std::max(Fixed{}, record.m_damage + damage); return; }
+        if (record.m_source == source)
+        {
+            record.m_damage = std::max(Fixed{}, record.m_damage + damage);
+            return;
+        }
     agent->m_threat.push_back({source, std::max(Fixed{}, damage)});
 }
 
@@ -138,34 +172,47 @@ void AiDriver::changeTarget()
     auto& agent  = m_world.ecs().get<AiAgent>(m_entity);
     auto& target = m_world.ecs().get<SkillPool>(m_entity).m_target;
     Fixed best;
-    for (const auto& value : agent.m_threat) if (value.m_source == target) best = value.m_damage;
     for (const auto& value : agent.m_threat)
-        if (value.m_damage > best && _hittable(value.m_source)) { best = value.m_damage; target = value.m_source; }
+        if (value.m_source == target)
+            best = value.m_damage;
+    for (const auto& value : agent.m_threat)
+        if (value.m_damage > best && _hittable(value.m_source))
+        {
+            best   = value.m_damage;
+            target = value.m_source;
+        }
     agent.m_threat.clear();
 }
 
 // 按地图四侧边界和角色半径修正目标点。
 FixedVec3 AiDriver::calcPos(FixedVec3 point) const
 {
-    const auto& map = m_world.ecs().singleton<MapRegion>();
+    const auto& map   = m_world.ecs().singleton<MapRegion>();
     const auto radius = m_world.ecs().get<ColliderState>(m_entity).radius;
-    auto edge = map.getLeftRegion({point.x - radius, point.z});
-    if (point.x != edge) point.x = edge + radius;
+    auto edge         = map.getLeftRegion({point.x - radius, point.z});
+    if (point.x != edge)
+        point.x = edge + radius;
     edge = map.getRightRegion({point.x + radius, point.z});
-    if (point.x != edge) point.x = edge - radius;
+    if (point.x != edge)
+        point.x = edge - radius;
     edge = map.getTopRegion({point.x, point.z + radius});
-    if (point.z != edge) point.z = edge - radius;
+    if (point.z != edge)
+        point.z = edge - radius;
     edge = map.getBottomRegion({point.x, point.z - radius});
-    if (point.z != edge) point.z = edge + radius;
+    if (point.z != edge)
+        point.z = edge + radius;
     if (m_world.ecs().get<RoleIdentity>(m_entity).roleType == 1)
     {
-        const auto* role = conf::Config::instance().find<conf::RoleConfig>(m_world.ecs().get<RoleIdentity>(m_entity).roleId);
+        const auto* role =
+            conf::Config::instance().find<conf::RoleConfig>(m_world.ecs().get<RoleIdentity>(m_entity).roleId);
         if (role)
         {
             const Fixed distance = role->velocity * kLogicDtMs * conf::kWalkRate;
-            const auto& self = m_world.ecs().get<Transform>(m_entity);
-            if (abs(point.x - self.position.x) < distance) point.x += self.vectorX < Fixed{} ? -distance : distance;
-            if (abs(point.z - self.position.z) < distance) point.z += self.vectorZ < Fixed{} ? -distance : distance;
+            const auto& self     = m_world.ecs().get<Transform>(m_entity);
+            if (abs(point.x - self.position.x) < distance)
+                point.x += self.vectorX < Fixed{} ? -distance : distance;
+            if (abs(point.z - self.position.z) < distance)
+                point.z += self.vectorZ < Fixed{} ? -distance : distance;
         }
     }
     point.y = {};
@@ -177,9 +224,11 @@ std::vector<Entity> AiDriver::candidates() const
 {
     std::vector<Entity> result;
     const int camp = m_world.ecs().get<RoleIdentity>(m_entity).camp;
-    m_world.ecs().each<RoleIdentity, EntityGroup, Vitals>([&](Entity other, const RoleIdentity& identity, const EntityGroup& group, const Vitals&) {
+    m_world.ecs().each<RoleIdentity, EntityGroup, Vitals>(
+        [&](Entity other, const RoleIdentity& identity, const EntityGroup& group, const Vitals&) {
         if (enabled(group) && camp != identity.camp && campGroup(camp) != 0 &&
-            campGroup(camp) != campGroup(identity.camp) && _hittable(other)) result.push_back(other);
+            campGroup(camp) != campGroup(identity.camp) && _hittable(other))
+            result.push_back(other);
     });
     return result;
 }
@@ -231,44 +280,60 @@ const conf::AiConfig* AiDriver::_config() const
 bool AiDriver::_canAct() const
 {
     const auto& state = m_world.ecs().get<RoleStatus>(m_entity);
-    return !state.isDeath() && !state.isTobeHit() &&
-           m_world.ecs().get<ExtraState>(m_entity).isCanControl();
+    return !state.isDeath() && !state.isTobeHit() && m_world.ecs().get<ExtraState>(m_entity).isCanControl();
 }
 
 // 先设置技能控制角，成功释放后再更新角色朝向。
 void AiDriver::_direction(bool apply)
 {
-    auto& ecs = m_world.ecs();
+    auto& ecs         = m_world.ecs();
     const auto target = ecs.get<SkillPool>(m_entity).m_target;
     const auto* other = ecs.tryGet<Transform>(target);
-    if (!other) return;
-    auto& self = ecs.get<Transform>(m_entity);
+    if (!other)
+        return;
+    auto& self    = ecs.get<Transform>(m_entity);
     const Fixed x = other->position.x - self.position.x, z = other->position.z - self.position.z;
-    if (x == Fixed{} && z == Fixed{}) return;
+    if (x == Fixed{} && z == Fixed{})
+        return;
     auto angle = "90"_fx - FixedMath::atan2Deg(z, x);
-    if (angle < Fixed{}) angle += "360"_fx;
+    if (angle < Fixed{})
+        angle += "360"_fx;
     ecs.get<SkillPool>(m_entity).m_controlAngle = angle;
     if (apply)
     {
-        if (x != Fixed{}) { self.towardX = x > Fixed{} ? 1 : -1; self.vectorX = Fixed::fromInt(self.towardX); }
-        if (z != Fixed{}) self.vectorZ = z > Fixed{} ? "1"_fx : "-1"_fx;
+        if (x != Fixed{})
+        {
+            self.towardX = x > Fixed{} ? 1 : -1;
+            self.vectorX = Fixed::fromInt(self.towardX);
+        }
+        if (z != Fixed{})
+            self.vectorZ = z > Fixed{} ? "1"_fx : "-1"_fx;
     }
 }
 
 // 按警戒、激怒和候选者选择索敌目标。
 void AiDriver::_selectTarget(const conf::AiConfig& row)
 {
-    auto& target = m_world.ecs().get<SkillPool>(m_entity).m_target;
+    auto& target     = m_world.ecs().get<SkillPool>(m_entity).m_target;
     const auto taunt = buff::BuffHolder(m_world, m_entity).sneerTarget();
-    if (_alive(taunt)) { target = taunt; return; }
+    if (_alive(taunt))
+    {
+        target = taunt;
+        return;
+    }
     if (!m_world.ecs().get<AiAgent>(m_entity).m_alerted && !_provoked())
     {
         target = _sightTarget(row);
         return;
     }
-    if (_hittable(target)) return;
+    if (_hittable(target))
+        return;
     const auto enemies = candidates();
-    if (enemies.empty()) { target = m_entity; return; }
+    if (enemies.empty())
+    {
+        target = m_entity;
+        return;
+    }
     target = enemies[m_world.ecs().singleton<RngState>().random.randomN(0, static_cast<int32_t>(enemies.size() - 1))];
 }
 
@@ -284,7 +349,8 @@ Entity AiDriver::_sightTarget(const conf::AiConfig& row) const
     for (const auto other : candidates())
     {
         const auto pos = m_world.ecs().get<Transform>(other).position;
-        if (contains(row.targetScopeX, origin.x - pos.x) && contains(row.targetScopeZ, origin.z - pos.z)) return other;
+        if (contains(row.targetScopeX, origin.x - pos.x) && contains(row.targetScopeZ, origin.z - pos.z))
+            return other;
     }
     return m_entity;
 }
@@ -294,11 +360,18 @@ bool AiDriver::_run(AiAction action, const conf::AiConfig& row)
 {
     switch (action)
     {
-    case AiAction::Idle: return false;
-    case AiAction::CastWakeSkill: return _castSpecial(true);
-    case AiAction::CastIdleSkill: return _castSpecial(false);
-    case AiAction::CastBestSkill: return _castBest(row);
-    case AiAction::Patrol: case AiAction::Chase: case AiAction::Wander: return _move(action, row);
+    case AiAction::Idle:
+        return false;
+    case AiAction::CastWakeSkill:
+        return _castSpecial(true);
+    case AiAction::CastIdleSkill:
+        return _castSpecial(false);
+    case AiAction::CastBestSkill:
+        return _castBest(row);
+    case AiAction::Patrol:
+    case AiAction::Chase:
+    case AiAction::Wander:
+        return _move(action, row);
     }
     MG_ASSERT(false && "Invalid AI action");
     return false;
@@ -307,15 +380,21 @@ bool AiDriver::_run(AiAction action, const conf::AiConfig& row)
 // X/Z 使用手动施放门槛，已有技能时续接原槽。
 bool AiDriver::_castSpecial(bool first)
 {
-    if (!_canAct()) return false;
-    if (!first && candidates().empty()) return false;
-    if (first) _direction(false);
-    const auto& pool = m_world.ecs().get<SkillPool>(m_entity);
-    const std::string slot = pool.m_current == kNoSkill ? (first ? "X" : "Z") :
-        pool.m_slots[pool.m_skills[pool.m_current].m_address.m_slot].m_name;
-    if (!skill::SkillCaster(m_world, m_entity).presetSkill(slot, false)) return false;
+    if (!_canAct())
+        return false;
+    if (!first && candidates().empty())
+        return false;
+    if (first)
+        _direction(false);
+    const auto& pool       = m_world.ecs().get<SkillPool>(m_entity);
+    const std::string slot = pool.m_current == kNoSkill
+                                 ? (first ? "X" : "Z")
+                                 : pool.m_slots[pool.m_skills[pool.m_current].m_address.m_slot].m_name;
+    if (!skill::SkillCaster(m_world, m_entity).presetSkill(slot, false))
+        return false;
     Role(m_world, m_entity).changeStatus(EntityRoleStatus::Attack);
-    if (first) _direction(true);
+    if (first)
+        _direction(true);
     return true;
 }
 
@@ -323,13 +402,15 @@ bool AiDriver::_castSpecial(bool first)
 bool AiDriver::_castBest(const conf::AiConfig& row)
 {
     if (candidates().empty() || !_canAct() ||
-        !m_world.ecs().tryGet<Transform>(m_world.ecs().get<SkillPool>(m_entity).m_target)) return false;
+        !m_world.ecs().tryGet<Transform>(m_world.ecs().get<SkillPool>(m_entity).m_target))
+        return false;
     _direction(false);
     auto& pool = m_world.ecs().get<SkillPool>(m_entity);
     if (pool.m_current != kNoSkill)
     {
         const auto slot = pool.m_slots[pool.m_skills[pool.m_current].m_address.m_slot].m_name;
-        if (!skill::SkillCaster(m_world, m_entity).presetSkill(slot, true)) return false;
+        if (!skill::SkillCaster(m_world, m_entity).presetSkill(slot, true))
+            return false;
         Role(m_world, m_entity).changeStatus(EntityRoleStatus::Attack);
         return true;
     }
@@ -339,7 +420,8 @@ bool AiDriver::_castBest(const conf::AiConfig& row)
             intervals.push_back(Fixed::fromInt(values.empty() ? row.skillInterval : values[0]));
     std::vector<size_t> ready;
     for (size_t i = 0; i < intervals.size(); ++i)
-        if (intervals[i] <= Fixed{}) ready.push_back(i);
+        if (intervals[i] <= Fixed{})
+            ready.push_back(i);
     std::sort(ready.begin(), ready.end(), [&](size_t a, size_t b) {
         const auto pa = firstValue(row.skillPriorityLevel, a, 1), pb = firstValue(row.skillPriorityLevel, b, 1);
         return pa == pb ? a < b : pa > pb;
@@ -347,13 +429,15 @@ bool AiDriver::_castBest(const conf::AiConfig& row)
     for (const auto index : ready)
     {
         const std::string slot(1, static_cast<char>('A' + index));
-        if (!skill::SkillCaster(m_world, m_entity).presetSkill(slot, true)) continue;
+        if (!skill::SkillCaster(m_world, m_entity).presetSkill(slot, true))
+            continue;
         Role(m_world, m_entity).changeStatus(EntityRoleStatus::Attack);
         const auto priority = firstValue(row.skillPriorityLevel, index, 1);
         for (size_t i = 0; i < row.skillPriorityLevel.size(); ++i)
             if (firstValue(row.skillPriorityLevel, i, 1) == priority)
             {
-                if (intervals.size() <= i) intervals.resize(i + 1);
+                if (intervals.size() <= i)
+                    intervals.resize(i + 1);
                 intervals[i] = Fixed::fromInt(firstValue(row.skillPriorityLevelCd, i, row.skillInterval));
             }
         _direction(true);
@@ -368,34 +452,42 @@ bool AiDriver::_move(AiAction action, const conf::AiConfig& row)
     const bool patrol = action == AiAction::Patrol, chase = action == AiAction::Chase;
     if (!chase && m_world.ecs().get<RoleStatus>(m_entity).isMove())
         return patrol;
-    if (!_canAct()) return false;
-    const auto self = m_world.ecs().get<Transform>(m_entity).position;
+    if (!_canAct())
+        return false;
+    const auto self  = m_world.ecs().get<Transform>(m_entity).position;
     FixedVec3 center = self;
     if (!patrol)
     {
         const auto* target = m_world.ecs().tryGet<Transform>(m_world.ecs().get<SkillPool>(m_entity).m_target);
-        if (!target) return false;
+        if (!target)
+            return false;
         center = target->position;
     }
-    auto& rng = m_world.ecs().singleton<RngState>().random;
-    const auto& xs = patrol ? row.patrolScopeX : row.chaseScopeX;
-    const auto& zs = patrol ? row.patrolScopeZ : row.chaseScopeZ;
-    const Fixed x = chase ? bound(xs, 1) : rng.randomF(bound(xs, 0), bound(xs, 1));
-    const Fixed z = chase ? bound(zs, 1) : rng.randomF(bound(zs, 0), bound(zs, 1));
+    auto& rng         = m_world.ecs().singleton<RngState>().random;
+    const auto& xs    = patrol ? row.patrolScopeX : row.chaseScopeX;
+    const auto& zs    = patrol ? row.patrolScopeZ : row.chaseScopeZ;
+    const Fixed x     = chase ? bound(xs, 1) : rng.randomF(bound(xs, 0), bound(xs, 1));
+    const Fixed z     = chase ? bound(zs, 1) : rng.randomF(bound(zs, 0), bound(zs, 1));
     const auto radius = m_world.ecs().get<ColliderState>(m_entity).radius;
-    if (!chase && abs(x) < radius && abs(z) < radius) return false;
+    if (!chase && abs(x) < radius && abs(z) < radius)
+        return false;
     center.x += !patrol && center.x > self.x ? -x : x;
     center.z += !patrol && center.z > self.z ? -z : z;
-    Role(m_world, m_entity).changeStatus(patrol ? EntityRoleStatus::Patrol : chase ? EntityRoleStatus::Chase : EntityRoleStatus::Alert,
-                                        -1, calcPos(center));
+    Role(m_world, m_entity)
+        .changeStatus(patrol  ? EntityRoleStatus::Patrol
+                      : chase ? EntityRoleStatus::Chase
+                              : EntityRoleStatus::Alert,
+                      -1, calcPos(center));
     return true;
 }
 
 // 受击、仇恨记录或有效嘲讽都算激怒。
 bool AiDriver::_provoked() const
 {
-    if (m_world.ecs().get<RoleStatus>(m_entity).isTobeHit()) return true;
-    if (!m_world.ecs().get<AiAgent>(m_entity).m_threat.empty()) return true;
+    if (m_world.ecs().get<RoleStatus>(m_entity).isTobeHit())
+        return true;
+    if (!m_world.ecs().get<AiAgent>(m_entity).m_threat.empty())
+        return true;
     return _alive(buff::BuffHolder(m_world, m_entity).sneerTarget());
 }
 
@@ -403,13 +495,15 @@ bool AiDriver::_provoked() const
 bool AiDriver::_outsideChase(Entity target, const conf::AiConfig& row) const
 {
     const auto* other = m_world.ecs().tryGet<Transform>(target);
-    if (!other) return false;
+    if (!other)
+        return false;
     if (bound(row.chaseScopeX, 0) == Fixed{} && bound(row.chaseScopeX, 1) == Fixed{} &&
         bound(row.chaseScopeZ, 0) == Fixed{} && bound(row.chaseScopeZ, 1) == Fixed{})
         return false;
     const auto self = m_world.ecs().get<Transform>(m_entity).position;
     const Fixed x = self.x - other->position.x, z = self.z - other->position.z;
-    if (x == Fixed{} && z == Fixed{}) return false;
+    if (x == Fixed{} && z == Fixed{})
+        return false;
     if (x != Fixed{} && z != Fixed{} && contains(row.chaseScopeX, abs(x)) && contains(row.chaseScopeZ, abs(z)))
         return false;
     return true;

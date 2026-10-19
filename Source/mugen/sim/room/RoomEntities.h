@@ -7,7 +7,12 @@ namespace mugen::sim
 {
 class World;
 // 战斗传送门只保留关闭、开放和传送三个互斥阶段。
-enum class PortalPhase : uint8_t { Close, Active, Transfer };
+enum class PortalPhase : uint8_t
+{
+    Close,
+    Active,
+    Transfer
+};
 // 房间门保存本地目标，不执行网络场景切换。
 struct PortalState
 {
@@ -30,12 +35,17 @@ struct ObstacleState
     MG_REFLECT(ObstacleState, m_id, m_hits, m_time, m_deathStarted, m_displacementEnd)
 };
 // 掉落物按抛射、待机、收集顺序推进。
-enum class GoodsPhase : uint8_t { Spurt, Idle, Collect };
+enum class GoodsPhase : uint8_t
+{
+    Spurt,
+    Idle,
+    Collect
+};
 // 掉落物携带自己的抛射状态和拾取者句柄。
 struct GoodsState
 {
     // 配置标识与阶段。
-    int32_t m_id = 0;
+    int32_t m_id       = 0;
     GoodsPhase m_phase = GoodsPhase::Idle;
     // 抛射速度和拾取者。
     FixedVec3 m_velocity;
@@ -77,5 +87,5 @@ private:
     World& m_world;
     Entity m_entity{};
 };
-}
-}
+}  // namespace room_entities
+}  // namespace mugen::sim

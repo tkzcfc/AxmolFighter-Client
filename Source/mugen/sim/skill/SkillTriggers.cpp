@@ -12,7 +12,8 @@ void SkillCaster::trigger(BFEvent event, SkillTrigger source)
 {
     BuffContext context;
     context.m_needUseTp = source.m_amount;
-    if (source.m_actionId != -1) context.m_actionId = source.m_actionId;
+    if (source.m_actionId != -1)
+        context.m_actionId = source.m_actionId;
     const auto* pool = m_world.ecs().tryGet<SkillPool>(m_entity);
     if (pool && source.m_skill >= 0 && static_cast<size_t>(source.m_skill) < pool->m_skills.size())
         context.m_currentSkill = pool->m_skills[source.m_skill].m_configId;
@@ -26,8 +27,10 @@ void SkillCaster::trigger(ability::SkillEvent event, SkillTrigger source)
     if (const auto* pool = m_world.ecs().tryGet<SkillPool>(m_entity))
         if (source.m_skill >= 0 && static_cast<size_t>(source.m_skill) < pool->m_skills.size())
             context.m_skillId = pool->m_skills[source.m_skill].m_configId;
-    ability::AbilityHolder(m_world, m_entity).trigger(
-        event == ability::SkillEvent::BeforeCastSkill ? ability::Event::BeforeCastSkill : ability::Event::AfterCastSkill, context);
+    ability::AbilityHolder(m_world, m_entity)
+        .trigger(event == ability::SkillEvent::BeforeCastSkill ? ability::Event::BeforeCastSkill
+                                                               : ability::Event::AfterCastSkill,
+                 context);
 }
 // 强制打断按槽首技能和最初施法者筛选模式零特效。
 void SkillCaster::clearSkillEffectsByInterrupt(int32_t skillId)

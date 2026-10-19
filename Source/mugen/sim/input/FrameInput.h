@@ -34,7 +34,7 @@ struct PauseCommand
 struct SlowMotionCommand
 {
     // 逻辑时间缩放倍率。
-    Fixed scale     = Fixed::fromInt(1);
+    Fixed scale = Fixed::fromInt(1);
     // 缩放持续的逻辑帧数。
     uint32_t frames = 0;
     // 参与系统命令归档的字段。
@@ -54,7 +54,8 @@ struct RoomWarningDone
     int32_t m_roomId = 0;
     MG_REFLECT(RoomWarningDone, m_roomId)
 };
-using SystemCommand = std::variant<ReviveCommand, PauseCommand, SlowMotionCommand, ReturnToTownCommand, RoomWarningDone>;
+using SystemCommand =
+    std::variant<ReviveCommand, PauseCommand, SlowMotionCommand, ReturnToTownCommand, RoomWarningDone>;
 // 外部控制角色在一帧内的同步状态。
 struct PuppetUpdate
 {
@@ -63,7 +64,7 @@ struct PuppetUpdate
     // 目标世界坐标。
     FixedVec3 position;
     // 目标朝向，仅取 -1 或 1。
-    int32_t towardX         = 1;
+    int32_t towardX = 1;
     // 目标角色状态位。
     EntityRoleStatus status = EntityRoleStatus::None;
     // 目标动作名称。

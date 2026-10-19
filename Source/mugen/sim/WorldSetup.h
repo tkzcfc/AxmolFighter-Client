@@ -15,7 +15,7 @@ enum class WorldMode : uint8_t
 struct WorldSetup
 {
     // 唯一随机数发生器的初始种子。
-    uint64_t seed  = 1;
+    uint64_t seed = 1;
     // 本世界运行的模式。
     WorldMode mode = WorldMode::Battle;
     // 房间实例标识。
@@ -34,5 +34,5 @@ struct WorldSetup
 // 固定逻辑帧的秒数。
 inline constexpr Fixed kLogicDtSec = "0.03333332"_fx;
 // 固定逻辑帧的毫秒数。
-inline constexpr Fixed kLogicDtMs  = "33.33332"_fx;
+inline constexpr Fixed kLogicDtMs = "33.33332"_fx;
 }  // namespace mugen::sim

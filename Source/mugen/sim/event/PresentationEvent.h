@@ -149,7 +149,8 @@ using PresentationPayload = std::variant<Sound,
                                          RoleDeath,
                                          RoleIntensity,
                                          WhiteFrame,
-                                         BuffSpine, RoomWarning>;
+                                         BuffSpine,
+                                         RoomWarning>;
 // 由逻辑帧产生、仅供表现层消费的事件。
 struct PresentationEvent
 {

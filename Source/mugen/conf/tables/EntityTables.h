@@ -27,8 +27,8 @@ struct RoleConfig
     int32_t hitStiffTime = 0;
     int32_t hpBarCount   = 0;
     std::vector<int32_t> hurtNumPos;
-    int32_t id           = 0;
-    int32_t isPassRoom   = 0;
+    int32_t id         = 0;
+    int32_t isPassRoom = 0;
     // KO、阵营、名称、半径和相对位置参数。
     int32_t koEffectId   = 0;
     int32_t monsterCamps = 0;
@@ -117,8 +117,8 @@ struct EffectConfig
     int32_t follow = 0;
     std::vector<int32_t> hitEffectIds;
     std::vector<int32_t> hitExtraControl;
-    int32_t hitId        = 0;
-    int32_t hitTarget    = 0;
+    int32_t hitId     = 0;
+    int32_t hitTarget = 0;
     // 标识、后继特效、位置、半径和 Spine 资源参数。
     int32_t id           = 0;
     int32_t nextEffectId = 0;

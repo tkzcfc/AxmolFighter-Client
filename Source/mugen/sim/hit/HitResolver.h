@@ -8,7 +8,7 @@ namespace mugen::conf
 {
 struct EffectConfig;
 struct SkillHitConfig;
-}
+}  // namespace mugen::conf
 
 namespace mugen::sim
 {
@@ -43,8 +43,11 @@ private:
     // 生成或复用同配置同目标的命中特效，位置取碰撞接触点。
     void _hitEffects(Entity sourceEntity, Entity target, FixedVec2 contact);
     // 受击预处理保持事件触发与状态过滤的先后顺序。
-    bool _beforeHit(Entity target, const HitTrigger& data, const conf::EffectConfig& effectRow,
-                    const conf::SkillHitConfig& hitRow, FixedVec2 contact);
+    bool _beforeHit(Entity target,
+                    const HitTrigger& data,
+                    const conf::EffectConfig& effectRow,
+                    const conf::SkillHitConfig& hitRow,
+                    FixedVec2 contact);
     // 非霸体受击设置冻结、朝向与追击数据；状态叶子由独立模块执行。
     void _hitReaction(Entity target, const HitTrigger& data, const conf::SkillHitConfig& hitRow);
     // 非爆发状态按命中或受击回复能量。

@@ -9,25 +9,35 @@ namespace mugen::sim::buff
 void BuffHolder::removeRepeat(uint64_t serial, bool all, int32_t count, bool force)
 {
     auto* instance = findInstance(serial);
-    if (!instance || count <= 0) return;
+    if (!instance || count <= 0)
+        return;
     const auto* initial = conf::Config::instance().find<conf::BuffConfig>(
         instance->m_initialId == 0 ? instance->m_id : instance->m_initialId);
-    if (!initial) return;
-    if (count >= instance->m_lifecycle.m_repeat) { force = false; all = true; }
+    if (!initial)
+        return;
+    if (count >= instance->m_lifecycle.m_repeat)
+    {
+        force = false;
+        all   = true;
+    }
     const bool removeAll = (all || initial->removeRepeatAll == 1) && !force;
-    const int32_t calls = removeAll ? std::max(0, instance->m_lifecycle.m_repeat - 1) : count;
+    const int32_t calls  = removeAll ? std::max(0, instance->m_lifecycle.m_repeat - 1) : count;
     for (int32_t index = 0; index < calls; ++index)
     {
         instance = findInstance(serial);
-        if (!instance) return;
+        if (!instance)
+            return;
         instance->m_lifecycle.m_repeat -= removeAll ? count : 1;
         invokeRule(serial, RuleHook::Exit);
         instance = findInstance(serial);
-        if (!instance) return;
-        if (!instance->m_triggered) instance->m_triggered = true;
+        if (!instance)
+            return;
+        if (!instance->m_triggered)
+            instance->m_triggered = true;
     }
     instance = findInstance(serial);
-    if (!instance) return;
+    if (!instance)
+        return;
     instance->m_lifecycle.m_repeat = removeAll ? 0 : std::max(0, instance->m_lifecycle.m_repeat);
     if (instance->m_lifecycle.m_repeat == 0)
     {
@@ -40,13 +50,16 @@ void BuffHolder::removeRepeat(uint64_t serial, bool all, int32_t count, bool for
 void BuffHolder::invokeRule(uint64_t serial, RuleHook hook, Fixed delta)
 {
     const auto* instance = findInstance(serial);
-    if (!instance) return;
+    if (!instance)
+        return;
     const auto* config = conf::Config::instance().find<conf::BuffConfig>(instance->m_id);
-    const auto* rule = config ? conf::Config::instance().find<conf::BuffRuleConfig>(config->ruleId) : nullptr;
-    if (!rule) return;
+    const auto* rule   = config ? conf::Config::instance().find<conf::BuffRuleConfig>(config->ruleId) : nullptr;
+    if (!rule)
+        return;
     const auto id = conf::buffRuleIdFromName(rule->className);
     MG_ASSERT(id.has_value());
-    if (!id) return;
+    if (!id)
+        return;
     ruleDispatch(*id).m_hooks[static_cast<size_t>(hook)](m_world, m_entity, serial, delta);
 }
 
@@ -54,23 +67,29 @@ void BuffHolder::invokeRule(uint64_t serial, RuleHook hook, Fixed delta)
 void BuffHolder::resetInstance(uint64_t serial, const conf::BuffConfig& config)
 {
     auto* instance = findInstance(serial);
-    if (!instance) return;
+    if (!instance)
+        return;
     const auto oldId = instance->m_id;
-    if (instance->m_initialId == 0) instance->m_initialId = oldId;
+    if (instance->m_initialId == 0)
+        instance->m_initialId = oldId;
     const auto* initialConfig = conf::Config::instance().find<conf::BuffConfig>(instance->m_initialId);
-    const auto* oldConfig = conf::Config::instance().find<conf::BuffConfig>(oldId);
-    if (!oldConfig || oldConfig->priority > config.priority) return;
+    const auto* oldConfig     = conf::Config::instance().find<conf::BuffConfig>(oldId);
+    if (!oldConfig || oldConfig->priority > config.priority)
+        return;
     const auto* oldRule = conf::Config::instance().find<conf::BuffRuleConfig>(oldConfig->ruleId);
-    const bool sustain = oldRule && oldRule->buffType == 1;
-    if (oldId != config.id) invokeRule(serial, RuleHook::Exit);
-    if (config.resetType == 0) return;
+    const bool sustain  = oldRule && oldRule->buffType == 1;
+    if (oldId != config.id)
+        invokeRule(serial, RuleHook::Exit);
+    if (config.resetType == 0)
+        return;
     auto& timers = m_world.ecs().singleton<LogicTimers>().entries;
     std::erase_if(timers, [entity = m_entity, serial](const LogicTimer& timer) {
         const auto* exit = std::get_if<BuffExit>(&timer.payload);
         return timer.owner == entity && exit && exit->m_serial == serial;
     });
     instance = findInstance(serial);
-    if (!instance) return;
+    if (!instance)
+        return;
     if (config.resetType >= 4)
     {
         if (instance->m_lifecycle.m_repeat < (initialConfig ? initialConfig->repeatMax : oldConfig->repeatMax))
@@ -84,23 +103,26 @@ void BuffHolder::resetInstance(uint64_t serial, const conf::BuffConfig& config)
             invokeRule(serial, RuleHook::Enter);
     }
     instance = findInstance(serial);
-    if (!instance) return;
+    if (!instance)
+        return;
     auto& state = instance->m_lifecycle;
     state.resetCounters(config.resetType);
-    if (!sustain || config.times == -1 ||
-        (state.m_maxTimes != -1 && state.m_maxTimes - state.m_times < config.times))
+    if (!sustain || config.times == -1 || (state.m_maxTimes != -1 && state.m_maxTimes - state.m_times < config.times))
     {
-        state.m_maxTimes = config.times;
+        state.m_maxTimes    = config.times;
         state.m_maxInterval = config.interval;
     }
-    state.m_destroy = false;
-    state.m_exit = false;
+    state.m_destroy                = false;
+    state.m_exit                   = false;
     const bool restartPresentation = state.m_repeat == 0;
-    if (restartPresentation) state.m_repeat = 1;
-    instance->m_id = config.id;
+    if (restartPresentation)
+        state.m_repeat = 1;
+    instance->m_id      = config.id;
     const auto* newRule = conf::Config::instance().find<conf::BuffRuleConfig>(config.ruleId);
-    const bool shield = newRule && conf::buffRuleIdFromName(newRule->className) == conf::BuffRuleId::BuffShield;
-    if (oldId != config.id || shield) invokeRule(serial, RuleHook::Enter);
-    if (restartPresentation || sustain || shield) beginPresentation(serial);
+    const bool shield   = newRule && conf::buffRuleIdFromName(newRule->className) == conf::BuffRuleId::BuffShield;
+    if (oldId != config.id || shield)
+        invokeRule(serial, RuleHook::Enter);
+    if (restartPresentation || sustain || shield)
+        beginPresentation(serial);
 }
 }  // namespace mugen::sim::buff

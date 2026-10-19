@@ -115,7 +115,8 @@ void World::applyInput(const FrameInput& input)
         if (room.m_enabled)
         {
             const auto* group = m_ecs.tryGet<EntityGroup>(slot->second);
-            if (group && group->suspended) continue;
+            if (group && group->suspended)
+                continue;
         }
         if (auto* queue = m_ecs.tryGet<ControlEventQueue>(slot->second))
             for (const auto& command : player.commands)
@@ -190,7 +191,7 @@ void World::tick(const FrameInput& input)
     applyInput(input);
     room::RoomDirector(*this).commands(input);
     m_hooks.camera(*this);
-    auto& slow        = m_ecs.singleton<SlowMotion>();
+    auto& slow          = m_ecs.singleton<SlowMotion>();
     const bool koActive = slow.m_ko.m_active;
     if (koActive)
     {
@@ -220,10 +221,11 @@ void World::tick(const FrameInput& input)
 // 保留实体句柄和池状态，仅回收旧房间拥有的实体与定时器。
 bool World::changeRoom(int32_t id, FixedVec3 position, int32_t toward)
 {
-    const auto* config = conf::Config::instance().find<conf::RoomConfig>(id);
-    auto previous = m_ecs.singleton<RoomState>();
+    const auto* config                          = conf::Config::instance().find<conf::RoomConfig>(id);
+    auto previous                               = m_ecs.singleton<RoomState>();
     m_ecs.singleton<RoomState>().m_transferRoom = 0;
-    if (!config || !previous.m_enabled || m_ecs.singleton<PlayerSlots>().entities.empty()) return false;
+    if (!config || !previous.m_enabled || m_ecs.singleton<PlayerSlots>().entities.empty())
+        return false;
     std::vector<Entity> removed;
     std::vector<Entity> retained;
     m_ecs.each<EntityGroup>([&](Entity entity, const EntityGroup& group) {
@@ -234,13 +236,15 @@ bool World::changeRoom(int32_t id, FixedVec3 position, int32_t toward)
             if (identity)
             {
                 const auto* row = conf::Config::instance().find<conf::RoleConfig>(identity->roleId);
-                keep = identity->playerSlot.has_value() || (row && row->isPassRoom == 1);
+                keep            = identity->playerSlot.has_value() || (row && row->isPassRoom == 1);
             }
             for (const auto& [slot, player] : m_ecs.singleton<PlayerSlots>().entities)
                 keep |= player == entity;
         }
-        if (!keep) removed.push_back(entity);
-        else retained.push_back(entity);
+        if (!keep)
+            removed.push_back(entity);
+        else
+            retained.push_back(entity);
     });
     for (const auto entity : retained)
     {
@@ -252,15 +256,20 @@ bool World::changeRoom(int32_t id, FixedVec3 position, int32_t toward)
         }
         if (auto* control = m_ecs.tryGet<RoleControl>(entity))
             control->m_last = {};
-        if (m_ecs.has<Displacement>(entity)) displacement::DisplacementDriver(*this, entity).reset();
+        if (m_ecs.has<Displacement>(entity))
+            displacement::DisplacementDriver(*this, entity).reset();
         if (auto* status = m_ecs.tryGet<RoleStatus>(entity))
         {
             status->eEntityStatus = EntityRoleStatus::Idle;
-            status->entityParams = {};
+            status->entityParams  = {};
         }
-        if (auto* queue = m_ecs.tryGet<ControlEventQueue>(entity)) queue->commands.clear();
+        if (auto* queue = m_ecs.tryGet<ControlEventQueue>(entity))
+            queue->commands.clear();
         if (auto* collider = m_ecs.tryGet<ColliderState>(entity))
-        { collider->attack.clear(); collider->damage.clear(); }
+        {
+            collider->attack.clear();
+            collider->damage.clear();
+        }
     }
     for (const auto entity : removed)
     {
@@ -271,25 +280,28 @@ bool World::changeRoom(int32_t id, FixedVec3 position, int32_t toward)
         m_ecs.destroy(entity);
     }
     m_ecs.flushDestroyed();
-    if (previous.m_waveTimer != 0) m_ecs.singleton<LogicTimers>().cancel(previous.m_waveTimer);
-    m_ecs.singleton<RoomState>() = {};
-    auto& state = m_ecs.singleton<RoomState>();
-    state.m_clearedRooms = std::move(previous.m_clearedRooms);
-    state.m_usedRevives = previous.m_usedRevives;
-    m_ecs.singleton<SlowMotion>() = {};
-    m_setup.roomId = id;
-    m_setup.mapKey = config->mapKey;
-    m_ecs.singleton<MapRegion>() = {};
+    if (previous.m_waveTimer != 0)
+        m_ecs.singleton<LogicTimers>().cancel(previous.m_waveTimer);
+    m_ecs.singleton<RoomState>()        = {};
+    auto& state                         = m_ecs.singleton<RoomState>();
+    state.m_clearedRooms                = std::move(previous.m_clearedRooms);
+    state.m_usedRevives                 = previous.m_usedRevives;
+    m_ecs.singleton<SlowMotion>()       = {};
+    m_setup.roomId                      = id;
+    m_setup.mapKey                      = config->mapKey;
+    m_ecs.singleton<MapRegion>()        = {};
     m_ecs.singleton<MapRegion>().mapKey = config->mapKey;
-    if (!config->mapKey.empty()) m_ecs.singleton<MapRegion>().load("mugen/map/" + config->mapKey + ".layer");
+    if (!config->mapKey.empty())
+        m_ecs.singleton<MapRegion>().load("mugen/map/" + config->mapKey + ".layer");
     m_ecs.each<CollisionState>([](Entity, CollisionState& collision) { collision.contacts.clear(); });
-    if (!room::RoomDirector(*this).enter(*config, previous.m_stageId, previous.m_copyId)) return false;
+    if (!room::RoomDirector(*this).enter(*config, previous.m_stageId, previous.m_copyId))
+        return false;
     for (const auto& [slot, entity] : m_ecs.singleton<PlayerSlots>().entities)
     {
-        auto& transform = m_ecs.get<Transform>(entity);
+        auto& transform    = m_ecs.get<Transform>(entity);
         transform.position = position;
-        transform.towardX = toward < 0 ? -1 : 1;
-        transform.vectorX = Fixed::fromInt(transform.towardX);
+        transform.towardX  = toward < 0 ? -1 : 1;
+        transform.vectorX  = Fixed::fromInt(transform.towardX);
     }
     return true;
 }
@@ -327,7 +339,7 @@ bool World::deserialize(ByteBuffer& buffer)
 // 复制本场全部可序列化状态和驱动回调策略；副本不共享语义追踪输出。
 World World::clone() const
 {
-    World copy = *this;
+    World copy   = *this;
     copy.m_trace = nullptr;
     return copy;
 }

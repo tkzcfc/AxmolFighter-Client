@@ -43,7 +43,17 @@ struct HitBuffApplication
     std::optional<int32_t> m_boundSkill, m_origin;
 };
 // 能力系统所拥有的命中通知，不在此执行能力规则。
-enum class HitAbilityEvent : uint8_t { BeforeHit, AfterHit, AfterToBeHit, SameCamp, Anger, Death, Crystal, Obstacle };
+enum class HitAbilityEvent : uint8_t
+{
+    BeforeHit,
+    AfterHit,
+    AfterToBeHit,
+    SameCamp,
+    Anger,
+    Death,
+    Crystal,
+    Obstacle
+};
 // 世界实例持有的同步模块接缝，不进入状态快照。
 struct HitHooks
 {
@@ -95,4 +105,4 @@ struct HitHooks
     // Buff 绑定能力的同步接缝，能力系统接管实例化与事件处理。
     void (*m_buffAbility)(World&, Entity, int32_t, BFEvent, const BuffContext&) = boundAbility;
 };
-}
+}  // namespace mugen::sim

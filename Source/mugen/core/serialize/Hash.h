@@ -17,7 +17,10 @@ inline constexpr uint64_t kPrime4 = 9650029242287828579ULL;
 inline constexpr uint64_t kPrime5 = 2870177450012600261ULL;
 
 // 对 64 位字执行非零位数循环左移。
-inline uint64_t rotateLeft(uint64_t value, uint32_t count) { return (value << count) | (value >> (64 - count)); }
+inline uint64_t rotateLeft(uint64_t value, uint32_t count)
+{
+    return (value << count) | (value >> (64 - count));
+}
 
 // 从字节序列读取小端 32 位无符号数。
 inline uint32_t read32(const uint8_t* data)
@@ -39,7 +42,7 @@ inline uint64_t round(uint64_t accumulator, uint64_t input)
     accumulator = rotateLeft(accumulator, 31);
     return accumulator * kPrime1;
 }
-}
+}  // namespace hash_detail
 
 // 计算指定字节序列的确定性 xxHash64；空数据可传空指针。
 inline uint64_t xxh64(const uint8_t* data, std::size_t size, uint64_t seed = 0)
@@ -56,10 +59,10 @@ inline uint64_t xxh64(const uint8_t* data, std::size_t size, uint64_t seed = 0)
     uint64_t hash;
     if (size >= 32)
     {
-        uint64_t lane1 = seed + kPrime1 + kPrime2;
-        uint64_t lane2 = seed + kPrime2;
-        uint64_t lane3 = seed;
-        uint64_t lane4 = seed - kPrime1;
+        uint64_t lane1       = seed + kPrime1 + kPrime2;
+        uint64_t lane2       = seed + kPrime2;
+        uint64_t lane3       = seed;
+        uint64_t lane4       = seed - kPrime1;
         const uint8_t* limit = end - 32;
         do
         {

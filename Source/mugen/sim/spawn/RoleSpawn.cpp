@@ -146,7 +146,7 @@ Entity RoleSpawner::spawnRole(const RoleSpawnParams& params)
     if (!ai)
         MG_LOG_W("Role {} references missing AI {}", params.roleId, aiId);
     const int32_t camp = params.camp.value_or(row->monsterCamps);
-    RoleIdentity identity{params.roleId, row->roleType, params.level,     aiId, params.aiDifficulty, camp,
+    RoleIdentity identity{params.roleId,  row->roleType, params.level,      aiId,          params.aiDifficulty, camp,
                           _hostile(camp), params.isAi,   params.playerSlot, params.m_owner};
     RoleTimers timers;
     if (row->timeRage.size() > 2 && !row->timeRage[1].empty())
@@ -158,7 +158,8 @@ Entity RoleSpawner::spawnRole(const RoleSpawnParams& params)
     if (row->roleType == static_cast<int32_t>(EntityRoleType::kSummon))
         if (const auto* owner = m_world.ecs().tryGet<Attributes>(params.m_owner))
             for (size_t i = 0; i < attributes.basic.size(); ++i)
-                attributes.basic[i] = owner->value(i) * (i < row->attributeRate.size() ? row->attributeRate[i] : "1"_fx);
+                attributes.basic[i] =
+                    owner->value(i) * (i < row->attributeRate.size() ? row->attributeRate[i] : "1"_fx);
     Transform transform{params.position, params.toward, Fixed::fromInt(params.toward), {}, Fixed::fromInt(1)};
     MotionState motion;
     if (const auto* spine = config.find<conf::ResSpineConfig>(row->resSpineId))
@@ -201,7 +202,8 @@ Entity RoleSpawner::spawnRole(const RoleSpawnParams& params)
     {
         const auto occupation = type_conversions::toCharacterClass(params.roleId);
         if (occupation != CharacterClass::kUnknown)
-            skill::SkillCaster(m_world, entity).loadSkill(skill::SkillAssembly::playerLoadout(skill::SkillAssembly::offlineKit(occupation)));
+            skill::SkillCaster(m_world, entity)
+                .loadSkill(skill::SkillAssembly::playerLoadout(skill::SkillAssembly::offlineKit(occupation)));
         else
             skill::SkillCaster(m_world, entity).loadSkill();
     }

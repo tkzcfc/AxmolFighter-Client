@@ -10,12 +10,12 @@ namespace
 // 生命周期匹配使用动作类名，不使用可共享的动画名。
 const char* behaviorName(behavior::ActionType type)
 {
-    constexpr std::array names{"ActionBase",     "ActionDeath",    "ActionGetUp",     "ActionHitFloor", "ActionHitDown",
-                               "ActionHitUp",    "ActionHitSwitch", "ActionHit",      "ActionFall",     "ActionPatrol",
-                               "ActionChase",    "ActionAlert",     "ActionRun",      "ActionWalk",     "ActionIdle",
-                               "ActionSpurt",    "ActionCollect",   "ActionActive",   "ActionTransfer", "ActionMove",
-                               "ActionReadyIdle", "ActionReadyMove", "ActionJostled", "ActionFollow",   "ActionSpecIdle",
-                               "ActionControlled", "ActionWake",     "ActionRevive",    "ActionDestroy"};
+    constexpr std::array names{
+        "ActionBase",      "ActionDeath",      "ActionGetUp",     "ActionHitFloor",  "ActionHitDown", "ActionHitUp",
+        "ActionHitSwitch", "ActionHit",        "ActionFall",      "ActionPatrol",    "ActionChase",   "ActionAlert",
+        "ActionRun",       "ActionWalk",       "ActionIdle",      "ActionSpurt",     "ActionCollect", "ActionActive",
+        "ActionTransfer",  "ActionMove",       "ActionReadyIdle", "ActionReadyMove", "ActionJostled", "ActionFollow",
+        "ActionSpecIdle",  "ActionControlled", "ActionWake",      "ActionRevive",    "ActionDestroy"};
     return names.at(static_cast<size_t>(type));
 }
 }  // namespace

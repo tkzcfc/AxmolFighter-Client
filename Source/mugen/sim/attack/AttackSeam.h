@@ -25,7 +25,7 @@ struct RoleSpawn
     /// 自定义生成向量。
     FixedVec3 m_vector;
 };
-}
+}  // namespace effect
 namespace attack
 {
 // 动作与效果、Buff 之间的临时接缝视图，不存入组件、不拥有资源，生命周期限于单次调用。
@@ -49,5 +49,5 @@ private:
     // 视图绑定的实体。
     Entity m_entity{};
 };
-}
-}
+}  // namespace attack
+}  // namespace mugen::sim

@@ -19,12 +19,13 @@ struct SkillTrigger
 };
 namespace ability
 {
-    /// 技能施放生命周期中的能力事件类型。
-    enum class SkillEvent {
-        /// 在技能正式施放前触发。
-        BeforeCastSkill,
-        /// 在技能施放结束后触发。
-        AfterCastSkill
-    };
-}
-}
+/// 技能施放生命周期中的能力事件类型。
+enum class SkillEvent
+{
+    /// 在技能正式施放前触发。
+    BeforeCastSkill,
+    /// 在技能施放结束后触发。
+    AfterCastSkill
+};
+}  // namespace ability
+}  // namespace mugen::sim

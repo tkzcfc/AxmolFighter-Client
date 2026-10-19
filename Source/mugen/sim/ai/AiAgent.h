@@ -37,7 +37,14 @@ struct AiAgent
     std::vector<AiThreat> m_threat;
     // 引导可暂停本角色的 AI。
     bool m_enabled = true;
-    MG_REFLECT(AiAgent, m_alerted, m_lastAction, m_ruleCooldownMs, m_skillIntervalMs, m_changeTargetMs, m_threat, m_enabled)
+    MG_REFLECT(AiAgent,
+               m_alerted,
+               m_lastAction,
+               m_ruleCooldownMs,
+               m_skillIntervalMs,
+               m_changeTargetMs,
+               m_threat,
+               m_enabled)
 };
 namespace ai
 {

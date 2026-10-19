@@ -46,9 +46,23 @@ struct EffectState
     int32_t m_artifactId = -1, m_artifactIndex = -1;
     // 能力触发来源不递归触发命中能力。
     bool m_capabilityTrigger = false;
-    MG_REFLECT(EffectState, m_configId, m_owner, m_hitEntity, m_skillId, m_baseSkillId,
-               m_slot, m_skillAttributeTag, m_freezeMs, m_frozen, m_next, m_hitCount,
-               m_hitInterval, m_hitTargets, m_artifactId, m_artifactIndex, m_capabilityTrigger)
+    MG_REFLECT(EffectState,
+               m_configId,
+               m_owner,
+               m_hitEntity,
+               m_skillId,
+               m_baseSkillId,
+               m_slot,
+               m_skillAttributeTag,
+               m_freezeMs,
+               m_frozen,
+               m_next,
+               m_hitCount,
+               m_hitInterval,
+               m_hitTargets,
+               m_artifactId,
+               m_artifactIndex,
+               m_capabilityTrigger)
 };
 /// 特效树只存配置键与可快照实例。
 struct EffectTree
