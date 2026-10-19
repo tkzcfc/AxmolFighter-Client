@@ -47,7 +47,17 @@ enum class ControlKey : uint8_t
     AttackO,
     // 攻击键 Q。
     AttackQ,
+    // 枚举数量；不是有效按键。
+    Count,
 };
+
+// 所有控制键当前是否按住。
+using ControlHeldState = std::array<bool, static_cast<size_t>(ControlKey::Count)>;
+
+// 可识别的方向连招序列条数（与 kCombos 对齐）。
+inline constexpr size_t kDirectionComboCount = 24;
+// 每种方向连招已匹配的输入长度。
+using DirectionComboProgress = std::array<uint8_t, kDirectionComboCount>;
 
 // 将按键状态转换为确定性角色控制命令。
 class ControlManagerCore
@@ -74,9 +84,9 @@ private:
     ControlEvent comboEvent() const;
 
     // 所有控制键当前是否按住。
-    std::array<bool, 20> m_held{};
+    ControlHeldState m_held{};
     // 每种方向连招已匹配的输入长度。
-    std::array<uint8_t, 24> m_comboProgress{};
+    DirectionComboProgress m_comboProgress{};
     // 攻击 A 的重复发令计时。
     uint32_t m_attackRepeat = 0;
     // 连招输入超时计时。

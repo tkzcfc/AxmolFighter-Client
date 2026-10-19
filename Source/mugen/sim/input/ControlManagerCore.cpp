@@ -12,7 +12,7 @@ constexpr std::array<ControlEvent, 16> kAttackEvents = {
     ControlEvent::CTR_ATKM, ControlEvent::CTR_ATKN, ControlEvent::CTR_ATKO, ControlEvent::CTR_ATKQ,
 };
 // 用方向编码描述的可识别连招序列。
-constexpr std::array<std::array<int32_t, 5>, 24> kCombos = {
+constexpr std::array<std::array<int32_t, 5>, kDirectionComboCount> kCombos = {
     {{2, 3, 4, 1, 2}, {4, 3, 2, 1, 4}, {3, 2, 3, 2, 0}, {3, 4, 3, 4, 0}, {2, 4, 3, 2, 0}, {4, 2, 3, 4, 0},
      {2, 3, 4, 0, 0}, {4, 3, 2, 0, 0}, {3, 2, 1, 0, 0}, {3, 4, 1, 0, 0}, {3, 4, 0, 0, 0}, {3, 2, 0, 0, 0},
      {2, 4, 0, 0, 0}, {4, 2, 0, 0, 0}, {3, 1, 0, 0, 0}, {3, 1, 0, 0, 0}, {3, 4, 3, 2, 0}, {3, 2, 3, 4, 0},
@@ -61,7 +61,7 @@ int32_t diagonalQuadrant(int32_t xSign, int32_t zSign)
 }
 
 // 按各轴后按下的方向键得出象限；垂直两轴同时按住时角度为 45 度。
-DirectionAim direction(const std::array<bool, 20>& held, const std::array<uint32_t, 4>& pressOrder)
+DirectionAim direction(const ControlHeldState& held, const std::array<uint32_t, 4>& pressOrder)
 {
     const int32_t xSign = axisSign({held[keyIndex(ControlKey::Left)], held[keyIndex(ControlKey::Right)],
                                     pressOrder[keyIndex(ControlKey::Left)], pressOrder[keyIndex(ControlKey::Right)]});

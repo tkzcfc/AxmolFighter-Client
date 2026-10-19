@@ -167,8 +167,7 @@ void LocalBattleMode::toggleCollisionDebug()
 
 void LocalBattleMode::setInput(uint32_t slot, bool pressed)
 {
-    if (slot >= static_cast<uint32_t>(mugen::sim::ControlKey::Left) &&
-        slot <= static_cast<uint32_t>(mugen::sim::ControlKey::AttackQ))
+    if (slot < static_cast<uint32_t>(mugen::sim::ControlKey::Count))
         m_control.setKey(static_cast<mugen::sim::ControlKey>(slot), pressed);
 }
 
