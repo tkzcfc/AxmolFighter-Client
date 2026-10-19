@@ -50,12 +50,8 @@ bool LocalBattleMode::init()
         std::exit(1);
         return false;
     }
-    m_world.init({1, mugen::sim::WorldMode::Battle, m_roomId, room->mapKey});
 
-    const int32_t roleId       = m_roleId > 0 ? m_roleId : resolveLocalPlayerRoleId();
-    const auto characterClass  = mugen::type_conversions::toCharacterClass(roleId);
-    const mugen::Entity player = mugen::sim::RoleSpawner(m_world).spawnPlayer(
-        characterClass, {.roleId = roleId, .level = 1, .playerSlot = 0, .isAi = false});
+    // 查找房间对应的关卡和副本 ID
     int32_t stageId = 0, copyId = 0;
     for (const auto& stage : config.table<mugen::conf::StageConfig>())
     {
@@ -73,18 +69,31 @@ bool LocalBattleMode::init()
             break;
         }
     }
+
+    m_world.init({1, mugen::sim::WorldMode::Battle, m_roomId, room->mapKey});
     if (!mugen::sim::room::RoomDirector(m_world).enter(*room, stageId, copyId))
         return false;
+
     auto* scene = ax::Director::getInstance()->getRunningScene();
     auto* root  = ax::Node::create();
     scene->addChild(root, 10);
+
+    
+    const int32_t roleId       = m_roleId > 0 ? m_roleId : resolveLocalPlayerRoleId();
+    const auto characterClass  = mugen::type_conversions::toCharacterClass(roleId);
+    const mugen::Entity player = mugen::sim::RoleSpawner(m_world).spawnPlayer(
+        characterClass, {.roleId = roleId, .level = 1, .playerSlot = 0, .isAi = false});
+
     m_presenter = std::make_unique<WorldPresenterHolder>(*root);
     m_presenter->presenter.loadMap(room->mapKey);
     m_presenter->presenter.setFollowEntity(player);
+
     m_replay.schemaHash = mugen::conf::configSchemaHash();
     m_replay.setup      = m_world.setup();
+
     m_initialized       = true;
     AXLOGI("LocalBattleMode: ready (room={})", m_roomId);
+
     return true;
 }
 
