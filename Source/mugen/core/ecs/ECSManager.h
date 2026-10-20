@@ -176,6 +176,7 @@ public:
     // 仅向从未分配实体的 manager 读取完整快照，失败不修改目标。
     bool deserialize(ByteBuffer& buffer)
     {
+        MG_ASSERT(m_traversalDepth == 0 && "Can only deserialize when not traversing");
         if (!m_entities.empty() || m_traversalDepth != 0)
             return false;
         ECSManager restored;
