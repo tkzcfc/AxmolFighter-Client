@@ -79,7 +79,7 @@ TEST_CASE("RoleBrain branch selection follows movement commands")
     // 行走命令进入 Walk 分支。
     PlayerCommand walk;
     walk.controlEvent = ControlEvent::CTR_WALK;
-    walk.quadrant     = 3;
+    walk.quadrant     = ControlQuadrant::DownLeft;
     f.world.ecs().get<ControlEventQueue>(f.entity).commands.push_back(walk);
     role::brain::RoleContext(f.world, f.entity).consumeControl();
     role::brain::RoleBrainDriver(f.world, f.entity, f.brain, false).update();
@@ -94,7 +94,7 @@ TEST_CASE("RoleBrain branch selection follows movement commands")
     // 跑动命令进入 Run 分支。
     PlayerCommand run;
     run.controlEvent = ControlEvent::CTR_RUN;
-    run.quadrant     = 3;
+    run.quadrant     = ControlQuadrant::DownLeft;
     f.world.ecs().get<ControlEventQueue>(f.entity).commands.push_back(run);
     role::brain::RoleContext(f.world, f.entity).consumeControl();
     role::brain::RoleBrainDriver(f.world, f.entity, f.brain, false).update();

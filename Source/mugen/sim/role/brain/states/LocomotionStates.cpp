@@ -59,7 +59,7 @@ BTStatus Locomotion::update(RoleContext& ctx, Param type, State& state)
     const auto command = ctx.get<RoleControl>().m_last;
     auto& t            = ctx.get<Transform>();
     auto& v            = ctx.get<RoleHitState>().forceVelocity;
-    if (command.quadrant == 0)
+    if (command.quadrant == ControlQuadrant::None)
     {
         v.x = v.z = {};
         return BTStatus::Running;
@@ -67,11 +67,11 @@ BTStatus Locomotion::update(RoleContext& ctx, Param type, State& state)
     const Fixed angle = Fixed::ratio(command.angle, 1000);
     if (command.angle != 90000)
     {
-        t.towardX = command.quadrant <= 2 ? 1 : -1;
+        t.towardX = vectorX(command.quadrant);
         t.vectorX = Fixed::fromInt(t.towardX);
     }
     if (command.angle != 0)
-        t.vectorZ = Fixed::fromInt(command.quadrant == 1 || command.quadrant == 4 ? 1 : -1);
+        t.vectorZ = Fixed::fromInt(vectorZ(command.quadrant));
     const auto* row = conf::Config::instance().find<conf::RoleConfig>(ctx.get<RoleIdentity>().roleId);
     if (row)
     {

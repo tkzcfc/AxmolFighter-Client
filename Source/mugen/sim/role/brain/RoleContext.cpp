@@ -40,15 +40,28 @@ void RoleContext::_skillEvent(const PlayerCommand& command)
     auto* pool = m_world.ecs().tryGet<SkillPool>(m_entity);
     if (!pool)
         return;
-    if (command.quadrant == 0)
+    if (command.quadrant == ControlQuadrant::None)
         pool->m_controlAngle.reset();
     else
     {
-        const auto angle     = Fixed::ratio(command.angle, 1000);
-        pool->m_controlAngle = command.quadrant == 1   ? "90"_fx - angle
-                               : command.quadrant == 2 ? "90"_fx + angle
-                               : command.quadrant == 3 ? "270"_fx - angle
-                                                       : "270"_fx + angle;
+        const auto angle = Fixed::ratio(command.angle, 1000);
+        switch (command.quadrant)
+        {
+        case ControlQuadrant::UpRight:
+            pool->m_controlAngle = "90"_fx - angle;
+            break;
+        case ControlQuadrant::DownRight:
+            pool->m_controlAngle = "90"_fx + angle;
+            break;
+        case ControlQuadrant::DownLeft:
+            pool->m_controlAngle = "270"_fx - angle;
+            break;
+        case ControlQuadrant::UpLeft:
+            pool->m_controlAngle = "270"_fx + angle;
+            break;
+        case ControlQuadrant::None:
+            break;
+        }
     }
     skill::SkillCaster(m_world, m_entity).dealButtonEvent(command.controlEvent, command.pressType == 2);
 }

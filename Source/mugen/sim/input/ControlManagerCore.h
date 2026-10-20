@@ -91,8 +91,8 @@ private:
     uint32_t m_attackRepeat = 0;
     // 连招输入超时计时。
     uint32_t m_comboWait = 0;
-    // 上一帧已处理的方向编码。
-    int32_t m_lastDirection = 0;
+    // 上一帧已处理的方向象限。
+    ControlQuadrant m_lastDirection = ControlQuadrant::None;
     // 上一帧已发出的移动角度，角度变化时即使象限不变也重新发令。
     int32_t m_lastAngle = 0;
     // 四个方向键的按下序号，同轴对向键同时按住时序号更大的一侧生效。

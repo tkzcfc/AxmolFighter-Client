@@ -1,4 +1,5 @@
 #pragma once
+#include "ControlQuadrant.h"
 #include "mugen/conf/GameDef.h"
 #include "mugen/core/reflect/Reflect.h"
 
@@ -9,8 +10,8 @@ struct PlayerCommand
 {
     // 触发的控制事件。
     ControlEvent controlEvent = ControlEvent::CTR_NONE;
-    // 方向象限编码。
-    int32_t quadrant = 0;
+    // 方向象限。
+    ControlQuadrant quadrant = ControlQuadrant::None;
     // 角度乘以 1000 的整数值，不经渲染数值解码。
     int32_t angle = 0;
     // 按下类型编码。

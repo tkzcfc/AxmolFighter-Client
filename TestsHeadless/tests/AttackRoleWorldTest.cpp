@@ -89,10 +89,7 @@ struct WorldAttack
         return static_cast<int64_t>(brain.m_cast.m_skill) * 1000 + brain.m_cast.m_index;
     }
     // 返回当前攻击叶的逐帧状态。
-    const attack::ActionAttack& state() const
-    {
-        return world.ecs().get<RoleBrain>(entity).m_cast.m_leaf.m_action;
-    }
+    const attack::ActionAttack& state() const { return world.ecs().get<RoleBrain>(entity).m_cast.m_leaf.m_action; }
     void overrideAction()
     {
         conf::ConfigArchive archive;
@@ -132,8 +129,8 @@ TEST_CASE("AttackRole World buffered FrameInput chains running leaf")
     CHECK(f.world.ecs().get<SkillPool>(f.entity).m_current != oldSkill);
     f.tick();
     REQUIRE(f.active() >= 0);
-    auto& brain      = f.world.ecs().get<RoleBrain>(f.entity);
-    const auto next  = brain.m_cast.m_skill;
+    auto& brain         = f.world.ecs().get<RoleBrain>(f.entity);
+    const auto next     = brain.m_cast.m_skill;
     const auto actionId = brain.m_cast.m_actions[static_cast<size_t>(brain.m_cast.m_index)];
     CHECK(next != oldSkill);
     std::cout << "AttackRole World buffered skill=" << f.skillId << " first_action=" << f.action.id
@@ -229,7 +226,7 @@ TEST_CASE("AttackRole World control movement and facing run through pipeline")
         const auto start = f.world.ecs().get<Transform>(f.entity).position;
         PlayerCommand command;
         command.controlEvent = ControlEvent::CTR_WALK;
-        command.quadrant     = 3;
+        command.quadrant     = ControlQuadrant::DownLeft;
         f.world.tick({++f.frame, {{0, {command}}}, {}, {}});
         const auto& t = f.world.ecs().get<Transform>(f.entity);
         CHECK(t.towardX == -1);

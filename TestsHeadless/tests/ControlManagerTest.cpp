@@ -43,7 +43,7 @@ TEST_CASE("ControlManager diagonal Up Right emits quadrant 1 at 45 degrees")
     control.advance(commands);
     REQUIRE(commands.size() == 1);
     CHECK(commands[0].controlEvent == mugen::ControlEvent::CTR_RUN);
-    CHECK(commands[0].quadrant == 1);
+    CHECK(commands[0].quadrant == ControlQuadrant::UpRight);
     CHECK(commands[0].angle == 45000);
 }
 
@@ -57,7 +57,7 @@ TEST_CASE("ControlManager Right then Up reemits the same quadrant at 45 degrees"
     control.advance(commands);
     REQUIRE(commands.size() == 2);
     CHECK(commands[1].controlEvent == mugen::ControlEvent::CTR_RUN);
-    CHECK(commands[1].quadrant == 1);
+    CHECK(commands[1].quadrant == ControlQuadrant::UpRight);
     CHECK(commands[1].angle == 45000);
 }
 
@@ -71,7 +71,7 @@ TEST_CASE("ControlManager Left then Right while both held runs right")
     control.advance(commands);
     REQUIRE(commands.size() == 2);
     CHECK(commands[1].controlEvent == mugen::ControlEvent::CTR_RUN);
-    CHECK(commands[1].quadrant == 1);
+    CHECK(commands[1].quadrant == ControlQuadrant::UpRight);
     CHECK(commands[1].angle == 0);
 }
 
@@ -88,6 +88,6 @@ TEST_CASE("ControlManager releasing the later opposing key keeps the remaining d
     control.advance(commands);
     REQUIRE(commands.size() == 1);
     CHECK(commands[0].controlEvent == mugen::ControlEvent::CTR_RUN);
-    CHECK(commands[0].quadrant == 3);
+    CHECK(commands[0].quadrant == ControlQuadrant::DownLeft);
     CHECK(commands[0].angle == 0);
 }

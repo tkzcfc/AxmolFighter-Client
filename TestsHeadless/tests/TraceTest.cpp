@@ -109,13 +109,13 @@ TEST_CASE("Trace combat scenario captures skill cast and is deterministic")
         {
             FrameInput input{frame, {}, {}, {}};
             if (frame >= 5 && frame <= 30)
-                input.players.push_back({0, {{ControlEvent::CTR_RUN, 3, 0, 1}}});
+                input.players.push_back({0, {{ControlEvent::CTR_RUN, ControlQuadrant::DownLeft, 0, 1}}});
             else if (frame >= 31 && frame <= 50)
-                input.players.push_back({0, {{ControlEvent::CTR_ATKA, 3, 0, 1}}});
+                input.players.push_back({0, {{ControlEvent::CTR_ATKA, ControlQuadrant::DownLeft, 0, 1}}});
             world.tick(input);
         }
     };
-    World first = build();
+    World first  = build();
     World second = build();
     trace::TraceSink a, b;
     first.setTrace(&a);

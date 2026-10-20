@@ -11,69 +11,49 @@ constexpr std::array<ControlEvent, 16> kAttackEvents = {
     ControlEvent::CTR_ATKI, ControlEvent::CTR_ATKJ, ControlEvent::CTR_ATKK, ControlEvent::CTR_ATKL,
     ControlEvent::CTR_ATKM, ControlEvent::CTR_ATKN, ControlEvent::CTR_ATKO, ControlEvent::CTR_ATKQ,
 };
-// 用方向编码描述的可识别连招序列。
-constexpr std::array<std::array<int32_t, 5>, kDirectionComboCount> kCombos = {
-    {{2, 3, 4, 1, 2}, {4, 3, 2, 1, 4}, {3, 2, 3, 2, 0}, {3, 4, 3, 4, 0}, {2, 4, 3, 2, 0}, {4, 2, 3, 4, 0},
-     {2, 3, 4, 0, 0}, {4, 3, 2, 0, 0}, {3, 2, 1, 0, 0}, {3, 4, 1, 0, 0}, {3, 4, 0, 0, 0}, {3, 2, 0, 0, 0},
-     {2, 4, 0, 0, 0}, {4, 2, 0, 0, 0}, {3, 1, 0, 0, 0}, {3, 1, 0, 0, 0}, {3, 4, 3, 2, 0}, {3, 2, 3, 4, 0},
-     {2, 1, 4, 3, 2}, {4, 1, 2, 3, 4}, {1, 3, 0, 0, 0}, {1, 3, 0, 0, 0}, {2, 4, 2, 0, 0}, {4, 2, 4, 0, 0}}};
+// 将箭头序列编译成象限连招；未写满的位置视为结束。
+constexpr std::array<ControlQuadrant, 5> comboOf(char32_t a,
+                                                 char32_t b = 0,
+                                                 char32_t c = 0,
+                                                 char32_t d = 0,
+                                                 char32_t e = 0)
+{
+    return {quadrantFromArrow(a), quadrantFromArrow(b), quadrantFromArrow(c), quadrantFromArrow(d),
+            quadrantFromArrow(e)};
+}
+
+// 用上下左右箭头描述的可识别连招序列。
+constexpr std::array<std::array<ControlQuadrant, 5>, kDirectionComboCount> kCombos = {{
+    comboOf(U'↓', U'←', U'↑', U'→', U'↓'),
+    comboOf(U'↑', U'←', U'↓', U'→', U'↑'),
+    comboOf(U'←', U'↓', U'←', U'↓'),
+    comboOf(U'←', U'↑', U'←', U'↑'),
+    comboOf(U'↓', U'↑', U'←', U'↓'),
+    comboOf(U'↑', U'↓', U'←', U'↑'),
+    comboOf(U'↓', U'←', U'↑'),
+    comboOf(U'↑', U'←', U'↓'),
+    comboOf(U'←', U'↓', U'→'),
+    comboOf(U'←', U'↑', U'→'),
+    comboOf(U'←', U'↑'),
+    comboOf(U'←', U'↓'),
+    comboOf(U'↓', U'↑'),
+    comboOf(U'↑', U'↓'),
+    comboOf(U'←', U'→'),
+    comboOf(U'←', U'→'),
+    comboOf(U'←', U'↑', U'←', U'↓'),
+    comboOf(U'←', U'↓', U'←', U'↑'),
+    comboOf(U'↓', U'→', U'↑', U'←', U'↓'),
+    comboOf(U'↑', U'→', U'↓', U'←', U'↑'),
+    comboOf(U'→', U'←'),
+    comboOf(U'→', U'←'),
+    comboOf(U'↓', U'↑', U'↓'),
+    comboOf(U'↑', U'↓', U'↑'),
+}};
 
 // 将枚举键转换为按键状态数组下标。
 constexpr size_t keyIndex(ControlKey key)
 {
     return static_cast<size_t>(key);
-}
-
-// 一帧方向意图：象限仍是四向扇区，斜向额外带 45 度角。
-struct DirectionAim
-{
-    int32_t quadrant = 0;
-    int32_t angle    = 0;
-};
-
-// 同一轴两侧的按住状态与按下序号。
-struct AxisKeys
-{
-    bool negativeHeld      = false;
-    bool positiveHeld      = false;
-    uint32_t negativeOrder = 0;
-    uint32_t positiveOrder = 0;
-};
-
-// 同轴对向键同时按住时，后按下的一侧决定符号。
-int32_t axisSign(AxisKeys axis)
-{
-    if (axis.negativeHeld && axis.positiveHeld)
-        return axis.positiveOrder >= axis.negativeOrder ? 1 : -1;
-    if (axis.positiveHeld)
-        return 1;
-    if (axis.negativeHeld)
-        return -1;
-    return 0;
-}
-
-// 斜向象限与移动叶子的向量符号一致：右上 1、右下 2、左下 3、左上 4。
-int32_t diagonalQuadrant(int32_t xSign, int32_t zSign)
-{
-    if (xSign > 0)
-        return zSign > 0 ? 1 : 2;
-    return zSign > 0 ? 4 : 3;
-}
-
-// 按各轴后按下的方向键得出象限；垂直两轴同时按住时角度为 45 度。
-DirectionAim direction(const ControlHeldState& held, const std::array<uint32_t, 4>& pressOrder)
-{
-    const int32_t xSign = axisSign({held[keyIndex(ControlKey::Left)], held[keyIndex(ControlKey::Right)],
-                                    pressOrder[keyIndex(ControlKey::Left)], pressOrder[keyIndex(ControlKey::Right)]});
-    const int32_t zSign = axisSign({held[keyIndex(ControlKey::Down)], held[keyIndex(ControlKey::Up)],
-                                    pressOrder[keyIndex(ControlKey::Down)], pressOrder[keyIndex(ControlKey::Up)]});
-    if (xSign == 0 && zSign == 0)
-        return {};
-    if (xSign != 0 && zSign != 0)
-        return {diagonalQuadrant(xSign, zSign), 45000};
-    if (xSign != 0)
-        return {xSign > 0 ? 1 : 3, 0};
-    return {zSign > 0 ? 4 : 2, 90000};
 }
 }  // namespace
 
@@ -98,12 +78,12 @@ void ControlManagerCore::appendAttack(ControlEvent event, int32_t pressType, std
         const ControlEvent combo = comboEvent();
         if (combo != ControlEvent::CTR_NONE)
         {
-            commands.push_back({combo, 0, 0, pressType});
+            commands.push_back({combo, ControlQuadrant::None, 0, pressType});
             resetCombo();
             return;
         }
     }
-    commands.push_back({event, 0, 0, pressType});
+    commands.push_back({event, ControlQuadrant::None, 0, pressType});
 }
 
 // 取消当前所有连招匹配状态。
@@ -119,7 +99,7 @@ ControlEvent ControlManagerCore::comboEvent() const
     for (size_t index = 0; index < m_comboProgress.size(); ++index)
     {
         size_t length = 0;
-        while (length < kCombos[index].size() && kCombos[index][length] != 0)
+        while (length < kCombos[index].size() && kCombos[index][length] != ControlQuadrant::None)
             ++length;
         if (m_comboProgress[index] >= length)
             return static_cast<ControlEvent>(static_cast<uint8_t>(ControlEvent::CTR_JOY1) + index / 2);
@@ -130,16 +110,21 @@ ControlEvent ControlManagerCore::comboEvent() const
 // 方向或角度变化时发令；仍有方向键按住时不发待机。
 void ControlManagerCore::updateDirection(std::vector<PlayerCommand>& commands)
 {
-    const DirectionAim aim = direction(m_held, m_pressOrder);
+    const ControlAim aim = ControlAim::fromDirectionKeys(
+        m_held[keyIndex(ControlKey::Left)], m_held[keyIndex(ControlKey::Right)], m_held[keyIndex(ControlKey::Down)],
+        m_held[keyIndex(ControlKey::Up)], m_pressOrder[keyIndex(ControlKey::Left)],
+        m_pressOrder[keyIndex(ControlKey::Right)], m_pressOrder[keyIndex(ControlKey::Down)],
+        m_pressOrder[keyIndex(ControlKey::Up)]);
+    // 按键的象限和角度都没变时不重新发出命令，避免重复发令。
     if (aim.quadrant == m_lastDirection && aim.angle == m_lastAngle)
         return;
     const bool sectorChanged = aim.quadrant != m_lastDirection;
     m_lastDirection          = aim.quadrant;
     m_lastAngle              = aim.angle;
-    if (aim.quadrant == 0)
+    if (aim.quadrant == ControlQuadrant::None)
     {
-        // 两轴都松开后清掉上一帧留下的移动方向。
-        commands.push_back({ControlEvent::CTR_IDLE, 0, 0, 0});
+        // 没有方向键按住时发出待机命令。
+        commands.push_back({ControlEvent::CTR_IDLE, ControlQuadrant::None, 0, 0});
         return;
     }
     if (sectorChanged)

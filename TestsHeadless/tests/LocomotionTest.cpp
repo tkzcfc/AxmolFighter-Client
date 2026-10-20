@@ -32,7 +32,7 @@ Entity setup(World& world, bool moving = false)
 }
 void advance(World& world, Entity entity, ControlEvent event)
 {
-    world.ecs().get<ControlEventQueue>(entity).commands.push_back({event, 1, 0, 0});
+    world.ecs().get<ControlEventQueue>(entity).commands.push_back({event, ControlQuadrant::UpRight, 0, 0});
     world.tick({world.ecs().singleton<WorldClock>().frame + 1, {}, {}, {}});
 }
 double number(Fixed value)
@@ -69,15 +69,15 @@ TEST_CASE("Locomotion applies ControlManager arrow commands to player movement")
     const Entity entity = setup(world, true);
     ControlManagerCore control;
     std::vector<PlayerCommand> commands;
-    ControlKey key   = ControlKey::Right;
-    int32_t quadrant = 1;
-    int32_t angle    = 0;
+    ControlKey key           = ControlKey::Right;
+    ControlQuadrant quadrant = ControlQuadrant::UpRight;
+    int32_t angle            = 0;
     int32_t dx = 1, dz = 0;
     SUBCASE("Right moves positive x") {}
     SUBCASE("Down moves negative z")
     {
         key      = ControlKey::Down;
-        quadrant = 2;
+        quadrant = ControlQuadrant::DownRight;
         angle    = 90000;
         dx       = 0;
         dz       = -1;
@@ -85,13 +85,13 @@ TEST_CASE("Locomotion applies ControlManager arrow commands to player movement")
     SUBCASE("Left moves negative x")
     {
         key      = ControlKey::Left;
-        quadrant = 3;
+        quadrant = ControlQuadrant::DownLeft;
         dx       = -1;
     }
     SUBCASE("Up moves positive z")
     {
         key      = ControlKey::Up;
-        quadrant = 4;
+        quadrant = ControlQuadrant::UpLeft;
         angle    = 90000;
         dx       = 0;
         dz       = 1;

@@ -106,7 +106,7 @@ TEST_CASE("World frame 500 byte snapshot restore and clone continue identically"
     for (uint64_t n = 501; n <= 1000; ++n)
     {
         FrameInput input = frame(n);
-        input.players.push_back({3, {{ControlEvent::CTR_WALK, 2, 45000, 1}}});
+        input.players.push_back({3, {{ControlEvent::CTR_WALK, ControlQuadrant::DownRight, 45000, 1}}});
         for (World* world : {&original, &restored, &clone})
         {
             world->ecs().singleton<RngState>().random.next();
@@ -160,11 +160,11 @@ TEST_CASE("Timer exact frame loop remainder event sequence and unscaled clock")
     CHECK(timers.entries[0].elapsedMs == Fixed{});
 #if !defined(NDEBUG)
     const std::string executable = ecs_test::executablePath;
-#if defined(_WIN32)
+#    if defined(_WIN32)
     const std::string timerProbe = "\"" + executable + "\" --world-invalid-probe 0 > NUL 2>&1";
-#else
+#    else
     const std::string timerProbe = "\"" + executable + "\" --world-invalid-probe 0 > /dev/null 2>&1";
-#endif
+#    endif
     CHECK(std::system(timerProbe.c_str()) != 0);
 #endif
 }
@@ -205,9 +205,9 @@ TEST_CASE("World input queues preserve ordering and reject frames transactionall
     const auto entity = world.create(GroupKind::Role);
     world.ecs().add(entity, ControlEventQueue{});
     world.ecs().singleton<PlayerSlots>().entities[4] = entity;
-    REQUIRE(harness.inject(1, 4, {ControlEvent::CTR_WALK, 2, 45000, 1}));
+    REQUIRE(harness.inject(1, 4, {ControlEvent::CTR_WALK, ControlQuadrant::DownRight, 45000, 1}));
     REQUIRE(harness.inject(1, 4, {ControlEvent::CTR_NONE}));
-    REQUIRE(harness.inject(1, 4, {ControlEvent::CTR_ATKA, 3, -90000, 2}));
+    REQUIRE(harness.inject(1, 4, {ControlEvent::CTR_ATKA, ControlQuadrant::DownLeft, -90000, 2}));
     REQUIRE(harness.injectSystem(1, PauseCommand{true}));
     REQUIRE(harness.injectSystem(1, ReviveCommand{4}));
     harness.tick();
@@ -220,11 +220,11 @@ TEST_CASE("World input queues preserve ordering and reject frames transactionall
     const auto before = world.hash();
 #if !defined(NDEBUG)
     const std::string executable = ecs_test::executablePath;
-#if defined(_WIN32)
+#    if defined(_WIN32)
     const std::string frameProbe = "\"" + executable + "\" --world-invalid-probe 1 > NUL 2>&1";
-#else
+#    else
     const std::string frameProbe = "\"" + executable + "\" --world-invalid-probe 1 > /dev/null 2>&1";
-#endif
+#    endif
     CHECK(std::system(frameProbe.c_str()) != 0);
 #endif
     CHECK(world.hash() == before);
@@ -271,7 +271,7 @@ TEST_CASE("Replay canonical bytes roundtrip hashes and schema mismatch rejection
     for (uint64_t n = 1; n <= 1000; ++n)
     {
         auto input = frame(n);
-        input.players.push_back({2, {{ControlEvent::CTR_WALK, 1, 90000, 2}}});
+        input.players.push_back({2, {{ControlEvent::CTR_WALK, ControlQuadrant::UpRight, 90000, 2}}});
         if (n == 5)
         {
             input.systemCommands = {ReviveCommand{2}, PauseCommand{false}, SlowMotionCommand{"0.5"_fx, 5}};

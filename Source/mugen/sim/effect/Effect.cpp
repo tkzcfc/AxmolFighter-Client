@@ -102,16 +102,16 @@ void direction(World& world, Entity entity, bool facing)
 {
     const auto command = control(world, entity);
     auto& transform    = world.ecs().get<Transform>(entity);
-    if (command.quadrant == 0)
+    if (command.quadrant == ControlQuadrant::None)
         return;
     if (command.angle != 90000)
     {
-        transform.vectorX = command.quadrant <= 2 ? "1"_fx : "-1"_fx;
+        transform.vectorX = Fixed::fromInt(vectorX(command.quadrant));
         if (facing)
             transform.towardX = static_cast<int32_t>(transform.vectorX.toInt());
     }
     if (command.angle != 0)
-        transform.vectorZ = command.quadrant == 1 || command.quadrant == 4 ? "1"_fx : "-1"_fx;
+        transform.vectorZ = Fixed::fromInt(vectorZ(command.quadrant));
 }
 /// 按共用动作控制规则更新特效速度。
 void moveControl(World& world, Entity entity, const conf::ActionEffectConfig& row)
@@ -127,10 +127,12 @@ void moveControl(World& world, Entity entity, const conf::ActionEffectConfig& ro
         const auto transform = world.ecs().get<Transform>(entity);
         auto& velocity       = world.ecs().get<RoleHitState>(entity).forceVelocity;
         const auto angle     = Fixed::ratio(command.angle, 1000);
-        velocity.x =
-            command.quadrant == 0 ? Fixed{} : FixedMath::cosDeg(angle) * row.controlVelocity * transform.vectorX;
-        velocity.z =
-            command.quadrant == 0 ? Fixed{} : FixedMath::sinDeg(angle) * row.controlVelocity * transform.vectorZ;
+        velocity.x           = command.quadrant == ControlQuadrant::None
+                                   ? Fixed{}
+                                   : FixedMath::cosDeg(angle) * row.controlVelocity * transform.vectorX;
+        velocity.z           = command.quadrant == ControlQuadrant::None
+                                   ? Fixed{}
+                                   : FixedMath::sinDeg(angle) * row.controlVelocity * transform.vectorZ;
     }
 }
 /// 初始化单段动画、飞行位移及声音。

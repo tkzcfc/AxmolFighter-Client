@@ -84,11 +84,13 @@ std::map<uint64_t, FrameInput> loadScript(const std::string& path, uint64_t fram
         std::istringstream row(line);
         uint64_t frame;
         uint32_t slot, event;
+        int32_t quadrant = 0;
         PlayerCommand command;
         std::string extra;
-        if (!(row >> frame >> slot >> event >> command.quadrant >> command.angle >> command.pressType) ||
-            (row >> extra) || frame == 0 || frame > frames || event > 255)
+        if (!(row >> frame >> slot >> event >> quadrant >> command.angle >> command.pressType) || (row >> extra) ||
+            frame == 0 || frame > frames || event > 255)
             throw std::invalid_argument("Invalid command script line " + std::to_string(lineNumber));
+        command.quadrant     = static_cast<ControlQuadrant>(quadrant);
         command.controlEvent = static_cast<ControlEvent>(event);
         auto& input          = inputs[frame];
         input.frame          = frame;
@@ -115,8 +117,8 @@ FrameInput recordedInput(World& world)
         input.systemCommands.push_back(RoomWarningDone{room.roomId});
     PlayerCommand command;
     command.controlEvent = room.m_victory ? ControlEvent::CTR_RUN
-                                           : (input.frame % 30 == 0 ? ControlEvent::CTR_ATKA : ControlEvent::CTR_WALK);
-    command.quadrant     = 1;
+                                          : (input.frame % 30 == 0 ? ControlEvent::CTR_ATKA : ControlEvent::CTR_WALK);
+    command.quadrant     = ControlQuadrant::UpRight;
     command.angle        = 0;
     command.pressType    = 1;
     input.players.push_back({0, {command}});
@@ -138,8 +140,8 @@ World combatWorld(int32_t roomId, uint64_t seed, int32_t occupation, int32_t lev
         throw std::runtime_error("Cannot enter room " + std::to_string(roomId));
     if (std::getenv("MUGEN_TRACE_DUMP_SKILLS"))
     {
-        world.ecs().each<RoleIdentity, SkillPool, Vitals>([&](Entity, const RoleIdentity& id, const SkillPool& pool,
-                                                               const Vitals& vitals) {
+        world.ecs().each<RoleIdentity, SkillPool, Vitals>(
+            [&](Entity, const RoleIdentity& id, const SkillPool& pool, const Vitals& vitals) {
             std::cerr << "[dump] role " << id.roleId << " ep=" << vitals.ep.toInt() << "/" << vitals.maxEp.toInt()
                       << " crystals=" << pool.m_crystals << '\n';
             for (size_t s = 0; s < pool.m_slots.size(); ++s)
@@ -148,7 +150,7 @@ World combatWorld(int32_t roomId, uint64_t seed, int32_t occupation, int32_t lev
                 for (const auto& idx : pool.m_index)
                     if (idx.m_address.m_slot == s)
                     {
-                        const auto& sk = pool.m_skills[idx.m_skill];
+                        const auto& sk  = pool.m_skills[idx.m_skill];
                         const auto* row = conf::Config::instance().find<conf::SkillAttackConfig>(sk.m_configId);
                         std::cerr << " [" << idx.m_address.m_index << "." << idx.m_address.m_mode << "."
                                   << idx.m_address.m_step << " cfg=" << sk.m_configId << " mp=" << (row ? row->mp : -1)
@@ -183,7 +185,8 @@ int main(int argc, char** argv)
             {
                 if (index + 1 >= argc)
                     throw std::invalid_argument(
-                        "Expected replay <file> [--hash-every N] [--compare hashfile] [--trace file] [--revision rev] [--ai on|off]");
+                        "Expected replay <file> [--hash-every N] [--compare hashfile] [--trace file] [--revision rev] "
+                        "[--ai on|off]");
                 if (std::string_view(argv[index]) == "--hash-every")
                     every = number(argv[index + 1]);
                 else if (std::string_view(argv[index]) == "--compare")
@@ -196,7 +199,8 @@ int main(int argc, char** argv)
                     aiEnabled = aiEnabledFlag(argv[index + 1]);
                 else
                     throw std::invalid_argument(
-                        "Expected replay <file> [--hash-every N] [--compare hashfile] [--trace file] [--revision rev] [--ai on|off]");
+                        "Expected replay <file> [--hash-every N] [--compare hashfile] [--trace file] [--revision rev] "
+                        "[--ai on|off]");
             }
             if (every == 0)
                 throw std::invalid_argument("Hash interval must be positive");
@@ -335,12 +339,12 @@ int main(int argc, char** argv)
                     world.ecs().each<RoleIdentity, RoleStatus, SkillPool, EntityGroup, ControlEventQueue, Vitals>(
                         [&](Entity, const RoleIdentity& id, const RoleStatus& st, const SkillPool& pool,
                             const EntityGroup& g, const ControlEventQueue& q, const Vitals& vitals) {
-                            if (id.roleId == 101 || id.roleId == 102 || id.roleId == 104)
-                                std::cerr << "[f" << frame << "] role=" << id.roleId
-                                          << " st=" << static_cast<uint32_t>(st.eEntityStatus) << " cur=" << pool.m_current
-                                          << " ep=" << vitals.ep.toInt() << " mp=" << vitals.mp.toInt()
-                                          << " susp=" << g.suspended << '\n';
-                        });
+                        if (id.roleId == 101 || id.roleId == 102 || id.roleId == 104)
+                            std::cerr << "[f" << frame << "] role=" << id.roleId
+                                      << " st=" << static_cast<uint32_t>(st.eEntityStatus) << " cur=" << pool.m_current
+                                      << " ep=" << vitals.ep.toInt() << " mp=" << vitals.mp.toInt()
+                                      << " susp=" << g.suspended << '\n';
+                    });
             }
             printHash(world);
             if (!tracePath.empty())
@@ -416,7 +420,7 @@ int main(int argc, char** argv)
                 throw std::runtime_error("Cannot open trace file: " + files[1]);
             std::string la, lb;
             uint64_t lineNumber = 0;
-            int printed = 0;
+            int printed         = 0;
             while (true)
             {
                 const bool gotA = static_cast<bool>(std::getline(fa, la));
@@ -437,11 +441,12 @@ int main(int argc, char** argv)
             }
             return printed == 0 ? 0 : 1;
         }
-        std::cerr << "usage: mugen_sim_cli --version | trace-diff [--mode full|effects] [--allow file] <a.trace> <b.trace> | "
-                     "replay <file> [--hash-every N] [--compare hashfile] [--trace file] [--revision rev] [--ai on|off] | "
-                     "record-room <roomId> --frames N <file> [--ai on|off] | "
-                     "run-room <roomId> --frames N [--script file] [--trace file] [--revision rev] [--ai on|off]\n"
-                     "script rows: frame slot controlEvent quadrant angleX1000 pressType\n";
+        std::cerr
+            << "usage: mugen_sim_cli --version | trace-diff [--mode full|effects] [--allow file] <a.trace> <b.trace> | "
+               "replay <file> [--hash-every N] [--compare hashfile] [--trace file] [--revision rev] [--ai on|off] | "
+               "record-room <roomId> --frames N <file> [--ai on|off] | "
+               "run-room <roomId> --frames N [--script file] [--trace file] [--revision rev] [--ai on|off]\n"
+               "script rows: frame slot controlEvent quadrant angleX1000 pressType\n";
         return 1;
     }
     catch (const std::exception& error)

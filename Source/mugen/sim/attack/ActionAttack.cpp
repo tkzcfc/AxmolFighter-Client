@@ -30,16 +30,16 @@ void ActionAttackDriver::dealWithDirection(bool facing)
 {
     const auto& command = m_world.ecs().get<RoleControl>(m_entity).m_last;
     auto& transform     = m_world.ecs().get<Transform>(m_entity);
-    if (command.quadrant == 0)
+    if (command.quadrant == ControlQuadrant::None)
         return;
     if (command.angle != 90000)
     {
-        transform.vectorX = command.quadrant <= 2 ? "1"_fx : "-1"_fx;
+        transform.vectorX = Fixed::fromInt(vectorX(command.quadrant));
         if (facing)
             transform.towardX = static_cast<int32_t>(transform.vectorX.toInt());
     }
     if (command.angle != 0)
-        transform.vectorZ = command.quadrant == 1 || command.quadrant == 4 ? "1"_fx : "-1"_fx;
+        transform.vectorZ = Fixed::fromInt(vectorZ(command.quadrant));
 }
 /// 按控制类型驱动位移或直接速度。
 void ActionAttackDriver::dealWithControl(const conf::ActionConfig& row)
@@ -54,8 +54,12 @@ void ActionAttackDriver::dealWithControl(const conf::ActionConfig& row)
         const auto& t       = ecs.get<Transform>(m_entity);
         auto& velocity      = ecs.get<RoleHitState>(m_entity).forceVelocity;
         const auto angle    = Fixed::ratio(command.angle, 1000);
-        velocity.x = command.quadrant == 0 ? Fixed{} : FixedMath::cosDeg(angle) * row.controlVelocity * t.vectorX;
-        velocity.z = command.quadrant == 0 ? Fixed{} : FixedMath::sinDeg(angle) * row.controlVelocity * t.vectorZ;
+        velocity.x          = command.quadrant == ControlQuadrant::None
+                                  ? Fixed{}
+                                  : FixedMath::cosDeg(angle) * row.controlVelocity * t.vectorX;
+        velocity.z          = command.quadrant == ControlQuadrant::None
+                                  ? Fixed{}
+                                  : FixedMath::sinDeg(angle) * row.controlVelocity * t.vectorZ;
     }
 }
 /// 在到达各镜头帧时发出一次震动事件。

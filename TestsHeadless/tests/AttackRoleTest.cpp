@@ -115,8 +115,8 @@ TEST_CASE("AttackRole control zero moves control two only turns")
     f.row.controlVelocity = "2"_fx;
     f.replace();
     f.enter();
-    auto& ecs                                    = f.world.ecs();
-    ecs.get<RoleControl>(f.entity).m_last.quadrant = 3;
+    auto& ecs                                      = f.world.ecs();
+    ecs.get<RoleControl>(f.entity).m_last.quadrant = ControlQuadrant::DownLeft;
     f.tick({});
     CHECK(ecs.get<RoleHitState>(f.entity).forceVelocity.x == "-2"_fx);
     CHECK(ecs.get<Transform>(f.entity).towardX == -1);
@@ -124,8 +124,8 @@ TEST_CASE("AttackRole control zero moves control two only turns")
     f.row.displacementId = 0;
     f.replace();
     f.enter();
-    ecs.get<RoleControl>(f.entity).m_last.quadrant = 1;
-    ecs.get<RoleHitState>(f.entity).forceVelocity = {};
+    ecs.get<RoleControl>(f.entity).m_last.quadrant = ControlQuadrant::UpRight;
+    ecs.get<RoleHitState>(f.entity).forceVelocity  = {};
     f.tick({});
     CHECK(ecs.get<Transform>(f.entity).towardX == 1);
     CHECK(ecs.get<RoleHitState>(f.entity).forceVelocity.x == Fixed{});
