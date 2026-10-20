@@ -65,12 +65,12 @@ BTStatus Locomotion::update(RoleContext& ctx, Param type, State& state)
         return BTStatus::Running;
     }
     const Fixed angle = Fixed::ratio(command.angle, 1000);
-    if (command.angle != 90000)
+    if (hasHorizontal(command.angle))
     {
         t.towardX = vectorX(command.quadrant);
         t.vectorX = Fixed::fromInt(t.towardX);
     }
-    if (command.angle != 0)
+    if (hasVertical(command.angle))
         t.vectorZ = Fixed::fromInt(vectorZ(command.quadrant));
     const auto* row = conf::Config::instance().find<conf::RoleConfig>(ctx.get<RoleIdentity>().roleId);
     if (row)

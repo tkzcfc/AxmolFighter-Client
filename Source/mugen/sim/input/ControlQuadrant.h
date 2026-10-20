@@ -61,6 +61,18 @@ constexpr ControlQuadrant quadrantFromArrow(char32_t arrow)
     }
 }
 
+// 非纯垂直时需要写入水平向量。
+constexpr bool hasHorizontal(int32_t angle)
+{
+    return angle != 90000;
+}
+
+// 非纯水平时需要写入纵深向量。
+constexpr bool hasVertical(int32_t angle)
+{
+    return angle != 0;
+}
+
 // 象限在水平轴上的移动符号：右为正，左为负。
 constexpr int32_t vectorX(ControlQuadrant quadrant)
 {

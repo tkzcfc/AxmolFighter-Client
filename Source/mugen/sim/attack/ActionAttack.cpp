@@ -32,13 +32,13 @@ void ActionAttackDriver::dealWithDirection(bool facing)
     auto& transform     = m_world.ecs().get<Transform>(m_entity);
     if (command.quadrant == ControlQuadrant::None)
         return;
-    if (command.angle != 90000)
+    if (hasHorizontal(command.angle))
     {
         transform.vectorX = Fixed::fromInt(vectorX(command.quadrant));
         if (facing)
             transform.towardX = static_cast<int32_t>(transform.vectorX.toInt());
     }
-    if (command.angle != 0)
+    if (hasVertical(command.angle))
         transform.vectorZ = Fixed::fromInt(vectorZ(command.quadrant));
 }
 /// 按控制类型驱动位移或直接速度。

@@ -104,13 +104,13 @@ void direction(World& world, Entity entity, bool facing)
     auto& transform    = world.ecs().get<Transform>(entity);
     if (command.quadrant == ControlQuadrant::None)
         return;
-    if (command.angle != 90000)
+    if (hasHorizontal(command.angle))
     {
         transform.vectorX = Fixed::fromInt(vectorX(command.quadrant));
         if (facing)
             transform.towardX = static_cast<int32_t>(transform.vectorX.toInt());
     }
-    if (command.angle != 0)
+    if (hasVertical(command.angle))
         transform.vectorZ = Fixed::fromInt(vectorZ(command.quadrant));
 }
 /// 按共用动作控制规则更新特效速度。
