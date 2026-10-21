@@ -36,6 +36,10 @@ public:
     int32_t autotestFrames() const { return m_autotestFrames; }
     // 按钮只提交下一帧系统命令。
     void requestReturnToTown() { m_systemCommands.push_back(mugen::sim::ReturnToTownCommand{}); }
+    // HUD 暂停按钮复用调试暂停开关，只停止本地推进。
+    void setPaused(bool paused) { m_debugPaused = paused; }
+    // 最近一次受到伤害数字事件的非英雄角色，供 HUD 目标血条使用。
+    mugen::Entity lastHurtTarget() const { return m_lastHurtTarget; }
     bool returnToTownRequested() const { return m_world.ecs().singleton<mugen::sim::RoomState>().m_returnToTown; }
 
 private:
@@ -54,6 +58,7 @@ private:
     // 待提交输入及最近的房间表现消息。
     std::vector<mugen::sim::SystemCommand> m_systemCommands;
     std::string m_roomMessage;
+    mugen::Entity m_lastHurtTarget;
     class WorldPresenterHolder;
     std::unique_ptr<WorldPresenterHolder> m_presenter;
 };

@@ -3,6 +3,7 @@
 #include "TownScreen.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "resource/builtin/MapResource.h"
+#include "ui/battle/BattleHudPanel.h"
 #include "ui/battle/LocalBattleMode.h"
 #include "ui/core/ScreenManager.h"
 #include "ui/widgets/common/MessageDialog.h"
@@ -46,6 +47,8 @@ void GameScreen::onEnter()
         MessageDialog::showGlobal("初始化失败", []() { ax::Director::getInstance()->end(); });
         return;
     }
+    if (auto* local = dynamic_cast<LocalBattleMode*>(m_battleMode.get()))
+        getScreenManager()->getUIManager()->open<BattleHudPanel>(*local);
     m_slotMap.clear();
     using Key                       = ax::EventKeyboard::KeyCode;
     using ControlKey                = mugen::sim::ControlKey;

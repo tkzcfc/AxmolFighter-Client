@@ -108,7 +108,13 @@ void LocalBattleMode::onUpdate(float delta)
         for (const auto& event : m_world.ecs().singleton<mugen::sim::PresentationEvents>().events)
         {
             using namespace mugen::sim;
-            if (std::holds_alternative<Victory>(event.payload))
+            if (std::holds_alternative<HurtNumber>(event.payload))
+            {
+                const auto* identity = m_world.ecs().tryGet<RoleIdentity>(event.entity);
+                if (identity && identity->roleType != static_cast<int32_t>(mugen::EntityRoleType::kHero))
+                    m_lastHurtTarget = event.entity;
+            }
+            else if (std::holds_alternative<Victory>(event.payload))
                 m_roomMessage = "Victory";
             else if (std::holds_alternative<Failure>(event.payload))
                 m_roomMessage = "Defeat";
