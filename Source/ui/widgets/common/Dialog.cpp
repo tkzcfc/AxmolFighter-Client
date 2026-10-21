@@ -17,7 +17,7 @@ void Dialog::onStopAnimations()
 
 void Dialog::doShowAnimation(std::function<void()> done)
 {
-    if (m_content == nullptr)
+    if (m_content == nullptr || !m_playAnimation)
     {
         done();
         return;
@@ -39,7 +39,7 @@ void Dialog::doShowAnimation(std::function<void()> done)
 
 void Dialog::doHideAnimation(std::function<void()> done)
 {
-    if (m_content == nullptr)
+    if (m_content == nullptr || !m_playAnimation)
     {
         done();
         return;

@@ -1,27 +1,27 @@
-#include "RegisterPanel.h"
-#include "LoginPanel.h"
+#include "RegisterDialog.h"
+#include "LoginDialog.h"
 #include "ui/widgets/common/MessageDialog.h"
 #include <net/client_game.pb.h>
 
 namespace gameui
 {
 
-void RegisterPanel::onCreate()
+void RegisterDialog::onCreate()
 {
     auto backButton     = this->getChild<GButton>("backButton");
     auto registerButton = this->getChild<GButton>("registerButton");
 
-    this->addClickListener(backButton, AX_CALLBACK_1(RegisterPanel::onClickBackButton, this));
-    this->addClickListener(registerButton, AX_CALLBACK_1(RegisterPanel::onClickRegisterButton, this));
+    this->addClickListener(backButton, AX_CALLBACK_1(RegisterDialog::onClickBackButton, this));
+    this->addClickListener(registerButton, AX_CALLBACK_1(RegisterDialog::onClickRegisterButton, this));
 }
 
-void RegisterPanel::onClickBackButton(EventContext* context)
+void RegisterDialog::onClickBackButton(EventContext* context)
 {
-    getUIManager()->open<LoginPanel>();
+    getUIManager()->open<LoginDialog>();
     this->close();
 }
 
-void RegisterPanel::onClickRegisterButton(EventContext* context)
+void RegisterDialog::onClickRegisterButton(EventContext* context)
 {
     auto usernameInput        = this->getChild<GComponent>("usernameInput")->getChild("input")->as<GTextInput>();
     auto passwordInput        = this->getChild<GComponent>("passwordInput")->getChild("input")->as<GTextInput>();
@@ -61,7 +61,7 @@ void RegisterPanel::onClickRegisterButton(EventContext* context)
         {
             AXLOGI("Register success, player_id={}", resp->player_id());
             MessageDialog::show("注册成功，请登录");
-            getUIManager()->open<LoginPanel>();
+            getUIManager()->open<LoginDialog>();
             this->close();
         }
         else

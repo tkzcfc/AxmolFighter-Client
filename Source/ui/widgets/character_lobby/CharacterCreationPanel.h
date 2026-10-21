@@ -1,30 +1,24 @@
 #pragma once
 
-#include "ui/core/UIWidget.h"
+#include "ui/widgets/common/Panel.h"
 #include "ui/UIMediaPlayer.h"
 
 namespace gameui
 {
 
-class CharacterCreationPanel : public UIWidget
+class CharacterCreationPanel : public Panel
 {
 public:
-    CharacterCreationPanel()
-    {
-        m_options.hasBackground  = false;
-        m_options.draggable      = false;
-        m_options.fullscreen     = true;
-        m_options.closeOnClickBg = false;
-    }
+    CharacterCreationPanel() {}
 
     virtual ~CharacterCreationPanel() {}
 
 protected:
     virtual std::vector<std::string> getPackages() const override { return {"UI/Screen_CharacterLobby"}; }
 
-    virtual GComponent* onCreateContent() override
+    virtual GComponent* onCreatePanelContent() override
     {
-        return createCenteredComponent("Screen_CharacterLobby", "CharacterCreationPanel");
+        return UIPackage::createObject("Screen_CharacterLobby", "CharacterCreationPanel")->as<GComponent>();
     }
 
     virtual void onCreate() override;

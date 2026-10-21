@@ -1,5 +1,5 @@
-#include "LoginPanel.h"
-#include "RegisterPanel.h"
+#include "LoginDialog.h"
+#include "RegisterDialog.h"
 #include "AppContext.h"
 #include "ui/screens/CharacterLobbyScreen.h"
 #include "ui/widgets/common/MessageDialog.h"
@@ -8,7 +8,7 @@
 namespace gameui
 {
 
-void LoginPanel::onCreate()
+void LoginDialog::onCreate()
 {
     auto usernameInput = this->getChild<GComponent>("usernameInput")->getChild("input")->as<GTextInput>();
     auto passwordInput = this->getChild<GComponent>("passwordInput")->getChild("input")->as<GTextInput>();
@@ -22,11 +22,11 @@ void LoginPanel::onCreate()
     auto loginButton      = this->getChild<GButton>("loginButton");
     auto toRegisterButton = this->getChild<GButton>("toRegisterButton");
 
-    this->addClickListener(loginButton, AX_CALLBACK_1(LoginPanel::onClickLoginButton, this));
-    this->addClickListener(toRegisterButton, AX_CALLBACK_1(LoginPanel::onClickToRegisterButton, this));
+    this->addClickListener(loginButton, AX_CALLBACK_1(LoginDialog::onClickLoginButton, this));
+    this->addClickListener(toRegisterButton, AX_CALLBACK_1(LoginDialog::onClickToRegisterButton, this));
 }
 
-void LoginPanel::onClickLoginButton(EventContext* context)
+void LoginDialog::onClickLoginButton(EventContext* context)
 {
     auto username = m_usernameInput->getText();
     auto password = m_passwordInput->getText();
@@ -68,13 +68,13 @@ void LoginPanel::onClickLoginButton(EventContext* context)
     });
 }
 
-void LoginPanel::onClickToRegisterButton(EventContext* context)
+void LoginDialog::onClickToRegisterButton(EventContext* context)
 {
-    getUIManager()->open<RegisterPanel>();
+    getUIManager()->open<RegisterDialog>();
     this->close();
 }
 
-void LoginPanel::onLoginSuccess()
+void LoginDialog::onLoginSuccess()
 {
     ax::UserDefault::getInstance()->setStringForKey("account", m_usernameInput->getText());
     ax::UserDefault::getInstance()->setStringForKey("password", m_passwordInput->getText());

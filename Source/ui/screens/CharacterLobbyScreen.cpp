@@ -62,7 +62,7 @@ void CharacterLobbyScreen::updateCharacterList()
     }
 
     const int characterCount  = static_cast<int>(session->characters.size());
-    auto charactorList        = this->getChild<GList>("charactorList");
+    auto charactorList        = this->getChild<GLoader>("charactorList")->getComponent()->getChild("list")->as<GList>();
     auto currentSelectedIndex = charactorList->getSelectedIndex();
 
     charactorList->setNumItems(characterCount);
@@ -135,7 +135,7 @@ void CharacterLobbyScreen::onClickStartGameButton(EventContext* context)
     }
 
     auto* session       = AppContext::get().gameSession();
-    auto* charactorList = this->getChild<GList>("charactorList");
+    auto charactorList  = this->getChild<GLoader>("charactorList")->getComponent()->getChild("list")->as<GList>();
     int selectedIndex   = charactorList->getSelectedIndex();
 
     if (!session || selectedIndex < 0 || selectedIndex >= static_cast<int>(session->characters.size()))

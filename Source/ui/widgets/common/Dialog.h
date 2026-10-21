@@ -20,6 +20,10 @@ public:
 
     // 播放隐藏动画，done 回调必须且只能被调用一次，调用时机由子类决定
     virtual void doHideAnimation(std::function<void()> done) override;
+
+protected:
+    // 是否播放显示/隐藏动画，静态居中弹窗可设为 false
+    bool m_playAnimation = true;
 };
 
 }  // namespace gameui

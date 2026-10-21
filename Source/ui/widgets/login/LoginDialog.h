@@ -1,27 +1,28 @@
 #pragma once
 
-#include "ui/core/UIWidget.h"
+#include "ui/widgets/common/Dialog.h"
 
 namespace gameui
 {
 
-class LoginPanel : public UIWidget
+class LoginDialog : public Dialog
 {
 public:
-    LoginPanel()
+    LoginDialog()
     {
         m_options.hasBackground  = false;
         m_options.draggable      = false;
         m_options.fullscreen     = false;
         m_options.closeOnClickBg = false;
+        m_playAnimation          = false;
     }
 
-    virtual ~LoginPanel() {}
+    virtual ~LoginDialog() {}
 
 protected:
     virtual std::vector<std::string> getPackages() const override { return {"UI/Screen_Login"}; }
 
-    virtual GComponent* onCreateContent() override { return createCenteredComponent("Screen_Login", "LoginPanel"); }
+    virtual GComponent* onCreateContent() override { return createCenteredComponent("Screen_Login", "LoginDialog"); }
 
     virtual void onCreate() override;
 

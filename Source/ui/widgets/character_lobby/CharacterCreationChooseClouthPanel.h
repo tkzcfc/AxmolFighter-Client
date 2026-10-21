@@ -1,31 +1,25 @@
 #pragma once
 
-#include "ui/core/UIWidget.h"
+#include "ui/widgets/common/Panel.h"
 #include "ui/UIMediaPlayer.h"
 #include "mugen/conf/GameDef.h"
 
 namespace gameui
 {
 
-class CharacterCreationChooseClouthPanel : public UIWidget
+class CharacterCreationChooseClouthPanel : public Panel
 {
 public:
-    CharacterCreationChooseClouthPanel(mugen::CharacterClass curClass) : m_curClass(curClass)
-    {
-        m_options.hasBackground  = false;
-        m_options.draggable      = false;
-        m_options.fullscreen     = true;
-        m_options.closeOnClickBg = false;
-    }
+    CharacterCreationChooseClouthPanel(mugen::CharacterClass curClass) : m_curClass(curClass) {}
 
     virtual ~CharacterCreationChooseClouthPanel() {}
 
 protected:
     virtual std::vector<std::string> getPackages() const override { return {"UI/Screen_CharacterLobby"}; }
 
-    virtual GComponent* onCreateContent() override
+    virtual GComponent* onCreatePanelContent() override
     {
-        return createCenteredComponent("Screen_CharacterLobby", "CharacterCreationChooseClouthPanel");
+        return UIPackage::createObject("Screen_CharacterLobby", "CharacterCreationChooseClouthPanel")->as<GComponent>();
     }
 
     virtual void onCreate() override;
