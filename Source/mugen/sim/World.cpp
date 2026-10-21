@@ -178,12 +178,14 @@ void World::tick(const FrameInput& input)
         return;
     }
     for (const auto& command : input.systemCommands)
+    {
         if (const auto* slow = std::get_if<SlowMotionCommand>(&command); slow && slow->scale < Fixed{})
         {
             MG_LOG_E("Slow motion scale must be nonnegative");
             MG_ASSERT(false && "Slow motion scale must be nonnegative");
             return;
         }
+    }
 
     ++clock.frame;
     m_ecs.singleton<PresentationEvents>().events.clear();

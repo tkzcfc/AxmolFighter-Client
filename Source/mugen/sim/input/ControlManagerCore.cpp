@@ -24,28 +24,51 @@ constexpr std::array<ControlQuadrant, 5> comboOf(char32_t a,
 
 // 用上下左右箭头描述的可识别连招序列。
 constexpr std::array<std::array<ControlQuadrant, 5>, kDirectionComboCount> kCombos = {{
+    // CTR_JOY1
     comboOf(U'↓', U'←', U'↑', U'→', U'↓'),
     comboOf(U'↑', U'←', U'↓', U'→', U'↑'),
+
+    // CTR_JOY2
     comboOf(U'←', U'↓', U'←', U'↓'),
     comboOf(U'←', U'↑', U'←', U'↑'),
+
+    // CTR_JOY3
     comboOf(U'↓', U'↑', U'←', U'↓'),
     comboOf(U'↑', U'↓', U'←', U'↑'),
+
+    // CTR_JOY4
     comboOf(U'↓', U'←', U'↑'),
     comboOf(U'↑', U'←', U'↓'),
+
+    // CTR_JOY5
     comboOf(U'←', U'↓', U'→'),
     comboOf(U'←', U'↑', U'→'),
+
+    // CTR_JOY6
     comboOf(U'←', U'↑'),
     comboOf(U'←', U'↓'),
+
+    // CTR_JOY7
     comboOf(U'↓', U'↑'),
     comboOf(U'↑', U'↓'),
+
+    // CTR_JOY8
     comboOf(U'←', U'→'),
     comboOf(U'←', U'→'),
+
+    // CTR_JOY9
     comboOf(U'←', U'↑', U'←', U'↓'),
     comboOf(U'←', U'↓', U'←', U'↑'),
+
+    // CTR_JOY10
     comboOf(U'↓', U'→', U'↑', U'←', U'↓'),
     comboOf(U'↑', U'→', U'↓', U'←', U'↑'),
+
+    // CTR_JOY11
     comboOf(U'→', U'←'),
     comboOf(U'→', U'←'),
+
+    // CTR_JOY12
     comboOf(U'↓', U'↑', U'↓'),
     comboOf(U'↑', U'↓', U'↑'),
 }};
