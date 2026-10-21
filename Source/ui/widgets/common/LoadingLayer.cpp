@@ -7,7 +7,7 @@ namespace gameui
 
 LoadingLayer::LoadingLayer()
 {
-    auto* object = UIPackage::createObject("Common", "LoadingLayer");
+    auto* object = UIPackage::createObject("Common_Base", "LoadingLayer");
     m_root       = object ? object->as<GComponent>() : nullptr;
     if (m_root)
     {

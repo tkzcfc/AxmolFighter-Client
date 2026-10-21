@@ -11,8 +11,8 @@ namespace gameui
 
 using namespace fairygui;
 
-class View;
-class ViewManager;
+class Screen;
+class ScreenManager;
 class UIWidget;
 
 class UIManager
@@ -21,7 +21,7 @@ public:
     UIManager();
     ~UIManager();
 
-    void init(ViewManager* viewManager, GComponent* layer);
+    void init(ScreenManager* screenManager, GComponent* layer);
     void update(float dt);
 
     template <typename T, typename... Args>
@@ -40,13 +40,13 @@ public:
 
     void close(UIWidget* widget);
     void closeAll();
-    void closeByOwner(View* owner);
-    void setVisibleByOwner(View* owner, bool visible);
+    void closeByOwner(Screen* owner);
+    void setVisibleByOwner(Screen* owner, bool visible);
 
     UIWidget* getTopWidget() const;
     bool hasVisibleWidget() const;
 
-    ViewManager* getViewManager() const;
+    ScreenManager* getScreenManager() const;
 
 private:
     void _open(std::shared_ptr<UIWidget> widget, const UIOpenOptions& options);
@@ -58,7 +58,7 @@ private:
 
     friend class UIWidget;
 
-    ViewManager* m_viewManager = nullptr;
+    ScreenManager* m_screenManager = nullptr;
     GComponent* m_layer        = nullptr;
     std::vector<std::shared_ptr<UIWidget>> m_widgets;
     uint16_t m_nextOpenOrder = 0;

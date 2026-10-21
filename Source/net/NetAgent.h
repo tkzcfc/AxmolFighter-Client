@@ -155,7 +155,7 @@ protected:
     void dispatchPush(uint16_t msgId, const std::string_view& payload);
 
 private:
-    // 独立生命周期标记：push 回调里可能销毁 this（如 switchView），
+    // 独立生命周期标记：push 回调里可能销毁 this（如 switchScreen），
     // 用 shared_ptr 探测销毁，避免再访问 this。
     struct LifetimeToken
     {

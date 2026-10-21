@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ui/core/View.h"
+#include "ui/core/Screen.h"
 #include "ui/battle/BattleBootParams.h"
 #include "ui/battle/BattleMode.h"
 
@@ -10,15 +10,15 @@
 namespace gameui
 {
 
-class GameView : public View
+class GameScreen : public Screen
 {
 public:
-    typedef View Super;
+    typedef Screen Super;
 
 public:
-    GameView();
-    explicit GameView(LocalBattleParams local);
-    ~GameView() override;
+    GameScreen();
+    explicit GameScreen(LocalBattleParams local);
+    ~GameScreen() override;
 
     virtual void onEnter() override;
     virtual void onExit() override;

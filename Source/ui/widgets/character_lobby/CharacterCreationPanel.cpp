@@ -1,5 +1,5 @@
 #include "CharacterCreationPanel.h"
-#include "ui/views/CharacterLobbyView.h"
+#include "ui/screens/CharacterLobbyScreen.h"
 #include "ui/widgets/common/MessageDialog.h"
 #include "ui/UiConfig.h"
 #include "mugen/render/spine/MgSkeletonAnimation.h"
@@ -20,7 +20,7 @@ void CharacterCreationPanel::onCreate()
     auto backButton = this->getChild<GButton>("backButton");
     this->addClickListener(backButton, AX_CALLBACK_1(CharacterCreationPanel::onClickBackButton, this));
 
-    auto container = this->getChild<GComponent>("container");
+    auto container = this->getChild<GLoader>("container")->getComponent();
 
     // 职业选择列表
     m_roleTypeSelector = container->getChild("roleTypeSelector")->as<GComponent>();
@@ -59,7 +59,7 @@ void CharacterCreationPanel::updateUI()
     }
     auto& curRoleConfig       = kRoleIntros[m_curRoleTypeIndex];
     auto& curProfessionConfig = curRoleConfig.professions[m_curProfessionIndex];
-    auto container            = this->getChild<GComponent>("container");
+    auto container            = this->getChild<GLoader>("container")->getComponent();
 
     for (int32_t i = 0; i < kProfessionCount; ++i)
     {
@@ -144,7 +144,7 @@ void CharacterCreationPanel::updateUI()
         m_mediaPlayer->setLooping(true);
         loaderVedio->setContent(m_mediaPlayer);
     }
-    m_mediaPlayer->setURL(curProfessionConfig.video);
+    m_mediaPlayer->setURL("file://" + ax::FileUtils::getInstance()->fullPathForFilename(curProfessionConfig.video));
     m_mediaPlayer->play();
 }
 

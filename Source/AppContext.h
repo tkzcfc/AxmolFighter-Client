@@ -6,7 +6,7 @@
 #include "model/GameSessionModel.h"
 #include "resource/ResourceLoader.h"
 #include "ui/core/UIManager.h"
-#include "ui/core/ViewManager.h"
+#include "ui/core/ScreenManager.h"
 #include "axmol.h"
 #include "FairyGUI.h"
 
@@ -22,11 +22,11 @@ public:
 
     net::NetClient* netClient() const { return m_netClient.get(); }
     game::model::GameSessionModel* gameSession() const { return m_gameSession.get(); }
-    gameui::ViewManager* viewManager() const { return m_viewManager.get(); }
+    gameui::ScreenManager* screenManager() const { return m_screenManager.get(); }
     gameui::UIManager* uiManager() const;
 
-    // 生命周期与 AppContext 相同的常驻资源（配置表等，不一定都在 UI/Common 里）；
-    // 由 LaunchView 通过 setResourceLoader() 共同持有并启动加载，后续也可以继续往里面加东西。
+    // 生命周期与 AppContext 相同的常驻资源（配置表等，不一定都在 UI/Common_Base 里）；
+    // 由 LaunchScreen 通过 setResourceLoader() 共同持有并启动加载，后续也可以继续往里面加东西。
     std::shared_ptr<gameres::ResourceLoader> globalLoader() const { return m_globalLoader; }
 
     /// 连接到服务器
@@ -49,7 +49,7 @@ private:
 
     std::unique_ptr<net::NetClient> m_netClient;
     std::unique_ptr<game::model::GameSessionModel> m_gameSession;
-    std::unique_ptr<gameui::ViewManager> m_viewManager;
+    std::unique_ptr<gameui::ScreenManager> m_screenManager;
     std::shared_ptr<gameres::ResourceLoader> m_globalLoader;
 
     // 连接遮罩

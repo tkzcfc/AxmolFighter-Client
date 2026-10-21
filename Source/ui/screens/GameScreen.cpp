@@ -1,10 +1,10 @@
-#include "GameView.h"
+#include "GameScreen.h"
 
-#include "TownView.h"
+#include "TownScreen.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "resource/builtin/MapResource.h"
 #include "ui/battle/LocalBattleMode.h"
-#include "ui/core/ViewManager.h"
+#include "ui/core/ScreenManager.h"
 #include "ui/widgets/common/MessageDialog.h"
 
 #include "imgui.h"
@@ -12,13 +12,13 @@
 namespace gameui
 {
 
-GameView::GameView() = default;
+GameScreen::GameScreen() = default;
 
-GameView::GameView(LocalBattleParams local) : m_local(std::move(local)) {}
+GameScreen::GameScreen(LocalBattleParams local) : m_local(std::move(local)) {}
 
-GameView::~GameView() = default;
+GameScreen::~GameScreen() = default;
 
-void GameView::onPrepareLoad()
+void GameScreen::onPrepareLoad()
 {
     const int32_t roomId = m_local ? m_local->roomId : 0;
     if (roomId <= 0)
@@ -30,7 +30,7 @@ void GameView::onPrepareLoad()
     getResourceLoader().add<gameres::MapResource>(layer);
 }
 
-void GameView::onEnter()
+void GameScreen::onEnter()
 {
     Super::onEnter();
     if (!initInput())
@@ -41,7 +41,7 @@ void GameView::onEnter()
     m_battleMode = createBattleMode();
     if (!m_battleMode || !m_battleMode->init())
     {
-        AXLOGE("GameView: battle mode init failed");
+        AXLOGE("GameScreen: battle mode init failed");
         m_battleMode = nullptr;
         MessageDialog::showGlobal("初始化失败", []() { ax::Director::getInstance()->end(); });
         return;
@@ -69,10 +69,10 @@ void GameView::onEnter()
     m_slotMap[Key::KEY_T]           = static_cast<uint32_t>(ControlKey::AttackN);
     m_slotMap[Key::KEY_Y]           = static_cast<uint32_t>(ControlKey::AttackO);
     m_slotMap[Key::KEY_U]           = static_cast<uint32_t>(ControlKey::AttackQ);
-    AXLOGI("GameView: entered (localRoom={})", m_local.has_value() ? m_local->roomId : 0);
+    AXLOGI("GameScreen: entered (localRoom={})", m_local.has_value() ? m_local->roomId : 0);
 }
 
-void GameView::onExit()
+void GameScreen::onExit()
 {
     if (m_keyboardListener)
     {
@@ -89,15 +89,15 @@ void GameView::onExit()
     Super::onExit();
 }
 
-void GameView::onUpdate(float delta)
+void GameScreen::onUpdate(float delta)
 {
     if (m_battleMode)
         m_battleMode->onUpdate(delta);
     if (auto* local = dynamic_cast<LocalBattleMode*>(m_battleMode.get()); local && local->returnToTownRequested())
-        getViewManager()->switchView<TownView>();
+        getScreenManager()->switchScreen<TownScreen>();
 }
 
-void GameView::onKeyPressed(ax::EventKeyboard::KeyCode code, ax::Event* /*event*/)
+void GameScreen::onKeyPressed(ax::EventKeyboard::KeyCode code, ax::Event* /*event*/)
 {
     if (code == ax::EventKeyboard::KeyCode::KEY_F8)
     {
@@ -108,12 +108,12 @@ void GameView::onKeyPressed(ax::EventKeyboard::KeyCode code, ax::Event* /*event*
     setInputFromKey(code, true);
 }
 
-void GameView::onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event* /*event*/)
+void GameScreen::onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event* /*event*/)
 {
     setInputFromKey(code, false);
 }
 
-void GameView::setInputFromKey(ax::EventKeyboard::KeyCode code, bool pressed)
+void GameScreen::setInputFromKey(ax::EventKeyboard::KeyCode code, bool pressed)
 {
     if (!m_battleMode)
         return;
@@ -125,31 +125,31 @@ void GameView::setInputFromKey(ax::EventKeyboard::KeyCode code, bool pressed)
     m_battleMode->setInput(it->second, pressed);
 }
 
-bool GameView::initInput()
+bool GameScreen::initInput()
 {
     auto* currentScene = ax::Director::getInstance()->getRunningScene();
     if (!currentScene)
     {
-        AXLOGE("GameView: running scene is null");
+        AXLOGE("GameScreen: running scene is null");
         return false;
     }
 
     m_keyboardListener                = ax::EventListenerKeyboard::create();
-    m_keyboardListener->onKeyPressed  = AX_CALLBACK_2(GameView::onKeyPressed, this);
-    m_keyboardListener->onKeyReleased = AX_CALLBACK_2(GameView::onKeyReleased, this);
+    m_keyboardListener->onKeyPressed  = AX_CALLBACK_2(GameScreen::onKeyPressed, this);
+    m_keyboardListener->onKeyReleased = AX_CALLBACK_2(GameScreen::onKeyReleased, this);
     ax::Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(m_keyboardListener,
                                                                                               currentScene);
     return true;
 }
 
-std::unique_ptr<IBattleMode> GameView::createBattleMode()
+std::unique_ptr<IBattleMode> GameScreen::createBattleMode()
 {
     if (m_local)
         return std::make_unique<LocalBattleMode>(*m_local);
     return std::make_unique<LocalBattleMode>();
 }
 
-void GameView::onImGUIRender()
+void GameScreen::onImGUIRender()
 {
     if (auto* localBattle = dynamic_cast<LocalBattleMode*>(m_battleMode.get()))
         localBattle->renderDebugPanel();

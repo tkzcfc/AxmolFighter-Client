@@ -1,6 +1,6 @@
 #include "UIManager.h"
 #include "UIWidget.h"
-#include "ViewManager.h"
+#include "ScreenManager.h"
 #include <algorithm>
 #include <limits>
 
@@ -14,9 +14,9 @@ UIManager::~UIManager()
     closeAll();
 }
 
-void UIManager::init(ViewManager* viewManager, GComponent* layer)
+void UIManager::init(ScreenManager* screenManager, GComponent* layer)
 {
-    m_viewManager = viewManager;
+    m_screenManager = screenManager;
     m_layer       = layer;
 }
 
@@ -44,7 +44,7 @@ void UIManager::_open(std::shared_ptr<UIWidget> widget, const UIOpenOptions& opt
     ptr->getRoot()->setSortingOrder(static_cast<int>(zorder));
     m_layer->addChild(ptr->getRoot());
     ptr->m_manager      = this;
-    ptr->m_ownerView    = m_viewManager ? m_viewManager->getCurrentView() : nullptr;
+    ptr->m_ownerScreen    = m_screenManager ? m_screenManager->getCurrentScreen() : nullptr;
     ptr->m_lifecycle    = options.lifecycle;
     ptr->m_zorder       = zorder;
     ptr->m_stackVisible = true;
@@ -76,29 +76,29 @@ void UIManager::closeAll()
     for (auto& w : m_widgets)
     {
         w->m_manager   = nullptr;
-        w->m_ownerView = nullptr;
+        w->m_ownerScreen = nullptr;
         w->_destroy();
     }
     m_widgets.clear();
     m_nextOpenOrder = 0;
 }
 
-void UIManager::closeByOwner(View* owner)
+void UIManager::closeByOwner(Screen* owner)
 {
     for (auto it = m_widgets.begin(); it != m_widgets.end();)
     {
-        if ((*it)->m_ownerView == owner)
+        if ((*it)->m_ownerScreen == owner)
         {
-            // 如果 Widget 设置为独立生命周期，则不跟随 View 销毁
+            // 如果 Widget 设置为独立生命周期，则不跟随 Screen 销毁
             if ((*it)->m_lifecycle == UIWidgetLifecycle::Independent)
             {
-                (*it)->m_ownerView = nullptr;
+                (*it)->m_ownerScreen = nullptr;
                 ++it;
                 continue;
             }
 
             (*it)->m_manager   = nullptr;
-            (*it)->m_ownerView = nullptr;
+            (*it)->m_ownerScreen = nullptr;
             (*it)->_destroy();
             it = m_widgets.erase(it);
         }
@@ -111,11 +111,11 @@ void UIManager::closeByOwner(View* owner)
     _notifyFullscreenChange();
 }
 
-void UIManager::setVisibleByOwner(View* owner, bool visible)
+void UIManager::setVisibleByOwner(Screen* owner, bool visible)
 {
     for (auto& w : m_widgets)
     {
-        if (w->m_ownerView != owner)
+        if (w->m_ownerScreen != owner)
             continue;
 
         w->m_stackVisible = visible;
@@ -146,9 +146,9 @@ bool UIManager::hasVisibleWidget() const
     return false;
 }
 
-ViewManager* UIManager::getViewManager() const
+ScreenManager* UIManager::getScreenManager() const
 {
-    return m_viewManager;
+    return m_screenManager;
 }
 
 bool UIManager::_isActiveVisible(const UIWidget* widget) const
@@ -223,7 +223,7 @@ void UIManager::_removeWidget(UIWidget* widget)
     {
         // 断开控件与 UIManager 的关联，避免在销毁过程中 UIManager 再次访问控件
         (*it)->m_manager   = nullptr;
-        (*it)->m_ownerView = nullptr;
+        (*it)->m_ownerScreen = nullptr;
         // 直接销毁控件实例，避免等待 shared_ptr 的引用计数归零
         (*it)->_destroy();
         m_widgets.erase(it);

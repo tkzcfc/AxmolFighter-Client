@@ -9,8 +9,8 @@ namespace gameui
 using namespace fairygui;
 
 // 通用加载界面：封装 Common 包里的 LoadingLayer 组件和其中的 progressBar 节点。
-// UI/Common 是全局同步加载的（见 AppContext::create），这里不负责包的加载/卸载。
-// 不会自己挂到任何父节点上，由调用方（gameui::View）把 getRoot() 加到场景里并负责销毁。
+// UI/Common_Base 是全局同步加载的（见 AppContext::create），这里不负责包的加载/卸载。
+// 不会自己挂到任何父节点上，由调用方（gameui::Screen）把 getRoot() 加到场景里并负责销毁。
 class LoadingLayer
 {
 public:

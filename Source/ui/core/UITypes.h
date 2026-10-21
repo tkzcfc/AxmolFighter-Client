@@ -22,8 +22,8 @@ enum class UIState
 // ============================================================
 enum class UIWidgetLifecycle
 {
-    WithOwner,    // 跟随所属View一起销毁（默认）
-    Independent,  // 独立存在，不随View销毁
+    WithOwner,    // 跟随所属Screen一起销毁（默认）
+    Independent,  // 独立存在，不随Screen销毁
 };
 
 // ============================================================

@@ -32,7 +32,7 @@ public:
     // 卸载 FairyGUI 包资源，支持引用计数，只有当引用计数为 0 时才会真正卸载包
     void unload(const std::vector<std::string>& paths);
 
-    // 从包路径提取包名，例如 "UI/Common" -> "Common"
+    // 从包路径提取包名，例如 "UI/Common_Base" -> "Common_Base"
     static std::string getPackageName(const std::string& path);
 
     // 遍历已加载包，收集 ATLAS / SPINE 项

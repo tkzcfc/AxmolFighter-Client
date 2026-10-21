@@ -1,9 +1,9 @@
-#include "DungeonSelectView.h"
+#include "DungeonSelectScreen.h"
 
-#include "GameView.h"
+#include "GameScreen.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "ui/battle/BattleBootParams.h"
-#include "ui/core/ViewManager.h"
+#include "ui/core/ScreenManager.h"
 #include "ui/widgets/common/MessageDialog.h"
 
 #include "imgui.h"
@@ -15,13 +15,13 @@ using namespace mugen;
 namespace gameui
 {
 
-void DungeonSelectView::onEnter()
+void DungeonSelectScreen::onEnter()
 {
     Super::onEnter();
     rebuildChapterList();
 }
 
-void DungeonSelectView::rebuildChapterList()
+void DungeonSelectScreen::rebuildChapterList()
 {
     m_chapters.clear();
     m_selectedChapterIndex = 0;
@@ -49,21 +49,21 @@ void DungeonSelectView::rebuildChapterList()
         m_selectedCopyId = m_chapters.front().mainCopys.front();
 }
 
-void DungeonSelectView::onUpdate(float /*delta*/)
+void DungeonSelectScreen::onUpdate(float /*delta*/)
 {
     if (m_requestClose)
     {
         m_requestClose = false;
-        getViewManager()->popView();
+        getScreenManager()->popScreen();
     }
 }
 
-void DungeonSelectView::requestClose()
+void DungeonSelectScreen::requestClose()
 {
     m_requestClose = true;
 }
 
-void DungeonSelectView::enterCopy(int32_t copyId)
+void DungeonSelectScreen::enterCopy(int32_t copyId)
 {
     auto& config     = conf::Config::instance();
     const auto* copy = config.find<conf::CopyConfig>(copyId);
@@ -93,15 +93,15 @@ void DungeonSelectView::enterCopy(int32_t copyId)
         return;
     }
 
-    AXLOGI("DungeonSelectView: enter copy={} stage={} room={} mapKey={}", copyId, copy->stageId, stage->roomId,
+    AXLOGI("DungeonSelectScreen: enter copy={} stage={} room={} mapKey={}", copyId, copy->stageId, stage->roomId,
            room->mapKey);
 
     LocalBattleParams params;
     params.roomId = stage->roomId;
-    getViewManager()->switchView<GameView>(params);
+    getScreenManager()->switchScreen<GameScreen>(params);
 }
 
-void DungeonSelectView::onImGUIRender()
+void DungeonSelectScreen::onImGUIRender()
 {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));

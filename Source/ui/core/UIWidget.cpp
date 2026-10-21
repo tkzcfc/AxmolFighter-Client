@@ -105,7 +105,7 @@ void UIWidget::_destroy()
     m_content      = nullptr;
     m_background   = nullptr;
     m_state        = UIState::None;
-    m_ownerView    = nullptr;
+    m_ownerScreen    = nullptr;
     m_zorder       = 0;
     m_stackVisible = true;
     FGUIPackageManager::getInstance().unload(getPackages());

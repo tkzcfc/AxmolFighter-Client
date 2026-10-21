@@ -23,18 +23,18 @@ struct LoadProgress
     size_t totalCount    = 0;     // 顶层资源总数
 };
 
-// 一批资源的异步加载任务。典型用法：在 gameui::View::onPrepareLoad() 中通过
-// gameui::View::getResourceLoader() 拿到一个实例、add() 若干资源；框架会自动 start()
+// 一批资源的异步加载任务。典型用法：在 gameui::Screen::onPrepareLoad() 中通过
+// gameui::Screen::getResourceLoader() 拿到一个实例、add() 若干资源；框架会自动 start()
 // 并驱动加载界面，不需要手动调用。
 //
 // 进度：每个顶层资源的权重取 ResourceLoaderRegistry 中该类型的权重；有任务结束时触发 onProgress。
 // 失败：失败的资源同样算作结束，进度照常推进，结束时在 onComplete 中汇总。
 //
 // 生命周期：加载函数被调用过的资源（不限于加载成功）会被 ResourceLoader 持有，
-// 析构时立即（同步）对它们调用 releaseHold()。典型用法是让 View 持有一个 ResourceLoader
-// 直到自己销毁为止，这样加载完成的资源在整个 View 存活期间都不会被
+// 析构时立即（同步）对它们调用 releaseHold()。典型用法是让 Screen 持有一个 ResourceLoader
+// 直到自己销毁为止，这样加载完成的资源在整个 Screen 存活期间都不会被
 // SpineSkeletonCache::purgeUnused() 或 FGUIPackageManager::unload() 过早回收；
-// 需要让资源比某个 View 活得更久时（例如常驻资源），可以把同一个 ResourceLoader
+// 需要让资源比某个 Screen 活得更久时（例如常驻资源），可以把同一个 ResourceLoader
 // 交给多个持有者共同持有（std::shared_ptr），最后一个持有者销毁时才真正释放。
 class ResourceLoader
 {

@@ -28,9 +28,9 @@ public:
     static std::weak_ptr<MessageDialog> showNetErr(std::string_view error, std::function<void()> onRetry = nullptr);
 
 protected:
-    virtual std::vector<std::string> getPackages() const override { return {"UI/Common"}; }
+    virtual std::vector<std::string> getPackages() const override { return {"UI/Common_Base"}; }
 
-    virtual GComponent* onCreateContent() override { return createCenteredComponent("Common", "MessageDialog"); }
+    virtual GComponent* onCreateContent() override { return createCenteredComponent("Common_Base", "MessageDialog"); }
 
     virtual void onCreate() override;
 

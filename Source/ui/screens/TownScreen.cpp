@@ -1,7 +1,7 @@
-#include "TownView.h"
+#include "TownScreen.h"
 
 #include "AppContext.h"
-#include "DungeonSelectView.h"
+#include "DungeonSelectScreen.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/TypeConversions.h"
 #include "mugen/render/battle/WorldPresenter.h"
@@ -34,7 +34,7 @@ mugen::Fixed fixedFromNetwork(float value)
 }
 }  // namespace
 
-class TownView::WorldPresenterHolder
+class TownScreen::WorldPresenterHolder
 {
 public:
     explicit WorldPresenterHolder(ax::Node& root) : root(&root), presenter(root) {}
@@ -48,7 +48,7 @@ public:
     mugen::WorldPresenter presenter;
 };
 
-void TownView::onPrepareLoad()
+void TownScreen::onPrepareLoad()
 {
     const auto* town = conf::Config::instance().find<conf::TownConfig>(m_boot.townId);
     if (!town || town->mapKey.empty())
@@ -57,20 +57,20 @@ void TownView::onPrepareLoad()
     getResourceLoader().add<gameres::MapResource>(layer);
 }
 
-TownView::TownView()
+TownScreen::TownScreen()
 {
     m_boot.townId = DEFAULT_TOWN_ID;
 }
 
-TownView::~TownView() = default;
+TownScreen::~TownScreen() = default;
 
-TownView::TownView(TownBootParams boot) : m_boot(std::move(boot))
+TownScreen::TownScreen(TownBootParams boot) : m_boot(std::move(boot))
 {
     if (m_boot.townId <= 0)
         m_boot.townId = DEFAULT_TOWN_ID;
 }
 
-void TownView::onEnter()
+void TownScreen::onEnter()
 {
     Super::onEnter();
     if (!initTown())
@@ -82,7 +82,7 @@ void TownView::onEnter()
     sendEnterScene();
 }
 
-void TownView::onExit()
+void TownScreen::onExit()
 {
     if (m_keyboardListener)
     {
@@ -94,7 +94,7 @@ void TownView::onExit()
     Super::onExit();
 }
 
-void TownView::onUpdate(float delta)
+void TownScreen::onUpdate(float delta)
 {
     if (!m_initialized)
         return;
@@ -118,11 +118,11 @@ void TownView::onUpdate(float delta)
     reportLocalState(delta);
 }
 
-bool TownView::initTown()
+bool TownScreen::initTown()
 {
     if (!conf::Config::instance().find<conf::TownConfig>(m_boot.townId))
     {
-        AXLOGE("TownView: town {} missing", m_boot.townId);
+        AXLOGE("TownScreen: town {} missing", m_boot.townId);
         return false;
     }
 
@@ -150,7 +150,7 @@ bool TownView::initTown()
     return true;
 }
 
-void TownView::sendEnterScene()
+void TownScreen::sendEnterScene()
 {
     PB::Game::EnterSceneReq req;
     req.set_type(PB::Types::SceneEnterType::Map);
@@ -173,11 +173,11 @@ void TownView::sendEnterScene()
         m_enteredScene = true;
         for (const auto& player : resp->players())
             addOrUpdateRemotePlayer(player);
-        AXLOGI("TownView: entered scene, players={}", resp->players_size());
+        AXLOGI("TownScreen: entered scene, players={}", resp->players_size());
     });
 }
 
-void TownView::fillLocalState(PB::Types::PlayerState* state) const
+void TownScreen::fillLocalState(PB::Types::PlayerState* state) const
 {
     auto* session = AppContext::get().gameSession();
     if (!session)
@@ -199,7 +199,7 @@ void TownView::fillLocalState(PB::Types::PlayerState* state) const
     state->set_moving(status.eEntityStatus == EntityRoleStatus::Walk);
 }
 
-void TownView::reportLocalState(float delta)
+void TownScreen::reportLocalState(float delta)
 {
     if (!m_enteredScene)
         return;
@@ -217,20 +217,20 @@ void TownView::reportLocalState(float delta)
     this->notify(push);
 }
 
-void TownView::addMessagePushReceiver()
+void TownScreen::addMessagePushReceiver()
 {
     this->listenPush([this](PB::Town::ScenePlayerEnterPush& push) {
         if (!push.has_state())
             return;
         addOrUpdateRemotePlayer(push.state());
-        AXLOGI("TownView: player {} entered scene", push.state().player_id());
+        AXLOGI("TownScreen: player {} entered scene", push.state().player_id());
     });
 
     this->listenPush([this](PB::Town::ScenePlayerLeavePush& push) {
         if (m_selectedPlayerId == push.player_id())
             m_selectedPlayerId = 0;
         removeRemotePlayer(push.player_id());
-        AXLOGI("TownView: player {} left scene", push.player_id());
+        AXLOGI("TownScreen: player {} left scene", push.player_id());
     });
 
     this->listenPush([this](PB::Town::ScenePlayerStatePush& push) {
@@ -253,13 +253,13 @@ void TownView::addMessagePushReceiver()
     });
 }
 
-void TownView::initPortals()
+void TownScreen::initPortals()
 {
     m_portals.clear();
     const auto* town = conf::Config::instance().find<conf::TownConfig>(m_boot.townId);
     if (!town || town->portalIds.empty())
     {
-        AXLOGI("TownView: town {} has no portals", m_boot.townId);
+        AXLOGI("TownScreen: town {} has no portals", m_boot.townId);
         return;
     }
 
@@ -298,12 +298,12 @@ void TownView::initPortals()
     }
 }
 
-bool TownView::initInput()
+bool TownScreen::initInput()
 {
     auto* scene = ax::Director::getInstance()->getRunningScene();
     if (!scene)
     {
-        AXLOGE("TownView: running scene is null");
+        AXLOGE("TownScreen: running scene is null");
         return false;
     }
     using Key                         = ax::EventKeyboard::KeyCode;
@@ -313,36 +313,36 @@ bool TownView::initInput()
     m_slotMap[Key::KEY_UP_ARROW]      = static_cast<uint32_t>(ControlKey::Up);
     m_slotMap[Key::KEY_DOWN_ARROW]    = static_cast<uint32_t>(ControlKey::Down);
     m_keyboardListener                = ax::EventListenerKeyboard::create();
-    m_keyboardListener->onKeyPressed  = AX_CALLBACK_2(TownView::onKeyPressed, this);
-    m_keyboardListener->onKeyReleased = AX_CALLBACK_2(TownView::onKeyReleased, this);
+    m_keyboardListener->onKeyPressed  = AX_CALLBACK_2(TownScreen::onKeyPressed, this);
+    m_keyboardListener->onKeyReleased = AX_CALLBACK_2(TownScreen::onKeyReleased, this);
     ax::Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(m_keyboardListener,
                                                                                               scene);
     return true;
 }
 
-void TownView::onKeyPressed(ax::EventKeyboard::KeyCode code, ax::Event*)
+void TownScreen::onKeyPressed(ax::EventKeyboard::KeyCode code, ax::Event*)
 {
     setInputFromKey(code, true);
 }
 
-void TownView::onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event*)
+void TownScreen::onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event*)
 {
     setInputFromKey(code, false);
 }
 
-void TownView::setInputFromKey(ax::EventKeyboard::KeyCode code, bool pressed)
+void TownScreen::setInputFromKey(ax::EventKeyboard::KeyCode code, bool pressed)
 {
     const auto it = m_slotMap.find(code);
     if (it != m_slotMap.end())
         m_control.setKey(static_cast<sim::ControlKey>(it->second), pressed);
 }
 
-mugen::Entity TownView::localEntity() const
+mugen::Entity TownScreen::localEntity() const
 {
     return m_localEntity;
 }
 
-void TownView::queuePuppetUpdate(mugen::Entity entity, const PB::Types::PlayerState& state)
+void TownScreen::queuePuppetUpdate(mugen::Entity entity, const PB::Types::PlayerState& state)
 {
     m_pendingPuppetUpdates.push_back(
         {entity,
@@ -352,7 +352,7 @@ void TownView::queuePuppetUpdate(mugen::Entity entity, const PB::Types::PlayerSt
          state.state()});
 }
 
-void TownView::addOrUpdateRemotePlayer(const PB::Types::PlayerState& state)
+void TownScreen::addOrUpdateRemotePlayer(const PB::Types::PlayerState& state)
 {
     auto* session = AppContext::get().gameSession();
     if (!session || state.player_id() == session->account.playerID)
@@ -366,7 +366,7 @@ void TownView::addOrUpdateRemotePlayer(const PB::Types::PlayerState& state)
     queuePuppetUpdate(it->second, state);
 }
 
-void TownView::removeRemotePlayer(int64_t playerId)
+void TownScreen::removeRemotePlayer(int64_t playerId)
 {
     const auto it = m_remotePlayers.find(playerId);
     if (it == m_remotePlayers.end())
@@ -375,17 +375,17 @@ void TownView::removeRemotePlayer(int64_t playerId)
     m_remotePlayers.erase(it);
 }
 
-void TownView::onPortalTriggered(const TownPortal& portal)
+void TownScreen::onPortalTriggered(const TownPortal& portal)
 {
     constexpr int32_t kDestTypeFunction = 1;
     constexpr int32_t kDestTypeCity     = 5;
 
-    AXLOGI("TownView: portal triggered id={} slot={} destType={} destTown={}", portal.portalId, portal.slot,
+    AXLOGI("TownScreen: portal triggered id={} slot={} destType={} destTown={}", portal.portalId, portal.slot,
            portal.destType, portal.destTownId);
 
     if (portal.destType == kDestTypeFunction)
     {
-        getViewManager()->pushView<DungeonSelectView>();
+        getScreenManager()->pushScreen<DungeonSelectScreen>();
         return;
     }
 
@@ -402,14 +402,14 @@ void TownView::onPortalTriggered(const TownPortal& portal)
         boot.spawnX = portal.destPosX;
         boot.spawnZ = portal.destPosZ;
         boot.facing = portal.destFacing;
-        getViewManager()->switchView<TownView>(boot);
+        getScreenManager()->switchScreen<TownScreen>(boot);
         return;
     }
 
-    AXLOGI("TownView: unsupported portal destType={}", portal.destType);
+    AXLOGI("TownScreen: unsupported portal destType={}", portal.destType);
 }
 
-void TownView::sendDuelInvite(int64_t targetPlayerId)
+void TownScreen::sendDuelInvite(int64_t targetPlayerId)
 {
     if (targetPlayerId == 0)
         return;
@@ -434,7 +434,7 @@ void TownView::sendDuelInvite(int64_t targetPlayerId)
     });
 }
 
-void TownView::respondDuelInvite(int32_t accept)
+void TownScreen::respondDuelInvite(int32_t accept)
 {
     PB::Game::DuelRespondReq req;
     req.set_accept(accept);
@@ -449,7 +449,7 @@ void TownView::respondDuelInvite(int32_t accept)
     });
 }
 
-void TownView::onImGUIRender()
+void TownScreen::onImGUIRender()
 {
     ImGui::SetNextWindowPos(ImVec2(20.0f, 60.0f), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(260.0f, 280.0f), ImGuiCond_FirstUseEver);
@@ -483,7 +483,7 @@ void TownView::onImGUIRender()
     }
 
     if (ImGui::Button("打开副本选择", ImVec2(-1, 0)))
-        getViewManager()->pushView<DungeonSelectView>();
+        getScreenManager()->pushScreen<DungeonSelectScreen>();
 
     if (m_showDuelInvite)
     {

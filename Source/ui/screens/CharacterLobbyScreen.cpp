@@ -1,7 +1,7 @@
-#include "CharacterLobbyView.h"
+#include "CharacterLobbyScreen.h"
 
 #include "AppContext.h"
-#include "TownView.h"
+#include "TownScreen.h"
 #include "mugen/avatar/render/Avatar.h"
 #include "mugen/conf/TypeConversions.h"
 #include "ui/widgets/character_lobby/CharacterCreationPanel.h"
@@ -13,20 +13,20 @@
 namespace gameui
 {
 
-void CharacterLobbyView::onEnter()
+void CharacterLobbyScreen::onEnter()
 {
     auto startGameBtn    = this->getChild<GButton>("startGameBtn");
     auto createPlayerBtn = this->getChild<GButton>("createPlayerBtn");
 
     m_startGameBtn = startGameBtn;
 
-    this->addClickListener(startGameBtn, AX_CALLBACK_1(CharacterLobbyView::onClickStartGameButton, this));
-    this->addClickListener(createPlayerBtn, AX_CALLBACK_1(CharacterLobbyView::onClickCreatePlayerButton, this));
+    this->addClickListener(startGameBtn, AX_CALLBACK_1(CharacterLobbyScreen::onClickStartGameButton, this));
+    this->addClickListener(createPlayerBtn, AX_CALLBACK_1(CharacterLobbyScreen::onClickCreatePlayerButton, this));
 
     requestCharacterList();
 }
 
-void CharacterLobbyView::requestCharacterList()
+void CharacterLobbyScreen::requestCharacterList()
 {
     PB::Game::FetchCharacterListReq req;
     this->call(req, [this](const PB::Game::FetchCharacterListResp* resp, std::string_view error) {
@@ -53,7 +53,7 @@ void CharacterLobbyView::requestCharacterList()
     });
 }
 
-void CharacterLobbyView::updateCharacterList()
+void CharacterLobbyScreen::updateCharacterList()
 {
     auto* session = AppContext::get().gameSession();
     if (!session)
@@ -106,7 +106,7 @@ void CharacterLobbyView::updateCharacterList()
         avatarLoader->setContent(nullptr);
         if (!previewAvatar)
         {
-            AXLOGW("CharacterLobbyView: preview avatar failed classId={}", c.classID);
+            AXLOGW("CharacterLobbyScreen: preview avatar failed classId={}", c.classID);
             continue;
         }
 
@@ -122,12 +122,12 @@ void CharacterLobbyView::updateCharacterList()
     }
 }
 
-void CharacterLobbyView::refreshCharacterList()
+void CharacterLobbyScreen::refreshCharacterList()
 {
     updateCharacterList();
 }
 
-void CharacterLobbyView::onClickStartGameButton(EventContext* context)
+void CharacterLobbyScreen::onClickStartGameButton(EventContext* context)
 {
     if (m_isWillEnterGame)
     {
@@ -171,12 +171,12 @@ void CharacterLobbyView::onClickStartGameButton(EventContext* context)
         m_isWillEnterGame = true;
         m_startGameBtn->getTransition("t_click")->play([this]() {
             AudioManager::getInstance()->stopBGM();
-            getViewManager()->switchView<TownView>();
+            getScreenManager()->switchScreen<TownScreen>();
         });
     });
 }
 
-void CharacterLobbyView::onClickCreatePlayerButton(EventContext* context)
+void CharacterLobbyScreen::onClickCreatePlayerButton(EventContext* context)
 {
     if (m_isWillEnterGame)
     {
@@ -194,7 +194,7 @@ void CharacterLobbyView::onClickCreatePlayerButton(EventContext* context)
         MessageDialog::show("已达到最大角色数量");
         return;
     }
-    getViewManager()->getUIManager()->open<CharacterCreationPanel>();
+    getScreenManager()->getUIManager()->open<CharacterCreationPanel>();
 }
 
 }  // namespace gameui

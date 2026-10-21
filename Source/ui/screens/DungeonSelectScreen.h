@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ui/core/View.h"
+#include "ui/core/Screen.h"
 
 #include <cstdint>
 #include <vector>
@@ -8,11 +8,11 @@
 namespace gameui
 {
 
-// 副本选择界面（纯 ImGui，叠加在 TownView 上）
-class DungeonSelectView : public View
+// 副本选择界面（纯 ImGui，叠加在 TownScreen 上）
+class DungeonSelectScreen : public Screen
 {
 public:
-    typedef View Super;
+    typedef Screen Super;
 
 public:
     void onEnter() override;

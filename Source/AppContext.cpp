@@ -6,13 +6,22 @@
 #include "mugen/avatar/data/AvatarAssetCache.h"
 #include "mugen/render/spine/SpineSkeletonCache.h"
 #include "resource/builtin/ConfigResource.h"
+#include "resource/builtin/FguiPackageResource.h"
 
 using namespace fairygui;
 
 namespace
 {
 constexpr const char* kDefaultServerHost = "127.0.0.1";
-constexpr int kDefaultServerPort         = 7000;
+constexpr int kDefaultServerPort         = 17000;
+
+// 与 AppContext 生命周期相同的常驻 FairyGUI 包，按顺序加载，按逆序卸载。
+// 同步加载只读取包描述文件，里面的图集/字体等到真正用到时才会加载解码。
+const std::vector<std::string> kResidentPackages = {
+    "UI/Res_Backgrounds",
+    "UI/Res_GeneralIcons",
+    "UI/Common_Base",
+};
 }  // namespace
 
 static AppContext* s_instance = nullptr;
@@ -26,7 +35,7 @@ AppContext& AppContext::get()
 void AppContext::create()
 {
     fairygui::UIConfig::defaultFont = "font-normal";
-    fairygui::UIConfig::buttonSound = "ui://Common/ui_click1";
+    fairygui::UIConfig::buttonSound = "ui://Common_Base/ui_click1";
     fairygui::UIConfig::registerFont("font-normal", "fonts/font-normal.ttf");
     fairygui::UIConfig::registerFont("font-title", "fonts/font-title.ttf");
     fairygui::UIConfig::registerFont("fangzhengzhunyuan_GBK", "fonts/fangzhengzhunyuan_GBK.ttf");
@@ -37,13 +46,12 @@ void AppContext::create()
     AXASSERT(!s_instance, "AppContext already created");
     s_instance = new AppContext();
 
-    // UI/Common 同步加载：只读取包描述文件，里面的图集/字体等到真正用到时才会加载解码
-    gameui::FGUIPackageManager::getInstance().load({"UI/Common"});
+    gameui::FGUIPackageManager::getInstance().load(kResidentPackages);
 }
 
 void AppContext::destroy()
 {
-    gameui::FGUIPackageManager::getInstance().unload({"UI/Common"});
+    gameui::FGUIPackageManager::getInstance().unload({kResidentPackages.rbegin(), kResidentPackages.rend()});
 
     delete s_instance;
     s_instance = nullptr;
@@ -60,12 +68,13 @@ AppContext::AppContext()
     mugen::AvatarAssetCache::getInstance()->addSearchPath("res_zhcn");
 
     // 生命周期与 AppContext 相同的常驻资源：配置表，以及之后可能加入的其他常驻资源
-    // （不一定都在 UI/Common 里）。由 LaunchView 通过 setResourceLoader() 共同持有并驱动加载；
-    // LaunchView 销毁后 AppContext 这份引用还在，资源不会被释放，直到 AppContext 自己销毁。
+    // （不一定都在 UI/Common_Base 里）。由 LaunchScreen 通过 setResourceLoader() 共同持有并驱动加载；
+    // LaunchScreen 销毁后 AppContext 这份引用还在，资源不会被释放，直到 AppContext 自己销毁。
     m_globalLoader = std::make_shared<gameres::ResourceLoader>();
     m_globalLoader->add<gameres::ConfigResource>(gameres::ConfigResource::Kind::Mugen, "mugen/config/config.bin");
     m_globalLoader->add<gameres::ConfigResource>(gameres::ConfigResource::Kind::AvatarAssets,
                                                  "mugen/config/avatar.bin");
+    m_globalLoader->add<gameres::FguiPackageResource>("UI/Res_GeneralIcons", true, false);
 }
 
 AppContext::~AppContext()
@@ -81,8 +90,8 @@ AppContext::~AppContext()
 
 void AppContext::init(ax::Scene* scene)
 {
-    m_viewManager = std::make_unique<gameui::ViewManager>();
-    m_viewManager->init(scene);
+    m_screenManager = std::make_unique<gameui::ScreenManager>();
+    m_screenManager->init(scene);
 
     // 监听断线
     m_netClient->setOnDisconnect([this]() { onDisconnected(); });
@@ -118,7 +127,7 @@ void AppContext::init(ax::Scene* scene)
 
 void AppContext::update(float delta)
 {
-    m_viewManager->update(delta);
+    m_screenManager->update(delta);
 
     // 重连计时
     if (m_shouldReconnect && !m_connecting)
@@ -244,7 +253,7 @@ void AppContext::showConnectMask(const std::string& text, bool showRetryButton)
 
     if (m_connectMask == nullptr)
     {
-        m_connectMask = UIPackage::createObject("Common", "ConnectMaskLayer")->as<GComponent>();
+        m_connectMask = UIPackage::createObject("Common_Base", "ConnectMaskLayer")->as<GComponent>();
         m_connectMask->setSize(groot->getWidth(), groot->getHeight());
         m_connectMask->addRelation(groot, RelationType::Size);
         m_connectMask->setSortingOrder(INT_MAX);
@@ -264,5 +273,5 @@ void AppContext::hideConnectMask()
 
 gameui::UIManager* AppContext::uiManager() const
 {
-    return m_viewManager ? m_viewManager->getUIManager() : nullptr;
+    return m_screenManager ? m_screenManager->getUIManager() : nullptr;
 }

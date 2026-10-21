@@ -16,7 +16,7 @@ ResourceLoader::ResourceLoader() : m_core(std::make_shared<detail::LoaderCore>()
 
 ResourceLoader::~ResourceLoader()
 {
-    // 立即释放，不延迟一帧：调用方（通常是 View）负责把本对象持有到不再需要资源的那一刻。
+    // 立即释放，不延迟一帧：调用方（通常是 Screen）负责把本对象持有到不再需要资源的那一刻。
     cancel();
     for (auto& resource : m_core->collectHeldResources())
         resource->releaseHold();

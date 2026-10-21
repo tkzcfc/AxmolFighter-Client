@@ -19,9 +19,9 @@ public:
     virtual ~LoginPanel() {}
 
 protected:
-    virtual std::vector<std::string> getPackages() const override { return {"UI/Login"}; }
+    virtual std::vector<std::string> getPackages() const override { return {"UI/Screen_Login"}; }
 
-    virtual GComponent* onCreateContent() override { return createCenteredComponent("Login", "LoginPanel"); }
+    virtual GComponent* onCreateContent() override { return createCenteredComponent("Screen_Login", "LoginPanel"); }
 
     virtual void onCreate() override;
 

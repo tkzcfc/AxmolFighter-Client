@@ -1,18 +1,18 @@
 #pragma once
 
-#include "ui/core/View.h"
+#include "ui/core/Screen.h"
 
 namespace gameui
 {
 
-class CharacterLobbyView : public View
+class CharacterLobbyScreen : public Screen
 {
 public:
-    std::vector<std::string> getPackages() const override { return {"UI/CharacterLobby"}; }
+    std::vector<std::string> getPackages() const override { return {"UI/Screen_CharacterLobby"}; }
 
     GComponent* onCreateContent() override
     {
-        return UIPackage::createObject("CharacterLobby", "CharacterLobbyView")->as<GComponent>();
+        return UIPackage::createObject("Screen_CharacterLobby", "CharacterLobbyScreen")->as<GComponent>();
     }
 
     virtual void onEnter() override;

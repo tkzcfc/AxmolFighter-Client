@@ -14,7 +14,7 @@ namespace gameui
 {
 using namespace fairygui;
 
-class View;
+class Screen;
 
 class UIWidget : public std::enable_shared_from_this<UIWidget>, public net::NetAgent
 {
@@ -55,7 +55,7 @@ public:
 
 protected:
     // 返回此控件依赖的 FairyGUI 包资源路径。
-    // 例如 { "UI/Common", "UI/Popup" }
+    // 例如 { "UI/Common_Base", "UI/Panel_Xxx" }
     // UIManager 会在创建控件时加载这些包，在销毁控件时卸载这些包。
     virtual std::vector<std::string> getPackages() const { return {}; }
 
@@ -101,7 +101,7 @@ protected:
     GGraph* m_background          = nullptr;
     UIState m_state               = UIState::None;
     UIManager* m_manager          = nullptr;
-    View* m_ownerView             = nullptr;
+    Screen* m_ownerScreen             = nullptr;
     UIWidgetLifecycle m_lifecycle = UIWidgetLifecycle::WithOwner;
     uint32_t m_zorder             = 0;
     bool m_stackVisible           = true;

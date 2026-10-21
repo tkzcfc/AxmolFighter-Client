@@ -26,9 +26,9 @@
 #include "MainScene.h"
 #include "ImGui/ImGuiPresenter.h"
 #include "AppContext.h"
-#include "ui/core/ViewManager.h"
-#include "ui/views/GameView.h"
-#include "ui/views/LaunchView.h"
+#include "ui/core/ScreenManager.h"
+#include "ui/screens/GameScreen.h"
+#include "ui/screens/LaunchScreen.h"
 #include "LaunchOptions.h"
 
 #include <charconv>
@@ -66,8 +66,8 @@ void MainScene::onEnter()
     if (parseOfflineLaunch())
         startOfflineBattle();
     else
-        AppContext::get().viewManager()->switchView<gameui::LaunchView>();
-    AppContext::get().viewManager()->flushPendingViews();
+        AppContext::get().screenManager()->switchScreen<gameui::LaunchScreen>();
+    AppContext::get().screenManager()->flushPendingScreens();
 
     // scheduleUpdate() is required to ensure update(float) is called on every loop
     scheduleUpdate();
@@ -130,7 +130,7 @@ void MainScene::startOfflineBattle()
         if (!m_offlineStarted)
         {
             m_offlineStarted = true;
-            AppContext::get().viewManager()->switchView<gameui::GameView>(m_offline);
+            AppContext::get().screenManager()->switchScreen<gameui::GameScreen>(m_offline);
         }
     });
 }
@@ -165,12 +165,12 @@ void MainScene::setupImGui()
 
 void MainScene::onImGuiRender()
 {
-    auto* viewManager = AppContext::get().viewManager();
-    if (auto* curView = viewManager->getCurrentView())
+    auto* screenManager = AppContext::get().screenManager();
+    if (auto* curScreen = screenManager->getCurrentScreen())
     {
-        if (!curView->isLoading())
-            curView->onImGUIRender();
+        if (!curScreen->isLoading())
+            curScreen->onImGUIRender();
     }
-    // ImGui 回调内可能 switchView；必须在当前 View 的 onImGUIRender 返回后再销毁
-    viewManager->flushPendingViews();
+    // ImGui 回调内可能 switchScreen；必须在当前 Screen 的 onImGUIRender 返回后再销毁
+    screenManager->flushPendingScreens();
 }

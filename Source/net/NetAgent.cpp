@@ -72,7 +72,7 @@ void NetAgent::push(uint16_t msgId, const char* data, size_t length)
 
 void NetAgent::dispatchPush(uint16_t msgId, const std::string_view& payload)
 {
-    // 先持有 lifetime 与 listener 拷贝：回调内可能 switchView 销毁 this，
+    // 先持有 lifetime 与 listener 拷贝：回调内可能 switchScreen 销毁 this，
     // 并 clear m_pushListeners（不能边跑边销毁正在执行的 std::function）。
     auto life = m_lifetime;
     std::function<void(const std::string_view&)> listener;

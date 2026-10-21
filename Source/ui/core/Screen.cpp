@@ -1,4 +1,4 @@
-#include "View.h"
+#include "Screen.h"
 #include "FGUIPackageManager.h"
 #include "ui/widgets/common/LoadingLayer.h"
 #include "ui/widgets/common/MessageDialog.h"
@@ -6,35 +6,35 @@
 namespace gameui
 {
 
-View::View() {}
+Screen::Screen() {}
 
-View::~View() {}
+Screen::~Screen() {}
 
-gameres::ResourceLoader& View::getResourceLoader()
+gameres::ResourceLoader& Screen::getResourceLoader()
 {
     if (!m_resourceLoader)
         m_resourceLoader = std::make_shared<gameres::ResourceLoader>();
     return *m_resourceLoader;
 }
 
-void View::setResourceLoader(std::shared_ptr<gameres::ResourceLoader> loader)
+void Screen::setResourceLoader(std::shared_ptr<gameres::ResourceLoader> loader)
 {
     m_resourceLoader = std::move(loader);
 }
 
-bool View::onResourceLoadFailed(const std::vector<gameres::ResourcePtr>& failedResources)
+bool Screen::onResourceLoadFailed(const std::vector<gameres::ResourcePtr>& failedResources)
 {
     for (const auto& res : failedResources)
     {
-        AXLOGW("View: failed to load {} '{}': {}", gameres::toString(res->getType()), res->getKey(), res->getError());
+        AXLOGW("Screen: failed to load {} '{}': {}", gameres::toString(res->getType()), res->getKey(), res->getError());
     }
     // 默认不算致命：继续创建正式内容，运行时按老办法自行处理资源缺失
     return true;
 }
 
-void View::_create()
+void Screen::_create()
 {
-    m_state = ViewState::None;
+    m_state = ScreenState::None;
 
     onPrepareLoad();
 
@@ -46,10 +46,10 @@ void View::_create()
 
     m_loadingLayer = std::make_unique<LoadingLayer>();
     m_loadingRoot  = m_loadingLayer->getRoot();
-    m_state        = ViewState::Loading;
+    m_state        = ScreenState::Loading;
 }
 
-void View::_createContent()
+void Screen::_createContent()
 {
     FGUIPackageManager::getInstance().load(getPackages());
     GComponent* content = onCreateContent();
@@ -57,17 +57,17 @@ void View::_createContent()
     m_root->setSize(GRoot::getInstance()->getWidth(), GRoot::getInstance()->getHeight());
     m_root->addRelation(GRoot::getInstance(), RelationType::Size);
 
-    m_state = ViewState::Active;
+    m_state = ScreenState::Active;
     onEnter();
 }
 
-void View::_destroy()
+void Screen::_destroy()
 {
     detach();
 
     switch (m_state)
     {
-    case ViewState::Loading:
+    case ScreenState::Loading:
     {
         // 此时应该还没有创建正式内容
         AX_ASSERT(m_root == nullptr);
@@ -80,14 +80,14 @@ void View::_destroy()
         m_loadingLayer.reset();
         break;
     }
-    case ViewState::Active:
+    case ScreenState::Active:
     {
         // 确保和 onEnter 成对调用
         onExit();
 
         // Active 状态时，loadingRoot 和加载界面应该已经被释放
         AXASSERT(m_loadingRoot == nullptr && m_loadingLayer == nullptr,
-                 "loading state must be released before an active view unloads");
+                 "loading state must be released before an active screen unloads");
 
         if (m_root)
         {
@@ -97,7 +97,7 @@ void View::_destroy()
         FGUIPackageManager::getInstance().unload(getPackages());
         break;
     }
-    case ViewState::None:
+    case ScreenState::None:
     {
         // 不应该出现这种情况
         AX_ASSERT(false);
@@ -107,16 +107,16 @@ void View::_destroy()
 
     // 加载器持有到这里才释放：
     // - 自己 getResourceLoader() 创建的那份，析构时会立即释放持有的全部资源；
-    // - setResourceLoader() 借用的那份，这里只是释放本 View 的引用，不影响其他持有者
+    // - setResourceLoader() 借用的那份，这里只是释放本 Screen 的引用，不影响其他持有者
     //   （例如 AppContext::globalLoader()）继续使用。
     m_resourceLoader.reset();
 
-    m_state = ViewState::None;
+    m_state = ScreenState::None;
 }
 
-bool View::_updateLoading(float dt)
+bool Screen::_updateLoading(float dt)
 {
-    AX_ASSERT(m_state == ViewState::Loading);
+    AX_ASSERT(m_state == ScreenState::Loading);
     AX_ASSERT(m_resourceLoader);
 
     if (m_loadFatal)
@@ -152,9 +152,9 @@ bool View::_updateLoading(float dt)
     return m_loadingLayer->isDone();
 }
 
-void View::_finishLoading()
+void Screen::_finishLoading()
 {
-    AX_ASSERT(m_state == ViewState::Loading && m_loadingLayer != nullptr);
+    AX_ASSERT(m_state == ScreenState::Loading && m_loadingLayer != nullptr);
 
     // 加载完成,移除loading界面
     if (m_loadingRoot)
@@ -168,7 +168,7 @@ void View::_finishLoading()
     _createContent();
 }
 
-void View::_failFatal(std::string_view message)
+void Screen::_failFatal(std::string_view message)
 {
     if (m_loadFatal)
         return;
@@ -176,11 +176,11 @@ void View::_failFatal(std::string_view message)
     MessageDialog::showGlobal(message, []() { ax::Director::getInstance()->end(); });
 }
 
-void View::addClickListener(UIEventDispatcher* dispatcher, const std::function<void(EventContext*)>& callback)
+void Screen::addClickListener(UIEventDispatcher* dispatcher, const std::function<void(EventContext*)>& callback)
 {
     if (dispatcher == nullptr)
     {
-        AXLOGW("View::addClickListener: dispatcher is null");
+        AXLOGW("Screen::addClickListener: dispatcher is null");
         return;
     }
     dispatcher->addEventListener(UIEventType::Click, callback);

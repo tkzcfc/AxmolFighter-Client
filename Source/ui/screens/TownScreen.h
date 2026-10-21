@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ui/core/View.h"
+#include "ui/core/Screen.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/input/ControlManagerCore.h"
 
@@ -28,15 +28,15 @@ struct TownBootParams
     int32_t facing = 1;
 };
 
-class TownView : public View
+class TownScreen : public Screen
 {
 public:
-    typedef View Super;
+    typedef Screen Super;
 
 public:
-    TownView();
-    explicit TownView(TownBootParams boot);
-    ~TownView() override;
+    TownScreen();
+    explicit TownScreen(TownBootParams boot);
+    ~TownScreen() override;
 
     virtual void onEnter() override;
     virtual void onExit() override;

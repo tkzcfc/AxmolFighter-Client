@@ -20,11 +20,11 @@ public:
     virtual ~CharacterCreationPanel() {}
 
 protected:
-    virtual std::vector<std::string> getPackages() const override { return {"UI/CharacterLobby"}; }
+    virtual std::vector<std::string> getPackages() const override { return {"UI/Screen_CharacterLobby"}; }
 
     virtual GComponent* onCreateContent() override
     {
-        return createCenteredComponent("CharacterLobby", "CharacterCreationPanel");
+        return createCenteredComponent("Screen_CharacterLobby", "CharacterCreationPanel");
     }
 
     virtual void onCreate() override;

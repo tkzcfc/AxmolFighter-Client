@@ -1,5 +1,5 @@
 #include "CharacterCreationChooseClouthPanel.h"
-#include "ui/views/CharacterLobbyView.h"
+#include "ui/screens/CharacterLobbyScreen.h"
 #include "ui/widgets/common/MessageDialog.h"
 #include "ui/UiConfig.h"
 #include "mugen/avatar/render/Avatar.h"
@@ -18,7 +18,7 @@ void CharacterCreationChooseClouthPanel::onCreate()
     auto backButton = this->getChild<GButton>("backButton");
     this->addClickListener(backButton, AX_CALLBACK_1(CharacterCreationChooseClouthPanel::onClickBackButton, this));
 
-    auto container = this->getChild<GComponent>("container");
+    auto container = this->getChild<GLoader>("container")->getComponent();
 
     m_choiceHairList     = container->getChild("choiceHair")->as<GComponent>()->getChild("list")->as<GList>();
     m_choiceClothingList = container->getChild("choiceClothing")->as<GComponent>()->getChild("list")->as<GList>();
@@ -86,7 +86,7 @@ void CharacterCreationChooseClouthPanel::updateUI()
     m_showHairIndex     = m_curHairIndex;
     m_showClothingIndex = m_curClothingIndex;
 
-    auto container    = this->getChild<GComponent>("container");
+    auto container    = this->getChild<GLoader>("container")->getComponent();
     auto loaderAvatar = container->getChild("loaderAvatar")->as<GLoader3D>();
 
     auto t0 = container->getTransition("t0");
@@ -189,7 +189,7 @@ void CharacterCreationChooseClouthPanel::onClickCreateButton(EventContext* conte
         if (auto* session = AppContext::get().gameSession())
             session->appendFromCreateResp(*resp);
 
-        if (auto* lobby = dynamic_cast<CharacterLobbyView*>(getUIManager()->getViewManager()->getCurrentView()))
+        if (auto* lobby = dynamic_cast<CharacterLobbyScreen*>(getUIManager()->getScreenManager()->getCurrentScreen()))
         {
             lobby->refreshCharacterList();
         }
