@@ -17,8 +17,7 @@ WeaponFormPreviewDialog::WeaponFormPreviewDialog(int32_t armamentSpineId) : m_ar
 
 GComponent* WeaponFormPreviewDialog::onCreateContent()
 {
-    // Center without pivot-as-anchor so Avatar / native layers keep stable local coords
-    // (createCenteredComponent uses setPivot(..., true) which blew up the prior layout).
+    // Center without pivot-as-anchor so Avatar keeps stable local coords.
     auto* comp = UIPackage::createObject("Panel_Weapon", "WeaponFormPreviewDialog")->as<GComponent>();
     const float x = (m_root->getWidth() - comp->getWidth()) * 0.5f;
     const float y = (m_root->getHeight() - comp->getHeight()) * 0.5f;
@@ -62,15 +61,20 @@ void WeaponFormPreviewDialog::refreshAvatar()
         if (f.worn && f.configID > 0)
             appearance.equipFashion[static_cast<mugen::FashionPosition>(f.position)] = f.configID;
     }
-    // Override weapon accessory with armament ResSpine id (FashionResolver treats kWeapon as ResSpine).
+
+    // FashionResolver: equipFashion values are FashionConfig ids (looked up → spineUiId).
+    // Accessory baseFashion values are raw ResSpine ids. Armament.spineId is ResSpine, so it
+    // must go into baseFashion[kWeapon]. Clear any worn weapon fashion so it cannot override.
+    appearance.equipFashion.erase(mugen::FashionPosition::kWeapon);
     if (m_armamentSpineId > 0)
-        appearance.equipFashion[mugen::FashionPosition::kWeapon] = m_armamentSpineId;
+        appearance.baseFashion[mugen::FashionPosition::kWeapon] = m_armamentSpineId;
 
     if (m_avatar)
     {
         if (m_avatar->setAppearance(appearance))
         {
             m_avatar->setMotion("stand", "", true);
+            AXLOGI("WeaponFormPreviewDialog: setAppearance weapon spineId={}", m_armamentSpineId);
             return;
         }
         m_avatarLoader->setContent(nullptr);
