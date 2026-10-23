@@ -38,6 +38,17 @@ public:
     explicit TownScreen(TownBootParams boot);
     ~TownScreen() override;
 
+    std::vector<std::string> getPackages() const override
+    {
+        // Res_GeneralIcons: MainMenu head icon (ui://37kbt1d9...)
+        return {"UI/Res_GeneralIcons", "UI/Screen_Town"};
+    }
+
+    GComponent* onCreateContent() override
+    {
+        return UIPackage::createObject("Screen_Town", "TownScreen")->as<GComponent>();
+    }
+
     virtual void onEnter() override;
     virtual void onExit() override;
     virtual void onUpdate(float delta) override;
@@ -79,6 +90,18 @@ private:
     void sendDuelInvite(int64_t targetPlayerId);
     void respondDuelInvite(int32_t accept);
 
+    void bindMainMenuUi();
+    void setupMainMenuButtonIcon();
+    void onClickMainMenuButton(EventContext* context);
+    void onClickMaskLayer(EventContext* context);
+    void openMainMenu();
+    void closeMainMenu();
+    void destroyMainMenu();
+    void setMainMenuInteractive(bool enabled);
+    void layoutMainMenu(bool offscreen);
+    void bindMainMenuFeatureButtons();
+    void refreshMainMenuPlayerInfo();
+
 private:
     TownBootParams m_boot;
     std::vector<TownPortal> m_portals;
@@ -102,6 +125,11 @@ private:
     bool m_showDuelInvite   = false;
     int64_t m_duelInviterId = 0;
     std::string m_duelInviterName;
+
+    GComponent* m_maskLayer      = nullptr;
+    GComponent* m_mainMenuButton = nullptr;
+    GComponent* m_mainMenu       = nullptr;
+    bool m_mainMenuAnimating     = false;
 };
 
 }  // namespace gameui

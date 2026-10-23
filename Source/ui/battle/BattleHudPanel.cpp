@@ -18,6 +18,14 @@ namespace
 {
 using mugen::sim::ControlKey;
 
+// Unwrap config icon variant; tables already store FairyGUI ui:// URLs (or int sentinel).
+std::string configIconString(const std::variant<int32_t, std::string>& icon)
+{
+    if (const auto* path = std::get_if<std::string>(&icon))
+        return *path;
+    return {};
+}
+
 // 摇杆死区占半径的比例。
 constexpr float kJoystickDeadZone = 0.25f;
 
@@ -38,31 +46,6 @@ bool poolSlotToControlKey(const std::string& poolSlot, uint32_t& key)
         return true;
     }
     return false;
-}
-
-// 配置里的图标沿用原版路径（如 piece/nfy_skill_fight_icon/xxx.png），按目录映射到对应 Res_ 包，
-// 资源名为去掉目录和扩展名的文件名。
-std::string iconUrl(std::string_view path)
-{
-    if (path.empty())
-        return {};
-    const size_t slash      = path.find_last_of('/');
-    std::string_view name   = slash == std::string_view::npos ? path : path.substr(slash + 1);
-    const size_t dot        = name.find_last_of('.');
-    name                    = dot == std::string_view::npos ? name : name.substr(0, dot);
-    const char* packageName = "Res_GeneralIcons";
-    if (path.find("nfy_skill_fight_icon/") != std::string_view::npos)
-        packageName = "Res_SkillIcons";
-    else if (path.find("nfy_buff/") != std::string_view::npos)
-        packageName = "Res_BuffIcons";
-    return UIPackage::getItemURL(packageName, std::string(name));
-}
-
-std::string configIconUrl(const std::variant<int32_t, std::string>& icon)
-{
-    if (const auto* path = std::get_if<std::string>(&icon))
-        return iconUrl(*path);
-    return {};
 }
 
 void setProgress(GProgressBar* bar, mugen::Fixed value, mugen::Fixed max)
@@ -144,7 +127,7 @@ void BattleHudPanel::bindSkillButtons()
         {
             binding.m_poolSlot = row->poolSlot;
             const auto* attack = mugen::conf::Config::instance().find<mugen::conf::SkillAttackConfig>(row->skillId);
-            const std::string url = attack ? configIconUrl(attack->icon) : std::string();
+            const std::string url = attack ? configIconString(attack->icon) : std::string();
             // 闪避按钮在原版使用固定的 HUD 图标，配置图标缺失时保留组件默认图标。
             if (!url.empty())
                 binding.m_button->setIcon(url);
@@ -257,7 +240,7 @@ void BattleHudPanel::updatePlayer(mugen::Entity player)
         return;
     m_portraitRoleId = ident.roleId;
     if (const auto* role = mugen::conf::Config::instance().find<mugen::conf::RoleConfig>(ident.roleId))
-        m_playerStatus->getChild("portrait")->setIcon(iconUrl(role->headImage));
+        m_playerStatus->getChild("portrait")->setIcon(role->headImage);
 }
 
 void BattleHudPanel::updateSkills(mugen::Entity player)
@@ -303,7 +286,7 @@ void BattleHudPanel::updateBuffs(mugen::Entity player)
             continue;
         auto* item = m_buffList->getChildAt(index++)->as<GComponent>();
         if (const auto* buff = config.find<mugen::conf::BuffConfig>(instance.m_id))
-            item->getChild("icon")->setIcon(configIconUrl(buff->icon));
+            item->getChild("icon")->setIcon(configIconString(buff->icon));
         item->getChild("time")->setText(instance.m_lifecycle.m_repeat > 1
                                             ? fmt::format("{}", instance.m_lifecycle.m_repeat)
                                             : std::string());
@@ -331,7 +314,7 @@ void BattleHudPanel::updateTarget(mugen::Entity /*player*/)
     bar->getChild("name")->setText(fmt::format("#{}", ident->roleId));
     if (isBoss)
         if (const auto* role = mugen::conf::Config::instance().find<mugen::conf::RoleConfig>(ident->roleId))
-            bar->getChild("portrait")->setIcon(iconUrl(role->headImage));
+            bar->getChild("portrait")->setIcon(role->headImage);
 }
 
 }  // namespace gameui

@@ -8,6 +8,9 @@
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "resource/builtin/MapResource.h"
 #include "ui/battle/LocalRoleUtils.h"
+#include "ui/core/FeatureEntry.h"
+#include "mugen/render/spine/MgSkeletonAnimation.h"
+#include "fairygui/GLoader3D.h"
 #include "ui/widgets/common/MessageDialog.h"
 
 #include "imgui.h"
@@ -27,6 +30,7 @@ namespace
 constexpr int32_t DEFAULT_TOWN_ID = 41;
 constexpr float REPORT_INTERVAL   = 0.2f;
 constexpr float LOGIC_DT          = 1.0f / 30.0f;
+constexpr float MAIN_MENU_SLIDE_TIME = 0.25f;
 
 mugen::Fixed fixedFromNetwork(float value)
 {
@@ -73,6 +77,7 @@ TownScreen::TownScreen(TownBootParams boot) : m_boot(std::move(boot))
 void TownScreen::onEnter()
 {
     Super::onEnter();
+    bindMainMenuUi();
     if (!initTown())
     {
         MessageDialog::showGlobal("初始化失败", []() { ax::Director::getInstance()->end(); });
@@ -84,6 +89,18 @@ void TownScreen::onEnter()
 
 void TownScreen::onExit()
 {
+    if (m_mainMenu)
+    {
+        GTween::kill(m_mainMenu, TweenPropType::None, false);
+        destroyMainMenu();
+    }
+    if (m_maskLayer)
+    {
+        m_maskLayer->setVisible(false);
+        m_maskLayer->setTouchable(false);
+    }
+    m_mainMenuAnimating = false;
+
     if (m_keyboardListener)
     {
         ax::Director::getInstance()->getEventDispatcher()->removeEventListener(m_keyboardListener);
@@ -118,6 +135,176 @@ void TownScreen::onUpdate(float delta)
     reportLocalState(delta);
 }
 
+void TownScreen::bindMainMenuUi()
+{
+    m_maskLayer      = getChild<GComponent>("maskLayer");
+    m_mainMenuButton = getChild<GComponent>("mainMenuButton");
+
+    m_maskLayer->setVisible(false);
+    m_maskLayer->setTouchable(false);
+    m_mainMenuButton->setTouchable(true);
+
+    setupMainMenuButtonIcon();
+
+    addClickListener(m_mainMenuButton, AX_CALLBACK_1(TownScreen::onClickMainMenuButton, this));
+    addClickListener(m_maskLayer, AX_CALLBACK_1(TownScreen::onClickMaskLayer, this));
+}
+
+void TownScreen::setupMainMenuButtonIcon()
+{
+    auto* loader = m_mainMenuButton->getChild("loaderIcon")->as<GLoader3D>();
+    AXASSERT(loader, "TownScreen: mainMenuButton.loaderIcon missing");
+
+    // Heiyue main-city menu character spine (design anim names: animation / animation2).
+    constexpr const char* kSkel = "mugen/spine/ui/afy_maincity/ui_tx_zhucheng_renwucaidan.skel";
+    auto* skeleton = mugen::MgSkeletonAnimation::createFromCache(kSkel);
+    if (!skeleton)
+    {
+        AXLOGW("TownScreen: failed to load main menu spine '{}'", kSkel);
+        return;
+    }
+
+    // Fit the ~100x100 loader; spine atlas is large (1024x2048).
+    constexpr float kScale = 0.22f;
+    skeleton->setScale(kScale);
+    skeleton->setPosition(loader->getWidth() * 0.5f, 8.0f);
+    skeleton->setAnimation(0, "animation", true);
+    skeleton->setAutoUpdate(true);
+    loader->setContent(skeleton);
+    AXLOGI("TownScreen: main menu button spine loaded");
+}
+
+void TownScreen::onClickMainMenuButton(EventContext*)
+{
+    if (m_mainMenuAnimating || m_mainMenu)
+        return;
+    openMainMenu();
+}
+
+void TownScreen::onClickMaskLayer(EventContext*)
+{
+    if (m_mainMenuAnimating || !m_mainMenu)
+        return;
+    closeMainMenu();
+}
+
+void TownScreen::setMainMenuInteractive(bool enabled)
+{
+    if (m_mainMenu)
+        m_mainMenu->setTouchable(enabled);
+    if (m_maskLayer)
+        m_maskLayer->setTouchable(enabled);
+}
+
+void TownScreen::layoutMainMenu(bool offscreen)
+{
+    const float screenW = getContent()->getWidth();
+    const float screenH = getContent()->getHeight();
+    const float designH = m_mainMenu->getHeight();
+    const float scale   = screenH / designH;
+    m_mainMenu->setScale(scale, scale);
+
+    const float scaledW = m_mainMenu->getWidth() * scale;
+    const float endX    = screenW - scaledW;
+    const float startX  = screenW;
+    m_mainMenu->setPosition(offscreen ? startX : endX, 0.0f);
+}
+
+void TownScreen::bindMainMenuFeatureButtons()
+{
+    auto bind = [this](const char* childName, FeatureId featureId) {
+        auto* button = m_mainMenu->getChild(childName)->as<GComponent>();
+        AXASSERT(button, ("MainMenu child not found: " + std::string(childName)).c_str());
+        addClickListener(button, [this, featureId](EventContext*) {
+            if (m_mainMenuAnimating)
+                return;
+            FeatureEntry::open(featureId);
+            closeMainMenu();
+        });
+    };
+
+    bind("dressButton", FeatureId::Dress);
+    bind("weaponButton", FeatureId::Weapon);
+    bind("equipButton", FeatureId::Equip);
+    bind("partnerButton", FeatureId::Partner);
+    bind("skillButton", FeatureId::Skill);
+}
+
+void TownScreen::refreshMainMenuPlayerInfo()
+{
+    auto* session = AppContext::get().gameSession();
+    if (!session || !m_mainMenu)
+        return;
+
+    auto* nameText  = m_mainMenu->getChild("nameText")->as<GTextField>();
+    auto* levelText = m_mainMenu->getChild("levelText")->as<GTextField>();
+    nameText->setText(session->selectedCharacter.name);
+    levelText->setText(fmt::format("{}级", session->selectedCharacter.level));
+}
+
+void TownScreen::openMainMenu()
+{
+    if (m_mainMenu || m_mainMenuAnimating)
+        return;
+
+    m_maskLayer->setVisible(true);
+    m_mainMenu = UIPackage::createObject("Screen_Town", "MainMenu")->as<GComponent>();
+    getContent()->addChild(m_mainMenu);
+
+    bindMainMenuFeatureButtons();
+    refreshMainMenuPlayerInfo();
+    layoutMainMenu(true);
+
+    const float screenW = getContent()->getWidth();
+    const float scaledW = m_mainMenu->getWidth() * m_mainMenu->getScaleX();
+    const float startX  = screenW;
+    const float endX    = screenW - scaledW;
+
+    m_mainMenuAnimating = true;
+    setMainMenuInteractive(false);
+
+    GTween::to(startX, endX, MAIN_MENU_SLIDE_TIME)
+        ->setEase(EaseType::CubicOut)
+        ->setTarget(m_mainMenu, TweenPropType::X)
+        ->onComplete([this]() {
+            m_mainMenuAnimating = false;
+            setMainMenuInteractive(true);
+        });
+}
+
+void TownScreen::closeMainMenu()
+{
+    if (!m_mainMenu || m_mainMenuAnimating)
+        return;
+
+    const float screenW = getContent()->getWidth();
+    const float startX  = m_mainMenu->getX();
+    const float endX    = screenW;
+
+    m_mainMenuAnimating = true;
+    setMainMenuInteractive(false);
+    GTween::kill(m_mainMenu, TweenPropType::X, false);
+
+    GTween::to(startX, endX, MAIN_MENU_SLIDE_TIME)
+        ->setEase(EaseType::CubicIn)
+        ->setTarget(m_mainMenu, TweenPropType::X)
+        ->onComplete([this]() {
+            destroyMainMenu();
+            m_maskLayer->setVisible(false);
+            m_maskLayer->setTouchable(false);
+            m_mainMenuAnimating = false;
+        });
+}
+
+void TownScreen::destroyMainMenu()
+{
+    if (!m_mainMenu)
+        return;
+    GTween::kill(m_mainMenu, TweenPropType::None, false);
+    m_mainMenu->removeFromParent();
+    m_mainMenu = nullptr;
+}
+
 bool TownScreen::initTown()
 {
     if (!conf::Config::instance().find<conf::TownConfig>(m_boot.townId))
@@ -139,7 +326,7 @@ bool TownScreen::initTown()
                                              .isAi       = false});
     auto* scene = ax::Director::getInstance()->getRunningScene();
     auto* root  = ax::Node::create();
-    scene->addChild(root, 10);
+    scene->addChild(root, 0);
     m_presenter = std::make_unique<WorldPresenterHolder>(*root);
     m_presenter->presenter.loadMap(town->mapKey);
     m_presenter->presenter.setFollowEntity(m_localEntity);
@@ -484,6 +671,14 @@ void TownScreen::onImGUIRender()
 
     if (ImGui::Button("打开副本选择", ImVec2(-1, 0)))
         getScreenManager()->pushScreen<DungeonSelectScreen>();
+
+    if (ImGui::Button(m_mainMenu ? "关闭主菜单" : "打开主菜单", ImVec2(-1, 0)))
+    {
+        if (m_mainMenu)
+            closeMainMenu();
+        else
+            openMainMenu();
+    }
 
     if (m_showDuelInvite)
     {
