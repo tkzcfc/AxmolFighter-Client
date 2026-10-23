@@ -7,6 +7,15 @@
 namespace gameui
 {
 
+namespace
+{
+// Heiyue ConstUI.EQUIPMENT_ZORDER: swordman/fighter/mage -1, ranger +1.
+int artifactLocalZOrder(mugen::CharacterClass cls)
+{
+    return cls == mugen::CharacterClass::kRanger ? 1 : -1;
+}
+}  // namespace
+
 WeaponFormPreviewDialog::WeaponFormPreviewDialog(int32_t armamentSpineId, std::string spineAnim)
     : m_armamentSpineId(armamentSpineId), m_spineAnim(std::move(spineAnim))
 {
@@ -49,8 +58,8 @@ void WeaponFormPreviewDialog::clearPreview()
 {
     if (m_avatarLoader)
         m_avatarLoader->setContent(nullptr);
-    m_avatar         = nullptr;
-    m_artifactSpine  = nullptr;
+    m_avatar        = nullptr;
+    m_artifactSpine = nullptr;
 }
 
 void WeaponFormPreviewDialog::refreshPreview()
@@ -61,11 +70,11 @@ void WeaponFormPreviewDialog::refreshPreview()
 
     clearPreview();
 
-    // Body fashion only — force occupational hand-weapon off (0). FashionResolver.merge keeps
-    // explicit 0 instead of injecting EQUIPMENT_DEFAULT (e.g. lilimu gun 14301).
+    const auto cls = static_cast<mugen::CharacterClass>(session->selectedCharacter.classID);
+
+    // Body fashion only — force occupational hand-weapon off (0).
     mugen::FashionAppearance appearance;
-    appearance.roleId = mugen::type_conversions::toRoleConfigId(
-        static_cast<mugen::CharacterClass>(session->selectedCharacter.classID));
+    appearance.roleId = mugen::type_conversions::toRoleConfigId(cls);
     for (const auto& skin : session->selectedCharacter.defaultSkins)
     {
         const auto pos = static_cast<mugen::FashionPosition>(skin.position);
@@ -93,45 +102,46 @@ void WeaponFormPreviewDialog::refreshPreview()
     }
     avatar->setMotion("stand", "", true);
     avatar->setAutoPlay(true);
-    // Heiyue ARM_PREVIEW: role on the left; feet at loader bottom.
+
+    // GLoader3D content space: y=0 at top, y=-height at feet line (same as ChooseClouth).
+    // Center the composed role+神器 on the ground line — heiyue NodePlayer origin.
     const float loaderW = m_avatarLoader->getWidth();
     const float loaderH = m_avatarLoader->getHeight();
-    avatar->setPosition(ax::Vec2(loaderW * 0.32f, -loaderH));
-    avatar->setScale(0.9f);
-
-    // Host both role + artifact under one node so GLoader3D keeps them together.
-    auto* host = ax::Node::create();
-    host->addChild(avatar);
+    avatar->setPosition(ax::Vec2(loaderW * 0.5f, -loaderH));
+    avatar->setScale(0.85f);
+    m_avatarLoader->setContent(avatar);
     m_avatar = avatar;
 
-    if (m_armamentSpineId > 0)
-    {
-        // Mirror heiyue CreateUIRoleWeapon / ROLE_WEAPON: artifact spine as sibling, not kWeapon fashion.
-        const int32_t spineId = m_armamentSpineId;
-        const std::string anim = m_spineAnim;
-        auto weakThis          = weak_from_this();
-        mugen::MgSkeletonAnimation::createFromCacheAsync(
-            spineId, [weakThis, this, host, spineId, anim, loaderW, loaderH](mugen::MgSkeletonAnimation* skel) {
-                if (!skel)
-                {
-                    AXLOGW("WeaponFormPreviewDialog: artifact spine load failed id={}", spineId);
-                    return;
-                }
-                if (weakThis.expired() || !m_avatarLoader || m_armamentSpineId != spineId)
-                    return;
-                skel->setAnimation(0, anim, true);
-                // Place to the right of the role (companion / 神器), heiyue NodePlayer layout.
-                skel->setPosition(ax::Vec2(loaderW * 0.72f, -loaderH * 0.15f));
-                skel->setScale(0.85f);
-                host->addChild(skel);
-                m_artifactSpine = skel;
-                AXLOGI("WeaponFormPreviewDialog: artifact spineId={} anim={} (sibling, not hand weapon)", spineId,
-                       anim);
-            });
-    }
+    if (m_armamentSpineId <= 0)
+        return;
 
-    m_avatarLoader->setContent(host);
-    AXLOGI("WeaponFormPreviewDialog: role without default weapon; artifactSpineId={}", m_armamentSpineId);
+    // Heiyue CreateUIRoleWeapon: ROLE_WEAPON is a child of the same NodePlayer at (0,0)
+    // with the same scale factor — not a far offset in UI space.
+    const int32_t spineId   = m_armamentSpineId;
+    const std::string anim  = m_spineAnim;
+    const int zOrder        = artifactLocalZOrder(cls);
+    auto weakThis           = weak_from_this();
+
+    mugen::MgSkeletonAnimation::createFromCacheAsync(
+        spineId, [weakThis, this, spineId, anim, zOrder](mugen::MgSkeletonAnimation* skel) {
+            if (!skel)
+            {
+                AXLOGW("WeaponFormPreviewDialog: artifact spine load failed id={}", spineId);
+                return;
+            }
+            if (weakThis.expired() || !m_avatar || m_armamentSpineId != spineId)
+                return;
+
+            skel->setAnimation(0, anim, true);
+            skel->setPosition(ax::Vec2::ZERO);
+            skel->setScale(1.0f);
+            m_avatar->addChild(skel, zOrder);
+            m_artifactSpine = skel;
+            AXLOGI("WeaponFormPreviewDialog: artifact spineId={} anim={} z={} (child of Avatar @ origin)",
+                   spineId, anim, zOrder);
+        });
+
+    AXLOGI("WeaponFormPreviewDialog: role centered; artifact pending spineId={}", m_armamentSpineId);
 }
 
 void WeaponFormPreviewDialog::onClickClose(EventContext*)
