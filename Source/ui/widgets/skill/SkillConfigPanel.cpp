@@ -115,9 +115,7 @@ std::string SkillConfigPanel::iconUrlForLeaf(int32_t leafId) const
     const auto* leaf = mugen::conf::Config::instance().find<mugen::conf::SkillLeafConfig>(leafId);
     if (!leaf)
         return {};
-    if (leaf->icon.rfind("ui://", 0) == 0)
-        return leaf->icon;
-    return {};
+    return leaf->icon;
 }
 
 void SkillConfigPanel::bindSlotItem(GComponent* item, mugen::EnumSkillSlot slot, const char* label, int32_t leafId,

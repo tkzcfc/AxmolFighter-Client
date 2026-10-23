@@ -96,10 +96,7 @@ std::string SkillMainPanel::iconUrlForLeaf(int32_t leafId) const
     const auto* leaf = mugen::conf::Config::instance().find<mugen::conf::SkillLeafConfig>(leafId);
     if (!leaf)
         return {};
-    // Only accept already-converted FairyGUI URLs (no piece/ path shim).
-    if (leaf->icon.rfind("ui://", 0) == 0)
-        return leaf->icon;
-    return {};
+    return leaf->icon;
 }
 
 void SkillMainPanel::bindItem(GComponent* item, int32_t leafId, bool selected)
