@@ -16,6 +16,7 @@ enum class FeatureId
     Equip,    // 装备
     Partner,  // 伙伴
     Skill,    // 技能
+    Pet,      // 宠物
 };
 
 // Global feature open API.

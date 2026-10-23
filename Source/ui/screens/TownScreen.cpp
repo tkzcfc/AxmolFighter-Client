@@ -228,6 +228,7 @@ void TownScreen::bindMainMenuFeatureButtons()
     bind("equipButton", FeatureId::Equip);
     bind("partnerButton", FeatureId::Partner);
     bind("skillButton", FeatureId::Skill);
+    bind("petButton", FeatureId::Pet);
 }
 
 void TownScreen::refreshMainMenuPlayerInfo()

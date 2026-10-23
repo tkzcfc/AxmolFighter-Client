@@ -49,6 +49,7 @@
 // item_base -> ItemBaseConfig -> tables/ItemTables.h
 // armament -> ArmamentConfig -> tables/ArmamentTables.h
 // pet -> PetConfig -> tables/PetTables.h
+// partner -> PartnerConfig -> tables/PartnerTables.h
 
 namespace mugen::conf
 {
@@ -94,6 +95,7 @@ struct ResFashionConfig;
 struct ItemBaseConfig;
 struct ArmamentConfig;
 struct PetConfig;
+struct PartnerConfig;
 
 // 按单一 id 建立索引的表键策略。
 struct KeyById
@@ -171,4 +173,5 @@ struct KeyByOrdinal
     X(res_fashion, ResFashionConfig, KeyById)                \
     X(item_base, ItemBaseConfig, KeyById)                   \
     X(armament, ArmamentConfig, KeyByIdAndOccupation) \
-    X(pet, PetConfig, KeyById)
+    X(pet, PetConfig, KeyById) \
+    X(partner, PartnerConfig, KeyById)
