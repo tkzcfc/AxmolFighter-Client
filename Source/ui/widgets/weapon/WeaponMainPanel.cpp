@@ -352,7 +352,7 @@ void WeaponMainPanel::onClickFormPreview(EventContext*)
         AXLOGW("WeaponMainPanel: form preview missing spine for id={}", m_selectedId);
         return;
     }
-    getUIManager()->open<WeaponFormPreviewDialog>(cfg->spineId);
+    getUIManager()->open<WeaponFormPreviewDialog>(cfg->spineId, cfg->spineAnim);
 }
 
 }  // namespace gameui
