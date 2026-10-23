@@ -5,6 +5,9 @@
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/TypeConversions.h"
 #include "mugen/render/battle/WorldPresenter.h"
+#include "AppContext.h"
+#include "core/event/EventDispatcher.h"
+#include "core/event/GameEvents.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "resource/builtin/MapResource.h"
 #include "ui/battle/LocalRoleUtils.h"
@@ -83,6 +86,7 @@ void TownScreen::onEnter()
         MessageDialog::showGlobal("初始化失败", []() { ax::Director::getInstance()->end(); });
         return;
     }
+    subscribeAppearanceEvents();
     addMessagePushReceiver();
     sendEnterScene();
 }
@@ -106,6 +110,8 @@ void TownScreen::onExit()
         ax::Director::getInstance()->getEventDispatcher()->removeEventListener(m_keyboardListener);
         m_keyboardListener = nullptr;
     }
+    if (auto* ed = AppContext::get().eventDispatcher())
+        ed->unsubscribeAll(this);
     m_presenter.reset();
     m_initialized = false;
     Super::onExit();
@@ -337,6 +343,28 @@ bool TownScreen::initTown()
     m_initialized = true;
     return true;
 }
+
+void TownScreen::subscribeAppearanceEvents()
+{
+    auto* ed = AppContext::get().eventDispatcher();
+    if (!ed)
+        return;
+    auto refresh = [this]() { refreshLocalAppearance(); };
+    ed->subscribe(game::GameEvent::FashionWornChanged, this, refresh);
+    ed->subscribe(game::GameEvent::ArmamentAppearanceChanged, this, refresh);
+    // Pet/Partner spawn-in-town is not wired yet; events still reserved for later.
+    ed->subscribe(game::GameEvent::PetFollowChanged, this, refresh);
+    ed->subscribe(game::GameEvent::PartnerActiveChanged, this, refresh);
+}
+
+void TownScreen::refreshLocalAppearance()
+{
+    if (!m_presenter || !m_initialized)
+        return;
+    if (!m_presenter->presenter.refreshLocalPlayerAppearance(m_world))
+        AXLOGW("TownScreen: refreshLocalPlayerAppearance skipped (avatar not ready)");
+}
+
 
 void TownScreen::sendEnterScene()
 {

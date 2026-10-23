@@ -14,6 +14,7 @@ namespace gameui
 class PartnerLocalState
 {
 public:
+    PartnerLocalState() = default;
     static PartnerLocalState& instance();
 
     void ensureUnlocked();
@@ -34,8 +35,6 @@ public:
     static constexpr int32_t kMaxStar  = 20;
 
 private:
-    PartnerLocalState() = default;
-
     std::unordered_map<int32_t, PartnerInstanceState> m_byId;
     int32_t m_activeId = 0;
     bool m_seeded      = false;

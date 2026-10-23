@@ -10,10 +10,11 @@
 namespace gameui
 {
 
-FeatureProgressSync& FeatureProgressSync::instance()
+FeatureProgressSync* FeatureProgressSync::getInstance()
 {
-    static FeatureProgressSync s;
-    return s;
+    auto* p = AppContext::get().featureProgressSync();
+    AXASSERT(p, "FeatureProgressSync not owned by AppContext");
+    return p;
 }
 
 void FeatureProgressSync::hydrateFromCharacter(const PB::Types::CharacterInfo& character)

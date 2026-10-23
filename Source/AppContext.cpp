@@ -7,6 +7,12 @@
 #include "mugen/render/spine/SpineSkeletonCache.h"
 #include "resource/builtin/ConfigResource.h"
 #include "resource/builtin/FguiPackageResource.h"
+#include "core/event/EventDispatcher.h"
+#include "ui/progress/FeatureProgressSync.h"
+#include "ui/widgets/weapon/WeaponLocalState.h"
+#include "ui/widgets/skill/SkillLocalState.h"
+#include "ui/widgets/pet/PetLocalState.h"
+#include "ui/widgets/partner/PartnerLocalState.h"
 
 using namespace fairygui;
 
@@ -45,6 +51,9 @@ void AppContext::create()
 
     AXASSERT(!s_instance, "AppContext already created");
     s_instance = new AppContext();
+    // FeatureProgressSync is a NetAgent — construct only after s_instance is set
+    // so NetAgent can bind to netClient via AppContext::get().
+    s_instance->m_featureProgressSync = std::make_unique<gameui::FeatureProgressSync>();
 
     gameui::FGUIPackageManager::getInstance().load(kResidentPackages);
 }
@@ -52,6 +61,13 @@ void AppContext::create()
 void AppContext::destroy()
 {
     gameui::FGUIPackageManager::getInstance().unload({kResidentPackages.rbegin(), kResidentPackages.rend()});
+
+    if (s_instance)
+    {
+        if (s_instance->m_featureProgressSync)
+            s_instance->m_featureProgressSync->detach();
+        s_instance->m_featureProgressSync.reset();
+    }
 
     delete s_instance;
     s_instance = nullptr;
@@ -64,6 +80,11 @@ AppContext::AppContext()
 {
     m_netClient   = std::make_unique<net::NetClient>(1);
     m_gameSession = std::make_unique<game::model::GameSessionModel>();
+    m_eventDispatcher  = std::make_unique<game::EventDispatcher>();
+    m_weaponLocalState = std::make_unique<gameui::WeaponLocalState>();
+    m_skillLocalState  = std::make_unique<gameui::SkillLocalState>();
+    m_petLocalState    = std::make_unique<gameui::PetLocalState>();
+    m_partnerLocalState = std::make_unique<gameui::PartnerLocalState>();
 
     mugen::AvatarAssetCache::getInstance()->addSearchPath("res_zhcn");
 
@@ -275,3 +296,10 @@ gameui::UIManager* AppContext::uiManager() const
 {
     return m_screenManager ? m_screenManager->getUIManager() : nullptr;
 }
+
+gameui::FeatureProgressSync* AppContext::featureProgressSync()
+{
+    return m_featureProgressSync.get();
+}
+
+

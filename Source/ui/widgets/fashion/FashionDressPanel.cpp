@@ -10,6 +10,8 @@
 
 #include <algorithm>
 #include "ui/progress/FeatureProgressSync.h"
+#include "core/event/EventDispatcher.h"
+#include "AppContext.h"
 
 namespace gameui
 {
@@ -500,6 +502,9 @@ void FashionDressPanel::saveDraftToSession()
         out->set_worn(f.worn);
     }
     FeatureProgressSync::instance().syncFashionWear(req);
+    if (auto* ed = AppContext::get().eventDispatcher())
+        ed->dispatch(game::GameEvent::FashionWornChanged);
 }
+
 
 }  // namespace gameui

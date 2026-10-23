@@ -4,6 +4,9 @@
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/TypeConversions.h"
 #include "mugen/render/battle/WorldPresenter.h"
+#include "AppContext.h"
+#include "core/event/EventDispatcher.h"
+#include "core/event/GameEvents.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "ui/battle/LocalRoleUtils.h"
 #include "mugen/sim/room/RoomDirector.h"
@@ -81,9 +84,11 @@ bool LocalBattleMode::init()
     m_presenter = std::make_unique<WorldPresenterHolder>(*root);
     m_presenter->presenter.loadMap(room->mapKey);
     m_presenter->presenter.setFollowEntity(player);
+    m_localPlayer       = player;
     m_replay.schemaHash = mugen::conf::configSchemaHash();
     m_replay.setup      = m_world.setup();
     m_initialized       = true;
+    subscribeAppearanceEvents();
     AXLOGI("LocalBattleMode: ready (room={})", m_roomId);
     return true;
 }
@@ -154,7 +159,28 @@ void LocalBattleMode::onExit()
         if (!m_replay.save(m_replayPath, error))
             AXLOGE("LocalBattleMode: replay save failed: {}", error);
     }
+    if (auto* ed = AppContext::get().eventDispatcher())
+        ed->unsubscribeAll(this);
     m_presenter.reset();
+    m_initialized = false;
+}
+
+void LocalBattleMode::subscribeAppearanceEvents()
+{
+    auto* ed = AppContext::get().eventDispatcher();
+    if (!ed)
+        return;
+    auto refresh = [this]() { refreshLocalAppearance(); };
+    ed->subscribe(game::GameEvent::FashionWornChanged, this, refresh);
+    ed->subscribe(game::GameEvent::ArmamentAppearanceChanged, this, refresh);
+}
+
+void LocalBattleMode::refreshLocalAppearance()
+{
+    if (!m_presenter || !m_initialized)
+        return;
+    if (!m_presenter->presenter.refreshLocalPlayerAppearance(m_world))
+        AXLOGW("LocalBattleMode: refreshLocalPlayerAppearance skipped (avatar not ready)");
 }
 
 void LocalBattleMode::renderDebugPanel()

@@ -1,5 +1,8 @@
 #include "WeaponLocalState.h"
 
+#include "AppContext.h"
+#include "core/event/EventDispatcher.h"
+
 #include "ui/progress/FeatureProgressSync.h"
 
 #include "mugen/conf/ReflectedConfig.h"
@@ -12,8 +15,9 @@ namespace gameui
 
 WeaponLocalState& WeaponLocalState::instance()
 {
-    static WeaponLocalState s;
-    return s;
+    auto* p = AppContext::get().weaponLocalState();
+    AXASSERT(p, "WeaponLocalState not owned by AppContext");
+    return *p;
 }
 
 void WeaponLocalState::ensureUnlockedForOccupation(int32_t occupation)
@@ -85,6 +89,8 @@ void WeaponLocalState::setAppearance(int32_t configId)
     m_appearanceId = configId;
     AXLOGI("WeaponLocalState: set appearance armamentId={}", configId);
     persistToServer();
+    if (auto* ed = AppContext::get().eventDispatcher())
+        ed->dispatch(game::GameEvent::ArmamentAppearanceChanged);
 }
 
 

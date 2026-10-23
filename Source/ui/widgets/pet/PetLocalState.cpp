@@ -1,5 +1,8 @@
 #include "PetLocalState.h"
 
+#include "AppContext.h"
+#include "core/event/EventDispatcher.h"
+
 #include "ui/progress/FeatureProgressSync.h"
 
 #include "mugen/conf/ReflectedConfig.h"
@@ -12,8 +15,9 @@ namespace gameui
 
 PetLocalState& PetLocalState::instance()
 {
-    static PetLocalState s;
-    return s;
+    auto* p = AppContext::get().petLocalState();
+    AXASSERT(p, "PetLocalState not owned by AppContext");
+    return *p;
 }
 
 void PetLocalState::ensureUnlocked()
@@ -68,6 +72,8 @@ void PetLocalState::setActive(int32_t configId)
     m_activeId = configId;
     AXLOGI("PetLocalState: active pet={}", configId);
     persistToServer();
+    if (auto* ed = AppContext::get().eventDispatcher())
+        ed->dispatch(game::GameEvent::PetFollowChanged);
 }
 
 void PetLocalState::addLevel(int32_t configId, int32_t delta)

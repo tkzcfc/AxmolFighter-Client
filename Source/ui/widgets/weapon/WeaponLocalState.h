@@ -13,6 +13,7 @@ namespace gameui
 class WeaponLocalState
 {
 public:
+    WeaponLocalState() = default;
     static WeaponLocalState& instance();
 
     // Ensure every ArmamentConfig row for occupation is unlocked at defaults.
@@ -40,8 +41,6 @@ public:
     static constexpr int32_t kMaxGrade = 10;
 
 private:
-    WeaponLocalState() = default;
-
     std::unordered_map<int32_t, WeaponInstanceState> m_byId;
     int32_t m_appearanceId = 0;
     int32_t m_seededOccupation = -1;

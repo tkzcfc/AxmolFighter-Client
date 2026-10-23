@@ -15,6 +15,7 @@ namespace gameui
 class SkillLocalState
 {
 public:
+    SkillLocalState() = default;
     static SkillLocalState& instance();
 
     void ensureUnlockedForOccupation(int32_t occupation);
@@ -35,8 +36,6 @@ public:
     std::vector<mugen::sim::skill::PlayerSkill> playerSkills() const;
 
 private:
-    SkillLocalState() = default;
-
     void seedLeaves(int32_t occupation);
     void seedSlotsFromOfflineKit(int32_t occupation);
 

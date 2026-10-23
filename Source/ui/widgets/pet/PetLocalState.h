@@ -14,6 +14,7 @@ namespace gameui
 class PetLocalState
 {
 public:
+    PetLocalState() = default;
     static PetLocalState& instance();
 
     void ensureUnlocked();
@@ -34,8 +35,6 @@ public:
     static constexpr int32_t kMaxStar  = 25;
 
 private:
-    PetLocalState() = default;
-
     std::unordered_map<int32_t, PetInstanceState> m_byId;
     int32_t m_activeId = 0;
     bool m_seeded      = false;

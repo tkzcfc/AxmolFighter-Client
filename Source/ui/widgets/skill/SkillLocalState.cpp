@@ -1,5 +1,7 @@
 #include "SkillLocalState.h"
 
+#include "AppContext.h"
+
 #include "ui/progress/FeatureProgressSync.h"
 
 #include "mugen/conf/ReflectedConfig.h"
@@ -13,8 +15,9 @@ namespace gameui
 
 SkillLocalState& SkillLocalState::instance()
 {
-    static SkillLocalState s;
-    return s;
+    auto* p = AppContext::get().skillLocalState();
+    AXASSERT(p, "SkillLocalState not owned by AppContext");
+    return *p;
 }
 
 void SkillLocalState::seedLeaves(int32_t occupation)

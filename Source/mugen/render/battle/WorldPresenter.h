@@ -22,6 +22,8 @@ public:
 
     void present(sim::World& world, float alpha, float renderDelta);
     void clear();
+    // Re-apply fashion on an already-created exclusive Avatar (town/battle local player).
+    bool setEntityAppearance(uint32_t entityValue, const FashionAppearance& appearance);
 
 private:
     // 单个实体的渲染状态：外观只在首次出现时解析一次。
@@ -130,6 +132,11 @@ public:
     void setFollowEntity(Entity entity) { m_followEntity = entity; }
     void addMapNode(ax::Node& node) { m_map.addNode(node); }
     DebugDraw& debugDraw() { return m_debugDraw; }
+
+    // Update an existing Avatar's fashion (kAsyncExclusive only).
+    bool setEntityAppearance(Entity entity, const FashionAppearance& appearance);
+    // Find local player Role (!isAi + playerSlot) and apply session fashion/weapon.
+    bool refreshLocalPlayerAppearance(sim::World& world);
 
 private:
     // 世界内容层，必须先于其余成员构造

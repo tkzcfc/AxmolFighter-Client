@@ -10,6 +10,20 @@
 #include "axmol.h"
 #include "FairyGUI.h"
 
+namespace game
+{
+class EventDispatcher;
+}
+
+namespace gameui
+{
+class FeatureProgressSync;
+class WeaponLocalState;
+class SkillLocalState;
+class PetLocalState;
+class PartnerLocalState;
+}
+
 class AppContext
 {
 public:
@@ -24,6 +38,13 @@ public:
     game::model::GameSessionModel* gameSession() const { return m_gameSession.get(); }
     gameui::ScreenManager* screenManager() const { return m_screenManager.get(); }
     gameui::UIManager* uiManager() const;
+
+    game::EventDispatcher* eventDispatcher() const { return m_eventDispatcher.get(); }
+    gameui::FeatureProgressSync* featureProgressSync();
+    gameui::WeaponLocalState* weaponLocalState() const { return m_weaponLocalState.get(); }
+    gameui::SkillLocalState* skillLocalState() const { return m_skillLocalState.get(); }
+    gameui::PetLocalState* petLocalState() const { return m_petLocalState.get(); }
+    gameui::PartnerLocalState* partnerLocalState() const { return m_partnerLocalState.get(); }
 
     // 生命周期与 AppContext 相同的常驻资源（配置表等，不一定都在 UI/Common_Base 里）；
     // 由 LaunchScreen 通过 setResourceLoader() 共同持有并启动加载，后续也可以继续往里面加东西。
@@ -51,6 +72,13 @@ private:
     std::unique_ptr<game::model::GameSessionModel> m_gameSession;
     std::unique_ptr<gameui::ScreenManager> m_screenManager;
     std::shared_ptr<gameres::ResourceLoader> m_globalLoader;
+
+    std::unique_ptr<game::EventDispatcher> m_eventDispatcher;
+    std::unique_ptr<gameui::FeatureProgressSync> m_featureProgressSync;
+    std::unique_ptr<gameui::WeaponLocalState> m_weaponLocalState;
+    std::unique_ptr<gameui::SkillLocalState> m_skillLocalState;
+    std::unique_ptr<gameui::PetLocalState> m_petLocalState;
+    std::unique_ptr<gameui::PartnerLocalState> m_partnerLocalState;
 
     // 连接遮罩
     fairygui::GComponent* m_connectMask = nullptr;

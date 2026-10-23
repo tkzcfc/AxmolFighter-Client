@@ -101,6 +101,8 @@ private:
     void layoutMainMenu(bool offscreen);
     void bindMainMenuFeatureButtons();
     void refreshMainMenuPlayerInfo();
+    void subscribeAppearanceEvents();
+    void refreshLocalAppearance();
 
 private:
     TownBootParams m_boot;

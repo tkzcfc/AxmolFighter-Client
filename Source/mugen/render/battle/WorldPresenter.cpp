@@ -9,6 +9,8 @@
 #    include "mugen/conf/TypeConversions.h"
 #    include "mugen/sim/effect/Effect.h"
 #    include "mugen/sim/room/RoomEntities.h"
+#    include "mugen/sim/role/RoleComponents.h"
+#    include "ui/progress/SessionFashionAppearance.h"
 
 #    include <algorithm>
 #    include <cmath>
@@ -85,14 +87,29 @@ AvatarLook resolveLook(sim::World& world, Entity entity, sim::GroupKind kind)
     return {};
 }
 
+bool isLocalPlayerRole(sim::World& world, Entity entity)
+{
+    const auto* identity = world.ecs().tryGet<sim::RoleIdentity>(entity);
+    return identity && identity->playerSlot.has_value() && !identity->isAi;
+}
+
 // 按外观配置创建 Avatar，动作文件与逻辑侧绑定的同一份。
 // 职业角色按职业默认外观创建：时装图集与皮肤、默认武器挂件（待机时显示，其余动作嫁接到身体插槽）。
-Avatar* createAvatar(const AvatarLook& look, const SpineInfo& spine, const std::string& motionFile)
+// 本地玩家用会话时装/武器外观（可后续 setAppearance 换装）。
+Avatar* createAvatar(const AvatarLook& look, const SpineInfo& spine, const std::string& motionFile,
+                     bool useSessionFashion)
 {
     if (look.characterClass != CharacterClass::kUnknown)
     {
         FashionAppearance appearance;
-        appearance.roleId = look.roleId;
+        if (useSessionFashion)
+        {
+            appearance = gameui::buildSessionFashionAppearance();
+            if (appearance.roleId == 0)
+                appearance.roleId = look.roleId;
+        }
+        else
+            appearance.roleId = look.roleId;
         return Avatar::create(appearance);
     }
     AvatarDesc desc;
@@ -129,7 +146,11 @@ void AvatarPresenter::present(sim::World& world, float alpha, float renderDelta)
             if (motion.motionFile.empty())
                 state.skeleton = MgSkeletonAnimation::createFromCache(look.resSpineId);
             else
-                state.avatar = createAvatar(look, spine, motion.motionFile);
+            {
+                const bool sessionFashion =
+                    group.kind == sim::GroupKind::Role && isLocalPlayerRole(world, entity);
+                state.avatar = createAvatar(look, spine, motion.motionFile, sessionFashion);
+            }
             ax::Node* node = displayNode(state);
             if (!node)
                 return;
@@ -208,6 +229,40 @@ void AvatarPresenter::clear()
         if (ax::Node* node = displayNode(state))
             node->removeFromParent();
     m_avatars.clear();
+}
+
+bool AvatarPresenter::setEntityAppearance(uint32_t entityValue, const FashionAppearance& appearance)
+{
+    auto it = m_avatars.find(entityValue);
+    if (it == m_avatars.end() || !it->second.avatar)
+        return false;
+    return it->second.avatar->setAppearance(appearance);
+}
+
+bool WorldPresenter::setEntityAppearance(Entity entity, const FashionAppearance& appearance)
+{
+    return m_avatars.setEntityAppearance(entity.value, appearance);
+}
+
+bool WorldPresenter::refreshLocalPlayerAppearance(sim::World& world)
+{
+    Entity local{};
+    bool found = false;
+    world.ecs().each<sim::RoleIdentity>([&](Entity entity, const sim::RoleIdentity& identity) {
+        if (found)
+            return;
+        if (identity.playerSlot.has_value() && !identity.isAi)
+        {
+            local = entity;
+            found = true;
+        }
+    });
+    if (!found)
+        return false;
+    FashionAppearance appearance = gameui::buildSessionFashionAppearance();
+    if (appearance.roleId == 0)
+        appearance.roleId = world.ecs().get<sim::RoleIdentity>(local).roleId;
+    return setEntityAppearance(local, appearance);
 }
 
 void MapPresenter::load(const std::string& mapKey)

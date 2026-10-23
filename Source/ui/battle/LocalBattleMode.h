@@ -59,8 +59,12 @@ private:
     std::vector<mugen::sim::SystemCommand> m_systemCommands;
     std::string m_roomMessage;
     mugen::Entity m_lastHurtTarget;
+    void subscribeAppearanceEvents();
+    void refreshLocalAppearance();
+
     class WorldPresenterHolder;
     std::unique_ptr<WorldPresenterHolder> m_presenter;
+    mugen::Entity m_localPlayer{};
 };
 
 }  // namespace gameui

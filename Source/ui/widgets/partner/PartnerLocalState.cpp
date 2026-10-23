@@ -1,5 +1,8 @@
 #include "PartnerLocalState.h"
 
+#include "AppContext.h"
+#include "core/event/EventDispatcher.h"
+
 #include "ui/progress/FeatureProgressSync.h"
 
 #include "mugen/conf/ReflectedConfig.h"
@@ -12,8 +15,9 @@ namespace gameui
 
 PartnerLocalState& PartnerLocalState::instance()
 {
-    static PartnerLocalState s;
-    return s;
+    auto* p = AppContext::get().partnerLocalState();
+    AXASSERT(p, "PartnerLocalState not owned by AppContext");
+    return *p;
 }
 
 void PartnerLocalState::ensureUnlocked()
@@ -68,6 +72,8 @@ void PartnerLocalState::setActive(int32_t configId)
     m_activeId = configId;
     AXLOGI("PartnerLocalState: active partner={}", configId);
     persistToServer();
+    if (auto* ed = AppContext::get().eventDispatcher())
+        ed->dispatch(game::GameEvent::PartnerActiveChanged);
 }
 
 void PartnerLocalState::addLevel(int32_t configId, int32_t delta)
