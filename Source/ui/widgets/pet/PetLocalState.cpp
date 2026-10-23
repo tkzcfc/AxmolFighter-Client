@@ -1,5 +1,7 @@
 #include "PetLocalState.h"
 
+#include "ui/progress/FeatureProgressSync.h"
+
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/tables/PetTables.h"
 
@@ -65,6 +67,7 @@ void PetLocalState::setActive(int32_t configId)
         return;
     m_activeId = configId;
     AXLOGI("PetLocalState: active pet={}", configId);
+    persistToServer();
 }
 
 void PetLocalState::addLevel(int32_t configId, int32_t delta)
@@ -75,6 +78,7 @@ void PetLocalState::addLevel(int32_t configId, int32_t delta)
     const auto* cfg = mugen::conf::Config::instance().find<mugen::conf::PetConfig>(configId);
     const int32_t cap = cfg && cfg->levelMax > 0 ? cfg->levelMax : kMaxLevel;
     st->level = std::clamp(st->level + delta, 1, cap);
+    persistToServer();
 }
 
 void PetLocalState::addStar(int32_t configId, int32_t delta)
@@ -85,6 +89,26 @@ void PetLocalState::addStar(int32_t configId, int32_t delta)
     const auto* cfg = mugen::conf::Config::instance().find<mugen::conf::PetConfig>(configId);
     const int32_t cap = cfg && cfg->starMax > 0 ? cfg->starMax : kMaxStar;
     st->star = std::clamp(st->star + delta, 0, cap);
+    persistToServer();
+}
+
+void PetLocalState::loadFromServer(const PB::Types::CharacterInfo& character)
+{
+    ensureUnlocked();
+    for (const auto& p : character.pets())
+    {
+        auto* st = find(p.config_id());
+        if (!st)
+            continue;
+        st->level = std::max(1, p.level());
+        st->star  = std::max(0, p.star());
+    }
+    m_activeId = character.active_pet_id();
+}
+
+void PetLocalState::persistToServer()
+{
+    FeatureProgressSync::instance().syncPets();
 }
 
 }  // namespace gameui

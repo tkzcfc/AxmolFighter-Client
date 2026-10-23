@@ -48,6 +48,12 @@ namespace Game {
 class AccountKickedPush;
 struct AccountKickedPushDefaultTypeInternal;
 extern AccountKickedPushDefaultTypeInternal _AccountKickedPush_default_instance_;
+class ArmamentSyncReq;
+struct ArmamentSyncReqDefaultTypeInternal;
+extern ArmamentSyncReqDefaultTypeInternal _ArmamentSyncReq_default_instance_;
+class ArmamentSyncResp;
+struct ArmamentSyncRespDefaultTypeInternal;
+extern ArmamentSyncRespDefaultTypeInternal _ArmamentSyncResp_default_instance_;
 class BattleJoinReq;
 struct BattleJoinReqDefaultTypeInternal;
 extern BattleJoinReqDefaultTypeInternal _BattleJoinReq_default_instance_;
@@ -96,6 +102,12 @@ extern EnterSceneReqDefaultTypeInternal _EnterSceneReq_default_instance_;
 class EnterSceneResp;
 struct EnterSceneRespDefaultTypeInternal;
 extern EnterSceneRespDefaultTypeInternal _EnterSceneResp_default_instance_;
+class FashionWearReq;
+struct FashionWearReqDefaultTypeInternal;
+extern FashionWearReqDefaultTypeInternal _FashionWearReq_default_instance_;
+class FashionWearResp;
+struct FashionWearRespDefaultTypeInternal;
+extern FashionWearRespDefaultTypeInternal _FashionWearResp_default_instance_;
 class FetchCharacterListReq;
 struct FetchCharacterListReqDefaultTypeInternal;
 extern FetchCharacterListReqDefaultTypeInternal _FetchCharacterListReq_default_instance_;
@@ -108,6 +120,18 @@ extern LoginReqDefaultTypeInternal _LoginReq_default_instance_;
 class LoginResp;
 struct LoginRespDefaultTypeInternal;
 extern LoginRespDefaultTypeInternal _LoginResp_default_instance_;
+class PartnerSyncReq;
+struct PartnerSyncReqDefaultTypeInternal;
+extern PartnerSyncReqDefaultTypeInternal _PartnerSyncReq_default_instance_;
+class PartnerSyncResp;
+struct PartnerSyncRespDefaultTypeInternal;
+extern PartnerSyncRespDefaultTypeInternal _PartnerSyncResp_default_instance_;
+class PetSyncReq;
+struct PetSyncReqDefaultTypeInternal;
+extern PetSyncReqDefaultTypeInternal _PetSyncReq_default_instance_;
+class PetSyncResp;
+struct PetSyncRespDefaultTypeInternal;
+extern PetSyncRespDefaultTypeInternal _PetSyncResp_default_instance_;
 class PlayerInfo;
 struct PlayerInfoDefaultTypeInternal;
 extern PlayerInfoDefaultTypeInternal _PlayerInfo_default_instance_;
@@ -123,6 +147,12 @@ extern SelectCharacterReqDefaultTypeInternal _SelectCharacterReq_default_instanc
 class SelectCharacterResp;
 struct SelectCharacterRespDefaultTypeInternal;
 extern SelectCharacterRespDefaultTypeInternal _SelectCharacterResp_default_instance_;
+class SkillSlotsSyncReq;
+struct SkillSlotsSyncReqDefaultTypeInternal;
+extern SkillSlotsSyncReqDefaultTypeInternal _SkillSlotsSyncReq_default_instance_;
+class SkillSlotsSyncResp;
+struct SkillSlotsSyncRespDefaultTypeInternal;
+extern SkillSlotsSyncRespDefaultTypeInternal _SkillSlotsSyncResp_default_instance_;
 class TownServerOfflinePush;
 struct TownServerOfflinePushDefaultTypeInternal;
 extern TownServerOfflinePushDefaultTypeInternal _TownServerOfflinePush_default_instance_;
@@ -130,6 +160,8 @@ extern TownServerOfflinePushDefaultTypeInternal _TownServerOfflinePush_default_i
 }  // namespace PB
 PROTOBUF_NAMESPACE_OPEN
 template<> ::PB::Game::AccountKickedPush* Arena::CreateMaybeMessage<::PB::Game::AccountKickedPush>(Arena*);
+template<> ::PB::Game::ArmamentSyncReq* Arena::CreateMaybeMessage<::PB::Game::ArmamentSyncReq>(Arena*);
+template<> ::PB::Game::ArmamentSyncResp* Arena::CreateMaybeMessage<::PB::Game::ArmamentSyncResp>(Arena*);
 template<> ::PB::Game::BattleJoinReq* Arena::CreateMaybeMessage<::PB::Game::BattleJoinReq>(Arena*);
 template<> ::PB::Game::BattleJoinResp* Arena::CreateMaybeMessage<::PB::Game::BattleJoinResp>(Arena*);
 template<> ::PB::Game::BattleServerOfflinePush* Arena::CreateMaybeMessage<::PB::Game::BattleServerOfflinePush>(Arena*);
@@ -146,15 +178,23 @@ template<> ::PB::Game::DuelRespondResp* Arena::CreateMaybeMessage<::PB::Game::Du
 template<> ::PB::Game::DuelStartPush* Arena::CreateMaybeMessage<::PB::Game::DuelStartPush>(Arena*);
 template<> ::PB::Game::EnterSceneReq* Arena::CreateMaybeMessage<::PB::Game::EnterSceneReq>(Arena*);
 template<> ::PB::Game::EnterSceneResp* Arena::CreateMaybeMessage<::PB::Game::EnterSceneResp>(Arena*);
+template<> ::PB::Game::FashionWearReq* Arena::CreateMaybeMessage<::PB::Game::FashionWearReq>(Arena*);
+template<> ::PB::Game::FashionWearResp* Arena::CreateMaybeMessage<::PB::Game::FashionWearResp>(Arena*);
 template<> ::PB::Game::FetchCharacterListReq* Arena::CreateMaybeMessage<::PB::Game::FetchCharacterListReq>(Arena*);
 template<> ::PB::Game::FetchCharacterListResp* Arena::CreateMaybeMessage<::PB::Game::FetchCharacterListResp>(Arena*);
 template<> ::PB::Game::LoginReq* Arena::CreateMaybeMessage<::PB::Game::LoginReq>(Arena*);
 template<> ::PB::Game::LoginResp* Arena::CreateMaybeMessage<::PB::Game::LoginResp>(Arena*);
+template<> ::PB::Game::PartnerSyncReq* Arena::CreateMaybeMessage<::PB::Game::PartnerSyncReq>(Arena*);
+template<> ::PB::Game::PartnerSyncResp* Arena::CreateMaybeMessage<::PB::Game::PartnerSyncResp>(Arena*);
+template<> ::PB::Game::PetSyncReq* Arena::CreateMaybeMessage<::PB::Game::PetSyncReq>(Arena*);
+template<> ::PB::Game::PetSyncResp* Arena::CreateMaybeMessage<::PB::Game::PetSyncResp>(Arena*);
 template<> ::PB::Game::PlayerInfo* Arena::CreateMaybeMessage<::PB::Game::PlayerInfo>(Arena*);
 template<> ::PB::Game::RegisterReq* Arena::CreateMaybeMessage<::PB::Game::RegisterReq>(Arena*);
 template<> ::PB::Game::RegisterResp* Arena::CreateMaybeMessage<::PB::Game::RegisterResp>(Arena*);
 template<> ::PB::Game::SelectCharacterReq* Arena::CreateMaybeMessage<::PB::Game::SelectCharacterReq>(Arena*);
 template<> ::PB::Game::SelectCharacterResp* Arena::CreateMaybeMessage<::PB::Game::SelectCharacterResp>(Arena*);
+template<> ::PB::Game::SkillSlotsSyncReq* Arena::CreateMaybeMessage<::PB::Game::SkillSlotsSyncReq>(Arena*);
+template<> ::PB::Game::SkillSlotsSyncResp* Arena::CreateMaybeMessage<::PB::Game::SkillSlotsSyncResp>(Arena*);
 template<> ::PB::Game::TownServerOfflinePush* Arena::CreateMaybeMessage<::PB::Game::TownServerOfflinePush>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 namespace PB {
@@ -727,6 +767,216 @@ inline const std::string& DuelEndPush_MsgId_Name(T enum_t_value) {
 }
 bool DuelEndPush_MsgId_Parse(
     ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, DuelEndPush_MsgId* value);
+enum FashionWearReq_MsgId : int {
+  FashionWearReq_MsgId_None = 0,
+  FashionWearReq_MsgId_Id = 1500,
+  FashionWearReq_MsgId_FashionWearReq_MsgId_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  FashionWearReq_MsgId_FashionWearReq_MsgId_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool FashionWearReq_MsgId_IsValid(int value);
+constexpr FashionWearReq_MsgId FashionWearReq_MsgId_MsgId_MIN = FashionWearReq_MsgId_None;
+constexpr FashionWearReq_MsgId FashionWearReq_MsgId_MsgId_MAX = FashionWearReq_MsgId_Id;
+constexpr int FashionWearReq_MsgId_MsgId_ARRAYSIZE = FashionWearReq_MsgId_MsgId_MAX + 1;
+
+const std::string& FashionWearReq_MsgId_Name(FashionWearReq_MsgId value);
+template<typename T>
+inline const std::string& FashionWearReq_MsgId_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, FashionWearReq_MsgId>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function FashionWearReq_MsgId_Name.");
+  return FashionWearReq_MsgId_Name(static_cast<FashionWearReq_MsgId>(enum_t_value));
+}
+bool FashionWearReq_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, FashionWearReq_MsgId* value);
+enum FashionWearResp_MsgId : int {
+  FashionWearResp_MsgId_None = 0,
+  FashionWearResp_MsgId_Id = 1501,
+  FashionWearResp_MsgId_FashionWearResp_MsgId_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  FashionWearResp_MsgId_FashionWearResp_MsgId_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool FashionWearResp_MsgId_IsValid(int value);
+constexpr FashionWearResp_MsgId FashionWearResp_MsgId_MsgId_MIN = FashionWearResp_MsgId_None;
+constexpr FashionWearResp_MsgId FashionWearResp_MsgId_MsgId_MAX = FashionWearResp_MsgId_Id;
+constexpr int FashionWearResp_MsgId_MsgId_ARRAYSIZE = FashionWearResp_MsgId_MsgId_MAX + 1;
+
+const std::string& FashionWearResp_MsgId_Name(FashionWearResp_MsgId value);
+template<typename T>
+inline const std::string& FashionWearResp_MsgId_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, FashionWearResp_MsgId>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function FashionWearResp_MsgId_Name.");
+  return FashionWearResp_MsgId_Name(static_cast<FashionWearResp_MsgId>(enum_t_value));
+}
+bool FashionWearResp_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, FashionWearResp_MsgId* value);
+enum ArmamentSyncReq_MsgId : int {
+  ArmamentSyncReq_MsgId_None = 0,
+  ArmamentSyncReq_MsgId_Id = 1502,
+  ArmamentSyncReq_MsgId_ArmamentSyncReq_MsgId_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  ArmamentSyncReq_MsgId_ArmamentSyncReq_MsgId_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool ArmamentSyncReq_MsgId_IsValid(int value);
+constexpr ArmamentSyncReq_MsgId ArmamentSyncReq_MsgId_MsgId_MIN = ArmamentSyncReq_MsgId_None;
+constexpr ArmamentSyncReq_MsgId ArmamentSyncReq_MsgId_MsgId_MAX = ArmamentSyncReq_MsgId_Id;
+constexpr int ArmamentSyncReq_MsgId_MsgId_ARRAYSIZE = ArmamentSyncReq_MsgId_MsgId_MAX + 1;
+
+const std::string& ArmamentSyncReq_MsgId_Name(ArmamentSyncReq_MsgId value);
+template<typename T>
+inline const std::string& ArmamentSyncReq_MsgId_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, ArmamentSyncReq_MsgId>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function ArmamentSyncReq_MsgId_Name.");
+  return ArmamentSyncReq_MsgId_Name(static_cast<ArmamentSyncReq_MsgId>(enum_t_value));
+}
+bool ArmamentSyncReq_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, ArmamentSyncReq_MsgId* value);
+enum ArmamentSyncResp_MsgId : int {
+  ArmamentSyncResp_MsgId_None = 0,
+  ArmamentSyncResp_MsgId_Id = 1503,
+  ArmamentSyncResp_MsgId_ArmamentSyncResp_MsgId_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  ArmamentSyncResp_MsgId_ArmamentSyncResp_MsgId_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool ArmamentSyncResp_MsgId_IsValid(int value);
+constexpr ArmamentSyncResp_MsgId ArmamentSyncResp_MsgId_MsgId_MIN = ArmamentSyncResp_MsgId_None;
+constexpr ArmamentSyncResp_MsgId ArmamentSyncResp_MsgId_MsgId_MAX = ArmamentSyncResp_MsgId_Id;
+constexpr int ArmamentSyncResp_MsgId_MsgId_ARRAYSIZE = ArmamentSyncResp_MsgId_MsgId_MAX + 1;
+
+const std::string& ArmamentSyncResp_MsgId_Name(ArmamentSyncResp_MsgId value);
+template<typename T>
+inline const std::string& ArmamentSyncResp_MsgId_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, ArmamentSyncResp_MsgId>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function ArmamentSyncResp_MsgId_Name.");
+  return ArmamentSyncResp_MsgId_Name(static_cast<ArmamentSyncResp_MsgId>(enum_t_value));
+}
+bool ArmamentSyncResp_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, ArmamentSyncResp_MsgId* value);
+enum SkillSlotsSyncReq_MsgId : int {
+  SkillSlotsSyncReq_MsgId_None = 0,
+  SkillSlotsSyncReq_MsgId_Id = 1504,
+  SkillSlotsSyncReq_MsgId_SkillSlotsSyncReq_MsgId_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  SkillSlotsSyncReq_MsgId_SkillSlotsSyncReq_MsgId_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool SkillSlotsSyncReq_MsgId_IsValid(int value);
+constexpr SkillSlotsSyncReq_MsgId SkillSlotsSyncReq_MsgId_MsgId_MIN = SkillSlotsSyncReq_MsgId_None;
+constexpr SkillSlotsSyncReq_MsgId SkillSlotsSyncReq_MsgId_MsgId_MAX = SkillSlotsSyncReq_MsgId_Id;
+constexpr int SkillSlotsSyncReq_MsgId_MsgId_ARRAYSIZE = SkillSlotsSyncReq_MsgId_MsgId_MAX + 1;
+
+const std::string& SkillSlotsSyncReq_MsgId_Name(SkillSlotsSyncReq_MsgId value);
+template<typename T>
+inline const std::string& SkillSlotsSyncReq_MsgId_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, SkillSlotsSyncReq_MsgId>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function SkillSlotsSyncReq_MsgId_Name.");
+  return SkillSlotsSyncReq_MsgId_Name(static_cast<SkillSlotsSyncReq_MsgId>(enum_t_value));
+}
+bool SkillSlotsSyncReq_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, SkillSlotsSyncReq_MsgId* value);
+enum SkillSlotsSyncResp_MsgId : int {
+  SkillSlotsSyncResp_MsgId_None = 0,
+  SkillSlotsSyncResp_MsgId_Id = 1505,
+  SkillSlotsSyncResp_MsgId_SkillSlotsSyncResp_MsgId_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  SkillSlotsSyncResp_MsgId_SkillSlotsSyncResp_MsgId_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool SkillSlotsSyncResp_MsgId_IsValid(int value);
+constexpr SkillSlotsSyncResp_MsgId SkillSlotsSyncResp_MsgId_MsgId_MIN = SkillSlotsSyncResp_MsgId_None;
+constexpr SkillSlotsSyncResp_MsgId SkillSlotsSyncResp_MsgId_MsgId_MAX = SkillSlotsSyncResp_MsgId_Id;
+constexpr int SkillSlotsSyncResp_MsgId_MsgId_ARRAYSIZE = SkillSlotsSyncResp_MsgId_MsgId_MAX + 1;
+
+const std::string& SkillSlotsSyncResp_MsgId_Name(SkillSlotsSyncResp_MsgId value);
+template<typename T>
+inline const std::string& SkillSlotsSyncResp_MsgId_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, SkillSlotsSyncResp_MsgId>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function SkillSlotsSyncResp_MsgId_Name.");
+  return SkillSlotsSyncResp_MsgId_Name(static_cast<SkillSlotsSyncResp_MsgId>(enum_t_value));
+}
+bool SkillSlotsSyncResp_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, SkillSlotsSyncResp_MsgId* value);
+enum PetSyncReq_MsgId : int {
+  PetSyncReq_MsgId_None = 0,
+  PetSyncReq_MsgId_Id = 1506,
+  PetSyncReq_MsgId_PetSyncReq_MsgId_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  PetSyncReq_MsgId_PetSyncReq_MsgId_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool PetSyncReq_MsgId_IsValid(int value);
+constexpr PetSyncReq_MsgId PetSyncReq_MsgId_MsgId_MIN = PetSyncReq_MsgId_None;
+constexpr PetSyncReq_MsgId PetSyncReq_MsgId_MsgId_MAX = PetSyncReq_MsgId_Id;
+constexpr int PetSyncReq_MsgId_MsgId_ARRAYSIZE = PetSyncReq_MsgId_MsgId_MAX + 1;
+
+const std::string& PetSyncReq_MsgId_Name(PetSyncReq_MsgId value);
+template<typename T>
+inline const std::string& PetSyncReq_MsgId_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, PetSyncReq_MsgId>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function PetSyncReq_MsgId_Name.");
+  return PetSyncReq_MsgId_Name(static_cast<PetSyncReq_MsgId>(enum_t_value));
+}
+bool PetSyncReq_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, PetSyncReq_MsgId* value);
+enum PetSyncResp_MsgId : int {
+  PetSyncResp_MsgId_None = 0,
+  PetSyncResp_MsgId_Id = 1507,
+  PetSyncResp_MsgId_PetSyncResp_MsgId_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  PetSyncResp_MsgId_PetSyncResp_MsgId_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool PetSyncResp_MsgId_IsValid(int value);
+constexpr PetSyncResp_MsgId PetSyncResp_MsgId_MsgId_MIN = PetSyncResp_MsgId_None;
+constexpr PetSyncResp_MsgId PetSyncResp_MsgId_MsgId_MAX = PetSyncResp_MsgId_Id;
+constexpr int PetSyncResp_MsgId_MsgId_ARRAYSIZE = PetSyncResp_MsgId_MsgId_MAX + 1;
+
+const std::string& PetSyncResp_MsgId_Name(PetSyncResp_MsgId value);
+template<typename T>
+inline const std::string& PetSyncResp_MsgId_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, PetSyncResp_MsgId>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function PetSyncResp_MsgId_Name.");
+  return PetSyncResp_MsgId_Name(static_cast<PetSyncResp_MsgId>(enum_t_value));
+}
+bool PetSyncResp_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, PetSyncResp_MsgId* value);
+enum PartnerSyncReq_MsgId : int {
+  PartnerSyncReq_MsgId_None = 0,
+  PartnerSyncReq_MsgId_Id = 1508,
+  PartnerSyncReq_MsgId_PartnerSyncReq_MsgId_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  PartnerSyncReq_MsgId_PartnerSyncReq_MsgId_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool PartnerSyncReq_MsgId_IsValid(int value);
+constexpr PartnerSyncReq_MsgId PartnerSyncReq_MsgId_MsgId_MIN = PartnerSyncReq_MsgId_None;
+constexpr PartnerSyncReq_MsgId PartnerSyncReq_MsgId_MsgId_MAX = PartnerSyncReq_MsgId_Id;
+constexpr int PartnerSyncReq_MsgId_MsgId_ARRAYSIZE = PartnerSyncReq_MsgId_MsgId_MAX + 1;
+
+const std::string& PartnerSyncReq_MsgId_Name(PartnerSyncReq_MsgId value);
+template<typename T>
+inline const std::string& PartnerSyncReq_MsgId_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, PartnerSyncReq_MsgId>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function PartnerSyncReq_MsgId_Name.");
+  return PartnerSyncReq_MsgId_Name(static_cast<PartnerSyncReq_MsgId>(enum_t_value));
+}
+bool PartnerSyncReq_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, PartnerSyncReq_MsgId* value);
+enum PartnerSyncResp_MsgId : int {
+  PartnerSyncResp_MsgId_None = 0,
+  PartnerSyncResp_MsgId_Id = 1509,
+  PartnerSyncResp_MsgId_PartnerSyncResp_MsgId_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  PartnerSyncResp_MsgId_PartnerSyncResp_MsgId_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool PartnerSyncResp_MsgId_IsValid(int value);
+constexpr PartnerSyncResp_MsgId PartnerSyncResp_MsgId_MsgId_MIN = PartnerSyncResp_MsgId_None;
+constexpr PartnerSyncResp_MsgId PartnerSyncResp_MsgId_MsgId_MAX = PartnerSyncResp_MsgId_Id;
+constexpr int PartnerSyncResp_MsgId_MsgId_ARRAYSIZE = PartnerSyncResp_MsgId_MsgId_MAX + 1;
+
+const std::string& PartnerSyncResp_MsgId_Name(PartnerSyncResp_MsgId value);
+template<typename T>
+inline const std::string& PartnerSyncResp_MsgId_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, PartnerSyncResp_MsgId>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function PartnerSyncResp_MsgId_Name.");
+  return PartnerSyncResp_MsgId_Name(static_cast<PartnerSyncResp_MsgId>(enum_t_value));
+}
+bool PartnerSyncResp_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, PartnerSyncResp_MsgId* value);
 // ===================================================================
 
 class CommonSuccessResp final :
@@ -5742,6 +5992,1724 @@ class DuelEndPush final :
   union { Impl_ _impl_; };
   friend struct ::TableStruct_client_5fgame_2eproto;
 };
+// -------------------------------------------------------------------
+
+class FashionWearReq final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Game.FashionWearReq) */ {
+ public:
+  inline FashionWearReq() : FashionWearReq(nullptr) {}
+  ~FashionWearReq() override;
+  explicit PROTOBUF_CONSTEXPR FashionWearReq(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  FashionWearReq(const FashionWearReq& from);
+  FashionWearReq(FashionWearReq&& from) noexcept
+    : FashionWearReq() {
+    *this = ::std::move(from);
+  }
+
+  inline FashionWearReq& operator=(const FashionWearReq& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline FashionWearReq& operator=(FashionWearReq&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const FashionWearReq& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const FashionWearReq* internal_default_instance() {
+    return reinterpret_cast<const FashionWearReq*>(
+               &_FashionWearReq_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    27;
+
+  friend void swap(FashionWearReq& a, FashionWearReq& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(FashionWearReq* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(FashionWearReq* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  FashionWearReq* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<FashionWearReq>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const FashionWearReq& from);
+  void MergeFrom(const FashionWearReq& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(FashionWearReq* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Game.FashionWearReq";
+  }
+  protected:
+  explicit FashionWearReq(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  typedef FashionWearReq_MsgId MsgId;
+  static constexpr MsgId None =
+    FashionWearReq_MsgId_None;
+  static constexpr MsgId Id =
+    FashionWearReq_MsgId_Id;
+  static inline bool MsgId_IsValid(int value) {
+    return FashionWearReq_MsgId_IsValid(value);
+  }
+  static constexpr MsgId MsgId_MIN =
+    FashionWearReq_MsgId_MsgId_MIN;
+  static constexpr MsgId MsgId_MAX =
+    FashionWearReq_MsgId_MsgId_MAX;
+  static constexpr int MsgId_ARRAYSIZE =
+    FashionWearReq_MsgId_MsgId_ARRAYSIZE;
+  template<typename T>
+  static inline const std::string& MsgId_Name(T enum_t_value) {
+    static_assert(::std::is_same<T, MsgId>::value ||
+      ::std::is_integral<T>::value,
+      "Incorrect type passed to function MsgId_Name.");
+    return FashionWearReq_MsgId_Name(enum_t_value);
+  }
+  static inline bool MsgId_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
+      MsgId* value) {
+    return FashionWearReq_MsgId_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kFashionsFieldNumber = 1,
+  };
+  // repeated .PB.Types.FashionInfo fashions = 1;
+  int fashions_size() const;
+  private:
+  int _internal_fashions_size() const;
+  public:
+  void clear_fashions();
+  ::PB::Types::FashionInfo* mutable_fashions(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::FashionInfo >*
+      mutable_fashions();
+  private:
+  const ::PB::Types::FashionInfo& _internal_fashions(int index) const;
+  ::PB::Types::FashionInfo* _internal_add_fashions();
+  public:
+  const ::PB::Types::FashionInfo& fashions(int index) const;
+  ::PB::Types::FashionInfo* add_fashions();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::FashionInfo >&
+      fashions() const;
+
+  // @@protoc_insertion_point(class_scope:PB.Game.FashionWearReq)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::FashionInfo > fashions_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_client_5fgame_2eproto;
+};
+// -------------------------------------------------------------------
+
+class FashionWearResp final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Game.FashionWearResp) */ {
+ public:
+  inline FashionWearResp() : FashionWearResp(nullptr) {}
+  ~FashionWearResp() override;
+  explicit PROTOBUF_CONSTEXPR FashionWearResp(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  FashionWearResp(const FashionWearResp& from);
+  FashionWearResp(FashionWearResp&& from) noexcept
+    : FashionWearResp() {
+    *this = ::std::move(from);
+  }
+
+  inline FashionWearResp& operator=(const FashionWearResp& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline FashionWearResp& operator=(FashionWearResp&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const FashionWearResp& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const FashionWearResp* internal_default_instance() {
+    return reinterpret_cast<const FashionWearResp*>(
+               &_FashionWearResp_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    28;
+
+  friend void swap(FashionWearResp& a, FashionWearResp& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(FashionWearResp* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(FashionWearResp* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  FashionWearResp* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<FashionWearResp>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const FashionWearResp& from);
+  void MergeFrom(const FashionWearResp& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(FashionWearResp* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Game.FashionWearResp";
+  }
+  protected:
+  explicit FashionWearResp(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  typedef FashionWearResp_MsgId MsgId;
+  static constexpr MsgId None =
+    FashionWearResp_MsgId_None;
+  static constexpr MsgId Id =
+    FashionWearResp_MsgId_Id;
+  static inline bool MsgId_IsValid(int value) {
+    return FashionWearResp_MsgId_IsValid(value);
+  }
+  static constexpr MsgId MsgId_MIN =
+    FashionWearResp_MsgId_MsgId_MIN;
+  static constexpr MsgId MsgId_MAX =
+    FashionWearResp_MsgId_MsgId_MAX;
+  static constexpr int MsgId_ARRAYSIZE =
+    FashionWearResp_MsgId_MsgId_ARRAYSIZE;
+  template<typename T>
+  static inline const std::string& MsgId_Name(T enum_t_value) {
+    static_assert(::std::is_same<T, MsgId>::value ||
+      ::std::is_integral<T>::value,
+      "Incorrect type passed to function MsgId_Name.");
+    return FashionWearResp_MsgId_Name(enum_t_value);
+  }
+  static inline bool MsgId_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
+      MsgId* value) {
+    return FashionWearResp_MsgId_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kMessageFieldNumber = 2,
+    kCodeFieldNumber = 1,
+  };
+  // string message = 2;
+  void clear_message();
+  const std::string& message() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_message(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_message();
+  PROTOBUF_NODISCARD std::string* release_message();
+  void set_allocated_message(std::string* message);
+  private:
+  const std::string& _internal_message() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_message(const std::string& value);
+  std::string* _internal_mutable_message();
+  public:
+
+  // int32 code = 1;
+  void clear_code();
+  int32_t code() const;
+  void set_code(int32_t value);
+  private:
+  int32_t _internal_code() const;
+  void _internal_set_code(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Game.FashionWearResp)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr message_;
+    int32_t code_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_client_5fgame_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ArmamentSyncReq final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Game.ArmamentSyncReq) */ {
+ public:
+  inline ArmamentSyncReq() : ArmamentSyncReq(nullptr) {}
+  ~ArmamentSyncReq() override;
+  explicit PROTOBUF_CONSTEXPR ArmamentSyncReq(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ArmamentSyncReq(const ArmamentSyncReq& from);
+  ArmamentSyncReq(ArmamentSyncReq&& from) noexcept
+    : ArmamentSyncReq() {
+    *this = ::std::move(from);
+  }
+
+  inline ArmamentSyncReq& operator=(const ArmamentSyncReq& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ArmamentSyncReq& operator=(ArmamentSyncReq&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ArmamentSyncReq& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ArmamentSyncReq* internal_default_instance() {
+    return reinterpret_cast<const ArmamentSyncReq*>(
+               &_ArmamentSyncReq_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    29;
+
+  friend void swap(ArmamentSyncReq& a, ArmamentSyncReq& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ArmamentSyncReq* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ArmamentSyncReq* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ArmamentSyncReq* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ArmamentSyncReq>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const ArmamentSyncReq& from);
+  void MergeFrom(const ArmamentSyncReq& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(ArmamentSyncReq* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Game.ArmamentSyncReq";
+  }
+  protected:
+  explicit ArmamentSyncReq(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  typedef ArmamentSyncReq_MsgId MsgId;
+  static constexpr MsgId None =
+    ArmamentSyncReq_MsgId_None;
+  static constexpr MsgId Id =
+    ArmamentSyncReq_MsgId_Id;
+  static inline bool MsgId_IsValid(int value) {
+    return ArmamentSyncReq_MsgId_IsValid(value);
+  }
+  static constexpr MsgId MsgId_MIN =
+    ArmamentSyncReq_MsgId_MsgId_MIN;
+  static constexpr MsgId MsgId_MAX =
+    ArmamentSyncReq_MsgId_MsgId_MAX;
+  static constexpr int MsgId_ARRAYSIZE =
+    ArmamentSyncReq_MsgId_MsgId_ARRAYSIZE;
+  template<typename T>
+  static inline const std::string& MsgId_Name(T enum_t_value) {
+    static_assert(::std::is_same<T, MsgId>::value ||
+      ::std::is_integral<T>::value,
+      "Incorrect type passed to function MsgId_Name.");
+    return ArmamentSyncReq_MsgId_Name(enum_t_value);
+  }
+  static inline bool MsgId_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
+      MsgId* value) {
+    return ArmamentSyncReq_MsgId_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kArmamentsFieldNumber = 1,
+    kAppearanceIdFieldNumber = 2,
+  };
+  // repeated .PB.Types.ArmamentInfo armaments = 1;
+  int armaments_size() const;
+  private:
+  int _internal_armaments_size() const;
+  public:
+  void clear_armaments();
+  ::PB::Types::ArmamentInfo* mutable_armaments(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::ArmamentInfo >*
+      mutable_armaments();
+  private:
+  const ::PB::Types::ArmamentInfo& _internal_armaments(int index) const;
+  ::PB::Types::ArmamentInfo* _internal_add_armaments();
+  public:
+  const ::PB::Types::ArmamentInfo& armaments(int index) const;
+  ::PB::Types::ArmamentInfo* add_armaments();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::ArmamentInfo >&
+      armaments() const;
+
+  // int32 appearance_id = 2;
+  void clear_appearance_id();
+  int32_t appearance_id() const;
+  void set_appearance_id(int32_t value);
+  private:
+  int32_t _internal_appearance_id() const;
+  void _internal_set_appearance_id(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Game.ArmamentSyncReq)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::ArmamentInfo > armaments_;
+    int32_t appearance_id_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_client_5fgame_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ArmamentSyncResp final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Game.ArmamentSyncResp) */ {
+ public:
+  inline ArmamentSyncResp() : ArmamentSyncResp(nullptr) {}
+  ~ArmamentSyncResp() override;
+  explicit PROTOBUF_CONSTEXPR ArmamentSyncResp(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ArmamentSyncResp(const ArmamentSyncResp& from);
+  ArmamentSyncResp(ArmamentSyncResp&& from) noexcept
+    : ArmamentSyncResp() {
+    *this = ::std::move(from);
+  }
+
+  inline ArmamentSyncResp& operator=(const ArmamentSyncResp& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ArmamentSyncResp& operator=(ArmamentSyncResp&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ArmamentSyncResp& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ArmamentSyncResp* internal_default_instance() {
+    return reinterpret_cast<const ArmamentSyncResp*>(
+               &_ArmamentSyncResp_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    30;
+
+  friend void swap(ArmamentSyncResp& a, ArmamentSyncResp& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ArmamentSyncResp* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ArmamentSyncResp* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ArmamentSyncResp* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ArmamentSyncResp>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const ArmamentSyncResp& from);
+  void MergeFrom(const ArmamentSyncResp& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(ArmamentSyncResp* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Game.ArmamentSyncResp";
+  }
+  protected:
+  explicit ArmamentSyncResp(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  typedef ArmamentSyncResp_MsgId MsgId;
+  static constexpr MsgId None =
+    ArmamentSyncResp_MsgId_None;
+  static constexpr MsgId Id =
+    ArmamentSyncResp_MsgId_Id;
+  static inline bool MsgId_IsValid(int value) {
+    return ArmamentSyncResp_MsgId_IsValid(value);
+  }
+  static constexpr MsgId MsgId_MIN =
+    ArmamentSyncResp_MsgId_MsgId_MIN;
+  static constexpr MsgId MsgId_MAX =
+    ArmamentSyncResp_MsgId_MsgId_MAX;
+  static constexpr int MsgId_ARRAYSIZE =
+    ArmamentSyncResp_MsgId_MsgId_ARRAYSIZE;
+  template<typename T>
+  static inline const std::string& MsgId_Name(T enum_t_value) {
+    static_assert(::std::is_same<T, MsgId>::value ||
+      ::std::is_integral<T>::value,
+      "Incorrect type passed to function MsgId_Name.");
+    return ArmamentSyncResp_MsgId_Name(enum_t_value);
+  }
+  static inline bool MsgId_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
+      MsgId* value) {
+    return ArmamentSyncResp_MsgId_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kMessageFieldNumber = 2,
+    kCodeFieldNumber = 1,
+  };
+  // string message = 2;
+  void clear_message();
+  const std::string& message() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_message(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_message();
+  PROTOBUF_NODISCARD std::string* release_message();
+  void set_allocated_message(std::string* message);
+  private:
+  const std::string& _internal_message() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_message(const std::string& value);
+  std::string* _internal_mutable_message();
+  public:
+
+  // int32 code = 1;
+  void clear_code();
+  int32_t code() const;
+  void set_code(int32_t value);
+  private:
+  int32_t _internal_code() const;
+  void _internal_set_code(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Game.ArmamentSyncResp)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr message_;
+    int32_t code_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_client_5fgame_2eproto;
+};
+// -------------------------------------------------------------------
+
+class SkillSlotsSyncReq final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Game.SkillSlotsSyncReq) */ {
+ public:
+  inline SkillSlotsSyncReq() : SkillSlotsSyncReq(nullptr) {}
+  ~SkillSlotsSyncReq() override;
+  explicit PROTOBUF_CONSTEXPR SkillSlotsSyncReq(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  SkillSlotsSyncReq(const SkillSlotsSyncReq& from);
+  SkillSlotsSyncReq(SkillSlotsSyncReq&& from) noexcept
+    : SkillSlotsSyncReq() {
+    *this = ::std::move(from);
+  }
+
+  inline SkillSlotsSyncReq& operator=(const SkillSlotsSyncReq& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline SkillSlotsSyncReq& operator=(SkillSlotsSyncReq&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const SkillSlotsSyncReq& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const SkillSlotsSyncReq* internal_default_instance() {
+    return reinterpret_cast<const SkillSlotsSyncReq*>(
+               &_SkillSlotsSyncReq_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    31;
+
+  friend void swap(SkillSlotsSyncReq& a, SkillSlotsSyncReq& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(SkillSlotsSyncReq* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(SkillSlotsSyncReq* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  SkillSlotsSyncReq* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<SkillSlotsSyncReq>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const SkillSlotsSyncReq& from);
+  void MergeFrom(const SkillSlotsSyncReq& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(SkillSlotsSyncReq* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Game.SkillSlotsSyncReq";
+  }
+  protected:
+  explicit SkillSlotsSyncReq(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  typedef SkillSlotsSyncReq_MsgId MsgId;
+  static constexpr MsgId None =
+    SkillSlotsSyncReq_MsgId_None;
+  static constexpr MsgId Id =
+    SkillSlotsSyncReq_MsgId_Id;
+  static inline bool MsgId_IsValid(int value) {
+    return SkillSlotsSyncReq_MsgId_IsValid(value);
+  }
+  static constexpr MsgId MsgId_MIN =
+    SkillSlotsSyncReq_MsgId_MsgId_MIN;
+  static constexpr MsgId MsgId_MAX =
+    SkillSlotsSyncReq_MsgId_MsgId_MAX;
+  static constexpr int MsgId_ARRAYSIZE =
+    SkillSlotsSyncReq_MsgId_MsgId_ARRAYSIZE;
+  template<typename T>
+  static inline const std::string& MsgId_Name(T enum_t_value) {
+    static_assert(::std::is_same<T, MsgId>::value ||
+      ::std::is_integral<T>::value,
+      "Incorrect type passed to function MsgId_Name.");
+    return SkillSlotsSyncReq_MsgId_Name(enum_t_value);
+  }
+  static inline bool MsgId_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
+      MsgId* value) {
+    return SkillSlotsSyncReq_MsgId_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kSlotsFieldNumber = 1,
+  };
+  // repeated .PB.Types.SkillSlotInfo slots = 1;
+  int slots_size() const;
+  private:
+  int _internal_slots_size() const;
+  public:
+  void clear_slots();
+  ::PB::Types::SkillSlotInfo* mutable_slots(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::SkillSlotInfo >*
+      mutable_slots();
+  private:
+  const ::PB::Types::SkillSlotInfo& _internal_slots(int index) const;
+  ::PB::Types::SkillSlotInfo* _internal_add_slots();
+  public:
+  const ::PB::Types::SkillSlotInfo& slots(int index) const;
+  ::PB::Types::SkillSlotInfo* add_slots();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::SkillSlotInfo >&
+      slots() const;
+
+  // @@protoc_insertion_point(class_scope:PB.Game.SkillSlotsSyncReq)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::SkillSlotInfo > slots_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_client_5fgame_2eproto;
+};
+// -------------------------------------------------------------------
+
+class SkillSlotsSyncResp final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Game.SkillSlotsSyncResp) */ {
+ public:
+  inline SkillSlotsSyncResp() : SkillSlotsSyncResp(nullptr) {}
+  ~SkillSlotsSyncResp() override;
+  explicit PROTOBUF_CONSTEXPR SkillSlotsSyncResp(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  SkillSlotsSyncResp(const SkillSlotsSyncResp& from);
+  SkillSlotsSyncResp(SkillSlotsSyncResp&& from) noexcept
+    : SkillSlotsSyncResp() {
+    *this = ::std::move(from);
+  }
+
+  inline SkillSlotsSyncResp& operator=(const SkillSlotsSyncResp& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline SkillSlotsSyncResp& operator=(SkillSlotsSyncResp&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const SkillSlotsSyncResp& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const SkillSlotsSyncResp* internal_default_instance() {
+    return reinterpret_cast<const SkillSlotsSyncResp*>(
+               &_SkillSlotsSyncResp_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    32;
+
+  friend void swap(SkillSlotsSyncResp& a, SkillSlotsSyncResp& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(SkillSlotsSyncResp* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(SkillSlotsSyncResp* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  SkillSlotsSyncResp* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<SkillSlotsSyncResp>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const SkillSlotsSyncResp& from);
+  void MergeFrom(const SkillSlotsSyncResp& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(SkillSlotsSyncResp* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Game.SkillSlotsSyncResp";
+  }
+  protected:
+  explicit SkillSlotsSyncResp(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  typedef SkillSlotsSyncResp_MsgId MsgId;
+  static constexpr MsgId None =
+    SkillSlotsSyncResp_MsgId_None;
+  static constexpr MsgId Id =
+    SkillSlotsSyncResp_MsgId_Id;
+  static inline bool MsgId_IsValid(int value) {
+    return SkillSlotsSyncResp_MsgId_IsValid(value);
+  }
+  static constexpr MsgId MsgId_MIN =
+    SkillSlotsSyncResp_MsgId_MsgId_MIN;
+  static constexpr MsgId MsgId_MAX =
+    SkillSlotsSyncResp_MsgId_MsgId_MAX;
+  static constexpr int MsgId_ARRAYSIZE =
+    SkillSlotsSyncResp_MsgId_MsgId_ARRAYSIZE;
+  template<typename T>
+  static inline const std::string& MsgId_Name(T enum_t_value) {
+    static_assert(::std::is_same<T, MsgId>::value ||
+      ::std::is_integral<T>::value,
+      "Incorrect type passed to function MsgId_Name.");
+    return SkillSlotsSyncResp_MsgId_Name(enum_t_value);
+  }
+  static inline bool MsgId_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
+      MsgId* value) {
+    return SkillSlotsSyncResp_MsgId_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kMessageFieldNumber = 2,
+    kCodeFieldNumber = 1,
+  };
+  // string message = 2;
+  void clear_message();
+  const std::string& message() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_message(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_message();
+  PROTOBUF_NODISCARD std::string* release_message();
+  void set_allocated_message(std::string* message);
+  private:
+  const std::string& _internal_message() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_message(const std::string& value);
+  std::string* _internal_mutable_message();
+  public:
+
+  // int32 code = 1;
+  void clear_code();
+  int32_t code() const;
+  void set_code(int32_t value);
+  private:
+  int32_t _internal_code() const;
+  void _internal_set_code(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Game.SkillSlotsSyncResp)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr message_;
+    int32_t code_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_client_5fgame_2eproto;
+};
+// -------------------------------------------------------------------
+
+class PetSyncReq final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Game.PetSyncReq) */ {
+ public:
+  inline PetSyncReq() : PetSyncReq(nullptr) {}
+  ~PetSyncReq() override;
+  explicit PROTOBUF_CONSTEXPR PetSyncReq(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  PetSyncReq(const PetSyncReq& from);
+  PetSyncReq(PetSyncReq&& from) noexcept
+    : PetSyncReq() {
+    *this = ::std::move(from);
+  }
+
+  inline PetSyncReq& operator=(const PetSyncReq& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline PetSyncReq& operator=(PetSyncReq&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const PetSyncReq& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const PetSyncReq* internal_default_instance() {
+    return reinterpret_cast<const PetSyncReq*>(
+               &_PetSyncReq_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    33;
+
+  friend void swap(PetSyncReq& a, PetSyncReq& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(PetSyncReq* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(PetSyncReq* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  PetSyncReq* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<PetSyncReq>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const PetSyncReq& from);
+  void MergeFrom(const PetSyncReq& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(PetSyncReq* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Game.PetSyncReq";
+  }
+  protected:
+  explicit PetSyncReq(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  typedef PetSyncReq_MsgId MsgId;
+  static constexpr MsgId None =
+    PetSyncReq_MsgId_None;
+  static constexpr MsgId Id =
+    PetSyncReq_MsgId_Id;
+  static inline bool MsgId_IsValid(int value) {
+    return PetSyncReq_MsgId_IsValid(value);
+  }
+  static constexpr MsgId MsgId_MIN =
+    PetSyncReq_MsgId_MsgId_MIN;
+  static constexpr MsgId MsgId_MAX =
+    PetSyncReq_MsgId_MsgId_MAX;
+  static constexpr int MsgId_ARRAYSIZE =
+    PetSyncReq_MsgId_MsgId_ARRAYSIZE;
+  template<typename T>
+  static inline const std::string& MsgId_Name(T enum_t_value) {
+    static_assert(::std::is_same<T, MsgId>::value ||
+      ::std::is_integral<T>::value,
+      "Incorrect type passed to function MsgId_Name.");
+    return PetSyncReq_MsgId_Name(enum_t_value);
+  }
+  static inline bool MsgId_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
+      MsgId* value) {
+    return PetSyncReq_MsgId_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kPetsFieldNumber = 1,
+    kActivePetIdFieldNumber = 2,
+  };
+  // repeated .PB.Types.PetInfo pets = 1;
+  int pets_size() const;
+  private:
+  int _internal_pets_size() const;
+  public:
+  void clear_pets();
+  ::PB::Types::PetInfo* mutable_pets(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PetInfo >*
+      mutable_pets();
+  private:
+  const ::PB::Types::PetInfo& _internal_pets(int index) const;
+  ::PB::Types::PetInfo* _internal_add_pets();
+  public:
+  const ::PB::Types::PetInfo& pets(int index) const;
+  ::PB::Types::PetInfo* add_pets();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PetInfo >&
+      pets() const;
+
+  // int32 active_pet_id = 2;
+  void clear_active_pet_id();
+  int32_t active_pet_id() const;
+  void set_active_pet_id(int32_t value);
+  private:
+  int32_t _internal_active_pet_id() const;
+  void _internal_set_active_pet_id(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Game.PetSyncReq)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PetInfo > pets_;
+    int32_t active_pet_id_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_client_5fgame_2eproto;
+};
+// -------------------------------------------------------------------
+
+class PetSyncResp final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Game.PetSyncResp) */ {
+ public:
+  inline PetSyncResp() : PetSyncResp(nullptr) {}
+  ~PetSyncResp() override;
+  explicit PROTOBUF_CONSTEXPR PetSyncResp(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  PetSyncResp(const PetSyncResp& from);
+  PetSyncResp(PetSyncResp&& from) noexcept
+    : PetSyncResp() {
+    *this = ::std::move(from);
+  }
+
+  inline PetSyncResp& operator=(const PetSyncResp& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline PetSyncResp& operator=(PetSyncResp&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const PetSyncResp& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const PetSyncResp* internal_default_instance() {
+    return reinterpret_cast<const PetSyncResp*>(
+               &_PetSyncResp_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    34;
+
+  friend void swap(PetSyncResp& a, PetSyncResp& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(PetSyncResp* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(PetSyncResp* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  PetSyncResp* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<PetSyncResp>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const PetSyncResp& from);
+  void MergeFrom(const PetSyncResp& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(PetSyncResp* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Game.PetSyncResp";
+  }
+  protected:
+  explicit PetSyncResp(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  typedef PetSyncResp_MsgId MsgId;
+  static constexpr MsgId None =
+    PetSyncResp_MsgId_None;
+  static constexpr MsgId Id =
+    PetSyncResp_MsgId_Id;
+  static inline bool MsgId_IsValid(int value) {
+    return PetSyncResp_MsgId_IsValid(value);
+  }
+  static constexpr MsgId MsgId_MIN =
+    PetSyncResp_MsgId_MsgId_MIN;
+  static constexpr MsgId MsgId_MAX =
+    PetSyncResp_MsgId_MsgId_MAX;
+  static constexpr int MsgId_ARRAYSIZE =
+    PetSyncResp_MsgId_MsgId_ARRAYSIZE;
+  template<typename T>
+  static inline const std::string& MsgId_Name(T enum_t_value) {
+    static_assert(::std::is_same<T, MsgId>::value ||
+      ::std::is_integral<T>::value,
+      "Incorrect type passed to function MsgId_Name.");
+    return PetSyncResp_MsgId_Name(enum_t_value);
+  }
+  static inline bool MsgId_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
+      MsgId* value) {
+    return PetSyncResp_MsgId_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kMessageFieldNumber = 2,
+    kCodeFieldNumber = 1,
+  };
+  // string message = 2;
+  void clear_message();
+  const std::string& message() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_message(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_message();
+  PROTOBUF_NODISCARD std::string* release_message();
+  void set_allocated_message(std::string* message);
+  private:
+  const std::string& _internal_message() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_message(const std::string& value);
+  std::string* _internal_mutable_message();
+  public:
+
+  // int32 code = 1;
+  void clear_code();
+  int32_t code() const;
+  void set_code(int32_t value);
+  private:
+  int32_t _internal_code() const;
+  void _internal_set_code(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Game.PetSyncResp)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr message_;
+    int32_t code_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_client_5fgame_2eproto;
+};
+// -------------------------------------------------------------------
+
+class PartnerSyncReq final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Game.PartnerSyncReq) */ {
+ public:
+  inline PartnerSyncReq() : PartnerSyncReq(nullptr) {}
+  ~PartnerSyncReq() override;
+  explicit PROTOBUF_CONSTEXPR PartnerSyncReq(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  PartnerSyncReq(const PartnerSyncReq& from);
+  PartnerSyncReq(PartnerSyncReq&& from) noexcept
+    : PartnerSyncReq() {
+    *this = ::std::move(from);
+  }
+
+  inline PartnerSyncReq& operator=(const PartnerSyncReq& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline PartnerSyncReq& operator=(PartnerSyncReq&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const PartnerSyncReq& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const PartnerSyncReq* internal_default_instance() {
+    return reinterpret_cast<const PartnerSyncReq*>(
+               &_PartnerSyncReq_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    35;
+
+  friend void swap(PartnerSyncReq& a, PartnerSyncReq& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(PartnerSyncReq* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(PartnerSyncReq* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  PartnerSyncReq* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<PartnerSyncReq>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const PartnerSyncReq& from);
+  void MergeFrom(const PartnerSyncReq& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(PartnerSyncReq* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Game.PartnerSyncReq";
+  }
+  protected:
+  explicit PartnerSyncReq(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  typedef PartnerSyncReq_MsgId MsgId;
+  static constexpr MsgId None =
+    PartnerSyncReq_MsgId_None;
+  static constexpr MsgId Id =
+    PartnerSyncReq_MsgId_Id;
+  static inline bool MsgId_IsValid(int value) {
+    return PartnerSyncReq_MsgId_IsValid(value);
+  }
+  static constexpr MsgId MsgId_MIN =
+    PartnerSyncReq_MsgId_MsgId_MIN;
+  static constexpr MsgId MsgId_MAX =
+    PartnerSyncReq_MsgId_MsgId_MAX;
+  static constexpr int MsgId_ARRAYSIZE =
+    PartnerSyncReq_MsgId_MsgId_ARRAYSIZE;
+  template<typename T>
+  static inline const std::string& MsgId_Name(T enum_t_value) {
+    static_assert(::std::is_same<T, MsgId>::value ||
+      ::std::is_integral<T>::value,
+      "Incorrect type passed to function MsgId_Name.");
+    return PartnerSyncReq_MsgId_Name(enum_t_value);
+  }
+  static inline bool MsgId_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
+      MsgId* value) {
+    return PartnerSyncReq_MsgId_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kPartnersFieldNumber = 1,
+    kActivePartnerIdFieldNumber = 2,
+  };
+  // repeated .PB.Types.PartnerInfo partners = 1;
+  int partners_size() const;
+  private:
+  int _internal_partners_size() const;
+  public:
+  void clear_partners();
+  ::PB::Types::PartnerInfo* mutable_partners(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PartnerInfo >*
+      mutable_partners();
+  private:
+  const ::PB::Types::PartnerInfo& _internal_partners(int index) const;
+  ::PB::Types::PartnerInfo* _internal_add_partners();
+  public:
+  const ::PB::Types::PartnerInfo& partners(int index) const;
+  ::PB::Types::PartnerInfo* add_partners();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PartnerInfo >&
+      partners() const;
+
+  // int32 active_partner_id = 2;
+  void clear_active_partner_id();
+  int32_t active_partner_id() const;
+  void set_active_partner_id(int32_t value);
+  private:
+  int32_t _internal_active_partner_id() const;
+  void _internal_set_active_partner_id(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Game.PartnerSyncReq)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PartnerInfo > partners_;
+    int32_t active_partner_id_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_client_5fgame_2eproto;
+};
+// -------------------------------------------------------------------
+
+class PartnerSyncResp final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Game.PartnerSyncResp) */ {
+ public:
+  inline PartnerSyncResp() : PartnerSyncResp(nullptr) {}
+  ~PartnerSyncResp() override;
+  explicit PROTOBUF_CONSTEXPR PartnerSyncResp(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  PartnerSyncResp(const PartnerSyncResp& from);
+  PartnerSyncResp(PartnerSyncResp&& from) noexcept
+    : PartnerSyncResp() {
+    *this = ::std::move(from);
+  }
+
+  inline PartnerSyncResp& operator=(const PartnerSyncResp& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline PartnerSyncResp& operator=(PartnerSyncResp&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const PartnerSyncResp& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const PartnerSyncResp* internal_default_instance() {
+    return reinterpret_cast<const PartnerSyncResp*>(
+               &_PartnerSyncResp_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    36;
+
+  friend void swap(PartnerSyncResp& a, PartnerSyncResp& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(PartnerSyncResp* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(PartnerSyncResp* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  PartnerSyncResp* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<PartnerSyncResp>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const PartnerSyncResp& from);
+  void MergeFrom(const PartnerSyncResp& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(PartnerSyncResp* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Game.PartnerSyncResp";
+  }
+  protected:
+  explicit PartnerSyncResp(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  typedef PartnerSyncResp_MsgId MsgId;
+  static constexpr MsgId None =
+    PartnerSyncResp_MsgId_None;
+  static constexpr MsgId Id =
+    PartnerSyncResp_MsgId_Id;
+  static inline bool MsgId_IsValid(int value) {
+    return PartnerSyncResp_MsgId_IsValid(value);
+  }
+  static constexpr MsgId MsgId_MIN =
+    PartnerSyncResp_MsgId_MsgId_MIN;
+  static constexpr MsgId MsgId_MAX =
+    PartnerSyncResp_MsgId_MsgId_MAX;
+  static constexpr int MsgId_ARRAYSIZE =
+    PartnerSyncResp_MsgId_MsgId_ARRAYSIZE;
+  template<typename T>
+  static inline const std::string& MsgId_Name(T enum_t_value) {
+    static_assert(::std::is_same<T, MsgId>::value ||
+      ::std::is_integral<T>::value,
+      "Incorrect type passed to function MsgId_Name.");
+    return PartnerSyncResp_MsgId_Name(enum_t_value);
+  }
+  static inline bool MsgId_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
+      MsgId* value) {
+    return PartnerSyncResp_MsgId_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kMessageFieldNumber = 2,
+    kCodeFieldNumber = 1,
+  };
+  // string message = 2;
+  void clear_message();
+  const std::string& message() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_message(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_message();
+  PROTOBUF_NODISCARD std::string* release_message();
+  void set_allocated_message(std::string* message);
+  private:
+  const std::string& _internal_message() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_message(const std::string& value);
+  std::string* _internal_mutable_message();
+  public:
+
+  // int32 code = 1;
+  void clear_code();
+  int32_t code() const;
+  void set_code(int32_t value);
+  private:
+  int32_t _internal_code() const;
+  void _internal_set_code(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Game.PartnerSyncResp)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr message_;
+    int32_t code_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_client_5fgame_2eproto;
+};
 // ===================================================================
 
 
@@ -8746,9 +10714,664 @@ inline void DuelEndPush::set_allocated_message(std::string* message) {
   // @@protoc_insertion_point(field_set_allocated:PB.Game.DuelEndPush.message)
 }
 
+// -------------------------------------------------------------------
+
+// FashionWearReq
+
+// repeated .PB.Types.FashionInfo fashions = 1;
+inline int FashionWearReq::_internal_fashions_size() const {
+  return _impl_.fashions_.size();
+}
+inline int FashionWearReq::fashions_size() const {
+  return _internal_fashions_size();
+}
+inline ::PB::Types::FashionInfo* FashionWearReq::mutable_fashions(int index) {
+  // @@protoc_insertion_point(field_mutable:PB.Game.FashionWearReq.fashions)
+  return _impl_.fashions_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::FashionInfo >*
+FashionWearReq::mutable_fashions() {
+  // @@protoc_insertion_point(field_mutable_list:PB.Game.FashionWearReq.fashions)
+  return &_impl_.fashions_;
+}
+inline const ::PB::Types::FashionInfo& FashionWearReq::_internal_fashions(int index) const {
+  return _impl_.fashions_.Get(index);
+}
+inline const ::PB::Types::FashionInfo& FashionWearReq::fashions(int index) const {
+  // @@protoc_insertion_point(field_get:PB.Game.FashionWearReq.fashions)
+  return _internal_fashions(index);
+}
+inline ::PB::Types::FashionInfo* FashionWearReq::_internal_add_fashions() {
+  return _impl_.fashions_.Add();
+}
+inline ::PB::Types::FashionInfo* FashionWearReq::add_fashions() {
+  ::PB::Types::FashionInfo* _add = _internal_add_fashions();
+  // @@protoc_insertion_point(field_add:PB.Game.FashionWearReq.fashions)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::FashionInfo >&
+FashionWearReq::fashions() const {
+  // @@protoc_insertion_point(field_list:PB.Game.FashionWearReq.fashions)
+  return _impl_.fashions_;
+}
+
+// -------------------------------------------------------------------
+
+// FashionWearResp
+
+// int32 code = 1;
+inline void FashionWearResp::clear_code() {
+  _impl_.code_ = 0;
+}
+inline int32_t FashionWearResp::_internal_code() const {
+  return _impl_.code_;
+}
+inline int32_t FashionWearResp::code() const {
+  // @@protoc_insertion_point(field_get:PB.Game.FashionWearResp.code)
+  return _internal_code();
+}
+inline void FashionWearResp::_internal_set_code(int32_t value) {
+  
+  _impl_.code_ = value;
+}
+inline void FashionWearResp::set_code(int32_t value) {
+  _internal_set_code(value);
+  // @@protoc_insertion_point(field_set:PB.Game.FashionWearResp.code)
+}
+
+// string message = 2;
+inline void FashionWearResp::clear_message() {
+  _impl_.message_.ClearToEmpty();
+}
+inline const std::string& FashionWearResp::message() const {
+  // @@protoc_insertion_point(field_get:PB.Game.FashionWearResp.message)
+  return _internal_message();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void FashionWearResp::set_message(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.message_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:PB.Game.FashionWearResp.message)
+}
+inline std::string* FashionWearResp::mutable_message() {
+  std::string* _s = _internal_mutable_message();
+  // @@protoc_insertion_point(field_mutable:PB.Game.FashionWearResp.message)
+  return _s;
+}
+inline const std::string& FashionWearResp::_internal_message() const {
+  return _impl_.message_.Get();
+}
+inline void FashionWearResp::_internal_set_message(const std::string& value) {
+  
+  _impl_.message_.Set(value, GetArenaForAllocation());
+}
+inline std::string* FashionWearResp::_internal_mutable_message() {
+  
+  return _impl_.message_.Mutable(GetArenaForAllocation());
+}
+inline std::string* FashionWearResp::release_message() {
+  // @@protoc_insertion_point(field_release:PB.Game.FashionWearResp.message)
+  return _impl_.message_.Release();
+}
+inline void FashionWearResp::set_allocated_message(std::string* message) {
+  if (message != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.message_.SetAllocated(message, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.message_.IsDefault()) {
+    _impl_.message_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:PB.Game.FashionWearResp.message)
+}
+
+// -------------------------------------------------------------------
+
+// ArmamentSyncReq
+
+// repeated .PB.Types.ArmamentInfo armaments = 1;
+inline int ArmamentSyncReq::_internal_armaments_size() const {
+  return _impl_.armaments_.size();
+}
+inline int ArmamentSyncReq::armaments_size() const {
+  return _internal_armaments_size();
+}
+inline ::PB::Types::ArmamentInfo* ArmamentSyncReq::mutable_armaments(int index) {
+  // @@protoc_insertion_point(field_mutable:PB.Game.ArmamentSyncReq.armaments)
+  return _impl_.armaments_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::ArmamentInfo >*
+ArmamentSyncReq::mutable_armaments() {
+  // @@protoc_insertion_point(field_mutable_list:PB.Game.ArmamentSyncReq.armaments)
+  return &_impl_.armaments_;
+}
+inline const ::PB::Types::ArmamentInfo& ArmamentSyncReq::_internal_armaments(int index) const {
+  return _impl_.armaments_.Get(index);
+}
+inline const ::PB::Types::ArmamentInfo& ArmamentSyncReq::armaments(int index) const {
+  // @@protoc_insertion_point(field_get:PB.Game.ArmamentSyncReq.armaments)
+  return _internal_armaments(index);
+}
+inline ::PB::Types::ArmamentInfo* ArmamentSyncReq::_internal_add_armaments() {
+  return _impl_.armaments_.Add();
+}
+inline ::PB::Types::ArmamentInfo* ArmamentSyncReq::add_armaments() {
+  ::PB::Types::ArmamentInfo* _add = _internal_add_armaments();
+  // @@protoc_insertion_point(field_add:PB.Game.ArmamentSyncReq.armaments)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::ArmamentInfo >&
+ArmamentSyncReq::armaments() const {
+  // @@protoc_insertion_point(field_list:PB.Game.ArmamentSyncReq.armaments)
+  return _impl_.armaments_;
+}
+
+// int32 appearance_id = 2;
+inline void ArmamentSyncReq::clear_appearance_id() {
+  _impl_.appearance_id_ = 0;
+}
+inline int32_t ArmamentSyncReq::_internal_appearance_id() const {
+  return _impl_.appearance_id_;
+}
+inline int32_t ArmamentSyncReq::appearance_id() const {
+  // @@protoc_insertion_point(field_get:PB.Game.ArmamentSyncReq.appearance_id)
+  return _internal_appearance_id();
+}
+inline void ArmamentSyncReq::_internal_set_appearance_id(int32_t value) {
+  
+  _impl_.appearance_id_ = value;
+}
+inline void ArmamentSyncReq::set_appearance_id(int32_t value) {
+  _internal_set_appearance_id(value);
+  // @@protoc_insertion_point(field_set:PB.Game.ArmamentSyncReq.appearance_id)
+}
+
+// -------------------------------------------------------------------
+
+// ArmamentSyncResp
+
+// int32 code = 1;
+inline void ArmamentSyncResp::clear_code() {
+  _impl_.code_ = 0;
+}
+inline int32_t ArmamentSyncResp::_internal_code() const {
+  return _impl_.code_;
+}
+inline int32_t ArmamentSyncResp::code() const {
+  // @@protoc_insertion_point(field_get:PB.Game.ArmamentSyncResp.code)
+  return _internal_code();
+}
+inline void ArmamentSyncResp::_internal_set_code(int32_t value) {
+  
+  _impl_.code_ = value;
+}
+inline void ArmamentSyncResp::set_code(int32_t value) {
+  _internal_set_code(value);
+  // @@protoc_insertion_point(field_set:PB.Game.ArmamentSyncResp.code)
+}
+
+// string message = 2;
+inline void ArmamentSyncResp::clear_message() {
+  _impl_.message_.ClearToEmpty();
+}
+inline const std::string& ArmamentSyncResp::message() const {
+  // @@protoc_insertion_point(field_get:PB.Game.ArmamentSyncResp.message)
+  return _internal_message();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void ArmamentSyncResp::set_message(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.message_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:PB.Game.ArmamentSyncResp.message)
+}
+inline std::string* ArmamentSyncResp::mutable_message() {
+  std::string* _s = _internal_mutable_message();
+  // @@protoc_insertion_point(field_mutable:PB.Game.ArmamentSyncResp.message)
+  return _s;
+}
+inline const std::string& ArmamentSyncResp::_internal_message() const {
+  return _impl_.message_.Get();
+}
+inline void ArmamentSyncResp::_internal_set_message(const std::string& value) {
+  
+  _impl_.message_.Set(value, GetArenaForAllocation());
+}
+inline std::string* ArmamentSyncResp::_internal_mutable_message() {
+  
+  return _impl_.message_.Mutable(GetArenaForAllocation());
+}
+inline std::string* ArmamentSyncResp::release_message() {
+  // @@protoc_insertion_point(field_release:PB.Game.ArmamentSyncResp.message)
+  return _impl_.message_.Release();
+}
+inline void ArmamentSyncResp::set_allocated_message(std::string* message) {
+  if (message != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.message_.SetAllocated(message, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.message_.IsDefault()) {
+    _impl_.message_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:PB.Game.ArmamentSyncResp.message)
+}
+
+// -------------------------------------------------------------------
+
+// SkillSlotsSyncReq
+
+// repeated .PB.Types.SkillSlotInfo slots = 1;
+inline int SkillSlotsSyncReq::_internal_slots_size() const {
+  return _impl_.slots_.size();
+}
+inline int SkillSlotsSyncReq::slots_size() const {
+  return _internal_slots_size();
+}
+inline ::PB::Types::SkillSlotInfo* SkillSlotsSyncReq::mutable_slots(int index) {
+  // @@protoc_insertion_point(field_mutable:PB.Game.SkillSlotsSyncReq.slots)
+  return _impl_.slots_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::SkillSlotInfo >*
+SkillSlotsSyncReq::mutable_slots() {
+  // @@protoc_insertion_point(field_mutable_list:PB.Game.SkillSlotsSyncReq.slots)
+  return &_impl_.slots_;
+}
+inline const ::PB::Types::SkillSlotInfo& SkillSlotsSyncReq::_internal_slots(int index) const {
+  return _impl_.slots_.Get(index);
+}
+inline const ::PB::Types::SkillSlotInfo& SkillSlotsSyncReq::slots(int index) const {
+  // @@protoc_insertion_point(field_get:PB.Game.SkillSlotsSyncReq.slots)
+  return _internal_slots(index);
+}
+inline ::PB::Types::SkillSlotInfo* SkillSlotsSyncReq::_internal_add_slots() {
+  return _impl_.slots_.Add();
+}
+inline ::PB::Types::SkillSlotInfo* SkillSlotsSyncReq::add_slots() {
+  ::PB::Types::SkillSlotInfo* _add = _internal_add_slots();
+  // @@protoc_insertion_point(field_add:PB.Game.SkillSlotsSyncReq.slots)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::SkillSlotInfo >&
+SkillSlotsSyncReq::slots() const {
+  // @@protoc_insertion_point(field_list:PB.Game.SkillSlotsSyncReq.slots)
+  return _impl_.slots_;
+}
+
+// -------------------------------------------------------------------
+
+// SkillSlotsSyncResp
+
+// int32 code = 1;
+inline void SkillSlotsSyncResp::clear_code() {
+  _impl_.code_ = 0;
+}
+inline int32_t SkillSlotsSyncResp::_internal_code() const {
+  return _impl_.code_;
+}
+inline int32_t SkillSlotsSyncResp::code() const {
+  // @@protoc_insertion_point(field_get:PB.Game.SkillSlotsSyncResp.code)
+  return _internal_code();
+}
+inline void SkillSlotsSyncResp::_internal_set_code(int32_t value) {
+  
+  _impl_.code_ = value;
+}
+inline void SkillSlotsSyncResp::set_code(int32_t value) {
+  _internal_set_code(value);
+  // @@protoc_insertion_point(field_set:PB.Game.SkillSlotsSyncResp.code)
+}
+
+// string message = 2;
+inline void SkillSlotsSyncResp::clear_message() {
+  _impl_.message_.ClearToEmpty();
+}
+inline const std::string& SkillSlotsSyncResp::message() const {
+  // @@protoc_insertion_point(field_get:PB.Game.SkillSlotsSyncResp.message)
+  return _internal_message();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void SkillSlotsSyncResp::set_message(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.message_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:PB.Game.SkillSlotsSyncResp.message)
+}
+inline std::string* SkillSlotsSyncResp::mutable_message() {
+  std::string* _s = _internal_mutable_message();
+  // @@protoc_insertion_point(field_mutable:PB.Game.SkillSlotsSyncResp.message)
+  return _s;
+}
+inline const std::string& SkillSlotsSyncResp::_internal_message() const {
+  return _impl_.message_.Get();
+}
+inline void SkillSlotsSyncResp::_internal_set_message(const std::string& value) {
+  
+  _impl_.message_.Set(value, GetArenaForAllocation());
+}
+inline std::string* SkillSlotsSyncResp::_internal_mutable_message() {
+  
+  return _impl_.message_.Mutable(GetArenaForAllocation());
+}
+inline std::string* SkillSlotsSyncResp::release_message() {
+  // @@protoc_insertion_point(field_release:PB.Game.SkillSlotsSyncResp.message)
+  return _impl_.message_.Release();
+}
+inline void SkillSlotsSyncResp::set_allocated_message(std::string* message) {
+  if (message != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.message_.SetAllocated(message, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.message_.IsDefault()) {
+    _impl_.message_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:PB.Game.SkillSlotsSyncResp.message)
+}
+
+// -------------------------------------------------------------------
+
+// PetSyncReq
+
+// repeated .PB.Types.PetInfo pets = 1;
+inline int PetSyncReq::_internal_pets_size() const {
+  return _impl_.pets_.size();
+}
+inline int PetSyncReq::pets_size() const {
+  return _internal_pets_size();
+}
+inline ::PB::Types::PetInfo* PetSyncReq::mutable_pets(int index) {
+  // @@protoc_insertion_point(field_mutable:PB.Game.PetSyncReq.pets)
+  return _impl_.pets_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PetInfo >*
+PetSyncReq::mutable_pets() {
+  // @@protoc_insertion_point(field_mutable_list:PB.Game.PetSyncReq.pets)
+  return &_impl_.pets_;
+}
+inline const ::PB::Types::PetInfo& PetSyncReq::_internal_pets(int index) const {
+  return _impl_.pets_.Get(index);
+}
+inline const ::PB::Types::PetInfo& PetSyncReq::pets(int index) const {
+  // @@protoc_insertion_point(field_get:PB.Game.PetSyncReq.pets)
+  return _internal_pets(index);
+}
+inline ::PB::Types::PetInfo* PetSyncReq::_internal_add_pets() {
+  return _impl_.pets_.Add();
+}
+inline ::PB::Types::PetInfo* PetSyncReq::add_pets() {
+  ::PB::Types::PetInfo* _add = _internal_add_pets();
+  // @@protoc_insertion_point(field_add:PB.Game.PetSyncReq.pets)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PetInfo >&
+PetSyncReq::pets() const {
+  // @@protoc_insertion_point(field_list:PB.Game.PetSyncReq.pets)
+  return _impl_.pets_;
+}
+
+// int32 active_pet_id = 2;
+inline void PetSyncReq::clear_active_pet_id() {
+  _impl_.active_pet_id_ = 0;
+}
+inline int32_t PetSyncReq::_internal_active_pet_id() const {
+  return _impl_.active_pet_id_;
+}
+inline int32_t PetSyncReq::active_pet_id() const {
+  // @@protoc_insertion_point(field_get:PB.Game.PetSyncReq.active_pet_id)
+  return _internal_active_pet_id();
+}
+inline void PetSyncReq::_internal_set_active_pet_id(int32_t value) {
+  
+  _impl_.active_pet_id_ = value;
+}
+inline void PetSyncReq::set_active_pet_id(int32_t value) {
+  _internal_set_active_pet_id(value);
+  // @@protoc_insertion_point(field_set:PB.Game.PetSyncReq.active_pet_id)
+}
+
+// -------------------------------------------------------------------
+
+// PetSyncResp
+
+// int32 code = 1;
+inline void PetSyncResp::clear_code() {
+  _impl_.code_ = 0;
+}
+inline int32_t PetSyncResp::_internal_code() const {
+  return _impl_.code_;
+}
+inline int32_t PetSyncResp::code() const {
+  // @@protoc_insertion_point(field_get:PB.Game.PetSyncResp.code)
+  return _internal_code();
+}
+inline void PetSyncResp::_internal_set_code(int32_t value) {
+  
+  _impl_.code_ = value;
+}
+inline void PetSyncResp::set_code(int32_t value) {
+  _internal_set_code(value);
+  // @@protoc_insertion_point(field_set:PB.Game.PetSyncResp.code)
+}
+
+// string message = 2;
+inline void PetSyncResp::clear_message() {
+  _impl_.message_.ClearToEmpty();
+}
+inline const std::string& PetSyncResp::message() const {
+  // @@protoc_insertion_point(field_get:PB.Game.PetSyncResp.message)
+  return _internal_message();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void PetSyncResp::set_message(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.message_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:PB.Game.PetSyncResp.message)
+}
+inline std::string* PetSyncResp::mutable_message() {
+  std::string* _s = _internal_mutable_message();
+  // @@protoc_insertion_point(field_mutable:PB.Game.PetSyncResp.message)
+  return _s;
+}
+inline const std::string& PetSyncResp::_internal_message() const {
+  return _impl_.message_.Get();
+}
+inline void PetSyncResp::_internal_set_message(const std::string& value) {
+  
+  _impl_.message_.Set(value, GetArenaForAllocation());
+}
+inline std::string* PetSyncResp::_internal_mutable_message() {
+  
+  return _impl_.message_.Mutable(GetArenaForAllocation());
+}
+inline std::string* PetSyncResp::release_message() {
+  // @@protoc_insertion_point(field_release:PB.Game.PetSyncResp.message)
+  return _impl_.message_.Release();
+}
+inline void PetSyncResp::set_allocated_message(std::string* message) {
+  if (message != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.message_.SetAllocated(message, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.message_.IsDefault()) {
+    _impl_.message_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:PB.Game.PetSyncResp.message)
+}
+
+// -------------------------------------------------------------------
+
+// PartnerSyncReq
+
+// repeated .PB.Types.PartnerInfo partners = 1;
+inline int PartnerSyncReq::_internal_partners_size() const {
+  return _impl_.partners_.size();
+}
+inline int PartnerSyncReq::partners_size() const {
+  return _internal_partners_size();
+}
+inline ::PB::Types::PartnerInfo* PartnerSyncReq::mutable_partners(int index) {
+  // @@protoc_insertion_point(field_mutable:PB.Game.PartnerSyncReq.partners)
+  return _impl_.partners_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PartnerInfo >*
+PartnerSyncReq::mutable_partners() {
+  // @@protoc_insertion_point(field_mutable_list:PB.Game.PartnerSyncReq.partners)
+  return &_impl_.partners_;
+}
+inline const ::PB::Types::PartnerInfo& PartnerSyncReq::_internal_partners(int index) const {
+  return _impl_.partners_.Get(index);
+}
+inline const ::PB::Types::PartnerInfo& PartnerSyncReq::partners(int index) const {
+  // @@protoc_insertion_point(field_get:PB.Game.PartnerSyncReq.partners)
+  return _internal_partners(index);
+}
+inline ::PB::Types::PartnerInfo* PartnerSyncReq::_internal_add_partners() {
+  return _impl_.partners_.Add();
+}
+inline ::PB::Types::PartnerInfo* PartnerSyncReq::add_partners() {
+  ::PB::Types::PartnerInfo* _add = _internal_add_partners();
+  // @@protoc_insertion_point(field_add:PB.Game.PartnerSyncReq.partners)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PartnerInfo >&
+PartnerSyncReq::partners() const {
+  // @@protoc_insertion_point(field_list:PB.Game.PartnerSyncReq.partners)
+  return _impl_.partners_;
+}
+
+// int32 active_partner_id = 2;
+inline void PartnerSyncReq::clear_active_partner_id() {
+  _impl_.active_partner_id_ = 0;
+}
+inline int32_t PartnerSyncReq::_internal_active_partner_id() const {
+  return _impl_.active_partner_id_;
+}
+inline int32_t PartnerSyncReq::active_partner_id() const {
+  // @@protoc_insertion_point(field_get:PB.Game.PartnerSyncReq.active_partner_id)
+  return _internal_active_partner_id();
+}
+inline void PartnerSyncReq::_internal_set_active_partner_id(int32_t value) {
+  
+  _impl_.active_partner_id_ = value;
+}
+inline void PartnerSyncReq::set_active_partner_id(int32_t value) {
+  _internal_set_active_partner_id(value);
+  // @@protoc_insertion_point(field_set:PB.Game.PartnerSyncReq.active_partner_id)
+}
+
+// -------------------------------------------------------------------
+
+// PartnerSyncResp
+
+// int32 code = 1;
+inline void PartnerSyncResp::clear_code() {
+  _impl_.code_ = 0;
+}
+inline int32_t PartnerSyncResp::_internal_code() const {
+  return _impl_.code_;
+}
+inline int32_t PartnerSyncResp::code() const {
+  // @@protoc_insertion_point(field_get:PB.Game.PartnerSyncResp.code)
+  return _internal_code();
+}
+inline void PartnerSyncResp::_internal_set_code(int32_t value) {
+  
+  _impl_.code_ = value;
+}
+inline void PartnerSyncResp::set_code(int32_t value) {
+  _internal_set_code(value);
+  // @@protoc_insertion_point(field_set:PB.Game.PartnerSyncResp.code)
+}
+
+// string message = 2;
+inline void PartnerSyncResp::clear_message() {
+  _impl_.message_.ClearToEmpty();
+}
+inline const std::string& PartnerSyncResp::message() const {
+  // @@protoc_insertion_point(field_get:PB.Game.PartnerSyncResp.message)
+  return _internal_message();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void PartnerSyncResp::set_message(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.message_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:PB.Game.PartnerSyncResp.message)
+}
+inline std::string* PartnerSyncResp::mutable_message() {
+  std::string* _s = _internal_mutable_message();
+  // @@protoc_insertion_point(field_mutable:PB.Game.PartnerSyncResp.message)
+  return _s;
+}
+inline const std::string& PartnerSyncResp::_internal_message() const {
+  return _impl_.message_.Get();
+}
+inline void PartnerSyncResp::_internal_set_message(const std::string& value) {
+  
+  _impl_.message_.Set(value, GetArenaForAllocation());
+}
+inline std::string* PartnerSyncResp::_internal_mutable_message() {
+  
+  return _impl_.message_.Mutable(GetArenaForAllocation());
+}
+inline std::string* PartnerSyncResp::release_message() {
+  // @@protoc_insertion_point(field_release:PB.Game.PartnerSyncResp.message)
+  return _impl_.message_.Release();
+}
+inline void PartnerSyncResp::set_allocated_message(std::string* message) {
+  if (message != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.message_.SetAllocated(message, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.message_.IsDefault()) {
+    _impl_.message_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:PB.Game.PartnerSyncResp.message)
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------
@@ -8836,6 +11459,16 @@ template <> struct is_proto_enum< ::PB::Game::TownServerOfflinePush_MsgId> : ::s
 template <> struct is_proto_enum< ::PB::Game::DuelInvitePush_MsgId> : ::std::true_type {};
 template <> struct is_proto_enum< ::PB::Game::DuelStartPush_MsgId> : ::std::true_type {};
 template <> struct is_proto_enum< ::PB::Game::DuelEndPush_MsgId> : ::std::true_type {};
+template <> struct is_proto_enum< ::PB::Game::FashionWearReq_MsgId> : ::std::true_type {};
+template <> struct is_proto_enum< ::PB::Game::FashionWearResp_MsgId> : ::std::true_type {};
+template <> struct is_proto_enum< ::PB::Game::ArmamentSyncReq_MsgId> : ::std::true_type {};
+template <> struct is_proto_enum< ::PB::Game::ArmamentSyncResp_MsgId> : ::std::true_type {};
+template <> struct is_proto_enum< ::PB::Game::SkillSlotsSyncReq_MsgId> : ::std::true_type {};
+template <> struct is_proto_enum< ::PB::Game::SkillSlotsSyncResp_MsgId> : ::std::true_type {};
+template <> struct is_proto_enum< ::PB::Game::PetSyncReq_MsgId> : ::std::true_type {};
+template <> struct is_proto_enum< ::PB::Game::PetSyncResp_MsgId> : ::std::true_type {};
+template <> struct is_proto_enum< ::PB::Game::PartnerSyncReq_MsgId> : ::std::true_type {};
+template <> struct is_proto_enum< ::PB::Game::PartnerSyncResp_MsgId> : ::std::true_type {};
 
 PROTOBUF_NAMESPACE_CLOSE
 

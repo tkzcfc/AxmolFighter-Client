@@ -144,6 +144,10 @@ PROTOBUF_CONSTEXPR CharacterInfo::CharacterInfo(
     /*decltype(_impl_.default_skins_)*/{}
   , /*decltype(_impl_.fashions_)*/{}
   , /*decltype(_impl_.equipments_)*/{}
+  , /*decltype(_impl_.armaments_)*/{}
+  , /*decltype(_impl_.skill_slots_)*/{}
+  , /*decltype(_impl_.pets_)*/{}
+  , /*decltype(_impl_.partners_)*/{}
   , /*decltype(_impl_.name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.character_id_)*/int64_t{0}
   , /*decltype(_impl_.class_id_)*/0
@@ -151,6 +155,9 @@ PROTOBUF_CONSTEXPR CharacterInfo::CharacterInfo(
   , /*decltype(_impl_.exp_)*/int64_t{0}
   , /*decltype(_impl_.gold_)*/int64_t{0}
   , /*decltype(_impl_.level_)*/0
+  , /*decltype(_impl_.armament_appearance_id_)*/0
+  , /*decltype(_impl_.active_pet_id_)*/0
+  , /*decltype(_impl_.active_partner_id_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct CharacterInfoDefaultTypeInternal {
   PROTOBUF_CONSTEXPR CharacterInfoDefaultTypeInternal()
@@ -161,6 +168,68 @@ struct CharacterInfoDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 CharacterInfoDefaultTypeInternal _CharacterInfo_default_instance_;
+PROTOBUF_CONSTEXPR ArmamentInfo::ArmamentInfo(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.config_id_)*/0
+  , /*decltype(_impl_.level_)*/0
+  , /*decltype(_impl_.star_)*/0
+  , /*decltype(_impl_.grade_)*/0
+  , /*decltype(_impl_.skin_id_)*/0
+  , /*decltype(_impl_.skill_id_)*/0
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct ArmamentInfoDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ArmamentInfoDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ArmamentInfoDefaultTypeInternal() {}
+  union {
+    ArmamentInfo _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ArmamentInfoDefaultTypeInternal _ArmamentInfo_default_instance_;
+PROTOBUF_CONSTEXPR SkillSlotInfo::SkillSlotInfo(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.slot_)*/0
+  , /*decltype(_impl_.leaf_id_)*/0
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct SkillSlotInfoDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR SkillSlotInfoDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~SkillSlotInfoDefaultTypeInternal() {}
+  union {
+    SkillSlotInfo _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 SkillSlotInfoDefaultTypeInternal _SkillSlotInfo_default_instance_;
+PROTOBUF_CONSTEXPR PetInfo::PetInfo(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.config_id_)*/0
+  , /*decltype(_impl_.level_)*/0
+  , /*decltype(_impl_.star_)*/0
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct PetInfoDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR PetInfoDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~PetInfoDefaultTypeInternal() {}
+  union {
+    PetInfo _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 PetInfoDefaultTypeInternal _PetInfo_default_instance_;
+PROTOBUF_CONSTEXPR PartnerInfo::PartnerInfo(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.config_id_)*/0
+  , /*decltype(_impl_.level_)*/0
+  , /*decltype(_impl_.star_)*/0
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct PartnerInfoDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR PartnerInfoDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~PartnerInfoDefaultTypeInternal() {}
+  union {
+    PartnerInfo _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 PartnerInfoDefaultTypeInternal _PartnerInfo_default_instance_;
 PROTOBUF_CONSTEXPR PlayerState::PlayerState(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.state_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
@@ -2256,6 +2325,10 @@ CharacterInfo::CharacterInfo(const CharacterInfo& from)
       decltype(_impl_.default_skins_){from._impl_.default_skins_}
     , decltype(_impl_.fashions_){from._impl_.fashions_}
     , decltype(_impl_.equipments_){from._impl_.equipments_}
+    , decltype(_impl_.armaments_){from._impl_.armaments_}
+    , decltype(_impl_.skill_slots_){from._impl_.skill_slots_}
+    , decltype(_impl_.pets_){from._impl_.pets_}
+    , decltype(_impl_.partners_){from._impl_.partners_}
     , decltype(_impl_.name_){}
     , decltype(_impl_.character_id_){}
     , decltype(_impl_.class_id_){}
@@ -2263,6 +2336,9 @@ CharacterInfo::CharacterInfo(const CharacterInfo& from)
     , decltype(_impl_.exp_){}
     , decltype(_impl_.gold_){}
     , decltype(_impl_.level_){}
+    , decltype(_impl_.armament_appearance_id_){}
+    , decltype(_impl_.active_pet_id_){}
+    , decltype(_impl_.active_partner_id_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
@@ -2275,8 +2351,8 @@ CharacterInfo::CharacterInfo(const CharacterInfo& from)
       _this->GetArenaForAllocation());
   }
   ::memcpy(&_impl_.character_id_, &from._impl_.character_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.level_) -
-    reinterpret_cast<char*>(&_impl_.character_id_)) + sizeof(_impl_.level_));
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.active_partner_id_) -
+    reinterpret_cast<char*>(&_impl_.character_id_)) + sizeof(_impl_.active_partner_id_));
   // @@protoc_insertion_point(copy_constructor:PB.Types.CharacterInfo)
 }
 
@@ -2288,6 +2364,10 @@ inline void CharacterInfo::SharedCtor(
       decltype(_impl_.default_skins_){arena}
     , decltype(_impl_.fashions_){arena}
     , decltype(_impl_.equipments_){arena}
+    , decltype(_impl_.armaments_){arena}
+    , decltype(_impl_.skill_slots_){arena}
+    , decltype(_impl_.pets_){arena}
+    , decltype(_impl_.partners_){arena}
     , decltype(_impl_.name_){}
     , decltype(_impl_.character_id_){int64_t{0}}
     , decltype(_impl_.class_id_){0}
@@ -2295,6 +2375,9 @@ inline void CharacterInfo::SharedCtor(
     , decltype(_impl_.exp_){int64_t{0}}
     , decltype(_impl_.gold_){int64_t{0}}
     , decltype(_impl_.level_){0}
+    , decltype(_impl_.armament_appearance_id_){0}
+    , decltype(_impl_.active_pet_id_){0}
+    , decltype(_impl_.active_partner_id_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
   _impl_.name_.InitDefault();
@@ -2317,6 +2400,10 @@ inline void CharacterInfo::SharedDtor() {
   _impl_.default_skins_.~RepeatedPtrField();
   _impl_.fashions_.~RepeatedPtrField();
   _impl_.equipments_.~RepeatedPtrField();
+  _impl_.armaments_.~RepeatedPtrField();
+  _impl_.skill_slots_.~RepeatedPtrField();
+  _impl_.pets_.~RepeatedPtrField();
+  _impl_.partners_.~RepeatedPtrField();
   _impl_.name_.Destroy();
 }
 
@@ -2333,10 +2420,14 @@ void CharacterInfo::Clear() {
   _impl_.default_skins_.Clear();
   _impl_.fashions_.Clear();
   _impl_.equipments_.Clear();
+  _impl_.armaments_.Clear();
+  _impl_.skill_slots_.Clear();
+  _impl_.pets_.Clear();
+  _impl_.partners_.Clear();
   _impl_.name_.ClearToEmpty();
   ::memset(&_impl_.character_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.level_) -
-      reinterpret_cast<char*>(&_impl_.character_id_)) + sizeof(_impl_.level_));
+      reinterpret_cast<char*>(&_impl_.active_partner_id_) -
+      reinterpret_cast<char*>(&_impl_.character_id_)) + sizeof(_impl_.active_partner_id_));
   _internal_metadata_.Clear<std::string>();
 }
 
@@ -2443,6 +2534,82 @@ const char* CharacterInfo::_InternalParse(const char* ptr, ::_pbi::ParseContext*
         } else
           goto handle_unusual;
         continue;
+      // repeated .PB.Types.ArmamentInfo armaments = 11;
+      case 11:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 90)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_armaments(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<90>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 armament_appearance_id = 12;
+      case 12:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 96)) {
+          _impl_.armament_appearance_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated .PB.Types.SkillSlotInfo skill_slots = 13;
+      case 13:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 106)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_skill_slots(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<106>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated .PB.Types.PetInfo pets = 14;
+      case 14:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 114)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_pets(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<114>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 active_pet_id = 15;
+      case 15:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 120)) {
+          _impl_.active_pet_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated .PB.Types.PartnerInfo partners = 16;
+      case 16:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 130)) {
+          ptr -= 2;
+          do {
+            ptr += 2;
+            ptr = ctx->ParseMessage(_internal_add_partners(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<130>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 active_partner_id = 17;
+      case 17:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 136)) {
+          _impl_.active_partner_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
       default:
         goto handle_unusual;
     }  // switch
@@ -2542,6 +2709,56 @@ uint8_t* CharacterInfo::_InternalSerialize(
         InternalWriteMessage(10, repfield, repfield.GetCachedSize(), target, stream);
   }
 
+  // repeated .PB.Types.ArmamentInfo armaments = 11;
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_armaments_size()); i < n; i++) {
+    const auto& repfield = this->_internal_armaments(i);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+        InternalWriteMessage(11, repfield, repfield.GetCachedSize(), target, stream);
+  }
+
+  // int32 armament_appearance_id = 12;
+  if (this->_internal_armament_appearance_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(12, this->_internal_armament_appearance_id(), target);
+  }
+
+  // repeated .PB.Types.SkillSlotInfo skill_slots = 13;
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_skill_slots_size()); i < n; i++) {
+    const auto& repfield = this->_internal_skill_slots(i);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+        InternalWriteMessage(13, repfield, repfield.GetCachedSize(), target, stream);
+  }
+
+  // repeated .PB.Types.PetInfo pets = 14;
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_pets_size()); i < n; i++) {
+    const auto& repfield = this->_internal_pets(i);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+        InternalWriteMessage(14, repfield, repfield.GetCachedSize(), target, stream);
+  }
+
+  // int32 active_pet_id = 15;
+  if (this->_internal_active_pet_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(15, this->_internal_active_pet_id(), target);
+  }
+
+  // repeated .PB.Types.PartnerInfo partners = 16;
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_partners_size()); i < n; i++) {
+    const auto& repfield = this->_internal_partners(i);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+        InternalWriteMessage(16, repfield, repfield.GetCachedSize(), target, stream);
+  }
+
+  // int32 active_partner_id = 17;
+  if (this->_internal_active_partner_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(17, this->_internal_active_partner_id(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
         static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
@@ -2575,6 +2792,34 @@ size_t CharacterInfo::ByteSizeLong() const {
   // repeated .PB.Types.EquipmentInfo equipments = 10;
   total_size += 1UL * this->_internal_equipments_size();
   for (const auto& msg : this->_impl_.equipments_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
+
+  // repeated .PB.Types.ArmamentInfo armaments = 11;
+  total_size += 1UL * this->_internal_armaments_size();
+  for (const auto& msg : this->_impl_.armaments_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
+
+  // repeated .PB.Types.SkillSlotInfo skill_slots = 13;
+  total_size += 1UL * this->_internal_skill_slots_size();
+  for (const auto& msg : this->_impl_.skill_slots_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
+
+  // repeated .PB.Types.PetInfo pets = 14;
+  total_size += 1UL * this->_internal_pets_size();
+  for (const auto& msg : this->_impl_.pets_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
+
+  // repeated .PB.Types.PartnerInfo partners = 16;
+  total_size += 2UL * this->_internal_partners_size();
+  for (const auto& msg : this->_impl_.partners_) {
     total_size +=
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
@@ -2616,6 +2861,23 @@ size_t CharacterInfo::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_level());
   }
 
+  // int32 armament_appearance_id = 12;
+  if (this->_internal_armament_appearance_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_armament_appearance_id());
+  }
+
+  // int32 active_pet_id = 15;
+  if (this->_internal_active_pet_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_active_pet_id());
+  }
+
+  // int32 active_partner_id = 17;
+  if (this->_internal_active_partner_id() != 0) {
+    total_size += 2 +
+      ::_pbi::WireFormatLite::Int32Size(
+        this->_internal_active_partner_id());
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
@@ -2640,6 +2902,10 @@ void CharacterInfo::MergeFrom(const CharacterInfo& from) {
   _this->_impl_.default_skins_.MergeFrom(from._impl_.default_skins_);
   _this->_impl_.fashions_.MergeFrom(from._impl_.fashions_);
   _this->_impl_.equipments_.MergeFrom(from._impl_.equipments_);
+  _this->_impl_.armaments_.MergeFrom(from._impl_.armaments_);
+  _this->_impl_.skill_slots_.MergeFrom(from._impl_.skill_slots_);
+  _this->_impl_.pets_.MergeFrom(from._impl_.pets_);
+  _this->_impl_.partners_.MergeFrom(from._impl_.partners_);
   if (!from._internal_name().empty()) {
     _this->_internal_set_name(from._internal_name());
   }
@@ -2660,6 +2926,15 @@ void CharacterInfo::MergeFrom(const CharacterInfo& from) {
   }
   if (from._internal_level() != 0) {
     _this->_internal_set_level(from._internal_level());
+  }
+  if (from._internal_armament_appearance_id() != 0) {
+    _this->_internal_set_armament_appearance_id(from._internal_armament_appearance_id());
+  }
+  if (from._internal_active_pet_id() != 0) {
+    _this->_internal_set_active_pet_id(from._internal_active_pet_id());
+  }
+  if (from._internal_active_partner_id() != 0) {
+    _this->_internal_set_active_partner_id(from._internal_active_partner_id());
   }
   _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
@@ -2683,13 +2958,17 @@ void CharacterInfo::InternalSwap(CharacterInfo* other) {
   _impl_.default_skins_.InternalSwap(&other->_impl_.default_skins_);
   _impl_.fashions_.InternalSwap(&other->_impl_.fashions_);
   _impl_.equipments_.InternalSwap(&other->_impl_.equipments_);
+  _impl_.armaments_.InternalSwap(&other->_impl_.armaments_);
+  _impl_.skill_slots_.InternalSwap(&other->_impl_.skill_slots_);
+  _impl_.pets_.InternalSwap(&other->_impl_.pets_);
+  _impl_.partners_.InternalSwap(&other->_impl_.partners_);
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
       &_impl_.name_, lhs_arena,
       &other->_impl_.name_, rhs_arena
   );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(CharacterInfo, _impl_.level_)
-      + sizeof(CharacterInfo::_impl_.level_)
+      PROTOBUF_FIELD_OFFSET(CharacterInfo, _impl_.active_partner_id_)
+      + sizeof(CharacterInfo::_impl_.active_partner_id_)
       - PROTOBUF_FIELD_OFFSET(CharacterInfo, _impl_.character_id_)>(
           reinterpret_cast<char*>(&_impl_.character_id_),
           reinterpret_cast<char*>(&other->_impl_.character_id_));
@@ -2697,6 +2976,1002 @@ void CharacterInfo::InternalSwap(CharacterInfo* other) {
 
 std::string CharacterInfo::GetTypeName() const {
   return "PB.Types.CharacterInfo";
+}
+
+
+// ===================================================================
+
+class ArmamentInfo::_Internal {
+ public:
+};
+
+ArmamentInfo::ArmamentInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:PB.Types.ArmamentInfo)
+}
+ArmamentInfo::ArmamentInfo(const ArmamentInfo& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  ArmamentInfo* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.config_id_){}
+    , decltype(_impl_.level_){}
+    , decltype(_impl_.star_){}
+    , decltype(_impl_.grade_){}
+    , decltype(_impl_.skin_id_){}
+    , decltype(_impl_.skill_id_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  ::memcpy(&_impl_.config_id_, &from._impl_.config_id_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.skill_id_) -
+    reinterpret_cast<char*>(&_impl_.config_id_)) + sizeof(_impl_.skill_id_));
+  // @@protoc_insertion_point(copy_constructor:PB.Types.ArmamentInfo)
+}
+
+inline void ArmamentInfo::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.config_id_){0}
+    , decltype(_impl_.level_){0}
+    , decltype(_impl_.star_){0}
+    , decltype(_impl_.grade_){0}
+    , decltype(_impl_.skin_id_){0}
+    , decltype(_impl_.skill_id_){0}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+ArmamentInfo::~ArmamentInfo() {
+  // @@protoc_insertion_point(destructor:PB.Types.ArmamentInfo)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void ArmamentInfo::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+}
+
+void ArmamentInfo::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void ArmamentInfo::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Types.ArmamentInfo)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  ::memset(&_impl_.config_id_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.skill_id_) -
+      reinterpret_cast<char*>(&_impl_.config_id_)) + sizeof(_impl_.skill_id_));
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* ArmamentInfo::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // int32 config_id = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.config_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 level = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.level_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 star = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.star_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 grade = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
+          _impl_.grade_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 skin_id = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 40)) {
+          _impl_.skin_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 skill_id = 6;
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 48)) {
+          _impl_.skill_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* ArmamentInfo::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Types.ArmamentInfo)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // int32 config_id = 1;
+  if (this->_internal_config_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(1, this->_internal_config_id(), target);
+  }
+
+  // int32 level = 2;
+  if (this->_internal_level() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_level(), target);
+  }
+
+  // int32 star = 3;
+  if (this->_internal_star() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(3, this->_internal_star(), target);
+  }
+
+  // int32 grade = 4;
+  if (this->_internal_grade() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(4, this->_internal_grade(), target);
+  }
+
+  // int32 skin_id = 5;
+  if (this->_internal_skin_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(5, this->_internal_skin_id(), target);
+  }
+
+  // int32 skill_id = 6;
+  if (this->_internal_skill_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(6, this->_internal_skill_id(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Types.ArmamentInfo)
+  return target;
+}
+
+size_t ArmamentInfo::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Types.ArmamentInfo)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // int32 config_id = 1;
+  if (this->_internal_config_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_config_id());
+  }
+
+  // int32 level = 2;
+  if (this->_internal_level() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_level());
+  }
+
+  // int32 star = 3;
+  if (this->_internal_star() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_star());
+  }
+
+  // int32 grade = 4;
+  if (this->_internal_grade() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_grade());
+  }
+
+  // int32 skin_id = 5;
+  if (this->_internal_skin_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_skin_id());
+  }
+
+  // int32 skill_id = 6;
+  if (this->_internal_skill_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_skill_id());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void ArmamentInfo::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const ArmamentInfo*>(
+      &from));
+}
+
+void ArmamentInfo::MergeFrom(const ArmamentInfo& from) {
+  ArmamentInfo* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Types.ArmamentInfo)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_config_id() != 0) {
+    _this->_internal_set_config_id(from._internal_config_id());
+  }
+  if (from._internal_level() != 0) {
+    _this->_internal_set_level(from._internal_level());
+  }
+  if (from._internal_star() != 0) {
+    _this->_internal_set_star(from._internal_star());
+  }
+  if (from._internal_grade() != 0) {
+    _this->_internal_set_grade(from._internal_grade());
+  }
+  if (from._internal_skin_id() != 0) {
+    _this->_internal_set_skin_id(from._internal_skin_id());
+  }
+  if (from._internal_skill_id() != 0) {
+    _this->_internal_set_skill_id(from._internal_skill_id());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void ArmamentInfo::CopyFrom(const ArmamentInfo& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Types.ArmamentInfo)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ArmamentInfo::IsInitialized() const {
+  return true;
+}
+
+void ArmamentInfo::InternalSwap(ArmamentInfo* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(ArmamentInfo, _impl_.skill_id_)
+      + sizeof(ArmamentInfo::_impl_.skill_id_)
+      - PROTOBUF_FIELD_OFFSET(ArmamentInfo, _impl_.config_id_)>(
+          reinterpret_cast<char*>(&_impl_.config_id_),
+          reinterpret_cast<char*>(&other->_impl_.config_id_));
+}
+
+std::string ArmamentInfo::GetTypeName() const {
+  return "PB.Types.ArmamentInfo";
+}
+
+
+// ===================================================================
+
+class SkillSlotInfo::_Internal {
+ public:
+};
+
+SkillSlotInfo::SkillSlotInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:PB.Types.SkillSlotInfo)
+}
+SkillSlotInfo::SkillSlotInfo(const SkillSlotInfo& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  SkillSlotInfo* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.slot_){}
+    , decltype(_impl_.leaf_id_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  ::memcpy(&_impl_.slot_, &from._impl_.slot_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.leaf_id_) -
+    reinterpret_cast<char*>(&_impl_.slot_)) + sizeof(_impl_.leaf_id_));
+  // @@protoc_insertion_point(copy_constructor:PB.Types.SkillSlotInfo)
+}
+
+inline void SkillSlotInfo::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.slot_){0}
+    , decltype(_impl_.leaf_id_){0}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+SkillSlotInfo::~SkillSlotInfo() {
+  // @@protoc_insertion_point(destructor:PB.Types.SkillSlotInfo)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void SkillSlotInfo::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+}
+
+void SkillSlotInfo::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void SkillSlotInfo::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Types.SkillSlotInfo)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  ::memset(&_impl_.slot_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.leaf_id_) -
+      reinterpret_cast<char*>(&_impl_.slot_)) + sizeof(_impl_.leaf_id_));
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* SkillSlotInfo::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // int32 slot = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.slot_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 leaf_id = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.leaf_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* SkillSlotInfo::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Types.SkillSlotInfo)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // int32 slot = 1;
+  if (this->_internal_slot() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(1, this->_internal_slot(), target);
+  }
+
+  // int32 leaf_id = 2;
+  if (this->_internal_leaf_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_leaf_id(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Types.SkillSlotInfo)
+  return target;
+}
+
+size_t SkillSlotInfo::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Types.SkillSlotInfo)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // int32 slot = 1;
+  if (this->_internal_slot() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_slot());
+  }
+
+  // int32 leaf_id = 2;
+  if (this->_internal_leaf_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_leaf_id());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void SkillSlotInfo::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const SkillSlotInfo*>(
+      &from));
+}
+
+void SkillSlotInfo::MergeFrom(const SkillSlotInfo& from) {
+  SkillSlotInfo* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Types.SkillSlotInfo)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_slot() != 0) {
+    _this->_internal_set_slot(from._internal_slot());
+  }
+  if (from._internal_leaf_id() != 0) {
+    _this->_internal_set_leaf_id(from._internal_leaf_id());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void SkillSlotInfo::CopyFrom(const SkillSlotInfo& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Types.SkillSlotInfo)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool SkillSlotInfo::IsInitialized() const {
+  return true;
+}
+
+void SkillSlotInfo::InternalSwap(SkillSlotInfo* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(SkillSlotInfo, _impl_.leaf_id_)
+      + sizeof(SkillSlotInfo::_impl_.leaf_id_)
+      - PROTOBUF_FIELD_OFFSET(SkillSlotInfo, _impl_.slot_)>(
+          reinterpret_cast<char*>(&_impl_.slot_),
+          reinterpret_cast<char*>(&other->_impl_.slot_));
+}
+
+std::string SkillSlotInfo::GetTypeName() const {
+  return "PB.Types.SkillSlotInfo";
+}
+
+
+// ===================================================================
+
+class PetInfo::_Internal {
+ public:
+};
+
+PetInfo::PetInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:PB.Types.PetInfo)
+}
+PetInfo::PetInfo(const PetInfo& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  PetInfo* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.config_id_){}
+    , decltype(_impl_.level_){}
+    , decltype(_impl_.star_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  ::memcpy(&_impl_.config_id_, &from._impl_.config_id_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.star_) -
+    reinterpret_cast<char*>(&_impl_.config_id_)) + sizeof(_impl_.star_));
+  // @@protoc_insertion_point(copy_constructor:PB.Types.PetInfo)
+}
+
+inline void PetInfo::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.config_id_){0}
+    , decltype(_impl_.level_){0}
+    , decltype(_impl_.star_){0}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+PetInfo::~PetInfo() {
+  // @@protoc_insertion_point(destructor:PB.Types.PetInfo)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void PetInfo::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+}
+
+void PetInfo::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void PetInfo::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Types.PetInfo)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  ::memset(&_impl_.config_id_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.star_) -
+      reinterpret_cast<char*>(&_impl_.config_id_)) + sizeof(_impl_.star_));
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* PetInfo::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // int32 config_id = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.config_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 level = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.level_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 star = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.star_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* PetInfo::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Types.PetInfo)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // int32 config_id = 1;
+  if (this->_internal_config_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(1, this->_internal_config_id(), target);
+  }
+
+  // int32 level = 2;
+  if (this->_internal_level() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_level(), target);
+  }
+
+  // int32 star = 3;
+  if (this->_internal_star() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(3, this->_internal_star(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Types.PetInfo)
+  return target;
+}
+
+size_t PetInfo::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Types.PetInfo)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // int32 config_id = 1;
+  if (this->_internal_config_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_config_id());
+  }
+
+  // int32 level = 2;
+  if (this->_internal_level() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_level());
+  }
+
+  // int32 star = 3;
+  if (this->_internal_star() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_star());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void PetInfo::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const PetInfo*>(
+      &from));
+}
+
+void PetInfo::MergeFrom(const PetInfo& from) {
+  PetInfo* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Types.PetInfo)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_config_id() != 0) {
+    _this->_internal_set_config_id(from._internal_config_id());
+  }
+  if (from._internal_level() != 0) {
+    _this->_internal_set_level(from._internal_level());
+  }
+  if (from._internal_star() != 0) {
+    _this->_internal_set_star(from._internal_star());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void PetInfo::CopyFrom(const PetInfo& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Types.PetInfo)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool PetInfo::IsInitialized() const {
+  return true;
+}
+
+void PetInfo::InternalSwap(PetInfo* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(PetInfo, _impl_.star_)
+      + sizeof(PetInfo::_impl_.star_)
+      - PROTOBUF_FIELD_OFFSET(PetInfo, _impl_.config_id_)>(
+          reinterpret_cast<char*>(&_impl_.config_id_),
+          reinterpret_cast<char*>(&other->_impl_.config_id_));
+}
+
+std::string PetInfo::GetTypeName() const {
+  return "PB.Types.PetInfo";
+}
+
+
+// ===================================================================
+
+class PartnerInfo::_Internal {
+ public:
+};
+
+PartnerInfo::PartnerInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:PB.Types.PartnerInfo)
+}
+PartnerInfo::PartnerInfo(const PartnerInfo& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  PartnerInfo* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.config_id_){}
+    , decltype(_impl_.level_){}
+    , decltype(_impl_.star_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  ::memcpy(&_impl_.config_id_, &from._impl_.config_id_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.star_) -
+    reinterpret_cast<char*>(&_impl_.config_id_)) + sizeof(_impl_.star_));
+  // @@protoc_insertion_point(copy_constructor:PB.Types.PartnerInfo)
+}
+
+inline void PartnerInfo::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.config_id_){0}
+    , decltype(_impl_.level_){0}
+    , decltype(_impl_.star_){0}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+PartnerInfo::~PartnerInfo() {
+  // @@protoc_insertion_point(destructor:PB.Types.PartnerInfo)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void PartnerInfo::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+}
+
+void PartnerInfo::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void PartnerInfo::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Types.PartnerInfo)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  ::memset(&_impl_.config_id_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.star_) -
+      reinterpret_cast<char*>(&_impl_.config_id_)) + sizeof(_impl_.star_));
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* PartnerInfo::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // int32 config_id = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.config_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 level = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.level_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 star = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.star_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* PartnerInfo::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Types.PartnerInfo)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // int32 config_id = 1;
+  if (this->_internal_config_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(1, this->_internal_config_id(), target);
+  }
+
+  // int32 level = 2;
+  if (this->_internal_level() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_level(), target);
+  }
+
+  // int32 star = 3;
+  if (this->_internal_star() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(3, this->_internal_star(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Types.PartnerInfo)
+  return target;
+}
+
+size_t PartnerInfo::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Types.PartnerInfo)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // int32 config_id = 1;
+  if (this->_internal_config_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_config_id());
+  }
+
+  // int32 level = 2;
+  if (this->_internal_level() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_level());
+  }
+
+  // int32 star = 3;
+  if (this->_internal_star() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_star());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void PartnerInfo::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const PartnerInfo*>(
+      &from));
+}
+
+void PartnerInfo::MergeFrom(const PartnerInfo& from) {
+  PartnerInfo* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Types.PartnerInfo)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_config_id() != 0) {
+    _this->_internal_set_config_id(from._internal_config_id());
+  }
+  if (from._internal_level() != 0) {
+    _this->_internal_set_level(from._internal_level());
+  }
+  if (from._internal_star() != 0) {
+    _this->_internal_set_star(from._internal_star());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void PartnerInfo::CopyFrom(const PartnerInfo& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Types.PartnerInfo)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool PartnerInfo::IsInitialized() const {
+  return true;
+}
+
+void PartnerInfo::InternalSwap(PartnerInfo* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(PartnerInfo, _impl_.star_)
+      + sizeof(PartnerInfo::_impl_.star_)
+      - PROTOBUF_FIELD_OFFSET(PartnerInfo, _impl_.config_id_)>(
+          reinterpret_cast<char*>(&_impl_.config_id_),
+          reinterpret_cast<char*>(&other->_impl_.config_id_));
+}
+
+std::string PartnerInfo::GetTypeName() const {
+  return "PB.Types.PartnerInfo";
 }
 
 
@@ -3859,6 +5134,22 @@ Arena::CreateMaybeMessage< ::PB::Types::InventoryInfo >(Arena* arena) {
 template<> PROTOBUF_NOINLINE ::PB::Types::CharacterInfo*
 Arena::CreateMaybeMessage< ::PB::Types::CharacterInfo >(Arena* arena) {
   return Arena::CreateMessageInternal< ::PB::Types::CharacterInfo >(arena);
+}
+template<> PROTOBUF_NOINLINE ::PB::Types::ArmamentInfo*
+Arena::CreateMaybeMessage< ::PB::Types::ArmamentInfo >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Types::ArmamentInfo >(arena);
+}
+template<> PROTOBUF_NOINLINE ::PB::Types::SkillSlotInfo*
+Arena::CreateMaybeMessage< ::PB::Types::SkillSlotInfo >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Types::SkillSlotInfo >(arena);
+}
+template<> PROTOBUF_NOINLINE ::PB::Types::PetInfo*
+Arena::CreateMaybeMessage< ::PB::Types::PetInfo >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Types::PetInfo >(arena);
+}
+template<> PROTOBUF_NOINLINE ::PB::Types::PartnerInfo*
+Arena::CreateMaybeMessage< ::PB::Types::PartnerInfo >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Types::PartnerInfo >(arena);
 }
 template<> PROTOBUF_NOINLINE ::PB::Types::PlayerState*
 Arena::CreateMaybeMessage< ::PB::Types::PlayerState >(Arena* arena) {

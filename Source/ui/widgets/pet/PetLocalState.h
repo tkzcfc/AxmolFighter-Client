@@ -2,6 +2,8 @@
 
 #include "PetTypes.h"
 
+#include "net/game_types.pb.h"
+
 #include <unordered_map>
 #include <vector>
 
@@ -15,6 +17,8 @@ public:
     static PetLocalState& instance();
 
     void ensureUnlocked();
+    void loadFromServer(const PB::Types::CharacterInfo& character);
+    void persistToServer();
 
     std::vector<PetInstanceState> list() const;
     PetInstanceState* find(int32_t configId);

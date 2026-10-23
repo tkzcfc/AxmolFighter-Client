@@ -1,5 +1,7 @@
 #include "WeaponLocalState.h"
 
+#include "ui/progress/FeatureProgressSync.h"
+
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/tables/ArmamentTables.h"
 
@@ -82,7 +84,9 @@ void WeaponLocalState::setAppearance(int32_t configId)
 {
     m_appearanceId = configId;
     AXLOGI("WeaponLocalState: set appearance armamentId={}", configId);
+    persistToServer();
 }
+
 
 void WeaponLocalState::setSkill(int32_t configId, int32_t skillId)
 {
@@ -91,7 +95,9 @@ void WeaponLocalState::setSkill(int32_t configId, int32_t skillId)
         st->skillId = skillId;
         AXLOGI("WeaponLocalState: set skill armamentId={} skillId={}", configId, skillId);
     }
+    persistToServer();
 }
+
 
 void WeaponLocalState::addLevel(int32_t configId, int32_t delta)
 {
@@ -100,7 +106,9 @@ void WeaponLocalState::addLevel(int32_t configId, int32_t delta)
         st->level = std::clamp(st->level + delta, 1, kMaxLevel);
         AXLOGI("WeaponLocalState: level armamentId={} -> {} (no cost)", configId, st->level);
     }
+    persistToServer();
 }
+
 
 void WeaponLocalState::addStar(int32_t configId, int32_t delta)
 {
@@ -109,7 +117,9 @@ void WeaponLocalState::addStar(int32_t configId, int32_t delta)
         st->star = std::clamp(st->star + delta, 0, kMaxStar);
         AXLOGI("WeaponLocalState: star armamentId={} -> {} (no cost)", configId, st->star);
     }
+    persistToServer();
 }
+
 
 void WeaponLocalState::addGrade(int32_t configId, int32_t delta)
 {
@@ -118,7 +128,9 @@ void WeaponLocalState::addGrade(int32_t configId, int32_t delta)
         st->grade = std::clamp(st->grade + delta, 0, kMaxGrade);
         AXLOGI("WeaponLocalState: grade armamentId={} -> {} (no cost)", configId, st->grade);
     }
+    persistToServer();
 }
+
 
 void WeaponLocalState::setSkin(int32_t configId, int32_t skinId)
 {
@@ -127,6 +139,40 @@ void WeaponLocalState::setSkin(int32_t configId, int32_t skinId)
         st->skinId = skinId;
         AXLOGI("WeaponLocalState: skin armamentId={} skinId={}", configId, skinId);
     }
+    persistToServer();
+}
+
+
+void WeaponLocalState::loadFromServer(int32_t occupation, const PB::Types::CharacterInfo& character)
+{
+    ensureUnlockedForOccupation(occupation);
+    for (const auto& a : character.armaments())
+    {
+        auto* st = find(a.config_id());
+        if (!st)
+            continue;
+        st->level   = std::max(1, a.level());
+        st->star    = std::max(0, a.star());
+        st->grade   = std::max(0, a.grade());
+        st->skinId  = std::max(0, a.skin_id());
+        st->skillId = std::max(0, a.skill_id());
+    }
+    if (character.armament_appearance_id() > 0)
+        m_appearanceId = character.armament_appearance_id();
+}
+
+std::vector<WeaponInstanceState> WeaponLocalState::snapshotAll() const
+{
+    std::vector<WeaponInstanceState> out;
+    out.reserve(m_byId.size());
+    for (const auto& [_, st] : m_byId)
+        out.push_back(st);
+    return out;
+}
+
+void WeaponLocalState::persistToServer()
+{
+    FeatureProgressSync::instance().syncArmaments();
 }
 
 }  // namespace gameui

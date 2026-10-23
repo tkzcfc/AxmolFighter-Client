@@ -1,5 +1,7 @@
 #include "SkillLocalState.h"
 
+#include "ui/progress/FeatureProgressSync.h"
+
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/tables/SkillTables.h"
 #include "mugen/conf/TypeConversions.h"
@@ -138,17 +140,20 @@ void SkillLocalState::assignSlot(mugen::EnumSkillSlot slot, int32_t leafId)
     }
     m_slotToLeaf[static_cast<int32_t>(slot)] = leafId;
     AXLOGI("SkillLocalState: slot {} <- leaf {}", static_cast<int>(slot), leafId);
+    persistToServer();
 }
 
 void SkillLocalState::clearSlot(mugen::EnumSkillSlot slot)
 {
     m_slotToLeaf.erase(static_cast<int32_t>(slot));
+    persistToServer();
 }
 
 void SkillLocalState::resetSlotsToDefault()
 {
     if (m_seededOccupation > 0)
         seedSlotsFromOfflineKit(m_seededOccupation);
+    persistToServer();
 }
 
 std::vector<mugen::sim::skill::PlayerSkill> SkillLocalState::playerSkills() const
@@ -166,6 +171,26 @@ std::vector<mugen::sim::skill::PlayerSkill> SkillLocalState::playerSkills() cons
         out.push_back(ps);
     }
     return out;
+}
+
+void SkillLocalState::loadFromServer(int32_t occupation, const PB::Types::CharacterInfo& character)
+{
+    ensureUnlockedForOccupation(occupation);
+    if (character.skill_slots_size() > 0)
+    {
+        m_slotToLeaf.clear();
+        for (const auto& s : character.skill_slots())
+        {
+            if (s.slot() <= 0)
+                continue;
+            m_slotToLeaf[s.slot()] = s.leaf_id();
+        }
+    }
+}
+
+void SkillLocalState::persistToServer()
+{
+    FeatureProgressSync::instance().syncSkillSlots();
 }
 
 }  // namespace gameui

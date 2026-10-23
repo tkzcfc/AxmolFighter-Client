@@ -2,6 +2,8 @@
 
 #include "PartnerTypes.h"
 
+#include "net/game_types.pb.h"
+
 #include <unordered_map>
 #include <vector>
 
@@ -15,6 +17,8 @@ public:
     static PartnerLocalState& instance();
 
     void ensureUnlocked();
+    void loadFromServer(const PB::Types::CharacterInfo& character);
+    void persistToServer();
 
     std::vector<PartnerInstanceState> list() const;
     PartnerInstanceState* find(int32_t configId);

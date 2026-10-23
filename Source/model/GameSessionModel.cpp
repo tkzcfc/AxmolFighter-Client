@@ -1,4 +1,6 @@
 #include "model/GameSessionModel.h"
+
+#include "ui/progress/FeatureProgressSync.h"
 #include "net/client_game.pb.h"
 
 namespace game::model
@@ -125,6 +127,7 @@ void GameSessionModel::setSelectedFromSelectResp(const PB::Game::SelectCharacter
     {
         selectedCharacter   = characterFromProto(resp.character());
         selectedCharacterID = selectedCharacter.characterID;
+        gameui::FeatureProgressSync::instance().hydrateFromCharacter(resp.character());
     }
 
     selectedInventory.clear();

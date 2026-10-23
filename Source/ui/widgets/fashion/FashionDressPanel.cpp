@@ -9,6 +9,7 @@
 #include "fairygui/UIPackage.h"
 
 #include <algorithm>
+#include "ui/progress/FeatureProgressSync.h"
 
 namespace gameui
 {
@@ -488,6 +489,17 @@ void FashionDressPanel::saveDraftToSession()
             }
         }
     }
+
+    PB::Game::FashionWearReq req;
+    for (const auto& f : fashions)
+    {
+        auto* out = req.add_fashions();
+        out->set_id(f.id);
+        out->set_config_id(f.configID);
+        out->set_position(f.position);
+        out->set_worn(f.worn);
+    }
+    FeatureProgressSync::instance().syncFashionWear(req);
 }
 
 }  // namespace gameui

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "SkillTypes.h"
+
+#include "net/game_types.pb.h"
 #include "mugen/sim/skill/Skill.h"
 
 #include <unordered_map>
@@ -16,6 +18,8 @@ public:
     static SkillLocalState& instance();
 
     void ensureUnlockedForOccupation(int32_t occupation);
+    void loadFromServer(int32_t occupation, const PB::Types::CharacterInfo& character);
+    void persistToServer();
 
     std::vector<SkillLeafState> listLeaves() const;
     const SkillLeafState* findLeaf(int32_t leafId) const;

@@ -47,6 +47,9 @@ namespace Types {
 class AccountInfo;
 struct AccountInfoDefaultTypeInternal;
 extern AccountInfoDefaultTypeInternal _AccountInfo_default_instance_;
+class ArmamentInfo;
+struct ArmamentInfoDefaultTypeInternal;
+extern ArmamentInfoDefaultTypeInternal _ArmamentInfo_default_instance_;
 class BattlePlayerSpec;
 struct BattlePlayerSpecDefaultTypeInternal;
 extern BattlePlayerSpecDefaultTypeInternal _BattlePlayerSpec_default_instance_;
@@ -71,6 +74,12 @@ extern InventoryInfoDefaultTypeInternal _InventoryInfo_default_instance_;
 class ItemInfo;
 struct ItemInfoDefaultTypeInternal;
 extern ItemInfoDefaultTypeInternal _ItemInfo_default_instance_;
+class PartnerInfo;
+struct PartnerInfoDefaultTypeInternal;
+extern PartnerInfoDefaultTypeInternal _PartnerInfo_default_instance_;
+class PetInfo;
+struct PetInfoDefaultTypeInternal;
+extern PetInfoDefaultTypeInternal _PetInfo_default_instance_;
 class PlayerState;
 struct PlayerStateDefaultTypeInternal;
 extern PlayerStateDefaultTypeInternal _PlayerState_default_instance_;
@@ -80,10 +89,14 @@ extern SceneInfoDefaultTypeInternal _SceneInfo_default_instance_;
 class ServerConfig;
 struct ServerConfigDefaultTypeInternal;
 extern ServerConfigDefaultTypeInternal _ServerConfig_default_instance_;
+class SkillSlotInfo;
+struct SkillSlotInfoDefaultTypeInternal;
+extern SkillSlotInfoDefaultTypeInternal _SkillSlotInfo_default_instance_;
 }  // namespace Types
 }  // namespace PB
 PROTOBUF_NAMESPACE_OPEN
 template<> ::PB::Types::AccountInfo* Arena::CreateMaybeMessage<::PB::Types::AccountInfo>(Arena*);
+template<> ::PB::Types::ArmamentInfo* Arena::CreateMaybeMessage<::PB::Types::ArmamentInfo>(Arena*);
 template<> ::PB::Types::BattlePlayerSpec* Arena::CreateMaybeMessage<::PB::Types::BattlePlayerSpec>(Arena*);
 template<> ::PB::Types::CharacterInfo* Arena::CreateMaybeMessage<::PB::Types::CharacterInfo>(Arena*);
 template<> ::PB::Types::DefaultSkin* Arena::CreateMaybeMessage<::PB::Types::DefaultSkin>(Arena*);
@@ -92,9 +105,12 @@ template<> ::PB::Types::EquipmentInfo* Arena::CreateMaybeMessage<::PB::Types::Eq
 template<> ::PB::Types::FashionInfo* Arena::CreateMaybeMessage<::PB::Types::FashionInfo>(Arena*);
 template<> ::PB::Types::InventoryInfo* Arena::CreateMaybeMessage<::PB::Types::InventoryInfo>(Arena*);
 template<> ::PB::Types::ItemInfo* Arena::CreateMaybeMessage<::PB::Types::ItemInfo>(Arena*);
+template<> ::PB::Types::PartnerInfo* Arena::CreateMaybeMessage<::PB::Types::PartnerInfo>(Arena*);
+template<> ::PB::Types::PetInfo* Arena::CreateMaybeMessage<::PB::Types::PetInfo>(Arena*);
 template<> ::PB::Types::PlayerState* Arena::CreateMaybeMessage<::PB::Types::PlayerState>(Arena*);
 template<> ::PB::Types::SceneInfo* Arena::CreateMaybeMessage<::PB::Types::SceneInfo>(Arena*);
 template<> ::PB::Types::ServerConfig* Arena::CreateMaybeMessage<::PB::Types::ServerConfig>(Arena*);
+template<> ::PB::Types::SkillSlotInfo* Arena::CreateMaybeMessage<::PB::Types::SkillSlotInfo>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 namespace PB {
 namespace Types {
@@ -1491,6 +1507,10 @@ class CharacterInfo final :
     kDefaultSkinsFieldNumber = 8,
     kFashionsFieldNumber = 9,
     kEquipmentsFieldNumber = 10,
+    kArmamentsFieldNumber = 11,
+    kSkillSlotsFieldNumber = 13,
+    kPetsFieldNumber = 14,
+    kPartnersFieldNumber = 16,
     kNameFieldNumber = 2,
     kCharacterIdFieldNumber = 1,
     kClassIdFieldNumber = 3,
@@ -1498,6 +1518,9 @@ class CharacterInfo final :
     kExpFieldNumber = 6,
     kGoldFieldNumber = 7,
     kLevelFieldNumber = 5,
+    kArmamentAppearanceIdFieldNumber = 12,
+    kActivePetIdFieldNumber = 15,
+    kActivePartnerIdFieldNumber = 17,
   };
   // repeated .PB.Types.DefaultSkin default_skins = 8;
   int default_skins_size() const;
@@ -1552,6 +1575,78 @@ class CharacterInfo final :
   ::PB::Types::EquipmentInfo* add_equipments();
   const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::EquipmentInfo >&
       equipments() const;
+
+  // repeated .PB.Types.ArmamentInfo armaments = 11;
+  int armaments_size() const;
+  private:
+  int _internal_armaments_size() const;
+  public:
+  void clear_armaments();
+  ::PB::Types::ArmamentInfo* mutable_armaments(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::ArmamentInfo >*
+      mutable_armaments();
+  private:
+  const ::PB::Types::ArmamentInfo& _internal_armaments(int index) const;
+  ::PB::Types::ArmamentInfo* _internal_add_armaments();
+  public:
+  const ::PB::Types::ArmamentInfo& armaments(int index) const;
+  ::PB::Types::ArmamentInfo* add_armaments();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::ArmamentInfo >&
+      armaments() const;
+
+  // repeated .PB.Types.SkillSlotInfo skill_slots = 13;
+  int skill_slots_size() const;
+  private:
+  int _internal_skill_slots_size() const;
+  public:
+  void clear_skill_slots();
+  ::PB::Types::SkillSlotInfo* mutable_skill_slots(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::SkillSlotInfo >*
+      mutable_skill_slots();
+  private:
+  const ::PB::Types::SkillSlotInfo& _internal_skill_slots(int index) const;
+  ::PB::Types::SkillSlotInfo* _internal_add_skill_slots();
+  public:
+  const ::PB::Types::SkillSlotInfo& skill_slots(int index) const;
+  ::PB::Types::SkillSlotInfo* add_skill_slots();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::SkillSlotInfo >&
+      skill_slots() const;
+
+  // repeated .PB.Types.PetInfo pets = 14;
+  int pets_size() const;
+  private:
+  int _internal_pets_size() const;
+  public:
+  void clear_pets();
+  ::PB::Types::PetInfo* mutable_pets(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PetInfo >*
+      mutable_pets();
+  private:
+  const ::PB::Types::PetInfo& _internal_pets(int index) const;
+  ::PB::Types::PetInfo* _internal_add_pets();
+  public:
+  const ::PB::Types::PetInfo& pets(int index) const;
+  ::PB::Types::PetInfo* add_pets();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PetInfo >&
+      pets() const;
+
+  // repeated .PB.Types.PartnerInfo partners = 16;
+  int partners_size() const;
+  private:
+  int _internal_partners_size() const;
+  public:
+  void clear_partners();
+  ::PB::Types::PartnerInfo* mutable_partners(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PartnerInfo >*
+      mutable_partners();
+  private:
+  const ::PB::Types::PartnerInfo& _internal_partners(int index) const;
+  ::PB::Types::PartnerInfo* _internal_add_partners();
+  public:
+  const ::PB::Types::PartnerInfo& partners(int index) const;
+  ::PB::Types::PartnerInfo* add_partners();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PartnerInfo >&
+      partners() const;
 
   // string name = 2;
   void clear_name();
@@ -1621,6 +1716,33 @@ class CharacterInfo final :
   void _internal_set_level(int32_t value);
   public:
 
+  // int32 armament_appearance_id = 12;
+  void clear_armament_appearance_id();
+  int32_t armament_appearance_id() const;
+  void set_armament_appearance_id(int32_t value);
+  private:
+  int32_t _internal_armament_appearance_id() const;
+  void _internal_set_armament_appearance_id(int32_t value);
+  public:
+
+  // int32 active_pet_id = 15;
+  void clear_active_pet_id();
+  int32_t active_pet_id() const;
+  void set_active_pet_id(int32_t value);
+  private:
+  int32_t _internal_active_pet_id() const;
+  void _internal_set_active_pet_id(int32_t value);
+  public:
+
+  // int32 active_partner_id = 17;
+  void clear_active_partner_id();
+  int32_t active_partner_id() const;
+  void set_active_partner_id(int32_t value);
+  private:
+  int32_t _internal_active_partner_id() const;
+  void _internal_set_active_partner_id(int32_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:PB.Types.CharacterInfo)
  private:
   class _Internal;
@@ -1632,6 +1754,10 @@ class CharacterInfo final :
     ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::DefaultSkin > default_skins_;
     ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::FashionInfo > fashions_;
     ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::EquipmentInfo > equipments_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::ArmamentInfo > armaments_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::SkillSlotInfo > skill_slots_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PetInfo > pets_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PartnerInfo > partners_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr name_;
     int64_t character_id_;
     int32_t class_id_;
@@ -1639,6 +1765,639 @@ class CharacterInfo final :
     int64_t exp_;
     int64_t gold_;
     int32_t level_;
+    int32_t armament_appearance_id_;
+    int32_t active_pet_id_;
+    int32_t active_partner_id_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_game_5ftypes_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ArmamentInfo final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Types.ArmamentInfo) */ {
+ public:
+  inline ArmamentInfo() : ArmamentInfo(nullptr) {}
+  ~ArmamentInfo() override;
+  explicit PROTOBUF_CONSTEXPR ArmamentInfo(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ArmamentInfo(const ArmamentInfo& from);
+  ArmamentInfo(ArmamentInfo&& from) noexcept
+    : ArmamentInfo() {
+    *this = ::std::move(from);
+  }
+
+  inline ArmamentInfo& operator=(const ArmamentInfo& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ArmamentInfo& operator=(ArmamentInfo&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ArmamentInfo& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ArmamentInfo* internal_default_instance() {
+    return reinterpret_cast<const ArmamentInfo*>(
+               &_ArmamentInfo_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    9;
+
+  friend void swap(ArmamentInfo& a, ArmamentInfo& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ArmamentInfo* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ArmamentInfo* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ArmamentInfo* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ArmamentInfo>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const ArmamentInfo& from);
+  void MergeFrom(const ArmamentInfo& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(ArmamentInfo* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Types.ArmamentInfo";
+  }
+  protected:
+  explicit ArmamentInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kConfigIdFieldNumber = 1,
+    kLevelFieldNumber = 2,
+    kStarFieldNumber = 3,
+    kGradeFieldNumber = 4,
+    kSkinIdFieldNumber = 5,
+    kSkillIdFieldNumber = 6,
+  };
+  // int32 config_id = 1;
+  void clear_config_id();
+  int32_t config_id() const;
+  void set_config_id(int32_t value);
+  private:
+  int32_t _internal_config_id() const;
+  void _internal_set_config_id(int32_t value);
+  public:
+
+  // int32 level = 2;
+  void clear_level();
+  int32_t level() const;
+  void set_level(int32_t value);
+  private:
+  int32_t _internal_level() const;
+  void _internal_set_level(int32_t value);
+  public:
+
+  // int32 star = 3;
+  void clear_star();
+  int32_t star() const;
+  void set_star(int32_t value);
+  private:
+  int32_t _internal_star() const;
+  void _internal_set_star(int32_t value);
+  public:
+
+  // int32 grade = 4;
+  void clear_grade();
+  int32_t grade() const;
+  void set_grade(int32_t value);
+  private:
+  int32_t _internal_grade() const;
+  void _internal_set_grade(int32_t value);
+  public:
+
+  // int32 skin_id = 5;
+  void clear_skin_id();
+  int32_t skin_id() const;
+  void set_skin_id(int32_t value);
+  private:
+  int32_t _internal_skin_id() const;
+  void _internal_set_skin_id(int32_t value);
+  public:
+
+  // int32 skill_id = 6;
+  void clear_skill_id();
+  int32_t skill_id() const;
+  void set_skill_id(int32_t value);
+  private:
+  int32_t _internal_skill_id() const;
+  void _internal_set_skill_id(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Types.ArmamentInfo)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    int32_t config_id_;
+    int32_t level_;
+    int32_t star_;
+    int32_t grade_;
+    int32_t skin_id_;
+    int32_t skill_id_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_game_5ftypes_2eproto;
+};
+// -------------------------------------------------------------------
+
+class SkillSlotInfo final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Types.SkillSlotInfo) */ {
+ public:
+  inline SkillSlotInfo() : SkillSlotInfo(nullptr) {}
+  ~SkillSlotInfo() override;
+  explicit PROTOBUF_CONSTEXPR SkillSlotInfo(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  SkillSlotInfo(const SkillSlotInfo& from);
+  SkillSlotInfo(SkillSlotInfo&& from) noexcept
+    : SkillSlotInfo() {
+    *this = ::std::move(from);
+  }
+
+  inline SkillSlotInfo& operator=(const SkillSlotInfo& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline SkillSlotInfo& operator=(SkillSlotInfo&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const SkillSlotInfo& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const SkillSlotInfo* internal_default_instance() {
+    return reinterpret_cast<const SkillSlotInfo*>(
+               &_SkillSlotInfo_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    10;
+
+  friend void swap(SkillSlotInfo& a, SkillSlotInfo& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(SkillSlotInfo* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(SkillSlotInfo* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  SkillSlotInfo* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<SkillSlotInfo>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const SkillSlotInfo& from);
+  void MergeFrom(const SkillSlotInfo& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(SkillSlotInfo* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Types.SkillSlotInfo";
+  }
+  protected:
+  explicit SkillSlotInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kSlotFieldNumber = 1,
+    kLeafIdFieldNumber = 2,
+  };
+  // int32 slot = 1;
+  void clear_slot();
+  int32_t slot() const;
+  void set_slot(int32_t value);
+  private:
+  int32_t _internal_slot() const;
+  void _internal_set_slot(int32_t value);
+  public:
+
+  // int32 leaf_id = 2;
+  void clear_leaf_id();
+  int32_t leaf_id() const;
+  void set_leaf_id(int32_t value);
+  private:
+  int32_t _internal_leaf_id() const;
+  void _internal_set_leaf_id(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Types.SkillSlotInfo)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    int32_t slot_;
+    int32_t leaf_id_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_game_5ftypes_2eproto;
+};
+// -------------------------------------------------------------------
+
+class PetInfo final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Types.PetInfo) */ {
+ public:
+  inline PetInfo() : PetInfo(nullptr) {}
+  ~PetInfo() override;
+  explicit PROTOBUF_CONSTEXPR PetInfo(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  PetInfo(const PetInfo& from);
+  PetInfo(PetInfo&& from) noexcept
+    : PetInfo() {
+    *this = ::std::move(from);
+  }
+
+  inline PetInfo& operator=(const PetInfo& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline PetInfo& operator=(PetInfo&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const PetInfo& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const PetInfo* internal_default_instance() {
+    return reinterpret_cast<const PetInfo*>(
+               &_PetInfo_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    11;
+
+  friend void swap(PetInfo& a, PetInfo& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(PetInfo* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(PetInfo* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  PetInfo* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<PetInfo>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const PetInfo& from);
+  void MergeFrom(const PetInfo& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(PetInfo* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Types.PetInfo";
+  }
+  protected:
+  explicit PetInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kConfigIdFieldNumber = 1,
+    kLevelFieldNumber = 2,
+    kStarFieldNumber = 3,
+  };
+  // int32 config_id = 1;
+  void clear_config_id();
+  int32_t config_id() const;
+  void set_config_id(int32_t value);
+  private:
+  int32_t _internal_config_id() const;
+  void _internal_set_config_id(int32_t value);
+  public:
+
+  // int32 level = 2;
+  void clear_level();
+  int32_t level() const;
+  void set_level(int32_t value);
+  private:
+  int32_t _internal_level() const;
+  void _internal_set_level(int32_t value);
+  public:
+
+  // int32 star = 3;
+  void clear_star();
+  int32_t star() const;
+  void set_star(int32_t value);
+  private:
+  int32_t _internal_star() const;
+  void _internal_set_star(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Types.PetInfo)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    int32_t config_id_;
+    int32_t level_;
+    int32_t star_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_game_5ftypes_2eproto;
+};
+// -------------------------------------------------------------------
+
+class PartnerInfo final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Types.PartnerInfo) */ {
+ public:
+  inline PartnerInfo() : PartnerInfo(nullptr) {}
+  ~PartnerInfo() override;
+  explicit PROTOBUF_CONSTEXPR PartnerInfo(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  PartnerInfo(const PartnerInfo& from);
+  PartnerInfo(PartnerInfo&& from) noexcept
+    : PartnerInfo() {
+    *this = ::std::move(from);
+  }
+
+  inline PartnerInfo& operator=(const PartnerInfo& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline PartnerInfo& operator=(PartnerInfo&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const PartnerInfo& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const PartnerInfo* internal_default_instance() {
+    return reinterpret_cast<const PartnerInfo*>(
+               &_PartnerInfo_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    12;
+
+  friend void swap(PartnerInfo& a, PartnerInfo& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(PartnerInfo* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(PartnerInfo* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  PartnerInfo* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<PartnerInfo>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const PartnerInfo& from);
+  void MergeFrom(const PartnerInfo& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(PartnerInfo* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Types.PartnerInfo";
+  }
+  protected:
+  explicit PartnerInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kConfigIdFieldNumber = 1,
+    kLevelFieldNumber = 2,
+    kStarFieldNumber = 3,
+  };
+  // int32 config_id = 1;
+  void clear_config_id();
+  int32_t config_id() const;
+  void set_config_id(int32_t value);
+  private:
+  int32_t _internal_config_id() const;
+  void _internal_set_config_id(int32_t value);
+  public:
+
+  // int32 level = 2;
+  void clear_level();
+  int32_t level() const;
+  void set_level(int32_t value);
+  private:
+  int32_t _internal_level() const;
+  void _internal_set_level(int32_t value);
+  public:
+
+  // int32 star = 3;
+  void clear_star();
+  int32_t star() const;
+  void set_star(int32_t value);
+  private:
+  int32_t _internal_star() const;
+  void _internal_set_star(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Types.PartnerInfo)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    int32_t config_id_;
+    int32_t level_;
+    int32_t star_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -1685,7 +2444,7 @@ class PlayerState final :
                &_PlayerState_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    9;
+    13;
 
   friend void swap(PlayerState& a, PlayerState& b) {
     a.Swap(&b);
@@ -1946,7 +2705,7 @@ class SceneInfo final :
                &_SceneInfo_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    10;
+    14;
 
   friend void swap(SceneInfo& a, SceneInfo& b) {
     a.Swap(&b);
@@ -2098,7 +2857,7 @@ class BattlePlayerSpec final :
                &_BattlePlayerSpec_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    11;
+    15;
 
   friend void swap(BattlePlayerSpec& a, BattlePlayerSpec& b) {
     a.Swap(&b);
@@ -3189,6 +3948,522 @@ CharacterInfo::equipments() const {
   return _impl_.equipments_;
 }
 
+// repeated .PB.Types.ArmamentInfo armaments = 11;
+inline int CharacterInfo::_internal_armaments_size() const {
+  return _impl_.armaments_.size();
+}
+inline int CharacterInfo::armaments_size() const {
+  return _internal_armaments_size();
+}
+inline void CharacterInfo::clear_armaments() {
+  _impl_.armaments_.Clear();
+}
+inline ::PB::Types::ArmamentInfo* CharacterInfo::mutable_armaments(int index) {
+  // @@protoc_insertion_point(field_mutable:PB.Types.CharacterInfo.armaments)
+  return _impl_.armaments_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::ArmamentInfo >*
+CharacterInfo::mutable_armaments() {
+  // @@protoc_insertion_point(field_mutable_list:PB.Types.CharacterInfo.armaments)
+  return &_impl_.armaments_;
+}
+inline const ::PB::Types::ArmamentInfo& CharacterInfo::_internal_armaments(int index) const {
+  return _impl_.armaments_.Get(index);
+}
+inline const ::PB::Types::ArmamentInfo& CharacterInfo::armaments(int index) const {
+  // @@protoc_insertion_point(field_get:PB.Types.CharacterInfo.armaments)
+  return _internal_armaments(index);
+}
+inline ::PB::Types::ArmamentInfo* CharacterInfo::_internal_add_armaments() {
+  return _impl_.armaments_.Add();
+}
+inline ::PB::Types::ArmamentInfo* CharacterInfo::add_armaments() {
+  ::PB::Types::ArmamentInfo* _add = _internal_add_armaments();
+  // @@protoc_insertion_point(field_add:PB.Types.CharacterInfo.armaments)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::ArmamentInfo >&
+CharacterInfo::armaments() const {
+  // @@protoc_insertion_point(field_list:PB.Types.CharacterInfo.armaments)
+  return _impl_.armaments_;
+}
+
+// int32 armament_appearance_id = 12;
+inline void CharacterInfo::clear_armament_appearance_id() {
+  _impl_.armament_appearance_id_ = 0;
+}
+inline int32_t CharacterInfo::_internal_armament_appearance_id() const {
+  return _impl_.armament_appearance_id_;
+}
+inline int32_t CharacterInfo::armament_appearance_id() const {
+  // @@protoc_insertion_point(field_get:PB.Types.CharacterInfo.armament_appearance_id)
+  return _internal_armament_appearance_id();
+}
+inline void CharacterInfo::_internal_set_armament_appearance_id(int32_t value) {
+  
+  _impl_.armament_appearance_id_ = value;
+}
+inline void CharacterInfo::set_armament_appearance_id(int32_t value) {
+  _internal_set_armament_appearance_id(value);
+  // @@protoc_insertion_point(field_set:PB.Types.CharacterInfo.armament_appearance_id)
+}
+
+// repeated .PB.Types.SkillSlotInfo skill_slots = 13;
+inline int CharacterInfo::_internal_skill_slots_size() const {
+  return _impl_.skill_slots_.size();
+}
+inline int CharacterInfo::skill_slots_size() const {
+  return _internal_skill_slots_size();
+}
+inline void CharacterInfo::clear_skill_slots() {
+  _impl_.skill_slots_.Clear();
+}
+inline ::PB::Types::SkillSlotInfo* CharacterInfo::mutable_skill_slots(int index) {
+  // @@protoc_insertion_point(field_mutable:PB.Types.CharacterInfo.skill_slots)
+  return _impl_.skill_slots_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::SkillSlotInfo >*
+CharacterInfo::mutable_skill_slots() {
+  // @@protoc_insertion_point(field_mutable_list:PB.Types.CharacterInfo.skill_slots)
+  return &_impl_.skill_slots_;
+}
+inline const ::PB::Types::SkillSlotInfo& CharacterInfo::_internal_skill_slots(int index) const {
+  return _impl_.skill_slots_.Get(index);
+}
+inline const ::PB::Types::SkillSlotInfo& CharacterInfo::skill_slots(int index) const {
+  // @@protoc_insertion_point(field_get:PB.Types.CharacterInfo.skill_slots)
+  return _internal_skill_slots(index);
+}
+inline ::PB::Types::SkillSlotInfo* CharacterInfo::_internal_add_skill_slots() {
+  return _impl_.skill_slots_.Add();
+}
+inline ::PB::Types::SkillSlotInfo* CharacterInfo::add_skill_slots() {
+  ::PB::Types::SkillSlotInfo* _add = _internal_add_skill_slots();
+  // @@protoc_insertion_point(field_add:PB.Types.CharacterInfo.skill_slots)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::SkillSlotInfo >&
+CharacterInfo::skill_slots() const {
+  // @@protoc_insertion_point(field_list:PB.Types.CharacterInfo.skill_slots)
+  return _impl_.skill_slots_;
+}
+
+// repeated .PB.Types.PetInfo pets = 14;
+inline int CharacterInfo::_internal_pets_size() const {
+  return _impl_.pets_.size();
+}
+inline int CharacterInfo::pets_size() const {
+  return _internal_pets_size();
+}
+inline void CharacterInfo::clear_pets() {
+  _impl_.pets_.Clear();
+}
+inline ::PB::Types::PetInfo* CharacterInfo::mutable_pets(int index) {
+  // @@protoc_insertion_point(field_mutable:PB.Types.CharacterInfo.pets)
+  return _impl_.pets_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PetInfo >*
+CharacterInfo::mutable_pets() {
+  // @@protoc_insertion_point(field_mutable_list:PB.Types.CharacterInfo.pets)
+  return &_impl_.pets_;
+}
+inline const ::PB::Types::PetInfo& CharacterInfo::_internal_pets(int index) const {
+  return _impl_.pets_.Get(index);
+}
+inline const ::PB::Types::PetInfo& CharacterInfo::pets(int index) const {
+  // @@protoc_insertion_point(field_get:PB.Types.CharacterInfo.pets)
+  return _internal_pets(index);
+}
+inline ::PB::Types::PetInfo* CharacterInfo::_internal_add_pets() {
+  return _impl_.pets_.Add();
+}
+inline ::PB::Types::PetInfo* CharacterInfo::add_pets() {
+  ::PB::Types::PetInfo* _add = _internal_add_pets();
+  // @@protoc_insertion_point(field_add:PB.Types.CharacterInfo.pets)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PetInfo >&
+CharacterInfo::pets() const {
+  // @@protoc_insertion_point(field_list:PB.Types.CharacterInfo.pets)
+  return _impl_.pets_;
+}
+
+// int32 active_pet_id = 15;
+inline void CharacterInfo::clear_active_pet_id() {
+  _impl_.active_pet_id_ = 0;
+}
+inline int32_t CharacterInfo::_internal_active_pet_id() const {
+  return _impl_.active_pet_id_;
+}
+inline int32_t CharacterInfo::active_pet_id() const {
+  // @@protoc_insertion_point(field_get:PB.Types.CharacterInfo.active_pet_id)
+  return _internal_active_pet_id();
+}
+inline void CharacterInfo::_internal_set_active_pet_id(int32_t value) {
+  
+  _impl_.active_pet_id_ = value;
+}
+inline void CharacterInfo::set_active_pet_id(int32_t value) {
+  _internal_set_active_pet_id(value);
+  // @@protoc_insertion_point(field_set:PB.Types.CharacterInfo.active_pet_id)
+}
+
+// repeated .PB.Types.PartnerInfo partners = 16;
+inline int CharacterInfo::_internal_partners_size() const {
+  return _impl_.partners_.size();
+}
+inline int CharacterInfo::partners_size() const {
+  return _internal_partners_size();
+}
+inline void CharacterInfo::clear_partners() {
+  _impl_.partners_.Clear();
+}
+inline ::PB::Types::PartnerInfo* CharacterInfo::mutable_partners(int index) {
+  // @@protoc_insertion_point(field_mutable:PB.Types.CharacterInfo.partners)
+  return _impl_.partners_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PartnerInfo >*
+CharacterInfo::mutable_partners() {
+  // @@protoc_insertion_point(field_mutable_list:PB.Types.CharacterInfo.partners)
+  return &_impl_.partners_;
+}
+inline const ::PB::Types::PartnerInfo& CharacterInfo::_internal_partners(int index) const {
+  return _impl_.partners_.Get(index);
+}
+inline const ::PB::Types::PartnerInfo& CharacterInfo::partners(int index) const {
+  // @@protoc_insertion_point(field_get:PB.Types.CharacterInfo.partners)
+  return _internal_partners(index);
+}
+inline ::PB::Types::PartnerInfo* CharacterInfo::_internal_add_partners() {
+  return _impl_.partners_.Add();
+}
+inline ::PB::Types::PartnerInfo* CharacterInfo::add_partners() {
+  ::PB::Types::PartnerInfo* _add = _internal_add_partners();
+  // @@protoc_insertion_point(field_add:PB.Types.CharacterInfo.partners)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PartnerInfo >&
+CharacterInfo::partners() const {
+  // @@protoc_insertion_point(field_list:PB.Types.CharacterInfo.partners)
+  return _impl_.partners_;
+}
+
+// int32 active_partner_id = 17;
+inline void CharacterInfo::clear_active_partner_id() {
+  _impl_.active_partner_id_ = 0;
+}
+inline int32_t CharacterInfo::_internal_active_partner_id() const {
+  return _impl_.active_partner_id_;
+}
+inline int32_t CharacterInfo::active_partner_id() const {
+  // @@protoc_insertion_point(field_get:PB.Types.CharacterInfo.active_partner_id)
+  return _internal_active_partner_id();
+}
+inline void CharacterInfo::_internal_set_active_partner_id(int32_t value) {
+  
+  _impl_.active_partner_id_ = value;
+}
+inline void CharacterInfo::set_active_partner_id(int32_t value) {
+  _internal_set_active_partner_id(value);
+  // @@protoc_insertion_point(field_set:PB.Types.CharacterInfo.active_partner_id)
+}
+
+// -------------------------------------------------------------------
+
+// ArmamentInfo
+
+// int32 config_id = 1;
+inline void ArmamentInfo::clear_config_id() {
+  _impl_.config_id_ = 0;
+}
+inline int32_t ArmamentInfo::_internal_config_id() const {
+  return _impl_.config_id_;
+}
+inline int32_t ArmamentInfo::config_id() const {
+  // @@protoc_insertion_point(field_get:PB.Types.ArmamentInfo.config_id)
+  return _internal_config_id();
+}
+inline void ArmamentInfo::_internal_set_config_id(int32_t value) {
+  
+  _impl_.config_id_ = value;
+}
+inline void ArmamentInfo::set_config_id(int32_t value) {
+  _internal_set_config_id(value);
+  // @@protoc_insertion_point(field_set:PB.Types.ArmamentInfo.config_id)
+}
+
+// int32 level = 2;
+inline void ArmamentInfo::clear_level() {
+  _impl_.level_ = 0;
+}
+inline int32_t ArmamentInfo::_internal_level() const {
+  return _impl_.level_;
+}
+inline int32_t ArmamentInfo::level() const {
+  // @@protoc_insertion_point(field_get:PB.Types.ArmamentInfo.level)
+  return _internal_level();
+}
+inline void ArmamentInfo::_internal_set_level(int32_t value) {
+  
+  _impl_.level_ = value;
+}
+inline void ArmamentInfo::set_level(int32_t value) {
+  _internal_set_level(value);
+  // @@protoc_insertion_point(field_set:PB.Types.ArmamentInfo.level)
+}
+
+// int32 star = 3;
+inline void ArmamentInfo::clear_star() {
+  _impl_.star_ = 0;
+}
+inline int32_t ArmamentInfo::_internal_star() const {
+  return _impl_.star_;
+}
+inline int32_t ArmamentInfo::star() const {
+  // @@protoc_insertion_point(field_get:PB.Types.ArmamentInfo.star)
+  return _internal_star();
+}
+inline void ArmamentInfo::_internal_set_star(int32_t value) {
+  
+  _impl_.star_ = value;
+}
+inline void ArmamentInfo::set_star(int32_t value) {
+  _internal_set_star(value);
+  // @@protoc_insertion_point(field_set:PB.Types.ArmamentInfo.star)
+}
+
+// int32 grade = 4;
+inline void ArmamentInfo::clear_grade() {
+  _impl_.grade_ = 0;
+}
+inline int32_t ArmamentInfo::_internal_grade() const {
+  return _impl_.grade_;
+}
+inline int32_t ArmamentInfo::grade() const {
+  // @@protoc_insertion_point(field_get:PB.Types.ArmamentInfo.grade)
+  return _internal_grade();
+}
+inline void ArmamentInfo::_internal_set_grade(int32_t value) {
+  
+  _impl_.grade_ = value;
+}
+inline void ArmamentInfo::set_grade(int32_t value) {
+  _internal_set_grade(value);
+  // @@protoc_insertion_point(field_set:PB.Types.ArmamentInfo.grade)
+}
+
+// int32 skin_id = 5;
+inline void ArmamentInfo::clear_skin_id() {
+  _impl_.skin_id_ = 0;
+}
+inline int32_t ArmamentInfo::_internal_skin_id() const {
+  return _impl_.skin_id_;
+}
+inline int32_t ArmamentInfo::skin_id() const {
+  // @@protoc_insertion_point(field_get:PB.Types.ArmamentInfo.skin_id)
+  return _internal_skin_id();
+}
+inline void ArmamentInfo::_internal_set_skin_id(int32_t value) {
+  
+  _impl_.skin_id_ = value;
+}
+inline void ArmamentInfo::set_skin_id(int32_t value) {
+  _internal_set_skin_id(value);
+  // @@protoc_insertion_point(field_set:PB.Types.ArmamentInfo.skin_id)
+}
+
+// int32 skill_id = 6;
+inline void ArmamentInfo::clear_skill_id() {
+  _impl_.skill_id_ = 0;
+}
+inline int32_t ArmamentInfo::_internal_skill_id() const {
+  return _impl_.skill_id_;
+}
+inline int32_t ArmamentInfo::skill_id() const {
+  // @@protoc_insertion_point(field_get:PB.Types.ArmamentInfo.skill_id)
+  return _internal_skill_id();
+}
+inline void ArmamentInfo::_internal_set_skill_id(int32_t value) {
+  
+  _impl_.skill_id_ = value;
+}
+inline void ArmamentInfo::set_skill_id(int32_t value) {
+  _internal_set_skill_id(value);
+  // @@protoc_insertion_point(field_set:PB.Types.ArmamentInfo.skill_id)
+}
+
+// -------------------------------------------------------------------
+
+// SkillSlotInfo
+
+// int32 slot = 1;
+inline void SkillSlotInfo::clear_slot() {
+  _impl_.slot_ = 0;
+}
+inline int32_t SkillSlotInfo::_internal_slot() const {
+  return _impl_.slot_;
+}
+inline int32_t SkillSlotInfo::slot() const {
+  // @@protoc_insertion_point(field_get:PB.Types.SkillSlotInfo.slot)
+  return _internal_slot();
+}
+inline void SkillSlotInfo::_internal_set_slot(int32_t value) {
+  
+  _impl_.slot_ = value;
+}
+inline void SkillSlotInfo::set_slot(int32_t value) {
+  _internal_set_slot(value);
+  // @@protoc_insertion_point(field_set:PB.Types.SkillSlotInfo.slot)
+}
+
+// int32 leaf_id = 2;
+inline void SkillSlotInfo::clear_leaf_id() {
+  _impl_.leaf_id_ = 0;
+}
+inline int32_t SkillSlotInfo::_internal_leaf_id() const {
+  return _impl_.leaf_id_;
+}
+inline int32_t SkillSlotInfo::leaf_id() const {
+  // @@protoc_insertion_point(field_get:PB.Types.SkillSlotInfo.leaf_id)
+  return _internal_leaf_id();
+}
+inline void SkillSlotInfo::_internal_set_leaf_id(int32_t value) {
+  
+  _impl_.leaf_id_ = value;
+}
+inline void SkillSlotInfo::set_leaf_id(int32_t value) {
+  _internal_set_leaf_id(value);
+  // @@protoc_insertion_point(field_set:PB.Types.SkillSlotInfo.leaf_id)
+}
+
+// -------------------------------------------------------------------
+
+// PetInfo
+
+// int32 config_id = 1;
+inline void PetInfo::clear_config_id() {
+  _impl_.config_id_ = 0;
+}
+inline int32_t PetInfo::_internal_config_id() const {
+  return _impl_.config_id_;
+}
+inline int32_t PetInfo::config_id() const {
+  // @@protoc_insertion_point(field_get:PB.Types.PetInfo.config_id)
+  return _internal_config_id();
+}
+inline void PetInfo::_internal_set_config_id(int32_t value) {
+  
+  _impl_.config_id_ = value;
+}
+inline void PetInfo::set_config_id(int32_t value) {
+  _internal_set_config_id(value);
+  // @@protoc_insertion_point(field_set:PB.Types.PetInfo.config_id)
+}
+
+// int32 level = 2;
+inline void PetInfo::clear_level() {
+  _impl_.level_ = 0;
+}
+inline int32_t PetInfo::_internal_level() const {
+  return _impl_.level_;
+}
+inline int32_t PetInfo::level() const {
+  // @@protoc_insertion_point(field_get:PB.Types.PetInfo.level)
+  return _internal_level();
+}
+inline void PetInfo::_internal_set_level(int32_t value) {
+  
+  _impl_.level_ = value;
+}
+inline void PetInfo::set_level(int32_t value) {
+  _internal_set_level(value);
+  // @@protoc_insertion_point(field_set:PB.Types.PetInfo.level)
+}
+
+// int32 star = 3;
+inline void PetInfo::clear_star() {
+  _impl_.star_ = 0;
+}
+inline int32_t PetInfo::_internal_star() const {
+  return _impl_.star_;
+}
+inline int32_t PetInfo::star() const {
+  // @@protoc_insertion_point(field_get:PB.Types.PetInfo.star)
+  return _internal_star();
+}
+inline void PetInfo::_internal_set_star(int32_t value) {
+  
+  _impl_.star_ = value;
+}
+inline void PetInfo::set_star(int32_t value) {
+  _internal_set_star(value);
+  // @@protoc_insertion_point(field_set:PB.Types.PetInfo.star)
+}
+
+// -------------------------------------------------------------------
+
+// PartnerInfo
+
+// int32 config_id = 1;
+inline void PartnerInfo::clear_config_id() {
+  _impl_.config_id_ = 0;
+}
+inline int32_t PartnerInfo::_internal_config_id() const {
+  return _impl_.config_id_;
+}
+inline int32_t PartnerInfo::config_id() const {
+  // @@protoc_insertion_point(field_get:PB.Types.PartnerInfo.config_id)
+  return _internal_config_id();
+}
+inline void PartnerInfo::_internal_set_config_id(int32_t value) {
+  
+  _impl_.config_id_ = value;
+}
+inline void PartnerInfo::set_config_id(int32_t value) {
+  _internal_set_config_id(value);
+  // @@protoc_insertion_point(field_set:PB.Types.PartnerInfo.config_id)
+}
+
+// int32 level = 2;
+inline void PartnerInfo::clear_level() {
+  _impl_.level_ = 0;
+}
+inline int32_t PartnerInfo::_internal_level() const {
+  return _impl_.level_;
+}
+inline int32_t PartnerInfo::level() const {
+  // @@protoc_insertion_point(field_get:PB.Types.PartnerInfo.level)
+  return _internal_level();
+}
+inline void PartnerInfo::_internal_set_level(int32_t value) {
+  
+  _impl_.level_ = value;
+}
+inline void PartnerInfo::set_level(int32_t value) {
+  _internal_set_level(value);
+  // @@protoc_insertion_point(field_set:PB.Types.PartnerInfo.level)
+}
+
+// int32 star = 3;
+inline void PartnerInfo::clear_star() {
+  _impl_.star_ = 0;
+}
+inline int32_t PartnerInfo::_internal_star() const {
+  return _impl_.star_;
+}
+inline int32_t PartnerInfo::star() const {
+  // @@protoc_insertion_point(field_get:PB.Types.PartnerInfo.star)
+  return _internal_star();
+}
+inline void PartnerInfo::_internal_set_star(int32_t value) {
+  
+  _impl_.star_ = value;
+}
+inline void PartnerInfo::set_star(int32_t value) {
+  _internal_set_star(value);
+  // @@protoc_insertion_point(field_set:PB.Types.PartnerInfo.star)
+}
+
 // -------------------------------------------------------------------
 
 // PlayerState
@@ -3694,6 +4969,14 @@ inline void BattlePlayerSpec::set_character_id(int64_t value) {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

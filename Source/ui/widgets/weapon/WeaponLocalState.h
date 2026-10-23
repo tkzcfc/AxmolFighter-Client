@@ -2,6 +2,8 @@
 
 #include "WeaponTypes.h"
 
+#include "net/game_types.pb.h"
+
 #include <optional>
 
 namespace gameui
@@ -15,6 +17,9 @@ public:
 
     // Ensure every ArmamentConfig row for occupation is unlocked at defaults.
     void ensureUnlockedForOccupation(int32_t occupation);
+    void loadFromServer(int32_t occupation, const PB::Types::CharacterInfo& character);
+    std::vector<WeaponInstanceState> snapshotAll() const;
+    void persistToServer();
 
     std::vector<WeaponInstanceState> listForOccupation(int32_t occupation) const;
     WeaponInstanceState* find(int32_t configId);
