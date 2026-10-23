@@ -7,6 +7,7 @@
 #include "ui/widgets/weapon/WeaponMainPanel.h"
 #include "ui/widgets/weapon/WeaponTypes.h"
 #include "ui/widgets/skill/SkillMainPanel.h"
+#include "ui/widgets/pet/PetMainPanel.h"
 
 namespace gameui
 {
@@ -70,8 +71,10 @@ std::weak_ptr<UIWidget> FeatureEntry::open(FeatureId id, std::any params)
     }
     case FeatureId::Skill:
         return uiManager->open<SkillMainPanel>();
-    case FeatureId::Equip:
     case FeatureId::Partner:
+        // Temporary entry: town 伙伴 button opens 宠物 until a dedicated pet button exists.
+        return uiManager->open<PetMainPanel>();
+    case FeatureId::Equip:
         AXLOGI("FeatureEntry: {} not implemented", toString(id));
         return {};
     }
