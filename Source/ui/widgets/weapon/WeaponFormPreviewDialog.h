@@ -16,10 +16,7 @@ public:
 protected:
     std::vector<std::string> getPackages() const override { return {"UI/Common_Base", "UI/Panel_Weapon"}; }
 
-    GComponent* onCreateContent() override
-    {
-        return createCenteredComponent("Panel_Weapon", "WeaponFormPreviewDialog");
-    }
+    GComponent* onCreateContent() override;
 
     void onCreate() override;
     void onShow() override;

@@ -15,6 +15,18 @@ WeaponFormPreviewDialog::WeaponFormPreviewDialog(int32_t armamentSpineId) : m_ar
     m_playAnimation             = false;
 }
 
+GComponent* WeaponFormPreviewDialog::onCreateContent()
+{
+    // Center without pivot-as-anchor so Avatar / native layers keep stable local coords
+    // (createCenteredComponent uses setPivot(..., true) which blew up the prior layout).
+    auto* comp = UIPackage::createObject("Panel_Weapon", "WeaponFormPreviewDialog")->as<GComponent>();
+    const float x = (m_root->getWidth() - comp->getWidth()) * 0.5f;
+    const float y = (m_root->getHeight() - comp->getHeight()) * 0.5f;
+    comp->setPosition(x, y);
+    comp->addRelation(m_root, RelationType::Center_Center);
+    return comp;
+}
+
 void WeaponFormPreviewDialog::onCreate()
 {
     addClickListener(getChild<GButton>("btnClose"), AX_CALLBACK_1(WeaponFormPreviewDialog::onClickClose, this));
@@ -73,7 +85,9 @@ void WeaponFormPreviewDialog::refreshAvatar()
     }
     avatar->setMotion("stand", "", true);
     avatar->setAutoPlay(true);
-    avatar->setPosition(m_avatarLoader->getWidth() * 0.5f, 0.0f);
+    // Mirror CharacterCreationChooseClouthPanel: feet at bottom of GLoader3D.
+    avatar->setPosition(ax::Vec2(m_avatarLoader->getWidth() * 0.5f, -m_avatarLoader->getHeight()));
+    avatar->setScale(0.9f);
     m_avatarLoader->setContent(avatar);
     m_avatar = avatar;
     AXLOGI("WeaponFormPreviewDialog: showing avatar with weapon spineId={}", m_armamentSpineId);
