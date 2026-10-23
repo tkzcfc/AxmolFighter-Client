@@ -3,6 +3,7 @@
 #include "ui/widgets/common/Panel.h"
 #include "mugen/conf/tables/PetTables.h"
 #include "fairygui/GLoader.h"
+#include "fairygui/GLoader3D.h"
 
 #include <vector>
 
@@ -39,19 +40,21 @@ private:
     GComponent* container() const;
     void rebuildList();
     void refreshDetail();
+    void refreshSpinePreview();
     void refreshSelectionHighlights();
     void bindItem(GComponent* item, int32_t petId, bool selected);
     const mugen::conf::PetConfig* findConfig(int32_t petId) const;
 
-    GList* m_itemList          = nullptr;
-    GTextField* m_titleText    = nullptr;
-    GTextField* m_detailText   = nullptr;
-    GLoader* m_previewIcon     = nullptr;
-    GButton* m_btnActive       = nullptr;
-    GButton* m_btnLevel        = nullptr;
-    GButton* m_btnStar         = nullptr;
+    GList* m_itemList        = nullptr;
+    GTextField* m_titleText  = nullptr;
+    GTextField* m_detailText = nullptr;
+    GLoader3D* m_previewSpine = nullptr;
+    GButton* m_btnActive     = nullptr;
+    GButton* m_btnLevel      = nullptr;
+    GButton* m_btnStar       = nullptr;
 
-    int32_t m_selectedId = 0;
+    int32_t m_selectedId     = 0;
+    int32_t m_previewSpineId = 0;
     std::vector<int32_t> m_listIds;
 };
 

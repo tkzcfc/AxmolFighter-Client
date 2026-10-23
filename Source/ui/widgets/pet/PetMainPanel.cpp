@@ -3,6 +3,7 @@
 #include "PetLocalState.h"
 
 #include "mugen/conf/ReflectedConfig.h"
+#include "mugen/render/spine/MgSkeletonAnimation.h"
 #include "fairygui/UIPackage.h"
 
 #include <fmt/format.h>
@@ -32,14 +33,14 @@ void PetMainPanel::onCreate()
 {
     addClickListener(getChild<GButton>("btnBack"), AX_CALLBACK_1(PetMainPanel::onClickBack, this));
 
-    auto* root     = container();
-    m_itemList     = root->getChild("itemList")->as<GList>();
-    m_titleText    = root->getChild("titleText")->as<GTextField>();
-    m_detailText   = root->getChild("detailText")->as<GTextField>();
-    m_previewIcon  = root->getChild("previewIcon")->as<GLoader>();
-    m_btnActive    = root->getChild("btnActive")->as<GButton>();
-    m_btnLevel     = root->getChild("btnLevel")->as<GButton>();
-    m_btnStar      = root->getChild("btnStar")->as<GButton>();
+    auto* root      = container();
+    m_itemList      = root->getChild("itemList")->as<GList>();
+    m_titleText     = root->getChild("titleText")->as<GTextField>();
+    m_detailText    = root->getChild("detailText")->as<GTextField>();
+    m_previewSpine  = root->getChild("previewSpine")->as<GLoader3D>();
+    m_btnActive     = root->getChild("btnActive")->as<GButton>();
+    m_btnLevel      = root->getChild("btnLevel")->as<GButton>();
+    m_btnStar       = root->getChild("btnStar")->as<GButton>();
 
     m_titleText->setText("宠物");
     m_btnActive->setTitle("设为跟随");
@@ -57,17 +58,21 @@ void PetMainPanel::onShow()
     PetLocalState::instance().ensureUnlocked();
     rebuildList();
     refreshDetail();
+    refreshSpinePreview();
 }
 
 void PetMainPanel::onDestroy()
 {
-    m_itemList    = nullptr;
-    m_titleText   = nullptr;
-    m_detailText  = nullptr;
-    m_previewIcon = nullptr;
-    m_btnActive   = nullptr;
-    m_btnLevel    = nullptr;
-    m_btnStar     = nullptr;
+    if (m_previewSpine)
+        m_previewSpine->setContent(nullptr);
+    m_itemList       = nullptr;
+    m_titleText      = nullptr;
+    m_detailText     = nullptr;
+    m_previewSpine   = nullptr;
+    m_btnActive      = nullptr;
+    m_btnLevel       = nullptr;
+    m_btnStar        = nullptr;
+    m_previewSpineId = 0;
 }
 
 void PetMainPanel::onClickBack(EventContext*)
@@ -123,7 +128,7 @@ void PetMainPanel::refreshSelectionHighlights()
     const int n = m_itemList->numChildren();
     for (int i = 0; i < n; ++i)
     {
-        auto* item  = m_itemList->getChildAt(i)->as<GComponent>();
+        auto* item    = m_itemList->getChildAt(i)->as<GComponent>();
         const auto id = static_cast<int32_t>(reinterpret_cast<intptr_t>(item->getData()));
         setItemSelectedVisual(item, id == m_selectedId);
     }
@@ -136,20 +141,63 @@ void PetMainPanel::refreshDetail()
     if (!cfg || !inst)
     {
         m_detailText->setText("Select a pet");
-        m_previewIcon->setURL("");
         return;
     }
 
     const bool active = PetLocalState::instance().activeId() == m_selectedId;
-    m_previewIcon->setURL(!cfg->iconMax.empty() ? cfg->iconMax : cfg->icon);
     m_detailText->setText(fmt::format(
         "ID: {}\nnameId: {}  descId: {}\nquality: {}  rare: {}\n"
-        "Level: {}/{}  Star: {}/{}\npetId(entity): {}\n{}\n\n"
+        "Level: {}/{}  Star: {}/{}\npetId: {}  spineId: {}  anim: {}\n{}\n\n"
         "All pets unlocked (dev). 设为跟随 = local active pet.",
         cfg->id, cfg->nameId, cfg->descId, cfg->quality, cfg->rare, inst->level,
         cfg->levelMax > 0 ? cfg->levelMax : PetLocalState::kMaxLevel, inst->star,
-        cfg->starMax > 0 ? cfg->starMax : PetLocalState::kMaxStar, cfg->petId,
+        cfg->starMax > 0 ? cfg->starMax : PetLocalState::kMaxStar, cfg->petId, cfg->spineId,
+        cfg->spineAnim.empty() ? "stand1" : cfg->spineAnim,
         active ? "Status: ACTIVE follow" : "Status: not following"));
+}
+
+void PetMainPanel::refreshSpinePreview()
+{
+    if (!m_previewSpine)
+        return;
+
+    const auto* cfg = findConfig(m_selectedId);
+    if (!cfg || cfg->spineId <= 0)
+    {
+        m_previewSpine->setContent(nullptr);
+        m_previewSpineId = 0;
+        return;
+    }
+
+    if (m_previewSpineId == cfg->spineId && m_previewSpine->getContent() != nullptr)
+        return;
+
+    m_previewSpineId = cfg->spineId;
+    m_previewSpine->setContent(nullptr);
+
+    const int32_t spineId  = cfg->spineId;
+    const std::string anim = cfg->spineAnim.empty() ? "stand1" : cfg->spineAnim;
+    const int32_t selected = m_selectedId;
+    auto weakThis          = weak_from_this();
+
+    mugen::MgSkeletonAnimation::createFromCacheAsync(
+        spineId, [weakThis, this, spineId, anim, selected](mugen::MgSkeletonAnimation* skel) {
+            if (!skel)
+            {
+                AXLOGW("PetMainPanel: spine load failed id={}", spineId);
+                return;
+            }
+            if (weakThis.expired())
+                return;
+            if (m_selectedId != selected || m_previewSpineId != spineId || !m_previewSpine)
+                return;
+
+            skel->setPosition(ax::Vec2(m_previewSpine->getWidth() * 0.5f, 40.0f));
+            skel->setScale(0.75f);
+            skel->setAnimation(0, anim, true);
+            m_previewSpine->setContent(skel);
+            AXLOGI("PetMainPanel: preview spineId={} anim={}", spineId, anim);
+        });
 }
 
 void PetMainPanel::onClickItem(int32_t petId)
@@ -157,6 +205,7 @@ void PetMainPanel::onClickItem(int32_t petId)
     m_selectedId = petId;
     refreshSelectionHighlights();
     refreshDetail();
+    refreshSpinePreview();
 }
 
 void PetMainPanel::onClickActive(EventContext*)
