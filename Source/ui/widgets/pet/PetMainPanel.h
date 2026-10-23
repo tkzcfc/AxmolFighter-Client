@@ -39,6 +39,7 @@ private:
 
     GComponent* container() const;
     void rebuildList();
+    void refreshItemCells();
     void refreshDetail();
     void refreshSpinePreview();
     void refreshSelectionHighlights();

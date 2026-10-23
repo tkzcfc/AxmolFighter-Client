@@ -123,6 +123,19 @@ void PetMainPanel::rebuildList()
     refreshSelectionHighlights();
 }
 
+void PetMainPanel::refreshItemCells()
+{
+    // In-place rebind when membership is unchanged (level/star/active).
+    // Avoid removeChildrenToPool — that resets scroll and flickers the list.
+    const int n = m_itemList->numChildren();
+    for (int i = 0; i < n; ++i)
+    {
+        auto* item    = m_itemList->getChildAt(i)->as<GComponent>();
+        const auto id = static_cast<int32_t>(reinterpret_cast<intptr_t>(item->getData()));
+        bindItem(item, id, id == m_selectedId);
+    }
+}
+
 void PetMainPanel::refreshSelectionHighlights()
 {
     const int n = m_itemList->numChildren();
@@ -217,7 +230,8 @@ void PetMainPanel::onClickActive(EventContext*)
         state.setActive(0);
     else
         state.setActive(m_selectedId);
-    rebuildList();
+    // Membership unchanged — rebind labels (跟随) without list rebuild.
+    refreshItemCells();
     refreshDetail();
 }
 
@@ -226,7 +240,7 @@ void PetMainPanel::onClickLevel(EventContext*)
     if (m_selectedId <= 0)
         return;
     PetLocalState::instance().addLevel(m_selectedId, 1);
-    rebuildList();
+    refreshItemCells();
     refreshDetail();
 }
 
@@ -235,7 +249,7 @@ void PetMainPanel::onClickStar(EventContext*)
     if (m_selectedId <= 0)
         return;
     PetLocalState::instance().addStar(m_selectedId, 1);
-    rebuildList();
+    refreshItemCells();
     refreshDetail();
 }
 
