@@ -2,24 +2,31 @@
 
 #include "ui/widgets/common/Panel.h"
 #include "WeaponTypes.h"
+#include "mugen/conf/tables/ArmamentTables.h"
+#include "fairygui/GLoader.h"
 
 #include <vector>
 
 namespace gameui
 {
 
-// 武装主界面 (vertical slice): list all unlocked armaments, set appearance,
-// configure skill, free 升星/升级/进阶. Local state only; FairyGUI Panel_Weapon
-// package can replace programmatic layout later.
+// 武装主界面: list all unlocked armaments with icons, set appearance,
+// configure skill, free 升星/升级/进阶. Local cheat state only.
 class WeaponMainPanel : public Panel
 {
 public:
     WeaponMainPanel() = default;
 
 protected:
-    std::vector<std::string> getPackages() const override { return {"UI/Common_Base"}; }
+    std::vector<std::string> getPackages() const override
+    {
+        return {"UI/Common_Base", "UI/Res_WeaponIcons", "UI/Res_WeaponSkillIcons", "UI/Panel_Weapon"};
+    }
 
-    GComponent* onCreatePanelContent() override;
+    GComponent* onCreatePanelContent() override
+    {
+        return UIPackage::createObject("Panel_Weapon", "WeaponMainPanel")->as<GComponent>();
+    }
 
     void onCreate() override;
     void onShow() override;
@@ -33,28 +40,27 @@ private:
     void onClickLevelUp(EventContext* context);
     void onClickStarUp(EventContext* context);
     void onClickGradeUp(EventContext* context);
-    void onClickPrevPage(EventContext* context);
-    void onClickNextPage(EventContext* context);
 
+    GComponent* container() const;
     void rebuildList();
     void refreshDetail();
+    void refreshSelectionHighlights();
+    void bindItem(GComponent* item, int32_t armamentId, bool selected);
     int32_t occupation() const;
+    const mugen::conf::ArmamentConfig* findConfig(int32_t armamentId) const;
 
-    GList* m_itemList       = nullptr;
-    GTextField* m_titleText = nullptr;
-    GTextField* m_detailText = nullptr;
-    GButton* m_btnAppearance = nullptr;
-    GButton* m_btnSkill      = nullptr;
-    GButton* m_btnLevel      = nullptr;
-    GButton* m_btnStar       = nullptr;
-    GButton* m_btnGrade      = nullptr;
+    GList* m_itemList          = nullptr;
+    GTextField* m_titleText    = nullptr;
+    GTextField* m_detailText   = nullptr;
+    GLoader* m_previewIcon     = nullptr;
+    GButton* m_btnAppearance   = nullptr;
+    GButton* m_btnSkill        = nullptr;
+    GButton* m_btnLevel        = nullptr;
+    GButton* m_btnStar         = nullptr;
+    GButton* m_btnGrade        = nullptr;
 
     int32_t m_selectedId = 0;
-    int32_t m_page = 0;
-    static constexpr int kPageSize = 12;
     std::vector<int32_t> m_listIds;
-    GButton* m_btnPrevPage = nullptr;
-    GButton* m_btnNextPage = nullptr;
 };
 
 }  // namespace gameui
