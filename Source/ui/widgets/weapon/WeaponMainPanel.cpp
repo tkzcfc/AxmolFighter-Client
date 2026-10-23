@@ -1,9 +1,12 @@
 #include "WeaponMainPanel.h"
 
 #include "WeaponLocalState.h"
+#include "WeaponSkillPreviewDialog.h"
+#include "WeaponFormPreviewDialog.h"
 
 #include "AppContext.h"
 #include "mugen/conf/ReflectedConfig.h"
+#include "mugen/render/spine/MgSkeletonAnimation.h"
 #include "fairygui/UIPackage.h"
 
 #include <algorithm>
@@ -34,28 +37,34 @@ void WeaponMainPanel::onCreate()
 {
     addClickListener(getChild<GButton>("btnBack"), AX_CALLBACK_1(WeaponMainPanel::onClickBack, this));
 
-    auto* root     = container();
-    m_itemList     = root->getChild("itemList")->as<GList>();
-    m_titleText    = root->getChild("titleText")->as<GTextField>();
-    m_detailText   = root->getChild("detailText")->as<GTextField>();
-    m_previewIcon  = root->getChild("previewIcon")->as<GLoader>();
-    m_btnAppearance = root->getChild("btnAppearance")->as<GButton>();
-    m_btnSkill      = root->getChild("btnSkill")->as<GButton>();
-    m_btnLevel      = root->getChild("btnLevel")->as<GButton>();
-    m_btnStar       = root->getChild("btnStar")->as<GButton>();
-    m_btnGrade      = root->getChild("btnGrade")->as<GButton>();
+    auto* root          = container();
+    m_itemList          = root->getChild("itemList")->as<GList>();
+    m_titleText         = root->getChild("titleText")->as<GTextField>();
+    m_detailText        = root->getChild("detailText")->as<GTextField>();
+    m_previewSpine      = root->getChild("previewSpine")->as<GLoader3D>();
+    m_btnAppearance     = root->getChild("btnAppearance")->as<GButton>();
+    m_btnSkill          = root->getChild("btnSkill")->as<GButton>();
+    m_btnLevel          = root->getChild("btnLevel")->as<GButton>();
+    m_btnStar           = root->getChild("btnStar")->as<GButton>();
+    m_btnGrade          = root->getChild("btnGrade")->as<GButton>();
+    m_btnSkillPreview   = root->getChild("btnSkillPreview")->as<GButton>();
+    m_btnFormPreview    = root->getChild("btnFormPreview")->as<GButton>();
 
     m_btnAppearance->setTitle("设为外观");
     m_btnSkill->setTitle("技能+");
     m_btnLevel->setTitle("升级");
     m_btnStar->setTitle("升星");
     m_btnGrade->setTitle("进阶");
+    m_btnSkillPreview->setTitle("技能预览");
+    m_btnFormPreview->setTitle("形态预览");
 
     addClickListener(m_btnAppearance, AX_CALLBACK_1(WeaponMainPanel::onClickAppearance, this));
     addClickListener(m_btnSkill, AX_CALLBACK_1(WeaponMainPanel::onClickSkill, this));
     addClickListener(m_btnLevel, AX_CALLBACK_1(WeaponMainPanel::onClickLevelUp, this));
     addClickListener(m_btnStar, AX_CALLBACK_1(WeaponMainPanel::onClickStarUp, this));
     addClickListener(m_btnGrade, AX_CALLBACK_1(WeaponMainPanel::onClickGradeUp, this));
+    addClickListener(m_btnSkillPreview, AX_CALLBACK_1(WeaponMainPanel::onClickSkillPreview, this));
+    addClickListener(m_btnFormPreview, AX_CALLBACK_1(WeaponMainPanel::onClickFormPreview, this));
 
     m_itemList->setDefaultItem(kItemUrl);
 }
@@ -65,19 +74,25 @@ void WeaponMainPanel::onShow()
     WeaponLocalState::instance().ensureUnlockedForOccupation(occupation());
     rebuildList();
     refreshDetail();
+    refreshSpinePreview();
 }
 
 void WeaponMainPanel::onDestroy()
 {
-    m_itemList      = nullptr;
-    m_titleText     = nullptr;
-    m_detailText    = nullptr;
-    m_previewIcon   = nullptr;
-    m_btnAppearance = nullptr;
-    m_btnSkill      = nullptr;
-    m_btnLevel      = nullptr;
-    m_btnStar       = nullptr;
-    m_btnGrade      = nullptr;
+    if (m_previewSpine)
+        m_previewSpine->setContent(nullptr);
+    m_itemList        = nullptr;
+    m_titleText       = nullptr;
+    m_detailText      = nullptr;
+    m_previewSpine    = nullptr;
+    m_btnAppearance   = nullptr;
+    m_btnSkill        = nullptr;
+    m_btnLevel        = nullptr;
+    m_btnStar         = nullptr;
+    m_btnGrade        = nullptr;
+    m_btnSkillPreview = nullptr;
+    m_btnFormPreview  = nullptr;
+    m_previewSpineId  = 0;
 }
 
 void WeaponMainPanel::onClickBack(EventContext*)
@@ -102,10 +117,9 @@ const mugen::conf::ArmamentConfig* WeaponMainPanel::findConfig(int32_t armamentI
 
 void WeaponMainPanel::bindItem(GComponent* item, int32_t armamentId, bool selected)
 {
-    auto* icon = item->getChild("icon")->as<GLoader>();
-    const auto* cfg = findConfig(armamentId);
+    auto* icon       = item->getChild("icon")->as<GLoader>();
+    const auto* cfg  = findConfig(armamentId);
     const auto* inst = WeaponLocalState::instance().find(armamentId);
-    // Prefer list icon URL from config (already ui://Res_WeaponIcons/...).
     std::string url;
     if (cfg)
         url = !cfg->iconList.empty() ? cfg->iconList : cfg->icon;
@@ -133,7 +147,7 @@ void WeaponMainPanel::rebuildList()
     for (const auto& inst : list)
     {
         m_listIds.push_back(inst.configId);
-        auto* item = m_itemList->addItemFromPool(kItemUrl)->as<GButton>();
+        auto* item          = m_itemList->addItemFromPool(kItemUrl)->as<GButton>();
         const bool selected = (m_selectedId == inst.configId);
         bindItem(item, inst.configId, selected);
         const int32_t id = inst.configId;
@@ -164,6 +178,7 @@ void WeaponMainPanel::onClickItem(int32_t armamentId)
     m_selectedId = armamentId;
     refreshSelectionHighlights();
     refreshDetail();
+    refreshSpinePreview();
 }
 
 void WeaponMainPanel::refreshDetail()
@@ -175,23 +190,62 @@ void WeaponMainPanel::refreshDetail()
     if (!inst || !cfg)
     {
         m_detailText->setText("No selection");
-        if (m_previewIcon)
-            m_previewIcon->setURL("");
         return;
     }
 
-    const std::string& preview = !cfg->iconBig.empty() ? cfg->iconBig : (!cfg->iconList.empty() ? cfg->iconList : cfg->icon);
-    if (m_previewIcon)
-        m_previewIcon->setURL(preview);
-
     m_detailText->setText(fmt::format(
-        "ID: {}\nnameId: {}\nquality: {}\noccupation: {}\n"
-        "level: {} / {}\nstar: {} / {}\ngrade: {} / {}\n"
-        "skillId: {} (comboSkill={})\nskinId: {}\n"
-        "appearance: {}\nicon: {}",
-        cfg->id, cfg->nameId, cfg->quality, cfg->occupation, inst->level, WeaponLocalState::kMaxLevel, inst->star,
+        "ID: {}  nameId: {}  quality: {}\n"
+        "level: {}/{}  star: {}/{}  grade: {}/{}\n"
+        "skillId: {} (combo={})  appearance: {}\n"
+        "spineId: {}  anim: {}  video: {}",
+        cfg->id, cfg->nameId, cfg->quality, inst->level, WeaponLocalState::kMaxLevel, inst->star,
         WeaponLocalState::kMaxStar, inst->grade, WeaponLocalState::kMaxGrade, inst->skillId, cfg->comboSkill,
-        inst->skinId, state.appearanceId() == inst->configId ? "YES" : "no", preview));
+        state.appearanceId() == inst->configId ? "YES" : "no", cfg->spineId, cfg->spineAnim,
+        cfg->videoPath.empty() ? "(none)" : cfg->videoPath));
+}
+
+void WeaponMainPanel::refreshSpinePreview()
+{
+    if (!m_previewSpine)
+        return;
+
+    const auto* cfg = findConfig(m_selectedId);
+    if (!cfg || cfg->spineId <= 0)
+    {
+        m_previewSpine->setContent(nullptr);
+        m_previewSpineId = 0;
+        return;
+    }
+
+    if (m_previewSpineId == cfg->spineId && m_previewSpine->getContent() != nullptr)
+        return;
+
+    m_previewSpineId = cfg->spineId;
+    m_previewSpine->setContent(nullptr);
+
+    const int32_t spineId   = cfg->spineId;
+    const std::string anim  = cfg->spineAnim.empty() ? "stand" : cfg->spineAnim;
+    const int32_t selected  = m_selectedId;
+    auto weakThis           = weak_from_this();
+
+    mugen::MgSkeletonAnimation::createFromCacheAsync(
+        spineId, [weakThis, this, spineId, anim, selected](mugen::MgSkeletonAnimation* skel) {
+            if (!skel)
+            {
+                AXLOGW("WeaponMainPanel: spine load failed id={}", spineId);
+                return;
+            }
+            if (weakThis.expired())
+                return;
+            if (m_selectedId != selected || m_previewSpineId != spineId || !m_previewSpine)
+                return;
+
+            skel->setPosition(ax::Vec2(m_previewSpine->getWidth() * 0.5f, 40.0f));
+            skel->setScale(0.8f);
+            skel->setAnimation(0, anim, true);
+            m_previewSpine->setContent(skel);
+            AXLOGI("WeaponMainPanel: preview spineId={} anim={}", spineId, anim);
+        });
 }
 
 void WeaponMainPanel::onClickAppearance(EventContext*)
@@ -215,7 +269,7 @@ void WeaponMainPanel::onClickSkill(EventContext*)
     auto* inst = WeaponLocalState::instance().find(m_selectedId);
     if (!inst)
         return;
-    const auto* cfg  = findConfig(m_selectedId);
+    const auto* cfg    = findConfig(m_selectedId);
     const int32_t base = cfg ? cfg->comboSkill : inst->skillId;
     if (inst->skillId == base)
         WeaponLocalState::instance().setSkill(m_selectedId, base + 1);
@@ -251,6 +305,25 @@ void WeaponMainPanel::onClickGradeUp(EventContext*)
     WeaponLocalState::instance().addGrade(m_selectedId);
     refreshSelectionHighlights();
     refreshDetail();
+}
+
+void WeaponMainPanel::onClickSkillPreview(EventContext*)
+{
+    const auto* cfg = findConfig(m_selectedId);
+    if (!cfg)
+        return;
+    getUIManager()->open<WeaponSkillPreviewDialog>(cfg->videoPath);
+}
+
+void WeaponMainPanel::onClickFormPreview(EventContext*)
+{
+    const auto* cfg = findConfig(m_selectedId);
+    if (!cfg || cfg->spineId <= 0)
+    {
+        AXLOGW("WeaponMainPanel: form preview missing spine for id={}", m_selectedId);
+        return;
+    }
+    getUIManager()->open<WeaponFormPreviewDialog>(cfg->spineId);
 }
 
 }  // namespace gameui
