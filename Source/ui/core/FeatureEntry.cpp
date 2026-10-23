@@ -4,6 +4,8 @@
 #include "ui/widgets/fashion/FashionDressPanel.h"
 #include "ui/widgets/fashion/FashionMainPanel.h"
 #include "ui/widgets/fashion/FashionTypes.h"
+#include "ui/widgets/weapon/WeaponMainPanel.h"
+#include "ui/widgets/weapon/WeaponTypes.h"
 
 namespace gameui
 {
@@ -61,6 +63,10 @@ std::weak_ptr<UIWidget> FeatureEntry::open(FeatureId id, std::any params)
         return uiManager->open<FashionMainPanel>();
     }
     case FeatureId::Weapon:
+    {
+        // Optional WeaponOpenParams currently unused beyond open; focus later.
+        return uiManager->open<WeaponMainPanel>();
+    }
     case FeatureId::Equip:
     case FeatureId::Partner:
     case FeatureId::Skill:

@@ -2,6 +2,7 @@
 
 #include "ConfigTables.h"
 #include "tables/ActionTables.h"
+#include "tables/ArmamentTables.h"
 #include "tables/AiTables.h"
 #include "tables/BuffTables.h"
 #include "tables/EntityTables.h"
