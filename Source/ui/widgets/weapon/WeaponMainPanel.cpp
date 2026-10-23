@@ -6,6 +6,8 @@
 
 #include "AppContext.h"
 #include "mugen/conf/ReflectedConfig.h"
+#include "mugen/conf/TypeConversions.h"
+#include "mugen/conf/GameDef.h"
 #include "mugen/render/spine/MgSkeletonAnimation.h"
 #include "fairygui/UIPackage.h"
 
@@ -103,16 +105,39 @@ void WeaponMainPanel::onClickBack(EventContext*)
 int32_t WeaponMainPanel::occupation() const
 {
     auto* session = AppContext::get().gameSession();
-    return session ? session->selectedCharacter.classID : 1;
+    if (!session)
+        return static_cast<int32_t>(mugen::CharacterClass::kSwordman);
+
+    // classID is CharacterClass (1..4). Tolerate accidental roleConfigId (101..104).
+    int32_t classId = session->selectedCharacter.classID;
+    if (classId >= 101 && classId <= 104)
+        classId = static_cast<int32_t>(mugen::type_conversions::toCharacterClass(classId));
+    if (classId < static_cast<int32_t>(mugen::CharacterClass::kSwordman) ||
+        classId > static_cast<int32_t>(mugen::CharacterClass::kMage))
+    {
+        AXLOGW("WeaponMainPanel: invalid classID={}, defaulting to swordman", session->selectedCharacter.classID);
+        return static_cast<int32_t>(mugen::CharacterClass::kSwordman);
+    }
+    return classId;
 }
 
 const mugen::conf::ArmamentConfig* WeaponMainPanel::findConfig(int32_t armamentId) const
 {
+    const int32_t occ = occupation();
     const auto* cfg =
-        mugen::conf::Config::instance().find<mugen::conf::ArmamentConfig>({armamentId, occupation()});
-    if (!cfg)
-        cfg = mugen::conf::Config::instance().find<mugen::conf::ArmamentConfig>({armamentId, 0});
-    return cfg;
+        mugen::conf::Config::instance().find<mugen::conf::ArmamentConfig>({armamentId, occ});
+    // Occupation-scoped only: never fall back to another job's row (wrong skill video).
+    if (cfg && cfg->occupation == occ)
+        return cfg;
+
+    // Linear scan fallback if archive sort/lookup ever mismatches.
+    for (const auto& row : mugen::conf::Config::instance().table<mugen::conf::ArmamentConfig>())
+    {
+        if (row.id == armamentId && row.occupation == occ)
+            return &row;
+    }
+    AXLOGW("WeaponMainPanel: no armament row id={} occupation={}", armamentId, occ);
+    return nullptr;
 }
 
 void WeaponMainPanel::bindItem(GComponent* item, int32_t armamentId, bool selected)
@@ -194,13 +219,14 @@ void WeaponMainPanel::refreshDetail()
     }
 
     m_detailText->setText(fmt::format(
-        "ID: {}  nameId: {}  quality: {}\n"
+        "ID: {}  nameId: {}  quality: {}  occupation: {}\n"
         "level: {}/{}  star: {}/{}  grade: {}/{}\n"
         "skillId: {} (combo={})  appearance: {}\n"
-        "spineId: {}  anim: {}  video: {}",
-        cfg->id, cfg->nameId, cfg->quality, inst->level, WeaponLocalState::kMaxLevel, inst->star,
+        "spineId: {}  anim: {}  videoId: {}\n"
+        "video: {}",
+        cfg->id, cfg->nameId, cfg->quality, cfg->occupation, inst->level, WeaponLocalState::kMaxLevel, inst->star,
         WeaponLocalState::kMaxStar, inst->grade, WeaponLocalState::kMaxGrade, inst->skillId, cfg->comboSkill,
-        state.appearanceId() == inst->configId ? "YES" : "no", cfg->spineId, cfg->spineAnim,
+        state.appearanceId() == inst->configId ? "YES" : "no", cfg->spineId, cfg->spineAnim, cfg->video,
         cfg->videoPath.empty() ? "(none)" : cfg->videoPath));
 }
 
@@ -312,6 +338,9 @@ void WeaponMainPanel::onClickSkillPreview(EventContext*)
     const auto* cfg = findConfig(m_selectedId);
     if (!cfg)
         return;
+    // Guaranteed same occupation as the listed icon / form preview selection.
+    AXLOGI("WeaponMainPanel: skill preview id={} occupation={} video={} path={}", cfg->id, cfg->occupation,
+           cfg->video, cfg->videoPath.empty() ? "(none)" : cfg->videoPath);
     getUIManager()->open<WeaponSkillPreviewDialog>(cfg->videoPath);
 }
 

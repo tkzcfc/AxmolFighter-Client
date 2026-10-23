@@ -19,6 +19,13 @@ void WeaponLocalState::ensureUnlockedForOccupation(int32_t occupation)
     if (m_seededOccupation == occupation && !m_byId.empty())
         return;
 
+    // Reseed when occupation changes so skill/appearance state stays occupation-scoped.
+    if (m_seededOccupation != occupation)
+    {
+        m_byId.clear();
+        m_appearanceId = 0;
+    }
+
     const auto& table = mugen::conf::Config::instance().table<mugen::conf::ArmamentConfig>();
     for (const auto& row : table)
     {
