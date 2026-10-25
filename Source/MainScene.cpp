@@ -137,11 +137,10 @@ void MainScene::startOfflineBattle()
 
 void MainScene::onExit()
 {
-    AppContext::destroy();
-
     ax::extension::ImGuiPresenter::getInstance()->removeRenderLoop(IMGUI_LOOP_ID);
 
     Super::onExit();
+    AppContext::destroy();
 }
 
 void MainScene::update(float delta)
