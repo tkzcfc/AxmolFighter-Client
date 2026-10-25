@@ -62,6 +62,13 @@ void AppContext::destroy()
 {
     if (s_instance)
     {
+        // ConnectMask is a child of GRoot — remove it before ScreenManager tears GRoot down.
+        if (s_instance->m_connectMask)
+        {
+            s_instance->m_connectMask->removeFromParent();
+            s_instance->m_connectMask = nullptr;
+        }
+
         if (s_instance->m_featureProgressSync)
             s_instance->m_featureProgressSync->detach();
         s_instance->m_featureProgressSync.reset();
@@ -103,13 +110,8 @@ AppContext::AppContext()
 
 AppContext::~AppContext()
 {
-    // m_globalLoader 的析构会立即释放它持有的资源（见 ResourceLoader 的生命周期说明），
-    // 不需要手动处理；这里只处理连接遮罩。
-    if (m_connectMask)
-    {
-        m_connectMask->removeFromParent();
-        m_connectMask = nullptr;
-    }
+    // ConnectMask is removed in destroy() before GRoot dies; only clear the dangling pointer here.
+    m_connectMask = nullptr;
 }
 
 void AppContext::init(ax::Scene* scene)
