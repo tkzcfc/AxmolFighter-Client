@@ -60,16 +60,17 @@ void AppContext::create()
 
 void AppContext::destroy()
 {
-    gameui::FGUIPackageManager::getInstance().unload({kResidentPackages.rbegin(), kResidentPackages.rend()});
-
     if (s_instance)
     {
         if (s_instance->m_featureProgressSync)
             s_instance->m_featureProgressSync->detach();
         s_instance->m_featureProgressSync.reset();
-        // Drop screens while EventDispatcher is still alive (unsubscribeAll in onExit).
+        // Drop screens / GRoot while EventDispatcher and FairyGUI packages are still alive.
         s_instance->m_screenManager.reset();
     }
+
+    // Unload resident packages only after all FairyGUI trees are gone.
+    gameui::FGUIPackageManager::getInstance().unload({kResidentPackages.rbegin(), kResidentPackages.rend()});
 
     delete s_instance;
     s_instance = nullptr;

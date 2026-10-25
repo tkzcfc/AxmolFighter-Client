@@ -28,9 +28,17 @@ ScreenManager::~ScreenManager()
 
     if (m_groot)
     {
+        // GRoot::create adds displayObject to the scene; detach before release so scene
+        // cleanup does not double-walk a dying FairyGUI tree.
+        if (auto* display = m_groot->displayObject())
+            display->removeFromParent();
+        m_screenLayer = nullptr;
+        m_uiLayer     = nullptr;
         m_groot->release();
         m_groot = nullptr;
     }
+
+    m_uiManager.reset();
 }
 
 void ScreenManager::init(ax::Scene* scene)

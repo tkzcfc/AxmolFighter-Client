@@ -139,8 +139,10 @@ void MainScene::onExit()
 {
     ax::extension::ImGuiPresenter::getInstance()->removeRenderLoop(IMGUI_LOOP_ID);
 
-    Super::onExit();
+    // Tear down GRoot / screens while the scene node tree is still intact.
+    // Super::onExit() walks FUIContainers; releasing GRoot after that hits refcount asserts.
     AppContext::destroy();
+    Super::onExit();
 }
 
 void MainScene::update(float delta)
