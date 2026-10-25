@@ -67,6 +67,8 @@ void AppContext::destroy()
         if (s_instance->m_featureProgressSync)
             s_instance->m_featureProgressSync->detach();
         s_instance->m_featureProgressSync.reset();
+        // Drop screens while EventDispatcher is still alive (unsubscribeAll in onExit).
+        s_instance->m_screenManager.reset();
     }
 
     delete s_instance;

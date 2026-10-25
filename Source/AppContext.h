@@ -70,15 +70,16 @@ private:
 
     std::unique_ptr<net::NetClient> m_netClient;
     std::unique_ptr<game::model::GameSessionModel> m_gameSession;
-    std::unique_ptr<gameui::ScreenManager> m_screenManager;
-    std::shared_ptr<gameres::ResourceLoader> m_globalLoader;
-
+    // EventDispatcher must outlive ScreenManager / local states: their onExit /
+    // destructors call unsubscribeAll. Members destroy in reverse declaration order.
     std::unique_ptr<game::EventDispatcher> m_eventDispatcher;
     std::unique_ptr<gameui::FeatureProgressSync> m_featureProgressSync;
     std::unique_ptr<gameui::WeaponLocalState> m_weaponLocalState;
     std::unique_ptr<gameui::SkillLocalState> m_skillLocalState;
     std::unique_ptr<gameui::PetLocalState> m_petLocalState;
     std::unique_ptr<gameui::PartnerLocalState> m_partnerLocalState;
+    std::unique_ptr<gameui::ScreenManager> m_screenManager;
+    std::shared_ptr<gameres::ResourceLoader> m_globalLoader;
 
     // 连接遮罩
     fairygui::GComponent* m_connectMask = nullptr;
