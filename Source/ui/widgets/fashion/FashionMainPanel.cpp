@@ -2,6 +2,8 @@
 
 #include "AppContext.h"
 #include "FashionDressPanel.h"
+
+#include "ui/utils/UiQualityRes.h"
 #include "mugen/avatar/render/Avatar.h"
 #include "mugen/conf/TypeConversions.h"
 #include "mugen/conf/ReflectedConfig.h"
@@ -124,6 +126,12 @@ void FashionMainPanel::refreshSlots()
                 icon->setURL(cfg->icon);
             else
                 icon->setURL("");
+            if (auto* quality = button->getChild("loaderQuality"))
+            {
+                const int32_t q = cfg ? cfg->quality : 0;
+                quality->as<GLoader>()->setURL(
+                    UiQualityRes::backgroundUrl(UiQualityRes::PlaceScenario::Fashion, q));
+            }
         }
         else
         {
