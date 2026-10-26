@@ -11,7 +11,6 @@
 #include <algorithm>
 #include "ui/progress/FeatureProgressSync.h"
 #include "core/event/EventDispatcher.h"
-#include "AppContext.h"
 
 namespace gameui
 {
@@ -58,9 +57,6 @@ void setItemSelectedVisual(GComponent* item, bool selected)
         btn->setSelected(selected);
     if (auto* glow = item->getChild("loaderSelectGlow"))
         glow->setVisible(selected);
-    // Never use loaderFashionBackdrop as selection fill (that asset is a solid quality plate).
-    if (auto* backdrop = item->getChild("loaderFashionBackdrop"))
-        backdrop->setVisible(false);
 }
 }  // namespace
 
@@ -410,7 +406,7 @@ void FashionDressPanel::refreshAvatar()
     }
     avatar->setMotion("stand", "", true);
     avatar->setAutoPlay(true);
-    avatar->setPosition(m_avatarLoader->getWidth() * 0.5f, 0.0f);
+    avatar->setPosition(m_avatarLoader->getWidth() * 0.5f, -m_avatarLoader->getHeight());
     m_avatarLoader->setContent(avatar);
     m_avatar = avatar;
 }

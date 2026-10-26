@@ -45,7 +45,7 @@ void FashionMainPanel::onCreate()
     addClickListener(getChild<GButton>("btnBack"), AX_CALLBACK_1(FashionMainPanel::onClickBack, this));
 
     auto* root = container();
-    m_avatarLoader = root->getChild("n10")->as<GLoader3D>();
+    m_avatarLoader = root->getChild("loaderAvatar")->as<GLoader3D>();
 
     for (const auto& [childName, position] : kPartSlots)
     {
@@ -97,7 +97,7 @@ void FashionMainPanel::refreshSlots()
     {
         auto* button = root->getChild(childName)->as<GButton>();
         auto* icon   = button->getChild("icon")->as<GLoader>();
-        auto* backdrop = button->getChild("loaderFashionBackdrop")->as<GLoader>();
+        auto* c_has_icon = button->getController("c_has_icon");
 
         int32_t fashionId = 0;
         if (session)
@@ -114,7 +114,7 @@ void FashionMainPanel::refreshSlots()
 
         if (fashionId > 0)
         {
-            backdrop->setVisible(true);
+            c_has_icon->setSelectedIndex(0);
             // Icon path may be absent in Content; leave empty when load fails.
             const auto* cfg = mugen::conf::Config::instance().find<mugen::conf::FashionConfig>(
                 {fashionId, session ? session->selectedCharacter.classID : 0});
@@ -127,8 +127,7 @@ void FashionMainPanel::refreshSlots()
         }
         else
         {
-            backdrop->setVisible(false);
-            icon->setURL("");
+            c_has_icon->setSelectedIndex(1);
         }
     }
 }
@@ -169,7 +168,7 @@ void FashionMainPanel::refreshAvatar()
     }
     avatar->setMotion(m_walkPose ? "walk" : "stand", "", true);
     avatar->setAutoPlay(true);
-    avatar->setPosition(m_avatarLoader->getWidth() * 0.5f, 0.0f);
+    avatar->setPosition(m_avatarLoader->getWidth() * 0.5f, -m_avatarLoader->getHeight());
     m_avatarLoader->setContent(avatar);
     m_avatar = avatar;
 }
