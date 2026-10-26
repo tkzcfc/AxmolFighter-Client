@@ -284,7 +284,7 @@ void FashionDressPanel::bindFashionItem(GComponent* item, int32_t fashionId, boo
     {
         const int32_t q = cfg ? cfg->quality : 0;
         quality->as<GLoader>()->setURL(
-            UiQualityRes::backgroundUrl(UiQualityRes::PlaceScenario::Fashion, q));
+            UiQualityRes::backgroundUrl(UiQualityRes::PlaceScenario::CommonItemBg, q));
     }
     setItemSelectedVisual(item, selected);
     item->setData(reinterpret_cast<void*>(static_cast<intptr_t>(fashionId)));
@@ -299,7 +299,7 @@ void FashionDressPanel::bindSuitItem(GComponent* item, int32_t suitId, bool sele
     {
         const int32_t q = suit ? suit->suitQuality : 0;
         quality->as<GLoader>()->setURL(
-            UiQualityRes::backgroundUrl(UiQualityRes::PlaceScenario::FashionTipQuality2, q));
+            UiQualityRes::backgroundUrl(UiQualityRes::PlaceScenario::FashionTipQuality, q));
     }
     if (auto* title = item->getChild("title"))
     {
