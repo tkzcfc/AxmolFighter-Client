@@ -175,16 +175,18 @@ inline std::string newCommonItemBg(Rarity rarity)
 // RGB taken from config_color 1001–1006 / 1027–1032.
 inline ax::Color3B equipNameDarkColor(Rarity rarity)
 {
-    static constexpr ax::Color3B kColors[] = {
+    // RGB table (not constexpr Color3B — MSVC C2131).
+    static const uint8_t kRgb[][3] = {
         {255, 255, 255}, // white 1001
         {94, 241, 150},  // green 1002
         {165, 186, 255}, // blue 1003
         {214, 152, 235}, // purple 1004
         {228, 149, 50},  // orange 1005
         {228, 149, 50},  // red 1006 (heiyue shares orange RGB)
-        {214, 152, 235}, // pink → purple stand-in
+        {214, 152, 235}, // pink -> purple stand-in
     };
-    return kColors[colorIndex(rarity)];
+    const auto& rgb = kRgb[colorIndex(rarity)];
+    return ax::Color3B(rgb[0], rgb[1], rgb[2]);
 }
 
 inline ax::Color3B bagpackIconColor(Rarity rarity)
