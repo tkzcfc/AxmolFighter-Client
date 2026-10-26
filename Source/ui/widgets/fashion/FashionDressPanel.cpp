@@ -2,6 +2,8 @@
 
 #include "FashionMainPanel.h"
 
+#include "ui/utils/UiQualityRes.h"
+
 #include "AppContext.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/TypeConversions.h"
@@ -9,6 +11,7 @@
 #include "fairygui/UIPackage.h"
 
 #include <algorithm>
+#include <string>
 #include "ui/progress/FeatureProgressSync.h"
 #include "core/event/EventDispatcher.h"
 
@@ -83,6 +86,12 @@ void FashionDressPanel::onCreate()
     m_saveButton->setTitle("保存");
     addClickListener(m_saveButton, AX_CALLBACK_1(FashionDressPanel::onClickSave, this));
 
+    if (auto* walk = root->getChild("btnToWalk"))
+    {
+        m_walkButton = walk->as<GButton>();
+        addClickListener(m_walkButton, AX_CALLBACK_1(FashionDressPanel::onClickWalk, this));
+    }
+
     loadDraftFromSession();
     rebuildTabs();
 }
@@ -105,6 +114,14 @@ void FashionDressPanel::onDestroy()
 void FashionDressPanel::onClickBack(EventContext*)
 {
     close();
+}
+
+void FashionDressPanel::onClickWalk(EventContext*)
+{
+    m_walkPose = !m_walkPose;
+    if (m_walkButton)
+        m_walkButton->setSelected(m_walkPose);
+    refreshAvatar();
 }
 
 void FashionDressPanel::onClickSave(EventContext*)
@@ -263,6 +280,12 @@ void FashionDressPanel::bindFashionItem(GComponent* item, int32_t fashionId, boo
     const auto* cfg = findFashion(fashionId);
     // Config already stores FairyGUI ui:// URLs.
     icon->setURL(cfg ? cfg->icon : "");
+    if (auto* quality = item->getChild("loaderQuality"))
+    {
+        const int32_t q = cfg ? cfg->quality : 0;
+        quality->as<GLoader>()->setURL(
+            UiQualityRes::backgroundUrl(UiQualityRes::PlaceScenario::Fashion, q));
+    }
     setItemSelectedVisual(item, selected);
     item->setData(reinterpret_cast<void*>(static_cast<intptr_t>(fashionId)));
 }
@@ -272,6 +295,21 @@ void FashionDressPanel::bindSuitItem(GComponent* item, int32_t suitId, bool sele
     auto* icon = item->getChild("icon")->as<GLoader>();
     const auto* suit = mugen::conf::Config::instance().findById<mugen::conf::FashionSuitConfig>(suitId);
     icon->setURL(suit ? suit->listPic : "");
+    if (auto* quality = item->getChild("loaderQuality"))
+    {
+        const int32_t q = suit ? suit->suitQuality : 0;
+        quality->as<GLoader>()->setURL(
+            UiQualityRes::backgroundUrl(UiQualityRes::PlaceScenario::FashionTipQuality2, q));
+    }
+    if (auto* title = item->getChild("title"))
+    {
+        // TEXTNAME(nameId) not wired yet — show nameId until lang table is available.
+        auto* titleField = title->as<GTextField>();
+        titleField->setText(suit ? std::to_string(suit->nameId) : "");
+        // heiyue UiFashionBagSuitItem: QUALITYTEXT(EquipNameDark, quality)
+        const int32_t q = suit ? suit->suitQuality : 0;
+        titleField->setColor(UiQualityRes::textColor(UiQualityRes::PlaceScenario::EquipNameDark, q));
+    }
     setItemSelectedVisual(item, selected);
     item->setData(reinterpret_cast<void*>(static_cast<intptr_t>(suitId)));
 }
@@ -390,7 +428,7 @@ void FashionDressPanel::refreshAvatar()
     {
         if (m_avatar->setAppearance(appearance))
         {
-            m_avatar->setMotion("stand", "", true);
+            m_avatar->setMotion(m_walkPose ? "walk" : "stand", "", true);
             return;
         }
         AXLOGW("FashionDressPanel: setAppearance failed, recreating avatar");
@@ -404,7 +442,7 @@ void FashionDressPanel::refreshAvatar()
         AXLOGW("FashionDressPanel: avatar create failed");
         return;
     }
-    avatar->setMotion("stand", "", true);
+    avatar->setMotion(m_walkPose ? "walk" : "stand", "", true);
     avatar->setAutoPlay(true);
     avatar->setPosition(m_avatarLoader->getWidth() * 0.5f, -m_avatarLoader->getHeight());
     m_avatarLoader->setContent(avatar);

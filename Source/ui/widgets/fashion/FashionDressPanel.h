@@ -45,6 +45,7 @@ private:
 
     void onClickBack(EventContext* context);
     void onClickSave(EventContext* context);
+    void onClickWalk(EventContext* context);
     void onClickTab(int index);
     void onClickSuitItem(int32_t suitId);
     void onClickFashionItem(int32_t fashionId);
@@ -80,6 +81,8 @@ private:
     mugen::Avatar* m_avatar   = nullptr;
     GTextField* m_titleText   = nullptr;
     GButton* m_saveButton     = nullptr;
+    GButton* m_walkButton     = nullptr;
+    bool m_walkPose           = false;
 };
 
 }  // namespace gameui
