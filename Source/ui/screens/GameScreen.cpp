@@ -27,7 +27,9 @@ void GameScreen::onPrepareLoad()
     const auto* room = mugen::conf::Config::instance().find<mugen::conf::RoomConfig>(roomId);
     if (!room || room->mapKey.empty())
         return;
-    const std::string layer = room->mapKey.ends_with(".layer") ? room->mapKey : "mugen/map/" + room->mapKey + ".layer";
+    std::string layer = room->mapKey;
+    if (!layer.ends_with(".layer"))
+        layer = "/mugen/map/" + layer + ".layer";
     getResourceLoader().add<gameres::MapResource>(layer);
 }
 

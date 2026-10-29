@@ -96,15 +96,13 @@ AppContext::AppContext()
     m_petLocalState    = std::make_unique<gameui::PetLocalState>();
     m_partnerLocalState = std::make_unique<gameui::PartnerLocalState>();
 
-    mugen::AvatarAssetCache::getInstance()->addSearchPath("res_zhcn");
-
     // 生命周期与 AppContext 相同的常驻资源：配置表，以及之后可能加入的其他常驻资源
     // （不一定都在 UI/Common_Base 里）。由 LaunchScreen 通过 setResourceLoader() 共同持有并驱动加载；
     // LaunchScreen 销毁后 AppContext 这份引用还在，资源不会被释放，直到 AppContext 自己销毁。
     m_globalLoader = std::make_shared<gameres::ResourceLoader>();
-    m_globalLoader->add<gameres::ConfigResource>(gameres::ConfigResource::Kind::Mugen, "mugen/config/config.bin");
+    m_globalLoader->add<gameres::ConfigResource>(gameres::ConfigResource::Kind::Mugen, "/mugen/config/config.bin");
     m_globalLoader->add<gameres::ConfigResource>(gameres::ConfigResource::Kind::AvatarAssets,
-                                                 "mugen/config/avatar.bin");
+                                                 "/mugen/config/avatar.bin");
     m_globalLoader->add<gameres::FguiPackageResource>("UI/Res_GeneralIcons", true, false);
 }
 

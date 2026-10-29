@@ -26,16 +26,12 @@ public:
 
     // 清空全部已缓存资源和加载状态。
     void clear();
-    // 添加资源相对路径的查找目录。
-    void addSearchPath(const std::string& path);
-    // 清空资源查找目录。
-    void clearSearchPaths();
-    // 从归档文件加载资源数据。
+    // 从 VFS 加载归档数据，路径必须是虚拟路径（例如 /mugen/config/avatar.bin）。
     bool load(const std::string& path);
+    // 将归档写入可写的 VFS 路径（优先 /user/...）。
+    bool saveToFile(const std::string& path) const;
     // 返回归档是否已成功加载。
     bool isLoaded() const;
-    // 将当前资源数据写入归档文件。
-    bool saveToFile(const std::string& path) const;
 
     // 按路径查询帧动画、战斗时间轴和动作图。
     const AniData* getAniData(const std::string& path) const;
@@ -61,8 +57,6 @@ private:
     // 将动作图片段绑定到对应战斗时间轴。
     bool bindTimelines();
 
-    // 资源相对路径的查找目录。
-    std::vector<std::string> m_searchPaths;
     // 当前缓存是否包含有效归档数据。
     bool m_isLoaded = false;
 };

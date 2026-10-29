@@ -1,4 +1,5 @@
 #include "SkillTestSupport.h"
+#include "../support/ContentVfs.h"
 #include "mugen/sim/effect/Effect.h"
 #include "mugen/sim/hit/HitResolver.h"
 #include "mugen/sim/hit/Damage.h"
@@ -57,7 +58,7 @@ struct DodgeHit
         seedFailingRoll();
     }
 
-    ~DodgeHit() { conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin"); }
+    ~DodgeHit() { (mugen::test::ensureContentVfs() && conf::Config::instance().load("/mugen/config/config.bin")); }
 
     conf::EffectConfig& effectRow()
     {

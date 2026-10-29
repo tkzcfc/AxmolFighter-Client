@@ -3,7 +3,10 @@
 #ifdef RUNTIME_IN_AXMOL
 
 #    include "audio/AudioEngine.h"
+#    include "platform/FileUtils.h"
 #    include "mugen/avatar/AvatarPaths.h"
+#    include "mugen/core/io/FileUtils.h"
+#    include "vfs/VirtualFileSystem.h"
 #    include "mugen/conf/LayerLoader.h"
 #    include "mugen/conf/ReflectedConfig.h"
 #    include "mugen/conf/TypeConversions.h"
@@ -272,7 +275,7 @@ void MapPresenter::load(const std::string& mapKey)
     if (m_map)
         m_map->removeFromParent();
     m_mapKey               = mapKey;
-    const std::string path = mapKey.ends_with(".layer") ? mapKey : "mugen/map/" + mapKey + ".layer";
+    const std::string path = mapKey.ends_with(".layer") ? mapKey : "/mugen/map/" + mapKey + ".layer";
     m_map                  = LayerRuntimeLoader::loadNode(path);
     m_root.addChild(m_map, -100);
     m_camera              = VirtualCamera::create();
@@ -323,7 +326,18 @@ void SoundPlayer::consume(const sim::PresentationEvent& event)
     if (!sound || sound->id <= 0)
         return;
     const float volume = 0.95f + static_cast<float>(m_random() % 11) * 0.01f;
-    ax::AudioEngine::play2d(fmt::format("mugen/sound/{}.ogg", sound->id), false, volume);
+    // AudioEngine prefers a native filesystem path. Relative logical path so Content/native
+    // can resolve via m_native search path when VFS misses.
+    const std::string path = fmt::format("mugen/sound/{}.ogg", sound->id);
+    std::string native = io::vfs()->realPath("/" + path);
+    if (native.empty())
+        native = ax::FileUtils::getInstance()->fullPathForFilename(path);
+    if (native.empty())
+    {
+        MG_LOG_E("SoundPlayer: no path for '{}'", path);
+        return;
+    }
+    ax::AudioEngine::play2d(native, false, volume);
 }
 
 void HurtNumber::consume(const sim::PresentationEvent& event, sim::World& world)

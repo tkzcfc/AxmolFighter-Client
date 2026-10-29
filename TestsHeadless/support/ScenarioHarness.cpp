@@ -1,6 +1,7 @@
 #include "ScenarioHarness.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
 #include "mugen/conf/ReflectedConfig.h"
+#include "ContentVfs.h"
 #include "mugen/core/io/FileUtils.h"
 #include "mugen/sim/room/RoomDirector.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
@@ -37,17 +38,19 @@ void recordedRole(sim::World& world, Entity entity)
 }  // namespace
 void ScenarioHarness::loadAssets()
 {
-    const auto content = std::filesystem::path(MUGEN_CONTENT_DIR);
-    io::addSearchPath(content.string());
+    if (!ensureContentVfs())
+    {
+        MG_LOG_E("Cannot mount Content VFS");
+        return;
+    }
     auto& config = conf::Config::instance();
-    if (!config.loaded() && !config.load((content / "mugen/config/config.bin").string()))
+    if (!config.loaded() && !config.load("/mugen/config/config.bin"))
     {
         MG_LOG_E("Cannot load real config.bin");
         return;
     }
     auto& avatar = *AvatarAssetCache::getInstance();
-    avatar.addSearchPath("res_zhcn");
-    if (!avatar.isLoaded() && !avatar.load((content / "mugen/config/avatar.bin").string()))
+    if (!avatar.isLoaded() && !avatar.load("/mugen/config/avatar.bin"))
     {
         MG_LOG_E("Cannot load real avatar.bin");
         return;

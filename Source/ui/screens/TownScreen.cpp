@@ -60,7 +60,11 @@ void TownScreen::onPrepareLoad()
     const auto* town = conf::Config::instance().find<conf::TownConfig>(m_boot.townId);
     if (!town || town->mapKey.empty())
         return;
-    const std::string layer = town->mapKey.ends_with(".layer") ? town->mapKey : "mugen/map/" + town->mapKey + ".layer";
+    std::string layer = town->mapKey;
+    if (!layer.ends_with(".layer"))
+        layer = "/mugen/map/" + layer + ".layer";
+    else if (!layer.starts_with("/"))
+        layer.insert(layer.begin(), '/');
     getResourceLoader().add<gameres::MapResource>(layer);
 }
 
@@ -161,8 +165,8 @@ void TownScreen::setupMainMenuButtonIcon()
     auto* loader = m_mainMenuButton->getChild("loaderIcon")->as<GLoader3D>();
     AXASSERT(loader, "TownScreen: mainMenuButton.loaderIcon missing");
 
-    // Heiyue main-city menu character spine (design anim names: animation / animation2).
-    constexpr const char* kSkel = "mugen/spine/ui/afy_maincity/ui_tx_zhucheng_renwucaidan.skel";
+    // 主城菜单角色 spine（设计动画名：animation / animation2）。
+    constexpr const char* kSkel = "/mugen/spine/ui/afy_maincity/ui_tx_zhucheng_renwucaidan.skel";
     auto* skeleton = mugen::MgSkeletonAnimation::createFromCache(kSkel);
     if (!skeleton)
     {

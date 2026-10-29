@@ -218,18 +218,11 @@ void registerConfig(ResourceLoaderRegistry& registry)
             return;
         }
 
-        // 全路径在主线程解析；worker 线程只用全路径读文件
-        std::string fullPath = ax::FileUtils::getInstance()->fullPathForFilename(res->getPath());
-        if (fullPath.empty())
-        {
-            task->fail("config file not found");
-            return;
-        }
-
+        const std::string path = res->getPath();
         auto ok = std::make_shared<bool>(false);
-        task->runOnWorker([isMugen, fullPath, ok]() {
-            *ok = isMugen ? mugen::conf::Config::instance().load(fullPath)
-                          : mugen::AvatarAssetCache::getInstance()->load(fullPath);
+        task->runOnWorker([isMugen, path, ok]() {
+            *ok = isMugen ? mugen::conf::Config::instance().load(path)
+                          : mugen::AvatarAssetCache::getInstance()->load(path);
         }, [task, ok]() {
             if (*ok)
                 task->complete();
@@ -243,17 +236,11 @@ void registerMap(ResourceLoaderRegistry& registry)
 {
     registry.registerType<MapResource>(ResourceType::Map,
                                        [](std::shared_ptr<MapResource> res, const LoadTaskPtr& task) {
-        std::string fullPath = ax::FileUtils::getInstance()->fullPathForFilename(res->getLayerFile());
-        if (fullPath.empty())
-        {
-            task->fail("map layer file not found");
-            return;
-        }
-
+        const std::string layerFile = res->getLayerFile();
         // 只解析 JSON、不创建节点，解析逻辑和真正建图共用（见 LayerRuntimeLoader::collectResources）
         auto resources = std::make_shared<mugen::LayerResourceList>();
-        task->runOnWorker([fullPath, resources]() {
-            *resources = mugen::LayerRuntimeLoader::collectResources(fullPath);
+        task->runOnWorker([layerFile, resources]() {
+            *resources = mugen::LayerRuntimeLoader::collectResources(layerFile);
         }, [task, resources]() {
             for (const auto& [skeleton, atlas] : resources->spines)
                 task->spawn<SpineResource>(skeleton, std::vector<std::string>{atlas}, 1.0f);

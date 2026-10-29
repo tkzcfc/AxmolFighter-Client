@@ -1,4 +1,5 @@
 #include "SkillTestSupport.h"
+#include "../support/ContentVfs.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
 #include <iostream>
 
@@ -19,8 +20,8 @@ struct WorldAttack
     {
         loadConfig();
         auto* assets = AvatarAssetCache::getInstance();
-        assets->addSearchPath("res_zhcn");
-        REQUIRE(assets->load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/avatar.bin"));
+        REQUIRE(mugen::test::ensureContentVfs());
+        REQUIRE(assets->load("/mugen/config/avatar.bin"));
         for (const auto& skill : conf::Config::instance().table<conf::SkillAttackConfig>())
         {
             if (skill.cd != 0 || skill.actionIds.empty() || skill.actionIds.front().empty() || skill.skillType == 1)
@@ -108,7 +109,7 @@ struct WorldAttack
         bytes.writeFinish();
         REQUIRE(conf::Config::instance().loadBytes({bytes.getBuffer(), bytes.getBuffer() + bytes.getSize()}));
     }
-    ~WorldAttack() { conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin"); }
+    ~WorldAttack() { (mugen::test::ensureContentVfs() && conf::Config::instance().load("/mugen/config/config.bin")); }
 };
 }  // namespace
 

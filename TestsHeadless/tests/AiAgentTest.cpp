@@ -1,4 +1,5 @@
 #include "SkillTestSupport.h"
+#include "../support/ContentVfs.h"
 #include "mugen/sim/ai/AiAgent.h"
 #include "mugen/sim/buff/BuffHolder.h"
 
@@ -52,7 +53,7 @@ struct MonsterFixture
         world.ecs().singleton<MapRegion>().moveRanges = {{"-2000"_fx, "-2000"_fx, "4000"_fx, "4000"_fx}};
         monster = create(true, 8, {});
     }
-    ~MonsterFixture() { conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin"); }
+    ~MonsterFixture() { (mugen::test::ensureContentVfs() && conf::Config::instance().load("/mugen/config/config.bin")); }
     void publish()
     {
         for (auto& row : archive.ai) if (row.id == aiRow.id) row = aiRow;

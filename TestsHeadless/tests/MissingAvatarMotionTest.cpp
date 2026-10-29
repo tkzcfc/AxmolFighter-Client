@@ -1,5 +1,7 @@
 #include "doctest.h"
 
+#include "../support/ContentVfs.h"
+
 #include "mugen/avatar/MissingAvatarMotion.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
 
@@ -11,17 +13,16 @@
 namespace
 {
 
-const char* kYouliMotion = "mugen/motion/effect/tx_youli_zidongsheji.motion";
+const char* kYouliMotion = "/mugen/motion/effect/tx_youli_zidongsheji.motion";
 
 const mugen::MotionMap* youliMotionMap()
 {
     auto* cache = mugen::AvatarAssetCache::getInstance();
     if (!cache->isLoaded())
     {
-        const auto content = std::filesystem::path(__FILE__).parent_path().parent_path().parent_path() / "Content";
-        cache->clearSearchPaths();
-        cache->addSearchPath("res_zhcn");
-        if (!cache->load((content / "mugen/config/avatar.bin").string()))
+        if (!mugen::test::ensureContentVfs())
+            return nullptr;
+        if (!cache->load("/mugen/config/avatar.bin"))
             return nullptr;
     }
     return cache->getMotionMap(kYouliMotion);
@@ -62,7 +63,7 @@ TEST_CASE("Missing avatar motion warns once for an absent tx_youli name")
 
     CHECK(first == nullptr);
     CHECK(second == nullptr);
-    CHECK(countOf(text, "Avatar: motion '18' not found in 'mugen/motion/effect/tx_youli_zidongsheji.motion'") == 1);
+    CHECK(countOf(text, "Avatar: motion '18' not found in '/mugen/motion/effect/tx_youli_zidongsheji.motion'") == 1);
 }
 
 TEST_CASE("Missing avatar motion still returns a name present in tx_youli")

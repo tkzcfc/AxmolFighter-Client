@@ -72,8 +72,12 @@ set(MUGEN_SOURCES
 # Rendering stays on the client.
 list(FILTER MUGEN_SOURCES EXCLUDE REGEX ".*/avatar/render/.*")
 
+include("${CMAKE_CURRENT_SOURCE_DIR}/../cmake/VfsSources.cmake")
+list(APPEND MUGEN_SOURCES ${VFS_SOURCES})
+
 set(MUGEN_COMMON_INCLUDES
     "${CLIENT_SOURCE_DIR}"
+    "${CLIENT_SOURCE_DIR}/3rd"
     "${RAPIDJSON_INCLUDE_DIR}"
 )
 
@@ -110,6 +114,8 @@ add_executable(mugen_sim_cli
     "${CMAKE_CURRENT_SOURCE_DIR}/sim_cli_main.cpp"
 )
 mugen_apply_compile_settings(mugen_sim_cli)
+find_package(Threads REQUIRED)
 foreach(target mugen_tests mugen_sim_cli)
     target_compile_definitions(${target} PRIVATE MUGEN_CONTENT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../Content")
+    target_link_libraries(${target} PRIVATE Threads::Threads)
 endforeach()

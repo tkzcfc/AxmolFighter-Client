@@ -1,4 +1,5 @@
 #include <doctest/doctest.h>
+#include "../support/ContentVfs.h"
 #include "mugen/sim/role/Role.h"
 #include "SkillTestSupport.h"
 #include "mugen/sim/role/brain/RoleBrainDriver.h"
@@ -32,8 +33,8 @@ struct HitStateWorld
     {
         skill_test::loadConfig();
         auto* assets = AvatarAssetCache::getInstance();
-        assets->addSearchPath("res_zhcn");
-        REQUIRE(assets->load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/avatar.bin"));
+        REQUIRE(mugen::test::ensureContentVfs());
+        REQUIRE(assets->load("/mugen/config/avatar.bin"));
         m_entity = skill_test::actor(m_world);
         auto& ecs = m_world.ecs();
         ecs.get<RoleIdentity>(m_entity).roleId = conf::Config::instance().table<conf::RoleConfig>().front().id;

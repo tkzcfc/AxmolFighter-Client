@@ -53,7 +53,7 @@ file(GLOB_RECURSE GAME_SOURCE CONFIGURE_DEPENDS
   Source/*.cpp Source/*.c Source/*.cc
 )
 
-# 排除 protobuf 源码目录（由 add_subdirectory 单独编译）
+# 排除 protobuf（由 add_subdirectory 单独编译）。vfs 运行时随本目标编译。
 list(FILTER GAME_HEADER EXCLUDE REGEX "Source/3rd/protobuf/")
 list(FILTER GAME_SOURCE EXCLUDE REGEX "Source/3rd/protobuf/")
 list(FILTER GAME_SOURCE EXCLUDE REGEX "Source/mugen/core/Object\\.cpp$")
@@ -71,9 +71,11 @@ else()
   set_source_files_properties(${SPINE34_C_SOURCES} PROPERTIES LANGUAGE C)
 endif()
 
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/VfsSources.cmake")
+
 set(GAME_INC_DIRS
   "${CMAKE_CURRENT_SOURCE_DIR}/Source"
-  "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd" # <spine_3_4/...>
+  "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd" # <spine_3_4/...> <vfs/...>
   "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd/protobuf/src"
 )
 
@@ -183,6 +185,14 @@ if(_AX_TESTS)
 endif()
 
 # Add any libraries you need to link to the project after this point
+# vfs 编进本目标：IFileStream 与引擎共用。
+target_compile_definitions(${APP_NAME} PRIVATE VFS_WITH_AXMOL=1)
+if(_AX_TESTS)
+  target_compile_definitions(${TEST_TARGET_NAME} PRIVATE VFS_WITH_AXMOL=1)
+endif()
+if(ANDROID)
+  target_link_libraries(${APP_NAME} android)
+endif()
 
 # Default Platform-specific setup
 include(AXGamePlatformSetup)

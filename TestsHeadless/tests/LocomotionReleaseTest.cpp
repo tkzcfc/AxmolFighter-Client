@@ -1,4 +1,5 @@
 #include "doctest.h"
+#include "../support/ContentVfs.h"
 #include "mugen/sim/input/ControlManagerCore.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 
@@ -10,7 +11,7 @@ namespace
 // 生成可控角色，并放开移动范围，避免碰到地图边缘被误判为停止。
 Entity setupHero(World& world)
 {
-    REQUIRE(conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin"));
+    REQUIRE((mugen::test::ensureContentVfs() && conf::Config::instance().load("/mugen/config/config.bin")));
     world.init({});
     const auto& role = conf::Config::instance().get<conf::RoleConfig>(104);
     REQUIRE(role.velocity > Fixed{});

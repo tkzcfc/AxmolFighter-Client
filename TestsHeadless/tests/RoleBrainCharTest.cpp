@@ -1,4 +1,5 @@
 #include "doctest.h"
+#include "../support/ContentVfs.h"
 #include "BTTestTypes.h"
 #include "SkillTestSupport.h"
 #include "../support/ScenarioHarness.h"
@@ -89,7 +90,7 @@ TEST_CASE("Attack leaf enter preserves static timer left by previous run of same
     const auto& again = state;
     CHECK(again.m_static);
     CHECK(again.m_staticResetAt == "123"_fx);
-    conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin");
+    (mugen::test::ensureContentVfs() && conf::Config::instance().load("/mugen/config/config.bin"));
 }
 
 TEST_CASE("First frame after spawn only enters, first tick updates once")
@@ -115,8 +116,8 @@ TEST_CASE("Interrupt window pins per-frame skill address and pipe timeline")
     // 找一个带 nextSkill 链且可普通打断的技能，驱动真实 World 施放与续接。
     skill_test::loadConfig();
     auto* assets = AvatarAssetCache::getInstance();
-    assets->addSearchPath("res_zhcn");
-    REQUIRE(assets->load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/avatar.bin"));
+    REQUIRE(mugen::test::ensureContentVfs());
+        REQUIRE(assets->load("/mugen/config/avatar.bin"));
     int32_t skillId = -1;
     conf::ActionConfig action;
     std::string motionFile;
@@ -208,7 +209,7 @@ TEST_CASE("Interrupt window pins per-frame skill address and pipe timeline")
     for (const auto& line : timeline)
         dump << line << " ";
     std::cout << "InterruptWindow skill=" << skillId << " switched_frame=" << switchedAt << " timeline=" << dump.str() << '\n';
-    conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin");
+    (mugen::test::ensureContentVfs() && conf::Config::instance().load("/mugen/config/config.bin"));
 }
 
 TEST_CASE("Room change exits previous leaf and enters plus updates once")
@@ -279,5 +280,5 @@ TEST_CASE("Hit state exit resets displacement only for Death and landing Hit")
         role::brain::states::HitState::exit(rc, behavior::ActionType::HitUp, state);
         CHECK(disp.listenerNode == 7);
     }
-    conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin");
+    (mugen::test::ensureContentVfs() && conf::Config::instance().load("/mugen/config/config.bin"));
 }

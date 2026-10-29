@@ -1,4 +1,5 @@
 #include "SkillTestSupport.h"
+#include "../support/ContentVfs.h"
 #include "mugen/sim/hit/HitResolver.h"
 #include "mugen/sim/hit/Damage.h"
 #include "mugen/sim/hit/DamageCalculator.h"
@@ -82,7 +83,7 @@ struct HitFixture
         m_world.ecs().get<EffectState>(m_effect).m_baseSkillId = 920000;
     }
     // 恢复全局只读配置，防止污染相邻测试。
-    ~HitFixture() { conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin"); }
+    ~HitFixture() { (mugen::test::ensureContentVfs() && conf::Config::instance().load("/mugen/config/config.bin")); }
     // 标准碰撞框，位于地面。
     static WorldBox box() { return {{}, {"20"_fx, {}, "20"_fx}}; }
     // 获取将被覆写的效果配置。

@@ -1,4 +1,5 @@
 #include "doctest.h"
+#include "../support/ContentVfs.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "mugen/sim/role/RoleActor.h"
 #include <filesystem>
@@ -21,7 +22,8 @@ namespace
 {
 void loadConfig()
 {
-    REQUIRE(mugen::conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin"));
+    REQUIRE(mugen::test::ensureContentVfs());
+    REQUIRE(mugen::conf::Config::instance().load("/mugen/config/config.bin"));
 }
 }  // namespace
 TEST_CASE("Attribute golden compares three role curves at two levels")
@@ -102,8 +104,8 @@ TEST_CASE("Collider real motion advances after freeze expires and restores ident
     using namespace mugen::sim;
     loadConfig();
     auto* cache = AvatarAssetCache::getInstance();
-    cache->addSearchPath("res_zhcn");
-    REQUIRE(cache->load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/avatar.bin"));
+    REQUIRE(mugen::test::ensureContentVfs());
+    REQUIRE(cache->load("/mugen/config/avatar.bin"));
     World world;
     world.init({});
     RoleSpawnParams params;
@@ -111,7 +113,7 @@ TEST_CASE("Collider real motion advances after freeze expires and restores ident
     params.level                                 = 100;
     const auto entity                            = RoleSpawner(world).spawnRole(params);
     auto& motion                                 = world.ecs().get<MotionState>(entity);
-    motion.motionFile                            = "mugen/motion/hero/rw_newzhujue_lilimu.motion";
+    motion.motionFile                            = "/mugen/motion/hero/rw_newzhujue_lilimu.motion";
     motion.motionName                            = "101";
     motion.playing                               = true;
     motion.actionScale                           = Fixed::fromInt(2);
@@ -133,8 +135,9 @@ TEST_CASE("Collider real motion advances after freeze expires and restores ident
 TEST_CASE("Spawn MapRegion loads real layer and clamps half unit boundaries")
 {
     using namespace mugen;
+    REQUIRE(mugen::test::ensureContentVfs());
     sim::MapRegion region;
-    region.load(std::string(MUGEN_CONTENT_DIR) + "/mugen/map/stage9_room5_2.layer");
+    region.load("/mugen/map/stage9_room5_2.layer");
     REQUIRE_FALSE(region.moveRanges.empty());
     region.moveRanges = {{"7.5"_fx, "-13.5"_fx, "5"_fx, "7"_fx}};
     CHECK(region.getLeftRegion({"0"_fx, "-10"_fx}) == "7.5"_fx);

@@ -1,4 +1,5 @@
 #include "SkillTestSupport.h"
+#include "../support/ContentVfs.h"
 #include "mugen/core/serialize/BinaryArchive.h"
 #include "mugen/conf/BattleConst.h"
 
@@ -49,7 +50,7 @@ struct AiFixture
     }
     ~AiFixture()
     {
-        conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin");
+        (mugen::test::ensureContentVfs() && conf::Config::instance().load("/mugen/config/config.bin"));
     }
 };
 }

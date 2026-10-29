@@ -1,4 +1,5 @@
 #include "doctest.h"
+#include "../support/ContentVfs.h"
 #include "SkillTestSupport.h"
 #include "mugen/sim/buff/BuffHolder.h"
 #include "mugen/avatar/AvatarPaths.h"
@@ -104,9 +105,8 @@ TEST_CASE("BuffPresentation production disappearance resolves or exits immediate
     using namespace mugen::sim;
     skill_test::loadConfig();
     auto* assets = AvatarAssetCache::getInstance();
-    assets->clearSearchPaths();
-    assets->addSearchPath("res_zhcn");
-    REQUIRE(assets->load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/avatar.bin"));
+    REQUIRE(mugen::test::ensureContentVfs());
+        REQUIRE(assets->load("/mugen/config/avatar.bin"));
     World world;
     const auto entity = skill_test::actor(world);
     BuffPool pool;

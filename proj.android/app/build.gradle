@@ -85,7 +85,7 @@ android {
     }
 
     aaptOptions {
-       noCompress 'mp3','ogg','wav','mp4','ttf','ttc','otf'
+       noCompress 'mp3','ogg','wav','mp4','ttf','ttc','otf','vfs'
     }
 
     buildFeatures {
@@ -100,10 +100,40 @@ android.applicationVariants.configureEach { variant ->
             delete "${projectDir}/build/assets"
         }
         doLast {
-            copy {
-                from "${projectDir}/../../Content"
-                into "${projectDir}/build/assets"
-                exclude "**/*.gz"
+            // CONTENT_VFS_PACK (proj.android/gradle.properties): pack Content into content.vfs + loose native/.
+            // Default false = copy the whole Content tree (dev-friendly; no vfstool required).
+            def packVfs = (findProperty("CONTENT_VFS_PACK") ?: "false").toString().equalsIgnoreCase("true")
+            def repoRoot = file("${projectDir}/../..")
+            def contentDir = file("${repoRoot}/Content")
+
+            if (packVfs) {
+                exec {
+                    workingDir repoRoot
+                    commandLine "pwsh", "-File", "${repoRoot}/Tools/pack_content_vfs.ps1"
+                }
+                def packedVfs = file("${contentDir}/content.vfs")
+                if (!packedVfs.exists()) {
+                    throw new GradleException("CONTENT_VFS_PACK=true but Content/content.vfs was not produced")
+                }
+                copy {
+                    from packedVfs
+                    into "${projectDir}/build/assets"
+                }
+                // Outside .vfs: Content/native -> assets/native (e.g. video for MediaPlayer file://).
+                def nativeDir = file("${contentDir}/native")
+                if (nativeDir.exists()) {
+                    copy {
+                        from nativeDir
+                        into "${projectDir}/build/assets/native"
+                    }
+                }
+            } else {
+                copy {
+                    from contentDir
+                    into "${projectDir}/build/assets"
+                    exclude "**/*.gz"
+                    exclude "content.vfs"
+                }
             }
             copy {
                 from "${projectDir}/build/runtime/axslc"

@@ -1,4 +1,5 @@
 #include "doctest.h"
+#include "../support/ContentVfs.h"
 #include "SkillTestSupport.h"
 #include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/role/brain/states/HitStates.h"
@@ -30,7 +31,7 @@ Entity fullActor(World& world, CharacterClass occupation = CharacterClass::kSwor
 }
 void reloadConfig()
 {
-    conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin");
+    (mugen::test::ensureContentVfs() && conf::Config::instance().load("/mugen/config/config.bin"));
 }
 }  // namespace
 

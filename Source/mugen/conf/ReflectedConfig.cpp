@@ -1,8 +1,14 @@
 #include "ReflectedConfig.h"
 #include "BuffRules.h"
 
-#include "mugen/core/io/FileUtils.h"
 #include "mugen/core/serialize/BinaryArchive.h"
+
+#include "mugen/core/io/FileUtils.h"
+#if !defined(MG_NO_VFS)
+#include "vfs/VirtualFileSystem.h"
+#endif
+
+#include <vector>
 
 namespace mugen::conf
 {
@@ -25,12 +31,6 @@ Config& Config::instance()
 {
     static Config config;
     return config;
-}
-
-// 读取文件内容后委托给内存加载流程。
-bool Config::load(const std::string& path)
-{
-    return loadBytes(io::getDataFromFile(path));
 }
 
 // 验证文件头和反射归档后替换当前配置。
@@ -70,5 +70,19 @@ bool Config::loadBytes(std::vector<uint8_t> bytes)
     m_archive = std::move(archive);
     m_loaded  = true;
     return true;
+}
+
+// 读取文件内容后委托给内存加载流程。
+bool Config::load(const std::string& path)
+{
+#if defined(MG_NO_VFS)
+    (void)path;
+    return false;
+#else
+    std::vector<uint8_t> bytes;
+    if (io::vfs()->readFile(path, bytes) != vfs::Error::OK)
+        return false;
+    return loadBytes(std::move(bytes));
+#endif
 }
 }  // namespace mugen::conf

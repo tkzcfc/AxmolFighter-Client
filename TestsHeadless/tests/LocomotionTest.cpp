@@ -1,4 +1,5 @@
 #include "doctest.h"
+#include "../support/ContentVfs.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "mugen/sim/input/ControlManagerCore.h"
 #include "mugen/conf/BattleConst.h"
@@ -13,7 +14,7 @@ namespace
 {
 Entity setup(World& world, bool moving = false)
 {
-    REQUIRE(conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin"));
+    REQUIRE((mugen::test::ensureContentVfs() && conf::Config::instance().load("/mugen/config/config.bin")));
     world.init({});
     RoleSpawnParams params;
     params.roleId = 261;

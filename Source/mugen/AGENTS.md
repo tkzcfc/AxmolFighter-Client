@@ -12,7 +12,7 @@ Source/mugen/
     serialize/ ByteBuffer, BinaryArchive, Hash
     ecs/     ECSManager, entity handles, ComponentPool, singletons
     bt/      BTDef / BTInstance / BTRunner / BTRegistry
-    io/ utils/ StdC.h MacroDefinition.h
+    io/ utils/ StdC.h MacroDefinition.h。io 只持有进程入口 set 的 VFS 指针（实现在 Source/3rd/vfs）；Content 挂在虚根 `/`，资源路径为 /mugen/...
   conf/      namespace mugen::conf. Reflected config tables and runtime Config.
   avatar/    MotionPlayer and avatar/data (.motion, .box, avatar.bin). No engine headers.
   render/    Client only. The whole tree is inside #ifdef RUNTIME_IN_AXMOL.
@@ -91,3 +91,16 @@ pwsh TestsHeadless/check_rules.ps1 [-Paths core,conf,avatar,sim]
 ```
 
 `run_headless_tests.ps1` configures, builds, runs `mugen_tests`, and returns its exit code. `check_rules.ps1` prints `file:line: rule` and returns non-zero on a violation. `mugen_sim_cli` replays and runs rooms headless.
+
+
+## VFS mount topology (client)
+
+Headless tests and the client share keys under `/mugen/...` (absolute, or relative `mugen/...` which `VfsFileUtils` prefixes with `/` for VFS). Shared code uses `io::vfs()`.
+
+| Mount | Role |
+|---|---|
+| `/` | Read-only Content (native dir on desktop; `content.vfs` archive if present on Android, else AssetManager) |
+| `/user` | Writable native directory (`WriteTarget`) |
+
+`io::setVfs` must run before `Config::load` / `AvatarAssetCache::load`. `ScenarioHarness` mounts both `/` and `/user`. Do not reference `res_zhcn`.
+On Android, `content.vfs` holds most Content when packed; without it the AssetManager is still mounted at `/` so VFS paths work. `Content/native/` (videos under `native/video/`) is loose under `assets/native` (MediaPlayer needs native paths; game code keeps `video/...` via native search path). Audio can stay in the `.vfs`. Gradle: `CONTENT_VFS_PACK` in `proj.android/gradle.properties`.

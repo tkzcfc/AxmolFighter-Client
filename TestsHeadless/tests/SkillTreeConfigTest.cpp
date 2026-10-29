@@ -1,15 +1,13 @@
 #include "doctest.h"
+#include "../support/ContentVfs.h"
 
 #include "mugen/conf/ReflectedConfig.h"
 
-#include <filesystem>
-
 TEST_CASE("SkillTree config loads tree 4 and leaf 40010")
 {
-    const auto path =
-        std::filesystem::path(__FILE__).parent_path().parent_path().parent_path() / "Content/mugen/config/config.bin";
+    REQUIRE(mugen::test::ensureContentVfs());
     mugen::conf::Config config;
-    REQUIRE(config.load(path.string()));
+    REQUIRE(config.load("/mugen/config/config.bin"));
 
     const auto* tree = config.find<mugen::conf::SkillTreeConfig>(4);
     REQUIRE(tree != nullptr);

@@ -1,5 +1,9 @@
 #include "doctest.h"
 
+#include "../support/ContentVfs.h"
+#include "vfs/VirtualFileSystem.h"
+#include <vector>
+
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/avatar/FashionResolver.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
@@ -9,11 +13,9 @@
 
 TEST_CASE("ConfigLoad finds real skill 920000")
 {
-    namespace fs = std::filesystem;
-    const fs::path configPath =
-        fs::path(__FILE__).parent_path().parent_path().parent_path() / "Content" / "mugen" / "config" / "config.bin";
+    REQUIRE(mugen::test::ensureContentVfs());
     mugen::conf::Config config;
-    REQUIRE(config.load(configPath.string()));
+    REQUIRE(config.load("/mugen/config/config.bin"));
     const auto* skill = config.find<mugen::conf::SkillAttackConfig>(920000);
     REQUIRE(skill != nullptr);
     CHECK(skill->actionIds == std::vector<std::vector<int32_t>>{{920000, 920010, 920020}});
@@ -22,12 +24,10 @@ TEST_CASE("ConfigLoad finds real skill 920000")
 
 TEST_CASE("AvatarAssetLoad finds lilimu motion and box timeline")
 {
-    const auto content = std::filesystem::path(__FILE__).parent_path().parent_path().parent_path() / "Content";
+    REQUIRE(mugen::test::ensureContentVfs());
     auto* cache = mugen::AvatarAssetCache::getInstance();
-    cache->clearSearchPaths();
-    cache->addSearchPath("res_zhcn");
-    REQUIRE(cache->load((content / "mugen/config/avatar.bin").string()));
-    const auto* motionMap = cache->getMotionMap("mugen/motion/hero/rw_newzhujue_lilimu.motion");
+    REQUIRE(cache->load("/mugen/config/avatar.bin"));
+    const auto* motionMap = cache->getMotionMap("/mugen/motion/hero/rw_newzhujue_lilimu.motion");
     REQUIRE(motionMap != nullptr);
     const auto* motion = motionMap->findMotion("101");
     REQUIRE(motion != nullptr);
@@ -37,29 +37,24 @@ TEST_CASE("AvatarAssetLoad finds lilimu motion and box timeline")
 
 TEST_CASE("AvatarAssetLoad refuses a schema-mismatched archive")
 {
-    const auto content = std::filesystem::path(__FILE__).parent_path().parent_path().parent_path() / "Content";
-    const auto source = content / "mugen/config/avatar.bin";
-    const auto invalid = std::filesystem::temp_directory_path() / "mugen-avatar-schema-mismatch.bin";
-    std::filesystem::copy_file(source, invalid, std::filesystem::copy_options::overwrite_existing);
-    std::fstream file(invalid, std::ios::binary | std::ios::in | std::ios::out);
-    file.seekp(8);
-    const char changed = 0;
-    file.write(&changed, 1);
-    file.close();
+    REQUIRE(mugen::test::ensureContentVfs());
+    std::vector<uint8_t> bytes;
+    REQUIRE(mugen::io::vfs()->readFile("/mugen/config/avatar.bin", bytes) == vfs::Error::OK);
+    REQUIRE(bytes.size() > 9);
+    bytes[8] = 0;
+    const char* invalidPath = "/user/mugen-avatar-schema-mismatch.bin";
+    REQUIRE(mugen::io::vfs()->writeFile(invalidPath, bytes.data(), bytes.size()) == vfs::Error::OK);
 
     auto* cache = mugen::AvatarAssetCache::getInstance();
-    cache->clearSearchPaths();
-    CHECK_FALSE(cache->load(invalid.string()));
-    std::filesystem::remove(invalid);
+    CHECK_FALSE(cache->load(invalidPath));
 }
 
 TEST_CASE("ConfigLoad resolves every real row by its registered key policy")
 {
     // Given the production archive.
-    const auto path =
-        std::filesystem::path(__FILE__).parent_path().parent_path().parent_path() / "Content/mugen/config/config.bin";
+    REQUIRE(mugen::test::ensureContentVfs());
     mugen::conf::Config config;
-    REQUIRE(config.load(path.string()));
+    REQUIRE(config.load("/mugen/config/config.bin"));
 
     // When each table is addressed using its declared identity.
     const auto checkTable = [&config]<class T>() {
@@ -93,10 +88,9 @@ TEST_CASE("ConfigLoad resolves every real row by its registered key policy")
 TEST_CASE("ConfigLoad selects occupation specific fashion when ids overlap")
 {
     // Given the production archive with shared fashion ids.
-    const auto path =
-        std::filesystem::path(__FILE__).parent_path().parent_path().parent_path() / "Content/mugen/config/config.bin";
+    REQUIRE(mugen::test::ensureContentVfs());
     mugen::conf::Config config;
-    REQUIRE(config.load(path.string()));
+    REQUIRE(config.load("/mugen/config/config.bin"));
     for (int32_t occupation : {1, 2, 3, 4})
     {
         // When the full composite key is requested.
@@ -112,10 +106,9 @@ TEST_CASE("ConfigLoad selects occupation specific fashion when ids overlap")
 TEST_CASE("ConfigLoad returns null when real reference chains dangle")
 {
     // Given known source rows whose targets are absent.
-    const auto path =
-        std::filesystem::path(__FILE__).parent_path().parent_path().parent_path() / "Content/mugen/config/config.bin";
+    REQUIRE(mugen::test::ensureContentVfs());
     mugen::conf::Config config;
-    REQUIRE(config.load(path.string()));
+    REQUIRE(config.load("/mugen/config/config.bin"));
     const auto* action = config.findById<mugen::conf::ActionConfig>(501750);
     const auto* role   = config.findById<mugen::conf::RoleConfig>(41211);
     REQUIRE(action != nullptr);
@@ -130,9 +123,8 @@ TEST_CASE("ConfigLoad returns null when real reference chains dangle")
 TEST_CASE("FashionResolver uses occupation and skips missing referenced fashion")
 {
     // Given the same production configuration used by avatar callers.
-    const auto path =
-        std::filesystem::path(__FILE__).parent_path().parent_path().parent_path() / "Content/mugen/config/config.bin";
-    REQUIRE(mugen::conf::Config::instance().load(path.string()));
+    REQUIRE(mugen::test::ensureContentVfs());
+    REQUIRE(mugen::conf::Config::instance().load("/mugen/config/config.bin"));
     for (int32_t role : {101, 102, 104})
     {
         mugen::FashionAppearance appearance;

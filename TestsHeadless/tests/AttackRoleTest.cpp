@@ -1,4 +1,5 @@
 #include "SkillTestSupport.h"
+#include "../support/ContentVfs.h"
 #include "mugen/sim/attack/AttackRole.h"
 #include "mugen/sim/attack/ActionAttack.h"
 
@@ -68,7 +69,7 @@ struct Fixture
         role::brain::RoleContext rc{world, entity};
         return attack::AttackAction::update(rc, param, state);
     }
-    ~Fixture() { conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin"); }
+    ~Fixture() { (mugen::test::ensureContentVfs() && conf::Config::instance().load("/mugen/config/config.bin")); }
 };
 }  // namespace
 TEST_CASE("AttackRole real config interrupt boundary is strict")

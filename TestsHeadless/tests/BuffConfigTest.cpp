@@ -1,4 +1,5 @@
 #include "doctest.h"
+#include "../support/ContentVfs.h"
 #include "mugen/conf/BuffRules.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/core/serialize/BinaryArchive.h"
@@ -25,7 +26,8 @@ TEST_CASE("BuffConfig registry covers every production rule")
 {
     using namespace mugen::conf;
     Config config;
-    REQUIRE(config.load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin"));
+    REQUIRE(mugen::test::ensureContentVfs());
+    REQUIRE(config.load("/mugen/config/config.bin"));
     REQUIRE(config.table<BuffRuleConfig>().size() == 162);
     for (const auto& row : config.table<BuffRuleConfig>())
     {

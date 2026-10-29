@@ -19,7 +19,7 @@ struct SpineInfo
 class AvatarPaths
 {
 public:
-    // spine 骨架路径 → .motion 路径（mugen/spine/x.skel → mugen/motion/x.motion）
+    // spine 骨架路径 → .motion 路径（/mugen/spine/x.skel → /mugen/motion/x.motion）
     static std::string motionFileFromSpine(const std::string& spineSkeleton);
 
     // roleId → res_spine 的骨架/atlas/缩放。角色不存在或未配置 Spine 时 valid=false。

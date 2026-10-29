@@ -28,7 +28,7 @@ void World::init(WorldSetup setup)
     m_ecs.singleton<MapRegion>().mapKey = m_setup.mapKey;
     if (!m_setup.mapKey.empty())
         m_ecs.singleton<MapRegion>().load(
-            m_setup.mapKey.ends_with(".layer") ? m_setup.mapKey : "mugen/map/" + m_setup.mapKey + ".layer");
+            m_setup.mapKey.ends_with(".layer") ? m_setup.mapKey : "/mugen/map/" + m_setup.mapKey + ".layer");
     m_ecs.singleton<RoomState>().roomId = m_setup.roomId;
     m_hashSequence                      = 0;
     m_initialized                       = true;
@@ -294,7 +294,7 @@ bool World::changeRoom(int32_t id, FixedVec3 position, int32_t toward)
     m_ecs.singleton<MapRegion>()        = {};
     m_ecs.singleton<MapRegion>().mapKey = config->mapKey;
     if (!config->mapKey.empty())
-        m_ecs.singleton<MapRegion>().load("mugen/map/" + config->mapKey + ".layer");
+        m_ecs.singleton<MapRegion>().load("/mugen/map/" + config->mapKey + ".layer");
     m_ecs.each<CollisionState>([](Entity, CollisionState& collision) { collision.contacts.clear(); });
     if (!room::RoomDirector(*this).enter(*config, previous.m_stageId, previous.m_copyId))
         return false;

@@ -1,4 +1,5 @@
 #include "SkillTestSupport.h"
+#include "../support/ContentVfs.h"
 #include "mugen/sim/effect/Effect.h"
 #include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/hit/DamageCalculator.h"
@@ -67,7 +68,7 @@ struct Fixture
     conf::EffectConfig& row(int index) { return archive.effect[archive.effect.size() - 6 + index]; }
     Entity spawn(int index = 0) { return attack::AttackSeam(world, owner).spawnFromRole({200000001 + index, 12, 11, 2}); }
     void tick() { FrameInput input; input.frame = world.ecs().singleton<WorldClock>().frame + 1; world.tick(input); }
-    ~Fixture() { conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin"); }
+    ~Fixture() { (mugen::test::ensureContentVfs() && conf::Config::instance().load("/mugen/config/config.bin")); }
 };
 }
 

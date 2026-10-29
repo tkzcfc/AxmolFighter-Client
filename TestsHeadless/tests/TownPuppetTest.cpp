@@ -1,4 +1,5 @@
 #include "doctest.h"
+#include "../support/ContentVfs.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 
@@ -7,7 +8,7 @@ TEST_CASE("Town puppet updates synchronize position, facing, and motion")
     using namespace mugen;
     using namespace mugen::sim;
 
-    REQUIRE(conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin"));
+    REQUIRE((mugen::test::ensureContentVfs() && conf::Config::instance().load("/mugen/config/config.bin")));
     World world;
     world.init({1, WorldMode::Town, 41, {}});
     const Entity puppet = RoleSpawner(world).spawnPuppet(77, 261, {}, 1);

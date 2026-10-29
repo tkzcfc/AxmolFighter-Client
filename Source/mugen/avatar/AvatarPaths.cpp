@@ -24,6 +24,9 @@ std::string AvatarPaths::motionFileFromSpine(const std::string& spineSkeleton)
     if (spineSkeleton.empty())
         return {};
 
+    // spineSkeleton必须以/开头
+    MG_ASSERT(!spineSkeleton.empty() && spineSkeleton.front() == '/' && "spineSkeleton path must start with '/'");
+
     std::string path = spineSkeleton;
     for (char& c : path)
     {

@@ -1,6 +1,7 @@
 #include "LayerLoader.h"
 
 #include "mugen/core/io/FileUtils.h"
+#include "vfs/VirtualFileSystem.h"
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"
 
@@ -200,8 +201,8 @@ LayerLoadResult LayerLoader::load(const std::string& layerFile)
 {
     LayerLoadResult result;
 
-    const std::vector<uint8_t> data = io::getDataFromFile(layerFile);
-    if (data.empty())
+    std::vector<uint8_t> data;
+    if (io::vfs()->readFile(layerFile, data) != vfs::Error::OK || data.empty())
     {
         MG_LOG_E("LayerLoader: failed to read layer file '{}'", layerFile);
         return result;

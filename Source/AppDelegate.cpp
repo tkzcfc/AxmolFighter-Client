@@ -25,6 +25,7 @@
 
 #include "AppDelegate.h"
 #include "MainScene.h"
+#include "io/VfsFileUtils.h"
 
 #define USE_AUDIO_ENGINE 1
 
@@ -62,6 +63,12 @@ bool AppDelegate::applicationDidFinishLaunching()
     // Enable logging output colored text style and prefix timestamp
     ax::setLogFmtFlag(ax::LogFmtFlag::Full);
 #endif
+
+    if (!VfsFileUtils::install())
+    {
+        AXLOGE("AppDelegate: VFS install failed; aborting startup");
+        return false;
+    }
 
     // initialize director
     auto director   = Director::getInstance();
@@ -126,6 +133,11 @@ int AppDelegate::run(int argc, char** argv)
 {
     AXLOGI("Running unit tests...\n");
     fflush(stdout);
+    if (!VfsFileUtils::install())
+    {
+        AXLOGE("AppDelegate: VFS install failed; aborting tests");
+        return 1;
+    }
     AXLOGI("Default resource path: {}\n", FileUtils::getInstance()->getDefaultResourceRootPath());
     AXLOGI("Writable path: {}\n", FileUtils::getInstance()->getWritablePath());
     {

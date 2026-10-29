@@ -1,4 +1,5 @@
 #pragma once
+#include "../support/ContentVfs.h"
 #include "doctest.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/skill/SkillCaster.h"
@@ -11,7 +12,8 @@ using namespace mugen;
 using namespace mugen::sim;
 inline void loadConfig()
 {
-    REQUIRE(conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin"));
+    REQUIRE(mugen::test::ensureContentVfs());
+    REQUIRE(conf::Config::instance().load("/mugen/config/config.bin"));
 }
 struct ConfigOverride
 {
@@ -35,7 +37,7 @@ struct ConfigOverride
     }
     ~ConfigOverride()
     {
-        conf::Config::instance().load(std::string(MUGEN_CONTENT_DIR) + "/mugen/config/config.bin");
+        (void)(mugen::test::ensureContentVfs() && conf::Config::instance().load("/mugen/config/config.bin"));
     }
 };
 template<class Predicate>

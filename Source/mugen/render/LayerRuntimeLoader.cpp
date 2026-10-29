@@ -4,8 +4,10 @@
 
 #    include "mugen/render/RenderUtils.h"
 #    include "mugen/render/spine/MgSkeletonAnimation.h"
+#    include "mugen/render/spine/MgSpineUtils.h"
 
 #    include "mugen/core/io/FileUtils.h"
+#    include "vfs/VirtualFileSystem.h"
 #    include "rapidjson/document.h"
 #    include "rapidjson/error/en.h"
 
@@ -146,9 +148,10 @@ ax::Node* createSpriteNode(const JsonValue& node)
         const std::string frameName = stringOr(*spriteData, "frameName");
         if (!atlasPath.empty() && !frameName.empty())
         {
+            std::string plist = atlasPath;
             auto* cache = ax::SpriteFrameCache::getInstance();
-            if (!cache->isSpriteFramesWithFileLoaded(atlasPath))
-                cache->addSpriteFramesWithFile(atlasPath);
+            if (!plist.empty() && !cache->isSpriteFramesWithFileLoaded(plist))
+                cache->addSpriteFramesWithFile(plist);
             sprite = ax::Sprite::createWithSpriteFrameName(frameName);
         }
     }
@@ -156,7 +159,9 @@ ax::Node* createSpriteNode(const JsonValue& node)
     {
         const std::string imagePath = stringOr(*spriteData, "imagePath");
         if (!imagePath.empty())
+        {
             sprite = ax::Sprite::create(imagePath);
+        }
     }
 
     if (!sprite)
@@ -487,8 +492,8 @@ void collectNodeResources(const JsonValue& node, LayerResourceList& out)
 
 ax::ParallaxNode* LayerRuntimeLoader::loadNode(const std::string& layerFile)
 {
-    const std::vector<uint8_t> data = io::getDataFromFile(layerFile);
-    if (data.empty())
+    std::vector<uint8_t> data;
+    if (io::vfs()->readFile(layerFile, data) != vfs::Error::OK || data.empty())
     {
         MG_LOG_E("LayerRuntimeLoader: failed to read layer file '{}'", layerFile);
         return nullptr;
@@ -543,8 +548,8 @@ LayerResourceList LayerRuntimeLoader::collectResources(const std::string& layerF
 {
     LayerResourceList result;
 
-    const std::vector<uint8_t> data = io::getDataFromFile(layerFile);
-    if (data.empty())
+    std::vector<uint8_t> data;
+    if (io::vfs()->readFile(layerFile, data) != vfs::Error::OK || data.empty())
     {
         MG_LOG_E("LayerRuntimeLoader: failed to read layer file '{}'", layerFile);
         return result;
