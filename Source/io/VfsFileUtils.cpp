@@ -130,7 +130,8 @@ VfsFileUtils* VfsFileUtils::install()
                vfs::errorMessage(contentErr));
         return nullptr;
     }
-    AXLOGI("VfsFileUtils: mounted {} at /", content);
+    // mountContentRoot prefers Content/content.vfs (Android APK parity) when present.
+    AXLOGI("VfsFileUtils: mounted Content root '{}' at / (archive content.vfs if present; else loose dir)", content);
 #endif
 
     const vfs::Error userErr = mugen::io::mountUserWritable(*fs, nativeUser);
@@ -220,7 +221,10 @@ ax::FileUtils::Status VfsFileUtils::readVfs(const std::string& vfsPath, ax::Resi
     }
     if (done != total)
     {
-        buffer->resize(done);
+        // 不把残片留给调用方：getDataFromFile 常忽略 Status
+        AXLOGE("VfsFileUtils: short read '{}' got {}/{} bytes", vfsPath, static_cast<unsigned long long>(done),
+               static_cast<unsigned long long>(total));
+        buffer->resize(0);
         return ax::FileUtils::Status::ReadFailed;
     }
     return ax::FileUtils::Status::OK;
