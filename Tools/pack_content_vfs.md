@@ -19,7 +19,7 @@ On Android, APK `assets/` is not a real filesystem directory. The client mounts 
 pwsh Tools/pack_content_vfs.ps1
 ```
 
-Requires `vfstool` on PATH. The pack excludes `native/` (and `native/**`) plus any nested `content.vfs`. After packing, `Content/native` must still be copied into APK `assets/native` (Gradle does this when packing is enabled).
+Looks for `Tools/bin/<platform>/vfstool(.exe)` first (e.g. `windows-x64`, `linux-x64`, `darwin-arm64`), then `PATH` / `VFSTOOL`. The pack excludes `native/` (and `native/**`) plus any nested `content.vfs`. After packing, `Content/native` must still be copied into APK `assets/native` (Gradle does this when packing is enabled).
 
 ## Gradle switch (`CONTENT_VFS_PACK`)
 

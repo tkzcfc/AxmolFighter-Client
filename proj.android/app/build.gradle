@@ -84,7 +84,12 @@ android {
         }
     }
 
+    // AGP 8+: aaptOptions.noCompress is ignored; use androidResources.
+    // Keep aaptOptions for older tooling. Large content.vfs must stay uncompressed.
     aaptOptions {
+       noCompress 'mp3','ogg','wav','mp4','ttf','ttc','otf','vfs'
+    }
+    androidResources {
        noCompress 'mp3','ogg','wav','mp4','ttf','ttc','otf','vfs'
     }
 
@@ -98,6 +103,7 @@ android.applicationVariants.configureEach { variant ->
     tasks.register("copy${variantName}ContentToAssets") {
         doFirst {
             delete "${projectDir}/build/assets"
+            delete "${projectDir}/build/vfs-staging"
         }
         doLast {
             // CONTENT_VFS_PACK (proj.android/gradle.properties): pack Content into content.vfs + loose native/.
@@ -115,9 +121,14 @@ android.applicationVariants.configureEach { variant ->
                 if (!packedVfs.exists()) {
                     throw new GradleException("CONTENT_VFS_PACK=true but Content/content.vfs was not produced")
                 }
+                // IMPORTANT: do NOT put content.vfs under build/assets.
+                // AGP compress*Assets uses zipflinger BytesSource (Files.readAllBytes),
+                // which throws "Required array size too large" for files >~2GiB even with
+                // noCompress 'vfs'. Stage it aside; injectCompressVfsAsset creates the
+                // single-entry jar with LargeFileSource after compress*Assets.
                 copy {
                     from packedVfs
-                    into "${projectDir}/build/assets"
+                    into "${projectDir}/build/vfs-staging"
                 }
                 // Outside .vfs: Content/native -> assets/native (e.g. video for MediaPlayer file://).
                 def nativeDir = file("${contentDir}/native")
@@ -165,5 +176,59 @@ project.afterEvaluate {
         tasks.named("merge${variantName}Assets").configure {
             dependsOn(copyTask)
         }
+
+        // AGP compress*Assets uses BytesSource (readAllBytes) and dies on >~2GiB files even
+        // with noCompress. content.vfs is staged outside assets; append a streamed STORED
+        // single-entry jar into this task's output so package* still sees it as COMPRESSED_ASSETS.
+        def compressName = "compress${variantName}Assets"
+        if (tasks.names.contains(compressName)) {
+            tasks.named(compressName).configure {
+                dependsOn(copyTask)
+                doLast {
+                    def packVfs = (findProperty("CONTENT_VFS_PACK") ?: "false").toString().equalsIgnoreCase("true")
+                    if (!packVfs) {
+                        return
+                    }
+                    def staged = file("${projectDir}/build/vfs-staging/content.vfs")
+                    if (!staged.exists()) {
+                        throw new GradleException("Expected staged VFS at ${staged} (CONTENT_VFS_PACK=true)")
+                    }
+                    def compressOut = outputs.files.singleFile
+                    def outJar = new File(compressOut, "assets/content.vfs.jar")
+                    outJar.parentFile.mkdirs()
+                    def repoRoot = file("${projectDir}/../..")
+                    def helperDir = file("${repoRoot}/Tools/make_stored_asset_jar")
+                    def zfJar = file("${System.getProperty('user.home')}/.gradle/caches/modules-2/files-2.1/com.android/zipflinger/8.8.1/de8e3267995699af356740cf562cbedb485f5763/zipflinger-8.8.1.jar")
+                    if (!zfJar.exists()) {
+                        def cacheRoot = file("${System.getProperty('user.home')}/.gradle/caches/modules-2/files-2.1/com.android/zipflinger")
+                        def found = null
+                        if (cacheRoot.exists()) {
+                            cacheRoot.eachFileRecurse { f ->
+                                if (found == null && f.name.startsWith("zipflinger-") && f.name.endsWith(".jar") && !f.name.contains("sources") && !f.name.contains("javadoc")) {
+                                    found = f
+                                }
+                            }
+                        }
+                        if (found == null) {
+                            throw new GradleException("zipflinger jar not found under ${cacheRoot}")
+                        }
+                        zfJar = found
+                    }
+                    exec {
+                        commandLine "java", "-cp", "${helperDir.absolutePath}${File.pathSeparator}${zfJar.absolutePath}",
+                                "MakeStoredAssetJar",
+                                staged.absolutePath,
+                                outJar.absolutePath,
+                                "assets/content.vfs"
+                    }
+                    if (!outJar.exists()) {
+                        throw new GradleException("Failed to create ${outJar}")
+                    }
+                    logger.lifecycle("Injected large STORED asset jar: ${outJar} (${outJar.length()} bytes)")
+                }
+            }
+        }
     }
 }
+
+

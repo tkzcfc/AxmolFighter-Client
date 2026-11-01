@@ -46,6 +46,8 @@ BundleArtifacts
 # Ignore files build by ndk and eclipse
 /libs/
 bin/
+!Tools/bin/
+!Tools/bin/**
 obj/
 gen/
 assets/
