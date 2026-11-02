@@ -228,6 +228,28 @@ project.afterEvaluate {
                 }
             }
         }
+
+        // AGP IncrementalSplitterRunnable 对 zip 条目大小走 Math.toIntExact。
+        // assets/content.vfs 约 2.5GiB（超过 Integer.MAX_VALUE），.so 变更后增量打 APK
+        // 会报 integer overflow。整包重打会流式写入 STORED 条目，可以成功。
+        def packageName = "package${variantName}"
+        if (tasks.names.contains(packageName)) {
+            tasks.named(packageName).configure {
+                def packVfs = (findProperty("CONTENT_VFS_PACK") ?: "false").toString().equalsIgnoreCase("true")
+                if (!packVfs) {
+                    return
+                }
+                doFirst {
+                    def apkDir = file("${projectDir}/build/outputs/apk/${variant.name}")
+                    def incDir = file("${projectDir}/build/intermediates/incremental/${packageName}")
+                    if (apkDir.exists()) {
+                        logger.lifecycle("CONTENT_VFS_PACK: deleting ${apkDir} to force clean APK packaging (avoid AGP integer overflow on >2GiB content.vfs)")
+                    }
+                    project.delete(apkDir)
+                    project.delete(incDir)
+                }
+            }
+        }
     }
 }
 
