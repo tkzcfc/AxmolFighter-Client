@@ -3,8 +3,7 @@
 #include "mugen/conf/ReflectedConfig.h"
 #include "ContentVfs.h"
 #include "mugen/core/io/FileUtils.h"
-#include "mugen/sim/room/RoomDirector.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
+#include "mugen/sim/BattleBootstrap.h"
 #include "mugen/sim/role/Role.h"
 #include <filesystem>
 
@@ -69,16 +68,15 @@ sim::WorldSetup ScenarioHarness::roomSetup(int32_t roomId, uint64_t seed)
 }
 sim::World ScenarioHarness::roomWorld(int32_t roomId, uint64_t seed)
 {
-    const auto setup = roomSetup(roomId, seed);
+    auto setup                = roomSetup(roomId, seed);
+    setup.m_playerRoleId      = 0;
+    setup.m_playerCamp        = 2;
+    setup.m_playerSlot        = 0;
+    setup.m_stageId           = 0;
+    setup.m_copyId            = 0;
+    setup.m_useScenarioHooks  = true;
     sim::World world(roomHooks());
-    world.init(setup);
-    sim::RoleSpawnParams player;
-    player.roleId     = 0;
-    player.camp       = 2;
-    player.playerSlot = 0;
-    sim::RoleSpawner(world).spawnRole(player);
-    const auto* config = conf::Config::instance().find<conf::RoomConfig>(roomId);
-    if (!config || !sim::room::RoomDirector(world).enter(*config, 0, 0))
+    if (sim::bootstrapBattle(world, setup).value == 0)
         MG_LOG_E("Cannot enter recorded room {}", roomId);
     return world;
 }

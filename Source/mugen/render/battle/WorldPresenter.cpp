@@ -10,6 +10,7 @@
 #    include "mugen/conf/LayerLoader.h"
 #    include "mugen/conf/ReflectedConfig.h"
 #    include "mugen/conf/TypeConversions.h"
+#    include "mugen/conf/tables/PetTables.h"
 #    include "mugen/sim/effect/Effect.h"
 #    include "mugen/sim/room/RoomEntities.h"
 #    include "mugen/sim/role/RoleComponents.h"
@@ -24,6 +25,8 @@ namespace
 {
 // 受击框调试色；引擎没有预置青色常量。
 const ax::Color4F kHurtBoxColor{0.0f, 1.0f, 1.0f, 1.0f};
+// 单帧位移平方超过该值视为瞬移（换房/位置吸附），跳过插值直接吸附。
+constexpr float kTeleportSnapDistanceSq = 500.0f * 500.0f;
 
 float renderValue(Fixed value)
 {
@@ -179,20 +182,35 @@ void AvatarPresenter::present(sim::World& world, float alpha, float renderDelta)
             state.avatar->stepAccessories(renderDelta);
         }
 
-        const sim::Transform& previous = state.hasPrevious ? state.previous : transform;
-        const float x                  = renderValue(previous.position.x) +
-                        (renderValue(transform.position.x) - renderValue(previous.position.x)) * alpha;
-        const float y = renderValue(previous.position.y) +
-                        (renderValue(transform.position.y) - renderValue(previous.position.y)) * alpha;
+        // 仅逻辑帧推进时滚动采样：previous 取上一逻辑帧，current 取最新逻辑帧，
+        // 渲染帧按 alpha 在两者间插值，得到平滑运动而非 30Hz 阶梯。
+        const uint64_t frame = world.ecs().singleton<sim::WorldClock>().frame;
+        if (!state.hasPrevious)
+        {
+            // 首次出现：前后帧均取当前变换，避免从原点插值。
+            state.previous    = transform;
+            state.current     = transform;
+            state.lastFrame   = frame;
+            state.hasPrevious = true;
+        }
+        else if (frame != state.lastFrame)
+        {
+            const float dx = renderValue(transform.position.x - state.current.position.x);
+            const float dy = renderValue(transform.position.y - state.current.position.y);
+            const float dz = renderValue(transform.position.z - state.current.position.z);
+            // 跳帧或大幅瞬移（换房/位置吸附）直接吸附，避免插值拖尾。
+            const bool snap = frame - state.lastFrame > 1 || (dx * dx + dy * dy + dz * dz) > kTeleportSnapDistanceSq;
+            state.previous  = snap ? transform : state.current;
+            state.current   = transform;
+            state.lastFrame = frame;
+        }
+        const RenderPose pose = interpolatePose(state, alpha);
         // Spine 偏移：x 随水平朝向翻转，z 随纵深朝向翻转；层内按偏移后的纵深排序。
-        const float towardX = transform.towardX < 0 ? -1.0f : 1.0f;
-        const float towardZ = transform.vectorZ < Fixed{} ? -1.0f : 1.0f;
-        const float depth   = renderValue(transform.position.z) + towardZ * offsetAxis(state.spineOffset, 2);
-        node->setPosition(x + towardX * offsetAxis(state.spineOffset, 0), y + offsetAxis(state.spineOffset, 1) + depth);
+        const float depth = pose.z + pose.towardZ * offsetAxis(state.spineOffset, 2);
+        node->setPosition(pose.x + pose.towardX * offsetAxis(state.spineOffset, 0),
+                          pose.y + offsetAxis(state.spineOffset, 1) + depth);
         node->setLocalZOrder(-static_cast<int>(std::floor(depth)));
-        node->setScaleX(towardX);
-        state.previous    = transform;
-        state.hasPrevious = true;
+        node->setScaleX(pose.towardX);
     });
     for (auto it = m_avatars.begin(); it != m_avatars.end();)
     {
@@ -205,6 +223,49 @@ void AvatarPresenter::present(sim::World& world, float alpha, float renderDelta)
         else
             ++it;
     }
+
+    if (m_petFollower && m_followEntity.value != 0)
+    {
+        RenderPose hero;
+        if (samplePose(m_followEntity.value, alpha, &hero))
+            m_petFollower->present({hero.x, hero.y, hero.z, hero.towardX, hero.towardZ}, renderDelta);
+    }
+}
+
+AvatarPresenter::RenderPose AvatarPresenter::interpolatePose(const AvatarState& state, float alpha)
+{
+    RenderPose pose;
+    pose.x = renderValue(state.previous.position.x) +
+             (renderValue(state.current.position.x) - renderValue(state.previous.position.x)) * alpha;
+    pose.y = renderValue(state.previous.position.y) +
+             (renderValue(state.current.position.y) - renderValue(state.previous.position.y)) * alpha;
+    pose.z = renderValue(state.previous.position.z) +
+             (renderValue(state.current.position.z) - renderValue(state.previous.position.z)) * alpha;
+    pose.towardX = state.current.towardX < 0 ? -1.0f : 1.0f;
+    pose.towardZ = state.current.vectorZ < Fixed{} ? -1.0f : 1.0f;
+    return pose;
+}
+
+bool AvatarPresenter::samplePose(uint32_t entityValue, float alpha, RenderPose* out) const
+{
+    const auto it = m_avatars.find(entityValue);
+    if (it == m_avatars.end() || !it->second.hasPrevious || !out)
+        return false;
+    *out = interpolatePose(it->second, alpha);
+    return true;
+}
+
+void AvatarPresenter::setPet(int32_t petId, int32_t spineId)
+{
+    if (!m_petFollower)
+        m_petFollower = std::make_unique<PetFollower>(tierLayer(2));
+    m_petFollower->setPet(petId, spineId);
+}
+
+void AvatarPresenter::clearPet()
+{
+    if (m_petFollower)
+        m_petFollower->clear();
 }
 
 ax::Node* AvatarPresenter::displayNode(const AvatarState& state)
@@ -232,6 +293,7 @@ void AvatarPresenter::clear()
         if (ax::Node* node = displayNode(state))
             node->removeFromParent();
     m_avatars.clear();
+    clearPet();
 }
 
 bool AvatarPresenter::setEntityAppearance(uint32_t entityValue, const FashionAppearance& appearance)
@@ -242,9 +304,54 @@ bool AvatarPresenter::setEntityAppearance(uint32_t entityValue, const FashionApp
     return it->second.avatar->setAppearance(appearance);
 }
 
+bool AvatarPresenter::setEntityIntensity(uint32_t entityValue, float intensity)
+{
+    auto it = m_avatars.find(entityValue);
+    if (it == m_avatars.end())
+        return false;
+    ax::Node* node = displayNode(it->second);
+    if (!node)
+        return false;
+    // 引擎 Spine 顶点色为 8 位（0-255），无法超过白色实现 >1 的提亮；
+    // 这里把亮度倍率饱和到 [0,1]，intensity>1 时按最亮（白色）处理。
+    const float v     = std::clamp(intensity, 0.0f, 1.0f);
+    const auto  level = static_cast<uint8_t>(std::lround(v * 255.0f));
+    node->setColor(ax::Color3B(level, level, level));
+    return true;
+}
+
 bool WorldPresenter::setEntityAppearance(Entity entity, const FashionAppearance& appearance)
 {
     return m_avatars.setEntityAppearance(entity.value, appearance);
+}
+
+void WorldPresenter::setFollowEntity(Entity entity)
+{
+    m_followEntity = entity;
+    m_avatars.setFollowEntity(entity);
+}
+
+void WorldPresenter::setPet(int32_t petId)
+{
+    if (petId == 0)
+    {
+        m_avatars.clearPet();
+        return;
+    }
+    const auto* pet = conf::Config::instance().find<conf::PetConfig>(petId);
+    if (!pet)
+    {
+        MG_LOG_W("WorldPresenter: pet {} not found", petId);
+        m_avatars.clearPet();
+        return;
+    }
+    if (pet->spineId <= 0)
+    {
+        MG_LOG_W("WorldPresenter: pet {} has invalid spine {}", petId, pet->spineId);
+        m_avatars.clearPet();
+        return;
+    }
+    m_avatars.setPet(petId, pet->spineId);
 }
 
 bool WorldPresenter::refreshLocalPlayerAppearance(sim::World& world)
@@ -407,6 +514,8 @@ void WorldPresenter::present(sim::World& world, float interpolationAlpha, float 
         m_camera.consume(event);
         m_sound.consume(event);
         m_hurtNumbers.consume(event, world);
+        if (const auto* intensity = std::get_if<sim::RoleIntensity>(&event.payload))
+            m_avatars.setEntityIntensity(event.entity.value, renderValue(intensity->m_value));
         m_lastEventSequence = event.seq + 1;
     }
     m_camera.follow(world, m_followEntity);

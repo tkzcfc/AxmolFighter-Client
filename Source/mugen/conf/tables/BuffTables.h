@@ -15,7 +15,6 @@ struct BuffConfig
     int32_t bindSpecialAbilityId = 0;
     int32_t binding              = 0;
     int32_t buffDirection        = 0;
-    int32_t buffPartner          = 0;
     int32_t buffType             = 0;
     // 冷却、条件、描述、销毁和执行参数。
     Fixed cd;
@@ -64,7 +63,6 @@ struct BuffConfig
                bindSpecialAbilityId,
                binding,
                buffDirection,
-               buffPartner,
                buffType,
                cd,
                cdPvp,
@@ -123,7 +121,6 @@ struct SpecialAbilityConfig
     std::vector<int32_t> bindBuffId;
     std::vector<int32_t> bindBuffType;
     int32_t bindSkillType  = 0;
-    int32_t buffPartner    = 0;
     int32_t condition      = 0;
     int32_t conditionValue = 0;
     int32_t descId         = 0;
@@ -158,7 +155,6 @@ struct SpecialAbilityConfig
                bindBuffId,
                bindBuffType,
                bindSkillType,
-               buffPartner,
                condition,
                conditionValue,
                descId,

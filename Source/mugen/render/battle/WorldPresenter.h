@@ -6,11 +6,13 @@
 #ifdef RUNTIME_IN_AXMOL
 
 #    include "mugen/avatar/render/Avatar.h"
+#    include "mugen/render/battle/PetFollower.h"
 #    include "mugen/render/LayerRuntimeLoader.h"
 #    include "mugen/render/VirtualCamera.h"
 #    include "mugen/render/spine/MgSkeletonAnimation.h"
 
 #    include <map>
+#    include <memory>
 #    include <random>
 
 NS_MG_BEGIN
@@ -21,9 +23,14 @@ public:
     explicit AvatarPresenter(ax::Node& root) : m_root(root) {}
 
     void present(sim::World& world, float alpha, float renderDelta);
+    void setFollowEntity(Entity entity) { m_followEntity = entity; }
+    void setPet(int32_t petId, int32_t spineId);
+    void clearPet();
     void clear();
     // Re-apply fashion on an already-created exclusive Avatar (town/battle local player).
     bool setEntityAppearance(uint32_t entityValue, const FashionAppearance& appearance);
+    // 应用受击亮度到实体显示节点；返回是否命中已有实体。
+    bool setEntityIntensity(uint32_t entityValue, float intensity);
 
 private:
     // 单个实体的渲染状态：外观只在首次出现时解析一次。
@@ -37,7 +44,12 @@ private:
         bool resolved = false;
         // 配置的 Spine 相对偏移（x 随水平朝向、y 向上、z 随纵深朝向）。
         std::vector<int32_t> spineOffset;
+        // 插值用前后两帧变换：previous 为上一逻辑帧，current 为最新逻辑帧。
         sim::Transform previous;
+        sim::Transform current;
+        // 采样 current 时的逻辑帧序号。
+        uint64_t lastFrame = 0;
+        // 是否已建立 previous/current 采样对。
         bool hasPrevious = false;
         std::string motionName;
         std::string entryId;
@@ -45,11 +57,26 @@ private:
 
     // 返回实体当前的显示节点；未创建时为空。
     static ax::Node* displayNode(const AvatarState& state);
+    // 渲染插值采样姿态。
+    struct RenderPose
+    {
+        float x       = 0.0f;
+        float y       = 0.0f;
+        float z       = 0.0f;
+        float towardX = 1.0f;
+        float towardZ = 1.0f;
+    };
+    // 用 previous/current 与 alpha 计算显示姿态。
+    static RenderPose interpolatePose(const AvatarState& state, float alpha);
+    // 读取实体当前插值姿态，失败时返回 false。
+    bool samplePose(uint32_t entityValue, float alpha, RenderPose* out) const;
     // 返回配置层级对应的绘制层，首次使用时按层级值作为 z 序创建。
     ax::Node& tierLayer(int32_t tier);
 
     ax::Node& m_root;
     std::map<uint32_t, AvatarState> m_avatars;
+    std::unique_ptr<PetFollower> m_petFollower;
+    Entity m_followEntity{};
     // 配置层级 → 绘制层；层间按层级值排序，层内按纵深排序。
     std::map<int32_t, ax::Node*> m_tierLayers;
 };
@@ -129,7 +156,8 @@ public:
 
     void loadMap(const std::string& mapKey);
     void present(sim::World& world, float interpolationAlpha, float renderDelta);
-    void setFollowEntity(Entity entity) { m_followEntity = entity; }
+    void setFollowEntity(Entity entity);
+    void setPet(int32_t petId);
     void addMapNode(ax::Node& node) { m_map.addNode(node); }
     DebugDraw& debugDraw() { return m_debugDraw; }
 
@@ -147,7 +175,7 @@ private:
     SoundPlayer m_sound;
     HurtNumber m_hurtNumbers;
     DebugDraw m_debugDraw;
-    Entity m_followEntity;
+    Entity m_followEntity{};
     uint64_t m_lastEventSequence = 0;
 };
 

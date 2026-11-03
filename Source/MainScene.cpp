@@ -30,6 +30,8 @@
 #include "ui/screens/GameScreen.h"
 #include "ui/screens/LaunchScreen.h"
 #include "LaunchOptions.h"
+#include "mugen/conf/ReflectedConfig.h"
+#include "mugen/conf/tables/PetTables.h"
 
 #include <charconv>
 
@@ -110,6 +112,22 @@ bool MainScene::parseOfflineLaunch()
     {
         AXLOGE("Invalid autotest frame argument");
         return false;
+    }
+    const std::string_view pet = LaunchOptions::get("offline-pet");
+    if (!pet.empty())
+    {
+        auto& config = mugen::conf::Config::instance();
+        if (!config.loaded() && !config.load("/mugen/config/config.bin"))
+        {
+            AXLOGE("Offline pet validation failed to load config");
+            return false;
+        }
+        if (!parseInt(pet, m_offline.petId) || m_offline.petId <= 0 ||
+            !config.find<mugen::conf::PetConfig>(m_offline.petId))
+        {
+            AXLOGE("Invalid offline pet argument");
+            return false;
+        }
     }
     m_offlineRequested = true;
     return true;

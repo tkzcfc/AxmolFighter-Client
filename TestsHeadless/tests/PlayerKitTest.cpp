@@ -1,5 +1,6 @@
 #include "SkillTestSupport.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
+#include <algorithm>
 #include <variant>
 
 using namespace skill_test;
@@ -115,4 +116,69 @@ TEST_CASE("PlayerKit swordman and ranger trees produce leaf attack skills")
     REQUIRE(!ranger.empty());
     CHECK(ranger.front().m_slot == EnumSkillSlot::Attack);
     CHECK(ranger.front().m_baseId == 930030);
+}
+
+TEST_CASE("PlayerKit partner professions keep source slot mapping")
+{
+    loadConfig();
+    struct Expect
+    {
+        CharacterClass cls;
+        std::vector<std::pair<EnumSkillSlot, int32_t>> slots;
+    };
+    const std::vector<Expect> expects = {
+        {CharacterClass::kPartnerWind,
+         {{EnumSkillSlot::Attack, 44000}, {EnumSkillSlot::Sprint, 44010}, {EnumSkillSlot::Dodge, 44020},
+          {EnumSkillSlot::A, 44040},      {EnumSkillSlot::B, 44060},      {EnumSkillSlot::C, 44080},
+          {EnumSkillSlot::SA, 44110},     {EnumSkillSlot::SB, 44120},     {EnumSkillSlot::SC, 44130},
+          {EnumSkillSlot::EA, 44102},     {EnumSkillSlot::Break, 44140}}},
+        {CharacterClass::kPartnerQueen,
+         {{EnumSkillSlot::Attack, 46000}, {EnumSkillSlot::Sprint, 46010}, {EnumSkillSlot::Dodge, 46020},
+          {EnumSkillSlot::A, 46040},      {EnumSkillSlot::B, 46060},      {EnumSkillSlot::C, 46080},
+          {EnumSkillSlot::SA, 46110},     {EnumSkillSlot::SB, 46120},     {EnumSkillSlot::SC, 46130},
+          {EnumSkillSlot::EA, 46102},     {EnumSkillSlot::Break, 46140}}},
+        {CharacterClass::kPartnerRage,
+         {{EnumSkillSlot::Attack, 48000}, {EnumSkillSlot::Sprint, 48010}, {EnumSkillSlot::Dodge, 48020},
+          {EnumSkillSlot::A, 48040},      {EnumSkillSlot::B, 48060},      {EnumSkillSlot::C, 48080},
+          {EnumSkillSlot::SA, 48110},     {EnumSkillSlot::SB, 48120},     {EnumSkillSlot::SC, 48130},
+          {EnumSkillSlot::EA, 48102},     {EnumSkillSlot::Break, 48140},  {EnumSkillSlot::Anger, 48150}}},
+    };
+
+    for (const auto& expect : expects)
+    {
+        const auto rows = skill::SkillAssembly::offlineKitRows(expect.cls);
+        REQUIRE(!rows.empty());
+        for (const auto& [slot, leafId] : expect.slots)
+        {
+            const auto it = std::find_if(rows.begin(), rows.end(), [slot](const auto& row) { return row.slot == slot; });
+            REQUIRE(it != rows.end());
+            CHECK(it->leafId == leafId);
+            const auto* leaf = conf::Config::instance().find<conf::SkillLeafConfig>(leafId);
+            REQUIRE(leaf != nullptr);
+            CHECK(it->skillId == leaf->skillId);
+        }
+    }
+}
+
+TEST_CASE("PlayerKit partner role ids spawn via player path")
+{
+    loadConfig();
+    const std::vector<std::pair<CharacterClass, int32_t>> expects = {
+        {CharacterClass::kPartnerWind, 105},
+        {CharacterClass::kPartnerQueen, 106},
+        {CharacterClass::kPartnerRage, 107},
+    };
+    for (const auto& [occupation, roleId] : expects)
+    {
+        World world;
+        RoleSpawnParams params;
+        params.playerSlot = 0;
+        const auto entity = RoleSpawner(world).spawnPlayer(occupation, params);
+        REQUIRE(entity.value != 0);
+        const auto& identity = world.ecs().get<RoleIdentity>(entity);
+        CHECK(identity.roleId == roleId);
+        const auto& pool = world.ecs().get<SkillPool>(entity);
+        const auto attack = skill::getGivenSkill(pool, "A");
+        CHECK(attack != kNoSkill);
+    }
 }

@@ -249,6 +249,9 @@ enum CharacterClass : int8_t
     kRanger,
     kFighter,
     kMage,
+    kPartnerWind,
+    kPartnerQueen,
+    kPartnerRage,
     kCount = 4
 };
 // 时装可装备的外观部位。

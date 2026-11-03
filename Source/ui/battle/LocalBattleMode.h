@@ -45,6 +45,7 @@ public:
 private:
     int32_t m_roomId         = 0;
     int32_t m_roleId         = 0;
+    int32_t m_petId          = 0;
     int32_t m_autotestFrames = 0;
     mugen::sim::World m_world;
     mugen::sim::ControlManagerCore m_control;
@@ -61,6 +62,8 @@ private:
     mugen::Entity m_lastHurtTarget;
     void subscribeAppearanceEvents();
     void refreshLocalAppearance();
+    int32_t resolveFollowPetId() const;
+    void refreshFollowPet();
 
     class WorldPresenterHolder;
     std::unique_ptr<WorldPresenterHolder> m_presenter;

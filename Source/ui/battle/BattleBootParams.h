@@ -10,6 +10,7 @@ struct LocalBattleParams
 {
     std::int32_t roomId         = 0;
     std::int32_t roleId         = 0;
+    std::int32_t petId          = 0;
     std::int32_t autotestFrames = 0;
 };
 

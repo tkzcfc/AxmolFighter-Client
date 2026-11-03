@@ -163,7 +163,8 @@ void DisplacementDriver::update()
     const auto& role      = ecs.get<RoleStatus>(m_entity);
     const bool moving     = role.isMove() && !role.isAttack();
     const bool cannotMove = !ecs.get<ExtraState>(m_entity).isCanMove();
-    auto v                = velocity;
+    // 禁锢时 x/z 速度恒乘速度倍率，y 沿用移动判定并抹去上升速度，保证被定身角色仍能落地。
+    auto v = velocity;
     v.x *= moving || cannotMove ? d.velocityScale.x : d.defaultVelocityScale;
     v.y *= moving ? d.velocityScale.y : d.defaultVelocityScale;
     v.z *= moving || cannotMove ? d.velocityScale.z : d.defaultVelocityScale;

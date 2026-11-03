@@ -32,6 +32,7 @@
 #include <spine_3_4/SkeletonBatch.h>
 #include <spine_3_4/extension.h>
 #include <algorithm>
+#include <cstring>
 
 USING_NS_AX;
 
@@ -101,13 +102,42 @@ void SkeletonBatch::update(float /*delta*/)
     reset();
 }
 
+ax::V3F_C4B_T2F* SkeletonBatch::allocateVertices(uint32_t numVertices)
+{
+    if (_vertices.size() - _numVertices < numVertices)
+    {
+        ax::V3F_C4B_T2F* oldData = _vertices.data();
+        _vertices.resize((_vertices.size() + numVertices) * 2 + 1);
+        ax::V3F_C4B_T2F* newData = _vertices.data();
+        for (uint32_t i = 0; i < _nextFreeCommand; ++i)
+        {
+            SkeletonCommand* command = _commandsPool[i];
+            SkeletonCommand::Triangles& commandTriangles = (SkeletonCommand::Triangles&)command->getTriangles();
+            commandTriangles.verts                           = newData + (commandTriangles.verts - oldData);
+        }
+    }
+
+    ax::V3F_C4B_T2F* vertices = _vertices.data() + _numVertices;
+    _numVertices += numVertices;
+    return vertices;
+}
+
 ax::TrianglesCommand* SkeletonBatch::addCommand(ax::Renderer* renderer, float globalOrder, ax::Texture2D* texture,
                                                 ax::backend::ProgramState* programState, ax::BlendFunc blendType,
                                                 const ax::TrianglesCommand::Triangles& triangles, const ax::Mat4& mv,
                                                 uint32_t flags)
 {
-    SkeletonCommand* command                  = nextFreeCommand();
     const ax::Mat4& projectionMat             = Director::getInstance()->getMatrix(MATRIX_STACK_TYPE::MATRIX_STACK_PROJECTION);
+
+    ax::TrianglesCommand::Triangles copiedTriangles;
+    copiedTriangles.indexCount = triangles.indexCount;
+    copiedTriangles.indices    = triangles.indices;
+    copiedTriangles.vertCount  = triangles.vertCount;
+    copiedTriangles.verts      = allocateVertices(static_cast<uint32_t>(triangles.vertCount));
+    std::memcpy(copiedTriangles.verts, triangles.verts,
+                sizeof(ax::V3F_C4B_T2F) * static_cast<size_t>(triangles.vertCount));
+
+    SkeletonCommand* command = nextFreeCommand();
 
     if (programState == nullptr)
         programState = _programState;
@@ -118,7 +148,7 @@ ax::TrianglesCommand* SkeletonBatch::addCommand(ax::Renderer* renderer, float gl
     pipelinePS->setUniform(command->_locMVP, projectionMat.m, sizeof(projectionMat.m));
     pipelinePS->setTexture(command->_locTexture, 0, texture->getBackendTexture());
 
-    command->init(globalOrder, texture, blendType, triangles, mv, flags);
+    command->init(globalOrder, texture, blendType, copiedTriangles, mv, flags);
     renderer->addCommand(command);
     return command;
 }
@@ -126,6 +156,7 @@ ax::TrianglesCommand* SkeletonBatch::addCommand(ax::Renderer* renderer, float gl
 void SkeletonBatch::reset()
 {
     _nextFreeCommand = 0;
+    _numVertices     = 0;
 }
 
 SkeletonCommand* SkeletonBatch::nextFreeCommand()

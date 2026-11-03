@@ -62,6 +62,7 @@ protected:
     virtual ~SkeletonBatch();
 
     void reset();
+    ax::V3F_C4B_T2F* allocateVertices(uint32_t numVertices);
     SkeletonCommand* nextFreeCommand();
     SkeletonCommand* newCommand();
     ax::backend::ProgramState* updateCommandPipelinePS(SkeletonCommand* command, ax::backend::ProgramState* programState);
@@ -69,6 +70,8 @@ protected:
     ax::backend::ProgramState* _programState = nullptr;
     std::vector<SkeletonCommand*> _commandsPool;
     uint32_t _nextFreeCommand = 0;
+    std::vector<ax::V3F_C4B_T2F> _vertices;
+    uint32_t _numVertices = 0;
 };
 
 }  // namespace spine34

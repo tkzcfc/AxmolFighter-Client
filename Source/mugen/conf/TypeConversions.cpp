@@ -19,6 +19,12 @@ int32_t toRoleConfigId(CharacterClass characterClass)
         return 103;
     case CharacterClass::kMage:
         return 104;
+    case CharacterClass::kPartnerWind:
+        return 105;
+    case CharacterClass::kPartnerQueen:
+        return 106;
+    case CharacterClass::kPartnerRage:
+        return 107;
     default:
         break;
     }
@@ -39,6 +45,12 @@ CharacterClass toCharacterClass(int32_t roleConfigId)
         return CharacterClass::kFighter;
     case 104:
         return CharacterClass::kMage;
+    case 105:
+        return CharacterClass::kPartnerWind;
+    case 106:
+        return CharacterClass::kPartnerQueen;
+    case 107:
+        return CharacterClass::kPartnerRage;
     default:
         return CharacterClass::kUnknown;
     }

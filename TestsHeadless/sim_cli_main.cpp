@@ -2,15 +2,16 @@
 #include "support/TraceDiff.h"
 #include "mugen/conf/ConfigFormat.h"
 #include "mugen/conf/ReflectedConfig.h"
+#include "mugen/conf/TypeConversions.h"
+#include "mugen/sim/BattleBootstrap.h"
 #include "mugen/sim/Replay.h"
-#include "mugen/sim/room/RoomDirector.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
 #include "mugen/sim/trace/TraceSink.h"
 #include <charconv>
 #include <cstdint>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <sstream>
 #include <string_view>
 #include <vector>
@@ -102,8 +103,14 @@ std::map<uint64_t, FrameInput> loadScript(const std::string& path, uint64_t fram
 }
 World recordedWorld(const WorldSetup& setup)
 {
-    if (setup.mode == WorldMode::Battle && setup.roomId > 0)
-        return test::ScenarioHarness::roomWorld(setup.roomId, setup.seed);
+    if (setup.mode == WorldMode::Battle)
+    {
+        test::ScenarioHarness::loadAssets();
+        World world(setup.m_useScenarioHooks ? test::ScenarioHarness::roomHooks() : WorldHooks{});
+        if (bootstrapBattle(world, setup).value == 0)
+            throw std::runtime_error("Cannot bootstrap replay world");
+        return world;
+    }
     World world;
     world.init(setup);
     return world;
@@ -129,14 +136,17 @@ World combatWorld(int32_t roomId, uint64_t seed, int32_t occupation, int32_t lev
 {
     test::ScenarioHarness::loadAssets();
     World world;  // 默认 WorldHooks：Role 组走真实 role::update 战斗逻辑
-    world.init(test::ScenarioHarness::roomSetup(roomId, seed));
-    sim::RoleSpawnParams player;
-    player.camp       = 2;
-    player.playerSlot = 0;
-    player.level      = level;
-    sim::RoleSpawner(world).spawnPlayer(static_cast<CharacterClass>(occupation), std::move(player));
-    const auto* config = conf::Config::instance().find<conf::RoomConfig>(roomId);
-    if (!config || !sim::room::RoomDirector(world).enter(*config, 0, 0))
+    auto setup               = test::ScenarioHarness::roomSetup(roomId, seed);
+    setup.m_playerClass      = static_cast<CharacterClass>(occupation);
+    setup.m_playerRoleId     = type_conversions::toRoleConfigId(setup.m_playerClass);
+    setup.m_playerLevel      = level;
+    setup.m_playerCamp       = 2;
+    setup.m_playerSlot       = 0;
+    setup.m_playerIsAi       = false;
+    setup.m_stageId          = 0;
+    setup.m_copyId           = 0;
+    setup.m_useScenarioHooks = false;
+    if (bootstrapBattle(world, setup).value == 0)
         throw std::runtime_error("Cannot enter room " + std::to_string(roomId));
     if (std::getenv("MUGEN_TRACE_DUMP_SKILLS"))
     {
@@ -180,7 +190,7 @@ int main(int argc, char** argv)
             std::string compare;
             std::string tracePath;
             std::string revision;
-            bool aiEnabled = true;
+            std::optional<bool> aiEnabledOverride;
             for (int index = 3; index < argc; index += 2)
             {
                 if (index + 1 >= argc)
@@ -196,7 +206,7 @@ int main(int argc, char** argv)
                 else if (std::string_view(argv[index]) == "--revision")
                     revision = argv[index + 1];
                 else if (std::string_view(argv[index]) == "--ai")
-                    aiEnabled = aiEnabledFlag(argv[index + 1]);
+                    aiEnabledOverride = aiEnabledFlag(argv[index + 1]);
                 else
                     throw std::invalid_argument(
                         "Expected replay <file> [--hash-every N] [--compare hashfile] [--trace file] [--revision rev] "
@@ -211,7 +221,8 @@ int main(int argc, char** argv)
             if (!replay.load(argv[2], conf::configSchemaHash(), error))
                 throw std::runtime_error(error);
             World world = recordedWorld(replay.setup);
-            world.setAiEnabled(aiEnabled);
+            if (aiEnabledOverride.has_value())
+                world.setAiEnabled(*aiEnabledOverride);
             trace::TraceSink sink;
             if (!tracePath.empty())
             {
@@ -261,8 +272,14 @@ int main(int argc, char** argv)
             Replay replay;
             replay.schemaHash = conf::configSchemaHash();
             replay.setup      = test::ScenarioHarness::roomSetup(static_cast<int32_t>(roomId), 31);
+            replay.setup.m_playerRoleId      = 0;
+            replay.setup.m_playerCamp        = 2;
+            replay.setup.m_playerSlot        = 0;
+            replay.setup.m_stageId           = 0;
+            replay.setup.m_copyId            = 0;
+            replay.setup.m_aiEnabled         = aiEnabled;
+            replay.setup.m_useScenarioHooks  = true;
             World world       = recordedWorld(replay.setup);
-            world.setAiEnabled(aiEnabled);
             for (uint64_t frame = 1; frame <= frames; ++frame)
             {
                 auto input = recordedInput(world);
@@ -280,7 +297,7 @@ int main(int argc, char** argv)
             const auto room = number(argv[2]);
             if (room > INT32_MAX || std::string_view(argv[3]) != "--frames")
                 throw std::invalid_argument(
-                    "Expected run-room <roomId> --frames N [--class 1-4] [--seed N] [--script file] [--trace file] "
+                    "Expected run-room <roomId> --frames N [--class 1-7] [--seed N] [--script file] [--trace file] "
                     "[--revision rev] [--ai on|off]");
             const auto frames = number(argv[4]);
             std::map<uint64_t, FrameInput> inputs;
@@ -294,7 +311,7 @@ int main(int argc, char** argv)
             {
                 if (index + 1 >= argc)
                     throw std::invalid_argument(
-                        "Expected run-room <roomId> --frames N [--class 1-4] [--seed N] [--level N] [--script file] "
+                        "Expected run-room <roomId> --frames N [--class 1-7] [--seed N] [--level N] [--script file] "
                         "[--trace file] [--revision rev] [--ai on|off]");
                 if (std::string_view(argv[index]) == "--script")
                     inputs = loadScript(argv[index + 1], frames);
@@ -312,11 +329,11 @@ int main(int argc, char** argv)
                     aiEnabled = aiEnabledFlag(argv[index + 1]);
                 else
                     throw std::invalid_argument(
-                        "Expected run-room <roomId> --frames N [--class 1-4] [--seed N] [--level N] [--script file] "
+                        "Expected run-room <roomId> --frames N [--class 1-7] [--seed N] [--level N] [--script file] "
                         "[--trace file] [--revision rev] [--ai on|off]");
             }
             World world;
-            if (occupation >= 1 && occupation <= 4)
+            if (occupation >= 1 && occupation <= 7)
                 world = combatWorld(static_cast<int32_t>(room), seed, occupation, level);
             else
                 world.init(test::ScenarioHarness::roomSetup(static_cast<int32_t>(room), seed));

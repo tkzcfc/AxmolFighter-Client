@@ -39,18 +39,16 @@ TEST_CASE("BuffCondition predicates read entity and event state")
     config.condition = {8};
     config.conditionParam = {{"2"_fx}};
     CHECK_FALSE(buff::BuffHolder(world, entity).checkConditions(instance, config));
-    world.ecs().add(entity, BuffExternalConditions{2, true, "1"_fx});
+    world.ecs().add(entity, BuffExternalConditions{2, "1"_fx});
     CHECK(buff::BuffHolder(world, entity).checkConditions(instance, config));
     config.conditionParam = {{"3"_fx}};
     CHECK_FALSE(buff::BuffHolder(world, entity).checkConditions(instance, config));
     config.condition = {263};
     config.conditionParam = {{"1"_fx}};
-    CHECK(buff::BuffHolder(world, entity).checkConditions(instance, config));
+    CHECK_FALSE(buff::BuffHolder(world, entity).checkConditions(instance, config));
     world.ecs().get<BuffExternalConditions>(entity).m_angerFreezeSeconds = {};
     CHECK_FALSE(buff::BuffHolder(world, entity).checkConditions(instance, config));
     config.conditionParam = {{"0"_fx}};
-    CHECK(buff::BuffHolder(world, entity).checkConditions(instance, config));
-    world.ecs().get<BuffExternalConditions>(entity).m_angerPartner = false;
     CHECK_FALSE(buff::BuffHolder(world, entity).checkConditions(instance, config));
 }
 

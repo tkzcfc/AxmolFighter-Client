@@ -6,15 +6,14 @@
 
 namespace mugen::sim
 {
-// 由连击和伙伴系统提供的条件输入，不在 Buff 内维护另一套玩法状态。
+// 由连击系统提供的条件输入，不在 Buff 内维护另一套玩法状态。
 struct BuffExternalConditions
 {
     // 当前连击评价等级。
     int32_t m_comboEvaluate = 0;
-    // 是否属于怒气变身伙伴及其剩余变身时间。
-    bool m_angerPartner = false;
+    // 怒气冻结剩余时间，当前未接入运行时驱动。
     Fixed m_angerFreezeSeconds;
-    MG_REFLECT(BuffExternalConditions, m_comboEvaluate, m_angerPartner, m_angerFreezeSeconds)
+    MG_REFLECT(BuffExternalConditions, m_comboEvaluate, m_angerFreezeSeconds)
 };
 // 实例事件上下文，实体之间仅保存代际句柄。
 struct BuffContext

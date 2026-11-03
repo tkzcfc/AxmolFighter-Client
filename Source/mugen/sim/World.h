@@ -82,7 +82,7 @@ public:
     void setTrace(trace::TraceSink* sink) { m_trace = sink; }
     // 返回当前追踪输出，未挂载时为空。
     trace::TraceSink* trace() const { return m_trace; }
-    // 开关怪物 AI。不改变回放与快照格式。
+    // 开关怪物 AI；修改当前世界 setup，供回放和快照保留。
     void setAiEnabled(bool enabled) { m_setup.m_aiEnabled = enabled; }
     // 返回实体创建时分配的稳定生成序号，未记录返回 0。
     uint64_t spawnSeq(Entity entity) const

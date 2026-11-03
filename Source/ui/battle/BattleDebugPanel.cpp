@@ -12,6 +12,8 @@ void BattleDebugPanel::render(mugen::sim::World& world, bool& paused, bool& sing
     const auto& clock = world.ecs().singleton<mugen::sim::WorldClock>();
     ImGui::Text("world hash %llu %016llx", static_cast<unsigned long long>(clock.frame),
                 static_cast<unsigned long long>(world.hash()));
+    ImGui::Text("Frame %llu  %.2fs", static_cast<unsigned long long>(clock.frame),
+                static_cast<double>(clock.frame) / 30.0);
     ImGui::Checkbox("Pause", &paused);
     if (ImGui::Button("Single step"))
         singleStep = true;

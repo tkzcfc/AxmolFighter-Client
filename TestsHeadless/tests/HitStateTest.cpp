@@ -132,6 +132,48 @@ TEST_CASE("HitState World launch recovery visits every distinct phase")
         ecs.get<RoleHitState>(f.m_entity).m_protectionBuffRequests.end());
 }
 
+// 受击链结束后回到待机必须清空残留位移，静止期间位置不再漂移。
+TEST_CASE("Hit recovery to Idle clears residual displacement and holds position")
+{
+    HitStateWorld f;
+    auto& ecs = f.m_world.ecs();
+    using A = behavior::ActionType;
+    // 取一个带非零加速度且受重力（会落地）的位移；若残留到待机会持续加速漂移。
+    const conf::DisplacementConfig* dispRow = nullptr;
+    for (const auto& d : conf::Config::instance().table<conf::DisplacementConfig>())
+        if (d.gravity > Fixed{} && d.acceleration.size() >= 1 && d.acceleration[0] != Fixed{})
+        {
+            dispRow = &d;
+            break;
+        }
+    REQUIRE(dispRow != nullptr);
+    // 施加推送位移并进入浮空受击链，模拟一次带水平推送的击飞。
+    displacement::DisplacementDriver(f.m_world, f.m_entity).set(dispRow->id, -1);
+    ecs.get<RoleStatus>(f.m_entity).eEntityStatus = EntityRoleStatus::Idle | EntityRoleStatus::HitUp;
+    ecs.get<Transform>(f.m_entity).position.y      = "100"_fx;
+    for (int i = 0; i < 400; ++i)
+    {
+        f.tick();
+        if (f.active() == A::Idle)
+            break;
+    }
+    REQUIRE(f.active() == A::Idle);
+    const auto& d = ecs.get<Displacement>(f.m_entity);
+    CHECK(d.velocityTime.x == Fixed{});
+    CHECK(d.velocityTime.y == Fixed{});
+    CHECK(d.velocityTime.z == Fixed{});
+    CHECK(d.acceleration.x == Fixed{});
+    CHECK(d.acceleration.y == Fixed{});
+    CHECK(d.acceleration.z == Fixed{});
+    CHECK(d.accelerationTime.x == Fixed{});
+    CHECK(ecs.get<RoleHitState>(f.m_entity).forceVelocity.x == Fixed{});
+    const auto pos = ecs.get<Transform>(f.m_entity).position;
+    for (int i = 0; i < 30; ++i)
+        f.tick();
+    CHECK(ecs.get<Transform>(f.m_entity).position.x == pos.x);
+    CHECK(ecs.get<Transform>(f.m_entity).position.z == pos.z);
+}
+
 // 死亡必须经过倒地完成、死亡动画和销毁叶子。
 TEST_CASE("HitState World death on floor reaches destroy and both events")
 {

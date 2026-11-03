@@ -141,3 +141,37 @@ TEST_CASE("FashionResolver uses occupation and skips missing referenced fashion"
               desc.atlases.end());
     }
 }
+
+TEST_CASE("FashionResolver resolves partner roles with hero spine atlas and motion")
+{
+    REQUIRE(mugen::test::ensureContentVfs());
+    REQUIRE(mugen::conf::Config::instance().load("/mugen/config/config.bin"));
+
+    struct Expectation
+    {
+        int32_t roleId;
+        const char* skeleton;
+        const char* atlas;
+        const char* motion;
+    };
+    const Expectation expects[] = {
+        {105, "/mugen/spine/hero/mx_huoban_01xueshi.skel", "/mugen/spine/hero/mx_huoban_01xueshi.atlas",
+         "/mugen/motion/hero/mx_huoban_01xueshi.motion"},
+        {106, "/mugen/spine/hero/mx_huoban04_heiyan.skel", "/mugen/spine/hero/mx_huoban04_heiyan.atlas",
+         "/mugen/motion/hero/mx_huoban04_heiyan.motion"},
+        {107, "/mugen/spine/hero/mx_huoban05_ailin.skel", "/mugen/spine/hero/mx_huoban05_ailin.atlas",
+         "/mugen/motion/hero/mx_huoban05_ailin.motion"},
+    };
+
+    for (const auto& it : expects)
+    {
+        mugen::FashionAppearance appearance;
+        appearance.roleId = it.roleId;
+        mugen::AvatarDesc desc;
+        REQUIRE(mugen::FashionResolver::resolve(appearance, desc));
+        CHECK(desc.skeleton == it.skeleton);
+        CHECK(desc.motionFile == it.motion);
+        CHECK_FALSE(desc.atlases.empty());
+        CHECK(std::find(desc.atlases.begin(), desc.atlases.end(), it.atlas) != desc.atlases.end());
+    }
+}

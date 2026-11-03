@@ -51,9 +51,19 @@ SkillLoadout SkillAssembly::playerLoadout(const std::vector<PlayerSkill>& skills
             {
                 if (static_cast<size_t>(entry.m_slot) != slot || entry.m_crazy != useCrazy)
                     continue;
-                const auto* rock         = config.find<conf::SkillRockConfig>(entry.m_rockId);
-                const bool joy           = slotMap[slot] == -1;
-                const int32_t targetSlot = joy ? (rock ? rock->commandIndex : 0) : slotMap[slot];
+                const auto* rock = config.find<conf::SkillRockConfig>(entry.m_rockId);
+                const bool joy   = slotMap[slot] == -1;
+                int32_t targetSlot = 0;
+                if (joy)
+                {
+                    if (rock && rock->commandIndex > 0)
+                        targetSlot = rock->commandIndex;
+                    else if (slot >= static_cast<size_t>(EnumSkillSlot::SA) &&
+                             slot <= static_cast<size_t>(EnumSkillSlot::SC))
+                        targetSlot = static_cast<int32_t>(slot - static_cast<size_t>(EnumSkillSlot::SA) + 1);
+                }
+                else
+                    targetSlot = slotMap[slot];
                 if (targetSlot <= 0)
                     continue;
                 const size_t group = slot == static_cast<size_t>(EnumSkillSlot::Sprint)
@@ -99,12 +109,24 @@ SkillLoadout SkillAssembly::playerLoadout(const std::vector<PlayerSkill>& skills
     return result;
 }
 
-std::vector<PlayerSkill> SkillAssembly::offlineKit(CharacterClass occupation)
+namespace
 {
-    std::vector<PlayerSkill> result;
-    const int32_t profession = static_cast<int32_t>(occupation);
-    if (profession < 1 || profession > 4)
-        return result;
+struct OfflineResolvedSkill
+{
+    EnumSkillSlot slot = EnumSkillSlot::None;
+    int32_t leafId     = -1;
+    int32_t skillId    = -1;
+    int32_t rockId     = -1;
+};
+
+bool isPartnerClass(CharacterClass occupation)
+{
+    return occupation == CharacterClass::kPartnerWind || occupation == CharacterClass::kPartnerQueen ||
+           occupation == CharacterClass::kPartnerRage;
+}
+
+const conf::SkillTreeConfig* findProfessionTree(int32_t profession)
+{
     const conf::SkillTreeConfig* tree = nullptr;
     for (const auto& row : conf::Config::instance().table<conf::SkillTreeConfig>())
     {
@@ -118,11 +140,26 @@ std::vector<PlayerSkill> SkillAssembly::offlineKit(CharacterClass occupation)
         if (!tree)
             tree = &row;
     }
-    if (!tree)
-    {
-        MG_LOG_W("No profession skill tree for occupation {}", profession);
-        return result;
-    }
+    return tree;
+}
+
+int32_t leafSkillId(int32_t leafId)
+{
+    const auto* leaf = conf::Config::instance().find<conf::SkillLeafConfig>(leafId);
+    return leaf ? leaf->skillId : -1;
+}
+
+int32_t rockIdBySkillId(int32_t skillId)
+{
+    for (const auto& rock : conf::Config::instance().table<conf::SkillRockConfig>())
+        if (rock.skillId == skillId)
+            return rock.id;
+    return -1;
+}
+
+std::vector<OfflineResolvedSkill> buildClassicOfflineRows(const conf::SkillTreeConfig& tree)
+{
+    std::vector<OfflineResolvedSkill> result;
     /// 主动叶子按固定顺序映射到输入槽位，溢出叶子改用扩展槽位序列。
     constexpr std::array<EnumSkillSlot, 10> kOrdered = {
         EnumSkillSlot::Attack, EnumSkillSlot::Sprint, EnumSkillSlot::Dodge, EnumSkillSlot::Crazy, EnumSkillSlot::A,
@@ -131,18 +168,14 @@ std::vector<PlayerSkill> SkillAssembly::offlineKit(CharacterClass occupation)
                                                           EnumSkillSlot::Anger};
     constexpr std::array<EnumSkillSlot, 3> kJoy        = {EnumSkillSlot::SA, EnumSkillSlot::SB, EnumSkillSlot::SC};
     constexpr std::array<EnumSkillSlot, 3> kJoyPassive = {EnumSkillSlot::SAP, EnumSkillSlot::SBP, EnumSkillSlot::SCP};
-    const auto& config                                 = conf::Config::instance();
-    auto leafSkill                                     = [&config](int32_t leafId) -> int32_t {
-        const auto* leaf = config.find<conf::SkillLeafConfig>(leafId);
-        return leaf ? leaf->skillId : -1;
-    };
+
     size_t overflow = 0;
-    for (size_t i = 0; i < tree->leafIds.size(); ++i)
+    for (size_t i = 0; i < tree.leafIds.size(); ++i)
     {
-        const int32_t leafId = tree->leafIds[i];
+        const int32_t leafId = tree.leafIds[i];
         if (leafId <= 0)
             continue;
-        const int32_t skillId = leafSkill(leafId);
+        const int32_t skillId = leafSkillId(leafId);
         if (skillId <= 0)
         {
             MG_LOG_W("Missing skill leaf {} for offline kit", leafId);
@@ -155,42 +188,125 @@ std::vector<PlayerSkill> SkillAssembly::offlineKit(CharacterClass occupation)
             slot = kOverflow[overflow++];
         else
             continue;
-        result.push_back({slot, skillId, -1, false});
+        result.push_back({slot, leafId, skillId, -1});
     }
-    for (const int32_t leafId : tree->leafBuffId)
+    for (const int32_t leafId : tree.leafBuffId)
     {
         if (leafId <= 0)
             continue;
         if (overflow >= kOverflow.size())
             break;
-        const int32_t skillId = leafSkill(leafId);
+        const int32_t skillId = leafSkillId(leafId);
         if (skillId <= 0)
         {
             MG_LOG_W("Missing skill leaf {} for offline kit", leafId);
             continue;
         }
-        result.push_back({kOverflow[overflow++], skillId, -1, false});
+        result.push_back({kOverflow[overflow++], leafId, skillId, -1});
     }
-    for (size_t i = 0; i < tree->leafRubId.size() && i < kJoy.size(); ++i)
+    for (size_t i = 0; i < tree.leafRubId.size() && i < kJoy.size(); ++i)
     {
-        const int32_t leafId = tree->leafRubId[i];
+        const int32_t leafId = tree.leafRubId[i];
         if (leafId <= 0)
             continue;
-        const int32_t skillId = leafSkill(leafId);
+        const int32_t skillId = leafSkillId(leafId);
         if (skillId <= 0)
         {
             MG_LOG_W("Missing skill leaf {} for offline kit", leafId);
             continue;
         }
-        int32_t rockId = -1;
-        for (const auto& rock : config.table<conf::SkillRockConfig>())
-            if (rock.skillId == skillId)
-            {
-                rockId = rock.id;
-                break;
-            }
-        result.push_back({rockId > 0 ? kJoy[i] : kJoyPassive[i], skillId, rockId, false});
+        const int32_t rockId = rockIdBySkillId(skillId);
+        result.push_back({rockId > 0 ? kJoy[i] : kJoyPassive[i], leafId, skillId, rockId});
     }
+    return result;
+}
+
+std::vector<OfflineResolvedSkill> buildPartnerOfflineRows(const conf::SkillTreeConfig& tree)
+{
+    std::vector<OfflineResolvedSkill> result;
+    /// 伙伴职业遵循 source 槽位：1-3 基础，5-7 主动，8-10 进阶，11-12 buff，16 解控，20 怒气。
+    constexpr std::array<EnumSkillSlot, 9> kPrimary = {
+        EnumSkillSlot::Attack,
+        EnumSkillSlot::Sprint,
+        EnumSkillSlot::Dodge,
+        EnumSkillSlot::A,
+        EnumSkillSlot::B,
+        EnumSkillSlot::C,
+        EnumSkillSlot::SA,
+        EnumSkillSlot::SB,
+        EnumSkillSlot::SC,
+    };
+    constexpr std::array<EnumSkillSlot, 2> kBuffSlots = {EnumSkillSlot::EA, EnumSkillSlot::EB};
+
+    for (size_t i = 0; i < tree.leafIds.size() && i < kPrimary.size(); ++i)
+    {
+        const int32_t leafId = tree.leafIds[i];
+        if (leafId <= 0)
+            continue;
+        const int32_t skillId = leafSkillId(leafId);
+        if (skillId <= 0)
+        {
+            MG_LOG_W("Missing skill leaf {} for offline kit", leafId);
+            continue;
+        }
+        result.push_back({kPrimary[i], leafId, skillId, -1});
+    }
+
+    for (size_t i = 0; i < tree.leafBuffId.size() && i < kBuffSlots.size(); ++i)
+    {
+        const int32_t leafId = tree.leafBuffId[i];
+        if (leafId <= 0)
+            continue;
+        const int32_t skillId = leafSkillId(leafId);
+        if (skillId <= 0)
+        {
+            MG_LOG_W("Missing skill leaf {} for offline kit", leafId);
+            continue;
+        }
+        result.push_back({kBuffSlots[i], leafId, skillId, -1});
+    }
+
+    for (size_t i = 0; i < tree.leafRubId.size(); ++i)
+    {
+        const int32_t leafId = tree.leafRubId[i];
+        if (leafId <= 0)
+            continue;
+        const int32_t slotValue = i < tree.leafRubPlace.size() ? tree.leafRubPlace[i] : 0;
+        if (slotValue <= static_cast<int32_t>(EnumSkillSlot::None) ||
+            slotValue > static_cast<int32_t>(EnumSkillSlot::Anger))
+            continue;
+        const int32_t skillId = leafSkillId(leafId);
+        if (skillId <= 0)
+        {
+            MG_LOG_W("Missing skill leaf {} for offline kit", leafId);
+            continue;
+        }
+        result.push_back({static_cast<EnumSkillSlot>(slotValue), leafId, skillId, -1});
+    }
+
+    return result;
+}
+
+std::vector<OfflineResolvedSkill> buildOfflineRows(CharacterClass occupation)
+{
+    const int32_t profession = static_cast<int32_t>(occupation);
+    if (profession <= 0)
+        return {};
+    const auto* tree = findProfessionTree(profession);
+    if (!tree)
+    {
+        MG_LOG_W("No profession skill tree for occupation {}", profession);
+        return {};
+    }
+    return isPartnerClass(occupation) ? buildPartnerOfflineRows(*tree) : buildClassicOfflineRows(*tree);
+}
+}  // namespace
+
+std::vector<PlayerSkill> SkillAssembly::offlineKit(CharacterClass occupation)
+{
+    std::vector<PlayerSkill> result;
+    for (const auto& row : buildOfflineRows(occupation))
+        result.push_back({row.slot, row.skillId, row.rockId, false});
     return result;
 }
 
@@ -344,6 +460,8 @@ OfflineKitRow makeRow(EnumSkillSlot slot, int32_t leafId, int32_t skillId, int32
             if (rock && rock->commandIndex > 0)
                 row.poolSlot = std::to_string(rock->commandIndex) + "+";
         }
+        else
+            row.poolSlot = slot == EnumSkillSlot::SA ? "1+" : slot == EnumSkillSlot::SB ? "2+" : "3+";
         break;
     default:
         break;
@@ -356,82 +474,8 @@ OfflineKitRow makeRow(EnumSkillSlot slot, int32_t leafId, int32_t skillId, int32
 std::vector<OfflineKitRow> SkillAssembly::offlineKitRows(CharacterClass occupation)
 {
     std::vector<OfflineKitRow> result;
-    const int32_t profession = static_cast<int32_t>(occupation);
-    if (profession < 1 || profession > 4)
-        return result;
-    const conf::SkillTreeConfig* tree = nullptr;
-    for (const auto& row : conf::Config::instance().table<conf::SkillTreeConfig>())
-    {
-        if (row.professionType != profession)
-            continue;
-        if (row.treeType == 1)
-        {
-            tree = &row;
-            break;
-        }
-        if (!tree)
-            tree = &row;
-    }
-    if (!tree)
-        return result;
-    constexpr std::array<EnumSkillSlot, 10> kOrdered = {
-        EnumSkillSlot::Attack, EnumSkillSlot::Sprint, EnumSkillSlot::Dodge, EnumSkillSlot::Crazy, EnumSkillSlot::A,
-        EnumSkillSlot::B,      EnumSkillSlot::C,      EnumSkillSlot::EA,    EnumSkillSlot::EB,    EnumSkillSlot::SUA};
-    constexpr std::array<EnumSkillSlot, 4> kOverflow   = {EnumSkillSlot::SUB, EnumSkillSlot::SUC, EnumSkillSlot::Break,
-                                                          EnumSkillSlot::Anger};
-    constexpr std::array<EnumSkillSlot, 3> kJoy        = {EnumSkillSlot::SA, EnumSkillSlot::SB, EnumSkillSlot::SC};
-    constexpr std::array<EnumSkillSlot, 3> kJoyPassive = {EnumSkillSlot::SAP, EnumSkillSlot::SBP, EnumSkillSlot::SCP};
-    const auto& config                                 = conf::Config::instance();
-    auto leafSkill                                     = [&config](int32_t leafId) -> int32_t {
-        const auto* leaf = config.find<conf::SkillLeafConfig>(leafId);
-        return leaf ? leaf->skillId : -1;
-    };
-    size_t overflow = 0;
-    for (size_t i = 0; i < tree->leafIds.size(); ++i)
-    {
-        const int32_t leafId = tree->leafIds[i];
-        if (leafId <= 0)
-            continue;
-        const int32_t skillId = leafSkill(leafId);
-        if (skillId <= 0)
-            continue;
-        EnumSkillSlot slot;
-        if (i < kOrdered.size())
-            slot = kOrdered[i];
-        else if (overflow < kOverflow.size())
-            slot = kOverflow[overflow++];
-        else
-            continue;
-        result.push_back(makeRow(slot, leafId, skillId, -1));
-    }
-    for (const int32_t leafId : tree->leafBuffId)
-    {
-        if (leafId <= 0)
-            continue;
-        if (overflow >= kOverflow.size())
-            break;
-        const int32_t skillId = leafSkill(leafId);
-        if (skillId <= 0)
-            continue;
-        result.push_back(makeRow(kOverflow[overflow++], leafId, skillId, -1));
-    }
-    for (size_t i = 0; i < tree->leafRubId.size() && i < kJoy.size(); ++i)
-    {
-        const int32_t leafId = tree->leafRubId[i];
-        if (leafId <= 0)
-            continue;
-        const int32_t skillId = leafSkill(leafId);
-        if (skillId <= 0)
-            continue;
-        int32_t rockId = -1;
-        for (const auto& rock : config.table<conf::SkillRockConfig>())
-            if (rock.skillId == skillId)
-            {
-                rockId = rock.id;
-                break;
-            }
-        result.push_back(makeRow(rockId > 0 ? kJoy[i] : kJoyPassive[i], leafId, skillId, rockId));
-    }
+    for (const auto& row : buildOfflineRows(occupation))
+        result.push_back(makeRow(row.slot, row.leafId, row.skillId, row.rockId));
     bool usedT = false;
     bool usedH = false;
     bool usedQ = false;

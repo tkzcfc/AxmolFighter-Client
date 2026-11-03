@@ -50,6 +50,23 @@ bool isAccessoryPosition(FashionPosition pos)
     return pos == FashionPosition::kWeapon || pos == FashionPosition::kWing || pos == FashionPosition::kHalo;
 }
 
+// 角色表的 resFashion 使用固定槽位：第 8 项是身体图集，第 9 项是武器挂件。
+void mergeRoleFallbackFashion(const conf::RoleConfig& role, std::unordered_map<FashionPosition, int32_t>& out)
+{
+    if (role.resFashion.size() >= 8)
+    {
+        const int32_t bodyId = role.resFashion[7];
+        if (bodyId > 0 && !out.contains(FashionPosition::kBody))
+            out.emplace(FashionPosition::kBody, bodyId);
+    }
+    if (role.resFashion.size() >= 9)
+    {
+        const int32_t weaponId = role.resFashion[8];
+        if (weaponId > 0 && !out.contains(FashionPosition::kWeapon))
+            out.emplace(FashionPosition::kWeapon, weaponId);
+    }
+}
+
 }  // namespace
 
 // 将外观选择解析为身体图集、皮肤和挂件描述。
@@ -78,8 +95,9 @@ bool FashionResolver::resolve(const FashionAppearance& appearance, AvatarDesc& o
         return false;
     }
 
-    // baseFashion 优先，缺省部位用职业默认外观补齐
+    // baseFashion 优先，缺省部位用角色表默认与职业默认补齐
     std::unordered_map<FashionPosition, int32_t> baseFashion = appearance.baseFashion;
+    mergeRoleFallbackFashion(*role, baseFashion);
     baseFashion.merge(getDefaultFashion(roleId));
 
     // 已穿时装：身体部位 → ResFashion id；挂件部位 → ResSpine id

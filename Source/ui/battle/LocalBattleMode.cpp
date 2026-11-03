@@ -7,17 +7,46 @@
 #include "AppContext.h"
 #include "core/event/EventDispatcher.h"
 #include "core/event/GameEvents.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
+#include "mugen/sim/BattleBootstrap.h"
 #include "ui/battle/LocalRoleUtils.h"
-#include "mugen/sim/room/RoomDirector.h"
+#include "ui/widgets/pet/PetLocalState.h"
 #include "imgui.h"
 
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
+#include <utility>
 
 namespace gameui
 {
+namespace
+{
+// 按房间查询默认关卡与副本，保持离线入口与无头回放使用同一初始化参数。
+std::pair<int32_t, int32_t> resolveStageAndCopy(int32_t roomId)
+{
+    auto& config = mugen::conf::Config::instance();
+    int32_t stageId = 0;
+    int32_t copyId  = 0;
+    for (const auto& stage : config.table<mugen::conf::StageConfig>())
+    {
+        if (stage.roomId == roomId)
+        {
+            stageId = stage.id;
+            break;
+        }
+    }
+    for (const auto& copy : config.table<mugen::conf::CopyConfig>())
+    {
+        if (copy.stageId == stageId)
+        {
+            copyId = copy.id;
+            break;
+        }
+    }
+    return {stageId, copyId};
+}
+}  // namespace
+
 class LocalBattleMode::WorldPresenterHolder
 {
 public:
@@ -37,7 +66,10 @@ LocalBattleMode::LocalBattleMode() = default;
 LocalBattleMode::LocalBattleMode(int32_t roomId) : m_roomId(roomId) {}
 
 LocalBattleMode::LocalBattleMode(LocalBattleParams params)
-    : m_roomId(params.roomId), m_roleId(params.roleId), m_autotestFrames(params.autotestFrames)
+    : m_roomId(params.roomId)
+    , m_roleId(params.roleId)
+    , m_petId(params.petId)
+    , m_autotestFrames(params.autotestFrames)
 {}
 
 LocalBattleMode::~LocalBattleMode() = default;
@@ -53,30 +85,24 @@ bool LocalBattleMode::init()
         std::exit(1);
         return false;
     }
-    m_world.init({1, mugen::sim::WorldMode::Battle, m_roomId, room->mapKey});
-
-    const int32_t roleId       = m_roleId > 0 ? m_roleId : resolveLocalPlayerRoleId();
-    const auto characterClass  = mugen::type_conversions::toCharacterClass(roleId);
-    const mugen::Entity player = mugen::sim::RoleSpawner(m_world).spawnPlayer(
-        characterClass, {.roleId = roleId, .level = 1, .playerSlot = 0, .isAi = false});
-    int32_t stageId = 0, copyId = 0;
-    for (const auto& stage : config.table<mugen::conf::StageConfig>())
-    {
-        if (stage.roomId == m_roomId)
-        {
-            stageId = stage.id;
-            break;
-        }
-    }
-    for (const auto& copy : config.table<mugen::conf::CopyConfig>())
-    {
-        if (copy.stageId == stageId)
-        {
-            copyId = copy.id;
-            break;
-        }
-    }
-    if (!mugen::sim::room::RoomDirector(m_world).enter(*room, stageId, copyId))
+    const int32_t roleId      = m_roleId > 0 ? m_roleId : resolveLocalPlayerRoleId();
+    const auto characterClass = mugen::type_conversions::toCharacterClass(roleId);
+    const auto [stageId, copyId] = resolveStageAndCopy(m_roomId);
+    mugen::sim::WorldSetup setup;
+    setup.seed           = 1;
+    setup.mode           = mugen::sim::WorldMode::Battle;
+    setup.roomId         = m_roomId;
+    setup.mapKey         = room->mapKey;
+    setup.m_aiEnabled    = true;
+    setup.m_playerClass  = characterClass;
+    setup.m_playerRoleId = roleId;
+    setup.m_playerLevel  = 1;
+    setup.m_playerSlot   = 0;
+    setup.m_playerIsAi   = false;
+    setup.m_stageId      = stageId;
+    setup.m_copyId       = copyId;
+    const mugen::Entity player = mugen::sim::bootstrapBattle(m_world, setup);
+    if (player.value == 0)
         return false;
     auto* scene = ax::Director::getInstance()->getRunningScene();
     auto* root  = ax::Node::create();
@@ -84,9 +110,11 @@ bool LocalBattleMode::init()
     m_presenter = std::make_unique<WorldPresenterHolder>(*root);
     m_presenter->presenter.loadMap(room->mapKey);
     m_presenter->presenter.setFollowEntity(player);
+    m_presenter->presenter.setPet(resolveFollowPetId());
     m_localPlayer       = player;
+    m_replay            = {};
     m_replay.schemaHash = mugen::conf::configSchemaHash();
-    m_replay.setup      = m_world.setup();
+    m_replay.setup      = setup;
     m_initialized       = true;
     subscribeAppearanceEvents();
     AXLOGI("LocalBattleMode: ready (room={})", m_roomId);
@@ -173,6 +201,7 @@ void LocalBattleMode::subscribeAppearanceEvents()
     auto refresh = [this]() { refreshLocalAppearance(); };
     ed->subscribe(game::GameEvent::FashionWornChanged, this, refresh);
     ed->subscribe(game::GameEvent::ArmamentAppearanceChanged, this, refresh);
+    ed->subscribe(game::GameEvent::PetFollowChanged, this, [this]() { refreshFollowPet(); });
 }
 
 void LocalBattleMode::refreshLocalAppearance()
@@ -181,6 +210,21 @@ void LocalBattleMode::refreshLocalAppearance()
         return;
     if (!m_presenter->presenter.refreshLocalPlayerAppearance(m_world))
         AXLOGW("LocalBattleMode: refreshLocalPlayerAppearance skipped (avatar not ready)");
+}
+
+int32_t LocalBattleMode::resolveFollowPetId() const
+{
+    if (m_petId > 0)
+        return m_petId;
+    const int32_t activeId = PetLocalState::instance().activeId();
+    return activeId > 0 ? activeId : 17102;
+}
+
+void LocalBattleMode::refreshFollowPet()
+{
+    if (!m_presenter || !m_initialized)
+        return;
+    m_presenter->presenter.setPet(resolveFollowPetId());
 }
 
 void LocalBattleMode::renderDebugPanel()

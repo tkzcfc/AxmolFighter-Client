@@ -214,9 +214,8 @@ struct SkillLeafConfig
     std::string icon;
     int32_t id     = 0;
     int32_t nameId = 0;
-    // 溢出等级与伙伴解锁。
+    // 溢出等级。
     int32_t overflowLevelLimit = 0;
-    int32_t partnerUnlock      = 0;
     // 伤害系数、关联技能、技能类型与标签。
     Fixed skillDamageFactor;
     int32_t skillId   = 0;
@@ -242,7 +241,6 @@ struct SkillLeafConfig
                id,
                nameId,
                overflowLevelLimit,
-               partnerUnlock,
                skillDamageFactor,
                skillId,
                skillType,
