@@ -238,3 +238,4 @@ tests/*-tests/build_*
 release_note_draft.txt
 /replays/
 run.ps1.txt
+run.bat.txt
