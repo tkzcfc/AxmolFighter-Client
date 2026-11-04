@@ -437,8 +437,10 @@ bool checkOne(World& world,
         return external && parameter(params) <= Fixed::fromInt(external->m_comboEvaluate);
     }
     case 263:
-        // 怒气伙伴变身条件未接入当前运行时，保持不通过。
-        return false;
+    {
+        const auto* rage = world.ecs().tryGet<PartnerRageState>(entity);
+        return rage && rage->m_transformed;
+    }
     // 原条件在全部匹配后返回空值，因此这两个编号始终不通过。
     case 259:
     case 260:

@@ -16,6 +16,14 @@ namespace mugen::sim::role
 {
 namespace
 {
+// 判断是否可以在当前状态执行怒气变身回退。
+bool canRecoverFromPartnerRage(const RoleStatus& status)
+{
+    if (status.isDeath() || status.isRevive() || status.isAttack() || status.isJostled() || status.isTobeHit())
+        return false;
+    return status.isIdle() || status.isMove();
+}
+
 // 推进角色技能池。
 void skillPoolUpdate(World& world, Entity entity)
 {
@@ -53,7 +61,29 @@ void crazyUpdate(World& world, Entity entity)
     skill::SkillCaster(world, entity).updateCrazy();
 }
 // 推进怒气流程。
-void rageUpdate(World&, Entity) {}
+void rageUpdate(World& world, Entity entity)
+{
+    auto* rage = world.ecs().tryGet<PartnerRageState>(entity);
+    if (!rage)
+        return;
+    rage->m_anger = std::clamp(rage->m_anger, Fixed{}, conf::kPartnerRageMaxAnger);
+    if (rage->m_transformed && rage->m_freezeMs > Fixed{})
+    {
+        rage->m_freezeMs = std::max(Fixed{}, rage->m_freezeMs - world.ecs().singleton<WorldClock>().dtMs);
+        if (rage->m_freezeMs == Fixed{})
+            rage->m_recoverPending = true;
+    }
+    if (!rage->m_transformed || !rage->m_recoverPending || !canRecoverFromPartnerRage(world.ecs().get<RoleStatus>(entity)))
+        return;
+    rage->m_anger             = {};
+    rage->m_freezeMs          = {};
+    rage->m_pendingGain       = {};
+    rage->m_pendingGainActive = false;
+    rage->m_transformed       = false;
+    rage->m_recoverPending    = false;
+    skill::clearSkillCooldownState(world, entity, true);
+    skill::setPartnerRageTransformState(world, entity, false);
+}
 // 推进受击保护流程。
 void hitProtectUpdate(World& world, Entity entity)
 {

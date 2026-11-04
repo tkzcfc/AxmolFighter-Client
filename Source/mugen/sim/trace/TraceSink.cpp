@@ -253,6 +253,8 @@ void emitEvent(TraceSink& sink, const World& world, const PresentationEvent& eve
             line += " intensity " + key + " v " + fixedStr(payload.m_value);
         else if constexpr (std::is_same_v<T, WhiteFrame>)
             line += " whiteframe " + key + " on " + std::to_string(payload.m_enabled ? 1 : 0);
+        else if constexpr (std::is_same_v<T, PartnerRageChanged>)
+            line += " rage " + key + " active " + std::to_string(payload.m_active ? 1 : 0);
         else if constexpr (std::is_same_v<T, BuffSpine>)
             line += " buff " + key + " serial " + std::to_string(payload.m_serial) + " spine " +
                     std::to_string(payload.m_spineId) + " stage " + std::to_string(payload.m_stage) + " buff " +

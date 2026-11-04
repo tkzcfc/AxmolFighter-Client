@@ -117,8 +117,11 @@ bool isLocalPlayerRole(sim::World& world, Entity entity)
 // 按外观配置创建 Avatar，动作文件与逻辑侧绑定的同一份。
 // 职业角色按职业默认外观创建：时装图集与皮肤、默认武器挂件（待机时显示，其余动作嫁接到身体插槽）。
 // 本地玩家用会话时装/武器外观（可后续 setAppearance 换装）。
-Avatar* createAvatar(const AvatarLook& look, const SpineInfo& spine, const std::string& motionFile,
-                     bool useSessionFashion)
+Avatar* createAvatar(const AvatarLook& look,
+                     const SpineInfo& spine,
+                     const std::string& motionFile,
+                     bool useSessionFashion,
+                     bool transformed)
 {
     if (look.characterClass != CharacterClass::kUnknown)
     {
@@ -131,6 +134,7 @@ Avatar* createAvatar(const AvatarLook& look, const SpineInfo& spine, const std::
         }
         else
             appearance.roleId = look.roleId;
+        appearance.transformed = transformed;
         return Avatar::create(appearance);
     }
     AvatarDesc desc;
@@ -164,14 +168,17 @@ void AvatarPresenter::present(sim::World& world, float alpha, float renderDelta)
             const SpineInfo spine = AvatarPaths::resolveSpine(look.resSpineId);
             if (!spine.valid)
                 return;
+            const bool roleEntity = group.kind == sim::GroupKind::Role;
+            state.fashionAvatar   = roleEntity && look.characterClass != CharacterClass::kUnknown;
+            state.useSessionFashion = roleEntity && isLocalPlayerRole(world, entity);
+            state.roleId            = look.roleId;
+            state.partnerRageTransformed = motion.m_partnerRageTransformed;
+            state.partnerRageStateKnown  = state.fashionAvatar;
             if (motion.motionFile.empty())
                 state.skeleton = MgSkeletonAnimation::createFromCache(look.resSpineId);
             else
-            {
-                const bool sessionFashion =
-                    group.kind == sim::GroupKind::Role && isLocalPlayerRole(world, entity);
-                state.avatar = createAvatar(look, spine, motion.motionFile, sessionFashion);
-            }
+                state.avatar = createAvatar(look, spine, motion.motionFile, state.useSessionFashion,
+                                            motion.m_partnerRageTransformed);
             ax::Node* node = displayNode(state);
             if (!node)
                 return;
@@ -181,6 +188,9 @@ void AvatarPresenter::present(sim::World& world, float alpha, float renderDelta)
         ax::Node* node = displayNode(state);
         if (!node)
             return;
+        if (state.fashionAvatar &&
+            (!state.partnerRageStateKnown || state.partnerRageTransformed != motion.m_partnerRageTransformed))
+            syncPartnerRageAppearance(entity.value, motion, motion.m_partnerRageTransformed, false);
         if (state.motionName != motion.motionName || state.entryId != motion.entryId)
         {
             if (state.avatar)
@@ -270,6 +280,51 @@ bool AvatarPresenter::samplePose(uint32_t entityValue, float alpha, RenderPose* 
     return true;
 }
 
+FashionAppearance AvatarPresenter::buildRoleAppearance(const AvatarState& state, bool transformed)
+{
+    FashionAppearance appearance;
+    if (state.useSessionFashion)
+        appearance = gameui::buildSessionFashionAppearance();
+    if (appearance.roleId == 0)
+        appearance.roleId = state.roleId;
+    appearance.transformed = transformed;
+    return appearance;
+}
+
+bool AvatarPresenter::syncPartnerRageAppearance(uint32_t entityValue,
+                                                const sim::MotionState& motion,
+                                                bool transformed,
+                                                bool force)
+{
+    auto it = m_avatars.find(entityValue);
+    if (it == m_avatars.end())
+        return false;
+    auto& state = it->second;
+    if (!state.avatar || !state.fashionAvatar)
+        return false;
+    if (!force && state.partnerRageStateKnown && state.partnerRageTransformed == transformed)
+        return true;
+    const FashionAppearance appearance = buildRoleAppearance(state, transformed);
+    if (!state.avatar->setAppearance(appearance))
+        return false;
+    state.partnerRageTransformed = transformed;
+    state.partnerRageStateKnown  = true;
+    // 换骨架后立即重放当前逻辑动作和时间，避免显示回到默认待机片段。
+    state.avatar->setMotion(motion.motionName, motion.entryId, motion.loop);
+    state.avatar->seek(static_cast<int>(motion.timeMs.toInt()));
+    state.motionName = motion.motionName;
+    state.entryId    = motion.entryId;
+    return true;
+}
+
+void AvatarPresenter::onPartnerRageChanged(sim::World& world, Entity entity, bool active)
+{
+    const auto* motion = world.ecs().tryGet<sim::MotionState>(entity);
+    if (!motion)
+        return;
+    syncPartnerRageAppearance(entity.value, *motion, active, true);
+}
+
 void AvatarPresenter::setPet(int32_t petId, int32_t spineId)
 {
     if (!m_petFollower)
@@ -316,7 +371,17 @@ bool AvatarPresenter::setEntityAppearance(uint32_t entityValue, const FashionApp
     auto it = m_avatars.find(entityValue);
     if (it == m_avatars.end() || !it->second.avatar)
         return false;
-    return it->second.avatar->setAppearance(appearance);
+    if (!it->second.avatar->setAppearance(appearance))
+        return false;
+    auto& state = it->second;
+    if (state.fashionAvatar)
+    {
+        state.partnerRageTransformed = appearance.transformed;
+        state.partnerRageStateKnown  = true;
+    }
+    state.motionName.clear();
+    state.entryId.clear();
+    return true;
 }
 
 bool AvatarPresenter::setEntityIntensity(uint32_t entityValue, float intensity)
@@ -387,6 +452,7 @@ bool WorldPresenter::refreshLocalPlayerAppearance(sim::World& world)
     FashionAppearance appearance = gameui::buildSessionFashionAppearance();
     if (appearance.roleId == 0)
         appearance.roleId = world.ecs().get<sim::RoleIdentity>(local).roleId;
+    appearance.transformed = world.ecs().get<sim::MotionState>(local).m_partnerRageTransformed;
     return setEntityAppearance(local, appearance);
 }
 
@@ -556,6 +622,8 @@ void WorldPresenter::present(sim::World& world, float interpolationAlpha, float 
         m_hurtNumbers.consume(event, world);
         if (const auto* intensity = std::get_if<sim::RoleIntensity>(&event.payload))
             m_avatars.setEntityIntensity(event.entity.value, renderValue(intensity->m_value));
+        if (const auto* partnerRage = std::get_if<sim::PartnerRageChanged>(&event.payload))
+            m_avatars.onPartnerRageChanged(world, event.entity, partnerRage->m_active);
         m_lastEventSequence = event.seq + 1;
     }
     m_camera.follow(world, m_followEntity);

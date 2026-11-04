@@ -3,6 +3,8 @@
 #include "mugen/conf/TypeConversions.h"
 #include "mugen/conf/ReflectedConfig.h"
 
+#include <unordered_set>
+
 NS_MG_BEGIN
 
 namespace
@@ -50,6 +52,31 @@ bool isAccessoryPosition(FashionPosition pos)
     return pos == FashionPosition::kWeapon || pos == FashionPosition::kWing || pos == FashionPosition::kHalo;
 }
 
+// 伙伴职业（风/女王/狂暴）走伙伴时装替换规则。
+bool isPartnerCharacterClass(CharacterClass cls)
+{
+    return cls == CharacterClass::kPartnerWind || cls == CharacterClass::kPartnerQueen ||
+           cls == CharacterClass::kPartnerRage;
+}
+
+// 解析时装图集路径：支持单 atlas 或双形态 atlas 列表。
+std::string pickResFashionAtlas(const conf::ResFashionConfig& cfg, bool transformed)
+{
+    if (const auto* atlas = std::get_if<std::string>(&cfg.spine))
+        return *atlas;
+
+    const auto* atlasList = std::get_if<std::vector<std::string>>(&cfg.spine);
+    if (!atlasList || atlasList->empty())
+        return {};
+
+    const size_t index = transformed ? 1u : 0u;
+    if (index < atlasList->size() && !(*atlasList)[index].empty())
+        return (*atlasList)[index];
+    if (!atlasList->front().empty())
+        return atlasList->front();
+    return {};
+}
+
 // 角色表的 resFashion 使用固定槽位：第 8 项是身体图集，第 9 项是武器挂件。
 void mergeRoleFallbackFashion(const conf::RoleConfig& role, std::unordered_map<FashionPosition, int32_t>& out)
 {
@@ -88,10 +115,16 @@ bool FashionResolver::resolve(const FashionAppearance& appearance, AvatarDesc& o
         return false;
     }
 
-    const auto* spine = conf::Config::instance().find<conf::ResSpineConfig>(role->resSpineId);
+    out.characterClass = type_conversions::toCharacterClass(roleId);
+
+    int32_t resSpineId = role->resSpineId;
+    if (appearance.transformed && role->resSpineIdExt > 0)
+        resSpineId = role->resSpineIdExt;
+
+    const auto* spine = conf::Config::instance().find<conf::ResSpineConfig>(resSpineId);
     if (!spine || spine->fileName.empty())
     {
-        MG_LOG_E("FashionResolver: ResSpine {} missing for role {}", role->resSpineId, roleId);
+        MG_LOG_E("FashionResolver: ResSpine {} missing for role {}", resSpineId, roleId);
         return false;
     }
 
@@ -108,7 +141,7 @@ bool FashionResolver::resolve(const FashionAppearance& appearance, AvatarDesc& o
         if (kv.second == 0)
             continue;
         const auto* item = conf::Config::instance().find<conf::FashionConfig>(
-            {kv.second, static_cast<int32_t>(type_conversions::toCharacterClass(roleId))});
+            {kv.second, static_cast<int32_t>(out.characterClass)});
         if (!item)
             item = conf::Config::instance().find<conf::FashionConfig>({kv.second, 0});
         if (!item)
@@ -141,18 +174,27 @@ bool FashionResolver::resolve(const FashionAppearance& appearance, AvatarDesc& o
     out.skeleton       = spine->fileName;
     out.scale          = spine->scale > Fixed{} ? spine->scale.toFloatForRender() : 1.0f;
     out.motionFile     = AvatarPaths::motionFileFromSpine(out.skeleton);
-    out.characterClass = type_conversions::toCharacterClass(roleId);
 
     const int32_t haloId = pick(equipAccessory, FashionPosition::kHalo);
-    out.setAccessory(AvatarAccessorySlot::kWeapon, pick(equipAccessory, FashionPosition::kWeapon));
+    int32_t weaponId = pick(equipAccessory, FashionPosition::kWeapon);
+    if (appearance.transformed && out.characterClass == CharacterClass::kPartnerRage)
+        weaponId = 0;
+    out.setAccessory(AvatarAccessorySlot::kWeapon, weaponId);
     out.setAccessory(AvatarAccessorySlot::kWing, pick(equipAccessory, FashionPosition::kWing));
     out.setAccessory(AvatarAccessorySlot::kHaloBack, haloId);
     out.setAccessory(AvatarAccessorySlot::kHaloFront, haloId);
+
+    const bool partnerClass = isPartnerCharacterClass(out.characterClass);
+    const bool hasClothesEquipped =
+        equipBody.find(FashionPosition::kClothes) != equipBody.end();
+    std::unordered_set<std::string> atlasSet;
 
     for (int i = 0; i < static_cast<int>(FashionPosition::kCount); ++i)
     {
         const auto pos = static_cast<FashionPosition>(i);
         if (isAccessoryPosition(pos))
+            continue;
+        if (partnerClass && hasClothesEquipped && pos == FashionPosition::kBody)
             continue;
 
         const int32_t id = pick(equipBody, pos);
@@ -165,13 +207,14 @@ bool FashionResolver::resolve(const FashionAppearance& appearance, AvatarDesc& o
             MG_LOG_W("FashionResolver: ResFashion {} missing for position {}", id, i);
             continue;
         }
-        const auto* atlas = std::get_if<std::string>(&cfg->spine);
-        if (!atlas || atlas->empty())
+        const std::string atlas = pickResFashionAtlas(*cfg, appearance.transformed);
+        if (atlas.empty())
         {
             MG_LOG_W("FashionResolver: ResFashion {} missing for position {}", id, i);
             continue;
         }
-        out.atlases.push_back(*atlas);
+        if (atlasSet.emplace(atlas).second)
+            out.atlases.push_back(atlas);
         if (out.skin.empty())
         {
             if (const auto* skin = std::get_if<std::string>(&cfg->skinName))

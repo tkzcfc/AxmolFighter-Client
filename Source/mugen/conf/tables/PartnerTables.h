@@ -16,6 +16,9 @@ struct PartnerConfig
     int32_t id       = 0;
     int32_t levelMax = 100;
     int32_t nameId   = 0;
+    int32_t roleId   = 0;
+    int32_t partnerType = 0;
+    int32_t typeValue   = 0;
     int32_t quality  = 0;
     int32_t rare     = 0;
     // item_partner.spine_id + heiyue UiPartner preview anim (stand).
@@ -29,6 +32,9 @@ struct PartnerConfig
                id,
                levelMax,
                nameId,
+               roleId,
+               partnerType,
+               typeValue,
                quality,
                rare,
                spineAnim,

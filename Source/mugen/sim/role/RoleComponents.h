@@ -258,8 +258,46 @@ struct MotionState
     bool playing = false;
     // 已完成循环次数。
     int64_t m_completedLoops = 0;
+    // 伙伴怒气变身是否激活，供表现层读取。
+    bool m_partnerRageTransformed = false;
     // 参与组件快照的动作字段。
-    MG_REFLECT(MotionState, motionFile, motionName, entryId, timeMs, actionScale, loop, playing, m_completedLoops)
+    MG_REFLECT(MotionState,
+               motionFile,
+               motionName,
+               entryId,
+               timeMs,
+               actionScale,
+               loop,
+               playing,
+               m_completedLoops,
+               m_partnerRageTransformed)
+};
+// 伙伴怒气变身的运行时状态。
+struct PartnerRageState
+{
+    // 当前怒气值。
+    Fixed m_anger;
+    // 变身剩余冻结时间（毫秒）。
+    Fixed m_freezeMs;
+    // 变身冻结总时长（毫秒）。
+    Fixed m_maxFreezeMs;
+    // 当前施法管线待领取的怒气值。
+    Fixed m_pendingGain;
+    // 待领取怒气是否有效。
+    bool m_pendingGainActive = false;
+    // 当前是否处于变身状态。
+    bool m_transformed = false;
+    // 冻结结束后等待安全状态回退。
+    bool m_recoverPending = false;
+    // 参与组件快照的怒气字段。
+    MG_REFLECT(PartnerRageState,
+               m_anger,
+               m_freezeMs,
+               m_maxFreezeMs,
+               m_pendingGain,
+               m_pendingGainActive,
+               m_transformed,
+               m_recoverPending)
 };
 // 标记由外部同步驱动的角色。
 struct Puppet

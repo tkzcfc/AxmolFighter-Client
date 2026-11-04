@@ -1,7 +1,10 @@
 #include "SkillCaster.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/trace/TraceSink.h"
+#include "mugen/avatar/AvatarPaths.h"
 #include "mugen/conf/ReflectedConfig.h"
+#include "mugen/conf/BattleConst.h"
+#include "mugen/sim/event/PresentationEvent.h"
 #include <algorithm>
 
 namespace mugen::sim
@@ -25,6 +28,95 @@ void SkillPool::setSkillBase(int32_t index)
 
 namespace mugen::sim::skill
 {
+namespace
+{
+// 由角色与变身状态解析当前应使用的动作文件。
+std::string resolvePartnerRageMotionFile(World& world, Entity entity, bool transformed)
+{
+    const int32_t roleId     = world.ecs().get<RoleIdentity>(entity).roleId;
+    const auto& role         = conf::Config::instance().get<conf::RoleConfig>(roleId);
+    const int32_t resSpineId = transformed && role.resSpineIdExt > 0 ? role.resSpineIdExt : role.resSpineId;
+    if (resSpineId <= 0)
+        return {};
+    return AvatarPaths::motionFileFromSpine(conf::Config::instance().get<conf::ResSpineConfig>(resSpineId).fileName);
+}
+
+// 在施法管线开始时记录首段技能的怒气增量。
+void beginPartnerRageCast(World& world, Entity entity, const SkillPool& pool, int32_t firstSkillIndex)
+{
+    auto* rage = world.ecs().tryGet<PartnerRageState>(entity);
+    if (!rage)
+        return;
+    rage->m_pendingGain = {};
+    rage->m_pendingGainActive = false;
+    if (firstSkillIndex < 0 || static_cast<size_t>(firstSkillIndex) >= pool.m_skills.size())
+        return;
+    const int32_t firstSkillId = pool.m_skills[static_cast<size_t>(firstSkillIndex)].m_configId;
+    if (const auto* skill = conf::Config::instance().find<conf::SkillAttackConfig>(firstSkillId))
+    {
+        rage->m_pendingGain = Fixed::fromInt(std::max(0, skill->rage));
+        rage->m_pendingGainActive = rage->m_pendingGain > Fixed{};
+    }
+}
+
+// 在怒气技能收束时进入变身并广播表现事件。
+void finishPartnerRageCast(World& world, Entity entity, const SkillPool& pool, const SkillBase& skill)
+{
+    auto* rage = world.ecs().tryGet<PartnerRageState>(entity);
+    if (!rage)
+        return;
+    rage->m_pendingGain       = {};
+    rage->m_pendingGainActive = false;
+    if (pool.baseSlot(skill) != "P")
+        return;
+    if (rage->m_transformed || rage->m_recoverPending || rage->m_anger < conf::kPartnerRageMaxAnger)
+        return;
+    rage->m_anger          = {};
+    rage->m_freezeMs       = rage->m_maxFreezeMs;
+    rage->m_transformed    = true;
+    rage->m_recoverPending = rage->m_freezeMs <= Fixed{};
+    clearSkillCooldownState(world, entity, false);
+    setPartnerRageTransformState(world, entity, true);
+}
+}  // namespace
+
+void clearSkillCooldownState(World& world, Entity entity, bool resetGroupChange)
+{
+    auto* pool = world.ecs().tryGet<SkillPool>(entity);
+    if (!pool)
+        return;
+    pool->m_running.clear();
+    pool->m_coolingSlots.clear();
+    if (resetGroupChange)
+    {
+        pool->m_group  = 1;
+        pool->m_change = 1;
+    }
+    for (auto& value : pool->m_skills)
+    {
+        value.m_cd           = {};
+        value.m_timing       = false;
+        value.m_releaseCount = value.m_releaseMax;
+        if (resetGroupChange)
+        {
+            value.m_groupTime  = {};
+            value.m_changeTime = {};
+        }
+    }
+}
+
+void setPartnerRageTransformState(World& world, Entity entity, bool transformed)
+{
+    auto* motion = world.ecs().tryGet<MotionState>(entity);
+    if (!motion)
+        return;
+    if (motion->m_partnerRageTransformed != transformed)
+        world.emit(entity, PartnerRageChanged{transformed});
+    motion->m_partnerRageTransformed = transformed;
+    if (const std::string motionFile = resolvePartnerRageMotionFile(world, entity, transformed); !motionFile.empty())
+        motion->motionFile = motionFile;
+}
+
 void SkillCaster::resetSkill()
 {
     auto* pool = m_world.ecs().tryGet<SkillPool>(m_entity);
@@ -151,6 +243,7 @@ void SkillCaster::dealWithCastPipeBegan(int32_t index)
                                            skill.m_pipe);
     const auto first = getGivenSkill(pool, pool.m_slots[skill.m_address.m_slot].m_name, skill.m_address.m_index,
                                      skill.m_address.m_mode, 1, true);
+    beginPartnerRageCast(m_world, m_entity, pool, first);
     trigger(BFEvent::BeforeCastSkill, {first});
     trigger(ability::SkillEvent::BeforeCastSkill, {first});
     pool.m_previous = index;
@@ -162,6 +255,7 @@ void SkillCaster::dealWithCastPipeEnded(int32_t index)
     trace::TraceRecorder(m_world).noteCastEnd(m_entity, skill.m_configId);
     const auto first = getGivenSkill(pool, pool.m_slots[skill.m_address.m_slot].m_name, skill.m_address.m_index,
                                      skill.m_address.m_mode, 1, true);
+    finishPartnerRageCast(m_world, m_entity, pool, skill);
     trigger(BFEvent::AfterCastSkill, {first});
     if (skill.m_address.m_step == skill.m_stepCount)
         trigger(BFEvent::AfterNextSkill, {index});

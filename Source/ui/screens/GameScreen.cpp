@@ -74,6 +74,7 @@ void GameScreen::onEnter()
     m_slotMap[Key::KEY_T]           = static_cast<uint32_t>(ControlKey::AttackN);
     m_slotMap[Key::KEY_Y]           = static_cast<uint32_t>(ControlKey::AttackO);
     m_slotMap[Key::KEY_U]           = static_cast<uint32_t>(ControlKey::AttackQ);
+    m_slotMap[Key::KEY_P]           = static_cast<uint32_t>(ControlKey::AttackQ);
     AXLOGI("GameScreen: entered (localRoom={})", m_local.has_value() ? m_local->roomId : 0);
 }
 

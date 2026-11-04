@@ -13,6 +13,16 @@ namespace mugen::sim::hit
 {
 HitResolver::HitResolver(World& world, Entity effect) : m_world(world), m_effect(effect) {}
 
+void grantPartnerRageOnAcceptedHit(World& world, Entity entity)
+{
+    auto* rage = world.ecs().tryGet<PartnerRageState>(entity);
+    if (!rage || !rage->m_pendingGainActive)
+        return;
+    rage->m_anger = std::clamp(rage->m_anger + rage->m_pendingGain, Fixed{}, conf::kPartnerRageMaxAnger);
+    rage->m_pendingGain       = {};
+    rage->m_pendingGainActive = false;
+}
+
 // 碰撞分派按目标类型与攻击者阵营过滤，End 事件不产生打击。
 void HitResolver::onCollision(Entity other, CollisionEvent event, FixedVec2 contact)
 {
@@ -363,6 +373,7 @@ void HitResolver::_hitTarget(const conf::EffectConfig& row)
             Role(m_world, m_target).modifyHp(-data.m_damage, m_effect);
         }
         _hitReaction(m_target, data, *hitRow);
+        grantPartnerRageOnAcceptedHit(m_world, data.m_attacker);
         m_world.hitHooks().m_ability(m_world, data.m_attacker, HitAbilityEvent::Anger, data, data.m_skillId);
         _endHit(m_target, data, row);
     }

@@ -175,3 +175,46 @@ TEST_CASE("FashionResolver resolves partner roles with hero spine atlas and moti
         CHECK(std::find(desc.atlases.begin(), desc.atlases.end(), it.atlas) != desc.atlases.end());
     }
 }
+
+TEST_CASE("FashionResolver partner clothes replace body atlas and transformed form uses ext skeleton")
+{
+    REQUIRE(mugen::test::ensureContentVfs());
+    REQUIRE(mugen::conf::Config::instance().load("/mugen/config/config.bin"));
+
+    struct ClothesExpectation
+    {
+        int32_t roleId;
+        int32_t fashionId;
+        const char* atlas;
+    };
+    const ClothesExpectation clothes[] = {
+        {105, 220001, "/mugen/spine/hero/mx_huoban_01xueshi_skin1.atlas"},
+        {106, 220003, "/mugen/spine/hero/mx_huoban_01heiyan_skin1.atlas"},
+        {107, 220021, "/mugen/spine/hero/mx_huoban05_ailin_skin1.atlas"},
+    };
+
+    for (const auto& it : clothes)
+    {
+        mugen::FashionAppearance appearance;
+        appearance.roleId = it.roleId;
+        appearance.equipFashion[mugen::FashionPosition::kClothes] = it.fashionId;
+        mugen::AvatarDesc desc;
+        REQUIRE(mugen::FashionResolver::resolve(appearance, desc));
+        CHECK(desc.atlases.size() == 1);
+        REQUIRE_FALSE(desc.atlases.empty());
+        CHECK(desc.atlases.front() == it.atlas);
+    }
+
+    mugen::FashionAppearance transformed;
+    transformed.roleId = 107;
+    transformed.transformed = true;
+    transformed.equipFashion[mugen::FashionPosition::kClothes] = 220021;
+
+    mugen::AvatarDesc transformedDesc;
+    REQUIRE(mugen::FashionResolver::resolve(transformed, transformedDesc));
+    CHECK(transformedDesc.skeleton == "/mugen/spine/hero/mx_huoban05_ailinrobot.skel");
+    CHECK(transformedDesc.motionFile == "/mugen/motion/hero/mx_huoban05_ailinrobot.motion");
+    CHECK(transformedDesc.atlases.size() == 1);
+    REQUIRE_FALSE(transformedDesc.atlases.empty());
+    CHECK(transformedDesc.atlases.front() == "/mugen/spine/hero/mx_huoban05_ailinrobot.atlas");
+}

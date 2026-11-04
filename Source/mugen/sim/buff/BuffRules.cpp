@@ -7,6 +7,9 @@
 #include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/skill/SkillComponents.h"
 #include "mugen/conf/ReflectedConfig.h"
+#include "mugen/conf/BattleConst.h"
+
+#include <algorithm>
 
 namespace mugen::sim::buff
 {
@@ -905,8 +908,27 @@ void detectorUpdate(World& w, Entity e, uint64_t s, Fixed)
 void stateBegin(World&, Entity, uint64_t, Fixed) {}
 void stateUpdate(World&, Entity, uint64_t, Fixed) {}
 void stateExit(World&, Entity, uint64_t, Fixed) {}
-// 怒气系统未纳入当前角色组件，保留具体空钩子以避免占位规则。
-void angerAdd(World&, Entity, uint64_t, Fixed) {}
+// 怒气增益：未变身加怒气，变身中加冻结时间。
+void angerAdd(World& world, Entity entity, uint64_t serial, Fixed)
+{
+    auto* rage = world.ecs().tryGet<PartnerRageState>(entity);
+    if (!rage)
+        return;
+    const auto* instance = BuffHolder(world, entity).findInstance(serial);
+    if (!instance)
+        return;
+    const auto& config = conf::Config::instance().get<conf::BuffConfig>(instance->m_id);
+    if (config.paramValue.empty())
+        return;
+    const Fixed ratio = config.paramValue.front();
+    if (rage->m_transformed)
+    {
+        rage->m_freezeMs = std::clamp(rage->m_freezeMs + ratio * rage->m_maxFreezeMs, Fixed{}, rage->m_maxFreezeMs);
+        return;
+    }
+    rage->m_anger = std::clamp(rage->m_anger + ratio * conf::kPartnerRageMaxAnger, Fixed{},
+                               conf::kPartnerRageMaxAnger);
+}
 // 寒冷即时按标准 Buff 伤害入口结算。
 void coldEnter(World& world, Entity entity, uint64_t serial, Fixed)
 {

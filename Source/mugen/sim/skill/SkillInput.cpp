@@ -10,9 +10,11 @@ namespace mugen::sim::skill
 std::string SkillAssembly::eventSlot(ControlEvent event)
 {
     const auto value = static_cast<int32_t>(event);
-    /// 控制事件编码连续排列，转换为配置使用的槽位名。
-    if (event >= ControlEvent::CTR_ATKA && event <= ControlEvent::CTR_ATKQ)
+    /// 控制事件编码连续排列，CTR_ATKQ 单独映射到怒气槽位 P。
+    if (event >= ControlEvent::CTR_ATKA && event <= ControlEvent::CTR_ATKO)
         return std::string(1, static_cast<char>('A' + value - static_cast<int32_t>(ControlEvent::CTR_ATKA)));
+    if (event == ControlEvent::CTR_ATKQ)
+        return "P";
     if (event >= ControlEvent::CTR_JOY1 && event <= ControlEvent::CTR_JOY12)
         return std::to_string(value - static_cast<int32_t>(ControlEvent::CTR_JOY1) + 1) + '+';
     if (event >= ControlEvent::CTR_JOYB && event <= ControlEvent::CTR_JOYD)

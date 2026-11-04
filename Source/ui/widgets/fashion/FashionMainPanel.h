@@ -22,7 +22,11 @@ public:
     static void requestRefresh();
 
 protected:
-    std::vector<std::string> getPackages() const override { return {"UI/Res_GeneralIcons", "UI/Res_FashionIcons", "UI/Res_FashionSuitIcons", "UI/Panel_Fashion"}; }
+    std::vector<std::string> getPackages() const override
+    {
+        return {"UI/Res_GeneralIcons", "UI/Res_FashionIcons", "UI/Res_FashionSuitIcons",
+                "UI/Res_PartnerIcons", "UI/Panel_Fashion"};
+    }
 
     GComponent* onCreatePanelContent() override
     {

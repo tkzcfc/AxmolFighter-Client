@@ -15,6 +15,9 @@ namespace mugen::sim
 class World;
 namespace hit
 {
+// 命中接收后按当前施法挂起状态结算一次怒气。
+void grantPartnerRageOnAcceptedHit(World& world, Entity entity);
+
 // 命中求解视图：包装世界与绑定实体，执行碰撞命中与 Buff 接缝。
 // 仅作为临时对象使用，不存入组件、不拥有资源，生命周期限于单次调用。
 class HitResolver

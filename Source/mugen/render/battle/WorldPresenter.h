@@ -29,6 +29,8 @@ public:
     void clear();
     // Re-apply fashion on an already-created exclusive Avatar (town/battle local player).
     bool setEntityAppearance(uint32_t entityValue, const FashionAppearance& appearance);
+    // 根据怒气变身事件刷新实体外观。
+    void onPartnerRageChanged(sim::World& world, Entity entity, bool active);
     // 应用受击亮度到实体显示节点；返回是否命中已有实体。
     bool setEntityIntensity(uint32_t entityValue, float intensity);
 
@@ -51,6 +53,16 @@ private:
         uint64_t lastFrame = 0;
         // 是否已建立 previous/current 采样对。
         bool hasPrevious = false;
+        // 是否使用时装外观 Avatar（可热切换骨架与图集）。
+        bool fashionAvatar = false;
+        // 角色外观是否来自本地会话（使用会话时装与武器）。
+        bool useSessionFashion = false;
+        // 角色配置 id（用于重建/重算外观）。
+        int32_t roleId = 0;
+        // 最近一次已应用到 Avatar 的变身状态。
+        bool partnerRageTransformed = false;
+        // 是否已记录过 partnerRageTransformed。
+        bool partnerRageStateKnown = false;
         std::string motionName;
         std::string entryId;
     };
@@ -70,6 +82,13 @@ private:
     static RenderPose interpolatePose(const AvatarState& state, float alpha);
     // 读取实体当前插值姿态，失败时返回 false。
     bool samplePose(uint32_t entityValue, float alpha, RenderPose* out) const;
+    // 按缓存角色信息构造当前应应用的外观。
+    static FashionAppearance buildRoleAppearance(const AvatarState& state, bool transformed);
+    // 刷新角色怒气变身外观并重放当前动作时间。
+    bool syncPartnerRageAppearance(uint32_t entityValue,
+                                   const sim::MotionState& motion,
+                                   bool transformed,
+                                   bool force);
     // 返回配置层级对应的绘制层，首次使用时按层级值作为 z 序创建。
     ax::Node& tierLayer(int32_t tier);
 

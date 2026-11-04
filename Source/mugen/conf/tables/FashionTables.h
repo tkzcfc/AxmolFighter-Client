@@ -117,7 +117,7 @@ struct ResFashionConfig
     // 标识、皮肤名称和 Spine 资源路径。
     int32_t id = 0;
     std::variant<int32_t, std::string> skinName;
-    std::variant<int32_t, std::string> spine;
+    std::variant<int32_t, std::string, std::vector<std::string>> spine;
 
     MG_REFLECT(ResFashionConfig, id, skinName, spine)
 };

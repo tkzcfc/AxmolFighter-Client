@@ -116,6 +116,13 @@ struct WhiteFrame
     bool m_enabled = false;
     MG_REFLECT(WhiteFrame, m_enabled)
 };
+// 通知表现层伙伴怒气变身状态切换。
+struct PartnerRageChanged
+{
+    // 是否进入变身态。
+    bool m_active = false;
+    MG_REFLECT(PartnerRageChanged, m_active)
+};
 // 所有可序列化的表现事件载荷类型。
 // Buff 骨骼阶段事件，不允许表现完成回调改变模拟状态。
 struct BuffSpine
@@ -149,6 +156,7 @@ using PresentationPayload = std::variant<Sound,
                                          RoleDeath,
                                          RoleIntensity,
                                          WhiteFrame,
+                                         PartnerRageChanged,
                                          BuffSpine,
                                          RoomWarning>;
 // 由逻辑帧产生、仅供表现层消费的事件。

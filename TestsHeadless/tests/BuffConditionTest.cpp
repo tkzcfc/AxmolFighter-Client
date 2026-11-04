@@ -46,7 +46,11 @@ TEST_CASE("BuffCondition predicates read entity and event state")
     config.condition = {263};
     config.conditionParam = {{"1"_fx}};
     CHECK_FALSE(buff::BuffHolder(world, entity).checkConditions(instance, config));
-    world.ecs().get<BuffExternalConditions>(entity).m_angerFreezeSeconds = {};
+    world.ecs().add(entity, PartnerRageState{});
+    CHECK_FALSE(buff::BuffHolder(world, entity).checkConditions(instance, config));
+    world.ecs().get<PartnerRageState>(entity).m_transformed = true;
+    CHECK(buff::BuffHolder(world, entity).checkConditions(instance, config));
+    world.ecs().get<PartnerRageState>(entity).m_transformed = false;
     CHECK_FALSE(buff::BuffHolder(world, entity).checkConditions(instance, config));
     config.conditionParam = {{"0"_fx}};
     CHECK_FALSE(buff::BuffHolder(world, entity).checkConditions(instance, config));

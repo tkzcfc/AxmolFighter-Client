@@ -15,7 +15,8 @@
 #define MG_COMPONENT_LIST(X)                                                                                          \
     X(EntityGroup)                                                                                                    \
     X(ControlEventQueue)                                                                                              \
-    X(RoleIdentity) X(RoleStatus) X(ExtraState) X(Attributes) X(Vitals) X(Transform) X(MotionState) X(Puppet)         \
+    X(RoleIdentity) X(RoleStatus) X(ExtraState) X(Attributes) X(Vitals) X(Transform) X(MotionState)                   \
+        X(PartnerRageState) X(Puppet)                                                                                   \
         X(ColliderState) X(CollisionState) X(RoleTimers) X(RoleHitState) X(Displacement) X(RoleBrain) X(RoleControl)  \
             X(SkillPool) X(EffectState) X(EffectTree) X(BuffPool) X(BuffExternalConditions) X(AbilityPool) X(AiAgent) \
                 X(PortalState) X(ObstacleState) X(GoodsState) X(DropGoods)

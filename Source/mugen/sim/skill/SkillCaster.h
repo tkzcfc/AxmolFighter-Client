@@ -7,6 +7,11 @@ namespace mugen::sim
 class World;
 namespace skill
 {
+// 清空技能池冷却状态，按需重置技能组与变化组。
+void clearSkillCooldownState(World& world, Entity entity, bool resetGroupChange);
+// 同步伙伴怒气变身标记与动作文件，并向表现层广播状态变化。
+void setPartnerRageTransformState(World& world, Entity entity, bool transformed);
+
 // 技能施放视图：包装世界实例与实体句柄，替代原先按 (World&, Entity) 传参的施放与技能池自由函数。
 // 仅作为临时对象使用，不存入组件、不拥有资源、生命周期限于单次调用。
 class SkillCaster

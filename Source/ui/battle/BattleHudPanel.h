@@ -44,6 +44,7 @@ private:
 
     void bindSkillButtons();
     void bindSkillButton(SkillButtonBinding& binding);
+    void bindRageHud();
     void bindJoystick();
     void updateJoystick(const ax::Vec2& stagePos);
     void releaseJoystick();
@@ -51,6 +52,7 @@ private:
     void onClickPause(EventContext* context);
 
     void updatePlayer(mugen::Entity player);
+    void updateRage(mugen::Entity player);
     void updateSkills(mugen::Entity player);
     void updateBuffs(mugen::Entity player);
     void updateTarget(mugen::Entity player);
@@ -60,6 +62,7 @@ private:
     GComponent* m_playerStatus = nullptr;
     GProgressBar* m_playerHp = nullptr;
     GProgressBar* m_playerMp = nullptr;
+    GProgressBar* m_playerRage = nullptr;
     GComponent* m_targetBar = nullptr;
     GComponent* m_bossBar = nullptr;
     GList* m_buffList = nullptr;
@@ -71,6 +74,8 @@ private:
     std::array<bool, 4> m_direction{};
 
     std::vector<SkillButtonBinding> m_skillButtons;
+    SkillButtonBinding m_rageSkillButton;
+    bool m_rageSkillEnabled = false;
     int32_t m_portraitRoleId = 0;
     int32_t m_targetRoleId = 0;
 };

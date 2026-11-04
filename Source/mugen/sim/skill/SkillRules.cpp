@@ -97,6 +97,10 @@ bool SkillCaster::isAllowCastInternal(int32_t index, bool autoCast)
         return false;
     if (slot == "E" && pool.m_crazy)
         return false;
+    if (slot == "P")
+        if (const auto* rage = ecs.tryGet<PartnerRageState>(m_entity);
+            rage && (rage->m_transformed || rage->m_recoverPending || rage->m_anger < conf::kPartnerRageMaxAnger))
+            return false;
     return !autoCast || checkAi(skill.m_ai);
 }
 bool SkillCaster::isAllowCast(int32_t index, bool autoCast)

@@ -66,6 +66,8 @@ inline constexpr int32_t kRoleDeathTime = 0;
 inline constexpr int32_t kChangeTargetTime = 10;
 // 摇杆指令等待间隔秒数。
 inline constexpr Fixed kJoystickWaitTime = "0.35"_fx;
+// 伙伴怒气变身怒气上限。
+inline constexpr Fixed kPartnerRageMaxAnger = "100"_fx;
 // 房间状态内部切换持续帧数。
 inline constexpr int32_t kRoomStateInternal = 30;
 // 受击保护的生命阈值比例。

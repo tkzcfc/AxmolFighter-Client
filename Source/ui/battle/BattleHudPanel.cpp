@@ -1,5 +1,6 @@
 #include "ui/battle/BattleHudPanel.h"
 
+#include "mugen/conf/BattleConst.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/TypeConversions.h"
 #include "mugen/sim/buff/BuffPool.h"
@@ -29,7 +30,7 @@ std::string configIconString(const std::variant<int32_t, std::string>& icon)
 // 摇杆死区占半径的比例。
 constexpr float kJoystickDeadZone = 0.25f;
 
-// 技能池槽位字母与 ControlKey 一一对应（AttackA..AttackO, AttackQ；没有 P）。
+// 技能池槽位字母与 ControlKey 一一对应（AttackA..AttackO 对应 A..O，AttackQ 对应 P）。
 bool poolSlotToControlKey(const std::string& poolSlot, uint32_t& key)
 {
     if (poolSlot.size() != 1)
@@ -40,7 +41,7 @@ bool poolSlotToControlKey(const std::string& poolSlot, uint32_t& key)
         key = static_cast<uint32_t>(ControlKey::AttackA) + static_cast<uint32_t>(c - 'A');
         return true;
     }
-    if (c == 'Q')
+    if (c == 'P' || c == 'Q')
     {
         key = static_cast<uint32_t>(ControlKey::AttackQ);
         return true;
@@ -52,6 +53,18 @@ void setProgress(GProgressBar* bar, mugen::Fixed value, mugen::Fixed max)
 {
     bar->setMax(std::max(1.0, static_cast<double>(max.toFloatForRender())));
     bar->setValue(std::max(0.0, static_cast<double>(value.toFloatForRender())));
+}
+
+void styleRageBar(GProgressBar* bar, bool transformed)
+{
+    if (auto* ctrl = bar->getController("mode"))
+        ctrl->setSelectedIndex(transformed ? 1 : 0);
+    if (auto* barObj = bar->getChild("bar"))
+        if (auto* barImg = dynamic_cast<GImage*>(barObj))
+            barImg->setColor(transformed ? ax::Color3B(212, 107, 255) : ax::Color3B(255, 157, 46));
+    if (auto* titleObj = bar->getChild("title"))
+        if (auto* title = dynamic_cast<GTextField*>(titleObj))
+            title->setColor(transformed ? ax::Color3B(243, 217, 255) : ax::Color3B(255, 229, 184));
 }
 
 mugen::Entity localPlayer(const mugen::sim::World& world)
@@ -78,6 +91,7 @@ void BattleHudPanel::onCreate()
 
     addClickListener(getChild<GButton>("pauseButton"), AX_CALLBACK_1(BattleHudPanel::onClickPause, this));
     bindSkillButtons();
+    bindRageHud();
     bindJoystick();
 }
 
@@ -87,6 +101,8 @@ void BattleHudPanel::onDestroy()
     for (const auto& binding : m_skillButtons)
         if (!binding.m_poolSlot.empty())
             m_battle.setInput(binding.m_controlKey, false);
+    if (!m_rageSkillButton.m_poolSlot.empty())
+        m_battle.setInput(m_rageSkillButton.m_controlKey, false);
 }
 
 void BattleHudPanel::bindSkillButtons()
@@ -153,6 +169,79 @@ void BattleHudPanel::bindSkillButton(SkillButtonBinding& binding)
     });
     binding.m_button->addEventListener(UIEventType::TouchEnd,
                                        [this, key](EventContext*) { m_battle.setInput(key, false); });
+}
+
+void BattleHudPanel::bindRageHud()
+{
+    auto* pad     = getChild<GComponent>("skillPad");
+    auto* rageBar = dynamic_cast<GProgressBar*>(m_playerStatus->getChild("rageBar"));
+    auto* rageBtn = dynamic_cast<GButton*>(pad->getChild("rageSkill"));
+    if (!rageBar || !rageBtn)
+    {
+        static bool s_warnedMissingRageHud = false;
+        if (!s_warnedMissingRageHud)
+        {
+            s_warnedMissingRageHud = true;
+            AXLOGW("BattleHudPanel: rageBar or rageSkill is missing in published Screen_Battle.fui; skipping partner rage HUD");
+        }
+        if (rageBar)
+            rageBar->setVisible(false);
+        if (rageBtn)
+            rageBtn->setVisible(false);
+        return;
+    }
+
+    m_playerRage            = rageBar;
+    m_rageSkillButton       = {};
+    m_rageSkillButton.m_button = rageBtn;
+    m_rageSkillButton.m_cdMask = dynamic_cast<GLoader*>(rageBtn->getChild("cdMask"));
+    m_rageSkillButton.m_cdText = dynamic_cast<GTextField*>(rageBtn->getChild("cd"));
+    if (m_rageSkillButton.m_cdMask)
+        m_rageSkillButton.m_cdMask->setVisible(false);
+    if (m_rageSkillButton.m_cdText)
+        m_rageSkillButton.m_cdText->setText("");
+
+    const auto& world = m_battle.world();
+    const auto player = localPlayer(world);
+    const bool hasRage = world.ecs().alive(player) && world.ecs().tryGet<mugen::sim::PartnerRageState>(player) != nullptr;
+    m_playerRage->setVisible(hasRage);
+    rageBtn->setVisible(hasRage);
+    if (!hasRage)
+        return;
+
+    const auto& ident = world.ecs().get<mugen::sim::RoleIdentity>(player);
+    const auto rows   = mugen::sim::skill::SkillAssembly::offlineKitRows(
+        mugen::type_conversions::toCharacterClass(ident.roleId));
+    for (const auto& row : rows)
+    {
+        if (row.slot != mugen::EnumSkillSlot::Anger)
+            continue;
+        if (poolSlotToControlKey(row.poolSlot, m_rageSkillButton.m_controlKey))
+        {
+            m_rageSkillButton.m_poolSlot = row.poolSlot;
+            const auto* attack = mugen::conf::Config::instance().find<mugen::conf::SkillAttackConfig>(row.skillId);
+            const std::string url = attack ? configIconString(attack->icon) : std::string();
+            if (!url.empty())
+                rageBtn->setIcon(url);
+        }
+        break;
+    }
+    if (m_rageSkillButton.m_poolSlot.empty())
+    {
+        m_rageSkillButton.m_poolSlot   = "P";
+        m_rageSkillButton.m_controlKey = static_cast<uint32_t>(ControlKey::AttackQ);
+    }
+
+    const uint32_t key = m_rageSkillButton.m_controlKey;
+    rageBtn->addEventListener(UIEventType::TouchBegin, [this, key](EventContext* context) {
+        if (!m_rageSkillEnabled)
+            return;
+        context->captureTouch();
+        m_battle.setInput(key, true);
+    });
+    rageBtn->addEventListener(UIEventType::TouchEnd, [this, key](EventContext*) { m_battle.setInput(key, false); });
+
+    updateRage(player);
 }
 
 void BattleHudPanel::bindJoystick()
@@ -223,6 +312,7 @@ void BattleHudPanel::onUpdate(float /*dt*/)
     if (!m_battle.world().ecs().alive(player))
         return;
     updatePlayer(player);
+    updateRage(player);
     updateSkills(player);
     updateBuffs(player);
     updateTarget(player);
@@ -241,6 +331,45 @@ void BattleHudPanel::updatePlayer(mugen::Entity player)
     m_portraitRoleId = ident.roleId;
     if (const auto* role = mugen::conf::Config::instance().find<mugen::conf::RoleConfig>(ident.roleId))
         m_playerStatus->getChild("portrait")->setIcon(role->headImage);
+}
+
+void BattleHudPanel::updateRage(mugen::Entity player)
+{
+    if (!m_playerRage || !m_rageSkillButton.m_button)
+        return;
+
+    const auto& ecs  = m_battle.world().ecs();
+    const auto* rage = ecs.tryGet<mugen::sim::PartnerRageState>(player);
+    const bool hasRage = rage != nullptr;
+    m_playerRage->setVisible(hasRage);
+    m_rageSkillButton.m_button->setVisible(hasRage);
+    if (!hasRage)
+    {
+        if (m_rageSkillEnabled)
+        {
+            m_rageSkillEnabled = false;
+            m_battle.setInput(m_rageSkillButton.m_controlKey, false);
+        }
+        return;
+    }
+
+    const bool draining = rage->m_freezeMs > mugen::Fixed{};
+    if (draining)
+        setProgress(m_playerRage, rage->m_freezeMs, rage->m_maxFreezeMs);
+    else
+        setProgress(m_playerRage, rage->m_anger, mugen::conf::kPartnerRageMaxAnger);
+    styleRageBar(m_playerRage, draining || rage->m_transformed);
+
+    const bool ready = !rage->m_transformed && !rage->m_recoverPending &&
+                       rage->m_anger >= mugen::conf::kPartnerRageMaxAnger;
+    if (!ready && m_rageSkillEnabled)
+        m_battle.setInput(m_rageSkillButton.m_controlKey, false);
+    m_rageSkillEnabled = ready;
+    m_rageSkillButton.m_button->setGrayed(!ready);
+    m_rageSkillButton.m_button->setTouchable(ready);
+    if (auto* bgObj = m_rageSkillButton.m_button->getChild("bg"))
+        if (auto* bgImg = dynamic_cast<GImage*>(bgObj))
+            bgImg->setColor(ready ? ax::Color3B(255, 204, 77) : ax::Color3B::WHITE);
 }
 
 void BattleHudPanel::updateSkills(mugen::Entity player)

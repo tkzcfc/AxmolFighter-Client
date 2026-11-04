@@ -5,8 +5,21 @@
 #include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/buff/BuffHolder.h"
 
+#include <algorithm>
+
 namespace mugen::sim
 {
+namespace
+{
+// 按角色配置标识定位伙伴表记录。
+const conf::PartnerConfig* findPartnerByRoleId(int32_t roleId)
+{
+    for (const auto& row : conf::Config::instance().table<conf::PartnerConfig>())
+        if (row.roleId == roleId)
+            return &row;
+    return nullptr;
+}
+}  // namespace
 // 将配置中的基础属性按运行时属性槽位顺序转换为 Fixed 数组。
 std::array<Fixed, 16> RoleSpawner::_values(const conf::AttributeConfig& a)
 {
@@ -188,6 +201,14 @@ Entity RoleSpawner::spawnRole(const RoleSpawnParams& params)
                                  {}});
     ecs.add(entity, transform);
     ecs.add(entity, motion);
+    if (const auto* partner = findPartnerByRoleId(params.roleId); partner && partner->partnerType == 1)
+    {
+        PartnerRageState rage;
+        rage.m_anger       = {};
+        rage.m_freezeMs    = {};
+        rage.m_maxFreezeMs = Fixed::fromInt(std::max(0, partner->typeValue));
+        ecs.add(entity, rage);
+    }
     ecs.add(entity, ColliderState{{}, {}, ecs.singleton<WorldClock>().frame, Fixed::fromInt(row->radius)});
     ecs.add(entity, attributes);
     Vitals vitals;
@@ -256,6 +277,12 @@ Entity RoleSpawner::spawnPuppet(int64_t playerId, int32_t roleId, FixedVec3 posi
     ecs.add(entity, RoleStatus{});
     ecs.add(entity, transform);
     ecs.add(entity, std::move(motion));
+    if (const auto* partner = findPartnerByRoleId(roleId); partner && partner->partnerType == 1)
+    {
+        PartnerRageState rage;
+        rage.m_maxFreezeMs = Fixed::fromInt(std::max(0, partner->typeValue));
+        ecs.add(entity, rage);
+    }
     ecs.add(entity, Puppet{playerId});
     return entity;
 }

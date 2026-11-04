@@ -15,6 +15,9 @@ struct FashionAppearance
 
     // 已穿时装：部位 → Fashion id（优先于 baseFashion）
     std::unordered_map<FashionPosition, int32_t> equipFashion;
+
+    // 是否处于变身形态（用于切换扩展骨架与多形态图集）
+    bool transformed = false;
 };
 
 class FashionResolver
