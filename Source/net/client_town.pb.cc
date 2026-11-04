@@ -19,22 +19,25 @@ namespace _pbi = _pb::internal;
 
 namespace PB {
 namespace Town {
-PROTOBUF_CONSTEXPR TownPlayerStatePush::TownPlayerStatePush(
+PROTOBUF_CONSTEXPR TownMoveReport::TownMoveReport(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.state_)*/nullptr
+    /*decltype(_impl_.movement_)*/nullptr
+  , /*decltype(_impl_.client_time_ms_)*/uint64_t{0u}
+  , /*decltype(_impl_.client_seq_)*/0u
+  , /*decltype(_impl_.ack_correction_seq_)*/0u
   , /*decltype(_impl_._cached_size_)*/{}} {}
-struct TownPlayerStatePushDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR TownPlayerStatePushDefaultTypeInternal()
+struct TownMoveReportDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR TownMoveReportDefaultTypeInternal()
       : _instance(::_pbi::ConstantInitialized{}) {}
-  ~TownPlayerStatePushDefaultTypeInternal() {}
+  ~TownMoveReportDefaultTypeInternal() {}
   union {
-    TownPlayerStatePush _instance;
+    TownMoveReport _instance;
   };
 };
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 TownPlayerStatePushDefaultTypeInternal _TownPlayerStatePush_default_instance_;
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 TownMoveReportDefaultTypeInternal _TownMoveReport_default_instance_;
 PROTOBUF_CONSTEXPR ScenePlayerEnterPush::ScenePlayerEnterPush(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.state_)*/nullptr
+    /*decltype(_impl_.player_)*/nullptr
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct ScenePlayerEnterPushDefaultTypeInternal {
   PROTOBUF_CONSTEXPR ScenePlayerEnterPushDefaultTypeInternal()
@@ -58,24 +61,67 @@ struct ScenePlayerLeavePushDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ScenePlayerLeavePushDefaultTypeInternal _ScenePlayerLeavePush_default_instance_;
-PROTOBUF_CONSTEXPR ScenePlayerStatePush::ScenePlayerStatePush(
+PROTOBUF_CONSTEXPR ScenePlayerAppearancePush::ScenePlayerAppearancePush(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.state_)*/nullptr
+    /*decltype(_impl_.appearance_)*/nullptr
+  , /*decltype(_impl_.player_id_)*/int64_t{0}
   , /*decltype(_impl_._cached_size_)*/{}} {}
-struct ScenePlayerStatePushDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR ScenePlayerStatePushDefaultTypeInternal()
+struct ScenePlayerAppearancePushDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ScenePlayerAppearancePushDefaultTypeInternal()
       : _instance(::_pbi::ConstantInitialized{}) {}
-  ~ScenePlayerStatePushDefaultTypeInternal() {}
+  ~ScenePlayerAppearancePushDefaultTypeInternal() {}
   union {
-    ScenePlayerStatePush _instance;
+    ScenePlayerAppearancePush _instance;
   };
 };
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ScenePlayerStatePushDefaultTypeInternal _ScenePlayerStatePush_default_instance_;
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ScenePlayerAppearancePushDefaultTypeInternal _ScenePlayerAppearancePush_default_instance_;
+PROTOBUF_CONSTEXPR TownStateEntry::TownStateEntry(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.movement_)*/nullptr
+  , /*decltype(_impl_.player_id_)*/int64_t{0}
+  , /*decltype(_impl_.server_time_ms_)*/uint64_t{0u}
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct TownStateEntryDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR TownStateEntryDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~TownStateEntryDefaultTypeInternal() {}
+  union {
+    TownStateEntry _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 TownStateEntryDefaultTypeInternal _TownStateEntry_default_instance_;
+PROTOBUF_CONSTEXPR ScenePlayerStatesPush::ScenePlayerStatesPush(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.players_)*/{}
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct ScenePlayerStatesPushDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ScenePlayerStatesPushDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ScenePlayerStatesPushDefaultTypeInternal() {}
+  union {
+    ScenePlayerStatesPush _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ScenePlayerStatesPushDefaultTypeInternal _ScenePlayerStatesPush_default_instance_;
+PROTOBUF_CONSTEXPR TownPositionCorrectionPush::TownPositionCorrectionPush(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.pos_)*/nullptr
+  , /*decltype(_impl_.client_seq_)*/0u
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct TownPositionCorrectionPushDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR TownPositionCorrectionPushDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~TownPositionCorrectionPushDefaultTypeInternal() {}
+  union {
+    TownPositionCorrectionPush _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 TownPositionCorrectionPushDefaultTypeInternal _TownPositionCorrectionPush_default_instance_;
 }  // namespace Town
 }  // namespace PB
 namespace PB {
 namespace Town {
-bool TownPlayerStatePush_MsgId_IsValid(int value) {
+bool TownMoveReport_MsgId_IsValid(int value) {
   switch (value) {
     case 0:
     case 30000:
@@ -85,53 +131,53 @@ bool TownPlayerStatePush_MsgId_IsValid(int value) {
   }
 }
 
-static ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<std::string> TownPlayerStatePush_MsgId_strings[2] = {};
+static ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<std::string> TownMoveReport_MsgId_strings[2] = {};
 
-static const char TownPlayerStatePush_MsgId_names[] =
+static const char TownMoveReport_MsgId_names[] =
   "Id"
   "None";
 
-static const ::PROTOBUF_NAMESPACE_ID::internal::EnumEntry TownPlayerStatePush_MsgId_entries[] = {
-  { {TownPlayerStatePush_MsgId_names + 0, 2}, 30000 },
-  { {TownPlayerStatePush_MsgId_names + 2, 4}, 0 },
+static const ::PROTOBUF_NAMESPACE_ID::internal::EnumEntry TownMoveReport_MsgId_entries[] = {
+  { {TownMoveReport_MsgId_names + 0, 2}, 30000 },
+  { {TownMoveReport_MsgId_names + 2, 4}, 0 },
 };
 
-static const int TownPlayerStatePush_MsgId_entries_by_number[] = {
+static const int TownMoveReport_MsgId_entries_by_number[] = {
   1, // 0 -> None
   0, // 30000 -> Id
 };
 
-const std::string& TownPlayerStatePush_MsgId_Name(
-    TownPlayerStatePush_MsgId value) {
+const std::string& TownMoveReport_MsgId_Name(
+    TownMoveReport_MsgId value) {
   static const bool dummy =
       ::PROTOBUF_NAMESPACE_ID::internal::InitializeEnumStrings(
-          TownPlayerStatePush_MsgId_entries,
-          TownPlayerStatePush_MsgId_entries_by_number,
-          2, TownPlayerStatePush_MsgId_strings);
+          TownMoveReport_MsgId_entries,
+          TownMoveReport_MsgId_entries_by_number,
+          2, TownMoveReport_MsgId_strings);
   (void) dummy;
   int idx = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumName(
-      TownPlayerStatePush_MsgId_entries,
-      TownPlayerStatePush_MsgId_entries_by_number,
+      TownMoveReport_MsgId_entries,
+      TownMoveReport_MsgId_entries_by_number,
       2, value);
   return idx == -1 ? ::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString() :
-                     TownPlayerStatePush_MsgId_strings[idx].get();
+                     TownMoveReport_MsgId_strings[idx].get();
 }
-bool TownPlayerStatePush_MsgId_Parse(
-    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, TownPlayerStatePush_MsgId* value) {
+bool TownMoveReport_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, TownMoveReport_MsgId* value) {
   int int_value;
   bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
-      TownPlayerStatePush_MsgId_entries, 2, name, &int_value);
+      TownMoveReport_MsgId_entries, 2, name, &int_value);
   if (success) {
-    *value = static_cast<TownPlayerStatePush_MsgId>(int_value);
+    *value = static_cast<TownMoveReport_MsgId>(int_value);
   }
   return success;
 }
 #if (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
-constexpr TownPlayerStatePush_MsgId TownPlayerStatePush::None;
-constexpr TownPlayerStatePush_MsgId TownPlayerStatePush::Id;
-constexpr TownPlayerStatePush_MsgId TownPlayerStatePush::MsgId_MIN;
-constexpr TownPlayerStatePush_MsgId TownPlayerStatePush::MsgId_MAX;
-constexpr int TownPlayerStatePush::MsgId_ARRAYSIZE;
+constexpr TownMoveReport_MsgId TownMoveReport::None;
+constexpr TownMoveReport_MsgId TownMoveReport::Id;
+constexpr TownMoveReport_MsgId TownMoveReport::MsgId_MIN;
+constexpr TownMoveReport_MsgId TownMoveReport::MsgId_MAX;
+constexpr int TownMoveReport::MsgId_ARRAYSIZE;
 #endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 bool ScenePlayerEnterPush_MsgId_IsValid(int value) {
   switch (value) {
@@ -249,7 +295,7 @@ constexpr ScenePlayerLeavePush_MsgId ScenePlayerLeavePush::MsgId_MIN;
 constexpr ScenePlayerLeavePush_MsgId ScenePlayerLeavePush::MsgId_MAX;
 constexpr int ScenePlayerLeavePush::MsgId_ARRAYSIZE;
 #endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
-bool ScenePlayerStatePush_MsgId_IsValid(int value) {
+bool ScenePlayerAppearancePush_MsgId_IsValid(int value) {
   switch (value) {
     case 0:
     case 30003:
@@ -259,104 +305,229 @@ bool ScenePlayerStatePush_MsgId_IsValid(int value) {
   }
 }
 
-static ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<std::string> ScenePlayerStatePush_MsgId_strings[2] = {};
+static ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<std::string> ScenePlayerAppearancePush_MsgId_strings[2] = {};
 
-static const char ScenePlayerStatePush_MsgId_names[] =
+static const char ScenePlayerAppearancePush_MsgId_names[] =
   "Id"
   "None";
 
-static const ::PROTOBUF_NAMESPACE_ID::internal::EnumEntry ScenePlayerStatePush_MsgId_entries[] = {
-  { {ScenePlayerStatePush_MsgId_names + 0, 2}, 30003 },
-  { {ScenePlayerStatePush_MsgId_names + 2, 4}, 0 },
+static const ::PROTOBUF_NAMESPACE_ID::internal::EnumEntry ScenePlayerAppearancePush_MsgId_entries[] = {
+  { {ScenePlayerAppearancePush_MsgId_names + 0, 2}, 30003 },
+  { {ScenePlayerAppearancePush_MsgId_names + 2, 4}, 0 },
 };
 
-static const int ScenePlayerStatePush_MsgId_entries_by_number[] = {
+static const int ScenePlayerAppearancePush_MsgId_entries_by_number[] = {
   1, // 0 -> None
   0, // 30003 -> Id
 };
 
-const std::string& ScenePlayerStatePush_MsgId_Name(
-    ScenePlayerStatePush_MsgId value) {
+const std::string& ScenePlayerAppearancePush_MsgId_Name(
+    ScenePlayerAppearancePush_MsgId value) {
   static const bool dummy =
       ::PROTOBUF_NAMESPACE_ID::internal::InitializeEnumStrings(
-          ScenePlayerStatePush_MsgId_entries,
-          ScenePlayerStatePush_MsgId_entries_by_number,
-          2, ScenePlayerStatePush_MsgId_strings);
+          ScenePlayerAppearancePush_MsgId_entries,
+          ScenePlayerAppearancePush_MsgId_entries_by_number,
+          2, ScenePlayerAppearancePush_MsgId_strings);
   (void) dummy;
   int idx = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumName(
-      ScenePlayerStatePush_MsgId_entries,
-      ScenePlayerStatePush_MsgId_entries_by_number,
+      ScenePlayerAppearancePush_MsgId_entries,
+      ScenePlayerAppearancePush_MsgId_entries_by_number,
       2, value);
   return idx == -1 ? ::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString() :
-                     ScenePlayerStatePush_MsgId_strings[idx].get();
+                     ScenePlayerAppearancePush_MsgId_strings[idx].get();
 }
-bool ScenePlayerStatePush_MsgId_Parse(
-    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, ScenePlayerStatePush_MsgId* value) {
+bool ScenePlayerAppearancePush_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, ScenePlayerAppearancePush_MsgId* value) {
   int int_value;
   bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
-      ScenePlayerStatePush_MsgId_entries, 2, name, &int_value);
+      ScenePlayerAppearancePush_MsgId_entries, 2, name, &int_value);
   if (success) {
-    *value = static_cast<ScenePlayerStatePush_MsgId>(int_value);
+    *value = static_cast<ScenePlayerAppearancePush_MsgId>(int_value);
   }
   return success;
 }
 #if (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
-constexpr ScenePlayerStatePush_MsgId ScenePlayerStatePush::None;
-constexpr ScenePlayerStatePush_MsgId ScenePlayerStatePush::Id;
-constexpr ScenePlayerStatePush_MsgId ScenePlayerStatePush::MsgId_MIN;
-constexpr ScenePlayerStatePush_MsgId ScenePlayerStatePush::MsgId_MAX;
-constexpr int ScenePlayerStatePush::MsgId_ARRAYSIZE;
+constexpr ScenePlayerAppearancePush_MsgId ScenePlayerAppearancePush::None;
+constexpr ScenePlayerAppearancePush_MsgId ScenePlayerAppearancePush::Id;
+constexpr ScenePlayerAppearancePush_MsgId ScenePlayerAppearancePush::MsgId_MIN;
+constexpr ScenePlayerAppearancePush_MsgId ScenePlayerAppearancePush::MsgId_MAX;
+constexpr int ScenePlayerAppearancePush::MsgId_ARRAYSIZE;
+#endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
+bool ScenePlayerStatesPush_MsgId_IsValid(int value) {
+  switch (value) {
+    case 0:
+    case 30004:
+      return true;
+    default:
+      return false;
+  }
+}
+
+static ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<std::string> ScenePlayerStatesPush_MsgId_strings[2] = {};
+
+static const char ScenePlayerStatesPush_MsgId_names[] =
+  "Id"
+  "None";
+
+static const ::PROTOBUF_NAMESPACE_ID::internal::EnumEntry ScenePlayerStatesPush_MsgId_entries[] = {
+  { {ScenePlayerStatesPush_MsgId_names + 0, 2}, 30004 },
+  { {ScenePlayerStatesPush_MsgId_names + 2, 4}, 0 },
+};
+
+static const int ScenePlayerStatesPush_MsgId_entries_by_number[] = {
+  1, // 0 -> None
+  0, // 30004 -> Id
+};
+
+const std::string& ScenePlayerStatesPush_MsgId_Name(
+    ScenePlayerStatesPush_MsgId value) {
+  static const bool dummy =
+      ::PROTOBUF_NAMESPACE_ID::internal::InitializeEnumStrings(
+          ScenePlayerStatesPush_MsgId_entries,
+          ScenePlayerStatesPush_MsgId_entries_by_number,
+          2, ScenePlayerStatesPush_MsgId_strings);
+  (void) dummy;
+  int idx = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumName(
+      ScenePlayerStatesPush_MsgId_entries,
+      ScenePlayerStatesPush_MsgId_entries_by_number,
+      2, value);
+  return idx == -1 ? ::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString() :
+                     ScenePlayerStatesPush_MsgId_strings[idx].get();
+}
+bool ScenePlayerStatesPush_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, ScenePlayerStatesPush_MsgId* value) {
+  int int_value;
+  bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
+      ScenePlayerStatesPush_MsgId_entries, 2, name, &int_value);
+  if (success) {
+    *value = static_cast<ScenePlayerStatesPush_MsgId>(int_value);
+  }
+  return success;
+}
+#if (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
+constexpr ScenePlayerStatesPush_MsgId ScenePlayerStatesPush::None;
+constexpr ScenePlayerStatesPush_MsgId ScenePlayerStatesPush::Id;
+constexpr ScenePlayerStatesPush_MsgId ScenePlayerStatesPush::MsgId_MIN;
+constexpr ScenePlayerStatesPush_MsgId ScenePlayerStatesPush::MsgId_MAX;
+constexpr int ScenePlayerStatesPush::MsgId_ARRAYSIZE;
+#endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
+bool TownPositionCorrectionPush_MsgId_IsValid(int value) {
+  switch (value) {
+    case 0:
+    case 30005:
+      return true;
+    default:
+      return false;
+  }
+}
+
+static ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<std::string> TownPositionCorrectionPush_MsgId_strings[2] = {};
+
+static const char TownPositionCorrectionPush_MsgId_names[] =
+  "Id"
+  "None";
+
+static const ::PROTOBUF_NAMESPACE_ID::internal::EnumEntry TownPositionCorrectionPush_MsgId_entries[] = {
+  { {TownPositionCorrectionPush_MsgId_names + 0, 2}, 30005 },
+  { {TownPositionCorrectionPush_MsgId_names + 2, 4}, 0 },
+};
+
+static const int TownPositionCorrectionPush_MsgId_entries_by_number[] = {
+  1, // 0 -> None
+  0, // 30005 -> Id
+};
+
+const std::string& TownPositionCorrectionPush_MsgId_Name(
+    TownPositionCorrectionPush_MsgId value) {
+  static const bool dummy =
+      ::PROTOBUF_NAMESPACE_ID::internal::InitializeEnumStrings(
+          TownPositionCorrectionPush_MsgId_entries,
+          TownPositionCorrectionPush_MsgId_entries_by_number,
+          2, TownPositionCorrectionPush_MsgId_strings);
+  (void) dummy;
+  int idx = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumName(
+      TownPositionCorrectionPush_MsgId_entries,
+      TownPositionCorrectionPush_MsgId_entries_by_number,
+      2, value);
+  return idx == -1 ? ::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString() :
+                     TownPositionCorrectionPush_MsgId_strings[idx].get();
+}
+bool TownPositionCorrectionPush_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, TownPositionCorrectionPush_MsgId* value) {
+  int int_value;
+  bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
+      TownPositionCorrectionPush_MsgId_entries, 2, name, &int_value);
+  if (success) {
+    *value = static_cast<TownPositionCorrectionPush_MsgId>(int_value);
+  }
+  return success;
+}
+#if (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
+constexpr TownPositionCorrectionPush_MsgId TownPositionCorrectionPush::None;
+constexpr TownPositionCorrectionPush_MsgId TownPositionCorrectionPush::Id;
+constexpr TownPositionCorrectionPush_MsgId TownPositionCorrectionPush::MsgId_MIN;
+constexpr TownPositionCorrectionPush_MsgId TownPositionCorrectionPush::MsgId_MAX;
+constexpr int TownPositionCorrectionPush::MsgId_ARRAYSIZE;
 #endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 
 // ===================================================================
 
-class TownPlayerStatePush::_Internal {
+class TownMoveReport::_Internal {
  public:
-  static const ::PB::Types::PlayerState& state(const TownPlayerStatePush* msg);
+  static const ::PB::Types::TownMovement& movement(const TownMoveReport* msg);
 };
 
-const ::PB::Types::PlayerState&
-TownPlayerStatePush::_Internal::state(const TownPlayerStatePush* msg) {
-  return *msg->_impl_.state_;
+const ::PB::Types::TownMovement&
+TownMoveReport::_Internal::movement(const TownMoveReport* msg) {
+  return *msg->_impl_.movement_;
 }
-void TownPlayerStatePush::clear_state() {
-  if (GetArenaForAllocation() == nullptr && _impl_.state_ != nullptr) {
-    delete _impl_.state_;
+void TownMoveReport::clear_movement() {
+  if (GetArenaForAllocation() == nullptr && _impl_.movement_ != nullptr) {
+    delete _impl_.movement_;
   }
-  _impl_.state_ = nullptr;
+  _impl_.movement_ = nullptr;
 }
-TownPlayerStatePush::TownPlayerStatePush(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+TownMoveReport::TownMoveReport(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
   : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
   SharedCtor(arena, is_message_owned);
-  // @@protoc_insertion_point(arena_constructor:PB.Town.TownPlayerStatePush)
+  // @@protoc_insertion_point(arena_constructor:PB.Town.TownMoveReport)
 }
-TownPlayerStatePush::TownPlayerStatePush(const TownPlayerStatePush& from)
+TownMoveReport::TownMoveReport(const TownMoveReport& from)
   : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
-  TownPlayerStatePush* const _this = this; (void)_this;
+  TownMoveReport* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.state_){nullptr}
+      decltype(_impl_.movement_){nullptr}
+    , decltype(_impl_.client_time_ms_){}
+    , decltype(_impl_.client_seq_){}
+    , decltype(_impl_.ack_correction_seq_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
-  if (from._internal_has_state()) {
-    _this->_impl_.state_ = new ::PB::Types::PlayerState(*from._impl_.state_);
+  if (from._internal_has_movement()) {
+    _this->_impl_.movement_ = new ::PB::Types::TownMovement(*from._impl_.movement_);
   }
-  // @@protoc_insertion_point(copy_constructor:PB.Town.TownPlayerStatePush)
+  ::memcpy(&_impl_.client_time_ms_, &from._impl_.client_time_ms_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.ack_correction_seq_) -
+    reinterpret_cast<char*>(&_impl_.client_time_ms_)) + sizeof(_impl_.ack_correction_seq_));
+  // @@protoc_insertion_point(copy_constructor:PB.Town.TownMoveReport)
 }
 
-inline void TownPlayerStatePush::SharedCtor(
+inline void TownMoveReport::SharedCtor(
     ::_pb::Arena* arena, bool is_message_owned) {
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.state_){nullptr}
+      decltype(_impl_.movement_){nullptr}
+    , decltype(_impl_.client_time_ms_){uint64_t{0u}}
+    , decltype(_impl_.client_seq_){0u}
+    , decltype(_impl_.ack_correction_seq_){0u}
     , /*decltype(_impl_._cached_size_)*/{}
   };
 }
 
-TownPlayerStatePush::~TownPlayerStatePush() {
-  // @@protoc_insertion_point(destructor:PB.Town.TownPlayerStatePush)
+TownMoveReport::~TownMoveReport() {
+  // @@protoc_insertion_point(destructor:PB.Town.TownMoveReport)
   if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
   (void)arena;
     return;
@@ -364,38 +535,65 @@ TownPlayerStatePush::~TownPlayerStatePush() {
   SharedDtor();
 }
 
-inline void TownPlayerStatePush::SharedDtor() {
+inline void TownMoveReport::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
-  if (this != internal_default_instance()) delete _impl_.state_;
+  if (this != internal_default_instance()) delete _impl_.movement_;
 }
 
-void TownPlayerStatePush::SetCachedSize(int size) const {
+void TownMoveReport::SetCachedSize(int size) const {
   _impl_._cached_size_.Set(size);
 }
 
-void TownPlayerStatePush::Clear() {
-// @@protoc_insertion_point(message_clear_start:PB.Town.TownPlayerStatePush)
+void TownMoveReport::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Town.TownMoveReport)
   uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  if (GetArenaForAllocation() == nullptr && _impl_.state_ != nullptr) {
-    delete _impl_.state_;
+  if (GetArenaForAllocation() == nullptr && _impl_.movement_ != nullptr) {
+    delete _impl_.movement_;
   }
-  _impl_.state_ = nullptr;
+  _impl_.movement_ = nullptr;
+  ::memset(&_impl_.client_time_ms_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.ack_correction_seq_) -
+      reinterpret_cast<char*>(&_impl_.client_time_ms_)) + sizeof(_impl_.ack_correction_seq_));
   _internal_metadata_.Clear<std::string>();
 }
 
-const char* TownPlayerStatePush::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+const char* TownMoveReport::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
     uint32_t tag;
     ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
-      // .PB.Types.PlayerState state = 1;
+      // uint32 client_seq = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
-          ptr = ctx->ParseMessage(_internal_mutable_state(), ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.client_seq_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // uint64 client_time_ms = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.client_time_ms_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // .PB.Types.TownMovement movement = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
+          ptr = ctx->ParseMessage(_internal_mutable_movement(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // uint32 ack_correction_seq = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
+          _impl_.ack_correction_seq_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -423,40 +621,73 @@ failure:
 #undef CHK_
 }
 
-uint8_t* TownPlayerStatePush::_InternalSerialize(
+uint8_t* TownMoveReport::_InternalSerialize(
     uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
-  // @@protoc_insertion_point(serialize_to_array_start:PB.Town.TownPlayerStatePush)
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Town.TownMoveReport)
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // .PB.Types.PlayerState state = 1;
-  if (this->_internal_has_state()) {
+  // uint32 client_seq = 1;
+  if (this->_internal_client_seq() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(1, this->_internal_client_seq(), target);
+  }
+
+  // uint64 client_time_ms = 2;
+  if (this->_internal_client_time_ms() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(2, this->_internal_client_time_ms(), target);
+  }
+
+  // .PB.Types.TownMovement movement = 3;
+  if (this->_internal_has_movement()) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(1, _Internal::state(this),
-        _Internal::state(this).GetCachedSize(), target, stream);
+      InternalWriteMessage(3, _Internal::movement(this),
+        _Internal::movement(this).GetCachedSize(), target, stream);
+  }
+
+  // uint32 ack_correction_seq = 4;
+  if (this->_internal_ack_correction_seq() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(4, this->_internal_ack_correction_seq(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
         static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
-  // @@protoc_insertion_point(serialize_to_array_end:PB.Town.TownPlayerStatePush)
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Town.TownMoveReport)
   return target;
 }
 
-size_t TownPlayerStatePush::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:PB.Town.TownPlayerStatePush)
+size_t TownMoveReport::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Town.TownMoveReport)
   size_t total_size = 0;
 
   uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // .PB.Types.PlayerState state = 1;
-  if (this->_internal_has_state()) {
+  // .PB.Types.TownMovement movement = 3;
+  if (this->_internal_has_movement()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-        *_impl_.state_);
+        *_impl_.movement_);
+  }
+
+  // uint64 client_time_ms = 2;
+  if (this->_internal_client_time_ms() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_client_time_ms());
+  }
+
+  // uint32 client_seq = 1;
+  if (this->_internal_client_seq() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_client_seq());
+  }
+
+  // uint32 ack_correction_seq = 4;
+  if (this->_internal_ack_correction_seq() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_ack_correction_seq());
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -467,45 +698,59 @@ size_t TownPlayerStatePush::ByteSizeLong() const {
   return total_size;
 }
 
-void TownPlayerStatePush::CheckTypeAndMergeFrom(
+void TownMoveReport::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::_pbi::DownCast<const TownPlayerStatePush*>(
+  MergeFrom(*::_pbi::DownCast<const TownMoveReport*>(
       &from));
 }
 
-void TownPlayerStatePush::MergeFrom(const TownPlayerStatePush& from) {
-  TownPlayerStatePush* const _this = this;
-  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Town.TownPlayerStatePush)
+void TownMoveReport::MergeFrom(const TownMoveReport& from) {
+  TownMoveReport* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Town.TownMoveReport)
   GOOGLE_DCHECK_NE(&from, _this);
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from._internal_has_state()) {
-    _this->_internal_mutable_state()->::PB::Types::PlayerState::MergeFrom(
-        from._internal_state());
+  if (from._internal_has_movement()) {
+    _this->_internal_mutable_movement()->::PB::Types::TownMovement::MergeFrom(
+        from._internal_movement());
+  }
+  if (from._internal_client_time_ms() != 0) {
+    _this->_internal_set_client_time_ms(from._internal_client_time_ms());
+  }
+  if (from._internal_client_seq() != 0) {
+    _this->_internal_set_client_seq(from._internal_client_seq());
+  }
+  if (from._internal_ack_correction_seq() != 0) {
+    _this->_internal_set_ack_correction_seq(from._internal_ack_correction_seq());
   }
   _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
-void TownPlayerStatePush::CopyFrom(const TownPlayerStatePush& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:PB.Town.TownPlayerStatePush)
+void TownMoveReport::CopyFrom(const TownMoveReport& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Town.TownMoveReport)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-bool TownPlayerStatePush::IsInitialized() const {
+bool TownMoveReport::IsInitialized() const {
   return true;
 }
 
-void TownPlayerStatePush::InternalSwap(TownPlayerStatePush* other) {
+void TownMoveReport::InternalSwap(TownMoveReport* other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  swap(_impl_.state_, other->_impl_.state_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(TownMoveReport, _impl_.ack_correction_seq_)
+      + sizeof(TownMoveReport::_impl_.ack_correction_seq_)
+      - PROTOBUF_FIELD_OFFSET(TownMoveReport, _impl_.movement_)>(
+          reinterpret_cast<char*>(&_impl_.movement_),
+          reinterpret_cast<char*>(&other->_impl_.movement_));
 }
 
-std::string TownPlayerStatePush::GetTypeName() const {
-  return "PB.Town.TownPlayerStatePush";
+std::string TownMoveReport::GetTypeName() const {
+  return "PB.Town.TownMoveReport";
 }
 
 
@@ -513,18 +758,18 @@ std::string TownPlayerStatePush::GetTypeName() const {
 
 class ScenePlayerEnterPush::_Internal {
  public:
-  static const ::PB::Types::PlayerState& state(const ScenePlayerEnterPush* msg);
+  static const ::PB::Types::TownPlayerInfo& player(const ScenePlayerEnterPush* msg);
 };
 
-const ::PB::Types::PlayerState&
-ScenePlayerEnterPush::_Internal::state(const ScenePlayerEnterPush* msg) {
-  return *msg->_impl_.state_;
+const ::PB::Types::TownPlayerInfo&
+ScenePlayerEnterPush::_Internal::player(const ScenePlayerEnterPush* msg) {
+  return *msg->_impl_.player_;
 }
-void ScenePlayerEnterPush::clear_state() {
-  if (GetArenaForAllocation() == nullptr && _impl_.state_ != nullptr) {
-    delete _impl_.state_;
+void ScenePlayerEnterPush::clear_player() {
+  if (GetArenaForAllocation() == nullptr && _impl_.player_ != nullptr) {
+    delete _impl_.player_;
   }
-  _impl_.state_ = nullptr;
+  _impl_.player_ = nullptr;
 }
 ScenePlayerEnterPush::ScenePlayerEnterPush(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
@@ -536,12 +781,12 @@ ScenePlayerEnterPush::ScenePlayerEnterPush(const ScenePlayerEnterPush& from)
   : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
   ScenePlayerEnterPush* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.state_){nullptr}
+      decltype(_impl_.player_){nullptr}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
-  if (from._internal_has_state()) {
-    _this->_impl_.state_ = new ::PB::Types::PlayerState(*from._impl_.state_);
+  if (from._internal_has_player()) {
+    _this->_impl_.player_ = new ::PB::Types::TownPlayerInfo(*from._impl_.player_);
   }
   // @@protoc_insertion_point(copy_constructor:PB.Town.ScenePlayerEnterPush)
 }
@@ -551,7 +796,7 @@ inline void ScenePlayerEnterPush::SharedCtor(
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.state_){nullptr}
+      decltype(_impl_.player_){nullptr}
     , /*decltype(_impl_._cached_size_)*/{}
   };
 }
@@ -567,7 +812,7 @@ ScenePlayerEnterPush::~ScenePlayerEnterPush() {
 
 inline void ScenePlayerEnterPush::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
-  if (this != internal_default_instance()) delete _impl_.state_;
+  if (this != internal_default_instance()) delete _impl_.player_;
 }
 
 void ScenePlayerEnterPush::SetCachedSize(int size) const {
@@ -580,10 +825,10 @@ void ScenePlayerEnterPush::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  if (GetArenaForAllocation() == nullptr && _impl_.state_ != nullptr) {
-    delete _impl_.state_;
+  if (GetArenaForAllocation() == nullptr && _impl_.player_ != nullptr) {
+    delete _impl_.player_;
   }
-  _impl_.state_ = nullptr;
+  _impl_.player_ = nullptr;
   _internal_metadata_.Clear<std::string>();
 }
 
@@ -593,10 +838,10 @@ const char* ScenePlayerEnterPush::_InternalParse(const char* ptr, ::_pbi::ParseC
     uint32_t tag;
     ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
-      // .PB.Types.PlayerState state = 1;
+      // .PB.Types.TownPlayerInfo player = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
-          ptr = ctx->ParseMessage(_internal_mutable_state(), ptr);
+          ptr = ctx->ParseMessage(_internal_mutable_player(), ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -630,11 +875,11 @@ uint8_t* ScenePlayerEnterPush::_InternalSerialize(
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // .PB.Types.PlayerState state = 1;
-  if (this->_internal_has_state()) {
+  // .PB.Types.TownPlayerInfo player = 1;
+  if (this->_internal_has_player()) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(1, _Internal::state(this),
-        _Internal::state(this).GetCachedSize(), target, stream);
+      InternalWriteMessage(1, _Internal::player(this),
+        _Internal::player(this).GetCachedSize(), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -653,11 +898,11 @@ size_t ScenePlayerEnterPush::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // .PB.Types.PlayerState state = 1;
-  if (this->_internal_has_state()) {
+  // .PB.Types.TownPlayerInfo player = 1;
+  if (this->_internal_has_player()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-        *_impl_.state_);
+        *_impl_.player_);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -681,9 +926,9 @@ void ScenePlayerEnterPush::MergeFrom(const ScenePlayerEnterPush& from) {
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from._internal_has_state()) {
-    _this->_internal_mutable_state()->::PB::Types::PlayerState::MergeFrom(
-        from._internal_state());
+  if (from._internal_has_player()) {
+    _this->_internal_mutable_player()->::PB::Types::TownPlayerInfo::MergeFrom(
+        from._internal_player());
   }
   _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
@@ -702,7 +947,7 @@ bool ScenePlayerEnterPush::IsInitialized() const {
 void ScenePlayerEnterPush::InternalSwap(ScenePlayerEnterPush* other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  swap(_impl_.state_, other->_impl_.state_);
+  swap(_impl_.player_, other->_impl_.player_);
 }
 
 std::string ScenePlayerEnterPush::GetTypeName() const {
@@ -892,53 +1137,56 @@ std::string ScenePlayerLeavePush::GetTypeName() const {
 
 // ===================================================================
 
-class ScenePlayerStatePush::_Internal {
+class ScenePlayerAppearancePush::_Internal {
  public:
-  static const ::PB::Types::PlayerState& state(const ScenePlayerStatePush* msg);
+  static const ::PB::Types::TownAppearance& appearance(const ScenePlayerAppearancePush* msg);
 };
 
-const ::PB::Types::PlayerState&
-ScenePlayerStatePush::_Internal::state(const ScenePlayerStatePush* msg) {
-  return *msg->_impl_.state_;
+const ::PB::Types::TownAppearance&
+ScenePlayerAppearancePush::_Internal::appearance(const ScenePlayerAppearancePush* msg) {
+  return *msg->_impl_.appearance_;
 }
-void ScenePlayerStatePush::clear_state() {
-  if (GetArenaForAllocation() == nullptr && _impl_.state_ != nullptr) {
-    delete _impl_.state_;
+void ScenePlayerAppearancePush::clear_appearance() {
+  if (GetArenaForAllocation() == nullptr && _impl_.appearance_ != nullptr) {
+    delete _impl_.appearance_;
   }
-  _impl_.state_ = nullptr;
+  _impl_.appearance_ = nullptr;
 }
-ScenePlayerStatePush::ScenePlayerStatePush(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+ScenePlayerAppearancePush::ScenePlayerAppearancePush(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
   : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
   SharedCtor(arena, is_message_owned);
-  // @@protoc_insertion_point(arena_constructor:PB.Town.ScenePlayerStatePush)
+  // @@protoc_insertion_point(arena_constructor:PB.Town.ScenePlayerAppearancePush)
 }
-ScenePlayerStatePush::ScenePlayerStatePush(const ScenePlayerStatePush& from)
+ScenePlayerAppearancePush::ScenePlayerAppearancePush(const ScenePlayerAppearancePush& from)
   : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
-  ScenePlayerStatePush* const _this = this; (void)_this;
+  ScenePlayerAppearancePush* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.state_){nullptr}
+      decltype(_impl_.appearance_){nullptr}
+    , decltype(_impl_.player_id_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
-  if (from._internal_has_state()) {
-    _this->_impl_.state_ = new ::PB::Types::PlayerState(*from._impl_.state_);
+  if (from._internal_has_appearance()) {
+    _this->_impl_.appearance_ = new ::PB::Types::TownAppearance(*from._impl_.appearance_);
   }
-  // @@protoc_insertion_point(copy_constructor:PB.Town.ScenePlayerStatePush)
+  _this->_impl_.player_id_ = from._impl_.player_id_;
+  // @@protoc_insertion_point(copy_constructor:PB.Town.ScenePlayerAppearancePush)
 }
 
-inline void ScenePlayerStatePush::SharedCtor(
+inline void ScenePlayerAppearancePush::SharedCtor(
     ::_pb::Arena* arena, bool is_message_owned) {
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.state_){nullptr}
+      decltype(_impl_.appearance_){nullptr}
+    , decltype(_impl_.player_id_){int64_t{0}}
     , /*decltype(_impl_._cached_size_)*/{}
   };
 }
 
-ScenePlayerStatePush::~ScenePlayerStatePush() {
-  // @@protoc_insertion_point(destructor:PB.Town.ScenePlayerStatePush)
+ScenePlayerAppearancePush::~ScenePlayerAppearancePush() {
+  // @@protoc_insertion_point(destructor:PB.Town.ScenePlayerAppearancePush)
   if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
   (void)arena;
     return;
@@ -946,38 +1194,47 @@ ScenePlayerStatePush::~ScenePlayerStatePush() {
   SharedDtor();
 }
 
-inline void ScenePlayerStatePush::SharedDtor() {
+inline void ScenePlayerAppearancePush::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
-  if (this != internal_default_instance()) delete _impl_.state_;
+  if (this != internal_default_instance()) delete _impl_.appearance_;
 }
 
-void ScenePlayerStatePush::SetCachedSize(int size) const {
+void ScenePlayerAppearancePush::SetCachedSize(int size) const {
   _impl_._cached_size_.Set(size);
 }
 
-void ScenePlayerStatePush::Clear() {
-// @@protoc_insertion_point(message_clear_start:PB.Town.ScenePlayerStatePush)
+void ScenePlayerAppearancePush::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Town.ScenePlayerAppearancePush)
   uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  if (GetArenaForAllocation() == nullptr && _impl_.state_ != nullptr) {
-    delete _impl_.state_;
+  if (GetArenaForAllocation() == nullptr && _impl_.appearance_ != nullptr) {
+    delete _impl_.appearance_;
   }
-  _impl_.state_ = nullptr;
+  _impl_.appearance_ = nullptr;
+  _impl_.player_id_ = int64_t{0};
   _internal_metadata_.Clear<std::string>();
 }
 
-const char* ScenePlayerStatePush::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+const char* ScenePlayerAppearancePush::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
     uint32_t tag;
     ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
-      // .PB.Types.PlayerState state = 1;
+      // int64 player_id = 1;
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
-          ptr = ctx->ParseMessage(_internal_mutable_state(), ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.player_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // .PB.Types.TownAppearance appearance = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+          ptr = ctx->ParseMessage(_internal_mutable_appearance(), ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -1005,40 +1262,51 @@ failure:
 #undef CHK_
 }
 
-uint8_t* ScenePlayerStatePush::_InternalSerialize(
+uint8_t* ScenePlayerAppearancePush::_InternalSerialize(
     uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
-  // @@protoc_insertion_point(serialize_to_array_start:PB.Town.ScenePlayerStatePush)
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Town.ScenePlayerAppearancePush)
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // .PB.Types.PlayerState state = 1;
-  if (this->_internal_has_state()) {
+  // int64 player_id = 1;
+  if (this->_internal_player_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(1, this->_internal_player_id(), target);
+  }
+
+  // .PB.Types.TownAppearance appearance = 2;
+  if (this->_internal_has_appearance()) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(1, _Internal::state(this),
-        _Internal::state(this).GetCachedSize(), target, stream);
+      InternalWriteMessage(2, _Internal::appearance(this),
+        _Internal::appearance(this).GetCachedSize(), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
         static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
-  // @@protoc_insertion_point(serialize_to_array_end:PB.Town.ScenePlayerStatePush)
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Town.ScenePlayerAppearancePush)
   return target;
 }
 
-size_t ScenePlayerStatePush::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:PB.Town.ScenePlayerStatePush)
+size_t ScenePlayerAppearancePush::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Town.ScenePlayerAppearancePush)
   size_t total_size = 0;
 
   uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // .PB.Types.PlayerState state = 1;
-  if (this->_internal_has_state()) {
+  // .PB.Types.TownAppearance appearance = 2;
+  if (this->_internal_has_appearance()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-        *_impl_.state_);
+        *_impl_.appearance_);
+  }
+
+  // int64 player_id = 1;
+  if (this->_internal_player_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_player_id());
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -1049,45 +1317,732 @@ size_t ScenePlayerStatePush::ByteSizeLong() const {
   return total_size;
 }
 
-void ScenePlayerStatePush::CheckTypeAndMergeFrom(
+void ScenePlayerAppearancePush::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::_pbi::DownCast<const ScenePlayerStatePush*>(
+  MergeFrom(*::_pbi::DownCast<const ScenePlayerAppearancePush*>(
       &from));
 }
 
-void ScenePlayerStatePush::MergeFrom(const ScenePlayerStatePush& from) {
-  ScenePlayerStatePush* const _this = this;
-  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Town.ScenePlayerStatePush)
+void ScenePlayerAppearancePush::MergeFrom(const ScenePlayerAppearancePush& from) {
+  ScenePlayerAppearancePush* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Town.ScenePlayerAppearancePush)
   GOOGLE_DCHECK_NE(&from, _this);
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from._internal_has_state()) {
-    _this->_internal_mutable_state()->::PB::Types::PlayerState::MergeFrom(
-        from._internal_state());
+  if (from._internal_has_appearance()) {
+    _this->_internal_mutable_appearance()->::PB::Types::TownAppearance::MergeFrom(
+        from._internal_appearance());
+  }
+  if (from._internal_player_id() != 0) {
+    _this->_internal_set_player_id(from._internal_player_id());
   }
   _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
-void ScenePlayerStatePush::CopyFrom(const ScenePlayerStatePush& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:PB.Town.ScenePlayerStatePush)
+void ScenePlayerAppearancePush::CopyFrom(const ScenePlayerAppearancePush& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Town.ScenePlayerAppearancePush)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-bool ScenePlayerStatePush::IsInitialized() const {
+bool ScenePlayerAppearancePush::IsInitialized() const {
   return true;
 }
 
-void ScenePlayerStatePush::InternalSwap(ScenePlayerStatePush* other) {
+void ScenePlayerAppearancePush::InternalSwap(ScenePlayerAppearancePush* other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  swap(_impl_.state_, other->_impl_.state_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(ScenePlayerAppearancePush, _impl_.player_id_)
+      + sizeof(ScenePlayerAppearancePush::_impl_.player_id_)
+      - PROTOBUF_FIELD_OFFSET(ScenePlayerAppearancePush, _impl_.appearance_)>(
+          reinterpret_cast<char*>(&_impl_.appearance_),
+          reinterpret_cast<char*>(&other->_impl_.appearance_));
 }
 
-std::string ScenePlayerStatePush::GetTypeName() const {
-  return "PB.Town.ScenePlayerStatePush";
+std::string ScenePlayerAppearancePush::GetTypeName() const {
+  return "PB.Town.ScenePlayerAppearancePush";
+}
+
+
+// ===================================================================
+
+class TownStateEntry::_Internal {
+ public:
+  static const ::PB::Types::TownMovement& movement(const TownStateEntry* msg);
+};
+
+const ::PB::Types::TownMovement&
+TownStateEntry::_Internal::movement(const TownStateEntry* msg) {
+  return *msg->_impl_.movement_;
+}
+void TownStateEntry::clear_movement() {
+  if (GetArenaForAllocation() == nullptr && _impl_.movement_ != nullptr) {
+    delete _impl_.movement_;
+  }
+  _impl_.movement_ = nullptr;
+}
+TownStateEntry::TownStateEntry(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:PB.Town.TownStateEntry)
+}
+TownStateEntry::TownStateEntry(const TownStateEntry& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  TownStateEntry* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.movement_){nullptr}
+    , decltype(_impl_.player_id_){}
+    , decltype(_impl_.server_time_ms_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  if (from._internal_has_movement()) {
+    _this->_impl_.movement_ = new ::PB::Types::TownMovement(*from._impl_.movement_);
+  }
+  ::memcpy(&_impl_.player_id_, &from._impl_.player_id_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.server_time_ms_) -
+    reinterpret_cast<char*>(&_impl_.player_id_)) + sizeof(_impl_.server_time_ms_));
+  // @@protoc_insertion_point(copy_constructor:PB.Town.TownStateEntry)
+}
+
+inline void TownStateEntry::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.movement_){nullptr}
+    , decltype(_impl_.player_id_){int64_t{0}}
+    , decltype(_impl_.server_time_ms_){uint64_t{0u}}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+TownStateEntry::~TownStateEntry() {
+  // @@protoc_insertion_point(destructor:PB.Town.TownStateEntry)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void TownStateEntry::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  if (this != internal_default_instance()) delete _impl_.movement_;
+}
+
+void TownStateEntry::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void TownStateEntry::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Town.TownStateEntry)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  if (GetArenaForAllocation() == nullptr && _impl_.movement_ != nullptr) {
+    delete _impl_.movement_;
+  }
+  _impl_.movement_ = nullptr;
+  ::memset(&_impl_.player_id_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.server_time_ms_) -
+      reinterpret_cast<char*>(&_impl_.player_id_)) + sizeof(_impl_.server_time_ms_));
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* TownStateEntry::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // int64 player_id = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.player_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // uint64 server_time_ms = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.server_time_ms_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // .PB.Types.TownMovement movement = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
+          ptr = ctx->ParseMessage(_internal_mutable_movement(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* TownStateEntry::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Town.TownStateEntry)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // int64 player_id = 1;
+  if (this->_internal_player_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(1, this->_internal_player_id(), target);
+  }
+
+  // uint64 server_time_ms = 2;
+  if (this->_internal_server_time_ms() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(2, this->_internal_server_time_ms(), target);
+  }
+
+  // .PB.Types.TownMovement movement = 3;
+  if (this->_internal_has_movement()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(3, _Internal::movement(this),
+        _Internal::movement(this).GetCachedSize(), target, stream);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Town.TownStateEntry)
+  return target;
+}
+
+size_t TownStateEntry::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Town.TownStateEntry)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // .PB.Types.TownMovement movement = 3;
+  if (this->_internal_has_movement()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *_impl_.movement_);
+  }
+
+  // int64 player_id = 1;
+  if (this->_internal_player_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_player_id());
+  }
+
+  // uint64 server_time_ms = 2;
+  if (this->_internal_server_time_ms() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_server_time_ms());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void TownStateEntry::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const TownStateEntry*>(
+      &from));
+}
+
+void TownStateEntry::MergeFrom(const TownStateEntry& from) {
+  TownStateEntry* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Town.TownStateEntry)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_has_movement()) {
+    _this->_internal_mutable_movement()->::PB::Types::TownMovement::MergeFrom(
+        from._internal_movement());
+  }
+  if (from._internal_player_id() != 0) {
+    _this->_internal_set_player_id(from._internal_player_id());
+  }
+  if (from._internal_server_time_ms() != 0) {
+    _this->_internal_set_server_time_ms(from._internal_server_time_ms());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void TownStateEntry::CopyFrom(const TownStateEntry& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Town.TownStateEntry)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool TownStateEntry::IsInitialized() const {
+  return true;
+}
+
+void TownStateEntry::InternalSwap(TownStateEntry* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(TownStateEntry, _impl_.server_time_ms_)
+      + sizeof(TownStateEntry::_impl_.server_time_ms_)
+      - PROTOBUF_FIELD_OFFSET(TownStateEntry, _impl_.movement_)>(
+          reinterpret_cast<char*>(&_impl_.movement_),
+          reinterpret_cast<char*>(&other->_impl_.movement_));
+}
+
+std::string TownStateEntry::GetTypeName() const {
+  return "PB.Town.TownStateEntry";
+}
+
+
+// ===================================================================
+
+class ScenePlayerStatesPush::_Internal {
+ public:
+};
+
+ScenePlayerStatesPush::ScenePlayerStatesPush(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:PB.Town.ScenePlayerStatesPush)
+}
+ScenePlayerStatesPush::ScenePlayerStatesPush(const ScenePlayerStatesPush& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  ScenePlayerStatesPush* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.players_){from._impl_.players_}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  // @@protoc_insertion_point(copy_constructor:PB.Town.ScenePlayerStatesPush)
+}
+
+inline void ScenePlayerStatesPush::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.players_){arena}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+ScenePlayerStatesPush::~ScenePlayerStatesPush() {
+  // @@protoc_insertion_point(destructor:PB.Town.ScenePlayerStatesPush)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void ScenePlayerStatesPush::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.players_.~RepeatedPtrField();
+}
+
+void ScenePlayerStatesPush::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void ScenePlayerStatesPush::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Town.ScenePlayerStatesPush)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.players_.Clear();
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* ScenePlayerStatesPush::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // repeated .PB.Town.TownStateEntry players = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_players(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<10>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* ScenePlayerStatesPush::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Town.ScenePlayerStatesPush)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // repeated .PB.Town.TownStateEntry players = 1;
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_players_size()); i < n; i++) {
+    const auto& repfield = this->_internal_players(i);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+        InternalWriteMessage(1, repfield, repfield.GetCachedSize(), target, stream);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Town.ScenePlayerStatesPush)
+  return target;
+}
+
+size_t ScenePlayerStatesPush::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Town.ScenePlayerStatesPush)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // repeated .PB.Town.TownStateEntry players = 1;
+  total_size += 1UL * this->_internal_players_size();
+  for (const auto& msg : this->_impl_.players_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void ScenePlayerStatesPush::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const ScenePlayerStatesPush*>(
+      &from));
+}
+
+void ScenePlayerStatesPush::MergeFrom(const ScenePlayerStatesPush& from) {
+  ScenePlayerStatesPush* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Town.ScenePlayerStatesPush)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  _this->_impl_.players_.MergeFrom(from._impl_.players_);
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void ScenePlayerStatesPush::CopyFrom(const ScenePlayerStatesPush& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Town.ScenePlayerStatesPush)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ScenePlayerStatesPush::IsInitialized() const {
+  return true;
+}
+
+void ScenePlayerStatesPush::InternalSwap(ScenePlayerStatesPush* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  _impl_.players_.InternalSwap(&other->_impl_.players_);
+}
+
+std::string ScenePlayerStatesPush::GetTypeName() const {
+  return "PB.Town.ScenePlayerStatesPush";
+}
+
+
+// ===================================================================
+
+class TownPositionCorrectionPush::_Internal {
+ public:
+  static const ::PB::Types::TownVec3& pos(const TownPositionCorrectionPush* msg);
+};
+
+const ::PB::Types::TownVec3&
+TownPositionCorrectionPush::_Internal::pos(const TownPositionCorrectionPush* msg) {
+  return *msg->_impl_.pos_;
+}
+void TownPositionCorrectionPush::clear_pos() {
+  if (GetArenaForAllocation() == nullptr && _impl_.pos_ != nullptr) {
+    delete _impl_.pos_;
+  }
+  _impl_.pos_ = nullptr;
+}
+TownPositionCorrectionPush::TownPositionCorrectionPush(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:PB.Town.TownPositionCorrectionPush)
+}
+TownPositionCorrectionPush::TownPositionCorrectionPush(const TownPositionCorrectionPush& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  TownPositionCorrectionPush* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.pos_){nullptr}
+    , decltype(_impl_.client_seq_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  if (from._internal_has_pos()) {
+    _this->_impl_.pos_ = new ::PB::Types::TownVec3(*from._impl_.pos_);
+  }
+  _this->_impl_.client_seq_ = from._impl_.client_seq_;
+  // @@protoc_insertion_point(copy_constructor:PB.Town.TownPositionCorrectionPush)
+}
+
+inline void TownPositionCorrectionPush::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.pos_){nullptr}
+    , decltype(_impl_.client_seq_){0u}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+TownPositionCorrectionPush::~TownPositionCorrectionPush() {
+  // @@protoc_insertion_point(destructor:PB.Town.TownPositionCorrectionPush)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void TownPositionCorrectionPush::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  if (this != internal_default_instance()) delete _impl_.pos_;
+}
+
+void TownPositionCorrectionPush::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void TownPositionCorrectionPush::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Town.TownPositionCorrectionPush)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  if (GetArenaForAllocation() == nullptr && _impl_.pos_ != nullptr) {
+    delete _impl_.pos_;
+  }
+  _impl_.pos_ = nullptr;
+  _impl_.client_seq_ = 0u;
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* TownPositionCorrectionPush::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // uint32 client_seq = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.client_seq_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // .PB.Types.TownVec3 pos = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+          ptr = ctx->ParseMessage(_internal_mutable_pos(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* TownPositionCorrectionPush::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Town.TownPositionCorrectionPush)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // uint32 client_seq = 1;
+  if (this->_internal_client_seq() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(1, this->_internal_client_seq(), target);
+  }
+
+  // .PB.Types.TownVec3 pos = 2;
+  if (this->_internal_has_pos()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(2, _Internal::pos(this),
+        _Internal::pos(this).GetCachedSize(), target, stream);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Town.TownPositionCorrectionPush)
+  return target;
+}
+
+size_t TownPositionCorrectionPush::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Town.TownPositionCorrectionPush)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // .PB.Types.TownVec3 pos = 2;
+  if (this->_internal_has_pos()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *_impl_.pos_);
+  }
+
+  // uint32 client_seq = 1;
+  if (this->_internal_client_seq() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_client_seq());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void TownPositionCorrectionPush::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const TownPositionCorrectionPush*>(
+      &from));
+}
+
+void TownPositionCorrectionPush::MergeFrom(const TownPositionCorrectionPush& from) {
+  TownPositionCorrectionPush* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Town.TownPositionCorrectionPush)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_has_pos()) {
+    _this->_internal_mutable_pos()->::PB::Types::TownVec3::MergeFrom(
+        from._internal_pos());
+  }
+  if (from._internal_client_seq() != 0) {
+    _this->_internal_set_client_seq(from._internal_client_seq());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void TownPositionCorrectionPush::CopyFrom(const TownPositionCorrectionPush& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Town.TownPositionCorrectionPush)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool TownPositionCorrectionPush::IsInitialized() const {
+  return true;
+}
+
+void TownPositionCorrectionPush::InternalSwap(TownPositionCorrectionPush* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(TownPositionCorrectionPush, _impl_.client_seq_)
+      + sizeof(TownPositionCorrectionPush::_impl_.client_seq_)
+      - PROTOBUF_FIELD_OFFSET(TownPositionCorrectionPush, _impl_.pos_)>(
+          reinterpret_cast<char*>(&_impl_.pos_),
+          reinterpret_cast<char*>(&other->_impl_.pos_));
+}
+
+std::string TownPositionCorrectionPush::GetTypeName() const {
+  return "PB.Town.TownPositionCorrectionPush";
 }
 
 
@@ -1095,9 +2050,9 @@ std::string ScenePlayerStatePush::GetTypeName() const {
 }  // namespace Town
 }  // namespace PB
 PROTOBUF_NAMESPACE_OPEN
-template<> PROTOBUF_NOINLINE ::PB::Town::TownPlayerStatePush*
-Arena::CreateMaybeMessage< ::PB::Town::TownPlayerStatePush >(Arena* arena) {
-  return Arena::CreateMessageInternal< ::PB::Town::TownPlayerStatePush >(arena);
+template<> PROTOBUF_NOINLINE ::PB::Town::TownMoveReport*
+Arena::CreateMaybeMessage< ::PB::Town::TownMoveReport >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Town::TownMoveReport >(arena);
 }
 template<> PROTOBUF_NOINLINE ::PB::Town::ScenePlayerEnterPush*
 Arena::CreateMaybeMessage< ::PB::Town::ScenePlayerEnterPush >(Arena* arena) {
@@ -1107,9 +2062,21 @@ template<> PROTOBUF_NOINLINE ::PB::Town::ScenePlayerLeavePush*
 Arena::CreateMaybeMessage< ::PB::Town::ScenePlayerLeavePush >(Arena* arena) {
   return Arena::CreateMessageInternal< ::PB::Town::ScenePlayerLeavePush >(arena);
 }
-template<> PROTOBUF_NOINLINE ::PB::Town::ScenePlayerStatePush*
-Arena::CreateMaybeMessage< ::PB::Town::ScenePlayerStatePush >(Arena* arena) {
-  return Arena::CreateMessageInternal< ::PB::Town::ScenePlayerStatePush >(arena);
+template<> PROTOBUF_NOINLINE ::PB::Town::ScenePlayerAppearancePush*
+Arena::CreateMaybeMessage< ::PB::Town::ScenePlayerAppearancePush >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Town::ScenePlayerAppearancePush >(arena);
+}
+template<> PROTOBUF_NOINLINE ::PB::Town::TownStateEntry*
+Arena::CreateMaybeMessage< ::PB::Town::TownStateEntry >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Town::TownStateEntry >(arena);
+}
+template<> PROTOBUF_NOINLINE ::PB::Town::ScenePlayerStatesPush*
+Arena::CreateMaybeMessage< ::PB::Town::ScenePlayerStatesPush >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Town::ScenePlayerStatesPush >(arena);
+}
+template<> PROTOBUF_NOINLINE ::PB::Town::TownPositionCorrectionPush*
+Arena::CreateMaybeMessage< ::PB::Town::TownPositionCorrectionPush >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Town::TownPositionCorrectionPush >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

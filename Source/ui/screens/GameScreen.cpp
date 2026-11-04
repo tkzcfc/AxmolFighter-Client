@@ -10,6 +10,8 @@
 #include "ui/core/ScreenManager.h"
 #include "ui/widgets/common/MessageDialog.h"
 
+#include <net/client_game.pb.h>
+
 #include "imgui.h"
 
 namespace gameui
@@ -60,6 +62,7 @@ void GameScreen::onEnter()
         MessageDialog::showGlobal("初始化失败", []() { ax::Director::getInstance()->end(); });
         return;
     }
+    leaveTownScene();
     if (auto* local = dynamic_cast<LocalBattleMode*>(m_battleMode.get()))
         getScreenManager()->getUIManager()->open<BattleHudPanel>(*local);
     m_slotMap.clear();
@@ -164,6 +167,20 @@ std::unique_ptr<IBattleMode> GameScreen::createBattleMode()
     if (m_local)
         return std::make_unique<LocalBattleMode>(*m_local);
     return std::make_unique<LocalBattleMode>();
+}
+
+void GameScreen::leaveTownScene()
+{
+    PB::Game::LeaveSceneReq req;
+    this->call(req, [](const PB::Game::LeaveSceneResp* resp, std::string_view err) {
+        if (!resp)
+        {
+            AXLOGW("GameScreen: leave town scene request failed: {}", err);
+            return;
+        }
+        if (resp->code() != 0)
+            AXLOGW("GameScreen: leave town scene failed: {}", resp->message());
+    });
 }
 
 void GameScreen::onImGUIRender()

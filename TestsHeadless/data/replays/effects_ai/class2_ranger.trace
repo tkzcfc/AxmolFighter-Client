@@ -179,8 +179,8 @@ ent 38 role 61300 2 x 1175228451 y 0 z 260473688 face 1 hp 10774558801920 mp 104
 ent 38 role 61320 3 x 1302864009 y 0 z 295698432 face 1 hp 10791593967616 mp 104857600 ep 235182480 st Hit,Idle ex - act running at 377487144 play 1 sk - - - - - buf -
 ent 38 effect 930120 4 x 1512046058 y 0 z 265289728 face -1 st Attack ex - act 0 at 83886032 play 1
 ent 38 effect 930130 5 x 1496317418 y 0 z 265289728 face -1 st Attack ex - act 2 at 69905038 play 1
-ent 38 effect 880240 6 x 1254695116 y 69202248 z 259425112 face -1 st Attack ex - act 0 at 0 play 1
-ent 38 effect 880240 7 x 1316206030 y 76126545 z 294649856 face -1 st Attack ex - act 0 at 0 play 1
+ent 38 effect 880240 6 x 1254170828 y 69202248 z 259425112 face -1 st Attack ex - act 0 at 0 play 1
+ent 38 effect 880240 7 x 1315681742 y 76126545 z 294649856 face -1 st Attack ex - act 0 at 0 play 1
 ev 38 15 damage role.61300.2 value 1825660
 ev 38 16 sound effect.880240.6 id 0
 ev 38 17 damage role.61320.3 value 1809414
@@ -191,8 +191,8 @@ ent 39 role 61300 2 x 1156004692 y 0 z 260473688 face 1 hp 10774558801920 mp 104
 ent 39 role 61320 3 x 1283640250 y 0 z 295698432 face 1 hp 10791593967616 mp 104857600 ep 235182480 st Hit,Idle ex - act hit at 34952519 play 1 sk - - - - - buf -
 ent 39 effect 930120 4 x 1500393913 y 0 z 265289728 face -1 st Attack ex - act 0 at 125829048 play 1
 ent 39 effect 930130 5 x 1484665273 y 0 z 265289728 face -1 st Attack ex - act 2 at 104857557 play 1
-ent 39 effect 880240 6 x 1254695116 y 66638915 z 259425112 face -1 st Attack ex - act 0 at 34952519 play 1
-ent 39 effect 880240 7 x 1316206030 y 73563212 z 294649856 face -1 st Attack ex - act 0 at 34952519 play 1
+ent 39 effect 880240 6 x 1254170828 y 66638915 z 259425112 face -1 st Attack ex - act 0 at 34952519 play 1
+ent 39 effect 880240 7 x 1315681742 y 73563212 z 294649856 face -1 st Attack ex - act 0 at 34952519 play 1
 ev 39 19 intensity role.61300.2 v 1363149
 ev 39 20 intensity role.61320.3 v 1363149
 ev 39 21 shake effect.880240.6 d 83886080
@@ -203,16 +203,16 @@ ent 40 role 61300 2 x 1140276465 y 0 z 260473688 face 1 hp 10774558801920 mp 104
 ent 40 role 61320 3 x 1267912023 y 0 z 295698432 face 1 hp 10791593967616 mp 104857600 ep 235182480 st Hit,Idle ex - act hit at 69905038 play 1 sk - - - - - buf -
 ent 40 effect 930120 4 x 1493401733 y 0 z 265289728 face -1 st Attack ex - act 0 at 167772064 play 1
 ent 40 effect 930130 5 x 1477673093 y 0 z 265289728 face -1 st Attack ex - act 2 at 139810076 play 1
-ent 40 effect 880240 6 x 1254695116 y 61512250 z 259425112 face -1 st Attack ex - act 0 at 69905038 play 1
-ent 40 effect 880240 7 x 1316206030 y 68436547 z 294649856 face -1 st Attack ex - act 0 at 69905038 play 1
+ent 40 effect 880240 6 x 1254170828 y 61512250 z 259425112 face -1 st Attack ex - act 0 at 69905038 play 1
+ent 40 effect 880240 7 x 1315681742 y 68436547 z 294649856 face -1 st Attack ex - act 0 at 69905038 play 1
 frame 41
 ent 41 role 102 1 x 1474502091 y 0 z 266338304 face -1 hp 433468713467904 mp 104857600 ep 9437184 st Attack,Idle ex - act 10302 at 209715114 play 1 sk Y 1 1 1 930090 buf -
 ent 41 role 61300 2 x 1128043770 y 0 z 260473688 face 1 hp 10774558801920 mp 104857600 ep 237294090 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 41 role 61320 3 x 1255679328 y 0 z 295698432 face 1 hp 10791593967616 mp 104857600 ep 235182480 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 41 effect 930120 4 x 1490230731 y 0 z 265289728 face -1 st Attack ex - act 0 at 209715080 play 1
 ent 41 effect 930130 5 x 1474502091 y 0 z 265289728 face -1 st Attack ex - act 2 at 174762595 play 1
-ent 41 effect 880240 6 x 1254695116 y 53822253 z 259425112 face -1 st Attack ex - act 0 at 104857557 play 1
-ent 41 effect 880240 7 x 1316206030 y 60746550 z 294649856 face -1 st Attack ex - act 0 at 104857557 play 1
+ent 41 effect 880240 6 x 1254170828 y 53822253 z 259425112 face -1 st Attack ex - act 0 at 104857557 play 1
+ent 41 effect 880240 7 x 1315681742 y 60746550 z 294649856 face -1 st Attack ex - act 0 at 104857557 play 1
 ev 41 23 intensity role.61300.2 v 1048576
 ev 41 24 intensity role.61320.3 v 1048576
 frame 42
@@ -221,47 +221,47 @@ ent 42 role 61300 2 x 1119306607 y 0 z 260473688 face 1 hp 10774558801920 mp 104
 ent 42 role 61320 3 x 1246942165 y 0 z 295698432 face 1 hp 10791593967616 mp 104857600 ep 235182480 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 42 effect 930120 4 x 1487432532 y 0 z 265289728 face -1 st Attack ex - act 0 at 251658096 play 1
 ent 42 effect 930130 5 x 1471703892 y 0 z 265289728 face -1 st Attack ex - act 2 at 209715114 play 1
-ent 42 effect 880240 6 x 1254695116 y 43568923 z 259425112 face -1 st Attack ex - act 0 at 139810076 play 1
-ent 42 effect 880240 7 x 1316206030 y 50493220 z 294649856 face -1 st Attack ex - act 0 at 139810076 play 1
+ent 42 effect 880240 6 x 1254170828 y 43568923 z 259425112 face -1 st Attack ex - act 0 at 139810076 play 1
+ent 42 effect 880240 7 x 1315681742 y 50493220 z 294649856 face -1 st Attack ex - act 0 at 139810076 play 1
 frame 43
 ent 43 role 102 1 x 1468905693 y 0 z 266338304 face -1 hp 433468713467904 mp 104857600 ep 9437184 st Attack,Idle ex - act 10302 at 209715200 play 1 sk Y 1 1 1 930090 buf -
 ent 43 role 61300 2 x 1114064976 y 0 z 260473688 face 1 hp 10774558801920 mp 104857600 ep 237294090 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 43 role 61320 3 x 1241700534 y 0 z 295698432 face 1 hp 10791593967616 mp 104857600 ep 235182480 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 43 effect 930120 4 x 1484634333 y 0 z 265289728 face -1 st Attack ex - act 0 at 293601112 play 1
 ent 43 effect 930130 5 x 1468905693 y 0 z 265289728 face -1 st Attack ex - act 2 at 244667633 play 1
-ent 43 effect 880240 6 x 1254695116 y 30752261 z 259425112 face -1 st Attack ex - act 0 at 174762595 play 1
-ent 43 effect 880240 7 x 1316206030 y 37676558 z 294649856 face -1 st Attack ex - act 0 at 174762595 play 1
+ent 43 effect 880240 6 x 1254170828 y 30752261 z 259425112 face -1 st Attack ex - act 0 at 174762595 play 1
+ent 43 effect 880240 7 x 1315681742 y 37676558 z 294649856 face -1 st Attack ex - act 0 at 174762595 play 1
 frame 44
 ent 44 role 102 1 x 1466107494 y 0 z 266338304 face -1 hp 433468713467904 mp 104857600 ep 9437184 st Attack,Idle ex - act 10302 at 209715200 play 1 sk Y 1 1 1 930090 buf -
 ent 44 role 61300 2 x 1111689669 y 0 z 260473688 face 1 hp 10774558801920 mp 104857600 ep 237294090 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 44 role 61320 3 x 1239325227 y 0 z 295698432 face 1 hp 10791593967616 mp 104857600 ep 235182480 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 44 effect 930120 4 x 1481836134 y 0 z 265289728 face -1 st Attack ex - act 0 at 335544128 play 1
 ent 44 effect 930130 5 x 1466107494 y 0 z 265289728 face -1 st Attack ex - act 2 at 279620152 play 1
-ent 44 effect 880240 6 x 1254695116 y 15372267 z 259425112 face -1 st Attack ex - act 0 at 209715114 play 1
-ent 44 effect 880240 7 x 1316206030 y 22296564 z 294649856 face -1 st Attack ex - act 0 at 209715114 play 1
+ent 44 effect 880240 6 x 1254170828 y 15372267 z 259425112 face -1 st Attack ex - act 0 at 209715114 play 1
+ent 44 effect 880240 7 x 1315681742 y 22296564 z 294649856 face -1 st Attack ex - act 0 at 209715114 play 1
 frame 45
 ent 45 role 102 1 x 1463309295 y 0 z 266338304 face -1 hp 433468713467904 mp 104857600 ep 9437184 st Attack,Idle ex - act 10302 at 209715200 play 1 sk Y 1 1 1 930090 buf -
 ent 45 role 61300 2 x 1109594003 y 0 z 260473688 face 1 hp 10774558801920 mp 104857600 ep 237294090 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 45 role 61320 3 x 1237229561 y 0 z 295698432 face 1 hp 10791593967616 mp 104857600 ep 235182480 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 45 effect 930120 4 x 1479037935 y 0 z 265289728 face -1 st Attack ex - act 0 at 377487144 play 1
 ent 45 effect 930130 5 x 1463309295 y 0 z 265289728 face -1 st Attack ex - act 2 at 314572671 play 1
-ent 45 effect 880240 6 x 1254695116 y 0 z 259425112 face -1 st Attack ex - act 0 at 244667633 play 1
-ent 45 effect 880240 7 x 1316206030 y 4353238 z 294649856 face -1 st Attack ex - act 0 at 244667633 play 1
+ent 45 effect 880240 6 x 1254170828 y 0 z 259425112 face -1 st Attack ex - act 0 at 244667633 play 1
+ent 45 effect 880240 7 x 1315681742 y 4353238 z 294649856 face -1 st Attack ex - act 0 at 244667633 play 1
 frame 46
 ent 46 role 102 1 x 1460511096 y 0 z 266338304 face -1 hp 433468713467904 mp 104857600 ep 9437184 st Attack,Idle ex - act 10302 at 209715200 play 1 sk Y 1 1 1 930090 buf -
 ent 46 role 61300 2 x 1107498337 y 0 z 260473688 face 1 hp 10774558801920 mp 104857600 ep 237294090 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 46 role 61320 3 x 1235133895 y 0 z 295698432 face 1 hp 10791593967616 mp 104857600 ep 235182480 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 46 effect 930120 4 x 1476239736 y 0 z 265289728 face -1 st Attack ex - act 0 at 384827392 play 1
 ent 46 effect 930130 5 x 1460511096 y 0 z 265289728 face -1 st Attack ex - act 2 at 349525190 play 1
-ent 46 effect 880240 6 x 1254695116 y 0 z 259425112 face -1 st Attack ex - act 0 at 279620152 play 1
-ent 46 effect 880240 7 x 1316206030 y 0 z 294649856 face -1 st Attack ex - act 0 at 279620152 play 1
+ent 46 effect 880240 6 x 1254170828 y 0 z 259425112 face -1 st Attack ex - act 0 at 279620152 play 1
+ent 46 effect 880240 7 x 1315681742 y 0 z 294649856 face -1 st Attack ex - act 0 at 279620152 play 1
 frame 47
 ent 47 role 102 1 x 1460511096 y 0 z 266338304 face -1 hp 433468713467904 mp 104857600 ep 9437184 st Attack,Idle ex - act 10304 at 27962021 play 1 sk Y 1 1 1 930090 buf -
 ent 47 role 61300 2 x 1105402671 y 0 z 260473688 face 1 hp 10774558801920 mp 104857600 ep 237294090 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 47 role 61320 3 x 1233038229 y 0 z 295698432 face 1 hp 10791593967616 mp 104857600 ep 235182480 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 47 effect 930130 5 x 1460511096 y 0 z 265289728 face -1 st Attack ex - act 2 at 384477709 play 1
-ent 47 effect 880240 6 x 1254695116 y 0 z 259425112 face -1 st Attack ex - act 0 at 314572671 play 1
-ent 47 effect 880240 7 x 1316206030 y 0 z 294649856 face -1 st Attack ex - act 0 at 314572671 play 1
+ent 47 effect 880240 6 x 1254170828 y 0 z 259425112 face -1 st Attack ex - act 0 at 314572671 play 1
+ent 47 effect 880240 7 x 1315681742 y 0 z 294649856 face -1 st Attack ex - act 0 at 314572671 play 1
 ev 47 25 sound role.102.1 id 0
 ev 47 26 sound role.102.1 id 0
 ev 47 27 sound gone.3.1 id 0
@@ -272,8 +272,8 @@ ent 48 role 102 1 x 1461559662 y 0 z 266338304 face -1 hp 433468713467904 mp 104
 ent 48 role 61300 2 x 1103307012 y 0 z 260473688 face 1 hp 10774558801920 mp 104857600 ep 237294090 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 48 role 61320 3 x 1230942570 y 0 z 295698432 face 1 hp 10791593967616 mp 104857600 ep 235182480 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 48 effect 930130 5 x 1461559662 y 0 z 265289728 face -1 st Attack ex - act 2 at 419430228 play 1
-ent 48 effect 880240 6 x 1254695116 y 0 z 259425112 face -1 st Attack ex - act 0 at 349525190 play 1
-ent 48 effect 880240 7 x 1316206030 y 0 z 294649856 face -1 st Attack ex - act 0 at 349525190 play 1
+ent 48 effect 880240 6 x 1254170828 y 0 z 259425112 face -1 st Attack ex - act 0 at 349525190 play 1
+ent 48 effect 880240 7 x 1315681742 y 0 z 294649856 face -1 st Attack ex - act 0 at 349525190 play 1
 ev 48 28 spine role.102.1 id 0
 ev 48 29 sound role.102.1 id 0
 ev 48 30 sound role.102.1 id 0
@@ -282,16 +282,16 @@ ent 49 role 102 1 x 1462608228 y 0 z 266338304 face -1 hp 433468713467904 mp 104
 ent 49 role 61300 2 x 1103307012 y 0 z 260473688 face 1 hp 10774558801920 mp 104857600 ep 237294090 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 49 role 61320 3 x 1230942570 y 0 z 295698432 face 1 hp 10791593967616 mp 104857600 ep 235182480 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 49 effect 930130 5 x 1462608228 y 0 z 265289728 face -1 st Attack ex - act 2 at 454382747 play 1
-ent 49 effect 880240 6 x 1254695116 y 0 z 259425112 face -1 st Attack ex - act 0 at 384477709 play 1
-ent 49 effect 880240 7 x 1316206030 y 0 z 294649856 face -1 st Attack ex - act 0 at 384477709 play 1
+ent 49 effect 880240 6 x 1254170828 y 0 z 259425112 face -1 st Attack ex - act 0 at 384477709 play 1
+ent 49 effect 880240 7 x 1315681742 y 0 z 294649856 face -1 st Attack ex - act 0 at 384477709 play 1
 ev 49 31 spine role.102.1 id 0
 frame 50
 ent 50 role 102 1 x 1463656794 y 0 z 266338304 face -1 hp 433468713467904 mp 104857600 ep 9437184 st Attack,Idle ex - act 10118 at 157286334 play 1 sk A 1 1 1 930030 buf -
 ent 50 role 61300 2 x 1103307012 y 0 z 260473688 face 1 hp 10774558801920 mp 104857600 ep 237294090 st HitSwitch,Idle ex - act hitswitch at 34952519 play 1 sk - - - - - buf -
 ent 50 role 61320 3 x 1230942570 y 0 z 295698432 face 1 hp 10791593967616 mp 104857600 ep 235182480 st HitSwitch,Idle ex - act hitswitch at 34952519 play 1 sk - - - - - buf -
 ent 50 effect 930130 5 x 1463656794 y 0 z 265289728 face -1 st Attack ex - act 2 at 489335266 play 1
-ent 50 effect 880240 6 x 1254695116 y 0 z 259425112 face -1 st Attack ex - act 0 at 384827392 play 1
-ent 50 effect 880240 7 x 1316206030 y 0 z 294649856 face -1 st Attack ex - act 0 at 384827392 play 1
+ent 50 effect 880240 6 x 1254170828 y 0 z 259425112 face -1 st Attack ex - act 0 at 384827392 play 1
+ent 50 effect 880240 7 x 1315681742 y 0 z 294649856 face -1 st Attack ex - act 0 at 384827392 play 1
 frame 51
 ent 51 role 102 1 x 1464705360 y 0 z 266338304 face -1 hp 433468713467904 mp 104857600 ep 9437184 st Attack,Idle ex - act 10118 at 209715112 play 1 sk A 1 1 1 930030 buf -
 ent 51 role 61300 2 x 1103307012 y 0 z 260473688 face 1 hp 10774558801920 mp 104857600 ep 237294090 st HitSwitch,Idle ex - act hitswitch at 69905038 play 1 sk - - - - - buf -
@@ -643,8 +643,8 @@ ent 95 effect 930290 15 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 
 ent 95 effect 930322 17 x 1108657515 y 0 z 265289728 face -1 st Attack ex - act 2 at 69905038 play 1
 ent 95 effect 930330 18 x 1278177230 y 0 z 264241152 face -1 st Attack ex - act 4 at 34952519 play 1
 ent 95 effect 930300 19 x 1278177230 y 0 z 263192576 face -1 st Attack ex - act 22 at 0 play 1
-ent 95 effect 880220 20 x 1172214939 y 73171317 z 248079101 face -1 st Attack ex - act 28 at 0 play 1
-ent 95 effect 880220 21 x 1200850532 y 77252440 z 259210636 face -1 st Attack ex - act 28 at 0 play 1
+ent 95 effect 880220 20 x 1172214939 y 73826677 z 248079101 face -1 st Attack ex - act 28 at 0 play 1
+ent 95 effect 880220 21 x 1200850532 y 77907800 z 259210636 face -1 st Attack ex - act 28 at 0 play 1
 ev 95 92 sound effect.930300.19 id 0
 ev 95 93 damage role.61300.2 value 2530766
 ev 95 94 sound effect.880220.20 id 0
@@ -659,8 +659,8 @@ ent 96 effect 930290 15 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 
 ent 96 effect 930322 17 x 1108657515 y 0 z 265289728 face -1 st Attack ex - act 2 at 70254592 play 1
 ent 96 effect 930330 18 x 1278177230 y 0 z 264241152 face -1 st Attack ex - act 4 at 69905038 play 1
 ent 96 effect 930300 19 x 1278177230 y 0 z 263192576 face -1 st Attack ex - act 22 at 34952519 play 1
-ent 96 effect 880220 20 x 1172214939 y 70607984 z 248079101 face -1 st Attack ex - act 28 at 27962021 play 1
-ent 96 effect 880220 21 x 1200850532 y 74689107 z 259210636 face -1 st Attack ex - act 28 at 27962021 play 1
+ent 96 effect 880220 20 x 1172214939 y 71263344 z 248079101 face -1 st Attack ex - act 28 at 27962021 play 1
+ent 96 effect 880220 21 x 1200850532 y 75344467 z 259210636 face -1 st Attack ex - act 28 at 27962021 play 1
 ev 96 97 intensity role.61300.2 v 1363149
 ev 96 98 intensity role.61320.3 v 1363149
 ev 96 99 shake effect.930300.19 d 104857600
@@ -676,8 +676,8 @@ ent 97 effect 930280 14 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 
 ent 97 effect 930290 15 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 2 at 244667633 play 1
 ent 97 effect 930330 18 x 1278177230 y 0 z 264241152 face -1 st Attack ex - act 4 at 104857557 play 1
 ent 97 effect 930300 19 x 1278177230 y 0 z 263192576 face -1 st Attack ex - act 22 at 69905038 play 1
-ent 97 effect 880220 20 x 1172214939 y 65481319 z 248079101 face -1 st Attack ex - act 28 at 55924042 play 1
-ent 97 effect 880220 21 x 1200850532 y 69562442 z 259210636 face -1 st Attack ex - act 28 at 55924042 play 1
+ent 97 effect 880220 20 x 1172214939 y 66136679 z 248079101 face -1 st Attack ex - act 28 at 55924042 play 1
+ent 97 effect 880220 21 x 1200850532 y 70217802 z 259210636 face -1 st Attack ex - act 28 at 55924042 play 1
 ent 97 effect 930323 22 x 1006945686 y 0 z 265289728 face -1 st Attack ex - act 2 at 34952519 play 1
 ent 97 effect 930360 23 x 1108657515 y 0 z 238026752 face -1 st Attack ex - act 10 at 0 play 1
 ev 97 102 sound effect.930323.22 id 0
@@ -698,8 +698,8 @@ ent 98 effect 930280 14 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 
 ent 98 effect 930290 15 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 2 at 279620152 play 1
 ent 98 effect 930330 18 x 1278177230 y 0 z 264241152 face -1 st Attack ex - act 4 at 139810076 play 1
 ent 98 effect 930300 19 x 1278177230 y 0 z 263192576 face -1 st Attack ex - act 22 at 104857557 play 1
-ent 98 effect 880220 20 x 1122845536 y 66479655 z 248079101 face -1 st Attack ex - act 28 at 0 play 1
-ent 98 effect 880220 21 x 1151481129 y 76126545 z 259210636 face -1 st Attack ex - act 28 at 0 play 1
+ent 98 effect 880220 20 x 1122190176 y 66479655 z 248079101 face -1 st Attack ex - act 28 at 0 play 1
+ent 98 effect 880220 21 x 1150825769 y 76126545 z 259210636 face -1 st Attack ex - act 28 at 0 play 1
 ent 98 effect 930323 22 x 1006945686 y 0 z 265289728 face -1 st Attack ex - act 2 at 69905038 play 1
 ent 98 effect 930360 23 x 1108657515 y 0 z 238026752 face -1 st Attack ex - act 10 at 34952519 play 1
 ent 98 effect 930300 24 x 1108657515 y 0 z 236978176 face -1 st Attack ex - act 22 at 0 play 1
@@ -726,8 +726,8 @@ ent 99 effect 930280 14 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 
 ent 99 effect 930290 15 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 2 at 314572671 play 1
 ent 99 effect 930330 18 x 1278177230 y 0 z 264241152 face -1 st Attack ex - act 4 at 174762595 play 1
 ent 99 effect 930300 19 x 1278177230 y 0 z 263192576 face -1 st Attack ex - act 22 at 139810076 play 1
-ent 99 effect 880220 20 x 1122845536 y 63916322 z 248079101 face -1 st Attack ex - act 28 at 27962021 play 1
-ent 99 effect 880220 21 x 1151481129 y 73563212 z 259210636 face -1 st Attack ex - act 28 at 27962021 play 1
+ent 99 effect 880220 20 x 1122190176 y 63916322 z 248079101 face -1 st Attack ex - act 28 at 27962021 play 1
+ent 99 effect 880220 21 x 1150825769 y 73563212 z 259210636 face -1 st Attack ex - act 28 at 27962021 play 1
 ent 99 effect 930323 22 x 1006945686 y 0 z 265289728 face -1 st Attack ex - act 2 at 70254592 play 1
 ent 99 effect 930360 23 x 1108657515 y 0 z 238026752 face -1 st Attack ex - act 10 at 69905038 play 1
 ent 99 effect 930300 24 x 1108657515 y 0 z 236978176 face -1 st Attack ex - act 22 at 34952519 play 1
@@ -749,8 +749,8 @@ ent 100 effect 930280 14 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act
 ent 100 effect 930290 15 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 2 at 347427990 play 1
 ent 100 effect 930330 18 x 1278177230 y 0 z 264241152 face -1 st Attack ex - act 4 at 207617914 play 1
 ent 100 effect 930300 19 x 1278177230 y 0 z 263192576 face -1 st Attack ex - act 22 at 172665395 play 1
-ent 100 effect 880220 20 x 1122845536 y 59241836 z 248079101 face -1 st Attack ex - act 28 at 54246282 play 1
-ent 100 effect 880220 21 x 1151481129 y 68888726 z 259210636 face -1 st Attack ex - act 28 at 54246282 play 1
+ent 100 effect 880220 20 x 1122190176 y 59241836 z 248079101 face -1 st Attack ex - act 28 at 54246282 play 1
+ent 100 effect 880220 21 x 1150825769 y 68888726 z 259210636 face -1 st Attack ex - act 28 at 54246282 play 1
 ent 100 effect 930360 23 x 1108657515 y 0 z 238026752 face -1 st Attack ex - act 10 at 102760357 play 1
 ent 100 effect 930300 24 x 1108657515 y 0 z 236978176 face -1 st Attack ex - act 22 at 67807838 play 1
 ent 100 effect 10045 25 x 1061483768 y 0 z 248079101 face 1 st Attack ex - act 0 at 67807838 play 1
@@ -769,8 +769,8 @@ ent 101 effect 930280 14 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act
 ent 101 effect 930290 15 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 2 at 378186144 play 1
 ent 101 effect 930330 18 x 1278177230 y 0 z 264241152 face -1 st Attack ex - act 4 at 238376068 play 1
 ent 101 effect 930300 19 x 1278177230 y 0 z 263192576 face -1 st Attack ex - act 22 at 203423549 play 1
-ent 101 effect 880220 20 x 1122845536 y 52880683 z 248079101 face -1 st Attack ex - act 28 at 78852811 play 1
-ent 101 effect 880220 21 x 1151481129 y 62527573 z 259210636 face -1 st Attack ex - act 28 at 78852811 play 1
+ent 101 effect 880220 20 x 1122190176 y 52880683 z 248079101 face -1 st Attack ex - act 28 at 78852811 play 1
+ent 101 effect 880220 21 x 1150825769 y 62527573 z 259210636 face -1 st Attack ex - act 28 at 78852811 play 1
 ent 101 effect 930360 23 x 1108657515 y 0 z 238026752 face -1 st Attack ex - act 10 at 133518511 play 1
 ent 101 effect 930300 24 x 1108657515 y 0 z 236978176 face -1 st Attack ex - act 22 at 98565992 play 1
 ent 101 effect 10045 25 x 1061483768 y 0 z 248079101 face 1 st Attack ex - act 0 at 98565992 play 1
@@ -789,8 +789,8 @@ ent 102 effect 930280 14 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act
 ent 102 effect 930290 15 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 2 at 406847098 play 1
 ent 102 effect 930330 18 x 1278177230 y 0 z 264241152 face -1 st Attack ex - act 4 at 267037022 play 1
 ent 102 effect 930300 19 x 1278177230 y 0 z 263192576 face -1 st Attack ex - act 22 at 232084503 play 1
-ent 102 effect 880220 20 x 1122845536 y 45229678 z 248079101 face -1 st Attack ex - act 28 at 101781579 play 1
-ent 102 effect 880220 21 x 1151481129 y 54876568 z 259210636 face -1 st Attack ex - act 28 at 101781579 play 1
+ent 102 effect 880220 20 x 1122190176 y 45229678 z 248079101 face -1 st Attack ex - act 28 at 101781579 play 1
+ent 102 effect 880220 21 x 1150825769 y 54876568 z 259210636 face -1 st Attack ex - act 28 at 101781579 play 1
 ent 102 effect 930360 23 x 1108657515 y 0 z 238026752 face -1 st Attack ex - act 10 at 162179465 play 1
 ent 102 effect 930300 24 x 1108657515 y 0 z 236978176 face -1 st Attack ex - act 22 at 127226946 play 1
 ent 102 effect 10045 25 x 1061483768 y 0 z 248079101 face 1 st Attack ex - act 0 at 127226946 play 1
@@ -810,8 +810,8 @@ ent 103 effect 930280 14 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act
 ent 103 effect 930290 15 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 2 at 433410887 play 1
 ent 103 effect 930330 18 x 1278177230 y 0 z 264241152 face -1 st Attack ex - act 4 at 293600811 play 1
 ent 103 effect 930300 19 x 1278177230 y 0 z 263192576 face -1 st Attack ex - act 22 at 258648292 play 1
-ent 103 effect 880220 20 x 1122845536 y 36657935 z 248079101 face -1 st Attack ex - act 28 at 123032615 play 1
-ent 103 effect 880220 21 x 1151481129 y 46304825 z 259210636 face -1 st Attack ex - act 28 at 123032615 play 1
+ent 103 effect 880220 20 x 1122190176 y 36657935 z 248079101 face -1 st Attack ex - act 28 at 123032615 play 1
+ent 103 effect 880220 21 x 1150825769 y 46304825 z 259210636 face -1 st Attack ex - act 28 at 123032615 play 1
 ent 103 effect 930360 23 x 1108657515 y 0 z 238026752 face -1 st Attack ex - act 10 at 188743254 play 1
 ent 103 effect 930300 24 x 1108657515 y 0 z 236978176 face -1 st Attack ex - act 22 at 153790735 play 1
 ent 103 effect 10045 25 x 1061483768 y 0 z 248079101 face 1 st Attack ex - act 0 at 153790735 play 1
@@ -831,8 +831,8 @@ ent 104 effect 930280 14 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act
 ent 104 effect 930290 15 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 2 at 457877510 play 1
 ent 104 effect 930330 18 x 1278177230 y 0 z 264241152 face -1 st Attack ex - act 4 at 318067434 play 1
 ent 104 effect 930300 19 x 1278177230 y 0 z 263192576 face -1 st Attack ex - act 22 at 283114915 play 1
-ent 104 effect 880220 20 x 1122845536 y 27506891 z 248079101 face -1 st Attack ex - act 28 at 142605918 play 1
-ent 104 effect 880220 21 x 1151481129 y 37153781 z 259210636 face -1 st Attack ex - act 28 at 142605918 play 1
+ent 104 effect 880220 20 x 1122190176 y 27506891 z 248079101 face -1 st Attack ex - act 28 at 142605918 play 1
+ent 104 effect 880220 21 x 1150825769 y 37153781 z 259210636 face -1 st Attack ex - act 28 at 142605918 play 1
 ent 104 effect 930360 23 x 1108657515 y 0 z 238026752 face -1 st Attack ex - act 10 at 213209877 play 1
 ent 104 effect 930300 24 x 1108657515 y 0 z 236978176 face -1 st Attack ex - act 22 at 178257358 play 1
 ent 104 effect 10045 25 x 1061483768 y 0 z 248079101 face 1 st Attack ex - act 0 at 178257358 play 1
@@ -850,8 +850,8 @@ ent 105 effect 930280 14 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act
 ent 105 effect 930290 15 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 2 at 480246934 play 1
 ent 105 effect 930330 18 x 1278177230 y 0 z 264241152 face -1 st Attack ex - act 4 at 340436858 play 1
 ent 105 effect 930300 19 x 1278177230 y 0 z 263192576 face -1 st Attack ex - act 22 at 305484339 play 1
-ent 105 effect 880220 20 x 1122845536 y 18090312 z 248079101 face -1 st Attack ex - act 28 at 160501461 play 1
-ent 105 effect 880220 21 x 1151481129 y 27737202 z 259210636 face -1 st Attack ex - act 28 at 160501461 play 1
+ent 105 effect 880220 20 x 1122190176 y 18090312 z 248079101 face -1 st Attack ex - act 28 at 160501461 play 1
+ent 105 effect 880220 21 x 1150825769 y 27737202 z 259210636 face -1 st Attack ex - act 28 at 160501461 play 1
 ent 105 effect 930360 23 x 1108657515 y 0 z 238026752 face -1 st Attack ex - act 10 at 235579301 play 1
 ent 105 effect 930300 24 x 1108657515 y 0 z 236978176 face -1 st Attack ex - act 22 at 200626782 play 1
 ent 105 effect 10045 25 x 1061483768 y 0 z 248079101 face 1 st Attack ex - act 0 at 200626782 play 1
@@ -869,8 +869,8 @@ ent 106 effect 930280 14 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act
 ent 106 effect 930290 15 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 2 at 500519192 play 1
 ent 106 effect 930330 18 x 1278177230 y 0 z 264241152 face -1 st Attack ex - act 4 at 360709116 play 1
 ent 106 effect 930300 19 x 1278177230 y 0 z 263192576 face -1 st Attack ex - act 22 at 325756597 play 1
-ent 106 effect 880220 20 x 1122845536 y 8694255 z 248079101 face -1 st Attack ex - act 28 at 176719271 play 1
-ent 106 effect 880220 21 x 1151481129 y 18341145 z 259210636 face -1 st Attack ex - act 28 at 176719271 play 1
+ent 106 effect 880220 20 x 1122190176 y 8694255 z 248079101 face -1 st Attack ex - act 28 at 176719271 play 1
+ent 106 effect 880220 21 x 1150825769 y 18341145 z 259210636 face -1 st Attack ex - act 28 at 176719271 play 1
 ent 106 effect 930360 23 x 1108657515 y 0 z 238026752 face -1 st Attack ex - act 10 at 255851559 play 1
 ent 106 effect 930300 24 x 1108657515 y 0 z 236978176 face -1 st Attack ex - act 22 at 220899040 play 1
 ent 106 effect 10045 25 x 1061483768 y 0 z 248079101 face 1 st Attack ex - act 0 at 220899040 play 1
@@ -887,8 +887,8 @@ ent 107 effect 930280 14 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act
 ent 107 effect 930290 15 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 2 at 518694284 play 1
 ent 107 effect 930330 18 x 1278177230 y 0 z 264241152 face -1 st Attack ex - act 4 at 378884208 play 1
 ent 107 effect 930300 19 x 1278177230 y 0 z 263192576 face -1 st Attack ex - act 22 at 343931689 play 1
-ent 107 effect 880220 20 x 1122845536 y 0 z 248079101 face -1 st Attack ex - act 28 at 191259348 play 1
-ent 107 effect 880220 21 x 1151481129 y 9223994 z 259210636 face -1 st Attack ex - act 28 at 191259348 play 1
+ent 107 effect 880220 20 x 1122190176 y 0 z 248079101 face -1 st Attack ex - act 28 at 191259348 play 1
+ent 107 effect 880220 21 x 1150825769 y 9223994 z 259210636 face -1 st Attack ex - act 28 at 191259348 play 1
 ent 107 effect 930360 23 x 1108657515 y 0 z 238026752 face -1 st Attack ex - act 10 at 274026651 play 1
 ent 107 effect 930300 24 x 1108657515 y 0 z 236978176 face -1 st Attack ex - act 22 at 239074132 play 1
 ent 107 effect 10045 25 x 1061483768 y 0 z 248079101 face 1 st Attack ex - act 0 at 239074132 play 1
@@ -905,8 +905,8 @@ ent 108 effect 930280 14 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act
 ent 108 effect 930290 15 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 2 at 534772177 play 1
 ent 108 effect 930330 18 x 1278177230 y 0 z 264241152 face -1 st Attack ex - act 4 at 384827392 play 1
 ent 108 effect 930300 19 x 1278177230 y 0 z 263192576 face -1 st Attack ex - act 22 at 360009582 play 1
-ent 108 effect 880220 20 x 1122845536 y 0 z 248079101 face -1 st Attack ex - act 28 at 204121665 play 1
-ent 108 effect 880220 21 x 1151481129 y 616466 z 259210636 face -1 st Attack ex - act 28 at 204121665 play 1
+ent 108 effect 880220 20 x 1122190176 y 0 z 248079101 face -1 st Attack ex - act 28 at 204121665 play 1
+ent 108 effect 880220 21 x 1150825769 y 616466 z 259210636 face -1 st Attack ex - act 28 at 204121665 play 1
 ent 108 effect 930360 23 x 1108657515 y 0 z 238026752 face -1 st Attack ex - act 10 at 290104544 play 1
 ent 108 effect 930300 24 x 1108657515 y 0 z 236978176 face -1 st Attack ex - act 22 at 255152025 play 1
 ent 108 effect 10045 25 x 1061483768 y 0 z 248079101 face 1 st Attack ex - act 0 at 255152025 play 1
@@ -923,8 +923,8 @@ ent 109 role 61320 3 x 1077764240 y 0 z 260259212 face 1 hp 0 mp 104857600 ep 10
 ent 109 effect 930280 14 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 0 at 548752904 play 1
 ent 109 effect 930290 15 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 2 at 548752904 play 1
 ent 109 effect 930300 19 x 1278177230 y 0 z 263192576 face -1 st Attack ex - act 22 at 373990309 play 1
-ent 109 effect 880220 20 x 1122845536 y 0 z 248079101 face -1 st Attack ex - act 28 at 215306249 play 1
-ent 109 effect 880220 21 x 1151481129 y 0 z 259210636 face -1 st Attack ex - act 28 at 215306249 play 1
+ent 109 effect 880220 20 x 1122190176 y 0 z 248079101 face -1 st Attack ex - act 28 at 215306249 play 1
+ent 109 effect 880220 21 x 1150825769 y 0 z 259210636 face -1 st Attack ex - act 28 at 215306249 play 1
 ent 109 effect 930360 23 x 1108657515 y 0 z 238026752 face -1 st Attack ex - act 10 at 304085271 play 1
 ent 109 effect 930300 24 x 1108657515 y 0 z 236978176 face -1 st Attack ex - act 22 at 269132752 play 1
 ent 109 effect 10045 25 x 1061483768 y 0 z 248079101 face 1 st Attack ex - act 0 at 269132752 play 1
@@ -945,8 +945,8 @@ ent 110 role 61320 3 x 1075982168 y 0 z 260259212 face 1 hp 0 mp 104857600 ep 10
 ent 110 effect 930280 14 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 0 at 560636432 play 1
 ent 110 effect 930290 15 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 2 at 560636432 play 1
 ent 110 effect 930300 19 x 1278177230 y 0 z 263192576 face -1 st Attack ex - act 22 at 384827392 play 1
-ent 110 effect 880220 20 x 1122845536 y 0 z 248079101 face -1 st Attack ex - act 28 at 224813073 play 1
-ent 110 effect 880220 21 x 1151481129 y 0 z 259210636 face -1 st Attack ex - act 28 at 224813073 play 1
+ent 110 effect 880220 20 x 1122190176 y 0 z 248079101 face -1 st Attack ex - act 28 at 224813073 play 1
+ent 110 effect 880220 21 x 1150825769 y 0 z 259210636 face -1 st Attack ex - act 28 at 224813073 play 1
 ent 110 effect 930360 23 x 1108657515 y 0 z 238026752 face -1 st Attack ex - act 10 at 315968799 play 1
 ent 110 effect 930300 24 x 1108657515 y 0 z 236978176 face -1 st Attack ex - act 22 at 281016280 play 1
 ent 110 effect 10045 25 x 1061483768 y 0 z 248079101 face 1 st Attack ex - act 0 at 281016280 play 1
@@ -967,8 +967,8 @@ ent 111 role 61300 2 x 1012629674 y 0 z 249127677 face 1 hp 0 mp 104857600 ep 10
 ent 111 role 61320 3 x 1074514590 y 0 z 260259212 face 1 hp 0 mp 104857600 ep 1048576000 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 111 effect 930280 14 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 0 at 570422794 play 1
 ent 111 effect 930290 15 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 2 at 570422794 play 1
-ent 111 effect 880220 20 x 1122845536 y 0 z 248079101 face -1 st Attack ex - act 28 at 232642164 play 1
-ent 111 effect 880220 21 x 1151481129 y 0 z 259210636 face -1 st Attack ex - act 28 at 232642164 play 1
+ent 111 effect 880220 20 x 1122190176 y 0 z 248079101 face -1 st Attack ex - act 28 at 232642164 play 1
+ent 111 effect 880220 21 x 1150825769 y 0 z 259210636 face -1 st Attack ex - act 28 at 232642164 play 1
 ent 111 effect 930360 23 x 1108657515 y 0 z 238026752 face -1 st Attack ex - act 10 at 325755161 play 1
 ent 111 effect 930300 24 x 1108657515 y 0 z 236978176 face -1 st Attack ex - act 22 at 290802642 play 1
 ent 111 effect 10045 25 x 1061483768 y 0 z 248079101 face 1 st Attack ex - act 0 at 290802642 play 1
@@ -988,8 +988,8 @@ ent 112 role 61300 2 x 1011476590 y 0 z 249127677 face 1 hp 0 mp 104857600 ep 10
 ent 112 role 61320 3 x 1073361506 y 0 z 260259212 face 1 hp 0 mp 104857600 ep 1048576000 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 112 effect 930280 14 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 0 at 578111990 play 1
 ent 112 effect 930290 15 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 2 at 578111990 play 1
-ent 112 effect 880220 20 x 1122845536 y 0 z 248079101 face -1 st Attack ex - act 28 at 238793522 play 1
-ent 112 effect 880220 21 x 1151481129 y 0 z 259210636 face -1 st Attack ex - act 28 at 238793522 play 1
+ent 112 effect 880220 20 x 1122190176 y 0 z 248079101 face -1 st Attack ex - act 28 at 238793522 play 1
+ent 112 effect 880220 21 x 1150825769 y 0 z 259210636 face -1 st Attack ex - act 28 at 238793522 play 1
 ent 112 effect 930360 23 x 1108657515 y 0 z 238026752 face -1 st Attack ex - act 10 at 333444357 play 1
 ent 112 effect 930300 24 x 1108657515 y 0 z 236978176 face -1 st Attack ex - act 22 at 298491838 play 1
 ent 112 effect 10045 25 x 1061483768 y 0 z 248079101 face 1 st Attack ex - act 0 at 298491838 play 1
@@ -1006,8 +1006,8 @@ ent 113 role 61300 2 x 1010638005 y 0 z 249127677 face 1 hp 0 mp 104857600 ep 10
 ent 113 role 61320 3 x 1072522921 y 0 z 260259212 face 1 hp 0 mp 104857600 ep 1048576000 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 113 effect 930280 14 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 0 at 583703987 play 1
 ent 113 effect 930290 15 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 2 at 583703987 play 1
-ent 113 effect 880220 20 x 1122845536 y 0 z 248079101 face -1 st Attack ex - act 28 at 243267120 play 1
-ent 113 effect 880220 21 x 1151481129 y 0 z 259210636 face -1 st Attack ex - act 28 at 243267120 play 1
+ent 113 effect 880220 20 x 1122190176 y 0 z 248079101 face -1 st Attack ex - act 28 at 243267120 play 1
+ent 113 effect 880220 21 x 1150825769 y 0 z 259210636 face -1 st Attack ex - act 28 at 243267120 play 1
 ent 113 effect 930360 23 x 1108657515 y 0 z 238026752 face -1 st Attack ex - act 10 at 339036354 play 1
 ent 113 effect 930300 24 x 1108657515 y 0 z 236978176 face -1 st Attack ex - act 22 at 304083835 play 1
 ent 113 effect 10045 25 x 1061483768 y 0 z 248079101 face 1 st Attack ex - act 0 at 304083835 play 1
@@ -1025,8 +1025,8 @@ ent 114 role 61300 2 x 1010113849 y 0 z 249127677 face 1 hp 0 mp 104857600 ep 10
 ent 114 role 61320 3 x 1071998765 y 0 z 260259212 face 1 hp 0 mp 104857600 ep 1048576000 st Hit,Idle ex - act hit at 70254592 play 1 sk - - - - - buf -
 ent 114 effect 930280 14 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 0 at 587199252 play 1
 ent 114 effect 930290 15 x 1379889059 y 0 z 265289728 face -1 st Attack ex - act 2 at 587199252 play 1
-ent 114 effect 880220 20 x 1122845536 y 0 z 248079101 face -1 st Attack ex - act 28 at 244318208 play 1
-ent 114 effect 880220 21 x 1151481129 y 0 z 259210636 face -1 st Attack ex - act 28 at 244318208 play 1
+ent 114 effect 880220 20 x 1122190176 y 0 z 248079101 face -1 st Attack ex - act 28 at 244318208 play 1
+ent 114 effect 880220 21 x 1150825769 y 0 z 259210636 face -1 st Attack ex - act 28 at 244318208 play 1
 ent 114 effect 930360 23 x 1108657515 y 0 z 238026752 face -1 st Attack ex - act 10 at 342531619 play 1
 ent 114 effect 930300 24 x 1108657515 y 0 z 236978176 face -1 st Attack ex - act 22 at 307579100 play 1
 ent 114 effect 10045 25 x 1061483768 y 0 z 248079101 face 1 st Attack ex - act 0 at 307579100 play 1
@@ -3739,251 +3739,523 @@ frame 579
 ent 579 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 57979007 ep 70778880 st Idle ex - act stand at 279620152 play 1 sk - - - - - buf -
 frame 580
 ent 580 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 58153773 ep 70778880 st Run,Idle ex - act walk at 34952519 play 1 sk - - - - - buf -
-cast role.102.1 930090 Y 0
+cast role.102.1 930090 Y 1
 frame 581
 ent 581 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 58328539 ep 70778880 st Attack,Idle ex - act 10300 at 34603008 play 1 sk Y 1 1 1 930090 buf -
 ev 581 416 sound role.102.1 id 0
-castend role.102.1 930090
 frame 582
-ent 582 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 58503305 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
-ev 582 417 sound role.102.1 id 0
+ent 582 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 58503305 ep 70778880 st Attack,Idle ex - act 10302 at 34952519 play 1 sk Y 1 1 1 930090 buf -
+ev 582 417 spine role.102.1 id 0
+ev 582 418 sound role.102.1 id 0
+ev 582 419 sound role.102.1 id 0
+spawn role.102.1 930120
+spawn role.102.1 930130
 frame 583
-ent 583 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 58678071 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 583 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 58678071 ep 70778880 st Attack,Idle ex - act 10302 at 69905038 play 1 sk Y 1 1 1 930090 buf -
+ent 583 effect 930120 80 x 71827456 y 0 z 265289728 face -1 st Attack ex - act 0 at 41943016 play 1
+ent 583 effect 930130 81 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 2 at 34952519 play 1
+ev 583 420 spine role.102.1 id 0
+ev 583 421 sound effect.930120.80 id 0
+ev 583 422 sound effect.930130.81 id 0
 frame 584
-ent 584 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 58852837 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 584 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 58852837 ep 70778880 st Attack,Idle ex - act 10302 at 104857557 play 1 sk Y 1 1 1 930090 buf -
+ent 584 effect 930120 80 x 71827456 y 0 z 265289728 face -1 st Attack ex - act 0 at 83886032 play 1
+ent 584 effect 930130 81 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 2 at 69905038 play 1
 frame 585
-ent 585 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 59027603 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
+ent 585 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 59027603 ep 70778880 st Attack,Idle ex - act 10302 at 139810076 play 1 sk Y 1 1 1 930090 buf -
+ent 585 effect 930120 80 x 71827456 y 0 z 265289728 face -1 st Attack ex - act 0 at 125829048 play 1
+ent 585 effect 930130 81 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 2 at 104857557 play 1
 frame 586
-ent 586 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 59202369 ep 70778880 st Idle ex - act stand at 174762595 play 1 sk - - - - - buf -
+ent 586 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 59202369 ep 70778880 st Attack,Idle ex - act 10302 at 174762595 play 1 sk Y 1 1 1 930090 buf -
+ent 586 effect 930120 80 x 71827456 y 0 z 265289728 face -1 st Attack ex - act 0 at 167772064 play 1
+ent 586 effect 930130 81 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 2 at 139810076 play 1
 frame 587
-ent 587 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 59377135 ep 70778880 st Idle ex - act stand at 209715114 play 1 sk - - - - - buf -
+ent 587 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 59377135 ep 70778880 st Attack,Idle ex - act 10302 at 209715114 play 1 sk Y 1 1 1 930090 buf -
+ent 587 effect 930120 80 x 71827456 y 0 z 265289728 face -1 st Attack ex - act 0 at 209715080 play 1
+ent 587 effect 930130 81 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 2 at 174762595 play 1
 frame 588
-ent 588 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 59551901 ep 70778880 st Idle ex - act stand at 244667633 play 1 sk - - - - - buf -
+ent 588 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 59551901 ep 70778880 st Attack,Idle ex - act 10302 at 209715200 play 1 sk Y 1 1 1 930090 buf -
+ent 588 effect 930120 80 x 71827456 y 0 z 265289728 face -1 st Attack ex - act 0 at 251658096 play 1
+ent 588 effect 930130 81 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 2 at 209715114 play 1
 frame 589
-ent 589 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 59726667 ep 70778880 st Idle ex - act stand at 279620152 play 1 sk - - - - - buf -
+ent 589 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 59726667 ep 70778880 st Attack,Idle ex - act 10302 at 209715200 play 1 sk Y 1 1 1 930090 buf -
+ent 589 effect 930120 80 x 71827456 y 0 z 265289728 face -1 st Attack ex - act 0 at 293601112 play 1
+ent 589 effect 930130 81 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 2 at 244667633 play 1
 frame 590
-ent 590 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 59901433 ep 70778880 st Idle ex - act stand at 314572671 play 1 sk - - - - - buf -
+ent 590 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 59901433 ep 70778880 st Attack,Idle ex - act 10302 at 209715200 play 1 sk Y 1 1 1 930090 buf -
+ent 590 effect 930120 80 x 71827456 y 0 z 265289728 face -1 st Attack ex - act 0 at 335544128 play 1
+ent 590 effect 930130 81 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 2 at 279620152 play 1
 frame 591
-ent 591 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 60076199 ep 70778880 st Idle ex - act stand at 349525190 play 1 sk - - - - - buf -
+ent 591 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 60076199 ep 70778880 st Attack,Idle ex - act 10302 at 209715200 play 1 sk Y 1 1 1 930090 buf -
+ent 591 effect 930120 80 x 71827456 y 0 z 265289728 face -1 st Attack ex - act 0 at 377487144 play 1
+ent 591 effect 930130 81 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 2 at 314572671 play 1
 frame 592
-ent 592 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 60250965 ep 70778880 st Idle ex - act stand at 384477709 play 1 sk - - - - - buf -
+ent 592 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 60250965 ep 70778880 st Attack,Idle ex - act 10302 at 209715200 play 1 sk Y 1 1 1 930090 buf -
+ent 592 effect 930120 80 x 71827456 y 0 z 265289728 face -1 st Attack ex - act 0 at 384827392 play 1
+ent 592 effect 930130 81 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 2 at 349525190 play 1
 frame 593
-ent 593 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 60425731 ep 70778880 st Idle ex - act stand at 419430228 play 1 sk - - - - - buf -
+ent 593 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 60425731 ep 70778880 st Attack,Idle ex - act 10304 at 27962021 play 1 sk Y 1 1 1 930090 buf -
+ent 593 effect 930130 81 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 2 at 384477709 play 1
+ev 593 423 sound role.102.1 id 0
+ev 593 424 sound role.102.1 id 0
+ev 593 425 sound gone.1.3 id 0
 frame 594
-ent 594 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 60600497 ep 70778880 st Idle ex - act stand at 454382747 play 1 sk - - - - - buf -
+ent 594 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 60600497 ep 70778880 st Attack,Idle ex - act 10304 at 55924042 play 1 sk Y 1 1 1 930090 buf -
+ent 594 effect 930130 81 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 2 at 419430228 play 1
+ev 594 426 spine role.102.1 id 0
 frame 595
-ent 595 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 60775263 ep 70778880 st Idle ex - act stand at 489335266 play 1 sk - - - - - buf -
+ent 595 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 60775263 ep 70778880 st Attack,Idle ex - act 10304 at 83886063 play 1 sk Y 1 1 1 930090 buf -
+ent 595 effect 930130 81 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 2 at 454382747 play 1
 frame 596
-ent 596 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 60950029 ep 70778880 st Idle ex - act stand at 524287785 play 1 sk - - - - - buf -
+ent 596 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 60950029 ep 70778880 st Attack,Idle ex - act 10304 at 111848084 play 1 sk Y 1 1 1 930090 buf -
+ent 596 effect 930130 81 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 2 at 489335266 play 1
 frame 597
-ent 597 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 61124795 ep 70778880 st Idle ex - act stand at 559240304 play 1 sk - - - - - buf -
+ent 597 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 61124795 ep 70778880 st Attack,Idle ex - act 10304 at 139810105 play 1 sk Y 1 1 1 930090 buf -
+ent 597 effect 930130 81 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 2 at 489684992 play 1
 frame 598
-ent 598 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 61299561 ep 70778880 st Idle ex - act stand at 594192823 play 1 sk - - - - - buf -
+ent 598 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 61299561 ep 70778880 st Attack,Idle ex - act 10304 at 167772126 play 1 sk Y 1 1 1 930090 buf -
+ev 598 427 sound gone.12.3 id 0
 frame 599
-ent 599 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 61474327 ep 70778880 st Idle ex - act stand at 629145342 play 1 sk - - - - - buf -
+ent 599 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 61474327 ep 70778880 st Attack,Idle ex - act 10304 at 195734147 play 1 sk Y 1 1 1 930090 buf -
 frame 600
-ent 600 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 61649093 ep 70778880 st Idle ex - act stand at 664097861 play 1 sk - - - - - buf -
+ent 600 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 61649093 ep 70778880 st Attack,Idle ex - act 10304 at 209715200 play 1 sk Y 1 1 1 930090 buf -
+castend role.102.1 930090
 frame 601
-ent 601 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 61823859 ep 70778880 st Idle ex - act stand at 699050380 play 1 sk - - - - - buf -
+ent 601 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 61823859 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ev 601 428 sound role.102.1 id 0
 frame 602
-ent 602 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 61998625 ep 70778880 st Idle ex - act stand at 734002899 play 1 sk - - - - - buf -
+ent 602 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 61998625 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
 frame 603
-ent 603 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 62173391 ep 70778880 st Idle ex - act stand at 768955418 play 1 sk - - - - - buf -
+ent 603 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 62173391 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
 frame 604
-ent 604 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 62348157 ep 70778880 st Idle ex - act stand at 803907937 play 1 sk - - - - - buf -
+ent 604 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 62348157 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
 frame 605
-ent 605 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 62522923 ep 70778880 st Idle ex - act stand at 838860456 play 1 sk - - - - - buf -
+ent 605 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 62522923 ep 70778880 st Idle ex - act stand at 174762595 play 1 sk - - - - - buf -
 frame 606
-ent 606 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 62697689 ep 70778880 st Idle ex - act stand at 873812975 play 1 sk - - - - - buf -
+ent 606 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 62697689 ep 70778880 st Idle ex - act stand at 209715114 play 1 sk - - - - - buf -
 frame 607
-ent 607 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 62872455 ep 70778880 st Idle ex - act stand at 908765494 play 1 sk - - - - - buf -
+ent 607 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 62872455 ep 70778880 st Idle ex - act stand at 244667633 play 1 sk - - - - - buf -
 frame 608
-ent 608 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 63047221 ep 70778880 st Idle ex - act stand at 943718013 play 1 sk - - - - - buf -
+ent 608 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 63047221 ep 70778880 st Idle ex - act stand at 279620152 play 1 sk - - - - - buf -
 frame 609
-ent 609 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 63221987 ep 70778880 st Idle ex - act stand at 978670532 play 1 sk - - - - - buf -
+ent 609 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 63221987 ep 70778880 st Idle ex - act stand at 314572671 play 1 sk - - - - - buf -
 frame 610
-ent 610 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 63396753 ep 70778880 st Idle ex - act stand at 1013623051 play 1 sk - - - - - buf -
-cast role.102.1 930030 A 0
+ent 610 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 63396753 ep 70778880 st Idle ex - act stand at 349525190 play 1 sk - - - - - buf -
+cast role.102.1 930030 A 1
 frame 611
 ent 611 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 63571519 ep 70778880 st Attack,Idle ex - act 10118 at 52428778 play 1 sk A 1 1 1 930030 buf -
-ev 611 418 sound role.102.1 id 0
-castend role.102.1 930030
+ev 611 429 sound role.102.1 id 0
 frame 612
-ent 612 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 63746285 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
-ev 612 419 sound role.102.1 id 0
+ent 612 role 102 1 x 58195948 y 0 z 266338304 face -1 hp 433468713467904 mp 63746285 ep 70778880 st Attack,Idle ex - act 10118 at 104857556 play 1 sk A 1 1 1 930030 buf -
+ev 612 430 spine role.102.1 id 0
 frame 613
-ent 613 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 63921051 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 613 role 102 1 x 59244514 y 0 z 266338304 face -1 hp 433468713467904 mp 63921051 ep 70778880 st Attack,Idle ex - act 10118 at 157286334 play 1 sk A 1 1 1 930030 buf -
 frame 614
-ent 614 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 64095817 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 614 role 102 1 x 60293080 y 0 z 266338304 face -1 hp 433468713467904 mp 64095817 ep 70778880 st Attack,Idle ex - act 10118 at 209715112 play 1 sk A 1 1 1 930030 buf -
 frame 615
-ent 615 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 64270583 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ent 615 role 102 1 x 61341646 y 0 z 266338304 face -1 hp 433468713467904 mp 64270583 ep 70778880 st Attack,Idle ex - act 10118 at 209715200 play 1 sk A 1 1 1 930030 buf -
 frame 616
-ent 616 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 64445349 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 616 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 64445349 ep 70778880 st Attack,Idle ex - act 10120 at 69905038 play 1 sk A 1 1 1 930030 buf -
+ev 616 431 sound role.102.1 id 0
+ev 616 432 sound role.102.1 id 0
+spawn role.102.1 930030
 frame 617
-ent 617 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 64620115 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 617 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 64620115 ep 70778880 st Attack,Idle ex - act 10120 at 104857600 play 1 sk A 1 1 1 930030 buf -
+ent 617 effect 930030 82 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 0 at 41943016 play 1
+ev 617 433 spine role.102.1 id 0
+ev 617 434 sound effect.930030.82 id 0
 frame 618
-ent 618 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 64794881 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
+ent 618 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 64794881 ep 70778880 st Attack,Idle ex - act 10122 at 24466756 play 1 sk A 1 1 1 930030 buf -
+ent 618 effect 930030 82 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 0 at 83886032 play 1
+ev 618 435 sound role.102.1 id 0
+ev 618 436 sound role.102.1 id 0
+castend role.102.1 930030
+cast role.102.1 930040 A 1
 frame 619
-ent 619 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 64969647 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ent 619 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 64969647 ep 70778880 st Attack,Idle ex - act 10124 at 52428778 play 1 sk A 1 1 2 930040 buf -
+ent 619 effect 930030 82 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 0 at 125829048 play 1
+ev 619 437 spine role.102.1 id 0
+ev 619 438 sound role.102.1 id 0
+ev 619 439 sound role.102.1 id 0
 frame 620
-ent 620 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 65144413 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 620 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 65144413 ep 70778880 st Attack,Idle ex - act 10124 at 104857556 play 1 sk A 1 1 2 930040 buf -
+ent 620 effect 930030 82 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 0 at 167772064 play 1
+ev 620 440 spine role.102.1 id 0
 frame 621
-ent 621 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 65319179 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 621 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 65319179 ep 70778880 st Attack,Idle ex - act 10124 at 139460608 play 1 sk A 1 1 2 930040 buf -
+ent 621 effect 930030 82 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 0 at 209715080 play 1
 frame 622
-ent 622 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 65493945 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
+ent 622 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 65493945 ep 70778880 st Attack,Idle ex - act 10126 at 69905038 play 1 sk A 1 1 2 930040 buf -
+ent 622 effect 930030 82 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 0 at 251658096 play 1
+ev 622 441 sound role.102.1 id 0
+ev 622 442 sound role.102.1 id 0
+spawn role.102.1 930040
 frame 623
-ent 623 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 65668711 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ent 623 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 65668711 ep 70778880 st Attack,Idle ex - act 10126 at 139810076 play 1 sk A 1 1 2 930040 buf -
+ent 623 effect 930030 82 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 0 at 293601112 play 1
+ent 623 effect 930040 83 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 2 at 41943016 play 1
+ev 623 443 spine role.102.1 id 0
+ev 623 444 sound effect.930040.83 id 0
 frame 624
-ent 624 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 65843477 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 624 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 65843477 ep 70778880 st Attack,Idle ex - act 10126 at 209715114 play 1 sk A 1 1 2 930040 buf -
+ent 624 effect 930030 82 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 0 at 314572800 play 1
+ent 624 effect 930040 83 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 2 at 83886032 play 1
 frame 625
-ent 625 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 66018243 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 625 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 66018243 ep 70778880 st Attack,Idle ex - act 10126 at 209715200 play 1 sk A 1 1 2 930040 buf -
+ent 625 effect 930040 83 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 2 at 125829048 play 1
+ev 625 445 sound gone.2.3 id 0
 frame 626
-ent 626 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 66193009 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
+ent 626 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 66193009 ep 70778880 st Attack,Idle ex - act 10128 at 24466756 play 1 sk A 1 1 2 930040 buf -
+ent 626 effect 930040 83 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 2 at 167772064 play 1
+ev 626 446 sound role.102.1 id 0
+ev 626 447 sound role.102.1 id 0
+castend role.102.1 930040
+cast role.102.1 930050 A 1
 frame 627
-ent 627 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 66367775 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ent 627 role 102 1 x 59594081 y 0 z 266338304 face -1 hp 433468713467904 mp 66367775 ep 70778880 st Attack,Idle ex - act 10130 at 52428778 play 1 sk A 1 1 3 930050 buf -
+ent 627 effect 930040 83 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 2 at 209715080 play 1
+ev 627 448 spine role.102.1 id 0
+ev 627 449 sound role.102.1 id 0
+ev 627 450 sound role.102.1 id 0
 frame 628
-ent 628 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 66542541 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 628 role 102 1 x 63089346 y 0 z 266338304 face -1 hp 433468713467904 mp 66542541 ep 70778880 st Attack,Idle ex - act 10130 at 104857556 play 1 sk A 1 1 3 930050 buf -
+ent 628 effect 930040 83 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 2 at 251658096 play 1
+ev 628 451 spine role.102.1 id 0
 frame 629
-ent 629 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 66717307 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 629 role 102 1 x 66584611 y 0 z 266338304 face -1 hp 433468713467904 mp 66717307 ep 70778880 st Attack,Idle ex - act 10130 at 139460608 play 1 sk A 1 1 3 930050 buf -
+ent 629 effect 930040 83 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 2 at 293601112 play 1
 frame 630
-ent 630 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 66892073 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
+ent 630 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 66892073 ep 70778880 st Attack,Idle ex - act 10132 at 62914540 play 1 sk A 1 1 3 930050 buf -
+ent 630 effect 930040 83 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 2 at 314572800 play 1
+ev 630 452 sound role.102.1 id 0
+ev 630 453 sound role.102.1 id 0
+spawn role.102.1 930050
 frame 631
-ent 631 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 67066839 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ent 631 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 67066839 ep 70778880 st Attack,Idle ex - act 10132 at 125829080 play 1 sk A 1 1 3 930050 buf -
+ent 631 effect 930050 84 x 35127296 y 0 z 265289728 face -1 st Attack ex - act 4 at 48933513 play 1
+ev 631 454 spine role.102.1 id 0
+ev 631 455 sound effect.930050.84 id 0
+ev 631 456 sound gone.13.3 id 0
 frame 632
-ent 632 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 67241605 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 632 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 67241605 ep 70778880 st Attack,Idle ex - act 10132 at 175112192 play 1 sk A 1 1 3 930050 buf -
+ent 632 effect 930050 84 x 35127296 y 0 z 265289728 face -1 st Attack ex - act 4 at 97867026 play 1
+ev 632 457 shake effect.930050.84 d 104857600
 frame 633
-ent 633 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 67416371 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 633 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 67416371 ep 70778880 st Attack,Idle ex - act 10132 at 175112192 play 1 sk A 1 1 3 930050 buf -
+ent 633 effect 930050 84 x 35127296 y 0 z 265289728 face -1 st Attack ex - act 4 at 146800539 play 1
 frame 634
-ent 634 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 67591137 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
+ent 634 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 67591137 ep 70778880 st Attack,Idle ex - act 10134 at 24466756 play 1 sk A 1 1 3 930050 buf -
+ent 634 effect 930050 84 x 35127296 y 0 z 265289728 face -1 st Attack ex - act 4 at 195734052 play 1
+ev 634 458 sound role.102.1 id 0
+ev 634 459 sound role.102.1 id 0
+castend role.102.1 930050
+cast role.102.1 930060 A 1
 frame 635
-ent 635 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 67765903 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ent 635 role 102 1 x 69147577 y 0 z 266338304 face -1 hp 433468713467904 mp 67765903 ep 70778880 st Attack,Idle ex - act 10136 at 52428778 play 1 sk A 1 1 4 930060 buf -
+ent 635 effect 930050 84 x 35127296 y 0 z 265289728 face -1 st Attack ex - act 4 at 244667565 play 1
+ev 635 460 spine role.102.1 id 0
+ev 635 461 sound role.102.1 id 0
+ev 635 462 ghost role.102.1
+ev 635 463 sound role.102.1 id 0
+spawn role.102.1 930060
 frame 636
-ent 636 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 67940669 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 636 role 102 1 x 80331872 y 0 z 266338304 face -1 hp 433468713467904 mp 67940669 ep 70778880 st Attack,Idle ex - act 10136 at 104857556 play 1 sk A 1 1 4 930060 buf -
+ent 636 effect 930050 84 x 35127296 y 0 z 265289728 face -1 st Attack ex - act 4 at 279969792 play 1
+ent 636 effect 930060 85 x 80331872 y 0 z 265289728 face -1 st Attack ex - act 6 at 41943016 play 1
+ev 636 464 spine role.102.1 id 0
+ev 636 465 sound effect.930060.85 id 0
 frame 637
-ent 637 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 68115435 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 637 role 102 1 x 89651701 y 0 z 266338304 face -1 hp 433468713467904 mp 68115435 ep 70778880 st Attack,Idle ex - act 10136 at 157286334 play 1 sk A 1 1 4 930060 buf -
+ent 637 effect 930060 85 x 89651701 y 0 z 265289728 face -1 st Attack ex - act 6 at 83886032 play 1
+ev 637 466 sound gone.4.9 id 0
 frame 638
-ent 638 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 68290201 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
+ent 638 role 102 1 x 97107064 y 0 z 266338304 face -1 hp 433468713467904 mp 68290201 ep 70778880 st Attack,Idle ex - act 10136 at 209715112 play 1 sk A 1 1 4 930060 buf -
+ent 638 effect 930060 85 x 97107064 y 0 z 265289728 face -1 st Attack ex - act 6 at 125829048 play 1
 frame 639
-ent 639 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 68464967 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ent 639 role 102 1 x 102697961 y 0 z 266338304 face -1 hp 433468713467904 mp 68464967 ep 70778880 st Attack,Idle ex - act 10136 at 262143890 play 1 sk A 1 1 4 930060 buf -
+ent 639 effect 930060 85 x 102697961 y 0 z 265289728 face -1 st Attack ex - act 6 at 167772064 play 1
 frame 640
-ent 640 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 68639733 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 640 role 102 1 x 106424392 y 0 z 266338304 face -1 hp 433468713467904 mp 68639733 ep 70778880 st Attack,Idle ex - act 10136 at 279969792 play 1 sk A 1 1 4 930060 buf -
+ent 640 effect 930060 85 x 106424392 y 0 z 265289728 face -1 st Attack ex - act 6 at 209715080 play 1
 frame 641
-ent 641 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 68814499 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 641 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 68814499 ep 70778880 st Attack,Idle ex - act 10138 at 62914540 play 1 sk A 1 1 4 930060 buf -
+ent 641 effect 930060 85 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 6 at 251658096 play 1
+ev 641 467 ghost role.102.1
+ev 641 468 sound role.102.1 id 0
+ev 641 469 ghost role.102.1
+ev 641 470 sound role.102.1 id 0
 frame 642
-ent 642 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 68989265 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
+ent 642 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 68989265 ep 70778880 st Attack,Idle ex - act 10138 at 125829080 play 1 sk A 1 1 4 930060 buf -
+ent 642 effect 930060 85 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 6 at 293601112 play 1
+ev 642 471 spine role.102.1 id 0
 frame 643
-ent 643 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 69164031 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ent 643 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 69164031 ep 70778880 st Attack,Idle ex - act 10138 at 188743620 play 1 sk A 1 1 4 930060 buf -
+ent 643 effect 930060 85 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 6 at 335544128 play 1
+ev 643 472 shake effect.930060.85 d 104857600
 frame 644
-ent 644 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 69338797 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 644 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 69338797 ep 70778880 st Attack,Idle ex - act 10140 at 27962021 play 1 sk A 1 1 5 930070 buf -
+ent 644 effect 930060 85 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 6 at 377487144 play 1
+ev 644 473 ghost role.102.1
+ev 644 474 sound role.102.1 id 0
+ev 644 475 ghost role.102.1
+ev 644 476 sound role.102.1 id 0
+castend role.102.1 930060
+cast role.102.1 930070 A 1
 frame 645
-ent 645 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 69513563 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 645 role 102 1 x 59594081 y 0 z 266338304 face -1 hp 433468713467904 mp 69513563 ep 70778880 st Attack,Idle ex - act 10142 at 38447784 play 1 sk A 1 1 5 930070 buf -
+ent 645 effect 930060 85 x 59594081 y 0 z 265289728 face -1 st Attack ex - act 6 at 419430160 play 1
+ev 645 477 ghost role.102.1
+ev 645 478 sound role.102.1 id 0
+ev 645 479 ghost role.102.1
+ev 645 480 sound role.102.1 id 0
 frame 646
-ent 646 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 69688329 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
+ent 646 role 102 1 x 63089346 y 0 z 266338304 face -1 hp 433468713467904 mp 69688329 ep 70778880 st Attack,Idle ex - act 10142 at 76895568 play 1 sk A 1 1 5 930070 buf -
+ent 646 effect 930060 85 x 63089346 y 0 z 265289728 face -1 st Attack ex - act 6 at 461373176 play 1
+ev 646 481 spine role.102.1 id 0
 frame 647
-ent 647 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 69863095 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ent 647 role 102 1 x 66584611 y 0 z 266338304 face -1 hp 433468713467904 mp 69863095 ep 70778880 st Attack,Idle ex - act 10142 at 115343352 play 1 sk A 1 1 5 930070 buf -
+ent 647 effect 930060 85 x 66584611 y 0 z 265289728 face -1 st Attack ex - act 6 at 503316192 play 1
 frame 648
-ent 648 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 70037861 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 648 role 102 1 x 70079876 y 0 z 266338304 face -1 hp 433468713467904 mp 70037861 ep 70778880 st Attack,Idle ex - act 10142 at 153791136 play 1 sk A 1 1 5 930070 buf -
+ent 648 effect 930060 85 x 70079876 y 0 z 265289728 face -1 st Attack ex - act 6 at 545259208 play 1
 frame 649
-ent 649 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 70212627 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 649 role 102 1 x 73575141 y 0 z 266338304 face -1 hp 433468713467904 mp 70212627 ep 70778880 st Attack,Idle ex - act 10142 at 192238920 play 1 sk A 1 1 5 930070 buf -
+ent 649 effect 930060 85 x 73575141 y 0 z 265289728 face -1 st Attack ex - act 6 at 587202224 play 1
 frame 650
-ent 650 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 70387393 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
+ent 650 role 102 1 x 77070406 y 0 z 266338304 face -1 hp 433468713467904 mp 70387393 ep 70778880 st Attack,Idle ex - act 10142 at 230686704 play 1 sk A 1 1 5 930070 buf -
+ent 650 effect 930060 85 x 77070406 y 0 z 265289728 face -1 st Attack ex - act 6 at 629145240 play 1
 frame 651
-ent 651 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 70562159 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ent 651 role 102 1 x 80565662 y 0 z 266338304 face -1 hp 433468713467904 mp 70562159 ep 70778880 st Attack,Idle ex - act 10142 at 244318208 play 1 sk A 1 1 5 930070 buf -
+ent 651 effect 930060 85 x 80565662 y 0 z 265289728 face -1 st Attack ex - act 6 at 629145600 play 1
 frame 652
-ent 652 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 70736925 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 652 role 102 1 x 80565662 y 0 z 266338304 face -1 hp 433468713467904 mp 70736925 ep 70778880 st Attack,Idle ex - act 10142 at 244318208 play 1 sk A 1 1 5 930070 buf -
+ev 652 482 sound gone.6.9 id 0
 frame 653
-ent 653 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 70911691 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 653 role 102 1 x 80565662 y 0 z 266338304 face -1 hp 433468713467904 mp 70911691 ep 70778880 st Attack,Idle ex - act 10142 at 244318208 play 1 sk A 1 1 5 930070 buf -
 frame 654
-ent 654 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 71086457 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
+ent 654 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 71086457 ep 70778880 st Attack,Idle ex - act 10144 at 62914540 play 1 sk A 1 1 5 930070 buf -
+ev 654 483 ghost role.102.1
+ev 654 484 sound role.102.1 id 0
+ev 654 485 ghost role.102.1
+ev 654 486 sound role.102.1 id 0
+spawn role.102.1 930072
+spawn role.102.1 930073
+spawn role.102.1 930080
 frame 655
-ent 655 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 71261223 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ent 655 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 71261223 ep 70778880 st Attack,Idle ex - act 10144 at 125829080 play 1 sk A 1 1 5 930070 buf -
+ent 655 effect 930072 86 x 265814016 y 5242880 z 265289728 face -1 st Attack ex - act 16 at 34952519 play 1
+ent 655 effect 930073 87 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 4 at 20971524 play 1
+ent 655 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 17476259 play 1
+ev 655 487 spine role.102.1 id 0
+ev 655 488 sound effect.930072.86 id 0
+ev 655 489 sound effect.930073.87 id 0
+ev 655 490 sound effect.930080.88 id 0
 frame 656
-ent 656 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 71435989 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 656 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 71435989 ep 70778880 st Attack,Idle ex - act 10144 at 139460608 play 1 sk A 1 1 5 930070 buf -
+ent 656 effect 930072 86 x 265814016 y 5242880 z 265289728 face -1 st Attack ex - act 16 at 69905038 play 1
+ent 656 effect 930073 87 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 4 at 41943048 play 1
+ent 656 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 34952518 play 1
+ev 656 491 shake effect.930073.87 d 104857600
 frame 657
-ent 657 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 71610755 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 657 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 71610755 ep 70778880 st Attack,Idle ex - act 10144 at 139460608 play 1 sk A 1 1 5 930070 buf -
+ent 657 effect 930072 86 x 265814016 y 5242880 z 265289728 face -1 st Attack ex - act 16 at 104857557 play 1
+ent 657 effect 930073 87 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 4 at 62914572 play 1
+ent 657 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 52428777 play 1
 frame 658
-ent 658 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 71785521 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
+ent 658 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 71785521 ep 70778880 st Attack,Idle ex - act 10146 at 34952519 play 1 sk A 1 1 5 930070 buf -
+ent 658 effect 930072 86 x 265814016 y 5242880 z 265289728 face -1 st Attack ex - act 16 at 139810076 play 1
+ent 658 effect 930073 87 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 4 at 83886096 play 1
+ent 658 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 69905036 play 1
+ev 658 492 ghost role.102.1
+ev 658 493 sound role.102.1 id 0
+ev 658 494 sound role.102.1 id 0
 frame 659
-ent 659 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 71960287 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ent 659 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 71960287 ep 70778880 st Attack,Idle ex - act 10146 at 69905038 play 1 sk A 1 1 5 930070 buf -
+ent 659 effect 930072 86 x 265814016 y 5242880 z 265289728 face -1 st Attack ex - act 16 at 174762595 play 1
+ent 659 effect 930073 87 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 4 at 104857620 play 1
+ent 659 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 87381295 play 1
+ev 659 495 spine role.102.1 id 0
+ev 659 496 shake effect.930072.86 d 125829120
 frame 660
-ent 660 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 72135053 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 660 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 72135053 ep 70778880 st Attack,Idle ex - act 10146 at 104857557 play 1 sk A 1 1 5 930070 buf -
+ent 660 effect 930072 86 x 265814016 y 5242880 z 265289728 face -1 st Attack ex - act 16 at 209715114 play 1
+ent 660 effect 930073 87 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 4 at 125829144 play 1
+ent 660 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 104857554 play 1
 frame 661
-ent 661 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 72309819 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 661 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 72309819 ep 70778880 st Attack,Idle ex - act 10146 at 139810076 play 1 sk A 1 1 5 930070 buf -
+ent 661 effect 930072 86 x 265814016 y 5242880 z 265289728 face -1 st Attack ex - act 16 at 244667633 play 1
+ent 661 effect 930073 87 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 4 at 146800668 play 1
+ent 661 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 122333813 play 1
 frame 662
-ent 662 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 72484585 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
+ent 662 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 72484585 ep 70778880 st Attack,Idle ex - act 10146 at 174762595 play 1 sk A 1 1 5 930070 buf -
+ent 662 effect 930072 86 x 265814016 y 5242880 z 265289728 face -1 st Attack ex - act 16 at 279620152 play 1
+ent 662 effect 930073 87 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 4 at 167772192 play 1
+ent 662 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 139810072 play 1
 frame 663
-ent 663 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 72659351 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ent 663 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 72659351 ep 70778880 st Attack,Idle ex - act 10146 at 209715114 play 1 sk A 1 1 5 930070 buf -
+ent 663 effect 930072 86 x 265814016 y 5242880 z 265289728 face -1 st Attack ex - act 16 at 314572671 play 1
+ent 663 effect 930073 87 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 4 at 188743716 play 1
+ent 663 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 157286331 play 1
 frame 664
-ent 664 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 72834117 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 664 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 72834117 ep 70778880 st Attack,Idle ex - act 10146 at 244667633 play 1 sk A 1 1 5 930070 buf -
+ent 664 effect 930072 86 x 265814016 y 5242880 z 265289728 face -1 st Attack ex - act 16 at 349525190 play 1
+ent 664 effect 930073 87 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 4 at 209715200 play 1
+ent 664 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 174762590 play 1
 frame 665
-ent 665 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 73008883 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 665 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 73008883 ep 70778880 st Attack,Idle ex - act 10146 at 279620152 play 1 sk A 1 1 5 930070 buf -
+ent 665 effect 930072 86 x 265814016 y 5242880 z 265289728 face -1 st Attack ex - act 16 at 384477709 play 1
+ent 665 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 192238849 play 1
+ev 665 497 sound gone.14.5 id 0
 frame 666
-ent 666 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 73183649 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
+ent 666 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 73183649 ep 70778880 st Attack,Idle ex - act 10146 at 314572671 play 1 sk A 1 1 5 930070 buf -
+ent 666 effect 930072 86 x 265814016 y 5242880 z 265289728 face -1 st Attack ex - act 16 at 419430228 play 1
+ent 666 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 209715108 play 1
 frame 667
-ent 667 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 73358415 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ent 667 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 73358415 ep 70778880 st Attack,Idle ex - act 10146 at 349175808 play 1 sk A 1 1 5 930070 buf -
+ent 667 effect 930072 86 x 265814016 y 5242880 z 265289728 face -1 st Attack ex - act 16 at 419430400 play 1
+ent 667 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 227191367 play 1
+castend role.102.1 930070
 frame 668
-ent 668 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 73533181 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 668 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 73533181 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ent 668 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 244667626 play 1
+ev 668 498 sound role.102.1 id 0
+ev 668 499 sound gone.3.6 id 0
 frame 669
-ent 669 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 73707947 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 669 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 73707947 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 669 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 262143885 play 1
 frame 670
-ent 670 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 73882713 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
+ent 670 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 73882713 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 670 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 279620144 play 1
+cast role.102.1 930030 A 1
 frame 671
-ent 671 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 74057479 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ent 671 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 74057479 ep 70778880 st Attack,Idle ex - act 10118 at 52428778 play 1 sk A 1 1 1 930030 buf -
+ent 671 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 297096403 play 1
+ev 671 500 sound role.102.1 id 0
 frame 672
-ent 672 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 74232245 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 672 role 102 1 x 58195948 y 0 z 266338304 face -1 hp 433468713467904 mp 74232245 ep 70778880 st Attack,Idle ex - act 10118 at 104857556 play 1 sk A 1 1 1 930030 buf -
+ent 672 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 314572662 play 1
+ev 672 501 spine role.102.1 id 0
 frame 673
-ent 673 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 74407011 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 673 role 102 1 x 59244514 y 0 z 266338304 face -1 hp 433468713467904 mp 74407011 ep 70778880 st Attack,Idle ex - act 10118 at 157286334 play 1 sk A 1 1 1 930030 buf -
+ent 673 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 332048921 play 1
 frame 674
-ent 674 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 74581777 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
+ent 674 role 102 1 x 60293080 y 0 z 266338304 face -1 hp 433468713467904 mp 74581777 ep 70778880 st Attack,Idle ex - act 10118 at 209715112 play 1 sk A 1 1 1 930030 buf -
+ent 674 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 349525180 play 1
 frame 675
-ent 675 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 74756543 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ent 675 role 102 1 x 61341646 y 0 z 266338304 face -1 hp 433468713467904 mp 74756543 ep 70778880 st Attack,Idle ex - act 10118 at 209715200 play 1 sk A 1 1 1 930030 buf -
+ent 675 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 367001439 play 1
 frame 676
-ent 676 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 74931309 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 676 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 74931309 ep 70778880 st Attack,Idle ex - act 10120 at 69905038 play 1 sk A 1 1 1 930030 buf -
+ent 676 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 384477698 play 1
+ev 676 502 sound role.102.1 id 0
+ev 676 503 sound role.102.1 id 0
+spawn role.102.1 930030
 frame 677
-ent 677 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 75106075 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 677 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 75106075 ep 70778880 st Attack,Idle ex - act 10120 at 104857600 play 1 sk A 1 1 1 930030 buf -
+ent 677 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 401953957 play 1
+ent 677 effect 930030 89 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 0 at 41943016 play 1
+ev 677 504 spine role.102.1 id 0
+ev 677 505 sound effect.930030.89 id 0
 frame 678
-ent 678 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 75280841 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
+ent 678 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 75280841 ep 70778880 st Attack,Idle ex - act 10122 at 24466756 play 1 sk A 1 1 1 930030 buf -
+ent 678 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 419430216 play 1
+ent 678 effect 930030 89 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 0 at 83886032 play 1
+ev 678 506 sound role.102.1 id 0
+ev 678 507 sound role.102.1 id 0
+castend role.102.1 930030
+cast role.102.1 930040 A 1
 frame 679
-ent 679 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 75455607 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ent 679 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 75455607 ep 70778880 st Attack,Idle ex - act 10124 at 52428778 play 1 sk A 1 1 2 930040 buf -
+ent 679 effect 930080 88 x 56098816 y 0 z 265289728 face -1 st Attack ex - act 10 at 419430400 play 1
+ent 679 effect 930030 89 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 0 at 125829048 play 1
+ev 679 508 spine role.102.1 id 0
+ev 679 509 sound role.102.1 id 0
+ev 679 510 sound role.102.1 id 0
 frame 680
-ent 680 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 75630373 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 680 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 75630373 ep 70778880 st Attack,Idle ex - act 10124 at 104857556 play 1 sk A 1 1 2 930040 buf -
+ent 680 effect 930030 89 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 0 at 167772064 play 1
+ev 680 511 spine role.102.1 id 0
+ev 680 512 sound gone.17.5 id 0
 frame 681
-ent 681 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 75805139 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 681 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 75805139 ep 70778880 st Attack,Idle ex - act 10124 at 139460608 play 1 sk A 1 1 2 930040 buf -
+ent 681 effect 930030 89 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 0 at 209715080 play 1
 frame 682
-ent 682 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 75979905 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
+ent 682 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 75979905 ep 70778880 st Attack,Idle ex - act 10126 at 69905038 play 1 sk A 1 1 2 930040 buf -
+ent 682 effect 930030 89 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 0 at 251658096 play 1
+ev 682 513 sound role.102.1 id 0
+ev 682 514 sound role.102.1 id 0
+spawn role.102.1 930040
 frame 683
-ent 683 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 76154671 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ent 683 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 76154671 ep 70778880 st Attack,Idle ex - act 10126 at 139810076 play 1 sk A 1 1 2 930040 buf -
+ent 683 effect 930030 89 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 0 at 293601112 play 1
+ent 683 effect 930040 90 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 2 at 41943016 play 1
+ev 683 515 spine role.102.1 id 0
+ev 683 516 sound effect.930040.90 id 0
 frame 684
-ent 684 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 76329437 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 684 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 76329437 ep 70778880 st Attack,Idle ex - act 10126 at 209715114 play 1 sk A 1 1 2 930040 buf -
+ent 684 effect 930030 89 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 0 at 314572800 play 1
+ent 684 effect 930040 90 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 2 at 83886032 play 1
 frame 685
-ent 685 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 76504203 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 685 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 76504203 ep 70778880 st Attack,Idle ex - act 10126 at 209715200 play 1 sk A 1 1 2 930040 buf -
+ent 685 effect 930040 90 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 2 at 125829048 play 1
+ev 685 517 sound gone.9.6 id 0
 frame 686
-ent 686 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 76678969 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
+ent 686 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 76678969 ep 70778880 st Attack,Idle ex - act 10128 at 24466756 play 1 sk A 1 1 2 930040 buf -
+ent 686 effect 930040 90 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 2 at 167772064 play 1
+ev 686 518 sound role.102.1 id 0
+ev 686 519 sound role.102.1 id 0
+castend role.102.1 930040
+cast role.102.1 930050 A 1
 frame 687
-ent 687 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 76853735 ep 70778880 st Idle ex - act stand at 34952519 play 1 sk - - - - - buf -
+ent 687 role 102 1 x 59594081 y 0 z 266338304 face -1 hp 433468713467904 mp 76853735 ep 70778880 st Attack,Idle ex - act 10130 at 52428778 play 1 sk A 1 1 3 930050 buf -
+ent 687 effect 930040 90 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 2 at 209715080 play 1
+ev 687 520 spine role.102.1 id 0
+ev 687 521 sound role.102.1 id 0
+ev 687 522 sound role.102.1 id 0
 frame 688
-ent 688 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 77028501 ep 70778880 st Idle ex - act stand at 69905038 play 1 sk - - - - - buf -
+ent 688 role 102 1 x 63089346 y 0 z 266338304 face -1 hp 433468713467904 mp 77028501 ep 70778880 st Attack,Idle ex - act 10130 at 104857556 play 1 sk A 1 1 3 930050 buf -
+ent 688 effect 930040 90 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 2 at 251658096 play 1
+ev 688 523 spine role.102.1 id 0
 frame 689
-ent 689 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 77203267 ep 70778880 st Idle ex - act stand at 104857557 play 1 sk - - - - - buf -
+ent 689 role 102 1 x 66584611 y 0 z 266338304 face -1 hp 433468713467904 mp 77203267 ep 70778880 st Attack,Idle ex - act 10130 at 139460608 play 1 sk A 1 1 3 930050 buf -
+ent 689 effect 930040 90 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 2 at 293601112 play 1
 frame 690
-ent 690 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 77378033 ep 70778880 st Idle ex - act stand at 139810076 play 1 sk - - - - - buf -
+ent 690 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 77378033 ep 70778880 st Attack,Idle ex - act 10132 at 62914540 play 1 sk A 1 1 3 930050 buf -
+ent 690 effect 930040 90 x 77070336 y 0 z 265289728 face -1 st Attack ex - act 2 at 314572800 play 1
+ev 690 524 sound role.102.1 id 0
+ev 690 525 sound role.102.1 id 0
+spawn role.102.1 930050
 frame 691
-ent 691 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 77552799 ep 70778880 st Idle ex - act stand at 174762595 play 1 sk - - - - - buf -
+ent 691 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 77552799 ep 70778880 st Attack,Idle ex - act 10132 at 125829080 play 1 sk A 1 1 3 930050 buf -
+ent 691 effect 930050 91 x 35127296 y 0 z 265289728 face -1 st Attack ex - act 4 at 48933513 play 1
+ev 691 526 spine role.102.1 id 0
+ev 691 527 sound effect.930050.91 id 0
+ev 691 528 sound gone.15.5 id 0
 frame 692
-ent 692 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 77727565 ep 70778880 st Idle ex - act stand at 209715114 play 1 sk - - - - - buf -
+ent 692 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 77727565 ep 70778880 st Attack,Idle ex - act 10132 at 175112192 play 1 sk A 1 1 3 930050 buf -
+ent 692 effect 930050 91 x 35127296 y 0 z 265289728 face -1 st Attack ex - act 4 at 97867026 play 1
+ev 692 529 shake effect.930050.91 d 104857600
 frame 693
-ent 693 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 77902331 ep 70778880 st Idle ex - act stand at 244667633 play 1 sk - - - - - buf -
+ent 693 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 77902331 ep 70778880 st Attack,Idle ex - act 10132 at 175112192 play 1 sk A 1 1 3 930050 buf -
+ent 693 effect 930050 91 x 35127296 y 0 z 265289728 face -1 st Attack ex - act 4 at 146800539 play 1
 frame 694
-ent 694 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 78077097 ep 70778880 st Idle ex - act stand at 279620152 play 1 sk - - - - - buf -
+ent 694 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 78077097 ep 70778880 st Attack,Idle ex - act 10134 at 24466756 play 1 sk A 1 1 3 930050 buf -
+ent 694 effect 930050 91 x 35127296 y 0 z 265289728 face -1 st Attack ex - act 4 at 195734052 play 1
+ev 694 530 sound role.102.1 id 0
+ev 694 531 sound role.102.1 id 0
 frame 695
-ent 695 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 78251863 ep 70778880 st Idle ex - act stand at 314572671 play 1 sk - - - - - buf -
+ent 695 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 78251863 ep 70778880 st Attack,Idle ex - act 10134 at 48933512 play 1 sk A 1 1 3 930050 buf -
+ent 695 effect 930050 91 x 35127296 y 0 z 265289728 face -1 st Attack ex - act 4 at 244667565 play 1
+ev 695 532 spine role.102.1 id 0
 frame 696
-ent 696 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 78426629 ep 70778880 st Idle ex - act stand at 349525190 play 1 sk - - - - - buf -
+ent 696 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 78426629 ep 70778880 st Attack,Idle ex - act 10134 at 73400268 play 1 sk A 1 1 3 930050 buf -
+ent 696 effect 930050 91 x 35127296 y 0 z 265289728 face -1 st Attack ex - act 4 at 279969792 play 1
 frame 697
-ent 697 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 78601395 ep 70778880 st Idle ex - act stand at 384477709 play 1 sk - - - - - buf -
+ent 697 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 78601395 ep 70778880 st Attack,Idle ex - act 10134 at 97867024 play 1 sk A 1 1 3 930050 buf -
+ev 697 533 sound gone.7.7 id 0
 frame 698
-ent 698 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 78776161 ep 70778880 st Idle ex - act stand at 419430228 play 1 sk - - - - - buf -
+ent 698 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 78776161 ep 70778880 st Attack,Idle ex - act 10134 at 122333780 play 1 sk A 1 1 3 930050 buf -
 frame 699
-ent 699 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 78950927 ep 70778880 st Idle ex - act stand at 454382747 play 1 sk - - - - - buf -
+ent 699 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 78950927 ep 70778880 st Attack,Idle ex - act 10134 at 146800536 play 1 sk A 1 1 3 930050 buf -
 frame 700
-ent 700 role 102 1 x 57147382 y 0 z 266338304 face -1 hp 433468713467904 mp 79125693 ep 70778880 st Idle ex - act stand at 489335266 play 1 sk - - - - - buf -
+ent 700 role 102 1 x 56098816 y 0 z 266338304 face -1 hp 433468713467904 mp 79125693 ep 70778880 st Attack,Idle ex - act 10134 at 171267292 play 1 sk A 1 1 3 930050 buf -

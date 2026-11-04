@@ -33,6 +33,8 @@ private:
     bool initInput();
     std::unique_ptr<IBattleMode> createBattleMode();
     void setInputFromKey(ax::EventKeyboard::KeyCode code, bool pressed);
+    // 进入战斗（本地副本）时通知 game 服离开城镇场景。
+    void leaveTownScene();
 
 private:
     std::optional<LocalBattleParams> m_local;

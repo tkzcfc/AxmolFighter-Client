@@ -73,4 +73,6 @@ struct WorldSetup
 inline constexpr Fixed kLogicDtSec = "0.03333332"_fx;
 // 固定逻辑帧的毫秒数。
 inline constexpr Fixed kLogicDtMs = "33.33332"_fx;
+// 一场战斗允许的最大玩家槽位数（当前 1v1 决斗为 2，后续合作副本扩展至 4）。
+inline constexpr int32_t kMaxBattlePlayers = 4;
 }  // namespace mugen::sim

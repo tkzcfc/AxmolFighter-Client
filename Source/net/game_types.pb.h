@@ -80,9 +80,6 @@ extern PartnerInfoDefaultTypeInternal _PartnerInfo_default_instance_;
 class PetInfo;
 struct PetInfoDefaultTypeInternal;
 extern PetInfoDefaultTypeInternal _PetInfo_default_instance_;
-class PlayerState;
-struct PlayerStateDefaultTypeInternal;
-extern PlayerStateDefaultTypeInternal _PlayerState_default_instance_;
 class SceneInfo;
 struct SceneInfoDefaultTypeInternal;
 extern SceneInfoDefaultTypeInternal _SceneInfo_default_instance_;
@@ -92,6 +89,24 @@ extern ServerConfigDefaultTypeInternal _ServerConfig_default_instance_;
 class SkillSlotInfo;
 struct SkillSlotInfoDefaultTypeInternal;
 extern SkillSlotInfoDefaultTypeInternal _SkillSlotInfo_default_instance_;
+class TownAppearance;
+struct TownAppearanceDefaultTypeInternal;
+extern TownAppearanceDefaultTypeInternal _TownAppearance_default_instance_;
+class TownFashionItem;
+struct TownFashionItemDefaultTypeInternal;
+extern TownFashionItemDefaultTypeInternal _TownFashionItem_default_instance_;
+class TownMovement;
+struct TownMovementDefaultTypeInternal;
+extern TownMovementDefaultTypeInternal _TownMovement_default_instance_;
+class TownPlayerInfo;
+struct TownPlayerInfoDefaultTypeInternal;
+extern TownPlayerInfoDefaultTypeInternal _TownPlayerInfo_default_instance_;
+class TownVec3;
+struct TownVec3DefaultTypeInternal;
+extern TownVec3DefaultTypeInternal _TownVec3_default_instance_;
+class TownVel;
+struct TownVelDefaultTypeInternal;
+extern TownVelDefaultTypeInternal _TownVel_default_instance_;
 }  // namespace Types
 }  // namespace PB
 PROTOBUF_NAMESPACE_OPEN
@@ -107,10 +122,15 @@ template<> ::PB::Types::InventoryInfo* Arena::CreateMaybeMessage<::PB::Types::In
 template<> ::PB::Types::ItemInfo* Arena::CreateMaybeMessage<::PB::Types::ItemInfo>(Arena*);
 template<> ::PB::Types::PartnerInfo* Arena::CreateMaybeMessage<::PB::Types::PartnerInfo>(Arena*);
 template<> ::PB::Types::PetInfo* Arena::CreateMaybeMessage<::PB::Types::PetInfo>(Arena*);
-template<> ::PB::Types::PlayerState* Arena::CreateMaybeMessage<::PB::Types::PlayerState>(Arena*);
 template<> ::PB::Types::SceneInfo* Arena::CreateMaybeMessage<::PB::Types::SceneInfo>(Arena*);
 template<> ::PB::Types::ServerConfig* Arena::CreateMaybeMessage<::PB::Types::ServerConfig>(Arena*);
 template<> ::PB::Types::SkillSlotInfo* Arena::CreateMaybeMessage<::PB::Types::SkillSlotInfo>(Arena*);
+template<> ::PB::Types::TownAppearance* Arena::CreateMaybeMessage<::PB::Types::TownAppearance>(Arena*);
+template<> ::PB::Types::TownFashionItem* Arena::CreateMaybeMessage<::PB::Types::TownFashionItem>(Arena*);
+template<> ::PB::Types::TownMovement* Arena::CreateMaybeMessage<::PB::Types::TownMovement>(Arena*);
+template<> ::PB::Types::TownPlayerInfo* Arena::CreateMaybeMessage<::PB::Types::TownPlayerInfo>(Arena*);
+template<> ::PB::Types::TownVec3* Arena::CreateMaybeMessage<::PB::Types::TownVec3>(Arena*);
+template<> ::PB::Types::TownVel* Arena::CreateMaybeMessage<::PB::Types::TownVel>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 namespace PB {
 namespace Types {
@@ -2405,24 +2425,24 @@ class PartnerInfo final :
 };
 // -------------------------------------------------------------------
 
-class PlayerState final :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Types.PlayerState) */ {
+class TownVec3 final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Types.TownVec3) */ {
  public:
-  inline PlayerState() : PlayerState(nullptr) {}
-  ~PlayerState() override;
-  explicit PROTOBUF_CONSTEXPR PlayerState(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+  inline TownVec3() : TownVec3(nullptr) {}
+  ~TownVec3() override;
+  explicit PROTOBUF_CONSTEXPR TownVec3(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
 
-  PlayerState(const PlayerState& from);
-  PlayerState(PlayerState&& from) noexcept
-    : PlayerState() {
+  TownVec3(const TownVec3& from);
+  TownVec3(TownVec3&& from) noexcept
+    : TownVec3() {
     *this = ::std::move(from);
   }
 
-  inline PlayerState& operator=(const PlayerState& from) {
+  inline TownVec3& operator=(const TownVec3& from) {
     CopyFrom(from);
     return *this;
   }
-  inline PlayerState& operator=(PlayerState&& from) noexcept {
+  inline TownVec3& operator=(TownVec3&& from) noexcept {
     if (this == &from) return *this;
     if (GetOwningArena() == from.GetOwningArena()
   #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
@@ -2436,20 +2456,20 @@ class PlayerState final :
     return *this;
   }
 
-  static const PlayerState& default_instance() {
+  static const TownVec3& default_instance() {
     return *internal_default_instance();
   }
-  static inline const PlayerState* internal_default_instance() {
-    return reinterpret_cast<const PlayerState*>(
-               &_PlayerState_default_instance_);
+  static inline const TownVec3* internal_default_instance() {
+    return reinterpret_cast<const TownVec3*>(
+               &_TownVec3_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
     13;
 
-  friend void swap(PlayerState& a, PlayerState& b) {
+  friend void swap(TownVec3& a, TownVec3& b) {
     a.Swap(&b);
   }
-  inline void Swap(PlayerState* other) {
+  inline void Swap(TownVec3* other) {
     if (other == this) return;
   #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
     if (GetOwningArena() != nullptr &&
@@ -2462,7 +2482,7 @@ class PlayerState final :
       ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
     }
   }
-  void UnsafeArenaSwap(PlayerState* other) {
+  void UnsafeArenaSwap(TownVec3* other) {
     if (other == this) return;
     GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
     InternalSwap(other);
@@ -2470,12 +2490,12 @@ class PlayerState final :
 
   // implements Message ----------------------------------------------
 
-  PlayerState* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
-    return CreateMaybeMessage<PlayerState>(arena);
+  TownVec3* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<TownVec3>(arena);
   }
   void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
-  void CopyFrom(const PlayerState& from);
-  void MergeFrom(const PlayerState& from);
+  void CopyFrom(const TownVec3& from);
+  void MergeFrom(const TownVec3& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
   bool IsInitialized() const final;
 
@@ -2489,15 +2509,319 @@ class PlayerState final :
   void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
   void SharedDtor();
   void SetCachedSize(int size) const;
-  void InternalSwap(PlayerState* other);
+  void InternalSwap(TownVec3* other);
 
   private:
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "PB.Types.PlayerState";
+    return "PB.Types.TownVec3";
   }
   protected:
-  explicit PlayerState(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+  explicit TownVec3(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kXFieldNumber = 1,
+    kYFieldNumber = 2,
+    kZFieldNumber = 3,
+  };
+  // int32 x = 1;
+  void clear_x();
+  int32_t x() const;
+  void set_x(int32_t value);
+  private:
+  int32_t _internal_x() const;
+  void _internal_set_x(int32_t value);
+  public:
+
+  // int32 y = 2;
+  void clear_y();
+  int32_t y() const;
+  void set_y(int32_t value);
+  private:
+  int32_t _internal_y() const;
+  void _internal_set_y(int32_t value);
+  public:
+
+  // int32 z = 3;
+  void clear_z();
+  int32_t z() const;
+  void set_z(int32_t value);
+  private:
+  int32_t _internal_z() const;
+  void _internal_set_z(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Types.TownVec3)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    int32_t x_;
+    int32_t y_;
+    int32_t z_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_game_5ftypes_2eproto;
+};
+// -------------------------------------------------------------------
+
+class TownVel final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Types.TownVel) */ {
+ public:
+  inline TownVel() : TownVel(nullptr) {}
+  ~TownVel() override;
+  explicit PROTOBUF_CONSTEXPR TownVel(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  TownVel(const TownVel& from);
+  TownVel(TownVel&& from) noexcept
+    : TownVel() {
+    *this = ::std::move(from);
+  }
+
+  inline TownVel& operator=(const TownVel& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline TownVel& operator=(TownVel&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const TownVel& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const TownVel* internal_default_instance() {
+    return reinterpret_cast<const TownVel*>(
+               &_TownVel_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    14;
+
+  friend void swap(TownVel& a, TownVel& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(TownVel* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(TownVel* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  TownVel* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<TownVel>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const TownVel& from);
+  void MergeFrom(const TownVel& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(TownVel* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Types.TownVel";
+  }
+  protected:
+  explicit TownVel(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kXFieldNumber = 1,
+    kYFieldNumber = 2,
+    kZFieldNumber = 3,
+  };
+  // float x = 1;
+  void clear_x();
+  float x() const;
+  void set_x(float value);
+  private:
+  float _internal_x() const;
+  void _internal_set_x(float value);
+  public:
+
+  // float y = 2;
+  void clear_y();
+  float y() const;
+  void set_y(float value);
+  private:
+  float _internal_y() const;
+  void _internal_set_y(float value);
+  public:
+
+  // float z = 3;
+  void clear_z();
+  float z() const;
+  void set_z(float value);
+  private:
+  float _internal_z() const;
+  void _internal_set_z(float value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Types.TownVel)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    float x_;
+    float y_;
+    float z_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_game_5ftypes_2eproto;
+};
+// -------------------------------------------------------------------
+
+class TownMovement final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Types.TownMovement) */ {
+ public:
+  inline TownMovement() : TownMovement(nullptr) {}
+  ~TownMovement() override;
+  explicit PROTOBUF_CONSTEXPR TownMovement(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  TownMovement(const TownMovement& from);
+  TownMovement(TownMovement&& from) noexcept
+    : TownMovement() {
+    *this = ::std::move(from);
+  }
+
+  inline TownMovement& operator=(const TownMovement& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline TownMovement& operator=(TownMovement&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const TownMovement& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const TownMovement* internal_default_instance() {
+    return reinterpret_cast<const TownMovement*>(
+               &_TownMovement_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    15;
+
+  friend void swap(TownMovement& a, TownMovement& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(TownMovement* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(TownMovement* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  TownMovement* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<TownMovement>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const TownMovement& from);
+  void MergeFrom(const TownMovement& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(TownMovement* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Types.TownMovement";
+  }
+  protected:
+  explicit TownMovement(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                        bool is_message_owned = false);
   public:
 
@@ -2509,17 +2833,10 @@ class PlayerState final :
 
   enum : int {
     kStateFieldNumber = 5,
-    kNameFieldNumber = 7,
-    kPlayerIdFieldNumber = 1,
-    kPosXFieldNumber = 2,
-    kPosYFieldNumber = 3,
-    kHpFieldNumber = 4,
-    kClassIdFieldNumber = 6,
-    kPosZFieldNumber = 8,
-    kFacingFieldNumber = 9,
-    kMovingFieldNumber = 10,
-    kVelXFieldNumber = 11,
-    kVelYFieldNumber = 12,
+    kPosFieldNumber = 1,
+    kVelFieldNumber = 4,
+    kFacingFieldNumber = 2,
+    kMovingFieldNumber = 3,
   };
   // string state = 5;
   void clear_state();
@@ -2535,7 +2852,369 @@ class PlayerState final :
   std::string* _internal_mutable_state();
   public:
 
-  // string name = 7;
+  // .PB.Types.TownVec3 pos = 1;
+  bool has_pos() const;
+  private:
+  bool _internal_has_pos() const;
+  public:
+  void clear_pos();
+  const ::PB::Types::TownVec3& pos() const;
+  PROTOBUF_NODISCARD ::PB::Types::TownVec3* release_pos();
+  ::PB::Types::TownVec3* mutable_pos();
+  void set_allocated_pos(::PB::Types::TownVec3* pos);
+  private:
+  const ::PB::Types::TownVec3& _internal_pos() const;
+  ::PB::Types::TownVec3* _internal_mutable_pos();
+  public:
+  void unsafe_arena_set_allocated_pos(
+      ::PB::Types::TownVec3* pos);
+  ::PB::Types::TownVec3* unsafe_arena_release_pos();
+
+  // .PB.Types.TownVel vel = 4;
+  bool has_vel() const;
+  private:
+  bool _internal_has_vel() const;
+  public:
+  void clear_vel();
+  const ::PB::Types::TownVel& vel() const;
+  PROTOBUF_NODISCARD ::PB::Types::TownVel* release_vel();
+  ::PB::Types::TownVel* mutable_vel();
+  void set_allocated_vel(::PB::Types::TownVel* vel);
+  private:
+  const ::PB::Types::TownVel& _internal_vel() const;
+  ::PB::Types::TownVel* _internal_mutable_vel();
+  public:
+  void unsafe_arena_set_allocated_vel(
+      ::PB::Types::TownVel* vel);
+  ::PB::Types::TownVel* unsafe_arena_release_vel();
+
+  // int32 facing = 2;
+  void clear_facing();
+  int32_t facing() const;
+  void set_facing(int32_t value);
+  private:
+  int32_t _internal_facing() const;
+  void _internal_set_facing(int32_t value);
+  public:
+
+  // bool moving = 3;
+  void clear_moving();
+  bool moving() const;
+  void set_moving(bool value);
+  private:
+  bool _internal_moving() const;
+  void _internal_set_moving(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Types.TownMovement)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr state_;
+    ::PB::Types::TownVec3* pos_;
+    ::PB::Types::TownVel* vel_;
+    int32_t facing_;
+    bool moving_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_game_5ftypes_2eproto;
+};
+// -------------------------------------------------------------------
+
+class TownFashionItem final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Types.TownFashionItem) */ {
+ public:
+  inline TownFashionItem() : TownFashionItem(nullptr) {}
+  ~TownFashionItem() override;
+  explicit PROTOBUF_CONSTEXPR TownFashionItem(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  TownFashionItem(const TownFashionItem& from);
+  TownFashionItem(TownFashionItem&& from) noexcept
+    : TownFashionItem() {
+    *this = ::std::move(from);
+  }
+
+  inline TownFashionItem& operator=(const TownFashionItem& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline TownFashionItem& operator=(TownFashionItem&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const TownFashionItem& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const TownFashionItem* internal_default_instance() {
+    return reinterpret_cast<const TownFashionItem*>(
+               &_TownFashionItem_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    16;
+
+  friend void swap(TownFashionItem& a, TownFashionItem& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(TownFashionItem* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(TownFashionItem* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  TownFashionItem* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<TownFashionItem>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const TownFashionItem& from);
+  void MergeFrom(const TownFashionItem& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(TownFashionItem* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Types.TownFashionItem";
+  }
+  protected:
+  explicit TownFashionItem(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kPositionFieldNumber = 1,
+    kConfigIdFieldNumber = 2,
+  };
+  // int32 position = 1;
+  void clear_position();
+  int32_t position() const;
+  void set_position(int32_t value);
+  private:
+  int32_t _internal_position() const;
+  void _internal_set_position(int32_t value);
+  public:
+
+  // int32 config_id = 2;
+  void clear_config_id();
+  int32_t config_id() const;
+  void set_config_id(int32_t value);
+  private:
+  int32_t _internal_config_id() const;
+  void _internal_set_config_id(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Types.TownFashionItem)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    int32_t position_;
+    int32_t config_id_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_game_5ftypes_2eproto;
+};
+// -------------------------------------------------------------------
+
+class TownAppearance final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Types.TownAppearance) */ {
+ public:
+  inline TownAppearance() : TownAppearance(nullptr) {}
+  ~TownAppearance() override;
+  explicit PROTOBUF_CONSTEXPR TownAppearance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  TownAppearance(const TownAppearance& from);
+  TownAppearance(TownAppearance&& from) noexcept
+    : TownAppearance() {
+    *this = ::std::move(from);
+  }
+
+  inline TownAppearance& operator=(const TownAppearance& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline TownAppearance& operator=(TownAppearance&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const TownAppearance& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const TownAppearance* internal_default_instance() {
+    return reinterpret_cast<const TownAppearance*>(
+               &_TownAppearance_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    17;
+
+  friend void swap(TownAppearance& a, TownAppearance& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(TownAppearance* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(TownAppearance* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  TownAppearance* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<TownAppearance>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const TownAppearance& from);
+  void MergeFrom(const TownAppearance& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(TownAppearance* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Types.TownAppearance";
+  }
+  protected:
+  explicit TownAppearance(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kFashionsFieldNumber = 4,
+    kBaseSkinsFieldNumber = 6,
+    kNameFieldNumber = 2,
+    kClassIdFieldNumber = 1,
+    kLevelFieldNumber = 3,
+    kPetIdFieldNumber = 5,
+    kArmamentIdFieldNumber = 7,
+  };
+  // repeated .PB.Types.TownFashionItem fashions = 4;
+  int fashions_size() const;
+  private:
+  int _internal_fashions_size() const;
+  public:
+  void clear_fashions();
+  ::PB::Types::TownFashionItem* mutable_fashions(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::TownFashionItem >*
+      mutable_fashions();
+  private:
+  const ::PB::Types::TownFashionItem& _internal_fashions(int index) const;
+  ::PB::Types::TownFashionItem* _internal_add_fashions();
+  public:
+  const ::PB::Types::TownFashionItem& fashions(int index) const;
+  ::PB::Types::TownFashionItem* add_fashions();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::TownFashionItem >&
+      fashions() const;
+
+  // repeated .PB.Types.DefaultSkin base_skins = 6;
+  int base_skins_size() const;
+  private:
+  int _internal_base_skins_size() const;
+  public:
+  void clear_base_skins();
+  ::PB::Types::DefaultSkin* mutable_base_skins(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::DefaultSkin >*
+      mutable_base_skins();
+  private:
+  const ::PB::Types::DefaultSkin& _internal_base_skins(int index) const;
+  ::PB::Types::DefaultSkin* _internal_add_base_skins();
+  public:
+  const ::PB::Types::DefaultSkin& base_skins(int index) const;
+  ::PB::Types::DefaultSkin* add_base_skins();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::DefaultSkin >&
+      base_skins() const;
+
+  // string name = 2;
   void clear_name();
   const std::string& name() const;
   template <typename ArgT0 = const std::string&, typename... ArgT>
@@ -2549,6 +3228,207 @@ class PlayerState final :
   std::string* _internal_mutable_name();
   public:
 
+  // int32 class_id = 1;
+  void clear_class_id();
+  int32_t class_id() const;
+  void set_class_id(int32_t value);
+  private:
+  int32_t _internal_class_id() const;
+  void _internal_set_class_id(int32_t value);
+  public:
+
+  // int32 level = 3;
+  void clear_level();
+  int32_t level() const;
+  void set_level(int32_t value);
+  private:
+  int32_t _internal_level() const;
+  void _internal_set_level(int32_t value);
+  public:
+
+  // int32 pet_id = 5;
+  void clear_pet_id();
+  int32_t pet_id() const;
+  void set_pet_id(int32_t value);
+  private:
+  int32_t _internal_pet_id() const;
+  void _internal_set_pet_id(int32_t value);
+  public:
+
+  // int32 armament_id = 7;
+  void clear_armament_id();
+  int32_t armament_id() const;
+  void set_armament_id(int32_t value);
+  private:
+  int32_t _internal_armament_id() const;
+  void _internal_set_armament_id(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Types.TownAppearance)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::TownFashionItem > fashions_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::DefaultSkin > base_skins_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr name_;
+    int32_t class_id_;
+    int32_t level_;
+    int32_t pet_id_;
+    int32_t armament_id_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_game_5ftypes_2eproto;
+};
+// -------------------------------------------------------------------
+
+class TownPlayerInfo final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Types.TownPlayerInfo) */ {
+ public:
+  inline TownPlayerInfo() : TownPlayerInfo(nullptr) {}
+  ~TownPlayerInfo() override;
+  explicit PROTOBUF_CONSTEXPR TownPlayerInfo(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  TownPlayerInfo(const TownPlayerInfo& from);
+  TownPlayerInfo(TownPlayerInfo&& from) noexcept
+    : TownPlayerInfo() {
+    *this = ::std::move(from);
+  }
+
+  inline TownPlayerInfo& operator=(const TownPlayerInfo& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline TownPlayerInfo& operator=(TownPlayerInfo&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const TownPlayerInfo& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const TownPlayerInfo* internal_default_instance() {
+    return reinterpret_cast<const TownPlayerInfo*>(
+               &_TownPlayerInfo_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    18;
+
+  friend void swap(TownPlayerInfo& a, TownPlayerInfo& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(TownPlayerInfo* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(TownPlayerInfo* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  TownPlayerInfo* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<TownPlayerInfo>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const TownPlayerInfo& from);
+  void MergeFrom(const TownPlayerInfo& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(TownPlayerInfo* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Types.TownPlayerInfo";
+  }
+  protected:
+  explicit TownPlayerInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kAppearanceFieldNumber = 2,
+    kMovementFieldNumber = 3,
+    kPlayerIdFieldNumber = 1,
+  };
+  // .PB.Types.TownAppearance appearance = 2;
+  bool has_appearance() const;
+  private:
+  bool _internal_has_appearance() const;
+  public:
+  void clear_appearance();
+  const ::PB::Types::TownAppearance& appearance() const;
+  PROTOBUF_NODISCARD ::PB::Types::TownAppearance* release_appearance();
+  ::PB::Types::TownAppearance* mutable_appearance();
+  void set_allocated_appearance(::PB::Types::TownAppearance* appearance);
+  private:
+  const ::PB::Types::TownAppearance& _internal_appearance() const;
+  ::PB::Types::TownAppearance* _internal_mutable_appearance();
+  public:
+  void unsafe_arena_set_allocated_appearance(
+      ::PB::Types::TownAppearance* appearance);
+  ::PB::Types::TownAppearance* unsafe_arena_release_appearance();
+
+  // .PB.Types.TownMovement movement = 3;
+  bool has_movement() const;
+  private:
+  bool _internal_has_movement() const;
+  public:
+  void clear_movement();
+  const ::PB::Types::TownMovement& movement() const;
+  PROTOBUF_NODISCARD ::PB::Types::TownMovement* release_movement();
+  ::PB::Types::TownMovement* mutable_movement();
+  void set_allocated_movement(::PB::Types::TownMovement* movement);
+  private:
+  const ::PB::Types::TownMovement& _internal_movement() const;
+  ::PB::Types::TownMovement* _internal_mutable_movement();
+  public:
+  void unsafe_arena_set_allocated_movement(
+      ::PB::Types::TownMovement* movement);
+  ::PB::Types::TownMovement* unsafe_arena_release_movement();
+
   // int64 player_id = 1;
   void clear_player_id();
   int64_t player_id() const;
@@ -2558,88 +3438,7 @@ class PlayerState final :
   void _internal_set_player_id(int64_t value);
   public:
 
-  // float pos_x = 2;
-  void clear_pos_x();
-  float pos_x() const;
-  void set_pos_x(float value);
-  private:
-  float _internal_pos_x() const;
-  void _internal_set_pos_x(float value);
-  public:
-
-  // float pos_y = 3;
-  void clear_pos_y();
-  float pos_y() const;
-  void set_pos_y(float value);
-  private:
-  float _internal_pos_y() const;
-  void _internal_set_pos_y(float value);
-  public:
-
-  // int32 hp = 4;
-  void clear_hp();
-  int32_t hp() const;
-  void set_hp(int32_t value);
-  private:
-  int32_t _internal_hp() const;
-  void _internal_set_hp(int32_t value);
-  public:
-
-  // int32 class_id = 6;
-  void clear_class_id();
-  int32_t class_id() const;
-  void set_class_id(int32_t value);
-  private:
-  int32_t _internal_class_id() const;
-  void _internal_set_class_id(int32_t value);
-  public:
-
-  // float pos_z = 8;
-  void clear_pos_z();
-  float pos_z() const;
-  void set_pos_z(float value);
-  private:
-  float _internal_pos_z() const;
-  void _internal_set_pos_z(float value);
-  public:
-
-  // int32 facing = 9;
-  void clear_facing();
-  int32_t facing() const;
-  void set_facing(int32_t value);
-  private:
-  int32_t _internal_facing() const;
-  void _internal_set_facing(int32_t value);
-  public:
-
-  // bool moving = 10;
-  void clear_moving();
-  bool moving() const;
-  void set_moving(bool value);
-  private:
-  bool _internal_moving() const;
-  void _internal_set_moving(bool value);
-  public:
-
-  // float vel_x = 11;
-  void clear_vel_x();
-  float vel_x() const;
-  void set_vel_x(float value);
-  private:
-  float _internal_vel_x() const;
-  void _internal_set_vel_x(float value);
-  public:
-
-  // float vel_y = 12;
-  void clear_vel_y();
-  float vel_y() const;
-  void set_vel_y(float value);
-  private:
-  float _internal_vel_y() const;
-  void _internal_set_vel_y(float value);
-  public:
-
-  // @@protoc_insertion_point(class_scope:PB.Types.PlayerState)
+  // @@protoc_insertion_point(class_scope:PB.Types.TownPlayerInfo)
  private:
   class _Internal;
 
@@ -2647,18 +3446,9 @@ class PlayerState final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr state_;
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr name_;
+    ::PB::Types::TownAppearance* appearance_;
+    ::PB::Types::TownMovement* movement_;
     int64_t player_id_;
-    float pos_x_;
-    float pos_y_;
-    int32_t hp_;
-    int32_t class_id_;
-    float pos_z_;
-    int32_t facing_;
-    bool moving_;
-    float vel_x_;
-    float vel_y_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -2705,7 +3495,7 @@ class SceneInfo final :
                &_SceneInfo_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    14;
+    19;
 
   friend void swap(SceneInfo& a, SceneInfo& b) {
     a.Swap(&b);
@@ -2857,7 +3647,7 @@ class BattlePlayerSpec final :
                &_BattlePlayerSpec_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    15;
+    20;
 
   friend void swap(BattlePlayerSpec& a, BattlePlayerSpec& b) {
     a.Swap(&b);
@@ -4466,124 +5256,392 @@ inline void PartnerInfo::set_star(int32_t value) {
 
 // -------------------------------------------------------------------
 
-// PlayerState
+// TownVec3
 
-// int64 player_id = 1;
-inline void PlayerState::clear_player_id() {
-  _impl_.player_id_ = int64_t{0};
+// int32 x = 1;
+inline void TownVec3::clear_x() {
+  _impl_.x_ = 0;
 }
-inline int64_t PlayerState::_internal_player_id() const {
-  return _impl_.player_id_;
+inline int32_t TownVec3::_internal_x() const {
+  return _impl_.x_;
 }
-inline int64_t PlayerState::player_id() const {
-  // @@protoc_insertion_point(field_get:PB.Types.PlayerState.player_id)
-  return _internal_player_id();
+inline int32_t TownVec3::x() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownVec3.x)
+  return _internal_x();
 }
-inline void PlayerState::_internal_set_player_id(int64_t value) {
+inline void TownVec3::_internal_set_x(int32_t value) {
   
-  _impl_.player_id_ = value;
+  _impl_.x_ = value;
 }
-inline void PlayerState::set_player_id(int64_t value) {
-  _internal_set_player_id(value);
-  // @@protoc_insertion_point(field_set:PB.Types.PlayerState.player_id)
-}
-
-// float pos_x = 2;
-inline void PlayerState::clear_pos_x() {
-  _impl_.pos_x_ = 0;
-}
-inline float PlayerState::_internal_pos_x() const {
-  return _impl_.pos_x_;
-}
-inline float PlayerState::pos_x() const {
-  // @@protoc_insertion_point(field_get:PB.Types.PlayerState.pos_x)
-  return _internal_pos_x();
-}
-inline void PlayerState::_internal_set_pos_x(float value) {
-  
-  _impl_.pos_x_ = value;
-}
-inline void PlayerState::set_pos_x(float value) {
-  _internal_set_pos_x(value);
-  // @@protoc_insertion_point(field_set:PB.Types.PlayerState.pos_x)
+inline void TownVec3::set_x(int32_t value) {
+  _internal_set_x(value);
+  // @@protoc_insertion_point(field_set:PB.Types.TownVec3.x)
 }
 
-// float pos_y = 3;
-inline void PlayerState::clear_pos_y() {
-  _impl_.pos_y_ = 0;
+// int32 y = 2;
+inline void TownVec3::clear_y() {
+  _impl_.y_ = 0;
 }
-inline float PlayerState::_internal_pos_y() const {
-  return _impl_.pos_y_;
+inline int32_t TownVec3::_internal_y() const {
+  return _impl_.y_;
 }
-inline float PlayerState::pos_y() const {
-  // @@protoc_insertion_point(field_get:PB.Types.PlayerState.pos_y)
-  return _internal_pos_y();
+inline int32_t TownVec3::y() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownVec3.y)
+  return _internal_y();
 }
-inline void PlayerState::_internal_set_pos_y(float value) {
+inline void TownVec3::_internal_set_y(int32_t value) {
   
-  _impl_.pos_y_ = value;
+  _impl_.y_ = value;
 }
-inline void PlayerState::set_pos_y(float value) {
-  _internal_set_pos_y(value);
-  // @@protoc_insertion_point(field_set:PB.Types.PlayerState.pos_y)
+inline void TownVec3::set_y(int32_t value) {
+  _internal_set_y(value);
+  // @@protoc_insertion_point(field_set:PB.Types.TownVec3.y)
 }
 
-// int32 hp = 4;
-inline void PlayerState::clear_hp() {
-  _impl_.hp_ = 0;
+// int32 z = 3;
+inline void TownVec3::clear_z() {
+  _impl_.z_ = 0;
 }
-inline int32_t PlayerState::_internal_hp() const {
-  return _impl_.hp_;
+inline int32_t TownVec3::_internal_z() const {
+  return _impl_.z_;
 }
-inline int32_t PlayerState::hp() const {
-  // @@protoc_insertion_point(field_get:PB.Types.PlayerState.hp)
-  return _internal_hp();
+inline int32_t TownVec3::z() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownVec3.z)
+  return _internal_z();
 }
-inline void PlayerState::_internal_set_hp(int32_t value) {
+inline void TownVec3::_internal_set_z(int32_t value) {
   
-  _impl_.hp_ = value;
+  _impl_.z_ = value;
 }
-inline void PlayerState::set_hp(int32_t value) {
-  _internal_set_hp(value);
-  // @@protoc_insertion_point(field_set:PB.Types.PlayerState.hp)
+inline void TownVec3::set_z(int32_t value) {
+  _internal_set_z(value);
+  // @@protoc_insertion_point(field_set:PB.Types.TownVec3.z)
+}
+
+// -------------------------------------------------------------------
+
+// TownVel
+
+// float x = 1;
+inline void TownVel::clear_x() {
+  _impl_.x_ = 0;
+}
+inline float TownVel::_internal_x() const {
+  return _impl_.x_;
+}
+inline float TownVel::x() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownVel.x)
+  return _internal_x();
+}
+inline void TownVel::_internal_set_x(float value) {
+  
+  _impl_.x_ = value;
+}
+inline void TownVel::set_x(float value) {
+  _internal_set_x(value);
+  // @@protoc_insertion_point(field_set:PB.Types.TownVel.x)
+}
+
+// float y = 2;
+inline void TownVel::clear_y() {
+  _impl_.y_ = 0;
+}
+inline float TownVel::_internal_y() const {
+  return _impl_.y_;
+}
+inline float TownVel::y() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownVel.y)
+  return _internal_y();
+}
+inline void TownVel::_internal_set_y(float value) {
+  
+  _impl_.y_ = value;
+}
+inline void TownVel::set_y(float value) {
+  _internal_set_y(value);
+  // @@protoc_insertion_point(field_set:PB.Types.TownVel.y)
+}
+
+// float z = 3;
+inline void TownVel::clear_z() {
+  _impl_.z_ = 0;
+}
+inline float TownVel::_internal_z() const {
+  return _impl_.z_;
+}
+inline float TownVel::z() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownVel.z)
+  return _internal_z();
+}
+inline void TownVel::_internal_set_z(float value) {
+  
+  _impl_.z_ = value;
+}
+inline void TownVel::set_z(float value) {
+  _internal_set_z(value);
+  // @@protoc_insertion_point(field_set:PB.Types.TownVel.z)
+}
+
+// -------------------------------------------------------------------
+
+// TownMovement
+
+// .PB.Types.TownVec3 pos = 1;
+inline bool TownMovement::_internal_has_pos() const {
+  return this != internal_default_instance() && _impl_.pos_ != nullptr;
+}
+inline bool TownMovement::has_pos() const {
+  return _internal_has_pos();
+}
+inline void TownMovement::clear_pos() {
+  if (GetArenaForAllocation() == nullptr && _impl_.pos_ != nullptr) {
+    delete _impl_.pos_;
+  }
+  _impl_.pos_ = nullptr;
+}
+inline const ::PB::Types::TownVec3& TownMovement::_internal_pos() const {
+  const ::PB::Types::TownVec3* p = _impl_.pos_;
+  return p != nullptr ? *p : reinterpret_cast<const ::PB::Types::TownVec3&>(
+      ::PB::Types::_TownVec3_default_instance_);
+}
+inline const ::PB::Types::TownVec3& TownMovement::pos() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownMovement.pos)
+  return _internal_pos();
+}
+inline void TownMovement::unsafe_arena_set_allocated_pos(
+    ::PB::Types::TownVec3* pos) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.pos_);
+  }
+  _impl_.pos_ = pos;
+  if (pos) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:PB.Types.TownMovement.pos)
+}
+inline ::PB::Types::TownVec3* TownMovement::release_pos() {
+  
+  ::PB::Types::TownVec3* temp = _impl_.pos_;
+  _impl_.pos_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::PB::Types::TownVec3* TownMovement::unsafe_arena_release_pos() {
+  // @@protoc_insertion_point(field_release:PB.Types.TownMovement.pos)
+  
+  ::PB::Types::TownVec3* temp = _impl_.pos_;
+  _impl_.pos_ = nullptr;
+  return temp;
+}
+inline ::PB::Types::TownVec3* TownMovement::_internal_mutable_pos() {
+  
+  if (_impl_.pos_ == nullptr) {
+    auto* p = CreateMaybeMessage<::PB::Types::TownVec3>(GetArenaForAllocation());
+    _impl_.pos_ = p;
+  }
+  return _impl_.pos_;
+}
+inline ::PB::Types::TownVec3* TownMovement::mutable_pos() {
+  ::PB::Types::TownVec3* _msg = _internal_mutable_pos();
+  // @@protoc_insertion_point(field_mutable:PB.Types.TownMovement.pos)
+  return _msg;
+}
+inline void TownMovement::set_allocated_pos(::PB::Types::TownVec3* pos) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.pos_;
+  }
+  if (pos) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(pos);
+    if (message_arena != submessage_arena) {
+      pos = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, pos, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.pos_ = pos;
+  // @@protoc_insertion_point(field_set_allocated:PB.Types.TownMovement.pos)
+}
+
+// int32 facing = 2;
+inline void TownMovement::clear_facing() {
+  _impl_.facing_ = 0;
+}
+inline int32_t TownMovement::_internal_facing() const {
+  return _impl_.facing_;
+}
+inline int32_t TownMovement::facing() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownMovement.facing)
+  return _internal_facing();
+}
+inline void TownMovement::_internal_set_facing(int32_t value) {
+  
+  _impl_.facing_ = value;
+}
+inline void TownMovement::set_facing(int32_t value) {
+  _internal_set_facing(value);
+  // @@protoc_insertion_point(field_set:PB.Types.TownMovement.facing)
+}
+
+// bool moving = 3;
+inline void TownMovement::clear_moving() {
+  _impl_.moving_ = false;
+}
+inline bool TownMovement::_internal_moving() const {
+  return _impl_.moving_;
+}
+inline bool TownMovement::moving() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownMovement.moving)
+  return _internal_moving();
+}
+inline void TownMovement::_internal_set_moving(bool value) {
+  
+  _impl_.moving_ = value;
+}
+inline void TownMovement::set_moving(bool value) {
+  _internal_set_moving(value);
+  // @@protoc_insertion_point(field_set:PB.Types.TownMovement.moving)
+}
+
+// .PB.Types.TownVel vel = 4;
+inline bool TownMovement::_internal_has_vel() const {
+  return this != internal_default_instance() && _impl_.vel_ != nullptr;
+}
+inline bool TownMovement::has_vel() const {
+  return _internal_has_vel();
+}
+inline void TownMovement::clear_vel() {
+  if (GetArenaForAllocation() == nullptr && _impl_.vel_ != nullptr) {
+    delete _impl_.vel_;
+  }
+  _impl_.vel_ = nullptr;
+}
+inline const ::PB::Types::TownVel& TownMovement::_internal_vel() const {
+  const ::PB::Types::TownVel* p = _impl_.vel_;
+  return p != nullptr ? *p : reinterpret_cast<const ::PB::Types::TownVel&>(
+      ::PB::Types::_TownVel_default_instance_);
+}
+inline const ::PB::Types::TownVel& TownMovement::vel() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownMovement.vel)
+  return _internal_vel();
+}
+inline void TownMovement::unsafe_arena_set_allocated_vel(
+    ::PB::Types::TownVel* vel) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.vel_);
+  }
+  _impl_.vel_ = vel;
+  if (vel) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:PB.Types.TownMovement.vel)
+}
+inline ::PB::Types::TownVel* TownMovement::release_vel() {
+  
+  ::PB::Types::TownVel* temp = _impl_.vel_;
+  _impl_.vel_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::PB::Types::TownVel* TownMovement::unsafe_arena_release_vel() {
+  // @@protoc_insertion_point(field_release:PB.Types.TownMovement.vel)
+  
+  ::PB::Types::TownVel* temp = _impl_.vel_;
+  _impl_.vel_ = nullptr;
+  return temp;
+}
+inline ::PB::Types::TownVel* TownMovement::_internal_mutable_vel() {
+  
+  if (_impl_.vel_ == nullptr) {
+    auto* p = CreateMaybeMessage<::PB::Types::TownVel>(GetArenaForAllocation());
+    _impl_.vel_ = p;
+  }
+  return _impl_.vel_;
+}
+inline ::PB::Types::TownVel* TownMovement::mutable_vel() {
+  ::PB::Types::TownVel* _msg = _internal_mutable_vel();
+  // @@protoc_insertion_point(field_mutable:PB.Types.TownMovement.vel)
+  return _msg;
+}
+inline void TownMovement::set_allocated_vel(::PB::Types::TownVel* vel) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.vel_;
+  }
+  if (vel) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(vel);
+    if (message_arena != submessage_arena) {
+      vel = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, vel, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.vel_ = vel;
+  // @@protoc_insertion_point(field_set_allocated:PB.Types.TownMovement.vel)
 }
 
 // string state = 5;
-inline void PlayerState::clear_state() {
+inline void TownMovement::clear_state() {
   _impl_.state_.ClearToEmpty();
 }
-inline const std::string& PlayerState::state() const {
-  // @@protoc_insertion_point(field_get:PB.Types.PlayerState.state)
+inline const std::string& TownMovement::state() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownMovement.state)
   return _internal_state();
 }
 template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
-void PlayerState::set_state(ArgT0&& arg0, ArgT... args) {
+void TownMovement::set_state(ArgT0&& arg0, ArgT... args) {
  
  _impl_.state_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:PB.Types.PlayerState.state)
+  // @@protoc_insertion_point(field_set:PB.Types.TownMovement.state)
 }
-inline std::string* PlayerState::mutable_state() {
+inline std::string* TownMovement::mutable_state() {
   std::string* _s = _internal_mutable_state();
-  // @@protoc_insertion_point(field_mutable:PB.Types.PlayerState.state)
+  // @@protoc_insertion_point(field_mutable:PB.Types.TownMovement.state)
   return _s;
 }
-inline const std::string& PlayerState::_internal_state() const {
+inline const std::string& TownMovement::_internal_state() const {
   return _impl_.state_.Get();
 }
-inline void PlayerState::_internal_set_state(const std::string& value) {
+inline void TownMovement::_internal_set_state(const std::string& value) {
   
   _impl_.state_.Set(value, GetArenaForAllocation());
 }
-inline std::string* PlayerState::_internal_mutable_state() {
+inline std::string* TownMovement::_internal_mutable_state() {
   
   return _impl_.state_.Mutable(GetArenaForAllocation());
 }
-inline std::string* PlayerState::release_state() {
-  // @@protoc_insertion_point(field_release:PB.Types.PlayerState.state)
+inline std::string* TownMovement::release_state() {
+  // @@protoc_insertion_point(field_release:PB.Types.TownMovement.state)
   return _impl_.state_.Release();
 }
-inline void PlayerState::set_allocated_state(std::string* state) {
+inline void TownMovement::set_allocated_state(std::string* state) {
   if (state != nullptr) {
     
   } else {
@@ -4595,65 +5653,113 @@ inline void PlayerState::set_allocated_state(std::string* state) {
     _impl_.state_.Set("", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:PB.Types.PlayerState.state)
+  // @@protoc_insertion_point(field_set_allocated:PB.Types.TownMovement.state)
 }
 
-// int32 class_id = 6;
-inline void PlayerState::clear_class_id() {
+// -------------------------------------------------------------------
+
+// TownFashionItem
+
+// int32 position = 1;
+inline void TownFashionItem::clear_position() {
+  _impl_.position_ = 0;
+}
+inline int32_t TownFashionItem::_internal_position() const {
+  return _impl_.position_;
+}
+inline int32_t TownFashionItem::position() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownFashionItem.position)
+  return _internal_position();
+}
+inline void TownFashionItem::_internal_set_position(int32_t value) {
+  
+  _impl_.position_ = value;
+}
+inline void TownFashionItem::set_position(int32_t value) {
+  _internal_set_position(value);
+  // @@protoc_insertion_point(field_set:PB.Types.TownFashionItem.position)
+}
+
+// int32 config_id = 2;
+inline void TownFashionItem::clear_config_id() {
+  _impl_.config_id_ = 0;
+}
+inline int32_t TownFashionItem::_internal_config_id() const {
+  return _impl_.config_id_;
+}
+inline int32_t TownFashionItem::config_id() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownFashionItem.config_id)
+  return _internal_config_id();
+}
+inline void TownFashionItem::_internal_set_config_id(int32_t value) {
+  
+  _impl_.config_id_ = value;
+}
+inline void TownFashionItem::set_config_id(int32_t value) {
+  _internal_set_config_id(value);
+  // @@protoc_insertion_point(field_set:PB.Types.TownFashionItem.config_id)
+}
+
+// -------------------------------------------------------------------
+
+// TownAppearance
+
+// int32 class_id = 1;
+inline void TownAppearance::clear_class_id() {
   _impl_.class_id_ = 0;
 }
-inline int32_t PlayerState::_internal_class_id() const {
+inline int32_t TownAppearance::_internal_class_id() const {
   return _impl_.class_id_;
 }
-inline int32_t PlayerState::class_id() const {
-  // @@protoc_insertion_point(field_get:PB.Types.PlayerState.class_id)
+inline int32_t TownAppearance::class_id() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownAppearance.class_id)
   return _internal_class_id();
 }
-inline void PlayerState::_internal_set_class_id(int32_t value) {
+inline void TownAppearance::_internal_set_class_id(int32_t value) {
   
   _impl_.class_id_ = value;
 }
-inline void PlayerState::set_class_id(int32_t value) {
+inline void TownAppearance::set_class_id(int32_t value) {
   _internal_set_class_id(value);
-  // @@protoc_insertion_point(field_set:PB.Types.PlayerState.class_id)
+  // @@protoc_insertion_point(field_set:PB.Types.TownAppearance.class_id)
 }
 
-// string name = 7;
-inline void PlayerState::clear_name() {
+// string name = 2;
+inline void TownAppearance::clear_name() {
   _impl_.name_.ClearToEmpty();
 }
-inline const std::string& PlayerState::name() const {
-  // @@protoc_insertion_point(field_get:PB.Types.PlayerState.name)
+inline const std::string& TownAppearance::name() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownAppearance.name)
   return _internal_name();
 }
 template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
-void PlayerState::set_name(ArgT0&& arg0, ArgT... args) {
+void TownAppearance::set_name(ArgT0&& arg0, ArgT... args) {
  
  _impl_.name_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:PB.Types.PlayerState.name)
+  // @@protoc_insertion_point(field_set:PB.Types.TownAppearance.name)
 }
-inline std::string* PlayerState::mutable_name() {
+inline std::string* TownAppearance::mutable_name() {
   std::string* _s = _internal_mutable_name();
-  // @@protoc_insertion_point(field_mutable:PB.Types.PlayerState.name)
+  // @@protoc_insertion_point(field_mutable:PB.Types.TownAppearance.name)
   return _s;
 }
-inline const std::string& PlayerState::_internal_name() const {
+inline const std::string& TownAppearance::_internal_name() const {
   return _impl_.name_.Get();
 }
-inline void PlayerState::_internal_set_name(const std::string& value) {
+inline void TownAppearance::_internal_set_name(const std::string& value) {
   
   _impl_.name_.Set(value, GetArenaForAllocation());
 }
-inline std::string* PlayerState::_internal_mutable_name() {
+inline std::string* TownAppearance::_internal_mutable_name() {
   
   return _impl_.name_.Mutable(GetArenaForAllocation());
 }
-inline std::string* PlayerState::release_name() {
-  // @@protoc_insertion_point(field_release:PB.Types.PlayerState.name)
+inline std::string* TownAppearance::release_name() {
+  // @@protoc_insertion_point(field_release:PB.Types.TownAppearance.name)
   return _impl_.name_.Release();
 }
-inline void PlayerState::set_allocated_name(std::string* name) {
+inline void TownAppearance::set_allocated_name(std::string* name) {
   if (name != nullptr) {
     
   } else {
@@ -4665,107 +5771,351 @@ inline void PlayerState::set_allocated_name(std::string* name) {
     _impl_.name_.Set("", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:PB.Types.PlayerState.name)
+  // @@protoc_insertion_point(field_set_allocated:PB.Types.TownAppearance.name)
 }
 
-// float pos_z = 8;
-inline void PlayerState::clear_pos_z() {
-  _impl_.pos_z_ = 0;
+// int32 level = 3;
+inline void TownAppearance::clear_level() {
+  _impl_.level_ = 0;
 }
-inline float PlayerState::_internal_pos_z() const {
-  return _impl_.pos_z_;
+inline int32_t TownAppearance::_internal_level() const {
+  return _impl_.level_;
 }
-inline float PlayerState::pos_z() const {
-  // @@protoc_insertion_point(field_get:PB.Types.PlayerState.pos_z)
-  return _internal_pos_z();
+inline int32_t TownAppearance::level() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownAppearance.level)
+  return _internal_level();
 }
-inline void PlayerState::_internal_set_pos_z(float value) {
+inline void TownAppearance::_internal_set_level(int32_t value) {
   
-  _impl_.pos_z_ = value;
+  _impl_.level_ = value;
 }
-inline void PlayerState::set_pos_z(float value) {
-  _internal_set_pos_z(value);
-  // @@protoc_insertion_point(field_set:PB.Types.PlayerState.pos_z)
+inline void TownAppearance::set_level(int32_t value) {
+  _internal_set_level(value);
+  // @@protoc_insertion_point(field_set:PB.Types.TownAppearance.level)
 }
 
-// int32 facing = 9;
-inline void PlayerState::clear_facing() {
-  _impl_.facing_ = 0;
+// repeated .PB.Types.TownFashionItem fashions = 4;
+inline int TownAppearance::_internal_fashions_size() const {
+  return _impl_.fashions_.size();
 }
-inline int32_t PlayerState::_internal_facing() const {
-  return _impl_.facing_;
+inline int TownAppearance::fashions_size() const {
+  return _internal_fashions_size();
 }
-inline int32_t PlayerState::facing() const {
-  // @@protoc_insertion_point(field_get:PB.Types.PlayerState.facing)
-  return _internal_facing();
+inline void TownAppearance::clear_fashions() {
+  _impl_.fashions_.Clear();
 }
-inline void PlayerState::_internal_set_facing(int32_t value) {
-  
-  _impl_.facing_ = value;
+inline ::PB::Types::TownFashionItem* TownAppearance::mutable_fashions(int index) {
+  // @@protoc_insertion_point(field_mutable:PB.Types.TownAppearance.fashions)
+  return _impl_.fashions_.Mutable(index);
 }
-inline void PlayerState::set_facing(int32_t value) {
-  _internal_set_facing(value);
-  // @@protoc_insertion_point(field_set:PB.Types.PlayerState.facing)
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::TownFashionItem >*
+TownAppearance::mutable_fashions() {
+  // @@protoc_insertion_point(field_mutable_list:PB.Types.TownAppearance.fashions)
+  return &_impl_.fashions_;
 }
-
-// bool moving = 10;
-inline void PlayerState::clear_moving() {
-  _impl_.moving_ = false;
+inline const ::PB::Types::TownFashionItem& TownAppearance::_internal_fashions(int index) const {
+  return _impl_.fashions_.Get(index);
 }
-inline bool PlayerState::_internal_moving() const {
-  return _impl_.moving_;
+inline const ::PB::Types::TownFashionItem& TownAppearance::fashions(int index) const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownAppearance.fashions)
+  return _internal_fashions(index);
 }
-inline bool PlayerState::moving() const {
-  // @@protoc_insertion_point(field_get:PB.Types.PlayerState.moving)
-  return _internal_moving();
+inline ::PB::Types::TownFashionItem* TownAppearance::_internal_add_fashions() {
+  return _impl_.fashions_.Add();
 }
-inline void PlayerState::_internal_set_moving(bool value) {
-  
-  _impl_.moving_ = value;
+inline ::PB::Types::TownFashionItem* TownAppearance::add_fashions() {
+  ::PB::Types::TownFashionItem* _add = _internal_add_fashions();
+  // @@protoc_insertion_point(field_add:PB.Types.TownAppearance.fashions)
+  return _add;
 }
-inline void PlayerState::set_moving(bool value) {
-  _internal_set_moving(value);
-  // @@protoc_insertion_point(field_set:PB.Types.PlayerState.moving)
-}
-
-// float vel_x = 11;
-inline void PlayerState::clear_vel_x() {
-  _impl_.vel_x_ = 0;
-}
-inline float PlayerState::_internal_vel_x() const {
-  return _impl_.vel_x_;
-}
-inline float PlayerState::vel_x() const {
-  // @@protoc_insertion_point(field_get:PB.Types.PlayerState.vel_x)
-  return _internal_vel_x();
-}
-inline void PlayerState::_internal_set_vel_x(float value) {
-  
-  _impl_.vel_x_ = value;
-}
-inline void PlayerState::set_vel_x(float value) {
-  _internal_set_vel_x(value);
-  // @@protoc_insertion_point(field_set:PB.Types.PlayerState.vel_x)
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::TownFashionItem >&
+TownAppearance::fashions() const {
+  // @@protoc_insertion_point(field_list:PB.Types.TownAppearance.fashions)
+  return _impl_.fashions_;
 }
 
-// float vel_y = 12;
-inline void PlayerState::clear_vel_y() {
-  _impl_.vel_y_ = 0;
+// int32 pet_id = 5;
+inline void TownAppearance::clear_pet_id() {
+  _impl_.pet_id_ = 0;
 }
-inline float PlayerState::_internal_vel_y() const {
-  return _impl_.vel_y_;
+inline int32_t TownAppearance::_internal_pet_id() const {
+  return _impl_.pet_id_;
 }
-inline float PlayerState::vel_y() const {
-  // @@protoc_insertion_point(field_get:PB.Types.PlayerState.vel_y)
-  return _internal_vel_y();
+inline int32_t TownAppearance::pet_id() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownAppearance.pet_id)
+  return _internal_pet_id();
 }
-inline void PlayerState::_internal_set_vel_y(float value) {
+inline void TownAppearance::_internal_set_pet_id(int32_t value) {
   
-  _impl_.vel_y_ = value;
+  _impl_.pet_id_ = value;
 }
-inline void PlayerState::set_vel_y(float value) {
-  _internal_set_vel_y(value);
-  // @@protoc_insertion_point(field_set:PB.Types.PlayerState.vel_y)
+inline void TownAppearance::set_pet_id(int32_t value) {
+  _internal_set_pet_id(value);
+  // @@protoc_insertion_point(field_set:PB.Types.TownAppearance.pet_id)
+}
+
+// repeated .PB.Types.DefaultSkin base_skins = 6;
+inline int TownAppearance::_internal_base_skins_size() const {
+  return _impl_.base_skins_.size();
+}
+inline int TownAppearance::base_skins_size() const {
+  return _internal_base_skins_size();
+}
+inline void TownAppearance::clear_base_skins() {
+  _impl_.base_skins_.Clear();
+}
+inline ::PB::Types::DefaultSkin* TownAppearance::mutable_base_skins(int index) {
+  // @@protoc_insertion_point(field_mutable:PB.Types.TownAppearance.base_skins)
+  return _impl_.base_skins_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::DefaultSkin >*
+TownAppearance::mutable_base_skins() {
+  // @@protoc_insertion_point(field_mutable_list:PB.Types.TownAppearance.base_skins)
+  return &_impl_.base_skins_;
+}
+inline const ::PB::Types::DefaultSkin& TownAppearance::_internal_base_skins(int index) const {
+  return _impl_.base_skins_.Get(index);
+}
+inline const ::PB::Types::DefaultSkin& TownAppearance::base_skins(int index) const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownAppearance.base_skins)
+  return _internal_base_skins(index);
+}
+inline ::PB::Types::DefaultSkin* TownAppearance::_internal_add_base_skins() {
+  return _impl_.base_skins_.Add();
+}
+inline ::PB::Types::DefaultSkin* TownAppearance::add_base_skins() {
+  ::PB::Types::DefaultSkin* _add = _internal_add_base_skins();
+  // @@protoc_insertion_point(field_add:PB.Types.TownAppearance.base_skins)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::DefaultSkin >&
+TownAppearance::base_skins() const {
+  // @@protoc_insertion_point(field_list:PB.Types.TownAppearance.base_skins)
+  return _impl_.base_skins_;
+}
+
+// int32 armament_id = 7;
+inline void TownAppearance::clear_armament_id() {
+  _impl_.armament_id_ = 0;
+}
+inline int32_t TownAppearance::_internal_armament_id() const {
+  return _impl_.armament_id_;
+}
+inline int32_t TownAppearance::armament_id() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownAppearance.armament_id)
+  return _internal_armament_id();
+}
+inline void TownAppearance::_internal_set_armament_id(int32_t value) {
+  
+  _impl_.armament_id_ = value;
+}
+inline void TownAppearance::set_armament_id(int32_t value) {
+  _internal_set_armament_id(value);
+  // @@protoc_insertion_point(field_set:PB.Types.TownAppearance.armament_id)
+}
+
+// -------------------------------------------------------------------
+
+// TownPlayerInfo
+
+// int64 player_id = 1;
+inline void TownPlayerInfo::clear_player_id() {
+  _impl_.player_id_ = int64_t{0};
+}
+inline int64_t TownPlayerInfo::_internal_player_id() const {
+  return _impl_.player_id_;
+}
+inline int64_t TownPlayerInfo::player_id() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownPlayerInfo.player_id)
+  return _internal_player_id();
+}
+inline void TownPlayerInfo::_internal_set_player_id(int64_t value) {
+  
+  _impl_.player_id_ = value;
+}
+inline void TownPlayerInfo::set_player_id(int64_t value) {
+  _internal_set_player_id(value);
+  // @@protoc_insertion_point(field_set:PB.Types.TownPlayerInfo.player_id)
+}
+
+// .PB.Types.TownAppearance appearance = 2;
+inline bool TownPlayerInfo::_internal_has_appearance() const {
+  return this != internal_default_instance() && _impl_.appearance_ != nullptr;
+}
+inline bool TownPlayerInfo::has_appearance() const {
+  return _internal_has_appearance();
+}
+inline void TownPlayerInfo::clear_appearance() {
+  if (GetArenaForAllocation() == nullptr && _impl_.appearance_ != nullptr) {
+    delete _impl_.appearance_;
+  }
+  _impl_.appearance_ = nullptr;
+}
+inline const ::PB::Types::TownAppearance& TownPlayerInfo::_internal_appearance() const {
+  const ::PB::Types::TownAppearance* p = _impl_.appearance_;
+  return p != nullptr ? *p : reinterpret_cast<const ::PB::Types::TownAppearance&>(
+      ::PB::Types::_TownAppearance_default_instance_);
+}
+inline const ::PB::Types::TownAppearance& TownPlayerInfo::appearance() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownPlayerInfo.appearance)
+  return _internal_appearance();
+}
+inline void TownPlayerInfo::unsafe_arena_set_allocated_appearance(
+    ::PB::Types::TownAppearance* appearance) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.appearance_);
+  }
+  _impl_.appearance_ = appearance;
+  if (appearance) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:PB.Types.TownPlayerInfo.appearance)
+}
+inline ::PB::Types::TownAppearance* TownPlayerInfo::release_appearance() {
+  
+  ::PB::Types::TownAppearance* temp = _impl_.appearance_;
+  _impl_.appearance_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::PB::Types::TownAppearance* TownPlayerInfo::unsafe_arena_release_appearance() {
+  // @@protoc_insertion_point(field_release:PB.Types.TownPlayerInfo.appearance)
+  
+  ::PB::Types::TownAppearance* temp = _impl_.appearance_;
+  _impl_.appearance_ = nullptr;
+  return temp;
+}
+inline ::PB::Types::TownAppearance* TownPlayerInfo::_internal_mutable_appearance() {
+  
+  if (_impl_.appearance_ == nullptr) {
+    auto* p = CreateMaybeMessage<::PB::Types::TownAppearance>(GetArenaForAllocation());
+    _impl_.appearance_ = p;
+  }
+  return _impl_.appearance_;
+}
+inline ::PB::Types::TownAppearance* TownPlayerInfo::mutable_appearance() {
+  ::PB::Types::TownAppearance* _msg = _internal_mutable_appearance();
+  // @@protoc_insertion_point(field_mutable:PB.Types.TownPlayerInfo.appearance)
+  return _msg;
+}
+inline void TownPlayerInfo::set_allocated_appearance(::PB::Types::TownAppearance* appearance) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.appearance_;
+  }
+  if (appearance) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(appearance);
+    if (message_arena != submessage_arena) {
+      appearance = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, appearance, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.appearance_ = appearance;
+  // @@protoc_insertion_point(field_set_allocated:PB.Types.TownPlayerInfo.appearance)
+}
+
+// .PB.Types.TownMovement movement = 3;
+inline bool TownPlayerInfo::_internal_has_movement() const {
+  return this != internal_default_instance() && _impl_.movement_ != nullptr;
+}
+inline bool TownPlayerInfo::has_movement() const {
+  return _internal_has_movement();
+}
+inline void TownPlayerInfo::clear_movement() {
+  if (GetArenaForAllocation() == nullptr && _impl_.movement_ != nullptr) {
+    delete _impl_.movement_;
+  }
+  _impl_.movement_ = nullptr;
+}
+inline const ::PB::Types::TownMovement& TownPlayerInfo::_internal_movement() const {
+  const ::PB::Types::TownMovement* p = _impl_.movement_;
+  return p != nullptr ? *p : reinterpret_cast<const ::PB::Types::TownMovement&>(
+      ::PB::Types::_TownMovement_default_instance_);
+}
+inline const ::PB::Types::TownMovement& TownPlayerInfo::movement() const {
+  // @@protoc_insertion_point(field_get:PB.Types.TownPlayerInfo.movement)
+  return _internal_movement();
+}
+inline void TownPlayerInfo::unsafe_arena_set_allocated_movement(
+    ::PB::Types::TownMovement* movement) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.movement_);
+  }
+  _impl_.movement_ = movement;
+  if (movement) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:PB.Types.TownPlayerInfo.movement)
+}
+inline ::PB::Types::TownMovement* TownPlayerInfo::release_movement() {
+  
+  ::PB::Types::TownMovement* temp = _impl_.movement_;
+  _impl_.movement_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::PB::Types::TownMovement* TownPlayerInfo::unsafe_arena_release_movement() {
+  // @@protoc_insertion_point(field_release:PB.Types.TownPlayerInfo.movement)
+  
+  ::PB::Types::TownMovement* temp = _impl_.movement_;
+  _impl_.movement_ = nullptr;
+  return temp;
+}
+inline ::PB::Types::TownMovement* TownPlayerInfo::_internal_mutable_movement() {
+  
+  if (_impl_.movement_ == nullptr) {
+    auto* p = CreateMaybeMessage<::PB::Types::TownMovement>(GetArenaForAllocation());
+    _impl_.movement_ = p;
+  }
+  return _impl_.movement_;
+}
+inline ::PB::Types::TownMovement* TownPlayerInfo::mutable_movement() {
+  ::PB::Types::TownMovement* _msg = _internal_mutable_movement();
+  // @@protoc_insertion_point(field_mutable:PB.Types.TownPlayerInfo.movement)
+  return _msg;
+}
+inline void TownPlayerInfo::set_allocated_movement(::PB::Types::TownMovement* movement) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.movement_;
+  }
+  if (movement) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(movement);
+    if (message_arena != submessage_arena) {
+      movement = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, movement, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.movement_ = movement;
+  // @@protoc_insertion_point(field_set_allocated:PB.Types.TownPlayerInfo.movement)
 }
 
 // -------------------------------------------------------------------
@@ -4969,6 +6319,16 @@ inline void BattlePlayerSpec::set_character_id(int64_t value) {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

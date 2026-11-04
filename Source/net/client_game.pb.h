@@ -114,6 +114,12 @@ extern FetchCharacterListReqDefaultTypeInternal _FetchCharacterListReq_default_i
 class FetchCharacterListResp;
 struct FetchCharacterListRespDefaultTypeInternal;
 extern FetchCharacterListRespDefaultTypeInternal _FetchCharacterListResp_default_instance_;
+class LeaveSceneReq;
+struct LeaveSceneReqDefaultTypeInternal;
+extern LeaveSceneReqDefaultTypeInternal _LeaveSceneReq_default_instance_;
+class LeaveSceneResp;
+struct LeaveSceneRespDefaultTypeInternal;
+extern LeaveSceneRespDefaultTypeInternal _LeaveSceneResp_default_instance_;
 class LoginReq;
 struct LoginReqDefaultTypeInternal;
 extern LoginReqDefaultTypeInternal _LoginReq_default_instance_;
@@ -182,6 +188,8 @@ template<> ::PB::Game::FashionWearReq* Arena::CreateMaybeMessage<::PB::Game::Fas
 template<> ::PB::Game::FashionWearResp* Arena::CreateMaybeMessage<::PB::Game::FashionWearResp>(Arena*);
 template<> ::PB::Game::FetchCharacterListReq* Arena::CreateMaybeMessage<::PB::Game::FetchCharacterListReq>(Arena*);
 template<> ::PB::Game::FetchCharacterListResp* Arena::CreateMaybeMessage<::PB::Game::FetchCharacterListResp>(Arena*);
+template<> ::PB::Game::LeaveSceneReq* Arena::CreateMaybeMessage<::PB::Game::LeaveSceneReq>(Arena*);
+template<> ::PB::Game::LeaveSceneResp* Arena::CreateMaybeMessage<::PB::Game::LeaveSceneResp>(Arena*);
 template<> ::PB::Game::LoginReq* Arena::CreateMaybeMessage<::PB::Game::LoginReq>(Arena*);
 template<> ::PB::Game::LoginResp* Arena::CreateMaybeMessage<::PB::Game::LoginResp>(Arena*);
 template<> ::PB::Game::PartnerSyncReq* Arena::CreateMaybeMessage<::PB::Game::PartnerSyncReq>(Arena*);
@@ -641,6 +649,48 @@ inline const std::string& EnterSceneResp_MsgId_Name(T enum_t_value) {
 }
 bool EnterSceneResp_MsgId_Parse(
     ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, EnterSceneResp_MsgId* value);
+enum LeaveSceneReq_MsgId : int {
+  LeaveSceneReq_MsgId_None = 0,
+  LeaveSceneReq_MsgId_Id = 1308,
+  LeaveSceneReq_MsgId_LeaveSceneReq_MsgId_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  LeaveSceneReq_MsgId_LeaveSceneReq_MsgId_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool LeaveSceneReq_MsgId_IsValid(int value);
+constexpr LeaveSceneReq_MsgId LeaveSceneReq_MsgId_MsgId_MIN = LeaveSceneReq_MsgId_None;
+constexpr LeaveSceneReq_MsgId LeaveSceneReq_MsgId_MsgId_MAX = LeaveSceneReq_MsgId_Id;
+constexpr int LeaveSceneReq_MsgId_MsgId_ARRAYSIZE = LeaveSceneReq_MsgId_MsgId_MAX + 1;
+
+const std::string& LeaveSceneReq_MsgId_Name(LeaveSceneReq_MsgId value);
+template<typename T>
+inline const std::string& LeaveSceneReq_MsgId_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, LeaveSceneReq_MsgId>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function LeaveSceneReq_MsgId_Name.");
+  return LeaveSceneReq_MsgId_Name(static_cast<LeaveSceneReq_MsgId>(enum_t_value));
+}
+bool LeaveSceneReq_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, LeaveSceneReq_MsgId* value);
+enum LeaveSceneResp_MsgId : int {
+  LeaveSceneResp_MsgId_None = 0,
+  LeaveSceneResp_MsgId_Id = 1309,
+  LeaveSceneResp_MsgId_LeaveSceneResp_MsgId_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  LeaveSceneResp_MsgId_LeaveSceneResp_MsgId_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool LeaveSceneResp_MsgId_IsValid(int value);
+constexpr LeaveSceneResp_MsgId LeaveSceneResp_MsgId_MsgId_MIN = LeaveSceneResp_MsgId_None;
+constexpr LeaveSceneResp_MsgId LeaveSceneResp_MsgId_MsgId_MAX = LeaveSceneResp_MsgId_Id;
+constexpr int LeaveSceneResp_MsgId_MsgId_ARRAYSIZE = LeaveSceneResp_MsgId_MsgId_MAX + 1;
+
+const std::string& LeaveSceneResp_MsgId_Name(LeaveSceneResp_MsgId value);
+template<typename T>
+inline const std::string& LeaveSceneResp_MsgId_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, LeaveSceneResp_MsgId>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function LeaveSceneResp_MsgId_Name.");
+  return LeaveSceneResp_MsgId_Name(static_cast<LeaveSceneResp_MsgId>(enum_t_value));
+}
+bool LeaveSceneResp_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, LeaveSceneResp_MsgId* value);
 enum AccountKickedPush_MsgId : int {
   AccountKickedPush_MsgId_None = 0,
   AccountKickedPush_MsgId_Id = 1400,
@@ -4593,28 +4643,28 @@ class EnterSceneReq final :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kStateFieldNumber = 4,
+    kMovementFieldNumber = 4,
     kTypeFieldNumber = 1,
     kMapIdFieldNumber = 2,
     kOwnerUidFieldNumber = 3,
   };
-  // .PB.Types.PlayerState state = 4;
-  bool has_state() const;
+  // .PB.Types.TownMovement movement = 4;
+  bool has_movement() const;
   private:
-  bool _internal_has_state() const;
+  bool _internal_has_movement() const;
   public:
-  void clear_state();
-  const ::PB::Types::PlayerState& state() const;
-  PROTOBUF_NODISCARD ::PB::Types::PlayerState* release_state();
-  ::PB::Types::PlayerState* mutable_state();
-  void set_allocated_state(::PB::Types::PlayerState* state);
+  void clear_movement();
+  const ::PB::Types::TownMovement& movement() const;
+  PROTOBUF_NODISCARD ::PB::Types::TownMovement* release_movement();
+  ::PB::Types::TownMovement* mutable_movement();
+  void set_allocated_movement(::PB::Types::TownMovement* movement);
   private:
-  const ::PB::Types::PlayerState& _internal_state() const;
-  ::PB::Types::PlayerState* _internal_mutable_state();
+  const ::PB::Types::TownMovement& _internal_movement() const;
+  ::PB::Types::TownMovement* _internal_mutable_movement();
   public:
-  void unsafe_arena_set_allocated_state(
-      ::PB::Types::PlayerState* state);
-  ::PB::Types::PlayerState* unsafe_arena_release_state();
+  void unsafe_arena_set_allocated_movement(
+      ::PB::Types::TownMovement* movement);
+  ::PB::Types::TownMovement* unsafe_arena_release_movement();
 
   // .PB.Types.SceneEnterType type = 1;
   void clear_type();
@@ -4651,7 +4701,7 @@ class EnterSceneReq final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
-    ::PB::Types::PlayerState* state_;
+    ::PB::Types::TownMovement* movement_;
     int type_;
     uint32_t map_id_;
     uint64_t owner_uid_;
@@ -4796,22 +4846,22 @@ class EnterSceneResp final :
     kSceneFieldNumber = 3,
     kCodeFieldNumber = 1,
   };
-  // repeated .PB.Types.PlayerState players = 4;
+  // repeated .PB.Types.TownPlayerInfo players = 4;
   int players_size() const;
   private:
   int _internal_players_size() const;
   public:
   void clear_players();
-  ::PB::Types::PlayerState* mutable_players(int index);
-  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PlayerState >*
+  ::PB::Types::TownPlayerInfo* mutable_players(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::TownPlayerInfo >*
       mutable_players();
   private:
-  const ::PB::Types::PlayerState& _internal_players(int index) const;
-  ::PB::Types::PlayerState* _internal_add_players();
+  const ::PB::Types::TownPlayerInfo& _internal_players(int index) const;
+  ::PB::Types::TownPlayerInfo* _internal_add_players();
   public:
-  const ::PB::Types::PlayerState& players(int index) const;
-  ::PB::Types::PlayerState* add_players();
-  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PlayerState >&
+  const ::PB::Types::TownPlayerInfo& players(int index) const;
+  ::PB::Types::TownPlayerInfo* add_players();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::TownPlayerInfo >&
       players() const;
 
   // string message = 2;
@@ -4863,9 +4913,324 @@ class EnterSceneResp final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
-    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PlayerState > players_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::TownPlayerInfo > players_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr message_;
     ::PB::Types::SceneInfo* scene_;
+    int32_t code_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_client_5fgame_2eproto;
+};
+// -------------------------------------------------------------------
+
+class LeaveSceneReq final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Game.LeaveSceneReq) */ {
+ public:
+  inline LeaveSceneReq() : LeaveSceneReq(nullptr) {}
+  ~LeaveSceneReq() override;
+  explicit PROTOBUF_CONSTEXPR LeaveSceneReq(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  LeaveSceneReq(const LeaveSceneReq& from);
+  LeaveSceneReq(LeaveSceneReq&& from) noexcept
+    : LeaveSceneReq() {
+    *this = ::std::move(from);
+  }
+
+  inline LeaveSceneReq& operator=(const LeaveSceneReq& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline LeaveSceneReq& operator=(LeaveSceneReq&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const LeaveSceneReq& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const LeaveSceneReq* internal_default_instance() {
+    return reinterpret_cast<const LeaveSceneReq*>(
+               &_LeaveSceneReq_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    21;
+
+  friend void swap(LeaveSceneReq& a, LeaveSceneReq& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(LeaveSceneReq* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(LeaveSceneReq* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  LeaveSceneReq* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<LeaveSceneReq>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const LeaveSceneReq& from);
+  void MergeFrom(const LeaveSceneReq& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(LeaveSceneReq* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Game.LeaveSceneReq";
+  }
+  protected:
+  explicit LeaveSceneReq(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  typedef LeaveSceneReq_MsgId MsgId;
+  static constexpr MsgId None =
+    LeaveSceneReq_MsgId_None;
+  static constexpr MsgId Id =
+    LeaveSceneReq_MsgId_Id;
+  static inline bool MsgId_IsValid(int value) {
+    return LeaveSceneReq_MsgId_IsValid(value);
+  }
+  static constexpr MsgId MsgId_MIN =
+    LeaveSceneReq_MsgId_MsgId_MIN;
+  static constexpr MsgId MsgId_MAX =
+    LeaveSceneReq_MsgId_MsgId_MAX;
+  static constexpr int MsgId_ARRAYSIZE =
+    LeaveSceneReq_MsgId_MsgId_ARRAYSIZE;
+  template<typename T>
+  static inline const std::string& MsgId_Name(T enum_t_value) {
+    static_assert(::std::is_same<T, MsgId>::value ||
+      ::std::is_integral<T>::value,
+      "Incorrect type passed to function MsgId_Name.");
+    return LeaveSceneReq_MsgId_Name(enum_t_value);
+  }
+  static inline bool MsgId_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
+      MsgId* value) {
+    return LeaveSceneReq_MsgId_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  // @@protoc_insertion_point(class_scope:PB.Game.LeaveSceneReq)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_client_5fgame_2eproto;
+};
+// -------------------------------------------------------------------
+
+class LeaveSceneResp final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Game.LeaveSceneResp) */ {
+ public:
+  inline LeaveSceneResp() : LeaveSceneResp(nullptr) {}
+  ~LeaveSceneResp() override;
+  explicit PROTOBUF_CONSTEXPR LeaveSceneResp(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  LeaveSceneResp(const LeaveSceneResp& from);
+  LeaveSceneResp(LeaveSceneResp&& from) noexcept
+    : LeaveSceneResp() {
+    *this = ::std::move(from);
+  }
+
+  inline LeaveSceneResp& operator=(const LeaveSceneResp& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline LeaveSceneResp& operator=(LeaveSceneResp&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const LeaveSceneResp& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const LeaveSceneResp* internal_default_instance() {
+    return reinterpret_cast<const LeaveSceneResp*>(
+               &_LeaveSceneResp_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    22;
+
+  friend void swap(LeaveSceneResp& a, LeaveSceneResp& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(LeaveSceneResp* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(LeaveSceneResp* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  LeaveSceneResp* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<LeaveSceneResp>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const LeaveSceneResp& from);
+  void MergeFrom(const LeaveSceneResp& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(LeaveSceneResp* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Game.LeaveSceneResp";
+  }
+  protected:
+  explicit LeaveSceneResp(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  typedef LeaveSceneResp_MsgId MsgId;
+  static constexpr MsgId None =
+    LeaveSceneResp_MsgId_None;
+  static constexpr MsgId Id =
+    LeaveSceneResp_MsgId_Id;
+  static inline bool MsgId_IsValid(int value) {
+    return LeaveSceneResp_MsgId_IsValid(value);
+  }
+  static constexpr MsgId MsgId_MIN =
+    LeaveSceneResp_MsgId_MsgId_MIN;
+  static constexpr MsgId MsgId_MAX =
+    LeaveSceneResp_MsgId_MsgId_MAX;
+  static constexpr int MsgId_ARRAYSIZE =
+    LeaveSceneResp_MsgId_MsgId_ARRAYSIZE;
+  template<typename T>
+  static inline const std::string& MsgId_Name(T enum_t_value) {
+    static_assert(::std::is_same<T, MsgId>::value ||
+      ::std::is_integral<T>::value,
+      "Incorrect type passed to function MsgId_Name.");
+    return LeaveSceneResp_MsgId_Name(enum_t_value);
+  }
+  static inline bool MsgId_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
+      MsgId* value) {
+    return LeaveSceneResp_MsgId_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kMessageFieldNumber = 2,
+    kCodeFieldNumber = 1,
+  };
+  // string message = 2;
+  void clear_message();
+  const std::string& message() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_message(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_message();
+  PROTOBUF_NODISCARD std::string* release_message();
+  void set_allocated_message(std::string* message);
+  private:
+  const std::string& _internal_message() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_message(const std::string& value);
+  std::string* _internal_mutable_message();
+  public:
+
+  // int32 code = 1;
+  void clear_code();
+  int32_t code() const;
+  void set_code(int32_t value);
+  private:
+  int32_t _internal_code() const;
+  void _internal_set_code(int32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Game.LeaveSceneResp)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr message_;
     int32_t code_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
@@ -4913,7 +5278,7 @@ class AccountKickedPush final :
                &_AccountKickedPush_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    21;
+    23;
 
   friend void swap(AccountKickedPush& a, AccountKickedPush& b) {
     a.Swap(&b);
@@ -5085,7 +5450,7 @@ class BattleServerOfflinePush final :
                &_BattleServerOfflinePush_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    22;
+    24;
 
   friend void swap(BattleServerOfflinePush& a, BattleServerOfflinePush& b) {
     a.Swap(&b);
@@ -5279,7 +5644,7 @@ class TownServerOfflinePush final :
                &_TownServerOfflinePush_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    23;
+    25;
 
   friend void swap(TownServerOfflinePush& a, TownServerOfflinePush& b) {
     a.Swap(&b);
@@ -5462,7 +5827,7 @@ class DuelInvitePush final :
                &_DuelInvitePush_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    24;
+    26;
 
   friend void swap(DuelInvitePush& a, DuelInvitePush& b) {
     a.Swap(&b);
@@ -5645,7 +6010,7 @@ class DuelStartPush final :
                &_DuelStartPush_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    25;
+    27;
 
   friend void swap(DuelStartPush& a, DuelStartPush& b) {
     a.Swap(&b);
@@ -5861,7 +6226,7 @@ class DuelEndPush final :
                &_DuelEndPush_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    26;
+    28;
 
   friend void swap(DuelEndPush& a, DuelEndPush& b) {
     a.Swap(&b);
@@ -6033,7 +6398,7 @@ class FashionWearReq final :
                &_FashionWearReq_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    27;
+    29;
 
   friend void swap(FashionWearReq& a, FashionWearReq& b) {
     a.Swap(&b);
@@ -6198,7 +6563,7 @@ class FashionWearResp final :
                &_FashionWearResp_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    28;
+    30;
 
   friend void swap(FashionWearResp& a, FashionWearResp& b) {
     a.Swap(&b);
@@ -6370,7 +6735,7 @@ class ArmamentSyncReq final :
                &_ArmamentSyncReq_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    29;
+    31;
 
   friend void swap(ArmamentSyncReq& a, ArmamentSyncReq& b) {
     a.Swap(&b);
@@ -6546,7 +6911,7 @@ class ArmamentSyncResp final :
                &_ArmamentSyncResp_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    30;
+    32;
 
   friend void swap(ArmamentSyncResp& a, ArmamentSyncResp& b) {
     a.Swap(&b);
@@ -6718,7 +7083,7 @@ class SkillSlotsSyncReq final :
                &_SkillSlotsSyncReq_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    31;
+    33;
 
   friend void swap(SkillSlotsSyncReq& a, SkillSlotsSyncReq& b) {
     a.Swap(&b);
@@ -6883,7 +7248,7 @@ class SkillSlotsSyncResp final :
                &_SkillSlotsSyncResp_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    32;
+    34;
 
   friend void swap(SkillSlotsSyncResp& a, SkillSlotsSyncResp& b) {
     a.Swap(&b);
@@ -7055,7 +7420,7 @@ class PetSyncReq final :
                &_PetSyncReq_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    33;
+    35;
 
   friend void swap(PetSyncReq& a, PetSyncReq& b) {
     a.Swap(&b);
@@ -7231,7 +7596,7 @@ class PetSyncResp final :
                &_PetSyncResp_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    34;
+    36;
 
   friend void swap(PetSyncResp& a, PetSyncResp& b) {
     a.Swap(&b);
@@ -7403,7 +7768,7 @@ class PartnerSyncReq final :
                &_PartnerSyncReq_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    35;
+    37;
 
   friend void swap(PartnerSyncReq& a, PartnerSyncReq& b) {
     a.Swap(&b);
@@ -7579,7 +7944,7 @@ class PartnerSyncResp final :
                &_PartnerSyncResp_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    36;
+    38;
 
   friend void swap(PartnerSyncResp& a, PartnerSyncResp& b) {
     a.Swap(&b);
@@ -9829,39 +10194,39 @@ inline void EnterSceneReq::set_owner_uid(uint64_t value) {
   // @@protoc_insertion_point(field_set:PB.Game.EnterSceneReq.owner_uid)
 }
 
-// .PB.Types.PlayerState state = 4;
-inline bool EnterSceneReq::_internal_has_state() const {
-  return this != internal_default_instance() && _impl_.state_ != nullptr;
+// .PB.Types.TownMovement movement = 4;
+inline bool EnterSceneReq::_internal_has_movement() const {
+  return this != internal_default_instance() && _impl_.movement_ != nullptr;
 }
-inline bool EnterSceneReq::has_state() const {
-  return _internal_has_state();
+inline bool EnterSceneReq::has_movement() const {
+  return _internal_has_movement();
 }
-inline const ::PB::Types::PlayerState& EnterSceneReq::_internal_state() const {
-  const ::PB::Types::PlayerState* p = _impl_.state_;
-  return p != nullptr ? *p : reinterpret_cast<const ::PB::Types::PlayerState&>(
-      ::PB::Types::_PlayerState_default_instance_);
+inline const ::PB::Types::TownMovement& EnterSceneReq::_internal_movement() const {
+  const ::PB::Types::TownMovement* p = _impl_.movement_;
+  return p != nullptr ? *p : reinterpret_cast<const ::PB::Types::TownMovement&>(
+      ::PB::Types::_TownMovement_default_instance_);
 }
-inline const ::PB::Types::PlayerState& EnterSceneReq::state() const {
-  // @@protoc_insertion_point(field_get:PB.Game.EnterSceneReq.state)
-  return _internal_state();
+inline const ::PB::Types::TownMovement& EnterSceneReq::movement() const {
+  // @@protoc_insertion_point(field_get:PB.Game.EnterSceneReq.movement)
+  return _internal_movement();
 }
-inline void EnterSceneReq::unsafe_arena_set_allocated_state(
-    ::PB::Types::PlayerState* state) {
+inline void EnterSceneReq::unsafe_arena_set_allocated_movement(
+    ::PB::Types::TownMovement* movement) {
   if (GetArenaForAllocation() == nullptr) {
-    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.state_);
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.movement_);
   }
-  _impl_.state_ = state;
-  if (state) {
+  _impl_.movement_ = movement;
+  if (movement) {
     
   } else {
     
   }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:PB.Game.EnterSceneReq.state)
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:PB.Game.EnterSceneReq.movement)
 }
-inline ::PB::Types::PlayerState* EnterSceneReq::release_state() {
+inline ::PB::Types::TownMovement* EnterSceneReq::release_movement() {
   
-  ::PB::Types::PlayerState* temp = _impl_.state_;
-  _impl_.state_ = nullptr;
+  ::PB::Types::TownMovement* temp = _impl_.movement_;
+  _impl_.movement_ = nullptr;
 #ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
   auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
   temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
@@ -9873,45 +10238,45 @@ inline ::PB::Types::PlayerState* EnterSceneReq::release_state() {
 #endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
   return temp;
 }
-inline ::PB::Types::PlayerState* EnterSceneReq::unsafe_arena_release_state() {
-  // @@protoc_insertion_point(field_release:PB.Game.EnterSceneReq.state)
+inline ::PB::Types::TownMovement* EnterSceneReq::unsafe_arena_release_movement() {
+  // @@protoc_insertion_point(field_release:PB.Game.EnterSceneReq.movement)
   
-  ::PB::Types::PlayerState* temp = _impl_.state_;
-  _impl_.state_ = nullptr;
+  ::PB::Types::TownMovement* temp = _impl_.movement_;
+  _impl_.movement_ = nullptr;
   return temp;
 }
-inline ::PB::Types::PlayerState* EnterSceneReq::_internal_mutable_state() {
+inline ::PB::Types::TownMovement* EnterSceneReq::_internal_mutable_movement() {
   
-  if (_impl_.state_ == nullptr) {
-    auto* p = CreateMaybeMessage<::PB::Types::PlayerState>(GetArenaForAllocation());
-    _impl_.state_ = p;
+  if (_impl_.movement_ == nullptr) {
+    auto* p = CreateMaybeMessage<::PB::Types::TownMovement>(GetArenaForAllocation());
+    _impl_.movement_ = p;
   }
-  return _impl_.state_;
+  return _impl_.movement_;
 }
-inline ::PB::Types::PlayerState* EnterSceneReq::mutable_state() {
-  ::PB::Types::PlayerState* _msg = _internal_mutable_state();
-  // @@protoc_insertion_point(field_mutable:PB.Game.EnterSceneReq.state)
+inline ::PB::Types::TownMovement* EnterSceneReq::mutable_movement() {
+  ::PB::Types::TownMovement* _msg = _internal_mutable_movement();
+  // @@protoc_insertion_point(field_mutable:PB.Game.EnterSceneReq.movement)
   return _msg;
 }
-inline void EnterSceneReq::set_allocated_state(::PB::Types::PlayerState* state) {
+inline void EnterSceneReq::set_allocated_movement(::PB::Types::TownMovement* movement) {
   ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
   if (message_arena == nullptr) {
-    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.state_);
+    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.movement_);
   }
-  if (state) {
+  if (movement) {
     ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
         ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(
-                reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(state));
+                reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(movement));
     if (message_arena != submessage_arena) {
-      state = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, state, submessage_arena);
+      movement = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, movement, submessage_arena);
     }
     
   } else {
     
   }
-  _impl_.state_ = state;
-  // @@protoc_insertion_point(field_set_allocated:PB.Game.EnterSceneReq.state)
+  _impl_.movement_ = movement;
+  // @@protoc_insertion_point(field_set_allocated:PB.Game.EnterSceneReq.movement)
 }
 
 // -------------------------------------------------------------------
@@ -10073,41 +10438,119 @@ inline void EnterSceneResp::set_allocated_scene(::PB::Types::SceneInfo* scene) {
   // @@protoc_insertion_point(field_set_allocated:PB.Game.EnterSceneResp.scene)
 }
 
-// repeated .PB.Types.PlayerState players = 4;
+// repeated .PB.Types.TownPlayerInfo players = 4;
 inline int EnterSceneResp::_internal_players_size() const {
   return _impl_.players_.size();
 }
 inline int EnterSceneResp::players_size() const {
   return _internal_players_size();
 }
-inline ::PB::Types::PlayerState* EnterSceneResp::mutable_players(int index) {
+inline ::PB::Types::TownPlayerInfo* EnterSceneResp::mutable_players(int index) {
   // @@protoc_insertion_point(field_mutable:PB.Game.EnterSceneResp.players)
   return _impl_.players_.Mutable(index);
 }
-inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PlayerState >*
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::TownPlayerInfo >*
 EnterSceneResp::mutable_players() {
   // @@protoc_insertion_point(field_mutable_list:PB.Game.EnterSceneResp.players)
   return &_impl_.players_;
 }
-inline const ::PB::Types::PlayerState& EnterSceneResp::_internal_players(int index) const {
+inline const ::PB::Types::TownPlayerInfo& EnterSceneResp::_internal_players(int index) const {
   return _impl_.players_.Get(index);
 }
-inline const ::PB::Types::PlayerState& EnterSceneResp::players(int index) const {
+inline const ::PB::Types::TownPlayerInfo& EnterSceneResp::players(int index) const {
   // @@protoc_insertion_point(field_get:PB.Game.EnterSceneResp.players)
   return _internal_players(index);
 }
-inline ::PB::Types::PlayerState* EnterSceneResp::_internal_add_players() {
+inline ::PB::Types::TownPlayerInfo* EnterSceneResp::_internal_add_players() {
   return _impl_.players_.Add();
 }
-inline ::PB::Types::PlayerState* EnterSceneResp::add_players() {
-  ::PB::Types::PlayerState* _add = _internal_add_players();
+inline ::PB::Types::TownPlayerInfo* EnterSceneResp::add_players() {
+  ::PB::Types::TownPlayerInfo* _add = _internal_add_players();
   // @@protoc_insertion_point(field_add:PB.Game.EnterSceneResp.players)
   return _add;
 }
-inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::PlayerState >&
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Types::TownPlayerInfo >&
 EnterSceneResp::players() const {
   // @@protoc_insertion_point(field_list:PB.Game.EnterSceneResp.players)
   return _impl_.players_;
+}
+
+// -------------------------------------------------------------------
+
+// LeaveSceneReq
+
+// -------------------------------------------------------------------
+
+// LeaveSceneResp
+
+// int32 code = 1;
+inline void LeaveSceneResp::clear_code() {
+  _impl_.code_ = 0;
+}
+inline int32_t LeaveSceneResp::_internal_code() const {
+  return _impl_.code_;
+}
+inline int32_t LeaveSceneResp::code() const {
+  // @@protoc_insertion_point(field_get:PB.Game.LeaveSceneResp.code)
+  return _internal_code();
+}
+inline void LeaveSceneResp::_internal_set_code(int32_t value) {
+  
+  _impl_.code_ = value;
+}
+inline void LeaveSceneResp::set_code(int32_t value) {
+  _internal_set_code(value);
+  // @@protoc_insertion_point(field_set:PB.Game.LeaveSceneResp.code)
+}
+
+// string message = 2;
+inline void LeaveSceneResp::clear_message() {
+  _impl_.message_.ClearToEmpty();
+}
+inline const std::string& LeaveSceneResp::message() const {
+  // @@protoc_insertion_point(field_get:PB.Game.LeaveSceneResp.message)
+  return _internal_message();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void LeaveSceneResp::set_message(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.message_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:PB.Game.LeaveSceneResp.message)
+}
+inline std::string* LeaveSceneResp::mutable_message() {
+  std::string* _s = _internal_mutable_message();
+  // @@protoc_insertion_point(field_mutable:PB.Game.LeaveSceneResp.message)
+  return _s;
+}
+inline const std::string& LeaveSceneResp::_internal_message() const {
+  return _impl_.message_.Get();
+}
+inline void LeaveSceneResp::_internal_set_message(const std::string& value) {
+  
+  _impl_.message_.Set(value, GetArenaForAllocation());
+}
+inline std::string* LeaveSceneResp::_internal_mutable_message() {
+  
+  return _impl_.message_.Mutable(GetArenaForAllocation());
+}
+inline std::string* LeaveSceneResp::release_message() {
+  // @@protoc_insertion_point(field_release:PB.Game.LeaveSceneResp.message)
+  return _impl_.message_.Release();
+}
+inline void LeaveSceneResp::set_allocated_message(std::string* message) {
+  if (message != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.message_.SetAllocated(message, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.message_.IsDefault()) {
+    _impl_.message_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:PB.Game.LeaveSceneResp.message)
 }
 
 // -------------------------------------------------------------------
@@ -11424,6 +11867,10 @@ inline void PartnerSyncResp::set_allocated_message(std::string* message) {
 
 // -------------------------------------------------------------------
 
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 
 // @@protoc_insertion_point(namespace_scope)
 
@@ -11453,6 +11900,8 @@ template <> struct is_proto_enum< ::PB::Game::DuelRespondReq_MsgId> : ::std::tru
 template <> struct is_proto_enum< ::PB::Game::DuelRespondResp_MsgId> : ::std::true_type {};
 template <> struct is_proto_enum< ::PB::Game::EnterSceneReq_MsgId> : ::std::true_type {};
 template <> struct is_proto_enum< ::PB::Game::EnterSceneResp_MsgId> : ::std::true_type {};
+template <> struct is_proto_enum< ::PB::Game::LeaveSceneReq_MsgId> : ::std::true_type {};
+template <> struct is_proto_enum< ::PB::Game::LeaveSceneResp_MsgId> : ::std::true_type {};
 template <> struct is_proto_enum< ::PB::Game::AccountKickedPush_MsgId> : ::std::true_type {};
 template <> struct is_proto_enum< ::PB::Game::BattleServerOfflinePush_MsgId> : ::std::true_type {};
 template <> struct is_proto_enum< ::PB::Game::TownServerOfflinePush_MsgId> : ::std::true_type {};

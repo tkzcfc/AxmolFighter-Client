@@ -230,30 +230,101 @@ struct PartnerInfoDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 PartnerInfoDefaultTypeInternal _PartnerInfo_default_instance_;
-PROTOBUF_CONSTEXPR PlayerState::PlayerState(
+PROTOBUF_CONSTEXPR TownVec3::TownVec3(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.state_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
-  , /*decltype(_impl_.name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
-  , /*decltype(_impl_.player_id_)*/int64_t{0}
-  , /*decltype(_impl_.pos_x_)*/0
-  , /*decltype(_impl_.pos_y_)*/0
-  , /*decltype(_impl_.hp_)*/0
-  , /*decltype(_impl_.class_id_)*/0
-  , /*decltype(_impl_.pos_z_)*/0
-  , /*decltype(_impl_.facing_)*/0
-  , /*decltype(_impl_.moving_)*/false
-  , /*decltype(_impl_.vel_x_)*/0
-  , /*decltype(_impl_.vel_y_)*/0
+    /*decltype(_impl_.x_)*/0
+  , /*decltype(_impl_.y_)*/0
+  , /*decltype(_impl_.z_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
-struct PlayerStateDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR PlayerStateDefaultTypeInternal()
+struct TownVec3DefaultTypeInternal {
+  PROTOBUF_CONSTEXPR TownVec3DefaultTypeInternal()
       : _instance(::_pbi::ConstantInitialized{}) {}
-  ~PlayerStateDefaultTypeInternal() {}
+  ~TownVec3DefaultTypeInternal() {}
   union {
-    PlayerState _instance;
+    TownVec3 _instance;
   };
 };
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 PlayerStateDefaultTypeInternal _PlayerState_default_instance_;
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 TownVec3DefaultTypeInternal _TownVec3_default_instance_;
+PROTOBUF_CONSTEXPR TownVel::TownVel(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.x_)*/0
+  , /*decltype(_impl_.y_)*/0
+  , /*decltype(_impl_.z_)*/0
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct TownVelDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR TownVelDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~TownVelDefaultTypeInternal() {}
+  union {
+    TownVel _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 TownVelDefaultTypeInternal _TownVel_default_instance_;
+PROTOBUF_CONSTEXPR TownMovement::TownMovement(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.state_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.pos_)*/nullptr
+  , /*decltype(_impl_.vel_)*/nullptr
+  , /*decltype(_impl_.facing_)*/0
+  , /*decltype(_impl_.moving_)*/false
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct TownMovementDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR TownMovementDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~TownMovementDefaultTypeInternal() {}
+  union {
+    TownMovement _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 TownMovementDefaultTypeInternal _TownMovement_default_instance_;
+PROTOBUF_CONSTEXPR TownFashionItem::TownFashionItem(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.position_)*/0
+  , /*decltype(_impl_.config_id_)*/0
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct TownFashionItemDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR TownFashionItemDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~TownFashionItemDefaultTypeInternal() {}
+  union {
+    TownFashionItem _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 TownFashionItemDefaultTypeInternal _TownFashionItem_default_instance_;
+PROTOBUF_CONSTEXPR TownAppearance::TownAppearance(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.fashions_)*/{}
+  , /*decltype(_impl_.base_skins_)*/{}
+  , /*decltype(_impl_.name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.class_id_)*/0
+  , /*decltype(_impl_.level_)*/0
+  , /*decltype(_impl_.pet_id_)*/0
+  , /*decltype(_impl_.armament_id_)*/0
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct TownAppearanceDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR TownAppearanceDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~TownAppearanceDefaultTypeInternal() {}
+  union {
+    TownAppearance _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 TownAppearanceDefaultTypeInternal _TownAppearance_default_instance_;
+PROTOBUF_CONSTEXPR TownPlayerInfo::TownPlayerInfo(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.appearance_)*/nullptr
+  , /*decltype(_impl_.movement_)*/nullptr
+  , /*decltype(_impl_.player_id_)*/int64_t{0}
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct TownPlayerInfoDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR TownPlayerInfoDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~TownPlayerInfoDefaultTypeInternal() {}
+  union {
+    TownPlayerInfo _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 TownPlayerInfoDefaultTypeInternal _TownPlayerInfo_default_instance_;
 PROTOBUF_CONSTEXPR SceneInfo::SceneInfo(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.type_)*/0
@@ -3977,88 +4048,46 @@ std::string PartnerInfo::GetTypeName() const {
 
 // ===================================================================
 
-class PlayerState::_Internal {
+class TownVec3::_Internal {
  public:
 };
 
-PlayerState::PlayerState(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+TownVec3::TownVec3(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
   : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
   SharedCtor(arena, is_message_owned);
-  // @@protoc_insertion_point(arena_constructor:PB.Types.PlayerState)
+  // @@protoc_insertion_point(arena_constructor:PB.Types.TownVec3)
 }
-PlayerState::PlayerState(const PlayerState& from)
+TownVec3::TownVec3(const TownVec3& from)
   : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
-  PlayerState* const _this = this; (void)_this;
+  TownVec3* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.state_){}
-    , decltype(_impl_.name_){}
-    , decltype(_impl_.player_id_){}
-    , decltype(_impl_.pos_x_){}
-    , decltype(_impl_.pos_y_){}
-    , decltype(_impl_.hp_){}
-    , decltype(_impl_.class_id_){}
-    , decltype(_impl_.pos_z_){}
-    , decltype(_impl_.facing_){}
-    , decltype(_impl_.moving_){}
-    , decltype(_impl_.vel_x_){}
-    , decltype(_impl_.vel_y_){}
+      decltype(_impl_.x_){}
+    , decltype(_impl_.y_){}
+    , decltype(_impl_.z_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
-  _impl_.state_.InitDefault();
-  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.state_.Set("", GetArenaForAllocation());
-  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (!from._internal_state().empty()) {
-    _this->_impl_.state_.Set(from._internal_state(), 
-      _this->GetArenaForAllocation());
-  }
-  _impl_.name_.InitDefault();
-  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.name_.Set("", GetArenaForAllocation());
-  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (!from._internal_name().empty()) {
-    _this->_impl_.name_.Set(from._internal_name(), 
-      _this->GetArenaForAllocation());
-  }
-  ::memcpy(&_impl_.player_id_, &from._impl_.player_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.vel_y_) -
-    reinterpret_cast<char*>(&_impl_.player_id_)) + sizeof(_impl_.vel_y_));
-  // @@protoc_insertion_point(copy_constructor:PB.Types.PlayerState)
+  ::memcpy(&_impl_.x_, &from._impl_.x_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.z_) -
+    reinterpret_cast<char*>(&_impl_.x_)) + sizeof(_impl_.z_));
+  // @@protoc_insertion_point(copy_constructor:PB.Types.TownVec3)
 }
 
-inline void PlayerState::SharedCtor(
+inline void TownVec3::SharedCtor(
     ::_pb::Arena* arena, bool is_message_owned) {
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.state_){}
-    , decltype(_impl_.name_){}
-    , decltype(_impl_.player_id_){int64_t{0}}
-    , decltype(_impl_.pos_x_){0}
-    , decltype(_impl_.pos_y_){0}
-    , decltype(_impl_.hp_){0}
-    , decltype(_impl_.class_id_){0}
-    , decltype(_impl_.pos_z_){0}
-    , decltype(_impl_.facing_){0}
-    , decltype(_impl_.moving_){false}
-    , decltype(_impl_.vel_x_){0}
-    , decltype(_impl_.vel_y_){0}
+      decltype(_impl_.x_){0}
+    , decltype(_impl_.y_){0}
+    , decltype(_impl_.z_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
-  _impl_.state_.InitDefault();
-  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.state_.Set("", GetArenaForAllocation());
-  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  _impl_.name_.InitDefault();
-  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.name_.Set("", GetArenaForAllocation());
-  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
-PlayerState::~PlayerState() {
-  // @@protoc_insertion_point(destructor:PB.Types.PlayerState)
+TownVec3::~TownVec3() {
+  // @@protoc_insertion_point(destructor:PB.Types.TownVec3)
   if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
   (void)arena;
     return;
@@ -4066,132 +4095,289 @@ PlayerState::~PlayerState() {
   SharedDtor();
 }
 
-inline void PlayerState::SharedDtor() {
+inline void TownVec3::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
-  _impl_.state_.Destroy();
-  _impl_.name_.Destroy();
 }
 
-void PlayerState::SetCachedSize(int size) const {
+void TownVec3::SetCachedSize(int size) const {
   _impl_._cached_size_.Set(size);
 }
 
-void PlayerState::Clear() {
-// @@protoc_insertion_point(message_clear_start:PB.Types.PlayerState)
+void TownVec3::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Types.TownVec3)
   uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  _impl_.state_.ClearToEmpty();
-  _impl_.name_.ClearToEmpty();
-  ::memset(&_impl_.player_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.vel_y_) -
-      reinterpret_cast<char*>(&_impl_.player_id_)) + sizeof(_impl_.vel_y_));
+  ::memset(&_impl_.x_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.z_) -
+      reinterpret_cast<char*>(&_impl_.x_)) + sizeof(_impl_.z_));
   _internal_metadata_.Clear<std::string>();
 }
 
-const char* PlayerState::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+const char* TownVec3::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
     uint32_t tag;
     ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
-      // int64 player_id = 1;
+      // int32 x = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
-          _impl_.player_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          _impl_.x_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
-      // float pos_x = 2;
+      // int32 y = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.y_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 z = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.z_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* TownVec3::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Types.TownVec3)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // int32 x = 1;
+  if (this->_internal_x() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(1, this->_internal_x(), target);
+  }
+
+  // int32 y = 2;
+  if (this->_internal_y() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_y(), target);
+  }
+
+  // int32 z = 3;
+  if (this->_internal_z() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(3, this->_internal_z(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Types.TownVec3)
+  return target;
+}
+
+size_t TownVec3::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Types.TownVec3)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // int32 x = 1;
+  if (this->_internal_x() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_x());
+  }
+
+  // int32 y = 2;
+  if (this->_internal_y() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_y());
+  }
+
+  // int32 z = 3;
+  if (this->_internal_z() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_z());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void TownVec3::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const TownVec3*>(
+      &from));
+}
+
+void TownVec3::MergeFrom(const TownVec3& from) {
+  TownVec3* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Types.TownVec3)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_x() != 0) {
+    _this->_internal_set_x(from._internal_x());
+  }
+  if (from._internal_y() != 0) {
+    _this->_internal_set_y(from._internal_y());
+  }
+  if (from._internal_z() != 0) {
+    _this->_internal_set_z(from._internal_z());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void TownVec3::CopyFrom(const TownVec3& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Types.TownVec3)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool TownVec3::IsInitialized() const {
+  return true;
+}
+
+void TownVec3::InternalSwap(TownVec3* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(TownVec3, _impl_.z_)
+      + sizeof(TownVec3::_impl_.z_)
+      - PROTOBUF_FIELD_OFFSET(TownVec3, _impl_.x_)>(
+          reinterpret_cast<char*>(&_impl_.x_),
+          reinterpret_cast<char*>(&other->_impl_.x_));
+}
+
+std::string TownVec3::GetTypeName() const {
+  return "PB.Types.TownVec3";
+}
+
+
+// ===================================================================
+
+class TownVel::_Internal {
+ public:
+};
+
+TownVel::TownVel(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:PB.Types.TownVel)
+}
+TownVel::TownVel(const TownVel& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  TownVel* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.x_){}
+    , decltype(_impl_.y_){}
+    , decltype(_impl_.z_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  ::memcpy(&_impl_.x_, &from._impl_.x_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.z_) -
+    reinterpret_cast<char*>(&_impl_.x_)) + sizeof(_impl_.z_));
+  // @@protoc_insertion_point(copy_constructor:PB.Types.TownVel)
+}
+
+inline void TownVel::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.x_){0}
+    , decltype(_impl_.y_){0}
+    , decltype(_impl_.z_){0}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+TownVel::~TownVel() {
+  // @@protoc_insertion_point(destructor:PB.Types.TownVel)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void TownVel::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+}
+
+void TownVel::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void TownVel::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Types.TownVel)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  ::memset(&_impl_.x_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.z_) -
+      reinterpret_cast<char*>(&_impl_.x_)) + sizeof(_impl_.z_));
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* TownVel::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // float x = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 13)) {
+          _impl_.x_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
+          ptr += sizeof(float);
+        } else
+          goto handle_unusual;
+        continue;
+      // float y = 2;
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 21)) {
-          _impl_.pos_x_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
+          _impl_.y_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
           ptr += sizeof(float);
         } else
           goto handle_unusual;
         continue;
-      // float pos_y = 3;
+      // float z = 3;
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 29)) {
-          _impl_.pos_y_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
-          ptr += sizeof(float);
-        } else
-          goto handle_unusual;
-        continue;
-      // int32 hp = 4;
-      case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
-          _impl_.hp_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // string state = 5;
-      case 5:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
-          auto str = _internal_mutable_state();
-          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
-          CHK_(ptr);
-          CHK_(::_pbi::VerifyUTF8(str, nullptr));
-        } else
-          goto handle_unusual;
-        continue;
-      // int32 class_id = 6;
-      case 6:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 48)) {
-          _impl_.class_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // string name = 7;
-      case 7:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 58)) {
-          auto str = _internal_mutable_name();
-          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
-          CHK_(ptr);
-          CHK_(::_pbi::VerifyUTF8(str, nullptr));
-        } else
-          goto handle_unusual;
-        continue;
-      // float pos_z = 8;
-      case 8:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 69)) {
-          _impl_.pos_z_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
-          ptr += sizeof(float);
-        } else
-          goto handle_unusual;
-        continue;
-      // int32 facing = 9;
-      case 9:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 72)) {
-          _impl_.facing_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // bool moving = 10;
-      case 10:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 80)) {
-          _impl_.moving_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // float vel_x = 11;
-      case 11:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 93)) {
-          _impl_.vel_x_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
-          ptr += sizeof(float);
-        } else
-          goto handle_unusual;
-        continue;
-      // float vel_y = 12;
-      case 12:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 101)) {
-          _impl_.vel_y_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
+          _impl_.z_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
           ptr += sizeof(float);
         } else
           goto handle_unusual;
@@ -4219,42 +4405,371 @@ failure:
 #undef CHK_
 }
 
-uint8_t* PlayerState::_InternalSerialize(
+uint8_t* TownVel::_InternalSerialize(
     uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
-  // @@protoc_insertion_point(serialize_to_array_start:PB.Types.PlayerState)
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Types.TownVel)
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // int64 player_id = 1;
-  if (this->_internal_player_id() != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt64ToArray(1, this->_internal_player_id(), target);
-  }
-
-  // float pos_x = 2;
+  // float x = 1;
   static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_pos_x = this->_internal_pos_x();
-  uint32_t raw_pos_x;
-  memcpy(&raw_pos_x, &tmp_pos_x, sizeof(tmp_pos_x));
-  if (raw_pos_x != 0) {
+  float tmp_x = this->_internal_x();
+  uint32_t raw_x;
+  memcpy(&raw_x, &tmp_x, sizeof(tmp_x));
+  if (raw_x != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteFloatToArray(2, this->_internal_pos_x(), target);
+    target = ::_pbi::WireFormatLite::WriteFloatToArray(1, this->_internal_x(), target);
   }
 
-  // float pos_y = 3;
+  // float y = 2;
   static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_pos_y = this->_internal_pos_y();
-  uint32_t raw_pos_y;
-  memcpy(&raw_pos_y, &tmp_pos_y, sizeof(tmp_pos_y));
-  if (raw_pos_y != 0) {
+  float tmp_y = this->_internal_y();
+  uint32_t raw_y;
+  memcpy(&raw_y, &tmp_y, sizeof(tmp_y));
+  if (raw_y != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteFloatToArray(3, this->_internal_pos_y(), target);
+    target = ::_pbi::WireFormatLite::WriteFloatToArray(2, this->_internal_y(), target);
   }
 
-  // int32 hp = 4;
-  if (this->_internal_hp() != 0) {
+  // float z = 3;
+  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
+  float tmp_z = this->_internal_z();
+  uint32_t raw_z;
+  memcpy(&raw_z, &tmp_z, sizeof(tmp_z));
+  if (raw_z != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(4, this->_internal_hp(), target);
+    target = ::_pbi::WireFormatLite::WriteFloatToArray(3, this->_internal_z(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Types.TownVel)
+  return target;
+}
+
+size_t TownVel::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Types.TownVel)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // float x = 1;
+  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
+  float tmp_x = this->_internal_x();
+  uint32_t raw_x;
+  memcpy(&raw_x, &tmp_x, sizeof(tmp_x));
+  if (raw_x != 0) {
+    total_size += 1 + 4;
+  }
+
+  // float y = 2;
+  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
+  float tmp_y = this->_internal_y();
+  uint32_t raw_y;
+  memcpy(&raw_y, &tmp_y, sizeof(tmp_y));
+  if (raw_y != 0) {
+    total_size += 1 + 4;
+  }
+
+  // float z = 3;
+  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
+  float tmp_z = this->_internal_z();
+  uint32_t raw_z;
+  memcpy(&raw_z, &tmp_z, sizeof(tmp_z));
+  if (raw_z != 0) {
+    total_size += 1 + 4;
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void TownVel::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const TownVel*>(
+      &from));
+}
+
+void TownVel::MergeFrom(const TownVel& from) {
+  TownVel* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Types.TownVel)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
+  float tmp_x = from._internal_x();
+  uint32_t raw_x;
+  memcpy(&raw_x, &tmp_x, sizeof(tmp_x));
+  if (raw_x != 0) {
+    _this->_internal_set_x(from._internal_x());
+  }
+  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
+  float tmp_y = from._internal_y();
+  uint32_t raw_y;
+  memcpy(&raw_y, &tmp_y, sizeof(tmp_y));
+  if (raw_y != 0) {
+    _this->_internal_set_y(from._internal_y());
+  }
+  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
+  float tmp_z = from._internal_z();
+  uint32_t raw_z;
+  memcpy(&raw_z, &tmp_z, sizeof(tmp_z));
+  if (raw_z != 0) {
+    _this->_internal_set_z(from._internal_z());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void TownVel::CopyFrom(const TownVel& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Types.TownVel)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool TownVel::IsInitialized() const {
+  return true;
+}
+
+void TownVel::InternalSwap(TownVel* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(TownVel, _impl_.z_)
+      + sizeof(TownVel::_impl_.z_)
+      - PROTOBUF_FIELD_OFFSET(TownVel, _impl_.x_)>(
+          reinterpret_cast<char*>(&_impl_.x_),
+          reinterpret_cast<char*>(&other->_impl_.x_));
+}
+
+std::string TownVel::GetTypeName() const {
+  return "PB.Types.TownVel";
+}
+
+
+// ===================================================================
+
+class TownMovement::_Internal {
+ public:
+  static const ::PB::Types::TownVec3& pos(const TownMovement* msg);
+  static const ::PB::Types::TownVel& vel(const TownMovement* msg);
+};
+
+const ::PB::Types::TownVec3&
+TownMovement::_Internal::pos(const TownMovement* msg) {
+  return *msg->_impl_.pos_;
+}
+const ::PB::Types::TownVel&
+TownMovement::_Internal::vel(const TownMovement* msg) {
+  return *msg->_impl_.vel_;
+}
+TownMovement::TownMovement(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:PB.Types.TownMovement)
+}
+TownMovement::TownMovement(const TownMovement& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  TownMovement* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.state_){}
+    , decltype(_impl_.pos_){nullptr}
+    , decltype(_impl_.vel_){nullptr}
+    , decltype(_impl_.facing_){}
+    , decltype(_impl_.moving_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _impl_.state_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.state_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_state().empty()) {
+    _this->_impl_.state_.Set(from._internal_state(), 
+      _this->GetArenaForAllocation());
+  }
+  if (from._internal_has_pos()) {
+    _this->_impl_.pos_ = new ::PB::Types::TownVec3(*from._impl_.pos_);
+  }
+  if (from._internal_has_vel()) {
+    _this->_impl_.vel_ = new ::PB::Types::TownVel(*from._impl_.vel_);
+  }
+  ::memcpy(&_impl_.facing_, &from._impl_.facing_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.moving_) -
+    reinterpret_cast<char*>(&_impl_.facing_)) + sizeof(_impl_.moving_));
+  // @@protoc_insertion_point(copy_constructor:PB.Types.TownMovement)
+}
+
+inline void TownMovement::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.state_){}
+    , decltype(_impl_.pos_){nullptr}
+    , decltype(_impl_.vel_){nullptr}
+    , decltype(_impl_.facing_){0}
+    , decltype(_impl_.moving_){false}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.state_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.state_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+}
+
+TownMovement::~TownMovement() {
+  // @@protoc_insertion_point(destructor:PB.Types.TownMovement)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void TownMovement::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.state_.Destroy();
+  if (this != internal_default_instance()) delete _impl_.pos_;
+  if (this != internal_default_instance()) delete _impl_.vel_;
+}
+
+void TownMovement::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void TownMovement::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Types.TownMovement)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.state_.ClearToEmpty();
+  if (GetArenaForAllocation() == nullptr && _impl_.pos_ != nullptr) {
+    delete _impl_.pos_;
+  }
+  _impl_.pos_ = nullptr;
+  if (GetArenaForAllocation() == nullptr && _impl_.vel_ != nullptr) {
+    delete _impl_.vel_;
+  }
+  _impl_.vel_ = nullptr;
+  ::memset(&_impl_.facing_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.moving_) -
+      reinterpret_cast<char*>(&_impl_.facing_)) + sizeof(_impl_.moving_));
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* TownMovement::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // .PB.Types.TownVec3 pos = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
+          ptr = ctx->ParseMessage(_internal_mutable_pos(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 facing = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.facing_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // bool moving = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.moving_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // .PB.Types.TownVel vel = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
+          ptr = ctx->ParseMessage(_internal_mutable_vel(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // string state = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
+          auto str = _internal_mutable_state();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* TownMovement::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Types.TownMovement)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // .PB.Types.TownVec3 pos = 1;
+  if (this->_internal_has_pos()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(1, _Internal::pos(this),
+        _Internal::pos(this).GetCachedSize(), target, stream);
+  }
+
+  // int32 facing = 2;
+  if (this->_internal_facing() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_facing(), target);
+  }
+
+  // bool moving = 3;
+  if (this->_internal_moving() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteBoolToArray(3, this->_internal_moving(), target);
+  }
+
+  // .PB.Types.TownVel vel = 4;
+  if (this->_internal_has_vel()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(4, _Internal::vel(this),
+        _Internal::vel(this).GetCachedSize(), target, stream);
   }
 
   // string state = 5;
@@ -4262,79 +4777,21 @@ uint8_t* PlayerState::_InternalSerialize(
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
       this->_internal_state().data(), static_cast<int>(this->_internal_state().length()),
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
-      "PB.Types.PlayerState.state");
+      "PB.Types.TownMovement.state");
     target = stream->WriteStringMaybeAliased(
         5, this->_internal_state(), target);
-  }
-
-  // int32 class_id = 6;
-  if (this->_internal_class_id() != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(6, this->_internal_class_id(), target);
-  }
-
-  // string name = 7;
-  if (!this->_internal_name().empty()) {
-    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
-      this->_internal_name().data(), static_cast<int>(this->_internal_name().length()),
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
-      "PB.Types.PlayerState.name");
-    target = stream->WriteStringMaybeAliased(
-        7, this->_internal_name(), target);
-  }
-
-  // float pos_z = 8;
-  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_pos_z = this->_internal_pos_z();
-  uint32_t raw_pos_z;
-  memcpy(&raw_pos_z, &tmp_pos_z, sizeof(tmp_pos_z));
-  if (raw_pos_z != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteFloatToArray(8, this->_internal_pos_z(), target);
-  }
-
-  // int32 facing = 9;
-  if (this->_internal_facing() != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(9, this->_internal_facing(), target);
-  }
-
-  // bool moving = 10;
-  if (this->_internal_moving() != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteBoolToArray(10, this->_internal_moving(), target);
-  }
-
-  // float vel_x = 11;
-  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_vel_x = this->_internal_vel_x();
-  uint32_t raw_vel_x;
-  memcpy(&raw_vel_x, &tmp_vel_x, sizeof(tmp_vel_x));
-  if (raw_vel_x != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteFloatToArray(11, this->_internal_vel_x(), target);
-  }
-
-  // float vel_y = 12;
-  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_vel_y = this->_internal_vel_y();
-  uint32_t raw_vel_y;
-  memcpy(&raw_vel_y, &tmp_vel_y, sizeof(tmp_vel_y));
-  if (raw_vel_y != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteFloatToArray(12, this->_internal_vel_y(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
         static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
-  // @@protoc_insertion_point(serialize_to_array_end:PB.Types.PlayerState)
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Types.TownMovement)
   return target;
 }
 
-size_t PlayerState::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:PB.Types.PlayerState)
+size_t TownMovement::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Types.TownMovement)
   size_t total_size = 0;
 
   uint32_t cached_has_bits = 0;
@@ -4348,81 +4805,28 @@ size_t PlayerState::ByteSizeLong() const {
         this->_internal_state());
   }
 
-  // string name = 7;
-  if (!this->_internal_name().empty()) {
+  // .PB.Types.TownVec3 pos = 1;
+  if (this->_internal_has_pos()) {
     total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
-        this->_internal_name());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *_impl_.pos_);
   }
 
-  // int64 player_id = 1;
-  if (this->_internal_player_id() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_player_id());
+  // .PB.Types.TownVel vel = 4;
+  if (this->_internal_has_vel()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *_impl_.vel_);
   }
 
-  // float pos_x = 2;
-  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_pos_x = this->_internal_pos_x();
-  uint32_t raw_pos_x;
-  memcpy(&raw_pos_x, &tmp_pos_x, sizeof(tmp_pos_x));
-  if (raw_pos_x != 0) {
-    total_size += 1 + 4;
-  }
-
-  // float pos_y = 3;
-  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_pos_y = this->_internal_pos_y();
-  uint32_t raw_pos_y;
-  memcpy(&raw_pos_y, &tmp_pos_y, sizeof(tmp_pos_y));
-  if (raw_pos_y != 0) {
-    total_size += 1 + 4;
-  }
-
-  // int32 hp = 4;
-  if (this->_internal_hp() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_hp());
-  }
-
-  // int32 class_id = 6;
-  if (this->_internal_class_id() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_class_id());
-  }
-
-  // float pos_z = 8;
-  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_pos_z = this->_internal_pos_z();
-  uint32_t raw_pos_z;
-  memcpy(&raw_pos_z, &tmp_pos_z, sizeof(tmp_pos_z));
-  if (raw_pos_z != 0) {
-    total_size += 1 + 4;
-  }
-
-  // int32 facing = 9;
+  // int32 facing = 2;
   if (this->_internal_facing() != 0) {
     total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_facing());
   }
 
-  // bool moving = 10;
+  // bool moving = 3;
   if (this->_internal_moving() != 0) {
     total_size += 1 + 1;
-  }
-
-  // float vel_x = 11;
-  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_vel_x = this->_internal_vel_x();
-  uint32_t raw_vel_x;
-  memcpy(&raw_vel_x, &tmp_vel_x, sizeof(tmp_vel_x));
-  if (raw_vel_x != 0) {
-    total_size += 1 + 4;
-  }
-
-  // float vel_y = 12;
-  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_vel_y = this->_internal_vel_y();
-  uint32_t raw_vel_y;
-  memcpy(&raw_vel_y, &tmp_vel_y, sizeof(tmp_vel_y));
-  if (raw_vel_y != 0) {
-    total_size += 1 + 4;
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -4433,15 +4837,15 @@ size_t PlayerState::ByteSizeLong() const {
   return total_size;
 }
 
-void PlayerState::CheckTypeAndMergeFrom(
+void TownMovement::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::_pbi::DownCast<const PlayerState*>(
+  MergeFrom(*::_pbi::DownCast<const TownMovement*>(
       &from));
 }
 
-void PlayerState::MergeFrom(const PlayerState& from) {
-  PlayerState* const _this = this;
-  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Types.PlayerState)
+void TownMovement::MergeFrom(const TownMovement& from) {
+  TownMovement* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Types.TownMovement)
   GOOGLE_DCHECK_NE(&from, _this);
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
@@ -4449,38 +4853,13 @@ void PlayerState::MergeFrom(const PlayerState& from) {
   if (!from._internal_state().empty()) {
     _this->_internal_set_state(from._internal_state());
   }
-  if (!from._internal_name().empty()) {
-    _this->_internal_set_name(from._internal_name());
+  if (from._internal_has_pos()) {
+    _this->_internal_mutable_pos()->::PB::Types::TownVec3::MergeFrom(
+        from._internal_pos());
   }
-  if (from._internal_player_id() != 0) {
-    _this->_internal_set_player_id(from._internal_player_id());
-  }
-  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_pos_x = from._internal_pos_x();
-  uint32_t raw_pos_x;
-  memcpy(&raw_pos_x, &tmp_pos_x, sizeof(tmp_pos_x));
-  if (raw_pos_x != 0) {
-    _this->_internal_set_pos_x(from._internal_pos_x());
-  }
-  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_pos_y = from._internal_pos_y();
-  uint32_t raw_pos_y;
-  memcpy(&raw_pos_y, &tmp_pos_y, sizeof(tmp_pos_y));
-  if (raw_pos_y != 0) {
-    _this->_internal_set_pos_y(from._internal_pos_y());
-  }
-  if (from._internal_hp() != 0) {
-    _this->_internal_set_hp(from._internal_hp());
-  }
-  if (from._internal_class_id() != 0) {
-    _this->_internal_set_class_id(from._internal_class_id());
-  }
-  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_pos_z = from._internal_pos_z();
-  uint32_t raw_pos_z;
-  memcpy(&raw_pos_z, &tmp_pos_z, sizeof(tmp_pos_z));
-  if (raw_pos_z != 0) {
-    _this->_internal_set_pos_z(from._internal_pos_z());
+  if (from._internal_has_vel()) {
+    _this->_internal_mutable_vel()->::PB::Types::TownVel::MergeFrom(
+        from._internal_vel());
   }
   if (from._internal_facing() != 0) {
     _this->_internal_set_facing(from._internal_facing());
@@ -4488,35 +4867,21 @@ void PlayerState::MergeFrom(const PlayerState& from) {
   if (from._internal_moving() != 0) {
     _this->_internal_set_moving(from._internal_moving());
   }
-  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_vel_x = from._internal_vel_x();
-  uint32_t raw_vel_x;
-  memcpy(&raw_vel_x, &tmp_vel_x, sizeof(tmp_vel_x));
-  if (raw_vel_x != 0) {
-    _this->_internal_set_vel_x(from._internal_vel_x());
-  }
-  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
-  float tmp_vel_y = from._internal_vel_y();
-  uint32_t raw_vel_y;
-  memcpy(&raw_vel_y, &tmp_vel_y, sizeof(tmp_vel_y));
-  if (raw_vel_y != 0) {
-    _this->_internal_set_vel_y(from._internal_vel_y());
-  }
   _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
-void PlayerState::CopyFrom(const PlayerState& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:PB.Types.PlayerState)
+void TownMovement::CopyFrom(const TownMovement& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Types.TownMovement)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-bool PlayerState::IsInitialized() const {
+bool TownMovement::IsInitialized() const {
   return true;
 }
 
-void PlayerState::InternalSwap(PlayerState* other) {
+void TownMovement::InternalSwap(TownMovement* other) {
   using std::swap;
   auto* lhs_arena = GetArenaForAllocation();
   auto* rhs_arena = other->GetArenaForAllocation();
@@ -4525,20 +4890,877 @@ void PlayerState::InternalSwap(PlayerState* other) {
       &_impl_.state_, lhs_arena,
       &other->_impl_.state_, rhs_arena
   );
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(TownMovement, _impl_.moving_)
+      + sizeof(TownMovement::_impl_.moving_)
+      - PROTOBUF_FIELD_OFFSET(TownMovement, _impl_.pos_)>(
+          reinterpret_cast<char*>(&_impl_.pos_),
+          reinterpret_cast<char*>(&other->_impl_.pos_));
+}
+
+std::string TownMovement::GetTypeName() const {
+  return "PB.Types.TownMovement";
+}
+
+
+// ===================================================================
+
+class TownFashionItem::_Internal {
+ public:
+};
+
+TownFashionItem::TownFashionItem(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:PB.Types.TownFashionItem)
+}
+TownFashionItem::TownFashionItem(const TownFashionItem& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  TownFashionItem* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.position_){}
+    , decltype(_impl_.config_id_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  ::memcpy(&_impl_.position_, &from._impl_.position_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.config_id_) -
+    reinterpret_cast<char*>(&_impl_.position_)) + sizeof(_impl_.config_id_));
+  // @@protoc_insertion_point(copy_constructor:PB.Types.TownFashionItem)
+}
+
+inline void TownFashionItem::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.position_){0}
+    , decltype(_impl_.config_id_){0}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+TownFashionItem::~TownFashionItem() {
+  // @@protoc_insertion_point(destructor:PB.Types.TownFashionItem)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void TownFashionItem::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+}
+
+void TownFashionItem::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void TownFashionItem::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Types.TownFashionItem)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  ::memset(&_impl_.position_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.config_id_) -
+      reinterpret_cast<char*>(&_impl_.position_)) + sizeof(_impl_.config_id_));
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* TownFashionItem::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // int32 position = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.position_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 config_id = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.config_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* TownFashionItem::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Types.TownFashionItem)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // int32 position = 1;
+  if (this->_internal_position() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(1, this->_internal_position(), target);
+  }
+
+  // int32 config_id = 2;
+  if (this->_internal_config_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_config_id(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Types.TownFashionItem)
+  return target;
+}
+
+size_t TownFashionItem::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Types.TownFashionItem)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // int32 position = 1;
+  if (this->_internal_position() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_position());
+  }
+
+  // int32 config_id = 2;
+  if (this->_internal_config_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_config_id());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void TownFashionItem::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const TownFashionItem*>(
+      &from));
+}
+
+void TownFashionItem::MergeFrom(const TownFashionItem& from) {
+  TownFashionItem* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Types.TownFashionItem)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_position() != 0) {
+    _this->_internal_set_position(from._internal_position());
+  }
+  if (from._internal_config_id() != 0) {
+    _this->_internal_set_config_id(from._internal_config_id());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void TownFashionItem::CopyFrom(const TownFashionItem& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Types.TownFashionItem)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool TownFashionItem::IsInitialized() const {
+  return true;
+}
+
+void TownFashionItem::InternalSwap(TownFashionItem* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(TownFashionItem, _impl_.config_id_)
+      + sizeof(TownFashionItem::_impl_.config_id_)
+      - PROTOBUF_FIELD_OFFSET(TownFashionItem, _impl_.position_)>(
+          reinterpret_cast<char*>(&_impl_.position_),
+          reinterpret_cast<char*>(&other->_impl_.position_));
+}
+
+std::string TownFashionItem::GetTypeName() const {
+  return "PB.Types.TownFashionItem";
+}
+
+
+// ===================================================================
+
+class TownAppearance::_Internal {
+ public:
+};
+
+TownAppearance::TownAppearance(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:PB.Types.TownAppearance)
+}
+TownAppearance::TownAppearance(const TownAppearance& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  TownAppearance* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.fashions_){from._impl_.fashions_}
+    , decltype(_impl_.base_skins_){from._impl_.base_skins_}
+    , decltype(_impl_.name_){}
+    , decltype(_impl_.class_id_){}
+    , decltype(_impl_.level_){}
+    , decltype(_impl_.pet_id_){}
+    , decltype(_impl_.armament_id_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _impl_.name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_name().empty()) {
+    _this->_impl_.name_.Set(from._internal_name(), 
+      _this->GetArenaForAllocation());
+  }
+  ::memcpy(&_impl_.class_id_, &from._impl_.class_id_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.armament_id_) -
+    reinterpret_cast<char*>(&_impl_.class_id_)) + sizeof(_impl_.armament_id_));
+  // @@protoc_insertion_point(copy_constructor:PB.Types.TownAppearance)
+}
+
+inline void TownAppearance::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.fashions_){arena}
+    , decltype(_impl_.base_skins_){arena}
+    , decltype(_impl_.name_){}
+    , decltype(_impl_.class_id_){0}
+    , decltype(_impl_.level_){0}
+    , decltype(_impl_.pet_id_){0}
+    , decltype(_impl_.armament_id_){0}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.name_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.name_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+}
+
+TownAppearance::~TownAppearance() {
+  // @@protoc_insertion_point(destructor:PB.Types.TownAppearance)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void TownAppearance::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.fashions_.~RepeatedPtrField();
+  _impl_.base_skins_.~RepeatedPtrField();
+  _impl_.name_.Destroy();
+}
+
+void TownAppearance::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void TownAppearance::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Types.TownAppearance)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.fashions_.Clear();
+  _impl_.base_skins_.Clear();
+  _impl_.name_.ClearToEmpty();
+  ::memset(&_impl_.class_id_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.armament_id_) -
+      reinterpret_cast<char*>(&_impl_.class_id_)) + sizeof(_impl_.armament_id_));
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* TownAppearance::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // int32 class_id = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.class_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // string name = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+          auto str = _internal_mutable_name();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 level = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.level_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated .PB.Types.TownFashionItem fashions = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_fashions(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<34>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 pet_id = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 40)) {
+          _impl_.pet_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated .PB.Types.DefaultSkin base_skins = 6;
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 50)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_base_skins(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<50>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 armament_id = 7;
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 56)) {
+          _impl_.armament_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* TownAppearance::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Types.TownAppearance)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // int32 class_id = 1;
+  if (this->_internal_class_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(1, this->_internal_class_id(), target);
+  }
+
+  // string name = 2;
+  if (!this->_internal_name().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_name().data(), static_cast<int>(this->_internal_name().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "PB.Types.TownAppearance.name");
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_name(), target);
+  }
+
+  // int32 level = 3;
+  if (this->_internal_level() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(3, this->_internal_level(), target);
+  }
+
+  // repeated .PB.Types.TownFashionItem fashions = 4;
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_fashions_size()); i < n; i++) {
+    const auto& repfield = this->_internal_fashions(i);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+        InternalWriteMessage(4, repfield, repfield.GetCachedSize(), target, stream);
+  }
+
+  // int32 pet_id = 5;
+  if (this->_internal_pet_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(5, this->_internal_pet_id(), target);
+  }
+
+  // repeated .PB.Types.DefaultSkin base_skins = 6;
+  for (unsigned i = 0,
+      n = static_cast<unsigned>(this->_internal_base_skins_size()); i < n; i++) {
+    const auto& repfield = this->_internal_base_skins(i);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+        InternalWriteMessage(6, repfield, repfield.GetCachedSize(), target, stream);
+  }
+
+  // int32 armament_id = 7;
+  if (this->_internal_armament_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(7, this->_internal_armament_id(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Types.TownAppearance)
+  return target;
+}
+
+size_t TownAppearance::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Types.TownAppearance)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // repeated .PB.Types.TownFashionItem fashions = 4;
+  total_size += 1UL * this->_internal_fashions_size();
+  for (const auto& msg : this->_impl_.fashions_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
+
+  // repeated .PB.Types.DefaultSkin base_skins = 6;
+  total_size += 1UL * this->_internal_base_skins_size();
+  for (const auto& msg : this->_impl_.base_skins_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
+
+  // string name = 2;
+  if (!this->_internal_name().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_name());
+  }
+
+  // int32 class_id = 1;
+  if (this->_internal_class_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_class_id());
+  }
+
+  // int32 level = 3;
+  if (this->_internal_level() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_level());
+  }
+
+  // int32 pet_id = 5;
+  if (this->_internal_pet_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_pet_id());
+  }
+
+  // int32 armament_id = 7;
+  if (this->_internal_armament_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_armament_id());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void TownAppearance::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const TownAppearance*>(
+      &from));
+}
+
+void TownAppearance::MergeFrom(const TownAppearance& from) {
+  TownAppearance* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Types.TownAppearance)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  _this->_impl_.fashions_.MergeFrom(from._impl_.fashions_);
+  _this->_impl_.base_skins_.MergeFrom(from._impl_.base_skins_);
+  if (!from._internal_name().empty()) {
+    _this->_internal_set_name(from._internal_name());
+  }
+  if (from._internal_class_id() != 0) {
+    _this->_internal_set_class_id(from._internal_class_id());
+  }
+  if (from._internal_level() != 0) {
+    _this->_internal_set_level(from._internal_level());
+  }
+  if (from._internal_pet_id() != 0) {
+    _this->_internal_set_pet_id(from._internal_pet_id());
+  }
+  if (from._internal_armament_id() != 0) {
+    _this->_internal_set_armament_id(from._internal_armament_id());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void TownAppearance::CopyFrom(const TownAppearance& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Types.TownAppearance)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool TownAppearance::IsInitialized() const {
+  return true;
+}
+
+void TownAppearance::InternalSwap(TownAppearance* other) {
+  using std::swap;
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  _impl_.fashions_.InternalSwap(&other->_impl_.fashions_);
+  _impl_.base_skins_.InternalSwap(&other->_impl_.base_skins_);
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
       &_impl_.name_, lhs_arena,
       &other->_impl_.name_, rhs_arena
   );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(PlayerState, _impl_.vel_y_)
-      + sizeof(PlayerState::_impl_.vel_y_)
-      - PROTOBUF_FIELD_OFFSET(PlayerState, _impl_.player_id_)>(
-          reinterpret_cast<char*>(&_impl_.player_id_),
-          reinterpret_cast<char*>(&other->_impl_.player_id_));
+      PROTOBUF_FIELD_OFFSET(TownAppearance, _impl_.armament_id_)
+      + sizeof(TownAppearance::_impl_.armament_id_)
+      - PROTOBUF_FIELD_OFFSET(TownAppearance, _impl_.class_id_)>(
+          reinterpret_cast<char*>(&_impl_.class_id_),
+          reinterpret_cast<char*>(&other->_impl_.class_id_));
 }
 
-std::string PlayerState::GetTypeName() const {
-  return "PB.Types.PlayerState";
+std::string TownAppearance::GetTypeName() const {
+  return "PB.Types.TownAppearance";
+}
+
+
+// ===================================================================
+
+class TownPlayerInfo::_Internal {
+ public:
+  static const ::PB::Types::TownAppearance& appearance(const TownPlayerInfo* msg);
+  static const ::PB::Types::TownMovement& movement(const TownPlayerInfo* msg);
+};
+
+const ::PB::Types::TownAppearance&
+TownPlayerInfo::_Internal::appearance(const TownPlayerInfo* msg) {
+  return *msg->_impl_.appearance_;
+}
+const ::PB::Types::TownMovement&
+TownPlayerInfo::_Internal::movement(const TownPlayerInfo* msg) {
+  return *msg->_impl_.movement_;
+}
+TownPlayerInfo::TownPlayerInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:PB.Types.TownPlayerInfo)
+}
+TownPlayerInfo::TownPlayerInfo(const TownPlayerInfo& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  TownPlayerInfo* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.appearance_){nullptr}
+    , decltype(_impl_.movement_){nullptr}
+    , decltype(_impl_.player_id_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  if (from._internal_has_appearance()) {
+    _this->_impl_.appearance_ = new ::PB::Types::TownAppearance(*from._impl_.appearance_);
+  }
+  if (from._internal_has_movement()) {
+    _this->_impl_.movement_ = new ::PB::Types::TownMovement(*from._impl_.movement_);
+  }
+  _this->_impl_.player_id_ = from._impl_.player_id_;
+  // @@protoc_insertion_point(copy_constructor:PB.Types.TownPlayerInfo)
+}
+
+inline void TownPlayerInfo::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.appearance_){nullptr}
+    , decltype(_impl_.movement_){nullptr}
+    , decltype(_impl_.player_id_){int64_t{0}}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+TownPlayerInfo::~TownPlayerInfo() {
+  // @@protoc_insertion_point(destructor:PB.Types.TownPlayerInfo)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void TownPlayerInfo::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  if (this != internal_default_instance()) delete _impl_.appearance_;
+  if (this != internal_default_instance()) delete _impl_.movement_;
+}
+
+void TownPlayerInfo::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void TownPlayerInfo::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Types.TownPlayerInfo)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  if (GetArenaForAllocation() == nullptr && _impl_.appearance_ != nullptr) {
+    delete _impl_.appearance_;
+  }
+  _impl_.appearance_ = nullptr;
+  if (GetArenaForAllocation() == nullptr && _impl_.movement_ != nullptr) {
+    delete _impl_.movement_;
+  }
+  _impl_.movement_ = nullptr;
+  _impl_.player_id_ = int64_t{0};
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* TownPlayerInfo::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // int64 player_id = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.player_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // .PB.Types.TownAppearance appearance = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+          ptr = ctx->ParseMessage(_internal_mutable_appearance(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // .PB.Types.TownMovement movement = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
+          ptr = ctx->ParseMessage(_internal_mutable_movement(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* TownPlayerInfo::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Types.TownPlayerInfo)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // int64 player_id = 1;
+  if (this->_internal_player_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(1, this->_internal_player_id(), target);
+  }
+
+  // .PB.Types.TownAppearance appearance = 2;
+  if (this->_internal_has_appearance()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(2, _Internal::appearance(this),
+        _Internal::appearance(this).GetCachedSize(), target, stream);
+  }
+
+  // .PB.Types.TownMovement movement = 3;
+  if (this->_internal_has_movement()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(3, _Internal::movement(this),
+        _Internal::movement(this).GetCachedSize(), target, stream);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Types.TownPlayerInfo)
+  return target;
+}
+
+size_t TownPlayerInfo::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Types.TownPlayerInfo)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // .PB.Types.TownAppearance appearance = 2;
+  if (this->_internal_has_appearance()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *_impl_.appearance_);
+  }
+
+  // .PB.Types.TownMovement movement = 3;
+  if (this->_internal_has_movement()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *_impl_.movement_);
+  }
+
+  // int64 player_id = 1;
+  if (this->_internal_player_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_player_id());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void TownPlayerInfo::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const TownPlayerInfo*>(
+      &from));
+}
+
+void TownPlayerInfo::MergeFrom(const TownPlayerInfo& from) {
+  TownPlayerInfo* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Types.TownPlayerInfo)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_has_appearance()) {
+    _this->_internal_mutable_appearance()->::PB::Types::TownAppearance::MergeFrom(
+        from._internal_appearance());
+  }
+  if (from._internal_has_movement()) {
+    _this->_internal_mutable_movement()->::PB::Types::TownMovement::MergeFrom(
+        from._internal_movement());
+  }
+  if (from._internal_player_id() != 0) {
+    _this->_internal_set_player_id(from._internal_player_id());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void TownPlayerInfo::CopyFrom(const TownPlayerInfo& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Types.TownPlayerInfo)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool TownPlayerInfo::IsInitialized() const {
+  return true;
+}
+
+void TownPlayerInfo::InternalSwap(TownPlayerInfo* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(TownPlayerInfo, _impl_.player_id_)
+      + sizeof(TownPlayerInfo::_impl_.player_id_)
+      - PROTOBUF_FIELD_OFFSET(TownPlayerInfo, _impl_.appearance_)>(
+          reinterpret_cast<char*>(&_impl_.appearance_),
+          reinterpret_cast<char*>(&other->_impl_.appearance_));
+}
+
+std::string TownPlayerInfo::GetTypeName() const {
+  return "PB.Types.TownPlayerInfo";
 }
 
 
@@ -5151,9 +6373,29 @@ template<> PROTOBUF_NOINLINE ::PB::Types::PartnerInfo*
 Arena::CreateMaybeMessage< ::PB::Types::PartnerInfo >(Arena* arena) {
   return Arena::CreateMessageInternal< ::PB::Types::PartnerInfo >(arena);
 }
-template<> PROTOBUF_NOINLINE ::PB::Types::PlayerState*
-Arena::CreateMaybeMessage< ::PB::Types::PlayerState >(Arena* arena) {
-  return Arena::CreateMessageInternal< ::PB::Types::PlayerState >(arena);
+template<> PROTOBUF_NOINLINE ::PB::Types::TownVec3*
+Arena::CreateMaybeMessage< ::PB::Types::TownVec3 >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Types::TownVec3 >(arena);
+}
+template<> PROTOBUF_NOINLINE ::PB::Types::TownVel*
+Arena::CreateMaybeMessage< ::PB::Types::TownVel >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Types::TownVel >(arena);
+}
+template<> PROTOBUF_NOINLINE ::PB::Types::TownMovement*
+Arena::CreateMaybeMessage< ::PB::Types::TownMovement >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Types::TownMovement >(arena);
+}
+template<> PROTOBUF_NOINLINE ::PB::Types::TownFashionItem*
+Arena::CreateMaybeMessage< ::PB::Types::TownFashionItem >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Types::TownFashionItem >(arena);
+}
+template<> PROTOBUF_NOINLINE ::PB::Types::TownAppearance*
+Arena::CreateMaybeMessage< ::PB::Types::TownAppearance >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Types::TownAppearance >(arena);
+}
+template<> PROTOBUF_NOINLINE ::PB::Types::TownPlayerInfo*
+Arena::CreateMaybeMessage< ::PB::Types::TownPlayerInfo >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Types::TownPlayerInfo >(arena);
 }
 template<> PROTOBUF_NOINLINE ::PB::Types::SceneInfo*
 Arena::CreateMaybeMessage< ::PB::Types::SceneInfo >(Arena* arena) {

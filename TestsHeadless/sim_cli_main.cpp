@@ -5,12 +5,17 @@
 #include "mugen/conf/TypeConversions.h"
 #include "mugen/sim/BattleBootstrap.h"
 #include "mugen/sim/Replay.h"
+#include "mugen/sim/room/RoomDirector.h"
+#include "mugen/sim/spawn/RoleSpawn.h"
 #include "mugen/sim/trace/TraceSink.h"
+#include <algorithm>
 #include <charconv>
+#include <chrono>
 #include <cstdint>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <numeric>
 #include <optional>
 #include <sstream>
 #include <string_view>
@@ -173,6 +178,114 @@ World combatWorld(int32_t roomId, uint64_t seed, int32_t occupation, int32_t lev
         });
     }
     return world;
+}
+
+// ===== 回滚成本基准 =====
+using BenchClock = std::chrono::steady_clock;
+double benchUsSince(BenchClock::time_point start)
+{
+    return std::chrono::duration<double, std::micro>(BenchClock::now() - start).count();
+}
+struct BenchStats
+{
+    double avg = 0;
+    double p50 = 0;
+    double p99 = 0;
+};
+BenchStats benchSummarize(std::vector<double> samples)
+{
+    std::sort(samples.begin(), samples.end());
+    const double sum = std::accumulate(samples.begin(), samples.end(), 0.0);
+    const auto pct   = [&](double p) {
+        const size_t index = static_cast<size_t>(p * static_cast<double>(samples.size() - 1) + 0.5);
+        return samples[std::min(index, samples.size() - 1)];
+    };
+    return {sum / static_cast<double>(samples.size()), pct(0.50), pct(0.99)};
+}
+void benchPrintStat(std::string_view name, const BenchStats& stats)
+{
+    std::cout << name << ": avg=" << stats.avg << "us p50=" << stats.p50 << "us p99=" << stats.p99 << "us\n";
+}
+// 生成确定性一帧输入：周期攻击，其余时间朝对方移动，驱动全部玩家槽位交战。
+FrameInput benchInput(uint64_t frame, int playerCount)
+{
+    FrameInput input;
+    input.frame = frame;
+    for (int slot = 0; slot < playerCount; ++slot)
+    {
+        PlayerCommand command;
+        if (frame % 24 == 0)
+            command.controlEvent = ControlEvent::CTR_ATKA;
+        else if (frame % 8 < 5)
+            command.controlEvent = ControlEvent::CTR_RUN;
+        else
+            command.controlEvent = ControlEvent::CTR_WALK;
+        command.quadrant  = (slot % 2 == 0) ? ControlQuadrant::UpRight : ControlQuadrant::DownLeft;
+        command.angle     = 0;
+        command.pressType = 1;
+        input.players.push_back({static_cast<uint32_t>(slot), {command}});
+    }
+    return input;
+}
+// 建立含 playerCount 个互相敌对玩家并进入房间的战斗世界。
+World benchWorld(int32_t roomId, uint64_t seed, int playerCount)
+{
+    test::ScenarioHarness::loadAssets();
+    World world;  // 默认 WorldHooks：Role 组走真实 role::update 战斗逻辑
+    world.init(test::ScenarioHarness::roomSetup(roomId, seed));
+    for (int slot = 0; slot < playerCount; ++slot)
+    {
+        RoleSpawnParams params;
+        params.camp       = slot == 0 ? 2 : 1;  // 槽位 0 与其余槽位互为敌对
+        params.level      = 100;                 // 与怪物等级接近，避免热身阶段清场
+        params.isAi       = false;  // 由脚本输入驱动
+        params.playerSlot = static_cast<uint32_t>(slot);
+        if (RoleSpawner(world).spawnPlayer(CharacterClass::kSwordman, std::move(params)).value == 0)
+            throw std::runtime_error("Cannot spawn player slot " + std::to_string(slot));
+    }
+    const auto* config = conf::Config::instance().find<conf::RoomConfig>(roomId);
+    if (!config || !room::RoomDirector(world).enter(*config, 0, 0))
+        throw std::runtime_error("Cannot enter room " + std::to_string(roomId));
+    return world;
+}
+// 逐帧推进进入战斗，期间确认房间警告以越过 ReadySpine。
+void benchWarmup(World& world, uint64_t frames, int playerCount)
+{
+    for (uint64_t frame = 1; frame <= frames; ++frame)
+    {
+        auto input       = benchInput(frame, playerCount);
+        const auto& room = world.ecs().singleton<mugen::sim::RoomState>();
+        if (room.m_state == mugen::RoomState::ReadySpine)
+            input.systemCommands.push_back(RoomWarningDone{room.roomId});
+        world.tick(input);
+    }
+}
+// 统计具有指定组件的实体数量。
+template <class Component>
+size_t benchCount(World& world)
+{
+    size_t count = 0;
+    world.ecs().each<Component>([&](Entity, Component&) { ++count; });
+    return count;
+}
+// 输出测量时的实体与组件池规模。
+void benchPrintEntities(World& world)
+{
+    size_t total = 0;
+    world.ecs().each<>([&](Entity) { ++total; });
+    std::array<size_t, 5> groups{};
+    world.ecs().each<EntityGroup>([&](Entity, const EntityGroup& group) {
+        const auto index = static_cast<size_t>(group.kind);
+        if (index < groups.size())
+            ++groups[index];
+    });
+    std::cout << "entities: total=" << total << " role=" << groups[0] << " effect=" << groups[1]
+              << " obstacle=" << groups[2] << " goods=" << groups[3] << " portal=" << groups[4] << '\n';
+    std::cout << "components: RoleIdentity=" << benchCount<RoleIdentity>(world)
+              << " SkillPool=" << benchCount<SkillPool>(world) << " BuffPool=" << benchCount<BuffPool>(world)
+              << " AiAgent=" << benchCount<AiAgent>(world) << " ColliderState=" << benchCount<ColliderState>(world)
+              << " EffectState=" << benchCount<EffectState>(world) << " MotionState=" << benchCount<MotionState>(world)
+              << '\n';
 }
 }  // namespace
 int main(int argc, char** argv)
@@ -458,11 +571,132 @@ int main(int argc, char** argv)
             }
             return printed == 0 ? 0 : 1;
         }
+        if (argc >= 2 && std::string_view(argv[1]) == "bench-rollback")
+        {
+            int32_t roomId  = 2010101;
+            int playerCount = 2;
+            uint64_t samples = 200;
+            uint64_t warmup  = 300;
+            for (int index = 2; index < argc; index += 2)
+            {
+                if (index + 1 >= argc)
+                    throw std::invalid_argument(
+                        "Expected bench-rollback [--room N] [--players N] [--samples N] [--warmup N]");
+                if (std::string_view(argv[index]) == "--room")
+                    roomId = static_cast<int32_t>(number(argv[index + 1]));
+                else if (std::string_view(argv[index]) == "--players")
+                    playerCount = static_cast<int>(number(argv[index + 1]));
+                else if (std::string_view(argv[index]) == "--samples")
+                    samples = number(argv[index + 1]);
+                else if (std::string_view(argv[index]) == "--warmup")
+                    warmup = number(argv[index + 1]);
+                else
+                    throw std::invalid_argument(
+                        "Expected bench-rollback [--room N] [--players N] [--samples N] [--warmup N]");
+            }
+            if (playerCount < 1 || playerCount > kMaxBattlePlayers)
+                throw std::invalid_argument("--players must be between 1 and " + std::to_string(kMaxBattlePlayers));
+            if (samples == 0 || warmup == 0)
+                throw std::invalid_argument("--samples and --warmup must be positive");
+
+            World world = benchWorld(roomId, 31, playerCount);
+            benchWarmup(world, warmup, playerCount);
+
+            std::cout << "bench-rollback room=" << roomId << " players=" << playerCount << " samples=" << samples
+                      << " warmup=" << warmup << " frame=" << world.ecs().singleton<WorldClock>().frame << '\n';
+            benchPrintEntities(world);
+
+            // 冻结在战斗状态，重复采样快照/克隆/哈希。
+            std::vector<double> cloneUs, serUs, deserUs, hashUs;
+            cloneUs.reserve(samples);
+            serUs.reserve(samples);
+            deserUs.reserve(samples);
+            hashUs.reserve(samples);
+            size_t snapshotBytes = 0;
+            for (uint64_t sample = 0; sample < samples; ++sample)
+            {
+                {
+                    const auto start = BenchClock::now();
+                    World copy       = world.clone();
+                    cloneUs.push_back(benchUsSince(start));
+                    (void)copy;
+                }
+                {
+                    ByteBuffer buffer;
+                    const auto start = BenchClock::now();
+                    world.serialize(buffer);
+                    serUs.push_back(benchUsSince(start));
+                    snapshotBytes = buffer.len();
+                    World restored;
+                    const auto startDeserialize = BenchClock::now();
+                    const bool ok               = restored.deserialize(buffer);
+                    deserUs.push_back(benchUsSince(startDeserialize));
+                    if (!ok)
+                        throw std::runtime_error("Snapshot deserialize failed during bench");
+                }
+                {
+                    const auto start = BenchClock::now();
+                    const uint64_t h = world.hash();
+                    hashUs.push_back(benchUsSince(start));
+                    (void)h;
+                }
+            }
+
+            // 完整回滚周期：从快照恢复并重推 N 帧。
+            constexpr std::array<uint64_t, 3> rollbackN{4, 8, 12};
+            std::array<std::vector<double>, rollbackN.size()> rollbackUs;
+            for (size_t ni = 0; ni < rollbackN.size(); ++ni)
+                rollbackUs[ni].reserve(samples);
+            const uint64_t baseFrame = world.ecs().singleton<WorldClock>().frame;
+            for (size_t ni = 0; ni < rollbackN.size(); ++ni)
+            {
+                const uint64_t n = rollbackN[ni];
+                std::vector<FrameInput> inputs;
+                inputs.reserve(n);
+                for (uint64_t k = 1; k <= n; ++k)
+                    inputs.push_back(benchInput(baseFrame + k, playerCount));
+                for (uint64_t sample = 0; sample < samples; ++sample)
+                {
+                    ByteBuffer snapshot;
+                    world.serialize(snapshot);
+                    World restored;
+                    const auto start = BenchClock::now();
+                    if (!restored.deserialize(snapshot))
+                        throw std::runtime_error("Rollback snapshot deserialize failed");
+                    for (const auto& input : inputs)
+                        restored.tick(input);
+                    rollbackUs[ni].push_back(benchUsSince(start));
+                }
+            }
+
+            // 在真实推进状态上采样 tick。
+            std::vector<double> tickUs;
+            tickUs.reserve(samples);
+            const uint64_t tickFrame = world.ecs().singleton<WorldClock>().frame;
+            for (uint64_t sample = 0; sample < samples; ++sample)
+            {
+                const auto input = benchInput(tickFrame + sample + 1, playerCount);
+                const auto start = BenchClock::now();
+                world.tick(input);
+                tickUs.push_back(benchUsSince(start));
+            }
+
+            std::cout << "snapshot bytes: " << snapshotBytes << '\n';
+            benchPrintStat("tick", benchSummarize(tickUs));
+            benchPrintStat("clone", benchSummarize(cloneUs));
+            benchPrintStat("serialize", benchSummarize(serUs));
+            benchPrintStat("deserialize", benchSummarize(deserUs));
+            benchPrintStat("hash", benchSummarize(hashUs));
+            for (size_t ni = 0; ni < rollbackN.size(); ++ni)
+                benchPrintStat("rollback N=" + std::to_string(rollbackN[ni]), benchSummarize(rollbackUs[ni]));
+            return 0;
+        }
         std::cerr
             << "usage: mugen_sim_cli --version | trace-diff [--mode full|effects] [--allow file] <a.trace> <b.trace> | "
                "replay <file> [--hash-every N] [--compare hashfile] [--trace file] [--revision rev] [--ai on|off] | "
                "record-room <roomId> --frames N <file> [--ai on|off] | "
-               "run-room <roomId> --frames N [--script file] [--trace file] [--revision rev] [--ai on|off]\n"
+               "run-room <roomId> --frames N [--script file] [--trace file] [--revision rev] [--ai on|off] | "
+               "bench-rollback [--room N] [--players N] [--samples N] [--warmup N]\n"
                "script rows: frame slot controlEvent quadrant angleX1000 pressType\n";
         return 1;
     }

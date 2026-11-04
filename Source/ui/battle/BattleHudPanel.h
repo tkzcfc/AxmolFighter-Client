@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ui/widgets/common/Panel.h"
+#include "ui/widgets/common/VirtualJoystick.h"
 #include "mugen/core/ecs/Entity.h"
 
 #include <array>
@@ -20,7 +21,10 @@ public:
     explicit BattleHudPanel(LocalBattleMode& battle) : m_battle(battle) {}
 
 protected:
-    std::vector<std::string> getPackages() const override { return {"UI/Res_SkillIcons", "UI/Res_BuffIcons", "UI/Screen_Battle"}; }
+    std::vector<std::string> getPackages() const override
+    {
+        return {"UI/Common_Base", "UI/Res_SkillIcons", "UI/Res_BuffIcons", "UI/Screen_Battle"};
+    }
 
     GComponent* onCreatePanelContent() override
     {
@@ -46,9 +50,6 @@ private:
     void bindSkillButton(SkillButtonBinding& binding);
     void bindRageHud();
     void bindJoystick();
-    void updateJoystick(const ax::Vec2& stagePos);
-    void releaseJoystick();
-    void setDirection(bool left, bool right, bool up, bool down);
     void onClickPause(EventContext* context);
 
     void updatePlayer(mugen::Entity player);
@@ -67,11 +68,7 @@ private:
     GComponent* m_bossBar = nullptr;
     GList* m_buffList = nullptr;
 
-    GComponent* m_joystick = nullptr;
-    GObject* m_joystickThumb = nullptr;
-    ax::Vec2 m_thumbOrigin;
-    int m_joystickTouchId = -1;
-    std::array<bool, 4> m_direction{};
+    VirtualJoystick m_joystick;
 
     std::vector<SkillButtonBinding> m_skillButtons;
     SkillButtonBinding m_rageSkillButton;

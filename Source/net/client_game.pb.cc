@@ -302,7 +302,7 @@ struct DuelRespondRespDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 DuelRespondRespDefaultTypeInternal _DuelRespondResp_default_instance_;
 PROTOBUF_CONSTEXPR EnterSceneReq::EnterSceneReq(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.state_)*/nullptr
+    /*decltype(_impl_.movement_)*/nullptr
   , /*decltype(_impl_.type_)*/0
   , /*decltype(_impl_.map_id_)*/0u
   , /*decltype(_impl_.owner_uid_)*/uint64_t{0u}
@@ -332,6 +332,32 @@ struct EnterSceneRespDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 EnterSceneRespDefaultTypeInternal _EnterSceneResp_default_instance_;
+PROTOBUF_CONSTEXPR LeaveSceneReq::LeaveSceneReq(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_._cached_size_)*/{}} {}
+struct LeaveSceneReqDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR LeaveSceneReqDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~LeaveSceneReqDefaultTypeInternal() {}
+  union {
+    LeaveSceneReq _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 LeaveSceneReqDefaultTypeInternal _LeaveSceneReq_default_instance_;
+PROTOBUF_CONSTEXPR LeaveSceneResp::LeaveSceneResp(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.message_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.code_)*/0
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct LeaveSceneRespDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR LeaveSceneRespDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~LeaveSceneRespDefaultTypeInternal() {}
+  union {
+    LeaveSceneResp _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 LeaveSceneRespDefaultTypeInternal _LeaveSceneResp_default_instance_;
 PROTOBUF_CONSTEXPR AccountKickedPush::AccountKickedPush(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.message_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
@@ -1783,6 +1809,122 @@ constexpr EnterSceneResp_MsgId EnterSceneResp::Id;
 constexpr EnterSceneResp_MsgId EnterSceneResp::MsgId_MIN;
 constexpr EnterSceneResp_MsgId EnterSceneResp::MsgId_MAX;
 constexpr int EnterSceneResp::MsgId_ARRAYSIZE;
+#endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
+bool LeaveSceneReq_MsgId_IsValid(int value) {
+  switch (value) {
+    case 0:
+    case 1308:
+      return true;
+    default:
+      return false;
+  }
+}
+
+static ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<std::string> LeaveSceneReq_MsgId_strings[2] = {};
+
+static const char LeaveSceneReq_MsgId_names[] =
+  "Id"
+  "None";
+
+static const ::PROTOBUF_NAMESPACE_ID::internal::EnumEntry LeaveSceneReq_MsgId_entries[] = {
+  { {LeaveSceneReq_MsgId_names + 0, 2}, 1308 },
+  { {LeaveSceneReq_MsgId_names + 2, 4}, 0 },
+};
+
+static const int LeaveSceneReq_MsgId_entries_by_number[] = {
+  1, // 0 -> None
+  0, // 1308 -> Id
+};
+
+const std::string& LeaveSceneReq_MsgId_Name(
+    LeaveSceneReq_MsgId value) {
+  static const bool dummy =
+      ::PROTOBUF_NAMESPACE_ID::internal::InitializeEnumStrings(
+          LeaveSceneReq_MsgId_entries,
+          LeaveSceneReq_MsgId_entries_by_number,
+          2, LeaveSceneReq_MsgId_strings);
+  (void) dummy;
+  int idx = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumName(
+      LeaveSceneReq_MsgId_entries,
+      LeaveSceneReq_MsgId_entries_by_number,
+      2, value);
+  return idx == -1 ? ::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString() :
+                     LeaveSceneReq_MsgId_strings[idx].get();
+}
+bool LeaveSceneReq_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, LeaveSceneReq_MsgId* value) {
+  int int_value;
+  bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
+      LeaveSceneReq_MsgId_entries, 2, name, &int_value);
+  if (success) {
+    *value = static_cast<LeaveSceneReq_MsgId>(int_value);
+  }
+  return success;
+}
+#if (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
+constexpr LeaveSceneReq_MsgId LeaveSceneReq::None;
+constexpr LeaveSceneReq_MsgId LeaveSceneReq::Id;
+constexpr LeaveSceneReq_MsgId LeaveSceneReq::MsgId_MIN;
+constexpr LeaveSceneReq_MsgId LeaveSceneReq::MsgId_MAX;
+constexpr int LeaveSceneReq::MsgId_ARRAYSIZE;
+#endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
+bool LeaveSceneResp_MsgId_IsValid(int value) {
+  switch (value) {
+    case 0:
+    case 1309:
+      return true;
+    default:
+      return false;
+  }
+}
+
+static ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<std::string> LeaveSceneResp_MsgId_strings[2] = {};
+
+static const char LeaveSceneResp_MsgId_names[] =
+  "Id"
+  "None";
+
+static const ::PROTOBUF_NAMESPACE_ID::internal::EnumEntry LeaveSceneResp_MsgId_entries[] = {
+  { {LeaveSceneResp_MsgId_names + 0, 2}, 1309 },
+  { {LeaveSceneResp_MsgId_names + 2, 4}, 0 },
+};
+
+static const int LeaveSceneResp_MsgId_entries_by_number[] = {
+  1, // 0 -> None
+  0, // 1309 -> Id
+};
+
+const std::string& LeaveSceneResp_MsgId_Name(
+    LeaveSceneResp_MsgId value) {
+  static const bool dummy =
+      ::PROTOBUF_NAMESPACE_ID::internal::InitializeEnumStrings(
+          LeaveSceneResp_MsgId_entries,
+          LeaveSceneResp_MsgId_entries_by_number,
+          2, LeaveSceneResp_MsgId_strings);
+  (void) dummy;
+  int idx = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumName(
+      LeaveSceneResp_MsgId_entries,
+      LeaveSceneResp_MsgId_entries_by_number,
+      2, value);
+  return idx == -1 ? ::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString() :
+                     LeaveSceneResp_MsgId_strings[idx].get();
+}
+bool LeaveSceneResp_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, LeaveSceneResp_MsgId* value) {
+  int int_value;
+  bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
+      LeaveSceneResp_MsgId_entries, 2, name, &int_value);
+  if (success) {
+    *value = static_cast<LeaveSceneResp_MsgId>(int_value);
+  }
+  return success;
+}
+#if (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
+constexpr LeaveSceneResp_MsgId LeaveSceneResp::None;
+constexpr LeaveSceneResp_MsgId LeaveSceneResp::Id;
+constexpr LeaveSceneResp_MsgId LeaveSceneResp::MsgId_MIN;
+constexpr LeaveSceneResp_MsgId LeaveSceneResp::MsgId_MAX;
+constexpr int LeaveSceneResp::MsgId_ARRAYSIZE;
 #endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 bool AccountKickedPush_MsgId_IsValid(int value) {
   switch (value) {
@@ -7648,18 +7790,18 @@ std::string DuelRespondResp::GetTypeName() const {
 
 class EnterSceneReq::_Internal {
  public:
-  static const ::PB::Types::PlayerState& state(const EnterSceneReq* msg);
+  static const ::PB::Types::TownMovement& movement(const EnterSceneReq* msg);
 };
 
-const ::PB::Types::PlayerState&
-EnterSceneReq::_Internal::state(const EnterSceneReq* msg) {
-  return *msg->_impl_.state_;
+const ::PB::Types::TownMovement&
+EnterSceneReq::_Internal::movement(const EnterSceneReq* msg) {
+  return *msg->_impl_.movement_;
 }
-void EnterSceneReq::clear_state() {
-  if (GetArenaForAllocation() == nullptr && _impl_.state_ != nullptr) {
-    delete _impl_.state_;
+void EnterSceneReq::clear_movement() {
+  if (GetArenaForAllocation() == nullptr && _impl_.movement_ != nullptr) {
+    delete _impl_.movement_;
   }
-  _impl_.state_ = nullptr;
+  _impl_.movement_ = nullptr;
 }
 EnterSceneReq::EnterSceneReq(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
@@ -7671,15 +7813,15 @@ EnterSceneReq::EnterSceneReq(const EnterSceneReq& from)
   : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
   EnterSceneReq* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.state_){nullptr}
+      decltype(_impl_.movement_){nullptr}
     , decltype(_impl_.type_){}
     , decltype(_impl_.map_id_){}
     , decltype(_impl_.owner_uid_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
-  if (from._internal_has_state()) {
-    _this->_impl_.state_ = new ::PB::Types::PlayerState(*from._impl_.state_);
+  if (from._internal_has_movement()) {
+    _this->_impl_.movement_ = new ::PB::Types::TownMovement(*from._impl_.movement_);
   }
   ::memcpy(&_impl_.type_, &from._impl_.type_,
     static_cast<size_t>(reinterpret_cast<char*>(&_impl_.owner_uid_) -
@@ -7692,7 +7834,7 @@ inline void EnterSceneReq::SharedCtor(
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.state_){nullptr}
+      decltype(_impl_.movement_){nullptr}
     , decltype(_impl_.type_){0}
     , decltype(_impl_.map_id_){0u}
     , decltype(_impl_.owner_uid_){uint64_t{0u}}
@@ -7711,7 +7853,7 @@ EnterSceneReq::~EnterSceneReq() {
 
 inline void EnterSceneReq::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
-  if (this != internal_default_instance()) delete _impl_.state_;
+  if (this != internal_default_instance()) delete _impl_.movement_;
 }
 
 void EnterSceneReq::SetCachedSize(int size) const {
@@ -7724,10 +7866,10 @@ void EnterSceneReq::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  if (GetArenaForAllocation() == nullptr && _impl_.state_ != nullptr) {
-    delete _impl_.state_;
+  if (GetArenaForAllocation() == nullptr && _impl_.movement_ != nullptr) {
+    delete _impl_.movement_;
   }
-  _impl_.state_ = nullptr;
+  _impl_.movement_ = nullptr;
   ::memset(&_impl_.type_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&_impl_.owner_uid_) -
       reinterpret_cast<char*>(&_impl_.type_)) + sizeof(_impl_.owner_uid_));
@@ -7765,10 +7907,10 @@ const char* EnterSceneReq::_InternalParse(const char* ptr, ::_pbi::ParseContext*
         } else
           goto handle_unusual;
         continue;
-      // .PB.Types.PlayerState state = 4;
+      // .PB.Types.TownMovement movement = 4;
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
-          ptr = ctx->ParseMessage(_internal_mutable_state(), ptr);
+          ptr = ctx->ParseMessage(_internal_mutable_movement(), ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -7821,11 +7963,11 @@ uint8_t* EnterSceneReq::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteUInt64ToArray(3, this->_internal_owner_uid(), target);
   }
 
-  // .PB.Types.PlayerState state = 4;
-  if (this->_internal_has_state()) {
+  // .PB.Types.TownMovement movement = 4;
+  if (this->_internal_has_movement()) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(4, _Internal::state(this),
-        _Internal::state(this).GetCachedSize(), target, stream);
+      InternalWriteMessage(4, _Internal::movement(this),
+        _Internal::movement(this).GetCachedSize(), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -7844,11 +7986,11 @@ size_t EnterSceneReq::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // .PB.Types.PlayerState state = 4;
-  if (this->_internal_has_state()) {
+  // .PB.Types.TownMovement movement = 4;
+  if (this->_internal_has_movement()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-        *_impl_.state_);
+        *_impl_.movement_);
   }
 
   // .PB.Types.SceneEnterType type = 1;
@@ -7888,9 +8030,9 @@ void EnterSceneReq::MergeFrom(const EnterSceneReq& from) {
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from._internal_has_state()) {
-    _this->_internal_mutable_state()->::PB::Types::PlayerState::MergeFrom(
-        from._internal_state());
+  if (from._internal_has_movement()) {
+    _this->_internal_mutable_movement()->::PB::Types::TownMovement::MergeFrom(
+        from._internal_movement());
   }
   if (from._internal_type() != 0) {
     _this->_internal_set_type(from._internal_type());
@@ -7921,9 +8063,9 @@ void EnterSceneReq::InternalSwap(EnterSceneReq* other) {
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
       PROTOBUF_FIELD_OFFSET(EnterSceneReq, _impl_.owner_uid_)
       + sizeof(EnterSceneReq::_impl_.owner_uid_)
-      - PROTOBUF_FIELD_OFFSET(EnterSceneReq, _impl_.state_)>(
-          reinterpret_cast<char*>(&_impl_.state_),
-          reinterpret_cast<char*>(&other->_impl_.state_));
+      - PROTOBUF_FIELD_OFFSET(EnterSceneReq, _impl_.movement_)>(
+          reinterpret_cast<char*>(&_impl_.movement_),
+          reinterpret_cast<char*>(&other->_impl_.movement_));
 }
 
 std::string EnterSceneReq::GetTypeName() const {
@@ -8068,7 +8210,7 @@ const char* EnterSceneResp::_InternalParse(const char* ptr, ::_pbi::ParseContext
         } else
           goto handle_unusual;
         continue;
-      // repeated .PB.Types.PlayerState players = 4;
+      // repeated .PB.Types.TownPlayerInfo players = 4;
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
           ptr -= 1;
@@ -8133,7 +8275,7 @@ uint8_t* EnterSceneResp::_InternalSerialize(
         _Internal::scene(this).GetCachedSize(), target, stream);
   }
 
-  // repeated .PB.Types.PlayerState players = 4;
+  // repeated .PB.Types.TownPlayerInfo players = 4;
   for (unsigned i = 0,
       n = static_cast<unsigned>(this->_internal_players_size()); i < n; i++) {
     const auto& repfield = this->_internal_players(i);
@@ -8157,7 +8299,7 @@ size_t EnterSceneResp::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // repeated .PB.Types.PlayerState players = 4;
+  // repeated .PB.Types.TownPlayerInfo players = 4;
   total_size += 1UL * this->_internal_players_size();
   for (const auto& msg : this->_impl_.players_) {
     total_size +=
@@ -8249,6 +8391,386 @@ void EnterSceneResp::InternalSwap(EnterSceneResp* other) {
 
 std::string EnterSceneResp::GetTypeName() const {
   return "PB.Game.EnterSceneResp";
+}
+
+
+// ===================================================================
+
+class LeaveSceneReq::_Internal {
+ public:
+};
+
+LeaveSceneReq::LeaveSceneReq(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:PB.Game.LeaveSceneReq)
+}
+LeaveSceneReq::LeaveSceneReq(const LeaveSceneReq& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  LeaveSceneReq* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  // @@protoc_insertion_point(copy_constructor:PB.Game.LeaveSceneReq)
+}
+
+inline void LeaveSceneReq::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+LeaveSceneReq::~LeaveSceneReq() {
+  // @@protoc_insertion_point(destructor:PB.Game.LeaveSceneReq)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void LeaveSceneReq::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+}
+
+void LeaveSceneReq::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void LeaveSceneReq::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Game.LeaveSceneReq)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* LeaveSceneReq::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* LeaveSceneReq::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Game.LeaveSceneReq)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Game.LeaveSceneReq)
+  return target;
+}
+
+size_t LeaveSceneReq::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Game.LeaveSceneReq)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void LeaveSceneReq::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const LeaveSceneReq*>(
+      &from));
+}
+
+void LeaveSceneReq::MergeFrom(const LeaveSceneReq& from) {
+  LeaveSceneReq* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Game.LeaveSceneReq)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void LeaveSceneReq::CopyFrom(const LeaveSceneReq& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Game.LeaveSceneReq)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool LeaveSceneReq::IsInitialized() const {
+  return true;
+}
+
+void LeaveSceneReq::InternalSwap(LeaveSceneReq* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+}
+
+std::string LeaveSceneReq::GetTypeName() const {
+  return "PB.Game.LeaveSceneReq";
+}
+
+
+// ===================================================================
+
+class LeaveSceneResp::_Internal {
+ public:
+};
+
+LeaveSceneResp::LeaveSceneResp(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:PB.Game.LeaveSceneResp)
+}
+LeaveSceneResp::LeaveSceneResp(const LeaveSceneResp& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  LeaveSceneResp* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.message_){}
+    , decltype(_impl_.code_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  _impl_.message_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.message_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (!from._internal_message().empty()) {
+    _this->_impl_.message_.Set(from._internal_message(), 
+      _this->GetArenaForAllocation());
+  }
+  _this->_impl_.code_ = from._impl_.code_;
+  // @@protoc_insertion_point(copy_constructor:PB.Game.LeaveSceneResp)
+}
+
+inline void LeaveSceneResp::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.message_){}
+    , decltype(_impl_.code_){0}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+  _impl_.message_.InitDefault();
+  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+    _impl_.message_.Set("", GetArenaForAllocation());
+  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+}
+
+LeaveSceneResp::~LeaveSceneResp() {
+  // @@protoc_insertion_point(destructor:PB.Game.LeaveSceneResp)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void LeaveSceneResp::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.message_.Destroy();
+}
+
+void LeaveSceneResp::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void LeaveSceneResp::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Game.LeaveSceneResp)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.message_.ClearToEmpty();
+  _impl_.code_ = 0;
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* LeaveSceneResp::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // int32 code = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.code_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // string message = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+          auto str = _internal_mutable_message();
+          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* LeaveSceneResp::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Game.LeaveSceneResp)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // int32 code = 1;
+  if (this->_internal_code() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(1, this->_internal_code(), target);
+  }
+
+  // string message = 2;
+  if (!this->_internal_message().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_message().data(), static_cast<int>(this->_internal_message().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "PB.Game.LeaveSceneResp.message");
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_message(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Game.LeaveSceneResp)
+  return target;
+}
+
+size_t LeaveSceneResp::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Game.LeaveSceneResp)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // string message = 2;
+  if (!this->_internal_message().empty()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_message());
+  }
+
+  // int32 code = 1;
+  if (this->_internal_code() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_code());
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void LeaveSceneResp::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const LeaveSceneResp*>(
+      &from));
+}
+
+void LeaveSceneResp::MergeFrom(const LeaveSceneResp& from) {
+  LeaveSceneResp* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Game.LeaveSceneResp)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (!from._internal_message().empty()) {
+    _this->_internal_set_message(from._internal_message());
+  }
+  if (from._internal_code() != 0) {
+    _this->_internal_set_code(from._internal_code());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void LeaveSceneResp::CopyFrom(const LeaveSceneResp& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Game.LeaveSceneResp)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool LeaveSceneResp::IsInitialized() const {
+  return true;
+}
+
+void LeaveSceneResp::InternalSwap(LeaveSceneResp* other) {
+  using std::swap;
+  auto* lhs_arena = GetArenaForAllocation();
+  auto* rhs_arena = other->GetArenaForAllocation();
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
+      &_impl_.message_, lhs_arena,
+      &other->_impl_.message_, rhs_arena
+  );
+  swap(_impl_.code_, other->_impl_.code_);
+}
+
+std::string LeaveSceneResp::GetTypeName() const {
+  return "PB.Game.LeaveSceneResp";
 }
 
 
@@ -12145,6 +12667,14 @@ Arena::CreateMaybeMessage< ::PB::Game::EnterSceneReq >(Arena* arena) {
 template<> PROTOBUF_NOINLINE ::PB::Game::EnterSceneResp*
 Arena::CreateMaybeMessage< ::PB::Game::EnterSceneResp >(Arena* arena) {
   return Arena::CreateMessageInternal< ::PB::Game::EnterSceneResp >(arena);
+}
+template<> PROTOBUF_NOINLINE ::PB::Game::LeaveSceneReq*
+Arena::CreateMaybeMessage< ::PB::Game::LeaveSceneReq >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Game::LeaveSceneReq >(arena);
+}
+template<> PROTOBUF_NOINLINE ::PB::Game::LeaveSceneResp*
+Arena::CreateMaybeMessage< ::PB::Game::LeaveSceneResp >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Game::LeaveSceneResp >(arena);
 }
 template<> PROTOBUF_NOINLINE ::PB::Game::AccountKickedPush*
 Arena::CreateMaybeMessage< ::PB::Game::AccountKickedPush >(Arena* arena) {

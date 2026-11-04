@@ -243,14 +243,18 @@ bool RoleBrainDriver::_fallbackToIdle()
 
 bool RoleBrainDriver::enterFirst()
 {
-    const size_t count = m_city ? kTownBranchCount : kBranchCount;
-    for (size_t i = 0; i < count; ++i)
+    if (m_city)
     {
-        // 城镇模板分支固定为 Finding、Idle。
-        const RoleBranch branch =
-            m_city ? (i == 0 ? RoleBranch::Finding : RoleBranch::Idle) : static_cast<RoleBranch>(i);
-        if (_tryEnter(branch))
-            return true;
+        // 城镇模板按 Finding、Run、Walk、Idle 顺序选择，可控角色按输入走跑。
+        for (const RoleBranch branch : kTownBranches)
+            if (_tryEnter(branch))
+                return true;
+    }
+    else
+    {
+        for (size_t i = 0; i < kBranchCount; ++i)
+            if (_tryEnter(static_cast<RoleBranch>(i)))
+                return true;
     }
     return _fallbackToIdle();
 }

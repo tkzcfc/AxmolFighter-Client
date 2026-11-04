@@ -1,11 +1,24 @@
 #include "ui/progress/SessionFashionAppearance.h"
 
 #include "AppContext.h"
+#include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/TypeConversions.h"
+#include "mugen/conf/tables/ArmamentTables.h"
 #include "ui/widgets/weapon/WeaponLocalState.h"
 
 namespace gameui
 {
+
+int32_t armamentWeaponSpineId(int32_t armamentId, mugen::CharacterClass cls)
+{
+    if (armamentId <= 0)
+        return 0;
+    const auto* cfg = mugen::conf::Config::instance().find<mugen::conf::ArmamentConfig>(
+        {armamentId, static_cast<int32_t>(cls)});
+    if (!cfg || cfg->spineId <= 0)
+        return 0;
+    return cfg->spineId;
+}
 
 mugen::FashionAppearance buildSessionFashionAppearance()
 {
@@ -36,8 +49,9 @@ mugen::FashionAppearance buildSessionFashionAppearance()
         const int32_t appId = weapons->appearanceId();
         if (appId > 0)
         {
-            if (const auto* st = weapons->find(appId); st && st->skinId > 0)
-                appearance.baseFashion[mugen::FashionPosition::kWeapon] = st->skinId;
+            const int32_t weapon = armamentWeaponSpineId(appId, cls);
+            if (weapon > 0)
+                appearance.baseFashion[mugen::FashionPosition::kWeapon] = weapon;
         }
     }
     return appearance;

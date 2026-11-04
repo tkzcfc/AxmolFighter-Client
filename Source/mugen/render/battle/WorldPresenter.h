@@ -13,6 +13,7 @@
 
 #    include <map>
 #    include <memory>
+#    include <optional>
 #    include <random>
 
 NS_MG_BEGIN
@@ -26,6 +27,9 @@ public:
     void setFollowEntity(Entity entity) { m_followEntity = entity; }
     void setPet(int32_t petId, int32_t spineId);
     void clearPet();
+    // 为任意实体绑定/清除宠物（城镇远端玩家或本地玩家）。
+    void setEntityPet(Entity entity, int32_t petId, int32_t spineId);
+    void clearEntityPet(Entity entity);
     void clear();
     // Re-apply fashion on an already-created exclusive Avatar (town/battle local player).
     bool setEntityAppearance(uint32_t entityValue, const FashionAppearance& appearance);
@@ -59,6 +63,8 @@ private:
         bool useSessionFashion = false;
         // 角色配置 id（用于重建/重算外观）。
         int32_t roleId = 0;
+        // 显式下发的外观（远端玩家换装），优先于会话/默认外观。
+        std::optional<FashionAppearance> m_overrideAppearance;
         // 最近一次已应用到 Avatar 的变身状态。
         bool partnerRageTransformed = false;
         // 是否已记录过 partnerRageTransformed。
@@ -94,7 +100,8 @@ private:
 
     ax::Node& m_root;
     std::map<uint32_t, AvatarState> m_avatars;
-    std::unique_ptr<PetFollower> m_petFollower;
+    // 实体 → 宠物跟随器（一个实体可有自己的宠物，城镇远端玩家与本地玩家都走这里）。
+    std::map<uint32_t, std::unique_ptr<PetFollower>> m_petFollowers;
     Entity m_followEntity{};
     // 配置层级 → 绘制层；层间按层级值排序，层内按纵深排序。
     std::map<int32_t, ax::Node*> m_tierLayers;
@@ -182,6 +189,8 @@ public:
     void present(sim::World& world, float interpolationAlpha, float renderDelta);
     void setFollowEntity(Entity entity);
     void setPet(int32_t petId);
+    void setEntityPet(Entity entity, int32_t petId);
+    void clearEntityPet(Entity entity);
     void addMapNode(ax::Node& node) { m_map.addNode(node); }
     DebugDraw& debugDraw() { return m_debugDraw; }
 

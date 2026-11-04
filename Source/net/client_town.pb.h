@@ -45,50 +45,62 @@ struct TableStruct_client_5ftown_2eproto {
 };
 namespace PB {
 namespace Town {
+class ScenePlayerAppearancePush;
+struct ScenePlayerAppearancePushDefaultTypeInternal;
+extern ScenePlayerAppearancePushDefaultTypeInternal _ScenePlayerAppearancePush_default_instance_;
 class ScenePlayerEnterPush;
 struct ScenePlayerEnterPushDefaultTypeInternal;
 extern ScenePlayerEnterPushDefaultTypeInternal _ScenePlayerEnterPush_default_instance_;
 class ScenePlayerLeavePush;
 struct ScenePlayerLeavePushDefaultTypeInternal;
 extern ScenePlayerLeavePushDefaultTypeInternal _ScenePlayerLeavePush_default_instance_;
-class ScenePlayerStatePush;
-struct ScenePlayerStatePushDefaultTypeInternal;
-extern ScenePlayerStatePushDefaultTypeInternal _ScenePlayerStatePush_default_instance_;
-class TownPlayerStatePush;
-struct TownPlayerStatePushDefaultTypeInternal;
-extern TownPlayerStatePushDefaultTypeInternal _TownPlayerStatePush_default_instance_;
+class ScenePlayerStatesPush;
+struct ScenePlayerStatesPushDefaultTypeInternal;
+extern ScenePlayerStatesPushDefaultTypeInternal _ScenePlayerStatesPush_default_instance_;
+class TownMoveReport;
+struct TownMoveReportDefaultTypeInternal;
+extern TownMoveReportDefaultTypeInternal _TownMoveReport_default_instance_;
+class TownPositionCorrectionPush;
+struct TownPositionCorrectionPushDefaultTypeInternal;
+extern TownPositionCorrectionPushDefaultTypeInternal _TownPositionCorrectionPush_default_instance_;
+class TownStateEntry;
+struct TownStateEntryDefaultTypeInternal;
+extern TownStateEntryDefaultTypeInternal _TownStateEntry_default_instance_;
 }  // namespace Town
 }  // namespace PB
 PROTOBUF_NAMESPACE_OPEN
+template<> ::PB::Town::ScenePlayerAppearancePush* Arena::CreateMaybeMessage<::PB::Town::ScenePlayerAppearancePush>(Arena*);
 template<> ::PB::Town::ScenePlayerEnterPush* Arena::CreateMaybeMessage<::PB::Town::ScenePlayerEnterPush>(Arena*);
 template<> ::PB::Town::ScenePlayerLeavePush* Arena::CreateMaybeMessage<::PB::Town::ScenePlayerLeavePush>(Arena*);
-template<> ::PB::Town::ScenePlayerStatePush* Arena::CreateMaybeMessage<::PB::Town::ScenePlayerStatePush>(Arena*);
-template<> ::PB::Town::TownPlayerStatePush* Arena::CreateMaybeMessage<::PB::Town::TownPlayerStatePush>(Arena*);
+template<> ::PB::Town::ScenePlayerStatesPush* Arena::CreateMaybeMessage<::PB::Town::ScenePlayerStatesPush>(Arena*);
+template<> ::PB::Town::TownMoveReport* Arena::CreateMaybeMessage<::PB::Town::TownMoveReport>(Arena*);
+template<> ::PB::Town::TownPositionCorrectionPush* Arena::CreateMaybeMessage<::PB::Town::TownPositionCorrectionPush>(Arena*);
+template<> ::PB::Town::TownStateEntry* Arena::CreateMaybeMessage<::PB::Town::TownStateEntry>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 namespace PB {
 namespace Town {
 
-enum TownPlayerStatePush_MsgId : int {
-  TownPlayerStatePush_MsgId_None = 0,
-  TownPlayerStatePush_MsgId_Id = 30000,
-  TownPlayerStatePush_MsgId_TownPlayerStatePush_MsgId_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
-  TownPlayerStatePush_MsgId_TownPlayerStatePush_MsgId_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+enum TownMoveReport_MsgId : int {
+  TownMoveReport_MsgId_None = 0,
+  TownMoveReport_MsgId_Id = 30000,
+  TownMoveReport_MsgId_TownMoveReport_MsgId_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  TownMoveReport_MsgId_TownMoveReport_MsgId_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
 };
-bool TownPlayerStatePush_MsgId_IsValid(int value);
-constexpr TownPlayerStatePush_MsgId TownPlayerStatePush_MsgId_MsgId_MIN = TownPlayerStatePush_MsgId_None;
-constexpr TownPlayerStatePush_MsgId TownPlayerStatePush_MsgId_MsgId_MAX = TownPlayerStatePush_MsgId_Id;
-constexpr int TownPlayerStatePush_MsgId_MsgId_ARRAYSIZE = TownPlayerStatePush_MsgId_MsgId_MAX + 1;
+bool TownMoveReport_MsgId_IsValid(int value);
+constexpr TownMoveReport_MsgId TownMoveReport_MsgId_MsgId_MIN = TownMoveReport_MsgId_None;
+constexpr TownMoveReport_MsgId TownMoveReport_MsgId_MsgId_MAX = TownMoveReport_MsgId_Id;
+constexpr int TownMoveReport_MsgId_MsgId_ARRAYSIZE = TownMoveReport_MsgId_MsgId_MAX + 1;
 
-const std::string& TownPlayerStatePush_MsgId_Name(TownPlayerStatePush_MsgId value);
+const std::string& TownMoveReport_MsgId_Name(TownMoveReport_MsgId value);
 template<typename T>
-inline const std::string& TownPlayerStatePush_MsgId_Name(T enum_t_value) {
-  static_assert(::std::is_same<T, TownPlayerStatePush_MsgId>::value ||
+inline const std::string& TownMoveReport_MsgId_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, TownMoveReport_MsgId>::value ||
     ::std::is_integral<T>::value,
-    "Incorrect type passed to function TownPlayerStatePush_MsgId_Name.");
-  return TownPlayerStatePush_MsgId_Name(static_cast<TownPlayerStatePush_MsgId>(enum_t_value));
+    "Incorrect type passed to function TownMoveReport_MsgId_Name.");
+  return TownMoveReport_MsgId_Name(static_cast<TownMoveReport_MsgId>(enum_t_value));
 }
-bool TownPlayerStatePush_MsgId_Parse(
-    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, TownPlayerStatePush_MsgId* value);
+bool TownMoveReport_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, TownMoveReport_MsgId* value);
 enum ScenePlayerEnterPush_MsgId : int {
   ScenePlayerEnterPush_MsgId_None = 0,
   ScenePlayerEnterPush_MsgId_Id = 30001,
@@ -131,47 +143,89 @@ inline const std::string& ScenePlayerLeavePush_MsgId_Name(T enum_t_value) {
 }
 bool ScenePlayerLeavePush_MsgId_Parse(
     ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, ScenePlayerLeavePush_MsgId* value);
-enum ScenePlayerStatePush_MsgId : int {
-  ScenePlayerStatePush_MsgId_None = 0,
-  ScenePlayerStatePush_MsgId_Id = 30003,
-  ScenePlayerStatePush_MsgId_ScenePlayerStatePush_MsgId_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
-  ScenePlayerStatePush_MsgId_ScenePlayerStatePush_MsgId_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+enum ScenePlayerAppearancePush_MsgId : int {
+  ScenePlayerAppearancePush_MsgId_None = 0,
+  ScenePlayerAppearancePush_MsgId_Id = 30003,
+  ScenePlayerAppearancePush_MsgId_ScenePlayerAppearancePush_MsgId_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  ScenePlayerAppearancePush_MsgId_ScenePlayerAppearancePush_MsgId_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
 };
-bool ScenePlayerStatePush_MsgId_IsValid(int value);
-constexpr ScenePlayerStatePush_MsgId ScenePlayerStatePush_MsgId_MsgId_MIN = ScenePlayerStatePush_MsgId_None;
-constexpr ScenePlayerStatePush_MsgId ScenePlayerStatePush_MsgId_MsgId_MAX = ScenePlayerStatePush_MsgId_Id;
-constexpr int ScenePlayerStatePush_MsgId_MsgId_ARRAYSIZE = ScenePlayerStatePush_MsgId_MsgId_MAX + 1;
+bool ScenePlayerAppearancePush_MsgId_IsValid(int value);
+constexpr ScenePlayerAppearancePush_MsgId ScenePlayerAppearancePush_MsgId_MsgId_MIN = ScenePlayerAppearancePush_MsgId_None;
+constexpr ScenePlayerAppearancePush_MsgId ScenePlayerAppearancePush_MsgId_MsgId_MAX = ScenePlayerAppearancePush_MsgId_Id;
+constexpr int ScenePlayerAppearancePush_MsgId_MsgId_ARRAYSIZE = ScenePlayerAppearancePush_MsgId_MsgId_MAX + 1;
 
-const std::string& ScenePlayerStatePush_MsgId_Name(ScenePlayerStatePush_MsgId value);
+const std::string& ScenePlayerAppearancePush_MsgId_Name(ScenePlayerAppearancePush_MsgId value);
 template<typename T>
-inline const std::string& ScenePlayerStatePush_MsgId_Name(T enum_t_value) {
-  static_assert(::std::is_same<T, ScenePlayerStatePush_MsgId>::value ||
+inline const std::string& ScenePlayerAppearancePush_MsgId_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, ScenePlayerAppearancePush_MsgId>::value ||
     ::std::is_integral<T>::value,
-    "Incorrect type passed to function ScenePlayerStatePush_MsgId_Name.");
-  return ScenePlayerStatePush_MsgId_Name(static_cast<ScenePlayerStatePush_MsgId>(enum_t_value));
+    "Incorrect type passed to function ScenePlayerAppearancePush_MsgId_Name.");
+  return ScenePlayerAppearancePush_MsgId_Name(static_cast<ScenePlayerAppearancePush_MsgId>(enum_t_value));
 }
-bool ScenePlayerStatePush_MsgId_Parse(
-    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, ScenePlayerStatePush_MsgId* value);
+bool ScenePlayerAppearancePush_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, ScenePlayerAppearancePush_MsgId* value);
+enum ScenePlayerStatesPush_MsgId : int {
+  ScenePlayerStatesPush_MsgId_None = 0,
+  ScenePlayerStatesPush_MsgId_Id = 30004,
+  ScenePlayerStatesPush_MsgId_ScenePlayerStatesPush_MsgId_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  ScenePlayerStatesPush_MsgId_ScenePlayerStatesPush_MsgId_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool ScenePlayerStatesPush_MsgId_IsValid(int value);
+constexpr ScenePlayerStatesPush_MsgId ScenePlayerStatesPush_MsgId_MsgId_MIN = ScenePlayerStatesPush_MsgId_None;
+constexpr ScenePlayerStatesPush_MsgId ScenePlayerStatesPush_MsgId_MsgId_MAX = ScenePlayerStatesPush_MsgId_Id;
+constexpr int ScenePlayerStatesPush_MsgId_MsgId_ARRAYSIZE = ScenePlayerStatesPush_MsgId_MsgId_MAX + 1;
+
+const std::string& ScenePlayerStatesPush_MsgId_Name(ScenePlayerStatesPush_MsgId value);
+template<typename T>
+inline const std::string& ScenePlayerStatesPush_MsgId_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, ScenePlayerStatesPush_MsgId>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function ScenePlayerStatesPush_MsgId_Name.");
+  return ScenePlayerStatesPush_MsgId_Name(static_cast<ScenePlayerStatesPush_MsgId>(enum_t_value));
+}
+bool ScenePlayerStatesPush_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, ScenePlayerStatesPush_MsgId* value);
+enum TownPositionCorrectionPush_MsgId : int {
+  TownPositionCorrectionPush_MsgId_None = 0,
+  TownPositionCorrectionPush_MsgId_Id = 30005,
+  TownPositionCorrectionPush_MsgId_TownPositionCorrectionPush_MsgId_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  TownPositionCorrectionPush_MsgId_TownPositionCorrectionPush_MsgId_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool TownPositionCorrectionPush_MsgId_IsValid(int value);
+constexpr TownPositionCorrectionPush_MsgId TownPositionCorrectionPush_MsgId_MsgId_MIN = TownPositionCorrectionPush_MsgId_None;
+constexpr TownPositionCorrectionPush_MsgId TownPositionCorrectionPush_MsgId_MsgId_MAX = TownPositionCorrectionPush_MsgId_Id;
+constexpr int TownPositionCorrectionPush_MsgId_MsgId_ARRAYSIZE = TownPositionCorrectionPush_MsgId_MsgId_MAX + 1;
+
+const std::string& TownPositionCorrectionPush_MsgId_Name(TownPositionCorrectionPush_MsgId value);
+template<typename T>
+inline const std::string& TownPositionCorrectionPush_MsgId_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, TownPositionCorrectionPush_MsgId>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function TownPositionCorrectionPush_MsgId_Name.");
+  return TownPositionCorrectionPush_MsgId_Name(static_cast<TownPositionCorrectionPush_MsgId>(enum_t_value));
+}
+bool TownPositionCorrectionPush_MsgId_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, TownPositionCorrectionPush_MsgId* value);
 // ===================================================================
 
-class TownPlayerStatePush final :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Town.TownPlayerStatePush) */ {
+class TownMoveReport final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Town.TownMoveReport) */ {
  public:
-  inline TownPlayerStatePush() : TownPlayerStatePush(nullptr) {}
-  ~TownPlayerStatePush() override;
-  explicit PROTOBUF_CONSTEXPR TownPlayerStatePush(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+  inline TownMoveReport() : TownMoveReport(nullptr) {}
+  ~TownMoveReport() override;
+  explicit PROTOBUF_CONSTEXPR TownMoveReport(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
 
-  TownPlayerStatePush(const TownPlayerStatePush& from);
-  TownPlayerStatePush(TownPlayerStatePush&& from) noexcept
-    : TownPlayerStatePush() {
+  TownMoveReport(const TownMoveReport& from);
+  TownMoveReport(TownMoveReport&& from) noexcept
+    : TownMoveReport() {
     *this = ::std::move(from);
   }
 
-  inline TownPlayerStatePush& operator=(const TownPlayerStatePush& from) {
+  inline TownMoveReport& operator=(const TownMoveReport& from) {
     CopyFrom(from);
     return *this;
   }
-  inline TownPlayerStatePush& operator=(TownPlayerStatePush&& from) noexcept {
+  inline TownMoveReport& operator=(TownMoveReport&& from) noexcept {
     if (this == &from) return *this;
     if (GetOwningArena() == from.GetOwningArena()
   #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
@@ -185,20 +239,20 @@ class TownPlayerStatePush final :
     return *this;
   }
 
-  static const TownPlayerStatePush& default_instance() {
+  static const TownMoveReport& default_instance() {
     return *internal_default_instance();
   }
-  static inline const TownPlayerStatePush* internal_default_instance() {
-    return reinterpret_cast<const TownPlayerStatePush*>(
-               &_TownPlayerStatePush_default_instance_);
+  static inline const TownMoveReport* internal_default_instance() {
+    return reinterpret_cast<const TownMoveReport*>(
+               &_TownMoveReport_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
     0;
 
-  friend void swap(TownPlayerStatePush& a, TownPlayerStatePush& b) {
+  friend void swap(TownMoveReport& a, TownMoveReport& b) {
     a.Swap(&b);
   }
-  inline void Swap(TownPlayerStatePush* other) {
+  inline void Swap(TownMoveReport* other) {
     if (other == this) return;
   #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
     if (GetOwningArena() != nullptr &&
@@ -211,7 +265,7 @@ class TownPlayerStatePush final :
       ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
     }
   }
-  void UnsafeArenaSwap(TownPlayerStatePush* other) {
+  void UnsafeArenaSwap(TownMoveReport* other) {
     if (other == this) return;
     GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
     InternalSwap(other);
@@ -219,12 +273,12 @@ class TownPlayerStatePush final :
 
   // implements Message ----------------------------------------------
 
-  TownPlayerStatePush* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
-    return CreateMaybeMessage<TownPlayerStatePush>(arena);
+  TownMoveReport* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<TownMoveReport>(arena);
   }
   void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
-  void CopyFrom(const TownPlayerStatePush& from);
-  void MergeFrom(const TownPlayerStatePush& from);
+  void CopyFrom(const TownMoveReport& from);
+  void MergeFrom(const TownMoveReport& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
   bool IsInitialized() const final;
 
@@ -238,15 +292,15 @@ class TownPlayerStatePush final :
   void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
   void SharedDtor();
   void SetCachedSize(int size) const;
-  void InternalSwap(TownPlayerStatePush* other);
+  void InternalSwap(TownMoveReport* other);
 
   private:
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "PB.Town.TownPlayerStatePush";
+    return "PB.Town.TownMoveReport";
   }
   protected:
-  explicit TownPlayerStatePush(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+  explicit TownMoveReport(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                        bool is_message_owned = false);
   public:
 
@@ -254,56 +308,86 @@ class TownPlayerStatePush final :
 
   // nested types ----------------------------------------------------
 
-  typedef TownPlayerStatePush_MsgId MsgId;
+  typedef TownMoveReport_MsgId MsgId;
   static constexpr MsgId None =
-    TownPlayerStatePush_MsgId_None;
+    TownMoveReport_MsgId_None;
   static constexpr MsgId Id =
-    TownPlayerStatePush_MsgId_Id;
+    TownMoveReport_MsgId_Id;
   static inline bool MsgId_IsValid(int value) {
-    return TownPlayerStatePush_MsgId_IsValid(value);
+    return TownMoveReport_MsgId_IsValid(value);
   }
   static constexpr MsgId MsgId_MIN =
-    TownPlayerStatePush_MsgId_MsgId_MIN;
+    TownMoveReport_MsgId_MsgId_MIN;
   static constexpr MsgId MsgId_MAX =
-    TownPlayerStatePush_MsgId_MsgId_MAX;
+    TownMoveReport_MsgId_MsgId_MAX;
   static constexpr int MsgId_ARRAYSIZE =
-    TownPlayerStatePush_MsgId_MsgId_ARRAYSIZE;
+    TownMoveReport_MsgId_MsgId_ARRAYSIZE;
   template<typename T>
   static inline const std::string& MsgId_Name(T enum_t_value) {
     static_assert(::std::is_same<T, MsgId>::value ||
       ::std::is_integral<T>::value,
       "Incorrect type passed to function MsgId_Name.");
-    return TownPlayerStatePush_MsgId_Name(enum_t_value);
+    return TownMoveReport_MsgId_Name(enum_t_value);
   }
   static inline bool MsgId_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
       MsgId* value) {
-    return TownPlayerStatePush_MsgId_Parse(name, value);
+    return TownMoveReport_MsgId_Parse(name, value);
   }
 
   // accessors -------------------------------------------------------
 
   enum : int {
-    kStateFieldNumber = 1,
+    kMovementFieldNumber = 3,
+    kClientTimeMsFieldNumber = 2,
+    kClientSeqFieldNumber = 1,
+    kAckCorrectionSeqFieldNumber = 4,
   };
-  // .PB.Types.PlayerState state = 1;
-  bool has_state() const;
+  // .PB.Types.TownMovement movement = 3;
+  bool has_movement() const;
   private:
-  bool _internal_has_state() const;
+  bool _internal_has_movement() const;
   public:
-  void clear_state();
-  const ::PB::Types::PlayerState& state() const;
-  PROTOBUF_NODISCARD ::PB::Types::PlayerState* release_state();
-  ::PB::Types::PlayerState* mutable_state();
-  void set_allocated_state(::PB::Types::PlayerState* state);
+  void clear_movement();
+  const ::PB::Types::TownMovement& movement() const;
+  PROTOBUF_NODISCARD ::PB::Types::TownMovement* release_movement();
+  ::PB::Types::TownMovement* mutable_movement();
+  void set_allocated_movement(::PB::Types::TownMovement* movement);
   private:
-  const ::PB::Types::PlayerState& _internal_state() const;
-  ::PB::Types::PlayerState* _internal_mutable_state();
+  const ::PB::Types::TownMovement& _internal_movement() const;
+  ::PB::Types::TownMovement* _internal_mutable_movement();
   public:
-  void unsafe_arena_set_allocated_state(
-      ::PB::Types::PlayerState* state);
-  ::PB::Types::PlayerState* unsafe_arena_release_state();
+  void unsafe_arena_set_allocated_movement(
+      ::PB::Types::TownMovement* movement);
+  ::PB::Types::TownMovement* unsafe_arena_release_movement();
 
-  // @@protoc_insertion_point(class_scope:PB.Town.TownPlayerStatePush)
+  // uint64 client_time_ms = 2;
+  void clear_client_time_ms();
+  uint64_t client_time_ms() const;
+  void set_client_time_ms(uint64_t value);
+  private:
+  uint64_t _internal_client_time_ms() const;
+  void _internal_set_client_time_ms(uint64_t value);
+  public:
+
+  // uint32 client_seq = 1;
+  void clear_client_seq();
+  uint32_t client_seq() const;
+  void set_client_seq(uint32_t value);
+  private:
+  uint32_t _internal_client_seq() const;
+  void _internal_set_client_seq(uint32_t value);
+  public:
+
+  // uint32 ack_correction_seq = 4;
+  void clear_ack_correction_seq();
+  uint32_t ack_correction_seq() const;
+  void set_ack_correction_seq(uint32_t value);
+  private:
+  uint32_t _internal_ack_correction_seq() const;
+  void _internal_set_ack_correction_seq(uint32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Town.TownMoveReport)
  private:
   class _Internal;
 
@@ -311,7 +395,10 @@ class TownPlayerStatePush final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
-    ::PB::Types::PlayerState* state_;
+    ::PB::Types::TownMovement* movement_;
+    uint64_t client_time_ms_;
+    uint32_t client_seq_;
+    uint32_t ack_correction_seq_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -448,25 +535,25 @@ class ScenePlayerEnterPush final :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kStateFieldNumber = 1,
+    kPlayerFieldNumber = 1,
   };
-  // .PB.Types.PlayerState state = 1;
-  bool has_state() const;
+  // .PB.Types.TownPlayerInfo player = 1;
+  bool has_player() const;
   private:
-  bool _internal_has_state() const;
+  bool _internal_has_player() const;
   public:
-  void clear_state();
-  const ::PB::Types::PlayerState& state() const;
-  PROTOBUF_NODISCARD ::PB::Types::PlayerState* release_state();
-  ::PB::Types::PlayerState* mutable_state();
-  void set_allocated_state(::PB::Types::PlayerState* state);
+  void clear_player();
+  const ::PB::Types::TownPlayerInfo& player() const;
+  PROTOBUF_NODISCARD ::PB::Types::TownPlayerInfo* release_player();
+  ::PB::Types::TownPlayerInfo* mutable_player();
+  void set_allocated_player(::PB::Types::TownPlayerInfo* player);
   private:
-  const ::PB::Types::PlayerState& _internal_state() const;
-  ::PB::Types::PlayerState* _internal_mutable_state();
+  const ::PB::Types::TownPlayerInfo& _internal_player() const;
+  ::PB::Types::TownPlayerInfo* _internal_mutable_player();
   public:
-  void unsafe_arena_set_allocated_state(
-      ::PB::Types::PlayerState* state);
-  ::PB::Types::PlayerState* unsafe_arena_release_state();
+  void unsafe_arena_set_allocated_player(
+      ::PB::Types::TownPlayerInfo* player);
+  ::PB::Types::TownPlayerInfo* unsafe_arena_release_player();
 
   // @@protoc_insertion_point(class_scope:PB.Town.ScenePlayerEnterPush)
  private:
@@ -476,7 +563,7 @@ class ScenePlayerEnterPush final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
-    ::PB::Types::PlayerState* state_;
+    ::PB::Types::TownPlayerInfo* player_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -640,24 +727,24 @@ class ScenePlayerLeavePush final :
 };
 // -------------------------------------------------------------------
 
-class ScenePlayerStatePush final :
-    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Town.ScenePlayerStatePush) */ {
+class ScenePlayerAppearancePush final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Town.ScenePlayerAppearancePush) */ {
  public:
-  inline ScenePlayerStatePush() : ScenePlayerStatePush(nullptr) {}
-  ~ScenePlayerStatePush() override;
-  explicit PROTOBUF_CONSTEXPR ScenePlayerStatePush(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+  inline ScenePlayerAppearancePush() : ScenePlayerAppearancePush(nullptr) {}
+  ~ScenePlayerAppearancePush() override;
+  explicit PROTOBUF_CONSTEXPR ScenePlayerAppearancePush(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
 
-  ScenePlayerStatePush(const ScenePlayerStatePush& from);
-  ScenePlayerStatePush(ScenePlayerStatePush&& from) noexcept
-    : ScenePlayerStatePush() {
+  ScenePlayerAppearancePush(const ScenePlayerAppearancePush& from);
+  ScenePlayerAppearancePush(ScenePlayerAppearancePush&& from) noexcept
+    : ScenePlayerAppearancePush() {
     *this = ::std::move(from);
   }
 
-  inline ScenePlayerStatePush& operator=(const ScenePlayerStatePush& from) {
+  inline ScenePlayerAppearancePush& operator=(const ScenePlayerAppearancePush& from) {
     CopyFrom(from);
     return *this;
   }
-  inline ScenePlayerStatePush& operator=(ScenePlayerStatePush&& from) noexcept {
+  inline ScenePlayerAppearancePush& operator=(ScenePlayerAppearancePush&& from) noexcept {
     if (this == &from) return *this;
     if (GetOwningArena() == from.GetOwningArena()
   #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
@@ -671,20 +758,20 @@ class ScenePlayerStatePush final :
     return *this;
   }
 
-  static const ScenePlayerStatePush& default_instance() {
+  static const ScenePlayerAppearancePush& default_instance() {
     return *internal_default_instance();
   }
-  static inline const ScenePlayerStatePush* internal_default_instance() {
-    return reinterpret_cast<const ScenePlayerStatePush*>(
-               &_ScenePlayerStatePush_default_instance_);
+  static inline const ScenePlayerAppearancePush* internal_default_instance() {
+    return reinterpret_cast<const ScenePlayerAppearancePush*>(
+               &_ScenePlayerAppearancePush_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
     3;
 
-  friend void swap(ScenePlayerStatePush& a, ScenePlayerStatePush& b) {
+  friend void swap(ScenePlayerAppearancePush& a, ScenePlayerAppearancePush& b) {
     a.Swap(&b);
   }
-  inline void Swap(ScenePlayerStatePush* other) {
+  inline void Swap(ScenePlayerAppearancePush* other) {
     if (other == this) return;
   #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
     if (GetOwningArena() != nullptr &&
@@ -697,7 +784,7 @@ class ScenePlayerStatePush final :
       ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
     }
   }
-  void UnsafeArenaSwap(ScenePlayerStatePush* other) {
+  void UnsafeArenaSwap(ScenePlayerAppearancePush* other) {
     if (other == this) return;
     GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
     InternalSwap(other);
@@ -705,12 +792,12 @@ class ScenePlayerStatePush final :
 
   // implements Message ----------------------------------------------
 
-  ScenePlayerStatePush* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
-    return CreateMaybeMessage<ScenePlayerStatePush>(arena);
+  ScenePlayerAppearancePush* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ScenePlayerAppearancePush>(arena);
   }
   void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
-  void CopyFrom(const ScenePlayerStatePush& from);
-  void MergeFrom(const ScenePlayerStatePush& from);
+  void CopyFrom(const ScenePlayerAppearancePush& from);
+  void MergeFrom(const ScenePlayerAppearancePush& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
   bool IsInitialized() const final;
 
@@ -724,15 +811,15 @@ class ScenePlayerStatePush final :
   void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
   void SharedDtor();
   void SetCachedSize(int size) const;
-  void InternalSwap(ScenePlayerStatePush* other);
+  void InternalSwap(ScenePlayerAppearancePush* other);
 
   private:
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "PB.Town.ScenePlayerStatePush";
+    return "PB.Town.ScenePlayerAppearancePush";
   }
   protected:
-  explicit ScenePlayerStatePush(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+  explicit ScenePlayerAppearancePush(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                        bool is_message_owned = false);
   public:
 
@@ -740,56 +827,66 @@ class ScenePlayerStatePush final :
 
   // nested types ----------------------------------------------------
 
-  typedef ScenePlayerStatePush_MsgId MsgId;
+  typedef ScenePlayerAppearancePush_MsgId MsgId;
   static constexpr MsgId None =
-    ScenePlayerStatePush_MsgId_None;
+    ScenePlayerAppearancePush_MsgId_None;
   static constexpr MsgId Id =
-    ScenePlayerStatePush_MsgId_Id;
+    ScenePlayerAppearancePush_MsgId_Id;
   static inline bool MsgId_IsValid(int value) {
-    return ScenePlayerStatePush_MsgId_IsValid(value);
+    return ScenePlayerAppearancePush_MsgId_IsValid(value);
   }
   static constexpr MsgId MsgId_MIN =
-    ScenePlayerStatePush_MsgId_MsgId_MIN;
+    ScenePlayerAppearancePush_MsgId_MsgId_MIN;
   static constexpr MsgId MsgId_MAX =
-    ScenePlayerStatePush_MsgId_MsgId_MAX;
+    ScenePlayerAppearancePush_MsgId_MsgId_MAX;
   static constexpr int MsgId_ARRAYSIZE =
-    ScenePlayerStatePush_MsgId_MsgId_ARRAYSIZE;
+    ScenePlayerAppearancePush_MsgId_MsgId_ARRAYSIZE;
   template<typename T>
   static inline const std::string& MsgId_Name(T enum_t_value) {
     static_assert(::std::is_same<T, MsgId>::value ||
       ::std::is_integral<T>::value,
       "Incorrect type passed to function MsgId_Name.");
-    return ScenePlayerStatePush_MsgId_Name(enum_t_value);
+    return ScenePlayerAppearancePush_MsgId_Name(enum_t_value);
   }
   static inline bool MsgId_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
       MsgId* value) {
-    return ScenePlayerStatePush_MsgId_Parse(name, value);
+    return ScenePlayerAppearancePush_MsgId_Parse(name, value);
   }
 
   // accessors -------------------------------------------------------
 
   enum : int {
-    kStateFieldNumber = 1,
+    kAppearanceFieldNumber = 2,
+    kPlayerIdFieldNumber = 1,
   };
-  // .PB.Types.PlayerState state = 1;
-  bool has_state() const;
+  // .PB.Types.TownAppearance appearance = 2;
+  bool has_appearance() const;
   private:
-  bool _internal_has_state() const;
+  bool _internal_has_appearance() const;
   public:
-  void clear_state();
-  const ::PB::Types::PlayerState& state() const;
-  PROTOBUF_NODISCARD ::PB::Types::PlayerState* release_state();
-  ::PB::Types::PlayerState* mutable_state();
-  void set_allocated_state(::PB::Types::PlayerState* state);
+  void clear_appearance();
+  const ::PB::Types::TownAppearance& appearance() const;
+  PROTOBUF_NODISCARD ::PB::Types::TownAppearance* release_appearance();
+  ::PB::Types::TownAppearance* mutable_appearance();
+  void set_allocated_appearance(::PB::Types::TownAppearance* appearance);
   private:
-  const ::PB::Types::PlayerState& _internal_state() const;
-  ::PB::Types::PlayerState* _internal_mutable_state();
+  const ::PB::Types::TownAppearance& _internal_appearance() const;
+  ::PB::Types::TownAppearance* _internal_mutable_appearance();
   public:
-  void unsafe_arena_set_allocated_state(
-      ::PB::Types::PlayerState* state);
-  ::PB::Types::PlayerState* unsafe_arena_release_state();
+  void unsafe_arena_set_allocated_appearance(
+      ::PB::Types::TownAppearance* appearance);
+  ::PB::Types::TownAppearance* unsafe_arena_release_appearance();
 
-  // @@protoc_insertion_point(class_scope:PB.Town.ScenePlayerStatePush)
+  // int64 player_id = 1;
+  void clear_player_id();
+  int64_t player_id() const;
+  void set_player_id(int64_t value);
+  private:
+  int64_t _internal_player_id() const;
+  void _internal_set_player_id(int64_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Town.ScenePlayerAppearancePush)
  private:
   class _Internal;
 
@@ -797,7 +894,510 @@ class ScenePlayerStatePush final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
-    ::PB::Types::PlayerState* state_;
+    ::PB::Types::TownAppearance* appearance_;
+    int64_t player_id_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_client_5ftown_2eproto;
+};
+// -------------------------------------------------------------------
+
+class TownStateEntry final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Town.TownStateEntry) */ {
+ public:
+  inline TownStateEntry() : TownStateEntry(nullptr) {}
+  ~TownStateEntry() override;
+  explicit PROTOBUF_CONSTEXPR TownStateEntry(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  TownStateEntry(const TownStateEntry& from);
+  TownStateEntry(TownStateEntry&& from) noexcept
+    : TownStateEntry() {
+    *this = ::std::move(from);
+  }
+
+  inline TownStateEntry& operator=(const TownStateEntry& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline TownStateEntry& operator=(TownStateEntry&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const TownStateEntry& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const TownStateEntry* internal_default_instance() {
+    return reinterpret_cast<const TownStateEntry*>(
+               &_TownStateEntry_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    4;
+
+  friend void swap(TownStateEntry& a, TownStateEntry& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(TownStateEntry* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(TownStateEntry* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  TownStateEntry* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<TownStateEntry>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const TownStateEntry& from);
+  void MergeFrom(const TownStateEntry& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(TownStateEntry* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Town.TownStateEntry";
+  }
+  protected:
+  explicit TownStateEntry(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kMovementFieldNumber = 3,
+    kPlayerIdFieldNumber = 1,
+    kServerTimeMsFieldNumber = 2,
+  };
+  // .PB.Types.TownMovement movement = 3;
+  bool has_movement() const;
+  private:
+  bool _internal_has_movement() const;
+  public:
+  void clear_movement();
+  const ::PB::Types::TownMovement& movement() const;
+  PROTOBUF_NODISCARD ::PB::Types::TownMovement* release_movement();
+  ::PB::Types::TownMovement* mutable_movement();
+  void set_allocated_movement(::PB::Types::TownMovement* movement);
+  private:
+  const ::PB::Types::TownMovement& _internal_movement() const;
+  ::PB::Types::TownMovement* _internal_mutable_movement();
+  public:
+  void unsafe_arena_set_allocated_movement(
+      ::PB::Types::TownMovement* movement);
+  ::PB::Types::TownMovement* unsafe_arena_release_movement();
+
+  // int64 player_id = 1;
+  void clear_player_id();
+  int64_t player_id() const;
+  void set_player_id(int64_t value);
+  private:
+  int64_t _internal_player_id() const;
+  void _internal_set_player_id(int64_t value);
+  public:
+
+  // uint64 server_time_ms = 2;
+  void clear_server_time_ms();
+  uint64_t server_time_ms() const;
+  void set_server_time_ms(uint64_t value);
+  private:
+  uint64_t _internal_server_time_ms() const;
+  void _internal_set_server_time_ms(uint64_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Town.TownStateEntry)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PB::Types::TownMovement* movement_;
+    int64_t player_id_;
+    uint64_t server_time_ms_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_client_5ftown_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ScenePlayerStatesPush final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Town.ScenePlayerStatesPush) */ {
+ public:
+  inline ScenePlayerStatesPush() : ScenePlayerStatesPush(nullptr) {}
+  ~ScenePlayerStatesPush() override;
+  explicit PROTOBUF_CONSTEXPR ScenePlayerStatesPush(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ScenePlayerStatesPush(const ScenePlayerStatesPush& from);
+  ScenePlayerStatesPush(ScenePlayerStatesPush&& from) noexcept
+    : ScenePlayerStatesPush() {
+    *this = ::std::move(from);
+  }
+
+  inline ScenePlayerStatesPush& operator=(const ScenePlayerStatesPush& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ScenePlayerStatesPush& operator=(ScenePlayerStatesPush&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ScenePlayerStatesPush& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ScenePlayerStatesPush* internal_default_instance() {
+    return reinterpret_cast<const ScenePlayerStatesPush*>(
+               &_ScenePlayerStatesPush_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    5;
+
+  friend void swap(ScenePlayerStatesPush& a, ScenePlayerStatesPush& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ScenePlayerStatesPush* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ScenePlayerStatesPush* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ScenePlayerStatesPush* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ScenePlayerStatesPush>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const ScenePlayerStatesPush& from);
+  void MergeFrom(const ScenePlayerStatesPush& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(ScenePlayerStatesPush* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Town.ScenePlayerStatesPush";
+  }
+  protected:
+  explicit ScenePlayerStatesPush(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  typedef ScenePlayerStatesPush_MsgId MsgId;
+  static constexpr MsgId None =
+    ScenePlayerStatesPush_MsgId_None;
+  static constexpr MsgId Id =
+    ScenePlayerStatesPush_MsgId_Id;
+  static inline bool MsgId_IsValid(int value) {
+    return ScenePlayerStatesPush_MsgId_IsValid(value);
+  }
+  static constexpr MsgId MsgId_MIN =
+    ScenePlayerStatesPush_MsgId_MsgId_MIN;
+  static constexpr MsgId MsgId_MAX =
+    ScenePlayerStatesPush_MsgId_MsgId_MAX;
+  static constexpr int MsgId_ARRAYSIZE =
+    ScenePlayerStatesPush_MsgId_MsgId_ARRAYSIZE;
+  template<typename T>
+  static inline const std::string& MsgId_Name(T enum_t_value) {
+    static_assert(::std::is_same<T, MsgId>::value ||
+      ::std::is_integral<T>::value,
+      "Incorrect type passed to function MsgId_Name.");
+    return ScenePlayerStatesPush_MsgId_Name(enum_t_value);
+  }
+  static inline bool MsgId_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
+      MsgId* value) {
+    return ScenePlayerStatesPush_MsgId_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kPlayersFieldNumber = 1,
+  };
+  // repeated .PB.Town.TownStateEntry players = 1;
+  int players_size() const;
+  private:
+  int _internal_players_size() const;
+  public:
+  void clear_players();
+  ::PB::Town::TownStateEntry* mutable_players(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Town::TownStateEntry >*
+      mutable_players();
+  private:
+  const ::PB::Town::TownStateEntry& _internal_players(int index) const;
+  ::PB::Town::TownStateEntry* _internal_add_players();
+  public:
+  const ::PB::Town::TownStateEntry& players(int index) const;
+  ::PB::Town::TownStateEntry* add_players();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Town::TownStateEntry >&
+      players() const;
+
+  // @@protoc_insertion_point(class_scope:PB.Town.ScenePlayerStatesPush)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Town::TownStateEntry > players_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_client_5ftown_2eproto;
+};
+// -------------------------------------------------------------------
+
+class TownPositionCorrectionPush final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Town.TownPositionCorrectionPush) */ {
+ public:
+  inline TownPositionCorrectionPush() : TownPositionCorrectionPush(nullptr) {}
+  ~TownPositionCorrectionPush() override;
+  explicit PROTOBUF_CONSTEXPR TownPositionCorrectionPush(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  TownPositionCorrectionPush(const TownPositionCorrectionPush& from);
+  TownPositionCorrectionPush(TownPositionCorrectionPush&& from) noexcept
+    : TownPositionCorrectionPush() {
+    *this = ::std::move(from);
+  }
+
+  inline TownPositionCorrectionPush& operator=(const TownPositionCorrectionPush& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline TownPositionCorrectionPush& operator=(TownPositionCorrectionPush&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const TownPositionCorrectionPush& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const TownPositionCorrectionPush* internal_default_instance() {
+    return reinterpret_cast<const TownPositionCorrectionPush*>(
+               &_TownPositionCorrectionPush_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    6;
+
+  friend void swap(TownPositionCorrectionPush& a, TownPositionCorrectionPush& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(TownPositionCorrectionPush* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(TownPositionCorrectionPush* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  TownPositionCorrectionPush* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<TownPositionCorrectionPush>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const TownPositionCorrectionPush& from);
+  void MergeFrom(const TownPositionCorrectionPush& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(TownPositionCorrectionPush* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Town.TownPositionCorrectionPush";
+  }
+  protected:
+  explicit TownPositionCorrectionPush(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  typedef TownPositionCorrectionPush_MsgId MsgId;
+  static constexpr MsgId None =
+    TownPositionCorrectionPush_MsgId_None;
+  static constexpr MsgId Id =
+    TownPositionCorrectionPush_MsgId_Id;
+  static inline bool MsgId_IsValid(int value) {
+    return TownPositionCorrectionPush_MsgId_IsValid(value);
+  }
+  static constexpr MsgId MsgId_MIN =
+    TownPositionCorrectionPush_MsgId_MsgId_MIN;
+  static constexpr MsgId MsgId_MAX =
+    TownPositionCorrectionPush_MsgId_MsgId_MAX;
+  static constexpr int MsgId_ARRAYSIZE =
+    TownPositionCorrectionPush_MsgId_MsgId_ARRAYSIZE;
+  template<typename T>
+  static inline const std::string& MsgId_Name(T enum_t_value) {
+    static_assert(::std::is_same<T, MsgId>::value ||
+      ::std::is_integral<T>::value,
+      "Incorrect type passed to function MsgId_Name.");
+    return TownPositionCorrectionPush_MsgId_Name(enum_t_value);
+  }
+  static inline bool MsgId_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
+      MsgId* value) {
+    return TownPositionCorrectionPush_MsgId_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kPosFieldNumber = 2,
+    kClientSeqFieldNumber = 1,
+  };
+  // .PB.Types.TownVec3 pos = 2;
+  bool has_pos() const;
+  private:
+  bool _internal_has_pos() const;
+  public:
+  void clear_pos();
+  const ::PB::Types::TownVec3& pos() const;
+  PROTOBUF_NODISCARD ::PB::Types::TownVec3* release_pos();
+  ::PB::Types::TownVec3* mutable_pos();
+  void set_allocated_pos(::PB::Types::TownVec3* pos);
+  private:
+  const ::PB::Types::TownVec3& _internal_pos() const;
+  ::PB::Types::TownVec3* _internal_mutable_pos();
+  public:
+  void unsafe_arena_set_allocated_pos(
+      ::PB::Types::TownVec3* pos);
+  ::PB::Types::TownVec3* unsafe_arena_release_pos();
+
+  // uint32 client_seq = 1;
+  void clear_client_seq();
+  uint32_t client_seq() const;
+  void set_client_seq(uint32_t value);
+  private:
+  uint32_t _internal_client_seq() const;
+  void _internal_set_client_seq(uint32_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Town.TownPositionCorrectionPush)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PB::Types::TownVec3* pos_;
+    uint32_t client_seq_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -812,41 +1412,81 @@ class ScenePlayerStatePush final :
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif  // __GNUC__
-// TownPlayerStatePush
+// TownMoveReport
 
-// .PB.Types.PlayerState state = 1;
-inline bool TownPlayerStatePush::_internal_has_state() const {
-  return this != internal_default_instance() && _impl_.state_ != nullptr;
+// uint32 client_seq = 1;
+inline void TownMoveReport::clear_client_seq() {
+  _impl_.client_seq_ = 0u;
 }
-inline bool TownPlayerStatePush::has_state() const {
-  return _internal_has_state();
+inline uint32_t TownMoveReport::_internal_client_seq() const {
+  return _impl_.client_seq_;
 }
-inline const ::PB::Types::PlayerState& TownPlayerStatePush::_internal_state() const {
-  const ::PB::Types::PlayerState* p = _impl_.state_;
-  return p != nullptr ? *p : reinterpret_cast<const ::PB::Types::PlayerState&>(
-      ::PB::Types::_PlayerState_default_instance_);
+inline uint32_t TownMoveReport::client_seq() const {
+  // @@protoc_insertion_point(field_get:PB.Town.TownMoveReport.client_seq)
+  return _internal_client_seq();
 }
-inline const ::PB::Types::PlayerState& TownPlayerStatePush::state() const {
-  // @@protoc_insertion_point(field_get:PB.Town.TownPlayerStatePush.state)
-  return _internal_state();
+inline void TownMoveReport::_internal_set_client_seq(uint32_t value) {
+  
+  _impl_.client_seq_ = value;
 }
-inline void TownPlayerStatePush::unsafe_arena_set_allocated_state(
-    ::PB::Types::PlayerState* state) {
+inline void TownMoveReport::set_client_seq(uint32_t value) {
+  _internal_set_client_seq(value);
+  // @@protoc_insertion_point(field_set:PB.Town.TownMoveReport.client_seq)
+}
+
+// uint64 client_time_ms = 2;
+inline void TownMoveReport::clear_client_time_ms() {
+  _impl_.client_time_ms_ = uint64_t{0u};
+}
+inline uint64_t TownMoveReport::_internal_client_time_ms() const {
+  return _impl_.client_time_ms_;
+}
+inline uint64_t TownMoveReport::client_time_ms() const {
+  // @@protoc_insertion_point(field_get:PB.Town.TownMoveReport.client_time_ms)
+  return _internal_client_time_ms();
+}
+inline void TownMoveReport::_internal_set_client_time_ms(uint64_t value) {
+  
+  _impl_.client_time_ms_ = value;
+}
+inline void TownMoveReport::set_client_time_ms(uint64_t value) {
+  _internal_set_client_time_ms(value);
+  // @@protoc_insertion_point(field_set:PB.Town.TownMoveReport.client_time_ms)
+}
+
+// .PB.Types.TownMovement movement = 3;
+inline bool TownMoveReport::_internal_has_movement() const {
+  return this != internal_default_instance() && _impl_.movement_ != nullptr;
+}
+inline bool TownMoveReport::has_movement() const {
+  return _internal_has_movement();
+}
+inline const ::PB::Types::TownMovement& TownMoveReport::_internal_movement() const {
+  const ::PB::Types::TownMovement* p = _impl_.movement_;
+  return p != nullptr ? *p : reinterpret_cast<const ::PB::Types::TownMovement&>(
+      ::PB::Types::_TownMovement_default_instance_);
+}
+inline const ::PB::Types::TownMovement& TownMoveReport::movement() const {
+  // @@protoc_insertion_point(field_get:PB.Town.TownMoveReport.movement)
+  return _internal_movement();
+}
+inline void TownMoveReport::unsafe_arena_set_allocated_movement(
+    ::PB::Types::TownMovement* movement) {
   if (GetArenaForAllocation() == nullptr) {
-    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.state_);
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.movement_);
   }
-  _impl_.state_ = state;
-  if (state) {
+  _impl_.movement_ = movement;
+  if (movement) {
     
   } else {
     
   }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:PB.Town.TownPlayerStatePush.state)
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:PB.Town.TownMoveReport.movement)
 }
-inline ::PB::Types::PlayerState* TownPlayerStatePush::release_state() {
+inline ::PB::Types::TownMovement* TownMoveReport::release_movement() {
   
-  ::PB::Types::PlayerState* temp = _impl_.state_;
-  _impl_.state_ = nullptr;
+  ::PB::Types::TownMovement* temp = _impl_.movement_;
+  _impl_.movement_ = nullptr;
 #ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
   auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
   temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
@@ -858,84 +1498,104 @@ inline ::PB::Types::PlayerState* TownPlayerStatePush::release_state() {
 #endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
   return temp;
 }
-inline ::PB::Types::PlayerState* TownPlayerStatePush::unsafe_arena_release_state() {
-  // @@protoc_insertion_point(field_release:PB.Town.TownPlayerStatePush.state)
+inline ::PB::Types::TownMovement* TownMoveReport::unsafe_arena_release_movement() {
+  // @@protoc_insertion_point(field_release:PB.Town.TownMoveReport.movement)
   
-  ::PB::Types::PlayerState* temp = _impl_.state_;
-  _impl_.state_ = nullptr;
+  ::PB::Types::TownMovement* temp = _impl_.movement_;
+  _impl_.movement_ = nullptr;
   return temp;
 }
-inline ::PB::Types::PlayerState* TownPlayerStatePush::_internal_mutable_state() {
+inline ::PB::Types::TownMovement* TownMoveReport::_internal_mutable_movement() {
   
-  if (_impl_.state_ == nullptr) {
-    auto* p = CreateMaybeMessage<::PB::Types::PlayerState>(GetArenaForAllocation());
-    _impl_.state_ = p;
+  if (_impl_.movement_ == nullptr) {
+    auto* p = CreateMaybeMessage<::PB::Types::TownMovement>(GetArenaForAllocation());
+    _impl_.movement_ = p;
   }
-  return _impl_.state_;
+  return _impl_.movement_;
 }
-inline ::PB::Types::PlayerState* TownPlayerStatePush::mutable_state() {
-  ::PB::Types::PlayerState* _msg = _internal_mutable_state();
-  // @@protoc_insertion_point(field_mutable:PB.Town.TownPlayerStatePush.state)
+inline ::PB::Types::TownMovement* TownMoveReport::mutable_movement() {
+  ::PB::Types::TownMovement* _msg = _internal_mutable_movement();
+  // @@protoc_insertion_point(field_mutable:PB.Town.TownMoveReport.movement)
   return _msg;
 }
-inline void TownPlayerStatePush::set_allocated_state(::PB::Types::PlayerState* state) {
+inline void TownMoveReport::set_allocated_movement(::PB::Types::TownMovement* movement) {
   ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
   if (message_arena == nullptr) {
-    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.state_);
+    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.movement_);
   }
-  if (state) {
+  if (movement) {
     ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
         ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(
-                reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(state));
+                reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(movement));
     if (message_arena != submessage_arena) {
-      state = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, state, submessage_arena);
+      movement = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, movement, submessage_arena);
     }
     
   } else {
     
   }
-  _impl_.state_ = state;
-  // @@protoc_insertion_point(field_set_allocated:PB.Town.TownPlayerStatePush.state)
+  _impl_.movement_ = movement;
+  // @@protoc_insertion_point(field_set_allocated:PB.Town.TownMoveReport.movement)
+}
+
+// uint32 ack_correction_seq = 4;
+inline void TownMoveReport::clear_ack_correction_seq() {
+  _impl_.ack_correction_seq_ = 0u;
+}
+inline uint32_t TownMoveReport::_internal_ack_correction_seq() const {
+  return _impl_.ack_correction_seq_;
+}
+inline uint32_t TownMoveReport::ack_correction_seq() const {
+  // @@protoc_insertion_point(field_get:PB.Town.TownMoveReport.ack_correction_seq)
+  return _internal_ack_correction_seq();
+}
+inline void TownMoveReport::_internal_set_ack_correction_seq(uint32_t value) {
+  
+  _impl_.ack_correction_seq_ = value;
+}
+inline void TownMoveReport::set_ack_correction_seq(uint32_t value) {
+  _internal_set_ack_correction_seq(value);
+  // @@protoc_insertion_point(field_set:PB.Town.TownMoveReport.ack_correction_seq)
 }
 
 // -------------------------------------------------------------------
 
 // ScenePlayerEnterPush
 
-// .PB.Types.PlayerState state = 1;
-inline bool ScenePlayerEnterPush::_internal_has_state() const {
-  return this != internal_default_instance() && _impl_.state_ != nullptr;
+// .PB.Types.TownPlayerInfo player = 1;
+inline bool ScenePlayerEnterPush::_internal_has_player() const {
+  return this != internal_default_instance() && _impl_.player_ != nullptr;
 }
-inline bool ScenePlayerEnterPush::has_state() const {
-  return _internal_has_state();
+inline bool ScenePlayerEnterPush::has_player() const {
+  return _internal_has_player();
 }
-inline const ::PB::Types::PlayerState& ScenePlayerEnterPush::_internal_state() const {
-  const ::PB::Types::PlayerState* p = _impl_.state_;
-  return p != nullptr ? *p : reinterpret_cast<const ::PB::Types::PlayerState&>(
-      ::PB::Types::_PlayerState_default_instance_);
+inline const ::PB::Types::TownPlayerInfo& ScenePlayerEnterPush::_internal_player() const {
+  const ::PB::Types::TownPlayerInfo* p = _impl_.player_;
+  return p != nullptr ? *p : reinterpret_cast<const ::PB::Types::TownPlayerInfo&>(
+      ::PB::Types::_TownPlayerInfo_default_instance_);
 }
-inline const ::PB::Types::PlayerState& ScenePlayerEnterPush::state() const {
-  // @@protoc_insertion_point(field_get:PB.Town.ScenePlayerEnterPush.state)
-  return _internal_state();
+inline const ::PB::Types::TownPlayerInfo& ScenePlayerEnterPush::player() const {
+  // @@protoc_insertion_point(field_get:PB.Town.ScenePlayerEnterPush.player)
+  return _internal_player();
 }
-inline void ScenePlayerEnterPush::unsafe_arena_set_allocated_state(
-    ::PB::Types::PlayerState* state) {
+inline void ScenePlayerEnterPush::unsafe_arena_set_allocated_player(
+    ::PB::Types::TownPlayerInfo* player) {
   if (GetArenaForAllocation() == nullptr) {
-    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.state_);
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.player_);
   }
-  _impl_.state_ = state;
-  if (state) {
+  _impl_.player_ = player;
+  if (player) {
     
   } else {
     
   }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:PB.Town.ScenePlayerEnterPush.state)
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:PB.Town.ScenePlayerEnterPush.player)
 }
-inline ::PB::Types::PlayerState* ScenePlayerEnterPush::release_state() {
+inline ::PB::Types::TownPlayerInfo* ScenePlayerEnterPush::release_player() {
   
-  ::PB::Types::PlayerState* temp = _impl_.state_;
-  _impl_.state_ = nullptr;
+  ::PB::Types::TownPlayerInfo* temp = _impl_.player_;
+  _impl_.player_ = nullptr;
 #ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
   auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
   temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
@@ -947,45 +1607,45 @@ inline ::PB::Types::PlayerState* ScenePlayerEnterPush::release_state() {
 #endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
   return temp;
 }
-inline ::PB::Types::PlayerState* ScenePlayerEnterPush::unsafe_arena_release_state() {
-  // @@protoc_insertion_point(field_release:PB.Town.ScenePlayerEnterPush.state)
+inline ::PB::Types::TownPlayerInfo* ScenePlayerEnterPush::unsafe_arena_release_player() {
+  // @@protoc_insertion_point(field_release:PB.Town.ScenePlayerEnterPush.player)
   
-  ::PB::Types::PlayerState* temp = _impl_.state_;
-  _impl_.state_ = nullptr;
+  ::PB::Types::TownPlayerInfo* temp = _impl_.player_;
+  _impl_.player_ = nullptr;
   return temp;
 }
-inline ::PB::Types::PlayerState* ScenePlayerEnterPush::_internal_mutable_state() {
+inline ::PB::Types::TownPlayerInfo* ScenePlayerEnterPush::_internal_mutable_player() {
   
-  if (_impl_.state_ == nullptr) {
-    auto* p = CreateMaybeMessage<::PB::Types::PlayerState>(GetArenaForAllocation());
-    _impl_.state_ = p;
+  if (_impl_.player_ == nullptr) {
+    auto* p = CreateMaybeMessage<::PB::Types::TownPlayerInfo>(GetArenaForAllocation());
+    _impl_.player_ = p;
   }
-  return _impl_.state_;
+  return _impl_.player_;
 }
-inline ::PB::Types::PlayerState* ScenePlayerEnterPush::mutable_state() {
-  ::PB::Types::PlayerState* _msg = _internal_mutable_state();
-  // @@protoc_insertion_point(field_mutable:PB.Town.ScenePlayerEnterPush.state)
+inline ::PB::Types::TownPlayerInfo* ScenePlayerEnterPush::mutable_player() {
+  ::PB::Types::TownPlayerInfo* _msg = _internal_mutable_player();
+  // @@protoc_insertion_point(field_mutable:PB.Town.ScenePlayerEnterPush.player)
   return _msg;
 }
-inline void ScenePlayerEnterPush::set_allocated_state(::PB::Types::PlayerState* state) {
+inline void ScenePlayerEnterPush::set_allocated_player(::PB::Types::TownPlayerInfo* player) {
   ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
   if (message_arena == nullptr) {
-    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.state_);
+    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.player_);
   }
-  if (state) {
+  if (player) {
     ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
         ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(
-                reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(state));
+                reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(player));
     if (message_arena != submessage_arena) {
-      state = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, state, submessage_arena);
+      player = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, player, submessage_arena);
     }
     
   } else {
     
   }
-  _impl_.state_ = state;
-  // @@protoc_insertion_point(field_set_allocated:PB.Town.ScenePlayerEnterPush.state)
+  _impl_.player_ = player;
+  // @@protoc_insertion_point(field_set_allocated:PB.Town.ScenePlayerEnterPush.player)
 }
 
 // -------------------------------------------------------------------
@@ -1014,41 +1674,61 @@ inline void ScenePlayerLeavePush::set_player_id(int64_t value) {
 
 // -------------------------------------------------------------------
 
-// ScenePlayerStatePush
+// ScenePlayerAppearancePush
 
-// .PB.Types.PlayerState state = 1;
-inline bool ScenePlayerStatePush::_internal_has_state() const {
-  return this != internal_default_instance() && _impl_.state_ != nullptr;
+// int64 player_id = 1;
+inline void ScenePlayerAppearancePush::clear_player_id() {
+  _impl_.player_id_ = int64_t{0};
 }
-inline bool ScenePlayerStatePush::has_state() const {
-  return _internal_has_state();
+inline int64_t ScenePlayerAppearancePush::_internal_player_id() const {
+  return _impl_.player_id_;
 }
-inline const ::PB::Types::PlayerState& ScenePlayerStatePush::_internal_state() const {
-  const ::PB::Types::PlayerState* p = _impl_.state_;
-  return p != nullptr ? *p : reinterpret_cast<const ::PB::Types::PlayerState&>(
-      ::PB::Types::_PlayerState_default_instance_);
+inline int64_t ScenePlayerAppearancePush::player_id() const {
+  // @@protoc_insertion_point(field_get:PB.Town.ScenePlayerAppearancePush.player_id)
+  return _internal_player_id();
 }
-inline const ::PB::Types::PlayerState& ScenePlayerStatePush::state() const {
-  // @@protoc_insertion_point(field_get:PB.Town.ScenePlayerStatePush.state)
-  return _internal_state();
+inline void ScenePlayerAppearancePush::_internal_set_player_id(int64_t value) {
+  
+  _impl_.player_id_ = value;
 }
-inline void ScenePlayerStatePush::unsafe_arena_set_allocated_state(
-    ::PB::Types::PlayerState* state) {
+inline void ScenePlayerAppearancePush::set_player_id(int64_t value) {
+  _internal_set_player_id(value);
+  // @@protoc_insertion_point(field_set:PB.Town.ScenePlayerAppearancePush.player_id)
+}
+
+// .PB.Types.TownAppearance appearance = 2;
+inline bool ScenePlayerAppearancePush::_internal_has_appearance() const {
+  return this != internal_default_instance() && _impl_.appearance_ != nullptr;
+}
+inline bool ScenePlayerAppearancePush::has_appearance() const {
+  return _internal_has_appearance();
+}
+inline const ::PB::Types::TownAppearance& ScenePlayerAppearancePush::_internal_appearance() const {
+  const ::PB::Types::TownAppearance* p = _impl_.appearance_;
+  return p != nullptr ? *p : reinterpret_cast<const ::PB::Types::TownAppearance&>(
+      ::PB::Types::_TownAppearance_default_instance_);
+}
+inline const ::PB::Types::TownAppearance& ScenePlayerAppearancePush::appearance() const {
+  // @@protoc_insertion_point(field_get:PB.Town.ScenePlayerAppearancePush.appearance)
+  return _internal_appearance();
+}
+inline void ScenePlayerAppearancePush::unsafe_arena_set_allocated_appearance(
+    ::PB::Types::TownAppearance* appearance) {
   if (GetArenaForAllocation() == nullptr) {
-    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.state_);
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.appearance_);
   }
-  _impl_.state_ = state;
-  if (state) {
+  _impl_.appearance_ = appearance;
+  if (appearance) {
     
   } else {
     
   }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:PB.Town.ScenePlayerStatePush.state)
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:PB.Town.ScenePlayerAppearancePush.appearance)
 }
-inline ::PB::Types::PlayerState* ScenePlayerStatePush::release_state() {
+inline ::PB::Types::TownAppearance* ScenePlayerAppearancePush::release_appearance() {
   
-  ::PB::Types::PlayerState* temp = _impl_.state_;
-  _impl_.state_ = nullptr;
+  ::PB::Types::TownAppearance* temp = _impl_.appearance_;
+  _impl_.appearance_ = nullptr;
 #ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
   auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
   temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
@@ -1060,50 +1740,338 @@ inline ::PB::Types::PlayerState* ScenePlayerStatePush::release_state() {
 #endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
   return temp;
 }
-inline ::PB::Types::PlayerState* ScenePlayerStatePush::unsafe_arena_release_state() {
-  // @@protoc_insertion_point(field_release:PB.Town.ScenePlayerStatePush.state)
+inline ::PB::Types::TownAppearance* ScenePlayerAppearancePush::unsafe_arena_release_appearance() {
+  // @@protoc_insertion_point(field_release:PB.Town.ScenePlayerAppearancePush.appearance)
   
-  ::PB::Types::PlayerState* temp = _impl_.state_;
-  _impl_.state_ = nullptr;
+  ::PB::Types::TownAppearance* temp = _impl_.appearance_;
+  _impl_.appearance_ = nullptr;
   return temp;
 }
-inline ::PB::Types::PlayerState* ScenePlayerStatePush::_internal_mutable_state() {
+inline ::PB::Types::TownAppearance* ScenePlayerAppearancePush::_internal_mutable_appearance() {
   
-  if (_impl_.state_ == nullptr) {
-    auto* p = CreateMaybeMessage<::PB::Types::PlayerState>(GetArenaForAllocation());
-    _impl_.state_ = p;
+  if (_impl_.appearance_ == nullptr) {
+    auto* p = CreateMaybeMessage<::PB::Types::TownAppearance>(GetArenaForAllocation());
+    _impl_.appearance_ = p;
   }
-  return _impl_.state_;
+  return _impl_.appearance_;
 }
-inline ::PB::Types::PlayerState* ScenePlayerStatePush::mutable_state() {
-  ::PB::Types::PlayerState* _msg = _internal_mutable_state();
-  // @@protoc_insertion_point(field_mutable:PB.Town.ScenePlayerStatePush.state)
+inline ::PB::Types::TownAppearance* ScenePlayerAppearancePush::mutable_appearance() {
+  ::PB::Types::TownAppearance* _msg = _internal_mutable_appearance();
+  // @@protoc_insertion_point(field_mutable:PB.Town.ScenePlayerAppearancePush.appearance)
   return _msg;
 }
-inline void ScenePlayerStatePush::set_allocated_state(::PB::Types::PlayerState* state) {
+inline void ScenePlayerAppearancePush::set_allocated_appearance(::PB::Types::TownAppearance* appearance) {
   ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
   if (message_arena == nullptr) {
-    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.state_);
+    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.appearance_);
   }
-  if (state) {
+  if (appearance) {
     ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
         ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(
-                reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(state));
+                reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(appearance));
     if (message_arena != submessage_arena) {
-      state = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, state, submessage_arena);
+      appearance = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, appearance, submessage_arena);
     }
     
   } else {
     
   }
-  _impl_.state_ = state;
-  // @@protoc_insertion_point(field_set_allocated:PB.Town.ScenePlayerStatePush.state)
+  _impl_.appearance_ = appearance;
+  // @@protoc_insertion_point(field_set_allocated:PB.Town.ScenePlayerAppearancePush.appearance)
+}
+
+// -------------------------------------------------------------------
+
+// TownStateEntry
+
+// int64 player_id = 1;
+inline void TownStateEntry::clear_player_id() {
+  _impl_.player_id_ = int64_t{0};
+}
+inline int64_t TownStateEntry::_internal_player_id() const {
+  return _impl_.player_id_;
+}
+inline int64_t TownStateEntry::player_id() const {
+  // @@protoc_insertion_point(field_get:PB.Town.TownStateEntry.player_id)
+  return _internal_player_id();
+}
+inline void TownStateEntry::_internal_set_player_id(int64_t value) {
+  
+  _impl_.player_id_ = value;
+}
+inline void TownStateEntry::set_player_id(int64_t value) {
+  _internal_set_player_id(value);
+  // @@protoc_insertion_point(field_set:PB.Town.TownStateEntry.player_id)
+}
+
+// uint64 server_time_ms = 2;
+inline void TownStateEntry::clear_server_time_ms() {
+  _impl_.server_time_ms_ = uint64_t{0u};
+}
+inline uint64_t TownStateEntry::_internal_server_time_ms() const {
+  return _impl_.server_time_ms_;
+}
+inline uint64_t TownStateEntry::server_time_ms() const {
+  // @@protoc_insertion_point(field_get:PB.Town.TownStateEntry.server_time_ms)
+  return _internal_server_time_ms();
+}
+inline void TownStateEntry::_internal_set_server_time_ms(uint64_t value) {
+  
+  _impl_.server_time_ms_ = value;
+}
+inline void TownStateEntry::set_server_time_ms(uint64_t value) {
+  _internal_set_server_time_ms(value);
+  // @@protoc_insertion_point(field_set:PB.Town.TownStateEntry.server_time_ms)
+}
+
+// .PB.Types.TownMovement movement = 3;
+inline bool TownStateEntry::_internal_has_movement() const {
+  return this != internal_default_instance() && _impl_.movement_ != nullptr;
+}
+inline bool TownStateEntry::has_movement() const {
+  return _internal_has_movement();
+}
+inline const ::PB::Types::TownMovement& TownStateEntry::_internal_movement() const {
+  const ::PB::Types::TownMovement* p = _impl_.movement_;
+  return p != nullptr ? *p : reinterpret_cast<const ::PB::Types::TownMovement&>(
+      ::PB::Types::_TownMovement_default_instance_);
+}
+inline const ::PB::Types::TownMovement& TownStateEntry::movement() const {
+  // @@protoc_insertion_point(field_get:PB.Town.TownStateEntry.movement)
+  return _internal_movement();
+}
+inline void TownStateEntry::unsafe_arena_set_allocated_movement(
+    ::PB::Types::TownMovement* movement) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.movement_);
+  }
+  _impl_.movement_ = movement;
+  if (movement) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:PB.Town.TownStateEntry.movement)
+}
+inline ::PB::Types::TownMovement* TownStateEntry::release_movement() {
+  
+  ::PB::Types::TownMovement* temp = _impl_.movement_;
+  _impl_.movement_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::PB::Types::TownMovement* TownStateEntry::unsafe_arena_release_movement() {
+  // @@protoc_insertion_point(field_release:PB.Town.TownStateEntry.movement)
+  
+  ::PB::Types::TownMovement* temp = _impl_.movement_;
+  _impl_.movement_ = nullptr;
+  return temp;
+}
+inline ::PB::Types::TownMovement* TownStateEntry::_internal_mutable_movement() {
+  
+  if (_impl_.movement_ == nullptr) {
+    auto* p = CreateMaybeMessage<::PB::Types::TownMovement>(GetArenaForAllocation());
+    _impl_.movement_ = p;
+  }
+  return _impl_.movement_;
+}
+inline ::PB::Types::TownMovement* TownStateEntry::mutable_movement() {
+  ::PB::Types::TownMovement* _msg = _internal_mutable_movement();
+  // @@protoc_insertion_point(field_mutable:PB.Town.TownStateEntry.movement)
+  return _msg;
+}
+inline void TownStateEntry::set_allocated_movement(::PB::Types::TownMovement* movement) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.movement_);
+  }
+  if (movement) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(
+                reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(movement));
+    if (message_arena != submessage_arena) {
+      movement = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, movement, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.movement_ = movement;
+  // @@protoc_insertion_point(field_set_allocated:PB.Town.TownStateEntry.movement)
+}
+
+// -------------------------------------------------------------------
+
+// ScenePlayerStatesPush
+
+// repeated .PB.Town.TownStateEntry players = 1;
+inline int ScenePlayerStatesPush::_internal_players_size() const {
+  return _impl_.players_.size();
+}
+inline int ScenePlayerStatesPush::players_size() const {
+  return _internal_players_size();
+}
+inline void ScenePlayerStatesPush::clear_players() {
+  _impl_.players_.Clear();
+}
+inline ::PB::Town::TownStateEntry* ScenePlayerStatesPush::mutable_players(int index) {
+  // @@protoc_insertion_point(field_mutable:PB.Town.ScenePlayerStatesPush.players)
+  return _impl_.players_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Town::TownStateEntry >*
+ScenePlayerStatesPush::mutable_players() {
+  // @@protoc_insertion_point(field_mutable_list:PB.Town.ScenePlayerStatesPush.players)
+  return &_impl_.players_;
+}
+inline const ::PB::Town::TownStateEntry& ScenePlayerStatesPush::_internal_players(int index) const {
+  return _impl_.players_.Get(index);
+}
+inline const ::PB::Town::TownStateEntry& ScenePlayerStatesPush::players(int index) const {
+  // @@protoc_insertion_point(field_get:PB.Town.ScenePlayerStatesPush.players)
+  return _internal_players(index);
+}
+inline ::PB::Town::TownStateEntry* ScenePlayerStatesPush::_internal_add_players() {
+  return _impl_.players_.Add();
+}
+inline ::PB::Town::TownStateEntry* ScenePlayerStatesPush::add_players() {
+  ::PB::Town::TownStateEntry* _add = _internal_add_players();
+  // @@protoc_insertion_point(field_add:PB.Town.ScenePlayerStatesPush.players)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Town::TownStateEntry >&
+ScenePlayerStatesPush::players() const {
+  // @@protoc_insertion_point(field_list:PB.Town.ScenePlayerStatesPush.players)
+  return _impl_.players_;
+}
+
+// -------------------------------------------------------------------
+
+// TownPositionCorrectionPush
+
+// uint32 client_seq = 1;
+inline void TownPositionCorrectionPush::clear_client_seq() {
+  _impl_.client_seq_ = 0u;
+}
+inline uint32_t TownPositionCorrectionPush::_internal_client_seq() const {
+  return _impl_.client_seq_;
+}
+inline uint32_t TownPositionCorrectionPush::client_seq() const {
+  // @@protoc_insertion_point(field_get:PB.Town.TownPositionCorrectionPush.client_seq)
+  return _internal_client_seq();
+}
+inline void TownPositionCorrectionPush::_internal_set_client_seq(uint32_t value) {
+  
+  _impl_.client_seq_ = value;
+}
+inline void TownPositionCorrectionPush::set_client_seq(uint32_t value) {
+  _internal_set_client_seq(value);
+  // @@protoc_insertion_point(field_set:PB.Town.TownPositionCorrectionPush.client_seq)
+}
+
+// .PB.Types.TownVec3 pos = 2;
+inline bool TownPositionCorrectionPush::_internal_has_pos() const {
+  return this != internal_default_instance() && _impl_.pos_ != nullptr;
+}
+inline bool TownPositionCorrectionPush::has_pos() const {
+  return _internal_has_pos();
+}
+inline const ::PB::Types::TownVec3& TownPositionCorrectionPush::_internal_pos() const {
+  const ::PB::Types::TownVec3* p = _impl_.pos_;
+  return p != nullptr ? *p : reinterpret_cast<const ::PB::Types::TownVec3&>(
+      ::PB::Types::_TownVec3_default_instance_);
+}
+inline const ::PB::Types::TownVec3& TownPositionCorrectionPush::pos() const {
+  // @@protoc_insertion_point(field_get:PB.Town.TownPositionCorrectionPush.pos)
+  return _internal_pos();
+}
+inline void TownPositionCorrectionPush::unsafe_arena_set_allocated_pos(
+    ::PB::Types::TownVec3* pos) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.pos_);
+  }
+  _impl_.pos_ = pos;
+  if (pos) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:PB.Town.TownPositionCorrectionPush.pos)
+}
+inline ::PB::Types::TownVec3* TownPositionCorrectionPush::release_pos() {
+  
+  ::PB::Types::TownVec3* temp = _impl_.pos_;
+  _impl_.pos_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::PB::Types::TownVec3* TownPositionCorrectionPush::unsafe_arena_release_pos() {
+  // @@protoc_insertion_point(field_release:PB.Town.TownPositionCorrectionPush.pos)
+  
+  ::PB::Types::TownVec3* temp = _impl_.pos_;
+  _impl_.pos_ = nullptr;
+  return temp;
+}
+inline ::PB::Types::TownVec3* TownPositionCorrectionPush::_internal_mutable_pos() {
+  
+  if (_impl_.pos_ == nullptr) {
+    auto* p = CreateMaybeMessage<::PB::Types::TownVec3>(GetArenaForAllocation());
+    _impl_.pos_ = p;
+  }
+  return _impl_.pos_;
+}
+inline ::PB::Types::TownVec3* TownPositionCorrectionPush::mutable_pos() {
+  ::PB::Types::TownVec3* _msg = _internal_mutable_pos();
+  // @@protoc_insertion_point(field_mutable:PB.Town.TownPositionCorrectionPush.pos)
+  return _msg;
+}
+inline void TownPositionCorrectionPush::set_allocated_pos(::PB::Types::TownVec3* pos) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.pos_);
+  }
+  if (pos) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(
+                reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(pos));
+    if (message_arena != submessage_arena) {
+      pos = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, pos, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.pos_ = pos;
+  // @@protoc_insertion_point(field_set_allocated:PB.Town.TownPositionCorrectionPush.pos)
 }
 
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------
@@ -1118,10 +2086,12 @@ inline void ScenePlayerStatePush::set_allocated_state(::PB::Types::PlayerState* 
 
 PROTOBUF_NAMESPACE_OPEN
 
-template <> struct is_proto_enum< ::PB::Town::TownPlayerStatePush_MsgId> : ::std::true_type {};
+template <> struct is_proto_enum< ::PB::Town::TownMoveReport_MsgId> : ::std::true_type {};
 template <> struct is_proto_enum< ::PB::Town::ScenePlayerEnterPush_MsgId> : ::std::true_type {};
 template <> struct is_proto_enum< ::PB::Town::ScenePlayerLeavePush_MsgId> : ::std::true_type {};
-template <> struct is_proto_enum< ::PB::Town::ScenePlayerStatePush_MsgId> : ::std::true_type {};
+template <> struct is_proto_enum< ::PB::Town::ScenePlayerAppearancePush_MsgId> : ::std::true_type {};
+template <> struct is_proto_enum< ::PB::Town::ScenePlayerStatesPush_MsgId> : ::std::true_type {};
+template <> struct is_proto_enum< ::PB::Town::TownPositionCorrectionPush_MsgId> : ::std::true_type {};
 
 PROTOBUF_NAMESPACE_CLOSE
 

@@ -223,9 +223,12 @@ void DisplacementDriver::update()
         event(DisplacementEvent::Lie);
     const Fixed radius = ecs.get<ColliderState>(m_entity).radius;
     const auto sign    = [](Fixed value) { return Fixed::fromInt(value > Fixed{} ? 1 : value < Fixed{} ? -1 : 0); };
-    const FixedVec2 point{t.position.x + sign(offset.x) * radius, t.position.z + sign(offset.z) * radius};
+    // 每个轴只用本轴的前沿探测点，另一轴取当前坐标：
+    // 斜向移动时若两轴同时前推，探测点可能落在多矩形并集的缺口里，
+    // 进而把远处矩形的边误当成墙（城镇斜向贴顶走时被拉回）。单矩形地图结果不变。
     const auto& map    = ecs.singleton<MapRegion>();
     const auto regionX = [&] {
+        const FixedVec2 point{t.position.x + sign(offset.x) * radius, t.position.z};
         if (offset.x < Fixed{})
         {
             const Fixed bound = map.getLeftRegion(point);
@@ -240,6 +243,7 @@ void DisplacementDriver::update()
         }
     };
     const auto regionZ = [&] {
+        const FixedVec2 point{t.position.x, t.position.z + sign(offset.z) * radius};
         if (offset.z < Fixed{})
         {
             const Fixed bound = map.getBottomRegion(point);

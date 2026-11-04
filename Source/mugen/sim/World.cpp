@@ -83,8 +83,15 @@ void World::applyInput(const FrameInput& input)
         transform.position = update.position;
         transform.towardX  = update.towardX < 0 ? -1 : 1;
         auto& motion       = m_ecs.get<MotionState>(update.entity);
-        motion.motionName  = update.motionName;
-        motion.timeMs      = {};
+        // 动作名未变化时不重置播放时间，让循环动作随时间持续推进；否则每帧都从第 0
+        // 帧开始，远端会看到动画卡在首帧。
+        if (motion.motionName != update.motionName)
+        {
+            motion.motionName = update.motionName;
+            motion.timeMs     = {};
+        }
+        motion.loop    = true;
+        motion.playing = true;
         if (auto* status = m_ecs.tryGet<RoleStatus>(update.entity))
             status->eEntityStatus = update.status;
     }

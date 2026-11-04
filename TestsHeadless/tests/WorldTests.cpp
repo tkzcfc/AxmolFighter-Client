@@ -87,7 +87,7 @@ TEST_CASE("World empty runs produce identical per-frame hashes for 1000 frames")
 TEST_CASE("World frame 500 byte snapshot restore and clone continue identically")
 {
     World original;
-    original.init({987, WorldMode::Town, 0, "town"});
+    original.init({987, WorldMode::Town, 0, "city_newcity_xueyuan"});
     const Entity entity = original.create(GroupKind::Role);
     original.ecs().add(entity, ControlEventQueue{});
     original.ecs().singleton<PlayerSlots>().entities[3] = entity;
@@ -200,7 +200,7 @@ TEST_CASE("World groups remove in place and later groups capture their own bound
 
 TEST_CASE("World input queues preserve ordering and reject frames transactionally")
 {
-    test::ScenarioHarness harness({1, WorldMode::Town, 0, "town"});
+    test::ScenarioHarness harness({1, WorldMode::Town, 0, "city_newcity_xueyuan"});
     auto& world       = harness.world();
     const auto entity = world.create(GroupKind::Role);
     world.ecs().add(entity, ControlEventQueue{});
@@ -267,7 +267,7 @@ TEST_CASE("Replay canonical bytes roundtrip hashes and schema mismatch rejection
     test::ScenarioHarness::loadAssets();
     Replay replay;
     replay.schemaHash = conf::configSchemaHash();
-    replay.setup      = {321, WorldMode::Town, 0, "town"};
+    replay.setup      = {321, WorldMode::Town, 0, "city_newcity_xueyuan"};
     for (uint64_t n = 1; n <= 1000; ++n)
     {
         auto input = frame(n);

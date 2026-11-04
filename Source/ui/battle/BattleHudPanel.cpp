@@ -27,9 +27,6 @@ std::string configIconString(const std::variant<int32_t, std::string>& icon)
     return {};
 }
 
-// 摇杆死区占半径的比例。
-constexpr float kJoystickDeadZone = 0.25f;
-
 // 技能池槽位字母与 ControlKey 一一对应（AttackA..AttackO 对应 A..O，AttackQ 对应 P）。
 bool poolSlotToControlKey(const std::string& poolSlot, uint32_t& key)
 {
@@ -97,7 +94,7 @@ void BattleHudPanel::onCreate()
 
 void BattleHudPanel::onDestroy()
 {
-    releaseJoystick();
+    m_joystick.release();
     for (const auto& binding : m_skillButtons)
         if (!binding.m_poolSlot.empty())
             m_battle.setInput(binding.m_controlKey, false);
@@ -246,57 +243,17 @@ void BattleHudPanel::bindRageHud()
 
 void BattleHudPanel::bindJoystick()
 {
-    m_joystick      = getChild<GComponent>("joystick");
-    m_joystickThumb = m_joystick->getChild("thumb");
-    m_thumbOrigin   = m_joystickThumb->getPosition();
-    auto* area      = m_joystick->getChild("touchArea");
-    area->addEventListener(UIEventType::TouchBegin, [this](EventContext* context) {
-        if (m_joystickTouchId != -1)
-            return;
-        m_joystickTouchId = context->getInput()->getTouchId();
-        context->captureTouch();
-        updateJoystick(context->getInput()->getPosition());
-    });
-    area->addEventListener(UIEventType::TouchMove, [this](EventContext* context) {
-        if (context->getInput()->getTouchId() == m_joystickTouchId)
-            updateJoystick(context->getInput()->getPosition());
-    });
-    area->addEventListener(UIEventType::TouchEnd, [this](EventContext* context) {
-        if (context->getInput()->getTouchId() == m_joystickTouchId)
-            releaseJoystick();
-    });
-}
-
-void BattleHudPanel::updateJoystick(const ax::Vec2& stagePos)
-{
-    const ax::Vec2 center = m_joystick->localToGlobal(m_thumbOrigin + m_joystickThumb->getSize() * 0.5f);
-    const float radius    = m_joystick->getWidth() * 0.5f;
-    ax::Vec2 delta        = m_joystick->globalToLocal(stagePos) - m_joystick->globalToLocal(center);
-    if (delta.length() > radius)
-        delta = delta.getNormalized() * radius;
-    m_joystickThumb->setPosition(m_thumbOrigin.x + delta.x, m_thumbOrigin.y + delta.y);
-    const float dead = radius * kJoystickDeadZone;
-    // FairyGUI 的 y 轴向下，向上推对应 Up。
-    setDirection(delta.x < -dead, delta.x > dead, delta.y < -dead, delta.y > dead);
-}
-
-void BattleHudPanel::releaseJoystick()
-{
-    m_joystickTouchId = -1;
-    m_joystickThumb->setPosition(m_thumbOrigin.x, m_thumbOrigin.y);
-    setDirection(false, false, false, false);
-}
-
-void BattleHudPanel::setDirection(bool left, bool right, bool up, bool down)
-{
-    const std::array<bool, 4> next = {left, right, up, down};
-    const std::array<ControlKey, 4> keys = {ControlKey::Left, ControlKey::Right, ControlKey::Up, ControlKey::Down};
-    for (size_t i = 0; i < next.size(); ++i)
+    auto* joystick = dynamic_cast<GComponent*>(getContent()->getChild("joystick"));
+    if (!m_joystick.bind(joystick, [this](ControlKey key, bool pressed) {
+            m_battle.setInput(static_cast<uint32_t>(key), pressed);
+        }))
     {
-        if (next[i] == m_direction[i])
-            continue;
-        m_direction[i] = next[i];
-        m_battle.setInput(static_cast<uint32_t>(keys[i]), next[i]);
+        static bool s_warnedMissingJoystick = false;
+        if (!s_warnedMissingJoystick)
+        {
+            s_warnedMissingJoystick = true;
+            AXLOGW("BattleHudPanel: joystick is missing in published Screen_Battle.fui; skipping virtual joystick");
+        }
     }
 }
 

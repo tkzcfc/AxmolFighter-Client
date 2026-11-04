@@ -114,6 +114,23 @@ void displacementUpdate(World& world, Entity entity)
 }
 // 更新角色碰撞体流程。
 void collisionBodyUpdate(World&, Entity) {}
+// 推进木偶动作播放时间：木偶由外部同步驱动、不跑战斗逻辑，这里只让循环动作随
+// 逻辑时间滚动，保证远端行走/待机动画持续播放。
+void puppetMotionUpdate(World& world, Entity entity)
+{
+    auto& motion = world.ecs().get<MotionState>(entity);
+    if (!motion.playing || motion.motionName.empty())
+        return;
+    motion.timeMs += world.ecs().singleton<WorldClock>().dtMs * motion.actionScale;
+    if (!motion.loop)
+        return;
+    MotionPlayer player;
+    if (!player.bind(motion.motionFile) || !player.play(motion.motionName, motion.entryId, motion.loop))
+        return;
+    const Fixed duration = Fixed::fromInt(player.getDurationMs());
+    if (duration > Fixed{})
+        motion.timeMs = Fixed::fromRaw(motion.timeMs.raw % duration.raw);
+}
 // 推进动作时间并重新登记本帧碰撞框。
 void motionUpdate(World& world, Entity entity)
 {
@@ -185,7 +202,13 @@ WorldBox RoleActor::transformBox(const DamageBox& box, const Transform& t)
 // 依固定顺序推进角色资源、状态、控制、行为、位移和动作。
 void RoleActor::update()
 {
-    if (!m_world.ecs().has<RoleIdentity>(m_entity) || m_world.ecs().has<Puppet>(m_entity))
+    // 木偶由外部同步驱动：只推进动作时间，不参与战斗逻辑。
+    if (m_world.ecs().has<Puppet>(m_entity))
+    {
+        puppetMotionUpdate(m_world, m_entity);
+        return;
+    }
+    if (!m_world.ecs().has<RoleIdentity>(m_entity))
         return;
     skillPoolUpdate(m_world, m_entity);
     buffPoolUpdate(m_world, m_entity);

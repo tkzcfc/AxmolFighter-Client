@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "mugen/conf/ReflectedConfig.h"
+#include "mugen/conf/tables/ArmamentTables.h"
 #include "mugen/avatar/FashionResolver.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
 
@@ -140,6 +141,25 @@ TEST_CASE("FashionResolver uses occupation and skips missing referenced fashion"
         CHECK(std::find(desc.atlases.begin(), desc.atlases.end(), std::get<std::string>(expected->spine)) !=
               desc.atlases.end());
     }
+}
+
+TEST_CASE("FashionResolver uses baseFashion weapon ResSpine as weapon accessory")
+{
+    REQUIRE(mugen::test::ensureContentVfs());
+    REQUIRE(mugen::conf::Config::instance().load("/mugen/config/config.bin"));
+
+    // 剑士蓝阶 1 武装（141001）的武器挂件 spine id。
+    const auto* arm = mugen::conf::Config::instance().find<mugen::conf::ArmamentConfig>({141001, 1});
+    REQUIRE(arm != nullptr);
+    REQUIRE(arm->spineId > 0);
+
+    mugen::FashionAppearance appearance;
+    appearance.roleId = 101;
+    appearance.baseFashion[mugen::FashionPosition::kWeapon] = arm->spineId;
+
+    mugen::AvatarDesc desc;
+    REQUIRE(mugen::FashionResolver::resolve(appearance, desc));
+    CHECK(desc.accessory(mugen::AvatarAccessorySlot::kWeapon) == arm->spineId);
 }
 
 TEST_CASE("FashionResolver resolves partner roles with hero spine atlas and motion")

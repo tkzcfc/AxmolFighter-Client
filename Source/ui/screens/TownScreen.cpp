@@ -3,7 +3,6 @@
 #include "AppContext.h"
 #include "DungeonSelectScreen.h"
 #include "mugen/conf/ReflectedConfig.h"
-#include "mugen/conf/TypeConversions.h"
 #include "mugen/render/battle/WorldPresenter.h"
 #include "AppContext.h"
 #include "core/event/EventDispatcher.h"
@@ -15,6 +14,9 @@
 #include "mugen/render/spine/MgSkeletonAnimation.h"
 #include "fairygui/GLoader3D.h"
 #include "ui/widgets/common/MessageDialog.h"
+#include "ui/town/TownFixed.h"
+#include "ui/town/TownSync.h"
+#include "ui/widgets/pet/PetLocalState.h"
 
 #include "imgui.h"
 
@@ -22,6 +24,7 @@
 #include <net/client_town.pb.h>
 
 #include <algorithm>
+#include <chrono>
 #include <optional>
 
 using namespace mugen;
@@ -32,13 +35,15 @@ namespace gameui
 namespace
 {
 constexpr int32_t DEFAULT_TOWN_ID = 41;
-constexpr float REPORT_INTERVAL   = 0.2f;
+// 移动上报频率上限（10 Hz）。
+constexpr float REPORT_INTERVAL   = 1.0f / 10.0f;
 constexpr float LOGIC_DT          = 1.0f / 30.0f;
 constexpr float MAIN_MENU_SLIDE_TIME = 0.25f;
 
-mugen::Fixed fixedFromNetwork(float value)
+int64_t monotonicNowMs()
 {
-    return mugen::Fixed::fromRaw(static_cast<int64_t>(value * static_cast<float>(mugen::Fixed::kOne)));
+    using namespace std::chrono;
+    return duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
 }
 }  // namespace
 
@@ -88,6 +93,7 @@ void TownScreen::onEnter()
 {
     Super::onEnter();
     bindMainMenuUi();
+    bindJoystick();
     if (!initTown())
     {
         MessageDialog::showGlobal("初始化失败", []() { ax::Director::getInstance()->end(); });
@@ -111,6 +117,8 @@ void TownScreen::onExit()
         m_maskLayer->setTouchable(false);
     }
     m_mainMenuAnimating = false;
+    m_joystick.release();
+    m_keyboardHeld.fill(false);
 
     if (m_keyboardListener)
     {
@@ -119,6 +127,9 @@ void TownScreen::onExit()
     }
     if (auto* ed = AppContext::get().eventDispatcher())
         ed->unsubscribeAll(this);
+    if (m_townSync)
+        m_townSync->clear();
+    m_townSync.reset();
     m_presenter.reset();
     m_initialized = false;
     Super::onExit();
@@ -128,23 +139,29 @@ void TownScreen::onUpdate(float delta)
 {
     if (!m_initialized)
         return;
+    applyLocalCorrection();
     m_accumulator    = std::min(m_accumulator + delta, 4.0f * LOGIC_DT);
     uint32_t catchUp = 0;
     while (m_accumulator >= LOGIC_DT && catchUp < 4)
     {
+        m_townSync->tick(LOGIC_DT);
         sim::FrameInput input;
         input.frame = m_world.ecs().singleton<sim::WorldClock>().frame + 1;
         std::vector<sim::PlayerCommand> commands;
-        m_control.advance(commands);
+        // 进入场景前不把本地控制输入喂进模拟：避免在服务器尚未就绪时移动，
+        // 使首帧上报被服务器按出生点钳制。
+        if (m_enteredScene)
+            m_control.advance(commands);
         if (!commands.empty())
             input.players.push_back({0, std::move(commands)});
-        input.puppetUpdates = std::move(m_pendingPuppetUpdates);
-        m_pendingPuppetUpdates.clear();
+        input.puppetUpdates = m_townSync->takePuppetUpdates();
         m_world.tick(input);
         m_accumulator -= LOGIC_DT;
         ++catchUp;
     }
     m_presenter->presenter->present(m_world, m_accumulator / LOGIC_DT, delta);
+    if (m_enteredScene && m_initialized)
+        updatePortalTriggers();
     reportLocalState(delta);
 }
 
@@ -331,8 +348,10 @@ bool TownScreen::initTown()
     m_world.init({1, sim::WorldMode::Town, m_boot.townId, town->mapKey});
     const int32_t spawnX = m_boot.spawnX >= 0 ? m_boot.spawnX : town->actorPosX;
     const int32_t spawnZ = m_boot.spawnZ >= 0 ? m_boot.spawnZ : town->actorPosZ;
+    const int32_t localRoleId = resolveLocalPlayerRoleId();
+    m_roleRadius              = Fixed::fromInt(conf::Config::instance().getById<conf::RoleConfig>(localRoleId).radius);
     m_localEntity =
-        sim::RoleSpawner(m_world).spawnRole({.roleId     = resolveLocalPlayerRoleId(),
+        sim::RoleSpawner(m_world).spawnRole({.roleId     = localRoleId,
                                              .level      = 1,
                                              .position   = {Fixed::fromInt(spawnX), {}, Fixed::fromInt(spawnZ)},
                                              .toward     = m_boot.facing < 0 ? -1 : 1,
@@ -344,6 +363,10 @@ bool TownScreen::initTown()
     m_presenter = std::make_unique<WorldPresenterHolder>(*root);
     m_presenter->presenter->loadMap(town->mapKey);
     m_presenter->presenter->setFollowEntity(m_localEntity);
+    m_townSync = std::make_unique<TownSync>(m_world, *m_presenter->presenter, *this);
+    if (auto* session = AppContext::get().gameSession())
+        m_townSync->setLocalPlayerId(session->account.playerID);
+    m_presenter->presenter->setEntityPet(m_localEntity, PetLocalState::instance().activeId());
     initPortals();
     if (!initInput())
         return false;
@@ -359,8 +382,7 @@ void TownScreen::subscribeAppearanceEvents()
     auto refresh = [this]() { refreshLocalAppearance(); };
     ed->subscribe(game::GameEvent::FashionWornChanged, this, refresh);
     ed->subscribe(game::GameEvent::ArmamentAppearanceChanged, this, refresh);
-    // Pet spawn-in-town is not wired yet; the event is reserved for later.
-    ed->subscribe(game::GameEvent::PetFollowChanged, this, refresh);
+    ed->subscribe(game::GameEvent::PetFollowChanged, this, [this]() { refreshLocalPet(); });
 }
 
 void TownScreen::refreshLocalAppearance()
@@ -371,13 +393,20 @@ void TownScreen::refreshLocalAppearance()
         AXLOGW("TownScreen: refreshLocalPlayerAppearance skipped (avatar not ready)");
 }
 
+void TownScreen::refreshLocalPet()
+{
+    if (!m_presenter || !m_initialized)
+        return;
+    m_presenter->presenter->setEntityPet(m_localEntity, PetLocalState::instance().activeId());
+}
+
 
 void TownScreen::sendEnterScene()
 {
     PB::Game::EnterSceneReq req;
     req.set_type(PB::Types::SceneEnterType::Map);
     req.set_map_id(static_cast<uint32_t>(m_boot.townId));
-    fillLocalState(req.mutable_state());
+    fillLocalMovement(req.mutable_movement());
 
     this->call(req, [this](const PB::Game::EnterSceneResp* resp, std::string_view error) {
         if (!resp)
@@ -393,72 +422,99 @@ void TownScreen::sendEnterScene()
         }
 
         m_enteredScene = true;
-        for (const auto& player : resp->players())
-            addOrUpdateRemotePlayer(player);
+        m_townSync->applyEnterPlayers(*resp);
+        initializePortalLatches();
+        // 新场景进入：服务端已重置校正 pending，本端 ack 状态也重置。
+        m_ackCorrectionSeq = 0;
+        m_forceReport      = false;
         AXLOGI("TownScreen: entered scene, players={}", resp->players_size());
     });
 }
 
-void TownScreen::fillLocalState(PB::Types::PlayerState* state) const
+void TownScreen::fillLocalMovement(PB::Types::TownMovement* movement) const
 {
-    auto* session = AppContext::get().gameSession();
-    if (!session)
-        return;
-
-    state->set_player_id(session->account.playerID);
-    state->set_class_id(session->selectedCharacter.classID);
-    state->set_name(session->selectedCharacter.name);
     if (!m_initialized)
         return;
     const auto& transform = m_world.ecs().get<sim::Transform>(m_localEntity);
     const auto& motion    = m_world.ecs().get<sim::MotionState>(m_localEntity);
     const auto& status    = m_world.ecs().get<sim::RoleStatus>(m_localEntity);
-    state->set_pos_x(transform.position.x.toFloatForRender());
-    state->set_pos_y(transform.position.y.toFloatForRender());
-    state->set_pos_z(transform.position.z.toFloatForRender());
-    state->set_facing(transform.towardX < 0 ? 0 : 1);
-    state->set_state(motion.motionName);
-    state->set_moving(status.eEntityStatus == EntityRoleStatus::Walk);
+    auto* pos             = movement->mutable_pos();
+    pos->set_x(townToFixedPoint(transform.position.x.toFloatForRender()));
+    pos->set_y(townToFixedPoint(transform.position.y.toFloatForRender()));
+    pos->set_z(townToFixedPoint(transform.position.z.toFloatForRender()));
+    movement->set_facing(transform.towardX < 0 ? 0 : 1);
+    movement->set_state(motion.motionName);
+    movement->set_moving(status.isMove());
+    // 附带当前水平速度（像素/秒），供远端在快照不足时斜向外推。
+    const auto& hit = m_world.ecs().get<sim::RoleHitState>(m_localEntity);
+    auto* vel       = movement->mutable_vel();
+    vel->set_x(hit.forceVelocity.x.toFloatForRender());
+    vel->set_y(hit.forceVelocity.y.toFloatForRender());
+    vel->set_z(hit.forceVelocity.z.toFloatForRender());
 }
 
 void TownScreen::reportLocalState(float delta)
 {
-    if (!m_enteredScene)
+    if (!m_enteredScene || !m_initialized)
         return;
 
+    const auto& transform = m_world.ecs().get<sim::Transform>(m_localEntity);
+    const auto& motion    = m_world.ecs().get<sim::MotionState>(m_localEntity);
+    const auto& status    = m_world.ecs().get<sim::RoleStatus>(m_localEntity);
+    const int32_t facing  = transform.towardX < 0 ? 0 : 1;
+    const bool moving     = status.isMove();
+
+    const bool changed = facing != m_lastFacing || moving != m_lastMoving || motion.motionName != m_lastState;
     m_reportTimer += delta;
-    if (m_reportTimer < REPORT_INTERVAL)
+    const bool periodic = moving && m_reportTimer >= REPORT_INTERVAL;
+    const bool force    = m_forceReport;
+    if (!changed && !periodic && !force)
         return;
-    m_reportTimer = 0.0f;
 
-    PB::Types::PlayerState state;
-    fillLocalState(&state);
+    PB::Town::TownMoveReport report;
+    report.set_client_seq(++m_clientSeq);
+    report.set_client_time_ms(static_cast<uint64_t>(monotonicNowMs()));
+    report.set_ack_correction_seq(m_ackCorrectionSeq);
+    fillLocalMovement(report.mutable_movement());
+    this->notify(report);
 
-    PB::Town::TownPlayerStatePush push;
-    *push.mutable_state() = state;
-    this->notify(push);
+    m_reportTimer  = 0.0f;
+    m_forceReport  = false;
+    m_lastFacing   = facing;
+    m_lastMoving   = moving;
+    m_lastState    = motion.motionName;
+}
+
+void TownScreen::applyLocalCorrection()
+{
+    if (!m_pendingCorrection)
+        return;
+    m_world.ecs().get<sim::Transform>(m_localEntity).position = *m_pendingCorrection;
+    m_pendingCorrection.reset();
+    // 校正已吸附到权威位置：确认该校正序号，并强制下一帧立即上报 ack。
+    m_ackCorrectionSeq = m_lastCorrectionSeq;
+    m_forceReport      = true;
 }
 
 void TownScreen::addMessagePushReceiver()
 {
-    this->listenPush([this](PB::Town::ScenePlayerEnterPush& push) {
-        if (!push.has_state())
-            return;
-        addOrUpdateRemotePlayer(push.state());
-        AXLOGI("TownScreen: player {} entered scene", push.state().player_id());
-    });
+    if (m_townSync)
+        m_townSync->start();
 
-    this->listenPush([this](PB::Town::ScenePlayerLeavePush& push) {
-        if (m_selectedPlayerId == push.player_id())
-            m_selectedPlayerId = 0;
-        removeRemotePlayer(push.player_id());
-        AXLOGI("TownScreen: player {} left scene", push.player_id());
-    });
-
-    this->listenPush([this](PB::Town::ScenePlayerStatePush& push) {
-        if (!push.has_state())
+    this->listenPush([this](PB::Town::TownPositionCorrectionPush& push) {
+        // 进入场景前收到的校正可能来自上一个城镇，直接忽略，避免把玩家拉回旧场景。
+        if (!m_enteredScene)
             return;
-        addOrUpdateRemotePlayer(push.state());
+        if (push.client_seq() < m_lastCorrectionSeq)
+            return;  // 过期校正，忽略
+        m_lastCorrectionSeq = push.client_seq();
+        if (!push.has_pos())
+            return;
+        m_pendingCorrection = mugen::FixedVec3{townFromFixedPoint(push.pos().x()),
+                                                townFromFixedPoint(push.pos().y()),
+                                                townFromFixedPoint(push.pos().z())};
+        AXLOGD("TownScreen: position correction seq={} -> ({},{},{})", push.client_seq(), push.pos().x(),
+               push.pos().y(), push.pos().z());
     });
 
     this->listenPush([this](PB::Game::DuelInvitePush& push) {
@@ -501,6 +557,10 @@ void TownScreen::initPortals()
         TownPortal portal;
         portal.portalId = id;
         portal.slot     = slot;
+        portal.posX     = Fixed::fromInt(valueAt(town->portalPosX, index));
+        portal.posZ     = Fixed::fromInt(valueAt(town->portalPosZ, index));
+        if (const auto* portalRow = conf::Config::instance().find<conf::PortalConfig>(id))
+            portal.radius = Fixed::fromInt(portalRow->radius);
         portal.destType = valueAt(town->portalDestType, index);
         if (index < town->portalDestRoomIds.size() && !town->portalDestRoomIds[index].empty())
         {
@@ -555,46 +615,67 @@ void TownScreen::onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event*)
 void TownScreen::setInputFromKey(ax::EventKeyboard::KeyCode code, bool pressed)
 {
     const auto it = m_slotMap.find(code);
-    if (it != m_slotMap.end())
-        m_control.setKey(static_cast<sim::ControlKey>(it->second), pressed);
-}
-
-mugen::Entity TownScreen::localEntity() const
-{
-    return m_localEntity;
-}
-
-void TownScreen::queuePuppetUpdate(mugen::Entity entity, const PB::Types::PlayerState& state)
-{
-    m_pendingPuppetUpdates.push_back(
-        {entity,
-         {fixedFromNetwork(state.pos_x()), fixedFromNetwork(state.pos_y()), fixedFromNetwork(state.pos_z())},
-         state.facing() == 0 ? -1 : 1,
-         state.moving() ? EntityRoleStatus::Walk : EntityRoleStatus::Idle,
-         state.state()});
-}
-
-void TownScreen::addOrUpdateRemotePlayer(const PB::Types::PlayerState& state)
-{
-    auto* session = AppContext::get().gameSession();
-    if (!session || state.player_id() == session->account.playerID)
+    if (it == m_slotMap.end())
         return;
-    auto [it, inserted] = m_remotePlayers.try_emplace(state.player_id());
-    if (inserted)
+    const auto key = static_cast<sim::ControlKey>(it->second);
+    const auto idx = static_cast<size_t>(key);
+    if (idx < m_keyboardHeld.size())
+        m_keyboardHeld[idx] = pressed;
+    refreshControlKey(key);
+}
+
+void TownScreen::bindJoystick()
+{
+    auto* joystick = dynamic_cast<GComponent*>(getContent()->getChild("joystick"));
+    if (!m_joystick.bind(joystick, [this](sim::ControlKey key, bool /*pressed*/) { refreshControlKey(key); }))
     {
-        const int32_t roleId = type_conversions::toRoleConfigId(static_cast<CharacterClass>(state.class_id()));
-        it->second           = sim::RoleSpawner(m_world).spawnPuppet(state.player_id(), roleId, {}, 1);
+        static bool s_warnedMissingJoystick = false;
+        if (!s_warnedMissingJoystick)
+        {
+            s_warnedMissingJoystick = true;
+            AXLOGW("TownScreen: joystick is missing in published Screen_Town.fui; skipping virtual joystick");
+        }
     }
-    queuePuppetUpdate(it->second, state);
 }
 
-void TownScreen::removeRemotePlayer(int64_t playerId)
+void TownScreen::refreshControlKey(sim::ControlKey key)
 {
-    const auto it = m_remotePlayers.find(playerId);
-    if (it == m_remotePlayers.end())
+    const auto idx          = static_cast<size_t>(key);
+    const bool keyboardHeld = idx < m_keyboardHeld.size() && m_keyboardHeld[idx];
+    m_control.setKey(key, keyboardHeld || m_joystick.isDirectionPressed(key));
+}
+
+bool TownScreen::portalContains(const TownPortal& portal) const
+{
+    const auto& t   = m_world.ecs().get<sim::Transform>(m_localEntity);
+    const Fixed dx  = t.position.x - portal.posX;
+    const Fixed dz  = t.position.z - portal.posZ;
+    const Fixed sum = portal.radius + m_roleRadius;
+    return dx * dx + dz * dz <= sum * sum;
+}
+
+void TownScreen::initializePortalLatches()
+{
+    for (auto& portal : m_portals)
+        portal.inside = portalContains(portal);
+}
+
+void TownScreen::updatePortalTriggers()
+{
+    if (m_portalTriggered)
         return;
-    m_world.destroy(it->second);
-    m_remotePlayers.erase(it);
+    for (auto& portal : m_portals)
+    {
+        const bool inside = portalContains(portal);
+        if (inside && !portal.inside)
+        {
+            portal.inside      = true;
+            m_portalTriggered  = true;
+            onPortalTriggered(portal);
+            return;
+        }
+        portal.inside = inside;
+    }
 }
 
 void TownScreen::onPortalTriggered(const TownPortal& portal)

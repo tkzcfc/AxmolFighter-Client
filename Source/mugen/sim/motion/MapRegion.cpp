@@ -13,8 +13,19 @@ void MapRegion::load(const std::string& layerFile)
 namespace
 {
 // 在指定轴向查找点所在或最近区域的边界。
+// moveRanges 视为可移动矩形的并集：点落在任一矩形内（两轴都在范围内）即处于可通行区域，
+// 直接返回点自身坐标，避免把嵌套子矩形的边误判为墙（城镇这类多矩形地图）。
+// 点不在任何矩形内时，再沿用下方按最近边界钳制的逻辑。
 Fixed boundary(const MapRegion& region, FixedVec2 point, bool horizontal, bool lower)
 {
+    for (const auto& range : region.moveRanges)
+    {
+        const bool insideX = point.x >= range.x && point.x <= range.x + range.width;
+        const bool insideY = point.y >= range.y && point.y <= range.y + range.height;
+        if (insideX && insideY)
+            return horizontal ? point.x : point.y;
+    }
+
     const Fixed value = horizontal ? point.x : point.y;
     const Fixed cross = horizontal ? point.y : point.x;
     Fixed fallback    = value;

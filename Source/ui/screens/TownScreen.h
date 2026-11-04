@@ -1,22 +1,28 @@
 #pragma once
 
 #include "ui/core/Screen.h"
+#include "ui/widgets/common/VirtualJoystick.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/input/ControlManagerCore.h"
+#include "mugen/core/math/FixedVec3.h"
 
+#include <array>
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
 namespace PB::Types
 {
-class PlayerState;
+class TownMovement;
 }
 
 namespace gameui
 {
+
+class TownSync;
 
 // 进入/切换城镇参数（城际传送门传入）
 struct TownBootParams
@@ -41,7 +47,7 @@ public:
     std::vector<std::string> getPackages() const override
     {
         // Res_GeneralIcons: MainMenu head icon (ui://37kbt1d9...)
-        return {"UI/Res_GeneralIcons", "UI/Screen_Town"};
+        return {"UI/Common_Base", "UI/Res_GeneralIcons", "UI/Screen_Town"};
     }
 
     GComponent* onCreateContent() override
@@ -67,25 +73,36 @@ private:
         int32_t destPosZ   = 0;
         int32_t destFacing = 1;
         ax::Node* node     = nullptr;
+        // 世界坐标与触发半径（来自 TownConfig.portalPosX/Z 与 PortalConfig.radius）。
+        mugen::Fixed posX;
+        mugen::Fixed posZ;
+        mugen::Fixed radius;
+        // 触发边沿锁存：进入时初始化，避免出生点落在传送门上立刻触发。
+        bool inside = false;
     };
 
     bool initTown();
     void sendEnterScene();
-    void fillLocalState(PB::Types::PlayerState* state) const;
+    void fillLocalMovement(PB::Types::TownMovement* movement) const;
     void reportLocalState(float delta);
+    void applyLocalCorrection();
 
     void initPortals();
     void onPortalTriggered(const TownPortal& portal);
+    // 判断本地玩家当前是否落在指定传送门的触发圆内。
+    bool portalContains(const TownPortal& portal) const;
+    // 进入场景时用当前落点初始化各传送门的触发锁存。
+    void initializePortalLatches();
+    // 边沿触发检测：由假变真时调用 onPortalTriggered 一次。
+    void updatePortalTriggers();
 
     void addMessagePushReceiver();
     bool initInput();
     void onKeyPressed(ax::EventKeyboard::KeyCode code, ax::Event* event);
     void onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event* event);
     void setInputFromKey(ax::EventKeyboard::KeyCode code, bool pressed);
-    void addOrUpdateRemotePlayer(const PB::Types::PlayerState& state);
-    void removeRemotePlayer(int64_t playerId);
-    void queuePuppetUpdate(mugen::Entity entity, const PB::Types::PlayerState& state);
-    mugen::Entity localEntity() const;
+    void bindJoystick();
+    void refreshControlKey(mugen::sim::ControlKey key);
 
     void sendDuelInvite(int64_t targetPlayerId);
     void respondDuelInvite(int32_t accept);
@@ -103,6 +120,7 @@ private:
     void refreshMainMenuPlayerInfo();
     void subscribeAppearanceEvents();
     void refreshLocalAppearance();
+    void refreshLocalPet();
 
 private:
     TownBootParams m_boot;
@@ -110,9 +128,10 @@ private:
     mugen::sim::World m_world;
     mugen::sim::ControlManagerCore m_control;
     mugen::Entity m_localEntity;
-    std::map<int64_t, mugen::Entity> m_remotePlayers;
-    std::vector<mugen::sim::PuppetUpdate> m_pendingPuppetUpdates;
+    std::unique_ptr<TownSync> m_townSync;
     std::map<ax::EventKeyboard::KeyCode, uint32_t> m_slotMap;
+    std::array<bool, static_cast<size_t>(mugen::sim::ControlKey::Count)> m_keyboardHeld{};
+    VirtualJoystick m_joystick;
     ax::EventListenerKeyboard* m_keyboardListener = nullptr;
     float m_accumulator                           = 0.0f;
     bool m_initialized                            = false;
@@ -121,6 +140,25 @@ private:
 
     bool m_enteredScene = false;
     float m_reportTimer = 0.0f;
+
+    // 本地玩家角色半径（来自 RoleConfig），用于传送门触发圆判定。
+    mugen::Fixed m_roleRadius;
+    // 本次城镇生命周期内是否已触发过传送门（防止重复切城）。
+    bool m_portalTriggered = false;
+
+    // 本地移动上报：client_seq 与最近一次上报的离散状态（用于即时上报起停/朝向/状态变化）。
+    uint32_t m_clientSeq  = 0;
+    int32_t m_lastFacing  = 0;
+    bool m_lastMoving     = false;
+    std::string m_lastState;
+    // 已应用的位置校正序号（拒绝更旧的校正）。
+    uint32_t m_lastCorrectionSeq = 0;
+    // 已确认给服务端的最近校正序号（回填到 TownMoveReport.ack_correction_seq）。
+    uint32_t m_ackCorrectionSeq = 0;
+    // 应用校正后强制下一帧立即上报，尽快把 ack 送回服务端。
+    bool m_forceReport = false;
+    // 待应用的权威位置校正（下一个逻辑帧前吸附本地玩家）。
+    std::optional<mugen::FixedVec3> m_pendingCorrection;
 
     int64_t m_selectedPlayerId = 0;
 

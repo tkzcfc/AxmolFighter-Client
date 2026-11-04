@@ -211,6 +211,10 @@ ent 29 role 21881 3 x 941621248 y 0 z 112197632 face -1 hp 19441231038 mp 104857
 ent 29 role 21881 4 x 744488960 y 0 z 87031808 face -1 hp 19441231038 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
 ent 29 role 21881 5 x 941621248 y 0 z 87031808 face -1 hp 19441231038 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
 ent 29 portal 113 6 x 1808793600 y 0 z 136314880 face 1 st Idle ex - act 0 at 0 play 1
+death role.21881.2
+death role.21881.3
+death role.21881.4
+death role.21881.5
 frame 30
 ent 30 role 0 1 x 140509184 y 0 z 136314880 face 1 hp 401143234560 mp 104857600 ep 0 st Idle ex - act stand at 0 play 1 sk - - - - - buf -
 ent 30 portal 113 6 x 1808793600 y 0 z 136314880 face 1 st Idle ex - act 0 at 0 play 1

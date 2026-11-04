@@ -176,6 +176,14 @@ void AvatarPresenter::present(sim::World& world, float alpha, float renderDelta)
             state.partnerRageStateKnown  = state.fashionAvatar;
             if (motion.motionFile.empty())
                 state.skeleton = MgSkeletonAnimation::createFromCache(look.resSpineId);
+            else if (state.m_overrideAppearance.has_value())
+            {
+                FashionAppearance appearance = *state.m_overrideAppearance;
+                if (appearance.roleId == 0)
+                    appearance.roleId = look.roleId;
+                appearance.transformed = motion.m_partnerRageTransformed;
+                state.avatar          = Avatar::create(appearance);
+            }
             else
                 state.avatar = createAvatar(look, spine, motion.motionFile, state.useSessionFashion,
                                             motion.m_partnerRageTransformed);
@@ -243,17 +251,32 @@ void AvatarPresenter::present(sim::World& world, float alpha, float renderDelta)
         {
             if (ax::Node* node = displayNode(it->second))
                 node->removeFromParent();
+            // 实体消失时同步清理其宠物。
+            auto pet = m_petFollowers.find(it->first);
+            if (pet != m_petFollowers.end())
+            {
+                pet->second->clear();
+                m_petFollowers.erase(pet);
+            }
             it = m_avatars.erase(it);
         }
         else
             ++it;
     }
 
-    if (m_petFollower && m_followEntity.value != 0)
+    for (auto it = m_petFollowers.begin(); it != m_petFollowers.end();)
     {
         RenderPose hero;
-        if (samplePose(m_followEntity.value, alpha, &hero))
-            m_petFollower->present({hero.x, hero.y, hero.z, hero.towardX, hero.towardZ}, renderDelta);
+        if (samplePose(it->first, alpha, &hero))
+        {
+            it->second->present({hero.x, hero.y, hero.z, hero.towardX, hero.towardZ}, renderDelta);
+            ++it;
+        }
+        else
+        {
+            it->second->clear();
+            it = m_petFollowers.erase(it);
+        }
     }
 }
 
@@ -283,7 +306,9 @@ bool AvatarPresenter::samplePose(uint32_t entityValue, float alpha, RenderPose* 
 FashionAppearance AvatarPresenter::buildRoleAppearance(const AvatarState& state, bool transformed)
 {
     FashionAppearance appearance;
-    if (state.useSessionFashion)
+    if (state.m_overrideAppearance.has_value())
+        appearance = *state.m_overrideAppearance;
+    else if (state.useSessionFashion)
         appearance = gameui::buildSessionFashionAppearance();
     if (appearance.roleId == 0)
         appearance.roleId = state.roleId;
@@ -327,15 +352,34 @@ void AvatarPresenter::onPartnerRageChanged(sim::World& world, Entity entity, boo
 
 void AvatarPresenter::setPet(int32_t petId, int32_t spineId)
 {
-    if (!m_petFollower)
-        m_petFollower = std::make_unique<PetFollower>(tierLayer(2));
-    m_petFollower->setPet(petId, spineId);
+    setEntityPet(m_followEntity, petId, spineId);
 }
 
 void AvatarPresenter::clearPet()
 {
-    if (m_petFollower)
-        m_petFollower->clear();
+    clearEntityPet(m_followEntity);
+}
+
+void AvatarPresenter::setEntityPet(Entity entity, int32_t petId, int32_t spineId)
+{
+    if (entity.value == 0 || petId == 0)
+    {
+        clearEntityPet(entity);
+        return;
+    }
+    auto& slot = m_petFollowers[entity.value];
+    if (!slot)
+        slot = std::make_unique<PetFollower>(tierLayer(2));
+    slot->setPet(petId, spineId);
+}
+
+void AvatarPresenter::clearEntityPet(Entity entity)
+{
+    const auto it = m_petFollowers.find(entity.value);
+    if (it == m_petFollowers.end())
+        return;
+    it->second->clear();
+    m_petFollowers.erase(it);
 }
 
 ax::Node* AvatarPresenter::displayNode(const AvatarState& state)
@@ -363,17 +407,19 @@ void AvatarPresenter::clear()
         if (ax::Node* node = displayNode(state))
             node->removeFromParent();
     m_avatars.clear();
-    clearPet();
+    for (auto& [_, pet] : m_petFollowers)
+        pet->clear();
+    m_petFollowers.clear();
 }
 
 bool AvatarPresenter::setEntityAppearance(uint32_t entityValue, const FashionAppearance& appearance)
 {
-    auto it = m_avatars.find(entityValue);
-    if (it == m_avatars.end() || !it->second.avatar)
+    auto& state             = m_avatars[entityValue];
+    state.m_overrideAppearance = appearance;
+    if (!state.avatar)
+        return true;
+    if (!state.avatar->setAppearance(appearance))
         return false;
-    if (!it->second.avatar->setAppearance(appearance))
-        return false;
-    auto& state = it->second;
     if (state.fashionAvatar)
     {
         state.partnerRageTransformed = appearance.transformed;
@@ -413,25 +459,35 @@ void WorldPresenter::setFollowEntity(Entity entity)
 
 void WorldPresenter::setPet(int32_t petId)
 {
+    setEntityPet(m_followEntity, petId);
+}
+
+void WorldPresenter::setEntityPet(Entity entity, int32_t petId)
+{
     if (petId == 0)
     {
-        m_avatars.clearPet();
+        m_avatars.clearEntityPet(entity);
         return;
     }
     const auto* pet = conf::Config::instance().find<conf::PetConfig>(petId);
     if (!pet)
     {
         MG_LOG_W("WorldPresenter: pet {} not found", petId);
-        m_avatars.clearPet();
+        m_avatars.clearEntityPet(entity);
         return;
     }
     if (pet->spineId <= 0)
     {
         MG_LOG_W("WorldPresenter: pet {} has invalid spine {}", petId, pet->spineId);
-        m_avatars.clearPet();
+        m_avatars.clearEntityPet(entity);
         return;
     }
-    m_avatars.setPet(petId, pet->spineId);
+    m_avatars.setEntityPet(entity, petId, pet->spineId);
+}
+
+void WorldPresenter::clearEntityPet(Entity entity)
+{
+    m_avatars.clearEntityPet(entity);
 }
 
 bool WorldPresenter::refreshLocalPlayerAppearance(sim::World& world)
