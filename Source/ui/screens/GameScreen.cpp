@@ -3,8 +3,10 @@
 #include "TownScreen.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "resource/builtin/MapResource.h"
+#include "resource/builtin/RoleEffectHelper.h"
 #include "ui/battle/BattleHudPanel.h"
 #include "ui/battle/LocalBattleMode.h"
+#include "ui/battle/LocalRoleUtils.h"
 #include "ui/core/ScreenManager.h"
 #include "ui/widgets/common/MessageDialog.h"
 
@@ -30,7 +32,16 @@ void GameScreen::onPrepareLoad()
     std::string layer = room->mapKey;
     if (!layer.ends_with(".layer"))
         layer = "/mugen/map/" + layer + ".layer";
-    getResourceLoader().add<gameres::MapResource>(layer);
+    auto& loader = getResourceLoader();
+    loader.add<gameres::MapResource>(layer);
+
+    const int32_t playerRole =
+        m_local && m_local->roleId > 0 ? m_local->roleId : resolveLocalPlayerRoleId();
+    const int32_t difficulty = room->monsterAiDifficulty;
+    gameres::addRoleEffects(loader, playerRole, difficulty);
+    for (const int32_t monsterId : room->monsterIds)
+        if (monsterId > 0)
+            gameres::addRoleEffects(loader, monsterId, difficulty);
 }
 
 void GameScreen::onEnter()

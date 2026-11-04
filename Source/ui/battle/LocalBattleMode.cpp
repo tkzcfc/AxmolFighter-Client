@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
+#include <optional>
 #include <utility>
 
 namespace gameui
@@ -50,15 +51,17 @@ std::pair<int32_t, int32_t> resolveStageAndCopy(int32_t roomId)
 class LocalBattleMode::WorldPresenterHolder
 {
 public:
-    explicit WorldPresenterHolder(ax::Node& root) : root(&root), presenter(root) {}
+    explicit WorldPresenterHolder(ax::Node& root) : root(&root), presenter(std::in_place, root) {}
     ~WorldPresenterHolder()
     {
+        // AvatarPresenter::clear 会访问场景节点，必须在摘掉 root 之前销毁 presenter。
+        presenter.reset();
         if (root)
             root->removeFromParent();
     }
 
     ax::Node* root;
-    mugen::WorldPresenter presenter;
+    std::optional<mugen::WorldPresenter> presenter;
 };
 
 LocalBattleMode::LocalBattleMode() = default;
@@ -108,9 +111,9 @@ bool LocalBattleMode::init()
     auto* root  = ax::Node::create();
     scene->addChild(root, 10);
     m_presenter = std::make_unique<WorldPresenterHolder>(*root);
-    m_presenter->presenter.loadMap(room->mapKey);
-    m_presenter->presenter.setFollowEntity(player);
-    m_presenter->presenter.setPet(resolveFollowPetId());
+    m_presenter->presenter->loadMap(room->mapKey);
+    m_presenter->presenter->setFollowEntity(player);
+    m_presenter->presenter->setPet(resolveFollowPetId());
     m_localPlayer       = player;
     m_replay            = {};
     m_replay.schemaHash = mugen::conf::configSchemaHash();
@@ -167,7 +170,7 @@ void LocalBattleMode::onUpdate(float delta)
         ++catchUp;
         m_debugSingleStep = false;
     }
-    m_presenter->presenter.present(m_world, m_accumulator * 30.0f, delta);
+    m_presenter->presenter->present(m_world, m_accumulator * 30.0f, delta);
     if (m_autotestFrames > 0 &&
         m_world.ecs().singleton<mugen::sim::WorldClock>().frame >= static_cast<uint64_t>(m_autotestFrames))
     {
@@ -208,7 +211,7 @@ void LocalBattleMode::refreshLocalAppearance()
 {
     if (!m_presenter || !m_initialized)
         return;
-    if (!m_presenter->presenter.refreshLocalPlayerAppearance(m_world))
+    if (!m_presenter->presenter->refreshLocalPlayerAppearance(m_world))
         AXLOGW("LocalBattleMode: refreshLocalPlayerAppearance skipped (avatar not ready)");
 }
 
@@ -224,14 +227,14 @@ void LocalBattleMode::refreshFollowPet()
 {
     if (!m_presenter || !m_initialized)
         return;
-    m_presenter->presenter.setPet(resolveFollowPetId());
+    m_presenter->presenter->setPet(resolveFollowPetId());
 }
 
 void LocalBattleMode::renderDebugPanel()
 {
     if (m_initialized)
     {
-        auto& debugDraw     = m_presenter->presenter.debugDraw();
+        auto& debugDraw     = m_presenter->presenter->debugDraw();
         bool collisionDebug = debugDraw.enabled();
         m_debugPanel.render(m_world, m_debugPaused, m_debugSingleStep, collisionDebug);
         debugDraw.setEnabled(collisionDebug);
@@ -259,7 +262,7 @@ void LocalBattleMode::toggleCollisionDebug()
 {
     if (!m_initialized)
         return;
-    auto& debugDraw = m_presenter->presenter.debugDraw();
+    auto& debugDraw = m_presenter->presenter->debugDraw();
     debugDraw.setEnabled(!debugDraw.enabled());
 }
 

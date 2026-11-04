@@ -22,6 +22,7 @@
 #include <net/client_town.pb.h>
 
 #include <algorithm>
+#include <optional>
 
 using namespace mugen;
 
@@ -44,15 +45,17 @@ mugen::Fixed fixedFromNetwork(float value)
 class TownScreen::WorldPresenterHolder
 {
 public:
-    explicit WorldPresenterHolder(ax::Node& root) : root(&root), presenter(root) {}
+    explicit WorldPresenterHolder(ax::Node& root) : root(&root), presenter(std::in_place, root) {}
     ~WorldPresenterHolder()
     {
+        // AvatarPresenter::clear 会访问场景节点，必须在摘掉 root 之前销毁 presenter。
+        presenter.reset();
         if (root)
             root->removeFromParent();
     }
 
     ax::Node* root;
-    mugen::WorldPresenter presenter;
+    std::optional<mugen::WorldPresenter> presenter;
 };
 
 void TownScreen::onPrepareLoad()
@@ -141,7 +144,7 @@ void TownScreen::onUpdate(float delta)
         m_accumulator -= LOGIC_DT;
         ++catchUp;
     }
-    m_presenter->presenter.present(m_world, m_accumulator / LOGIC_DT, delta);
+    m_presenter->presenter->present(m_world, m_accumulator / LOGIC_DT, delta);
     reportLocalState(delta);
 }
 
@@ -339,8 +342,8 @@ bool TownScreen::initTown()
     auto* root  = ax::Node::create();
     scene->addChild(root, 0);
     m_presenter = std::make_unique<WorldPresenterHolder>(*root);
-    m_presenter->presenter.loadMap(town->mapKey);
-    m_presenter->presenter.setFollowEntity(m_localEntity);
+    m_presenter->presenter->loadMap(town->mapKey);
+    m_presenter->presenter->setFollowEntity(m_localEntity);
     initPortals();
     if (!initInput())
         return false;
@@ -364,7 +367,7 @@ void TownScreen::refreshLocalAppearance()
 {
     if (!m_presenter || !m_initialized)
         return;
-    if (!m_presenter->presenter.refreshLocalPlayerAppearance(m_world))
+    if (!m_presenter->presenter->refreshLocalPlayerAppearance(m_world))
         AXLOGW("TownScreen: refreshLocalPlayerAppearance skipped (avatar not ready)");
 }
 
@@ -511,7 +514,7 @@ void TownScreen::initPortals()
         auto* node = ax::Node::create();
         node->setPosition(static_cast<float>(valueAt(town->portalPosX, index)),
                           static_cast<float>(valueAt(town->portalPosZ, index)));
-        m_presenter->presenter.addMapNode(*node);
+        m_presenter->presenter->addMapNode(*node);
         portal.node = node;
         m_portals.push_back(portal);
     }

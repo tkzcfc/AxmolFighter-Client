@@ -601,6 +601,8 @@ WorldPresenter::WorldPresenter(ax::Node& root)
 WorldPresenter::~WorldPresenter()
 {
     m_sound.clear();
+    // 先拆掉角色/特效节点，让 MgSkeletonData 的节点引用在 ResourceLoader 释放之前掉干净。
+    m_avatars.clear();
 }
 
 void WorldPresenter::loadMap(const std::string& mapKey)

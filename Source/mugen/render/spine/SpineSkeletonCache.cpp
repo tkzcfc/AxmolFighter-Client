@@ -6,8 +6,11 @@
 #    include "mugen/render/spine/MgSpineLoadPipeline.h"
 #    include "mugen/render/spine/MgSpineUtils.h"
 
+#    include "axmol.h"
+
 #    include <algorithm>
 #    include <cstring>
+#    include <set>
 
 NS_MG_BEGIN
 
@@ -62,6 +65,26 @@ std::string SpineSkeletonCache::makeKey(std::string_view skeletonFile,
     return key;
 }
 
+void SpineSkeletonCache::store(const std::string& key, MgSkeletonDataPtr data, const std::vector<std::string>& atlases)
+{
+    CacheEntry entry;
+    entry.data          = std::move(data);
+    entry.texturePaths  = collectTexturePaths(atlases);
+    m_map.emplace(key, std::move(entry));
+}
+
+void SpineSkeletonCache::releaseOrphanTextures(const std::vector<std::string>& texturePaths)
+{
+    auto* cache = ax::Director::getInstance()->getTextureCache();
+    std::set<std::string> unique(texturePaths.begin(), texturePaths.end());
+    for (const auto& path : unique)
+    {
+        auto* texture = cache->getTextureForKey(path);
+        if (texture && texture->getReferenceCount() == 1)
+            cache->removeTextureForKey(path);
+    }
+}
+
 MgSkeletonDataPtr SpineSkeletonCache::getOrCreate(std::string_view skeletonFile,
                                                   const std::vector<std::string>& atlasFiles,
                                                   float scale)
@@ -74,11 +97,11 @@ MgSkeletonDataPtr SpineSkeletonCache::getOrCreate(std::string_view skeletonFile,
     const auto atlases = resolveAtlasFiles(skeletonFile, atlasFiles);
     const auto key     = makeKey(skeletonFile, atlases, scale);
     if (auto it = m_map.find(key); it != m_map.end())
-        return it->second;
+        return it->second.data;
 
     auto loaded = MgSkeletonData::loadFromFile(skeletonFile, atlases, scale, false);
     if (loaded)
-        m_map.emplace(key, loaded);
+        store(key, loaded, atlases);
     return loaded;
 }
 
@@ -108,7 +131,7 @@ void SpineSkeletonCache::loadAsync(std::string_view skeletonFile,
     const auto key = makeKey(skeletonFile, atlases, scale);
     if (auto it = m_map.find(key); it != m_map.end())
     {
-        onDone(it->second);
+        onDone(it->second.data);
         return;
     }
 
@@ -119,16 +142,16 @@ void SpineSkeletonCache::loadAsync(std::string_view skeletonFile,
         return;
 
     std::weak_ptr<char> token = m_lifeToken;
-    MgSpineLoadPipeline::start(skeletonFile, std::move(atlases), scale, false,
-                               [this, token, key](MgSkeletonDataPtr data) {
+    MgSpineLoadPipeline::start(skeletonFile, atlases, scale, false,
+                               [this, token, key, atlases](MgSkeletonDataPtr data) {
         if (token.expired())
             return;
 
         // 在途期间可能已被同步加载写入：以已有数据为准，丢弃本次结果
         if (auto it = m_map.find(key); it != m_map.end())
-            data = it->second;
+            data = it->second.data;
         else if (data)
-            m_map.emplace(key, data);
+            store(key, data, atlases);
 
         auto it = m_pending.find(key);
         if (it == m_pending.end())
@@ -154,18 +177,27 @@ void SpineSkeletonCache::loadAsync(int32_t resSpineId, LoadCallback onDone)
 
 void SpineSkeletonCache::clear()
 {
+    std::vector<std::string> textures;
+    for (auto& [_, entry] : m_map)
+        textures.insert(textures.end(), entry.texturePaths.begin(), entry.texturePaths.end());
     m_map.clear();
+    releaseOrphanTextures(textures);
 }
 
 void SpineSkeletonCache::purgeUnused()
 {
+    std::vector<std::string> textures;
     for (auto it = m_map.begin(); it != m_map.end();)
     {
-        if (it->second.use_count() == 1)
+        if (it->second.data.use_count() == 1)
+        {
+            textures.insert(textures.end(), it->second.texturePaths.begin(), it->second.texturePaths.end());
             it = m_map.erase(it);
+        }
         else
             ++it;
     }
+    releaseOrphanTextures(textures);
 }
 
 NS_MG_END

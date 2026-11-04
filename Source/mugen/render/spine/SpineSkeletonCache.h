@@ -36,7 +36,7 @@ public:
     void loadAsync(int32_t resSpineId, LoadCallback onDone);
 
     void clear();
-    // 释放只被缓存引用的数据（切换 View 后调用）
+    // 释放只被缓存引用的骨架，并在 TextureCache 仅剩自身引用时移除对应 atlas 页
     void purgeUnused();
 
 private:
@@ -48,8 +48,22 @@ private:
 
     static std::string makeKey(std::string_view skeletonFile, const std::vector<std::string>& atlasFiles, float scale);
 
+    // 共享缓存项：骨架数据及其 atlas 页贴图路径（供 purgeUnused 精确释放 TextureCache）。
+    struct CacheEntry
+    {
+        // 只读共享骨架数据。
+        MgSkeletonDataPtr data;
+        // atlas 引用的贴图路径，与 TextureCache 的 key 一致。
+        std::vector<std::string> texturePaths;
+    };
+
+    // 写入缓存并记录 atlas 贴图路径。
+    void store(const std::string& key, MgSkeletonDataPtr data, const std::vector<std::string>& atlases);
+    // 释放已无外部引用的 atlas 页；仅当 TextureCache 自己还持有时才 removeTextureForKey。
+    static void releaseOrphanTextures(const std::vector<std::string>& texturePaths);
+
     // 骨架数据缓存
-    std::unordered_map<std::string, MgSkeletonDataPtr> m_map;
+    std::unordered_map<std::string, CacheEntry> m_map;
     // 在途异步请求的回调队列
     std::unordered_map<std::string, std::vector<LoadCallback>> m_pending;
     // 生命周期令牌：异步回调晚于 destroy 时不再访问 this
