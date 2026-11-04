@@ -9,7 +9,9 @@ namespace mugen::sim
 {
 void SkillBase::dealWithCoolDown()
 {
-    const auto cd = conf::Config::instance().get<conf::SkillAttackConfig>(m_configId).cd;
+    const auto& row = conf::Config::instance().get<conf::SkillAttackConfig>(m_configId);
+    // PVP 场景使用独立冷却配置，与普通场景的 cd 分离。
+    const auto cd = m_pvp ? row.pvpCd : row.cd;
     m_coldMaxTime =
         Fixed::fromInt(std::clamp(cd, int64_t{0}, std::numeric_limits<int64_t>::max() / Fixed::kOne)) * m_coldScale;
     m_timing = true;

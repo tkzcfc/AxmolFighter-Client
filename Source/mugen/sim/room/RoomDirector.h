@@ -49,6 +49,8 @@ private:
     void _spawn(const conf::RoomConfig& positions);
     // 进入单个状态，结算仅产生本地事件。
     void _enterState(mugen::RoomState state);
+    // 推进 PVP 决斗的 KO 与超时判定，结果相对主控阵营结算。
+    void _updatePvp();
 
     // 本场战斗世界。
     World& m_world;

@@ -261,6 +261,13 @@ void emitEvent(TraceSink& sink, const World& world, const PresentationEvent& eve
                     std::to_string(payload.m_buffId);
         else if constexpr (std::is_same_v<T, RoomWarning>)
             line += " warn id " + std::to_string(payload.m_id) + " boss " + std::to_string(payload.m_boss ? 1 : 0);
+        else if constexpr (std::is_same_v<T, PvpRoundEnd>)
+        {
+            line += " pvpround winner " + std::to_string(payload.m_winnerCamp) + " reason " +
+                    std::to_string(static_cast<int32_t>(payload.m_reason));
+            for (const auto& [camp, ratio] : payload.m_hpRatios)
+                line += " hp " + std::to_string(camp) + ' ' + fixedStr(ratio);
+        }
     }, event.payload);
     sink.write(line);
 }

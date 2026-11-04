@@ -76,7 +76,12 @@ void RoleContext::consumeControl()
         if (!ecs.get<ExtraState>(m_entity).isCanControl() || ecs.get<RoleStatus>(m_entity).isJostled())
             continue;
         ecs.get<RoleControl>(m_entity).m_last = command;
-        if (static_cast<int32_t>(command.controlEvent) >= static_cast<int32_t>(ControlEvent::CTR_ATKA))
+        // PVP 中禁用奥义 I/J/K，避免与普通攻击共用同一条施放路径。
+        const bool pvpUltimate = m_world.setup().m_pvp &&
+                                 (command.controlEvent == ControlEvent::CTR_ATKI ||
+                                  command.controlEvent == ControlEvent::CTR_ATKJ ||
+                                  command.controlEvent == ControlEvent::CTR_ATKK);
+        if (!pvpUltimate && static_cast<int32_t>(command.controlEvent) >= static_cast<int32_t>(ControlEvent::CTR_ATKA))
             _skillEvent(command);
         else if (command.controlEvent == ControlEvent::CTR_IDLE)
             Role(m_world, m_entity).changeStatus(EntityRoleStatus::Idle);

@@ -812,11 +812,11 @@ void comboEnter(World& world, Entity entity, uint64_t serial, Fixed)
     const auto* external = world.ecs().tryGet<BuffExternalConditions>(entity);
     const size_t index   = static_cast<size_t>(external ? external->m_comboEvaluate : 0);
     if (index < config.paramValue.size())
-        world.ecs().get<RoleHitState>(entity).m_comboScale = config.paramValue[index];
+        world.ecs().get<RoleHitState>(entity).m_parameterExp = config.paramValue[index];
 }
 void comboExit(World& world, Entity entity, uint64_t, Fixed)
 {
-    world.ecs().get<RoleHitState>(entity).m_comboScale = "1"_fx;
+    world.ecs().get<RoleHitState>(entity).m_parameterExp = "1"_fx;
 }
 
 // 数值怒气和能力池由各自系统拥有；这里使用已声明的能力接缝完成绑定。
@@ -1007,6 +1007,8 @@ constexpr auto makeDispatch()
     table[static_cast<size_t>(conf::BuffRuleId::BuffPurplePoison)] = {
         {purplePoison, noHook, noHook, purplePoison, noHook}};
     table[static_cast<size_t>(conf::BuffRuleId::BuffCrazy)]        = {{crazyEnter, noHook, noHook, noHook, noHook}};
+    // 以下规则是对照来源的空标记子类：本身无生命周期行为，仅按规则身份被 BuffCondition 与
+    // BuffPool 的减益免疫判定查询。它们是已移植的空标记，不是未移植占位，因此全部绑定 noHook。
     table[static_cast<size_t>(conf::BuffRuleId::BuffAdjudication)] = {{noHook, noHook, noHook, noHook, noHook}};
     table[static_cast<size_t>(conf::BuffRuleId::BuffDark)]         = {{noHook, noHook, noHook, noHook, noHook}};
     table[static_cast<size_t>(conf::BuffRuleId::BuffDarkMark)]     = {{noHook, noHook, noHook, noHook, noHook}};
@@ -1084,6 +1086,7 @@ constexpr auto makeDispatch()
         {removeByTypeEnter, noHook, noHook, noHook, noHook}};
     table[static_cast<size_t>(conf::BuffRuleId::BuffShield)] = {
         {shieldEnter, shieldExit, shieldEnter, shieldEnter, shieldExit}};
+    // BuffSign 同样是空标记子类，仅用于按身份查询，保持 noHook。
     table[static_cast<size_t>(conf::BuffRuleId::BuffSign)] = {{noHook, noHook, noHook, noHook, noHook}};
     table[static_cast<size_t>(conf::BuffRuleId::BuffSpecialAbilityApplicator)] = {
         {specialAbilityEnter, noHook, noHook, noHook, noHook}};

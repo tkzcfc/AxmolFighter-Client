@@ -65,6 +65,8 @@ struct SkillBase
     SkillAddress m_address;
     /// 技能配置行 id。
     int32_t m_configId = -1;
+    /// 本技能是否受 PVP 冷却规则约束。
+    bool m_pvp = false;
     /// 当前所属技能组。
     int32_t m_group = 1;
     /// 此技能连段的总步骤数。
@@ -126,6 +128,7 @@ struct SkillBase
     MG_REFLECT(SkillBase,
                m_address,
                m_configId,
+               m_pvp,
                m_group,
                m_stepCount,
                m_slotCount,

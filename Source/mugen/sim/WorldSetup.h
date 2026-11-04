@@ -27,6 +27,10 @@ struct WorldSetup
     bool m_pvp = false;
     // 场景驱动提供的战斗类型编号，供效果区域过滤使用，不从房间主键猜测。
     int32_t m_fightType = 0;
+    // PVP 决斗限时（秒），超时按剩余生命比例判定胜负。
+    Fixed m_pvpTimeLimit = Fixed::fromInt(100);
+    // PVP 玩家出生生命倍率，作用于基础生命与生命上限。
+    Fixed m_pvpHpScale = Fixed::fromInt(1);
     // 为假时角色更新跳过怪物 AI。写入回放与快照，保证重放一致。
     bool m_aiEnabled = true;
     // 玩家职业；未知时按 m_playerRoleId 直接出生。
@@ -57,6 +61,8 @@ struct WorldSetup
                mapKey,
                m_pvp,
                m_fightType,
+               m_pvpTimeLimit,
+               m_pvpHpScale,
                m_aiEnabled,
                m_playerClass,
                m_playerRoleId,

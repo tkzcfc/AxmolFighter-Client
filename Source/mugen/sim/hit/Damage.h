@@ -13,7 +13,7 @@ struct DamageInput
     Attributes m_attacker;
     // 受击方三层属性。
     Attributes m_target;
-    // 本次打击配置；保留但不执行 PVP 倍率。
+    // 本次打击配置。
     conf::SkillHitConfig m_hit;
     // 已解析的标准伤害。
     Fixed m_standardHurt;
@@ -21,6 +21,8 @@ struct DamageInput
     Fixed m_addition;
     // 神器或特殊能力来源使用神器增伤。
     bool m_artifact = false;
+    // 竞技战斗使用 PVP 倍率与攻防缩放。
+    bool m_pvp = false;
 };
 // 单次公式结果，不包含生命扣除或受击状态切换。
 struct DamageResult
@@ -62,11 +64,18 @@ inline DamageResult calculateDamage(const DamageInput& input, DamageDraw draw)
     const auto& target = input.m_target;
     const bool physical =
         input.m_hit.hurtType == 0 || (input.m_hit.hurtType == 2 && attack.value(5) >= attack.value(7));
-    const auto atk  = attack.value(physical ? 5 : 7);
-    const auto def  = target.value(physical ? 6 : 8);
+    auto atk = attack.value(physical ? 5 : 7);
+    auto def = target.value(physical ? 6 : 8);
+    // 竞技战斗按各自倍率缩放攻防并向下取整；真实伤害不参与攻防缩放。
+    if (input.m_pvp && input.m_hit.hurtType != 3)
+    {
+        atk = (atk * ("1"_fx + attack.m_pvpAtk)).floor();
+        def = (def * ("1"_fx + target.m_pvpDef)).floor();
+    }
     const auto rate = input.m_hit.hurtType == 3 ? "1"_fx : (atk + def == "0"_fx ? "0"_fx : atk / (atk + def));
     auto hurt       = input.m_standardHurt * rate;
-    hurt *= input.m_hit.hurtRate * ("1"_fx + input.m_addition);
+    const auto hurtAddition = input.m_pvp ? input.m_hit.pvpHurtRate : input.m_hit.hurtRate;
+    hurt *= hurtAddition * ("1"_fx + input.m_addition);
     const auto critRate =
         std::clamp((attack.value(9) + attack.extend[2] - target.value(10) - target.extend[3]) / "100"_fx, "0.01"_fx,
                    "1"_fx) *

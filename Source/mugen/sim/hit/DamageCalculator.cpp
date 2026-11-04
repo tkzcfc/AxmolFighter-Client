@@ -90,6 +90,7 @@ bool DamageCalculator::damageInput(Entity effect, Entity target, DamageInput& in
     input.m_addition     = m_world.hitHooks().m_damageLevel(m_world, source.m_owner, source.m_skillAttributeTag) *
                        conf::kSkillHurtDefaultAddition;
     input.m_artifact = source.m_artifactId != -1 || source.m_capabilityTrigger;
+    input.m_pvp      = m_world.setup().m_pvp;
     return true;
 }
 }  // namespace mugen::sim::hit

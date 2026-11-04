@@ -1,4 +1,5 @@
 #include "RoleActor.h"
+#include "RoleCombo.h"
 #include "mugen/sim/World.h"
 #include "mugen/avatar/MotionPlayer.h"
 #include "mugen/conf/BattleConst.h"
@@ -40,7 +41,10 @@ void abilityPoolUpdate(World& world, Entity entity)
     ability::AbilityHolder(world, entity).update();
 }
 // 推进伤害数字连击流程。
-void hurtNumberComboUpdate(World&, Entity) {}
+void hurtNumberComboUpdate(World& world, Entity entity)
+{
+    RoleCombo(world, entity).update();
+}
 // 推进召唤流程。
 void summonUpdate(World& world, Entity entity)
 {

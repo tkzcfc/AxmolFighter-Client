@@ -73,6 +73,7 @@ void SkillCaster::loadSkill(const SkillLoadout& loadout)
                         skill.m_address      = {code, static_cast<int32_t>(i + 1), static_cast<int32_t>(m + 1),
                                                 static_cast<int32_t>(pool.m_skills.size() - begin + 1)};
                         skill.m_configId     = id;
+                        skill.m_pvp          = m_world.setup().m_pvp;
                         skill.m_group        = static_cast<int32_t>(g + 1);
                         skill.m_slotCount    = static_cast<int32_t>(links.size());
                         skill.m_releaseMax   = row->cdCount == -1 ? 1 : std::max(1, row->cdCount);

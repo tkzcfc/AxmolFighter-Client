@@ -2,6 +2,8 @@
 
 #include "mugen/core/math/Fixed.h"
 
+#include <array>
+
 namespace mugen::conf
 {
 // 周期伤害默认等级加成，Const.lua:616，值为 0。
@@ -74,4 +76,22 @@ inline constexpr int32_t kRoomStateInternal = 30;
 inline constexpr Fixed kHitProtectHpScale = "0.45"_fx;
 // 受击保护清理间隔毫秒数。
 inline constexpr int32_t kHitProtectCleanTime = 5000;
+// 连击未命中后重置连击数的超时毫秒数。
+inline constexpr Fixed kComboTimeMs = "2000"_fx;
+// 连击评价等级的经验阈值，按评价等级升序。
+inline constexpr std::array<Fixed, 5> kComboStageExp = {"200"_fx, "500"_fx, "1000"_fx, "1700"_fx, "2500"_fx};
+// 连击评价等级每帧的经验衰减速度，与经验阈值一一对应。
+inline constexpr std::array<Fixed, 5> kComboStageSpeed = {"0.5"_fx, "0.7"_fx, "1.8"_fx, "3.4"_fx, "5"_fx};
+// 击杀目标额外增加的经验值。
+inline constexpr Fixed kComboKillExp = "50"_fx;
+// 命中眩晕目标额外增加的经验值。
+inline constexpr Fixed kComboStunExp = "50"_fx;
+// 首领命中的经验倍率。
+inline constexpr Fixed kComboBossExpRate = "3"_fx;
+// 连击公式固定参数：连击数阈值。
+inline constexpr std::array<int32_t, 4> kComboFormulaCombo = {50, 100, 175, 250};
+// 连击公式固定参数：与阈值对应的加数 M。
+inline constexpr std::array<Fixed, 4> kComboFormulaM = {"0"_fx, "1"_fx, "2"_fx, "3"_fx};
+// 连击公式固定参数：与阈值对应的倍率 N。
+inline constexpr std::array<Fixed, 4> kComboFormulaN = {"1.2"_fx, "1.3"_fx, "1.4"_fx, "1.5"_fx};
 }  // namespace mugen::conf

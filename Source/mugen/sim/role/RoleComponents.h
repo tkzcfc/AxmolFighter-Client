@@ -142,6 +142,10 @@ struct Attributes
     std::array<Fixed, 16> overlay{};
     // 以扩展属性标识索引的附加值。
     std::array<Fixed, 16> extend{};
+    // PVP 攻击增伤倍率，仅竞技战斗参与攻防缩放。
+    Fixed m_pvpAtk;
+    // PVP 防御减伤倍率，仅竞技战斗参与攻防缩放。
+    Fixed m_pvpDef;
     // 返回基础和叠加属性之和。
     Fixed value(size_t index) const { return basic.at(index) + overlay.at(index); }
     // 返回含扩展项的生命上限。
@@ -151,7 +155,7 @@ struct Attributes
     // 按扩展属性标识访问只读值。
     const Fixed& extended(int32_t id) const { return extend.at(static_cast<size_t>(id - 100)); }
     // 参与组件快照的属性字段。
-    MG_REFLECT(Attributes, basic, overlay, extend)
+    MG_REFLECT(Attributes, basic, overlay, extend, m_pvpAtk, m_pvpDef)
 };
 // 角色当前资源及其上限。
 struct Vitals
@@ -430,8 +434,20 @@ struct RoleHitState
     // 命中期间临时伤害、暴击与累计输出。
     Fixed m_damage, m_hurt, m_dps;
     bool m_critical = false, m_beCritical = false;
-    // 连击累计经验与缩放。
-    Fixed m_comboExp, m_comboScale = "1"_fx;
+    // 当前连击数与历史最高连击数。
+    int32_t m_curCombo = 0;
+    int32_t m_maxCombo = 0;
+    // 当前评价等级与历史最高评价等级。
+    int32_t m_curEvaluate = 0;
+    int32_t m_maxEvaluate = 0;
+    // 当前评价经验值。
+    Fixed m_evaluateExp;
+    // 连击未命中的累计毫秒。
+    Fixed m_comboTimerMs;
+    // 连击经验倍率，由 Buff 规则按评价等级写入。
+    Fixed m_parameterExp = "1"_fx;
+    // 已结算击杀奖励的目标，避免同一目标重复计入击杀经验。
+    std::vector<Entity> m_comboKilledTargets;
     // 水晶的一次性命中标记。
     bool m_crystalHit = false;
     // 正配置总值耗尽才触发浮空保护，零配置不表示永久保护。
@@ -484,8 +500,14 @@ struct RoleHitState
                m_dps,
                m_critical,
                m_beCritical,
-               m_comboExp,
-               m_comboScale,
+               m_curCombo,
+               m_maxCombo,
+               m_curEvaluate,
+               m_maxEvaluate,
+               m_evaluateExp,
+               m_comboTimerMs,
+               m_parameterExp,
+               m_comboKilledTargets,
                m_crystalHit,
                m_hitProtectHp,
                m_hitProtectTime,

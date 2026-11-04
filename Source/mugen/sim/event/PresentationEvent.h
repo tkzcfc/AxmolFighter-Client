@@ -143,6 +143,26 @@ struct RoomWarning
     bool m_boss = false;
     MG_REFLECT(RoomWarning, m_id, m_boss)
 };
+// PVP 决斗结束原因。
+enum class PvpRoundEndReason : int32_t
+{
+    // 一方阵营被击倒清空。
+    Ko = 0,
+    // 决斗限时到达。
+    Timeout = 1,
+};
+// PVP 决斗结束通知，携带获胜阵营、结束原因和各阵营剩余生命比例。
+struct PvpRoundEnd
+{
+    // 获胜阵营位；零表示平局。
+    int32_t m_winnerCamp = 0;
+    // 结束原因：KO 或超时。
+    PvpRoundEndReason m_reason = PvpRoundEndReason::Ko;
+    // 各阵营剩余生命比例（hp / maxHp），按阵营位为键。
+    std::map<int32_t, Fixed> m_hpRatios;
+    // 参与事件快照的 PVP 结束字段。
+    MG_REFLECT(PvpRoundEnd, m_winnerCamp, m_reason, m_hpRatios)
+};
 using PresentationPayload = std::variant<Sound,
                                          CameraShake,
                                          DisplaySpine,
@@ -158,7 +178,8 @@ using PresentationPayload = std::variant<Sound,
                                          WhiteFrame,
                                          PartnerRageChanged,
                                          BuffSpine,
-                                         RoomWarning>;
+                                         RoomWarning,
+                                         PvpRoundEnd>;
 // 由逻辑帧产生、仅供表现层消费的事件。
 struct PresentationEvent
 {

@@ -92,6 +92,12 @@ struct RoomState
     int32_t m_levelBonus = 0, m_maxRevives = 0, m_usedRevives = 0;
     // 首领、KO 和等待复活标记。
     bool m_haveBoss = false, m_ko = false, m_reviving = false;
+    // 是否为 PVP 决斗，进入房间时由 WorldSetup 写入。
+    bool m_pvp = false;
+    // PVP 决斗限时（秒），超时按剩余生命比例判定胜负。
+    Fixed m_pvpTimeLimit;
+    // PVP 获胜阵营位；零表示平局或尚未产生胜者。
+    int32_t m_winnerCamp = 0;
     // 最终结果和返回城镇请求。
     bool m_victory = false, m_failure = false, m_returnToTown = false;
     // 参与世界快照的房间字段。
@@ -127,6 +133,9 @@ struct RoomState
                m_haveBoss,
                m_ko,
                m_reviving,
+               m_pvp,
+               m_pvpTimeLimit,
+               m_winnerCamp,
                m_victory,
                m_failure,
                m_returnToTown)

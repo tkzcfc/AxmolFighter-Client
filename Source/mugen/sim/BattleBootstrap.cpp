@@ -46,6 +46,15 @@ Entity bootstrapBattle(World& world, const WorldSetup& setup)
         MG_ASSERT(hero.value != 0 && "Battle bootstrap failed to spawn player");
         return {};
     }
+    // PVP 决斗按出生生命倍率统一缩放玩家生命与上限。
+    if (setup.m_pvp)
+    {
+        auto& attributes    = world.ecs().get<Attributes>(hero);
+        attributes.basic[4] *= setup.m_pvpHpScale;
+        auto& vitals = world.ecs().get<Vitals>(hero);
+        vitals.maxHp = attributes.maxHp();
+        vitals.hp    = vitals.maxHp;
+    }
     if (!room::RoomDirector(world).enter(*room, setup.m_stageId, setup.m_copyId))
     {
         MG_LOG_E("Battle bootstrap failed to enter room {}", setup.roomId);

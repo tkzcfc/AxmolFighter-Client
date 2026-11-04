@@ -3,6 +3,7 @@
 #include "DamageCalculator.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/role/Role.h"
+#include "mugen/sim/role/RoleCombo.h"
 #include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/effect/Effect.h"
 #include "mugen/sim/trace/TraceSink.h"
@@ -270,8 +271,11 @@ void HitResolver::_endHit(Entity target, HitTrigger data, const conf::EffectConf
         m_world.emit(target, HurtNumber{data.m_damage.toInt()});
     const auto owner = DamageCalculator(m_world).finalOwner(data.m_attacker);
     ai::AiDriver(m_world, target).addThreat(data.m_attacker, data.m_damage);
-    if (const auto* combo = ecs.tryGet<RoleHitState>(owner))
-        ecs.get<RoleHitState>(owner).m_comboExp += row.comboExp * combo->m_comboScale;
+    if (ecs.tryGet<RoleHitState>(owner))
+    {
+        const Fixed exp = row.comboExp * ecs.get<RoleHitState>(owner).m_parameterExp;
+        role::RoleCombo(m_world, owner).add(exp, target);
+    }
     const auto maxHp = ecs.get<Vitals>(target).maxHp;
     if (maxHp > Fixed{})
         _recoverEp(target, std::min("100"_fx * data.m_damage / maxHp, "100"_fx) * conf::kCrazyFromHurtValue);

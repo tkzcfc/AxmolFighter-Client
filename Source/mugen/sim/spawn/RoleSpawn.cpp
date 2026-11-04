@@ -215,6 +215,7 @@ Entity RoleSpawner::spawnRole(const RoleSpawnParams& params)
     vitals.hp = vitals.maxHp = attributes.maxHp();
     ecs.add(entity, vitals);
     ecs.add(entity, ExtraState{});
+    ecs.add(entity, BuffExternalConditions{});
     ecs.add(entity, ControlEventQueue{});
     ecs.add(entity, Displacement{});
     ecs.add(entity, RoleBrain{});

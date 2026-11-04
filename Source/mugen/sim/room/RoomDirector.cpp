@@ -6,6 +6,7 @@
 #include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/hit/HitResolver.h"
 #include <algorithm>
+#include <map>
 
 namespace mugen::sim::room
 {
@@ -121,7 +122,8 @@ void RoomDirector::_enterState(State state)
         setExpectRoomState(room.m_config.roomType == 0 ? State::FightEnd : State::FightBalance);
         break;
     case State::FightBalance:
-        if (room.m_victory)
+        // PVP 失败也推进到结束状态，保证决斗双方都能收尾。
+        if (room.m_victory || (room.m_pvp && room.m_failure))
             setExpectRoomState(State::FightFinish);
         break;
     case State::FightFinish:
@@ -171,6 +173,12 @@ bool RoomDirector::enter(const conf::RoomConfig& config, int32_t stageId, int32_
         room.m_maxRevives = copy->maxRevive;
         room.m_levelBonus = copy->addLevel;
     }
+    // PVP 决斗禁用复活，限时与获胜阵营由世界设置初始化。
+    room.m_pvp          = m_world.setup().m_pvp;
+    room.m_pvpTimeLimit = m_world.setup().m_pvpTimeLimit;
+    room.m_winnerCamp   = 0;
+    if (room.m_pvp)
+        room.m_maxRevives = 0;
     if (const auto* stage = conf::Config::instance().find<conf::StageConfig>(stageId))
         if (config.battleRuleType == 1)
             room.m_limitSeconds = Fixed::fromInt(stage->openTime);
@@ -217,7 +225,8 @@ void RoomDirector::commands(const FrameInput& input)
         {
             const auto& slots = m_world.ecs().singleton<PlayerSlots>().entities;
             const auto found  = slots.find(revive->slot);
-            if (found == slots.end() || !room.m_reviving || room.m_failure || room.m_usedRevives >= room.m_maxRevives)
+            if (found == slots.end() || !room.m_reviving || room.m_failure || room.m_pvp ||
+                room.m_usedRevives >= room.m_maxRevives)
                 continue;
             if (m_world.ecs().get<RoleStatus>(found->second).isDeath())
             {
@@ -280,6 +289,11 @@ void RoomDirector::update()
     }
     if (room.m_state != State::Process || room.m_failure || room.m_victory)
         return;
+    if (room.m_pvp)
+    {
+        _updatePvp();
+        return;
+    }
     if (!room.m_reviving && !room.m_ko && room.m_haveBoss && room.m_config.roomType != 0 &&
         room.m_config.battleRuleType < 2)
     {
@@ -352,5 +366,98 @@ void RoomDirector::update()
             setExpectRoomState(State::FightVictory);
     }
     room.m_gameSeconds += m_world.ecs().singleton<WorldClock>().dtSec;
+}
+// 推进 PVP 决斗：先判定 KO（一方阵营英雄被清空），再判定超时（按剩余生命比例）。
+void RoomDirector::_updatePvp()
+{
+    auto& room      = m_world.ecs().singleton<sim::RoomState>();
+    room.m_gameSeconds += m_world.ecs().singleton<WorldClock>().dtSec;
+    if (room.m_failure || room.m_victory)
+        return;
+    // KO 已发生：等待慢放结束后按获胜阵营结算。
+    if (room.m_ko)
+    {
+        if (!m_world.ecs().singleton<SlowMotion>().m_ko.m_active)
+        {
+            const int32_t localCamp = m_world.ecs().get<RoleIdentity>(_hero()).camp;
+            if (room.m_winnerCamp != 0 && room.m_winnerCamp == localCamp)
+                setExpectRoomState(State::FightVictory);
+            else
+                setExpectRoomState(State::FightFailure);
+        }
+        return;
+    }
+    // 统计各阵营存活玩家英雄数量及剩余生命比例。
+    std::map<int32_t, int32_t> living, present;
+    std::map<int32_t, Fixed> hpSum, maxHpSum;
+    m_world.ecs().each<RoleIdentity, RoleStatus, Vitals>(
+        [&](Entity, const RoleIdentity& role, const RoleStatus& status, const Vitals& vitals) {
+            if (role.roleType != 1 || !role.playerSlot)
+                return;
+            ++present[role.camp];
+            if (!status.isDeath() && vitals.hp > Fixed{})
+                ++living[role.camp];
+            hpSum[role.camp] += vitals.hp;
+            maxHpSum[role.camp] += vitals.maxHp;
+        });
+    std::map<int32_t, Fixed> ratios;
+    for (const auto& [camp, hp] : hpSum)
+        ratios[camp] = maxHpSum[camp] > Fixed{} ? hp / maxHpSum[camp] : Fixed{};
+    // KO：有英雄的阵营中恰好只剩一个存活时，该阵营获胜。
+    int32_t winnerCamp = 0;
+    int32_t aliveCamps = 0;
+    bool anyEliminated = false;
+    for (const auto& [camp, count] : present)
+    {
+        if (living[camp] > 0)
+        {
+            ++aliveCamps;
+            winnerCamp = camp;
+        }
+        else if (count > 0)
+            anyEliminated = true;
+    }
+    if (anyEliminated && aliveCamps == 1)
+    {
+        room.m_ko         = true;
+        room.m_winnerCamp = winnerCamp;
+        m_world.ecs().singleton<SlowMotion>().m_ko.start();
+        m_world.emit({}, RoomStateChanged{static_cast<int32_t>(State::FightKo)});
+        m_world.ecs().each<RoleIdentity, Vitals>([&](Entity, const RoleIdentity& role, Vitals& vitals) {
+            if (role.roleType == 1)
+                vitals.m_beHitEnabled = false;
+        });
+        m_world.emit({}, PvpRoundEnd{winnerCamp, PvpRoundEndReason::Ko, ratios});
+        return;
+    }
+    // 超时：剩余生命比例高者胜；相等判为平局，本地视为失败。
+    if (room.m_gameSeconds > room.m_pvpTimeLimit)
+    {
+        int32_t timeoutWinner = 0;
+        Fixed bestRatio;
+        bool tie = false;
+        for (const auto& [camp, ratio] : ratios)
+        {
+            if (present[camp] == 0)
+                continue;
+            if (ratio > bestRatio)
+            {
+                bestRatio     = ratio;
+                timeoutWinner = camp;
+                tie           = false;
+            }
+            else if (ratio == bestRatio)
+                tie = true;
+        }
+        if (tie)
+            timeoutWinner = 0;
+        room.m_winnerCamp = timeoutWinner;
+        m_world.emit({}, PvpRoundEnd{timeoutWinner, PvpRoundEndReason::Timeout, ratios});
+        const int32_t localCamp = m_world.ecs().get<RoleIdentity>(_hero()).camp;
+        if (timeoutWinner != 0 && timeoutWinner == localCamp)
+            setExpectRoomState(State::FightVictory);
+        else
+            setExpectRoomState(State::FightFailure);
+    }
 }
 }  // namespace mugen::sim::room
