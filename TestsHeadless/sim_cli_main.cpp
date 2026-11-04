@@ -5,6 +5,7 @@
 #include "mugen/conf/TypeConversions.h"
 #include "mugen/sim/BattleBootstrap.h"
 #include "mugen/sim/Replay.h"
+#include "mugen/sim/rollback/RollbackSession.h"
 #include "mugen/sim/room/RoomDirector.h"
 #include "mugen/sim/spawn/RoleSpawn.h"
 #include "mugen/sim/trace/TraceSink.h"
@@ -286,6 +287,61 @@ void benchPrintEntities(World& world)
               << " AiAgent=" << benchCount<AiAgent>(world) << " ColliderState=" << benchCount<ColliderState>(world)
               << " EffectState=" << benchCount<EffectState>(world) << " MotionState=" << benchCount<MotionState>(world)
               << '\n';
+}
+// 用模拟延迟驱动联机回滚会话，校验最终确认帧哈希并打印统计。
+int rollbackSim(int32_t roomId, int playerCount, uint64_t frames, uint64_t lag, uint64_t seed)
+{
+    World reference = benchWorld(roomId, seed, playerCount);
+
+    std::vector<FrameInput> script;
+    script.reserve(frames);
+    for (uint64_t f = 1; f <= frames; ++f)
+        script.push_back(benchInput(f, playerCount));
+
+    std::vector<uint64_t> hashes;
+    hashes.reserve(frames);
+    for (const auto& input : script)
+    {
+        reference.tick(input);
+        hashes.push_back(reference.hash());
+    }
+
+    rollback::RollbackSession session(0, static_cast<uint32_t>(playerCount));
+    session.setWorld(benchWorld(roomId, seed, playerCount));
+
+    for (uint64_t frame = 1; frame <= frames; ++frame)
+    {
+        const auto& frameInput = script[frame - 1];
+        for (const auto& player : frameInput.players)
+            if (player.slot == 0)
+                session.addLocalInput(frame, player);
+        for (int slot = 0; slot < playerCount; ++slot)
+        {
+            const uint64_t confirmed = frame >= lag + static_cast<uint64_t>(slot)
+                                           ? frame - lag - static_cast<uint64_t>(slot)
+                                           : 0;
+            if (confirmed >= 1)
+                for (const auto& player : script[confirmed - 1].players)
+                    if (player.slot == static_cast<uint32_t>(slot))
+                        session.addConfirmedInput(confirmed, static_cast<uint32_t>(slot), player);
+        }
+        if (!session.advanceTo(frame))
+        {
+            std::cout << "rollback-sim stalled at frame " << frame << '\n';
+            break;
+        }
+    }
+
+    const uint64_t confirmed = session.confirmedFrame();
+    const bool match         = confirmed > 0 && session.hashAt(confirmed) == hashes[confirmed - 1];
+    std::cout << "rollback-sim room=" << roomId << " players=" << playerCount << " frames=" << frames
+              << " lag=" << lag << " seed=" << seed << '\n';
+    std::cout << "confirmed frame " << confirmed << " hash " << std::hex << session.hashAt(confirmed) << std::dec
+              << (match ? " MATCH" : " MISMATCH") << '\n';
+    std::cout << "stats rollbacks=" << session.stats().rollbacks << " maxDepth=" << session.stats().maxDepth
+              << " resimFrames=" << session.stats().resimFrames << " stalls=" << session.stats().stalls
+              << " mispredictions=" << session.stats().mispredictions << '\n';
+    return match ? 0 : 1;
 }
 }  // namespace
 int main(int argc, char** argv)
@@ -691,12 +747,45 @@ int main(int argc, char** argv)
                 benchPrintStat("rollback N=" + std::to_string(rollbackN[ni]), benchSummarize(rollbackUs[ni]));
             return 0;
         }
+        if (argc >= 2 && std::string_view(argv[1]) == "rollback-sim")
+        {
+            int32_t roomId     = 30002;
+            int playerCount    = 2;
+            uint64_t frames    = 300;
+            uint64_t lag       = 4;
+            uint64_t seed      = 31;
+            for (int index = 2; index < argc; index += 2)
+            {
+                if (index + 1 >= argc)
+                    throw std::invalid_argument(
+                        "Expected rollback-sim [--room N] [--players N] [--frames N] [--lag N] [--seed N]");
+                if (std::string_view(argv[index]) == "--room")
+                    roomId = static_cast<int32_t>(number(argv[index + 1]));
+                else if (std::string_view(argv[index]) == "--players")
+                    playerCount = static_cast<int>(number(argv[index + 1]));
+                else if (std::string_view(argv[index]) == "--frames")
+                    frames = number(argv[index + 1]);
+                else if (std::string_view(argv[index]) == "--lag")
+                    lag = number(argv[index + 1]);
+                else if (std::string_view(argv[index]) == "--seed")
+                    seed = number(argv[index + 1]);
+                else
+                    throw std::invalid_argument(
+                        "Expected rollback-sim [--room N] [--players N] [--frames N] [--lag N] [--seed N]");
+            }
+            if (playerCount < 1 || playerCount > kMaxBattlePlayers)
+                throw std::invalid_argument("--players must be between 1 and " + std::to_string(kMaxBattlePlayers));
+            if (frames == 0)
+                throw std::invalid_argument("--frames must be positive");
+            return rollbackSim(roomId, playerCount, frames, lag, seed);
+        }
         std::cerr
             << "usage: mugen_sim_cli --version | trace-diff [--mode full|effects] [--allow file] <a.trace> <b.trace> | "
                "replay <file> [--hash-every N] [--compare hashfile] [--trace file] [--revision rev] [--ai on|off] | "
                "record-room <roomId> --frames N <file> [--ai on|off] | "
                "run-room <roomId> --frames N [--script file] [--trace file] [--revision rev] [--ai on|off] | "
-               "bench-rollback [--room N] [--players N] [--samples N] [--warmup N]\n"
+               "bench-rollback [--room N] [--players N] [--samples N] [--warmup N] | "
+               "rollback-sim [--room N] [--players N] [--frames N] [--lag N] [--seed N]\n"
                "script rows: frame slot controlEvent quadrant angleX1000 pressType\n";
         return 1;
     }

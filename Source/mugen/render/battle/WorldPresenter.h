@@ -187,6 +187,11 @@ public:
 
     void loadMap(const std::string& mapKey);
     void present(sim::World& world, float interpolationAlpha, float renderDelta);
+    // 消费回滚会话去重后的表现事件列表（联机路径），不做 seq 单调去重。
+    void presentEvents(const std::vector<sim::PresentationEvent>& events,
+                       sim::World& world,
+                       float interpolationAlpha,
+                       float renderDelta);
     void setFollowEntity(Entity entity);
     void setPet(int32_t petId);
     void setEntityPet(Entity entity, int32_t petId);
@@ -200,6 +205,9 @@ public:
     bool refreshLocalPlayerAppearance(sim::World& world);
 
 private:
+    // 逐条消费表现事件；dedupeBySeq 为真时按全局单调 seq 去重（离线路径）。
+    void consumeEvents(const std::vector<sim::PresentationEvent>& events, sim::World& world, bool dedupeBySeq);
+
     // 世界内容层，必须先于其余成员构造
     ax::Node& m_worldLayer;
     AvatarPresenter m_avatars;

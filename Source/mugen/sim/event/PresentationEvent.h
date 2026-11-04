@@ -166,12 +166,14 @@ struct PresentationEvent
     uint64_t frame = 0;
     // 事件所属实体。
     Entity entity;
-    // 同一帧内的稳定顺序号。
+    // 同一帧内的稳定顺序号，每帧从零重计；跨回滚稳定，供表现层按帧去重。
+    uint64_t ordinal = 0;
+    // 全局单调顺序号，供追踪输出使用。
     uint64_t seq = 0;
     // 事件具体内容。
     PresentationPayload payload;
     // 参与事件快照的事件字段。
-    MG_REFLECT(PresentationEvent, frame, entity, seq, payload)
+    MG_REFLECT(PresentationEvent, frame, entity, ordinal, seq, payload)
 };
 // 每场世界独有的表现事件队列。
 struct PresentationEvents

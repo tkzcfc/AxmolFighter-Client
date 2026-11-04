@@ -670,10 +670,31 @@ void WorldPresenter::loadMap(const std::string& mapKey)
 void WorldPresenter::present(sim::World& world, float interpolationAlpha, float renderDelta)
 {
     m_avatars.present(world, std::clamp(interpolationAlpha, 0.0f, 1.0f), renderDelta);
-    const auto& events = world.ecs().singleton<sim::PresentationEvents>().events;
+    consumeEvents(world.ecs().singleton<sim::PresentationEvents>().events, world, true);
+    m_camera.follow(world, m_followEntity);
+    m_camera.update(renderDelta);
+    m_debugDraw.present(world);
+}
+
+void WorldPresenter::presentEvents(const std::vector<sim::PresentationEvent>& events,
+                                   sim::World& world,
+                                   float interpolationAlpha,
+                                   float renderDelta)
+{
+    m_avatars.present(world, std::clamp(interpolationAlpha, 0.0f, 1.0f), renderDelta);
+    consumeEvents(events, world, false);
+    m_camera.follow(world, m_followEntity);
+    m_camera.update(renderDelta);
+    m_debugDraw.present(world);
+}
+
+void WorldPresenter::consumeEvents(const std::vector<sim::PresentationEvent>& events,
+                                   sim::World& world,
+                                   bool dedupeBySeq)
+{
     for (const auto& event : events)
     {
-        if (event.seq < m_lastEventSequence)
+        if (dedupeBySeq && event.seq < m_lastEventSequence)
             continue;
         m_camera.consume(event);
         m_sound.consume(event);
@@ -682,11 +703,9 @@ void WorldPresenter::present(sim::World& world, float interpolationAlpha, float 
             m_avatars.setEntityIntensity(event.entity.value, renderValue(intensity->m_value));
         if (const auto* partnerRage = std::get_if<sim::PartnerRageChanged>(&event.payload))
             m_avatars.onPartnerRageChanged(world, event.entity, partnerRage->m_active);
-        m_lastEventSequence = event.seq + 1;
+        if (dedupeBySeq)
+            m_lastEventSequence = event.seq + 1;
     }
-    m_camera.follow(world, m_followEntity);
-    m_camera.update(renderDelta);
-    m_debugDraw.present(world);
 }
 
 NS_MG_END

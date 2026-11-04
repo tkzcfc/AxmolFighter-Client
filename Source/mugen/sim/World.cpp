@@ -63,7 +63,8 @@ void World::destroy(Entity entity)
 void World::emit(Entity entity, PresentationPayload payload)
 {
     auto& events = m_ecs.singleton<PresentationEvents>();
-    events.events.push_back({m_ecs.singleton<WorldClock>().frame, entity, events.nextSeq++, std::move(payload)});
+    events.events.push_back({m_ecs.singleton<WorldClock>().frame, entity, static_cast<uint64_t>(events.events.size()),
+                             events.nextSeq++, std::move(payload)});
 }
 
 // 按确定输入顺序应用木偶、系统和玩家控制事件。
