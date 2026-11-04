@@ -5,6 +5,7 @@
 #include "tables/ArmamentTables.h"
 #include "tables/PetTables.h"
 #include "tables/PartnerTables.h"
+#include "tables/CreateRoleTables.h"
 #include "tables/AiTables.h"
 #include "tables/BuffTables.h"
 #include "tables/EntityTables.h"

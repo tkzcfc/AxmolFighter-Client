@@ -1,8 +1,7 @@
 #pragma once
 
 #include "ui/widgets/common/Panel.h"
-#include "ui/UIMediaPlayer.h"
-#include "ui/UiConfig.h"
+#include "mugen/conf/GameDef.h"
 
 #include <array>
 
@@ -39,16 +38,11 @@ protected:
 
     void onClickRoleTypeButton(EventContext* context, int32_t index);
 
-    void onClickProfessionButton(EventContext* context, int32_t index);
-
 private:
     GComponent* m_roleTypeSelector = nullptr;
-    std::array<GButton*, kOpenCharacterCount> m_roleTypeButtons{};
+    std::array<GButton*, mugen::CharacterClass::kCount> m_roleTypeButtons{};
 
-    int32_t m_curRoleTypeIndex   = 0;
-    int32_t m_curProfessionIndex = 0;
-
-    ax::ui::MediaPlayer* m_mediaPlayer = nullptr;
+    int32_t m_curRoleTypeIndex = 0;
 };
 
 }  // namespace gameui

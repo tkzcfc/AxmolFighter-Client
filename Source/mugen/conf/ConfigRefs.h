@@ -44,4 +44,13 @@
                                                                                             equip, specialAbilityId,   \
                                                                                             special_ability)           \
                                                                                             X(fashion, specialability, \
-                                                                                              special_ability)
+                                                                                              special_ability)         \
+                                                                                                X(create_role,         \
+                                                                                                  previewSpineId,      \
+                                                                                                  res_spine)           \
+                                                                                                    X(create_role,     \
+                                                                                                      hairLooks,       \
+                                                                                                      res_fashion)     \
+                                                                                                        X(create_role, \
+                                                                                                          clothLooks,  \
+                                                                                                          res_fashion)

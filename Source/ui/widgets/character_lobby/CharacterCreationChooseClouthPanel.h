@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ui/widgets/common/Panel.h"
-#include "ui/UIMediaPlayer.h"
 #include "mugen/conf/GameDef.h"
 
 namespace gameui
@@ -38,7 +37,7 @@ protected:
 
     void onClickBackButton(EventContext* context);
 
-    bool isPartnerClass() const;
+    bool canSelectFashion() const;
 
 private:
     GList* m_choiceHairList          = nullptr;

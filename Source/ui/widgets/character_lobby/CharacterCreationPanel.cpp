@@ -1,12 +1,10 @@
 #include "CharacterCreationPanel.h"
-#include "ui/screens/CharacterLobbyScreen.h"
 #include "ui/widgets/common/MessageDialog.h"
-#include "ui/UiConfig.h"
 #include "mugen/render/spine/MgSkeletonAnimation.h"
-#include "mugen/conf/GameDef.h"
+#include "mugen/conf/ReflectedConfig.h"
 #include "core/audio/AudioManager.h"
-#include <net/client_game.pb.h>
 #include "CharacterCreationChooseClouthPanel.h"
+#include "fairygui/GLoader3D.h"
 
 #include <cstring>
 
@@ -16,12 +14,22 @@ namespace gameui
 namespace
 {
 
-constexpr int32_t kHeroRoleTypeCount = 4;
+constexpr int32_t kRoleTypeCount = mugen::CharacterClass::kCount;
 
-bool isPartnerClass(mugen::CharacterClass cls)
+int32_t classIdFromIndex(int32_t index)
 {
-    return cls == mugen::CharacterClass::kPartnerWind || cls == mugen::CharacterClass::kPartnerQueen ||
-           cls == mugen::CharacterClass::kPartnerRage;
+    return index + 1;
+}
+
+const mugen::conf::CreateRoleConfig* findCreateRole(int32_t classId)
+{
+    return mugen::conf::Config::instance().find<mugen::conf::CreateRoleConfig>(classId);
+}
+
+bool isCreateRoleEnabled(int32_t classId)
+{
+    const auto* row = findCreateRole(classId);
+    return row && row->enabled;
 }
 
 }  // namespace
@@ -35,45 +43,19 @@ void CharacterCreationPanel::onCreate()
 
     auto container = this->getChild<GLoader>("container")->getComponent();
 
-    // 职业选择列表（兼容未重发布的旧 .fui：若缺失伙伴按钮 n4..n6，记录警告并隐藏伙伴选项）
-    m_roleTypeSelector    = container->getChild("roleTypeSelector")->as<GComponent>();
-    bool missingPartnerUi = false;
-    for (int32_t i = 0; i < kOpenCharacterCount; ++i)
+    m_roleTypeSelector = container->getChild("roleTypeSelector")->as<GComponent>();
+    for (int32_t i = 0; i < kRoleTypeCount; ++i)
     {
-        auto* child                                = m_roleTypeSelector->getChild("n" + std::to_string(i));
-        auto* btn                                  = dynamic_cast<GButton*>(child);
+        auto* child                               = m_roleTypeSelector->getChild("n" + std::to_string(i));
+        auto* btn                                 = dynamic_cast<GButton*>(child);
         m_roleTypeButtons[static_cast<size_t>(i)] = btn;
+        // 不存在的按钮则表示该职业暂未开放，忽略
         if (!btn)
         {
-            if (i >= kHeroRoleTypeCount)
-                missingPartnerUi = true;
-            else
-                AXLOGW("CharacterCreationPanel: hero role button n{} is missing in UI package", i);
+            AXLOGW("CharacterCreationPanel: hero role button n{} is missing in UI package", i);
             continue;
         }
-        if (i >= kHeroRoleTypeCount)
-            btn->setIcon(kRoleIntros[i].professions[0].icon);
         this->addClickListener(btn, [this, i](EventContext* context) { this->onClickRoleTypeButton(context, i); });
-    }
-
-    if (missingPartnerUi)
-    {
-        AXLOGW("CharacterCreationPanel: partner buttons n4..n6 missing in published UI package; hiding partner options");
-        for (int32_t i = kHeroRoleTypeCount; i < kOpenCharacterCount; ++i)
-        {
-            if (auto* btn = m_roleTypeButtons[static_cast<size_t>(i)])
-            {
-                btn->setVisible(false);
-                btn->setTouchable(false);
-            }
-        }
-    }
-
-    for (int32_t i = 0; i < kProfessionCount; ++i)
-    {
-        auto professionButton = container->getChild("professionButton" + std::to_string(i))->as<GButton>();
-        this->addClickListener(professionButton,
-                               [this, i](EventContext* context) { this->onClickProfessionButton(context, i); });
     }
 
     // 创建角色按钮
@@ -90,7 +72,7 @@ void CharacterCreationPanel::onDestroy()
 
 void CharacterCreationPanel::updateUI()
 {
-    for (int32_t i = 0; i < kOpenCharacterCount; ++i)
+    for (int32_t i = 0; i < kRoleTypeCount; ++i)
     {
         auto* btn = m_roleTypeButtons[static_cast<size_t>(i)];
         if (!btn || !btn->isVisible())
@@ -98,73 +80,64 @@ void CharacterCreationPanel::updateUI()
         btn->setTouchable(i != m_curRoleTypeIndex);
         btn->setSelected(i == m_curRoleTypeIndex);
     }
-    const auto curClass       = static_cast<mugen::CharacterClass>(m_curRoleTypeIndex + 1);
-    const bool isPartner      = isPartnerClass(curClass);
-    auto& curRoleConfig       = kRoleIntros[m_curRoleTypeIndex];
-    auto& curProfessionConfig = curRoleConfig.professions[m_curProfessionIndex];
-    auto container            = this->getChild<GLoader>("container")->getComponent();
 
-    // 伙伴不可转职，仅展示初始职业按钮，隐藏觉醒方向标签与转职按钮
-    if (auto* awakenLabel = container->getChild("n3"))
-        awakenLabel->setVisible(!isPartner);
-
-    for (int32_t i = 0; i < kProfessionCount; ++i)
+    const int32_t classId = classIdFromIndex(m_curRoleTypeIndex);
+    const auto* row       = findCreateRole(classId);
+    if (!row)
     {
-        auto professionButton = container->getChild("professionButton" + std::to_string(i))->as<GButton>();
-        const bool showBtn    = !isPartner || i == 0;
-        professionButton->setVisible(showBtn);
-        professionButton->setTouchable(showBtn && i != m_curProfessionIndex);
-        professionButton->setSelected(i == m_curProfessionIndex);
-        professionButton->setText(curRoleConfig.professions[i].name);
+        AXLOGW("CharacterCreationPanel: create_role row missing for class {}", classId);
+        return;
     }
 
-    // 属性描述图片
-    auto loaderAttr = container->getChild("loaderAttr")->as<GLoader>();
-    loaderAttr->setURL(curRoleConfig.attributeIcon);
+    auto container = this->getChild<GLoader>("container")->getComponent();
 
-    // 职业名称
-    auto loaderName = container->getChild("loaderName")->as<GLoader>();
-    loaderName->setURL(curProfessionConfig.icon);
+    if (auto* awakenLabel = container->getChild("n3"))
+        awakenLabel->setVisible(false);
 
-    // 职业描述
+    for (int32_t i = 0; i < 3; ++i)
+    {
+        if (auto* professionButton = container->getChild("professionButton" + std::to_string(i)))
+            professionButton->setVisible(false);
+    }
+
+    auto textName = container->getChild("textName")->as<GTextField>();
+    textName->setText(row->name);
+
     auto textDesc = container->getChild("textDesc")->as<GTextField>();
-    textDesc->setText(curProfessionConfig.description);
+    textDesc->setText(row->description);
 
-    // 操作难度
     auto cStar = container->getController("c_star");
-    cStar->setSelectedIndex(curProfessionConfig.difficulty);
+    cStar->setSelectedIndex(row->difficulty);
 
-    // 职业模型（异步加载；加载期间切换职业则丢弃过期结果）
     auto loaderAvatar = container->getChild("loaderAvatar")->as<GLoader3D>();
     loaderAvatar->setContent(nullptr);
 
     auto weakThis = this->weak_from_this();
     mugen::MgSkeletonAnimation::createFromCacheAsync(
-        curProfessionConfig.spine.id,
-        [weakThis, this, loaderAvatar, roleTypeIndex = m_curRoleTypeIndex,
-         professionIndex = m_curProfessionIndex](mugen::MgSkeletonAnimation* skeletonAnimation) {
+        row->previewSpineId,
+        [weakThis, this, loaderAvatar, roleTypeIndex = m_curRoleTypeIndex](mugen::MgSkeletonAnimation* skeletonAnimation) {
         if (!skeletonAnimation)
         {
             AXLOGW("CharacterCreationPanel: async profession spine failed");
             return;
         }
-        // 界面已关闭或销毁
         if (weakThis.expired())
-        {
             return;
-        }
-        if (roleTypeIndex != m_curRoleTypeIndex || professionIndex != m_curProfessionIndex)
-            return;  // 加载期间已切换职业
+        if (roleTypeIndex != m_curRoleTypeIndex)
+            return;
 
-        const auto& spine = kRoleIntros[m_curRoleTypeIndex].professions[m_curProfessionIndex].spine;
+        const auto* loadedRow = findCreateRole(classIdFromIndex(m_curRoleTypeIndex));
+        if (!loadedRow)
+            return;
+
         skeletonAnimation->setPosition(ax::Vec2(loaderAvatar->getWidth() * 0.5f, -loaderAvatar->getHeight()) +
-                                       ax::Vec2(spine.offsetX, spine.offsetY));
-        skeletonAnimation->setScale(spine.scaleX, spine.scaleY);
-        // 有出现动画则先播放出现动画，否则直接循环播放待机动画
-        if (m_curProfessionIndex == 0 && skeletonAnimation->findAnimation("chuxian"))
+                                       ax::Vec2(loadedRow->previewOffsetX.toFloatForRender(),
+                                                loadedRow->previewOffsetY.toFloatForRender()));
+        skeletonAnimation->setScale(loadedRow->previewScaleX.toFloatForRender(),
+                                    loadedRow->previewScaleY.toFloatForRender());
+        if (skeletonAnimation->findAnimation("chuxian"))
         {
-            std::string animationName = spine.animationName;
-
+            std::string animationName = loadedRow->previewAnim;
             skeletonAnimation->setAnimation(0, "chuxian", false);
             skeletonAnimation->setCompleteListener(
                 [skeletonAnimation, animationName](const mugen::MgTrackEntry& entry) {
@@ -177,30 +150,23 @@ void CharacterCreationPanel::updateUI()
         }
         else
         {
-            skeletonAnimation->setAnimation(0, spine.animationName, true);
+            skeletonAnimation->setAnimation(0, loadedRow->previewAnim, true);
         }
 
         loaderAvatar->setContent(skeletonAnimation);
     });
-
-    // 视频
-    if (m_mediaPlayer == nullptr)
-    {
-        auto loaderVedio = container->getChild("loaderVedio")->as<GLoader3D>();
-        m_mediaPlayer    = ax::ui::MediaPlayer::create();
-        m_mediaPlayer->setContentSize(loaderVedio->getSize());
-        m_mediaPlayer->setPosition(ax::Vec2(loaderVedio->getWidth() * 0.5f, -loaderVedio->getHeight() * 0.5f));
-        m_mediaPlayer->setLooping(true);
-        loaderVedio->setContent(m_mediaPlayer);
-    }
-    m_mediaPlayer->setURL("file://" + ax::FileUtils::getInstance()->fullPathForFilename(curProfessionConfig.video));
-    m_mediaPlayer->play();
 }
 
 void CharacterCreationPanel::onClickCreateButton(EventContext* context)
 {
-    getUIManager()->open<CharacterCreationChooseClouthPanel>(
-        static_cast<mugen::CharacterClass>(m_curRoleTypeIndex + 1));
+    const int32_t classId = classIdFromIndex(m_curRoleTypeIndex);
+    if (!isCreateRoleEnabled(classId))
+    {
+        MessageDialog::show("敬请期待");
+        return;
+    }
+
+    getUIManager()->open<CharacterCreationChooseClouthPanel>(static_cast<mugen::CharacterClass>(classId));
     this->close();
 }
 
@@ -211,7 +177,7 @@ void CharacterCreationPanel::onClickBackButton(EventContext* context)
 
 void CharacterCreationPanel::onClickRoleTypeButton(EventContext* context, int32_t index)
 {
-    if (index >= kOpenCharacterCount || (index + 1) == mugen::CharacterClass::kFighter)
+    if (index < 0 || index >= kRoleTypeCount || !isCreateRoleEnabled(classIdFromIndex(index)))
     {
         MessageDialog::show("敬请期待");
         return;
@@ -220,16 +186,7 @@ void CharacterCreationPanel::onClickRoleTypeButton(EventContext* context, int32_
     if (m_curRoleTypeIndex == index)
         return;
 
-    m_curRoleTypeIndex   = index;
-    m_curProfessionIndex = 0;
-    updateUI();
-}
-
-void CharacterCreationPanel::onClickProfessionButton(EventContext* context, int32_t index)
-{
-    if (m_curProfessionIndex == index)
-        return;
-    m_curProfessionIndex = index;
+    m_curRoleTypeIndex = index;
     updateUI();
 }
 
