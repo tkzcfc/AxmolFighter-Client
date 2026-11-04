@@ -252,7 +252,7 @@ enum CharacterClass : int8_t
     kPartnerWind,
     kPartnerQueen,
     kPartnerRage,
-    kCount = 4
+    kCount = 7
 };
 // 时装可装备的外观部位。
 enum class FashionPosition : int32_t

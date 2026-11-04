@@ -1,5 +1,5 @@
 #include "AppContext.h"
-#include "ui/core/AudioManager.h"
+#include "core/audio/AudioManager.h"
 #include "ui/core/FGUIPackageManager.h"
 #include "ui/widgets/common/MessageDialog.h"
 #include "net/client_game.pb.h"
@@ -46,7 +46,7 @@ void AppContext::create()
     fairygui::UIConfig::registerFont("font-title", "fonts/font-title.ttf");
     fairygui::UIConfig::registerFont("fangzhengzhunyuan_GBK", "fonts/fangzhengzhunyuan_GBK.ttf");
     fairygui::UIConfig::onMusicCallback = [](const std::string& path, float volumnScale) {
-        gameui::AudioManager::getInstance()->playUISFX(path, volumnScale);
+        game::AudioManager::getInstance()->playUISFX(path, volumnScale);
     };
 
     AXASSERT(!s_instance, "AppContext already created");
@@ -304,5 +304,4 @@ gameui::FeatureProgressSync* AppContext::featureProgressSync()
 {
     return m_featureProgressSync.get();
 }
-
 

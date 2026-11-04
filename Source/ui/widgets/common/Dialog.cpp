@@ -1,5 +1,5 @@
 #include "Dialog.h"
-#include "ui/core/AudioManager.h"
+#include "core/audio/AudioManager.h"
 
 namespace gameui
 {
@@ -23,7 +23,7 @@ void Dialog::doShowAnimation(std::function<void()> done)
         return;
     }
 
-    AudioManager::getInstance()->playUISFX("ui://Common_Base/ui_open_3");
+    game::AudioManager::getInstance()->playUISFX("ui://Common_Base/ui_open_3");
 
     m_content->setScale(0.0f, 0.0f);
     GTween::toVec2(ax::Vec2(0.0f, 0.0f), ax::Vec2(1.0f, 0.3f), SCALE_TIME)
@@ -44,7 +44,7 @@ void Dialog::doHideAnimation(std::function<void()> done)
         done();
         return;
     }
-    AudioManager::getInstance()->playUISFX("ui://Common_Base/ui_close_3");
+    game::AudioManager::getInstance()->playUISFX("ui://Common_Base/ui_close_3");
 
     GTween::toFloat(m_content->getScaleY(), 0.3f, VWETICAL_TIME)
         ->setEase(EaseType::Linear)

@@ -2,6 +2,9 @@
 
 #include "ui/widgets/common/Panel.h"
 #include "ui/UIMediaPlayer.h"
+#include "ui/UiConfig.h"
+
+#include <array>
 
 namespace gameui
 {
@@ -14,7 +17,10 @@ public:
     virtual ~CharacterCreationPanel() {}
 
 protected:
-    virtual std::vector<std::string> getPackages() const override { return {"UI/Screen_CharacterLobby"}; }
+    virtual std::vector<std::string> getPackages() const override
+    {
+        return {"UI/Res_PartnerIcons", "UI/Screen_CharacterLobby"};
+    }
 
     virtual GComponent* onCreatePanelContent() override
     {
@@ -37,6 +43,7 @@ protected:
 
 private:
     GComponent* m_roleTypeSelector = nullptr;
+    std::array<GButton*, kOpenCharacterCount> m_roleTypeButtons{};
 
     int32_t m_curRoleTypeIndex   = 0;
     int32_t m_curProfessionIndex = 0;

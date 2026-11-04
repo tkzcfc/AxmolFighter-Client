@@ -4,7 +4,7 @@
 #include "ui/UiConfig.h"
 #include "mugen/render/spine/MgSkeletonAnimation.h"
 #include "mugen/conf/GameDef.h"
-#include "ui/core/AudioManager.h"
+#include "core/audio/AudioManager.h"
 #include <net/client_game.pb.h>
 #include "CharacterCreationChooseClouthPanel.h"
 
@@ -13,21 +13,60 @@
 namespace gameui
 {
 
+namespace
+{
+
+constexpr int32_t kHeroRoleTypeCount = 4;
+
+bool isPartnerClass(mugen::CharacterClass cls)
+{
+    return cls == mugen::CharacterClass::kPartnerWind || cls == mugen::CharacterClass::kPartnerQueen ||
+           cls == mugen::CharacterClass::kPartnerRage;
+}
+
+}  // namespace
+
 void CharacterCreationPanel::onCreate()
 {
-    AudioManager::getInstance()->pauseBGM();
+    game::AudioManager::getInstance()->pauseBGM();
 
     auto backButton = this->getChild<GButton>("backButton");
     this->addClickListener(backButton, AX_CALLBACK_1(CharacterCreationPanel::onClickBackButton, this));
 
     auto container = this->getChild<GLoader>("container")->getComponent();
 
-    // 职业选择列表
-    m_roleTypeSelector = container->getChild("roleTypeSelector")->as<GComponent>();
+    // 职业选择列表（兼容未重发布的旧 .fui：若缺失伙伴按钮 n4..n6，记录警告并隐藏伙伴选项）
+    m_roleTypeSelector    = container->getChild("roleTypeSelector")->as<GComponent>();
+    bool missingPartnerUi = false;
     for (int32_t i = 0; i < kOpenCharacterCount; ++i)
     {
-        auto btn = m_roleTypeSelector->getChild("n" + std::to_string(i))->as<GButton>();
+        auto* child                                = m_roleTypeSelector->getChild("n" + std::to_string(i));
+        auto* btn                                  = dynamic_cast<GButton*>(child);
+        m_roleTypeButtons[static_cast<size_t>(i)] = btn;
+        if (!btn)
+        {
+            if (i >= kHeroRoleTypeCount)
+                missingPartnerUi = true;
+            else
+                AXLOGW("CharacterCreationPanel: hero role button n{} is missing in UI package", i);
+            continue;
+        }
+        if (i >= kHeroRoleTypeCount)
+            btn->setIcon(kRoleIntros[i].professions[0].icon);
         this->addClickListener(btn, [this, i](EventContext* context) { this->onClickRoleTypeButton(context, i); });
+    }
+
+    if (missingPartnerUi)
+    {
+        AXLOGW("CharacterCreationPanel: partner buttons n4..n6 missing in published UI package; hiding partner options");
+        for (int32_t i = kHeroRoleTypeCount; i < kOpenCharacterCount; ++i)
+        {
+            if (auto* btn = m_roleTypeButtons[static_cast<size_t>(i)])
+            {
+                btn->setVisible(false);
+                btn->setTouchable(false);
+            }
+        }
     }
 
     for (int32_t i = 0; i < kProfessionCount; ++i)
@@ -46,25 +85,35 @@ void CharacterCreationPanel::onCreate()
 
 void CharacterCreationPanel::onDestroy()
 {
-    AudioManager::getInstance()->resumeBGM();
+    game::AudioManager::getInstance()->resumeBGM();
 }
 
 void CharacterCreationPanel::updateUI()
 {
     for (int32_t i = 0; i < kOpenCharacterCount; ++i)
     {
-        auto btn = m_roleTypeSelector->getChild("n" + std::to_string(i))->as<GButton>();
+        auto* btn = m_roleTypeButtons[static_cast<size_t>(i)];
+        if (!btn || !btn->isVisible())
+            continue;
         btn->setTouchable(i != m_curRoleTypeIndex);
         btn->setSelected(i == m_curRoleTypeIndex);
     }
+    const auto curClass       = static_cast<mugen::CharacterClass>(m_curRoleTypeIndex + 1);
+    const bool isPartner      = isPartnerClass(curClass);
     auto& curRoleConfig       = kRoleIntros[m_curRoleTypeIndex];
     auto& curProfessionConfig = curRoleConfig.professions[m_curProfessionIndex];
     auto container            = this->getChild<GLoader>("container")->getComponent();
 
+    // 伙伴不可转职，仅展示初始职业按钮，隐藏觉醒方向标签与转职按钮
+    if (auto* awakenLabel = container->getChild("n3"))
+        awakenLabel->setVisible(!isPartner);
+
     for (int32_t i = 0; i < kProfessionCount; ++i)
     {
         auto professionButton = container->getChild("professionButton" + std::to_string(i))->as<GButton>();
-        professionButton->setTouchable(i != m_curProfessionIndex);
+        const bool showBtn    = !isPartner || i == 0;
+        professionButton->setVisible(showBtn);
+        professionButton->setTouchable(showBtn && i != m_curProfessionIndex);
         professionButton->setSelected(i == m_curProfessionIndex);
         professionButton->setText(curRoleConfig.professions[i].name);
     }
@@ -111,8 +160,8 @@ void CharacterCreationPanel::updateUI()
         skeletonAnimation->setPosition(ax::Vec2(loaderAvatar->getWidth() * 0.5f, -loaderAvatar->getHeight()) +
                                        ax::Vec2(spine.offsetX, spine.offsetY));
         skeletonAnimation->setScale(spine.scaleX, spine.scaleY);
-        // 有出现动画
-        if (m_curProfessionIndex == 0)
+        // 有出现动画则先播放出现动画，否则直接循环播放待机动画
+        if (m_curProfessionIndex == 0 && skeletonAnimation->findAnimation("chuxian"))
         {
             std::string animationName = spine.animationName;
 

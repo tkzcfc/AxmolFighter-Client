@@ -7,7 +7,7 @@ namespace gameui
 {
 
 // 当前开放的角色数量
-inline constexpr int32_t kOpenCharacterCount = 4;
+inline constexpr int32_t kOpenCharacterCount = 7;
 
 // spine预览配置
 struct SpinePreview

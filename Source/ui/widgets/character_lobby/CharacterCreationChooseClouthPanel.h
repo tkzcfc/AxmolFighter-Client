@@ -38,6 +38,8 @@ protected:
 
     void onClickBackButton(EventContext* context);
 
+    bool isPartnerClass() const;
+
 private:
     GList* m_choiceHairList          = nullptr;
     GList* m_choiceClothingList      = nullptr;

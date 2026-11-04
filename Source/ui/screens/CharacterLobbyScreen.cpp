@@ -6,7 +6,7 @@
 #include "mugen/conf/TypeConversions.h"
 #include "ui/widgets/character_lobby/CharacterCreationPanel.h"
 #include "ui/widgets/common/MessageDialog.h"
-#include "ui/core/AudioManager.h"
+#include "core/audio/AudioManager.h"
 #include "fairygui/GLoader3D.h"
 #include <net/client_game.pb.h>
 
@@ -93,6 +93,8 @@ void CharacterLobbyScreen::updateCharacterList()
         appearance.roleId = mugen::type_conversions::toRoleConfigId(cls);
         for (const auto& skin : c.defaultSkins)
         {
+            if (skin.resFashionId <= 0)
+                continue;
             appearance.baseFashion[static_cast<mugen::FashionPosition>(skin.position)] = skin.resFashionId;
         }
         for (const auto& f : c.fashions)
@@ -170,7 +172,7 @@ void CharacterLobbyScreen::onClickStartGameButton(EventContext* context)
 
         m_isWillEnterGame = true;
         m_startGameBtn->getTransition("t_click")->play([this]() {
-            AudioManager::getInstance()->stopBGM();
+            game::AudioManager::getInstance()->stopBGM();
             getScreenManager()->switchScreen<TownScreen>();
         });
     });

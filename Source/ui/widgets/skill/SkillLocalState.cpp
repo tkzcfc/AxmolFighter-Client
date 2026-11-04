@@ -27,6 +27,8 @@ void SkillLocalState::seedLeaves(int32_t occupation)
     const auto& config = mugen::conf::Config::instance();
     for (const auto& tree : trees)
     {
+        if (tree.treeType != 1)
+            continue;
         if (tree.professionType != occupation)
             continue;
         auto addLeaf = [&](int32_t leafId) {

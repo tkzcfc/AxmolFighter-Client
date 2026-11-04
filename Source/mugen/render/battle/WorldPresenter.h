@@ -121,9 +121,13 @@ public:
     explicit SoundPlayer(uint32_t seed = 0x51A7u) : m_random(seed) {}
 
     void consume(const sim::PresentationEvent& event);
+    void clear();
 
 private:
+    using ActionKey = std::pair<uint32_t, int32_t>;
+
     std::minstd_rand m_random;
+    std::map<ActionKey, int> m_loopAudioByAction;
 };
 
 class HurtNumber
@@ -153,6 +157,7 @@ class WorldPresenter
 {
 public:
     explicit WorldPresenter(ax::Node& root);
+    ~WorldPresenter();
 
     void loadMap(const std::string& mapKey);
     void present(sim::World& world, float interpolationAlpha, float renderDelta);

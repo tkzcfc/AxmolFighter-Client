@@ -5,13 +5,18 @@
 #include "mugen/avatar/render/Avatar.h"
 #include "mugen/conf/TypeConversions.h"
 #include "AppContext.h"
-#include "ui/core/AudioManager.h"
 #include <net/client_game.pb.h>
 #include "CharacterCreationPanel.h"
 #include "fairygui/GLoader3D.h"
 
 namespace gameui
 {
+
+bool CharacterCreationChooseClouthPanel::isPartnerClass() const
+{
+    return m_curClass == mugen::CharacterClass::kPartnerWind || m_curClass == mugen::CharacterClass::kPartnerQueen ||
+           m_curClass == mugen::CharacterClass::kPartnerRage;
+}
 
 void CharacterCreationChooseClouthPanel::onCreate()
 {
@@ -20,34 +25,55 @@ void CharacterCreationChooseClouthPanel::onCreate()
 
     auto container = this->getChild<GLoader>("container")->getComponent();
 
-    m_choiceHairList     = container->getChild("choiceHair")->as<GComponent>()->getChild("list")->as<GList>();
-    m_choiceClothingList = container->getChild("choiceClothing")->as<GComponent>()->getChild("list")->as<GList>();
+    auto* choiceHairComp     = container->getChild("choiceHair")->as<GComponent>();
+    auto* choiceClothingComp = container->getChild("choiceClothing")->as<GComponent>();
+    m_choiceHairList         = choiceHairComp->getChild("list")->as<GList>();
+    m_choiceClothingList     = choiceClothingComp->getChild("list")->as<GList>();
 
-    m_choiceHairList->addEventListener(UIEventType::Scroll,
-                                       [this](EventContext*) { this->m_choiceHairListScrollEnd = false; });
-    m_choiceClothingList->addEventListener(UIEventType::Scroll,
-                                           [this](EventContext*) { this->m_choiceClothingListScrollEnd = false; });
-    m_choiceHairList->addEventListener(UIEventType::ScrollEnd, [this](EventContext*) {
-        this->m_choiceHairListScrollEnd = true;
-        this->updateUI();
-    });
-    m_choiceClothingList->addEventListener(UIEventType::ScrollEnd, [this](EventContext*) {
-        this->m_choiceClothingListScrollEnd = true;
-        this->updateUI();
-    });
+    if (isPartnerClass())
+    {
+        // 伙伴外观固定，隐藏发型/服装选择器与标题
+        choiceHairComp->setVisible(false);
+        choiceClothingComp->setVisible(false);
+        if (auto* lookTitle = container->getChild("n5"))
+            lookTitle->setVisible(false);
+        if (auto* loaderName = container->getChild("loaderName"))
+            loaderName->setVisible(false);
+    }
+    else
+    {
+        m_choiceHairList->addEventListener(UIEventType::Scroll,
+                                           [this](EventContext*) { this->m_choiceHairListScrollEnd = false; });
+        m_choiceClothingList->addEventListener(UIEventType::Scroll,
+                                               [this](EventContext*) { this->m_choiceClothingListScrollEnd = false; });
+        m_choiceHairList->addEventListener(UIEventType::ScrollEnd, [this](EventContext*) {
+            this->m_choiceHairListScrollEnd = true;
+            this->updateUI();
+        });
+        m_choiceClothingList->addEventListener(UIEventType::ScrollEnd, [this](EventContext*) {
+            this->m_choiceClothingListScrollEnd = true;
+            this->updateUI();
+        });
+
+        // 根据当前职业设置选择器的页签
+        container->getController("c1")->setSelectedIndex(static_cast<int>(m_curClass) - 1);
+    }
 
     m_inputTextName = container->getChild("inputTextName")->as<GTextInput>();
 
     // 创建角色按钮
     auto createButton = container->getChild("createButton")->as<GButton>();
     this->addClickListener(createButton, AX_CALLBACK_1(CharacterCreationChooseClouthPanel::onClickCreateButton, this));
-
-    // 根据当前职业设置选择器的页签
-    container->getController("c1")->setSelectedIndex(static_cast<int>(m_curClass) - 1);
 }
 
 void CharacterCreationChooseClouthPanel::onShow()
 {
+    if (isPartnerClass())
+    {
+        updateUI();
+        return;
+    }
+
     m_choiceHairList->itemRenderer = [this](int index, GObject* obj) {
         obj->setIcon(kLookIcons[this->m_curClass - 1].hairIcons[index]);
     };
@@ -71,38 +97,41 @@ void CharacterCreationChooseClouthPanel::onDestroy() {}
 
 void CharacterCreationChooseClouthPanel::updateUI()
 {
-    // 正在滚动中,不更新UI
-    if (!m_choiceHairListScrollEnd || !m_choiceClothingListScrollEnd)
-        return;
-
-    // 当前选择的索引无效
-    if (m_curHairIndex == -1 || m_curClothingIndex == -1)
-        return;
-
-    // 当前显示的索引与当前选择的索引相同,不更新UI
-    if (m_showHairIndex == m_curHairIndex && m_showClothingIndex == m_curClothingIndex)
-        return;
-
-    m_showHairIndex     = m_curHairIndex;
-    m_showClothingIndex = m_curClothingIndex;
-
     auto container    = this->getChild<GLoader>("container")->getComponent();
     auto loaderAvatar = container->getChild("loaderAvatar")->as<GLoader3D>();
 
-    auto t0 = container->getTransition("t0");
-    if (t0 && loaderAvatar->getContent() != nullptr)
-    {
-        t0->stop();
-        t0->play();
-    }
-
-    const auto& look = kLookIcons[static_cast<int>(m_curClass) - 1];
-
     mugen::FashionAppearance appearance;
-    appearance.roleId                                        = mugen::type_conversions::toRoleConfigId(m_curClass);
-    appearance.baseFashion[mugen::FashionPosition::kHair]    = look.hairIds[m_curHairIndex];
-    appearance.baseFashion[mugen::FashionPosition::kClothes] = look.clothIds[m_curClothingIndex];
-    appearance.baseFashion[mugen::FashionPosition::kSkin]    = look.skinIds[m_curClothingIndex];
+    appearance.roleId = mugen::type_conversions::toRoleConfigId(m_curClass);
+
+    if (!isPartnerClass())
+    {
+        // 正在滚动中,不更新UI
+        if (!m_choiceHairListScrollEnd || !m_choiceClothingListScrollEnd)
+            return;
+
+        // 当前选择的索引无效
+        if (m_curHairIndex == -1 || m_curClothingIndex == -1)
+            return;
+
+        // 当前显示的索引与当前选择的索引相同,不更新UI
+        if (m_showHairIndex == m_curHairIndex && m_showClothingIndex == m_curClothingIndex)
+            return;
+
+        m_showHairIndex     = m_curHairIndex;
+        m_showClothingIndex = m_curClothingIndex;
+
+        auto t0 = container->getTransition("t0");
+        if (t0 && loaderAvatar->getContent() != nullptr)
+        {
+            t0->stop();
+            t0->play();
+        }
+
+        const auto& look                                         = kLookIcons[static_cast<int>(m_curClass) - 1];
+        appearance.baseFashion[mugen::FashionPosition::kHair]    = look.hairIds[m_curHairIndex];
+        appearance.baseFashion[mugen::FashionPosition::kClothes] = look.clothIds[m_curClothingIndex];
+        appearance.baseFashion[mugen::FashionPosition::kSkin]    = look.skinIds[m_curClothingIndex];
+    }
 
     // 已有预览：整体下发外观（内部对比差异换装，连续调用最新优先）
     if (auto* preview = dynamic_cast<mugen::Avatar*>(loaderAvatar->getContent()))
@@ -111,7 +140,7 @@ void CharacterCreationChooseClouthPanel::updateUI()
         return;
     }
 
-    // 首个预览：外观驱动创建（骨架异步装配，就绪自动浮现；含默认武器）
+    // 首个预览：外观驱动创建（骨架异步装配，就绪自动浮现；伙伴由 FashionResolver 回退到 role.resFashion）
     auto* preview = mugen::Avatar::create(appearance);
     if (!preview)
     {
@@ -154,7 +183,8 @@ void CharacterCreationChooseClouthPanel::adjustListItem(GList* list, int32_t cur
 
 void CharacterCreationChooseClouthPanel::onClickCreateButton(EventContext* context)
 {
-    if (m_curHairIndex < 0 || m_curClothingIndex < 0)
+    const bool isPartner = isPartnerClass();
+    if (!isPartner && (m_curHairIndex < 0 || m_curClothingIndex < 0))
     {
         MessageDialog::show("请选择头饰和服饰");
         return;
@@ -171,8 +201,8 @@ void CharacterCreationChooseClouthPanel::onClickCreateButton(EventContext* conte
     req.set_name(name);
     req.set_class_id(static_cast<int32_t>(m_curClass));
     req.set_gender(0);
-    req.set_hair_id(kLookIcons[m_curClass - 1].hairIds[m_curHairIndex]);
-    req.set_clothes_id(kLookIcons[m_curClass - 1].clothIds[m_curClothingIndex]);
+    req.set_hair_id(isPartner ? 0 : kLookIcons[m_curClass - 1].hairIds[m_curHairIndex]);
+    req.set_clothes_id(isPartner ? 0 : kLookIcons[m_curClass - 1].clothIds[m_curClothingIndex]);
 
     this->call(req, [this](const PB::Game::CreateCharacterResp* resp, std::string_view error) {
         if (!resp)

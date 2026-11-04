@@ -102,10 +102,10 @@ int32_t SkillConfigPanel::occupation() const
         return static_cast<int32_t>(mugen::CharacterClass::kSwordman);
 
     int32_t classId = session->selectedCharacter.classID;
-    if (classId >= 101 && classId <= 104)
+    if (classId >= 101 && classId <= 107)
         classId = static_cast<int32_t>(mugen::type_conversions::toCharacterClass(classId));
     if (classId < static_cast<int32_t>(mugen::CharacterClass::kSwordman) ||
-        classId > static_cast<int32_t>(mugen::CharacterClass::kMage))
+        classId > static_cast<int32_t>(mugen::CharacterClass::kPartnerRage))
         return static_cast<int32_t>(mugen::CharacterClass::kSwordman);
     return classId;
 }
