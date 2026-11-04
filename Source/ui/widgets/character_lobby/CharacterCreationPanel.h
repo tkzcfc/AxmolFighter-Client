@@ -18,7 +18,7 @@ public:
 protected:
     virtual std::vector<std::string> getPackages() const override
     {
-        return {"UI/Res_PartnerIcons", "UI/Screen_CharacterLobby"};
+        return {"UI/Screen_CharacterLobby"};
     }
 
     virtual GComponent* onCreatePanelContent() override

@@ -18,7 +18,7 @@ public:
 protected:
     std::vector<std::string> getPackages() const override
     {
-        return {"UI/Common_Base", "UI/Res_PartnerIcons", "UI/Panel_Partner"};
+        return {"UI/Common_Base", "UI/Panel_Partner"};
     }
 
     GComponent* onCreatePanelContent() override
