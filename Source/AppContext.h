@@ -21,7 +21,6 @@ class FeatureProgressSync;
 class WeaponLocalState;
 class SkillLocalState;
 class PetLocalState;
-class PartnerLocalState;
 }
 
 class AppContext
@@ -44,7 +43,6 @@ public:
     gameui::WeaponLocalState* weaponLocalState() const { return m_weaponLocalState.get(); }
     gameui::SkillLocalState* skillLocalState() const { return m_skillLocalState.get(); }
     gameui::PetLocalState* petLocalState() const { return m_petLocalState.get(); }
-    gameui::PartnerLocalState* partnerLocalState() const { return m_partnerLocalState.get(); }
 
     // 生命周期与 AppContext 相同的常驻资源（配置表等，不一定都在 UI/Common_Base 里）；
     // 由 LaunchScreen 通过 setResourceLoader() 共同持有并启动加载，后续也可以继续往里面加东西。
@@ -77,7 +75,6 @@ private:
     std::unique_ptr<gameui::WeaponLocalState> m_weaponLocalState;
     std::unique_ptr<gameui::SkillLocalState> m_skillLocalState;
     std::unique_ptr<gameui::PetLocalState> m_petLocalState;
-    std::unique_ptr<gameui::PartnerLocalState> m_partnerLocalState;
     std::unique_ptr<gameui::ScreenManager> m_screenManager;
     std::shared_ptr<gameres::ResourceLoader> m_globalLoader;
 

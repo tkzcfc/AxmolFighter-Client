@@ -356,9 +356,8 @@ void TownScreen::subscribeAppearanceEvents()
     auto refresh = [this]() { refreshLocalAppearance(); };
     ed->subscribe(game::GameEvent::FashionWornChanged, this, refresh);
     ed->subscribe(game::GameEvent::ArmamentAppearanceChanged, this, refresh);
-    // Pet/Partner spawn-in-town is not wired yet; events still reserved for later.
+    // Pet spawn-in-town is not wired yet; the event is reserved for later.
     ed->subscribe(game::GameEvent::PetFollowChanged, this, refresh);
-    ed->subscribe(game::GameEvent::PartnerActiveChanged, this, refresh);
 }
 
 void TownScreen::refreshLocalAppearance()

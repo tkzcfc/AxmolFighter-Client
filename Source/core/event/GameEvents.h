@@ -12,7 +12,6 @@ enum class GameEvent : int32_t
     FashionWornChanged = 1,
     ArmamentAppearanceChanged,
     PetFollowChanged,
-    PartnerActiveChanged,
 };
 
 }  // namespace game

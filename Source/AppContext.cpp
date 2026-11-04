@@ -12,13 +12,12 @@
 #include "ui/widgets/weapon/WeaponLocalState.h"
 #include "ui/widgets/skill/SkillLocalState.h"
 #include "ui/widgets/pet/PetLocalState.h"
-#include "ui/widgets/partner/PartnerLocalState.h"
 
 using namespace fairygui;
 
 namespace
 {
-constexpr const char* kDefaultServerHost = "127.0.0.1";
+constexpr const char* kDefaultServerHost = "10.0.1.183";
 constexpr int kDefaultServerPort         = 17000;
 
 // 与 AppContext 生命周期相同的常驻 FairyGUI 包，按顺序加载，按逆序卸载。
@@ -94,7 +93,6 @@ AppContext::AppContext()
     m_weaponLocalState = std::make_unique<gameui::WeaponLocalState>();
     m_skillLocalState  = std::make_unique<gameui::SkillLocalState>();
     m_petLocalState    = std::make_unique<gameui::PetLocalState>();
-    m_partnerLocalState = std::make_unique<gameui::PartnerLocalState>();
 
     // 生命周期与 AppContext 相同的常驻资源：配置表，以及之后可能加入的其他常驻资源
     // （不一定都在 UI/Common_Base 里）。由 LaunchScreen 通过 setResourceLoader() 共同持有并驱动加载；

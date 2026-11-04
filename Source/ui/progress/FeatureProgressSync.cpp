@@ -1,6 +1,5 @@
 #include "FeatureProgressSync.h"
 
-#include "ui/widgets/partner/PartnerLocalState.h"
 #include "ui/widgets/pet/PetLocalState.h"
 #include "ui/widgets/skill/SkillLocalState.h"
 #include "ui/widgets/weapon/WeaponLocalState.h"
@@ -30,15 +29,10 @@ void FeatureProgressSync::hydrateFromCharacter(const PB::Types::CharacterInfo& c
     auto& pets = PetLocalState::instance();
     pets.loadFromServer(character);
 
-    auto& partners = PartnerLocalState::instance();
-    partners.loadFromServer(character);
-
     AXLOGI(
-        "FeatureProgressSync: hydrated armaments={} skills={} pets={} partners={} appearance={} "
-        "activePet={} activePartner={}",
+        "FeatureProgressSync: hydrated armaments={} skills={} pets={} appearance={} activePet={}",
         character.armaments_size(), character.skill_slots_size(), character.pets_size(),
-        character.partners_size(), character.armament_appearance_id(), character.active_pet_id(),
-        character.active_partner_id());
+        character.armament_appearance_id(), character.active_pet_id());
 
     // First login / empty DB: push unlock-all seed so progress persists across sessions.
     if (character.armaments_size() == 0)
@@ -47,8 +41,6 @@ void FeatureProgressSync::hydrateFromCharacter(const PB::Types::CharacterInfo& c
         syncSkillSlots();
     if (character.pets_size() == 0)
         syncPets();
-    if (character.partners_size() == 0)
-        syncPartners();
 }
 
 void FeatureProgressSync::syncFashionWear(const PB::Game::FashionWearReq& req)
@@ -133,29 +125,6 @@ void FeatureProgressSync::syncPets()
         }
         if (resp->code() != 0)
             AXLOGW("PetSync code={} msg={}", resp->code(), resp->message());
-    });
-}
-
-void FeatureProgressSync::syncPartners()
-{
-    PB::Game::PartnerSyncReq req;
-    auto& state = PartnerLocalState::instance();
-    for (const auto& st : state.list())
-    {
-        auto* p = req.add_partners();
-        p->set_config_id(st.configId);
-        p->set_level(st.level);
-        p->set_star(st.star);
-    }
-    req.set_active_partner_id(state.activeId());
-    call(req, [](const PB::Game::PartnerSyncResp* resp, std::string_view err) {
-        if (!resp)
-        {
-            AXLOGW("PartnerSync failed: {}", err);
-            return;
-        }
-        if (resp->code() != 0)
-            AXLOGW("PartnerSync code={} msg={}", resp->code(), resp->message());
     });
 }
 

@@ -8,7 +8,7 @@ namespace gameui
 {
 
 // AppContext-owned NetAgent that hydrates LocalStates from SelectCharacter and
-// pushes fashion/armament/skill/pet/partner progress to the lobby game server.
+// pushes fashion/armament/skill/pet progress to the lobby game server.
 class FeatureProgressSync : public net::NetAgent
 {
 public:
@@ -25,7 +25,6 @@ public:
     void syncArmaments();
     void syncSkillSlots();
     void syncPets();
-    void syncPartners();
 
 };
 

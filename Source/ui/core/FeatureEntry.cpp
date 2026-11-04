@@ -8,7 +8,6 @@
 #include "ui/widgets/weapon/WeaponTypes.h"
 #include "ui/widgets/skill/SkillMainPanel.h"
 #include "ui/widgets/pet/PetMainPanel.h"
-#include "ui/widgets/partner/PartnerMainPanel.h"
 
 namespace gameui
 {
@@ -74,11 +73,10 @@ std::weak_ptr<UIWidget> FeatureEntry::open(FeatureId id, std::any params)
     }
     case FeatureId::Skill:
         return uiManager->open<SkillMainPanel>();
-    case FeatureId::Partner:
-        return uiManager->open<PartnerMainPanel>();
     case FeatureId::Pet:
         return uiManager->open<PetMainPanel>();
     case FeatureId::Equip:
+    case FeatureId::Partner:
         AXLOGI("FeatureEntry: {} not implemented", toString(id));
         return {};
     }
