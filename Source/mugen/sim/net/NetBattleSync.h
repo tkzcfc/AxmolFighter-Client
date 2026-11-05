@@ -30,6 +30,9 @@ struct NetBattleSyncConfig
     uint32_t m_shrinkWindowFrames = 30;
     // 单次反馈最多增加的领先帧数，避免一次客户端卡顿把领先量顶到上限。
     uint32_t m_maxLeadStep = 8;
+    // 开局校准的最长等待（本地毫秒）：首个 RTT 样本到达前本地输入保持不采样（按键状态保留），
+    // 超过该时长仍无样本则放行。
+    uint32_t m_calibrationTimeoutMs = 2000;
     // 每逻辑帧毫秒数（来自 BattleStartPush.frame_ms）。
     uint32_t m_frameMs = 33;
     // 确定性哈希对账间隔帧数，与服务端一致。
@@ -77,6 +80,13 @@ public:
     // 缩小时在 targetFrame 追上之前暂停推进。
     void onServerFeedback(const ServerInputFeedback& feedback, uint64_t localNowMs);
 
+    // 本地输入此刻是否应当采样（frame 为即将生成输入的帧号）。调用方在返回 false 时跳过输入采样并提交空输入，
+    // 按键状态保留，放行后的第一帧照常发出。两种情况下该帧的输入必然迟到，被服务器顺延执行后客户端要回滚，
+    // 表现为角色被拉回：
+    // 1) 首个 RTT 样本到达前：初始领先量远小于 RTT；
+    // 2) 领先量刚增大或刚从卡顿 / 重同步追帧期间：追帧生成的帧领先估计服务器帧不足（早已过去）。
+    // 校准超时后无条件放行。
+    bool inputReady(uint64_t localNowMs, uint64_t frame) const;
     // 本地时钟下应预测到的目标帧号（估计服务器帧 + 当前输入领先量，受回滚窗口封顶）。
     uint64_t targetFrame(uint64_t localNowMs) const;
     // 由时钟偏移估计服务端当前帧号。
@@ -121,8 +131,8 @@ private:
     uint32_t maxLead() const;
     // 缩小领先量的下限：配置下限与按 RTT + 抖动估计的所需帧数取大。
     uint32_t shrinkFloor() const;
-    // 设置新领先量；之后发出的帧才算新领先量下的样本。
-    void setLead(uint32_t lead);
+    // 设置新领先量；之后真正按新领先量发出（追帧完成后）的帧才算新领先量下的样本。
+    void setLead(uint32_t lead, uint64_t localNowMs);
     // 清空缩小观察窗口。
     void resetShrinkWindow();
 
@@ -134,6 +144,8 @@ private:
     // 服务器帧 0 对应的墙钟时间戳。
     uint64_t m_startServerTimeMs = 0;
     bool m_hasStart = false;
+    // start() 时的本地单调毫秒，用于校准超时。
+    uint64_t m_startLocalMs = 0;
 
     rollback::RollbackSession m_session;
 

@@ -16,8 +16,9 @@ namespace mugen::sim::net
 inline constexpr uint32_t kMaxInputLead = 90;
 // 权威世界记录确定性哈希的间隔帧数。
 inline constexpr uint32_t kHashInterval = 30;
-// 迟到输入（首次到达时目标帧已 tick）最多迟到多少帧仍顺延到下一帧执行；更久的直接丢弃，
-// 避免网络长时间卡顿后在很久之后才触发过期的攻击等边缘命令。
+// 迟到输入（首次到达时目标帧已 tick）最多迟到多少帧仍整体顺延到下一帧执行；更久的只保留最后一条
+// 移动状态命令（跑动 / 待机，电平语义，丢掉会让角色永久停在旧状态），其余攻击等边缘命令直接丢弃，
+// 避免网络长时间卡顿后在很久之后才触发过期的攻击。
 inline constexpr uint32_t kMaxLateCarryFrames = 12;
 // 每槽位记住已收到输入帧号的回溯窗口（帧）。窗口之外的过期帧既不计迟到也不顺延。
 inline constexpr uint32_t kReceivedWindowFrames = 64;
@@ -29,7 +30,7 @@ struct SlotInputStats
     uint32_t m_lateInputs = 0;
     // 其中非空且顺延到下一帧执行的帧数。
     uint32_t m_carriedInputs = 0;
-    // 其中非空但迟到过久被丢弃的帧数。
+    // 其中非空、迟到过久且不含移动状态命令而被丢弃的帧数。
     uint32_t m_droppedInputs = 0;
     // 自上次 resetSlackWindow 以来首次到达输入的最小富余帧数（输入帧号 - 已 tick 帧号 - 1，负数为迟到）、
     // 对应输入帧号与样本数。
@@ -60,7 +61,8 @@ public:
     bool needsInput(uint32_t slot, uint64_t frame) const;
     // 提交某槽位在指定帧的输入。重复提交同一帧保持首次提交；超前过多返回 false。
     // 首次到达时目标帧已 tick 的输入记为迟到：非空命令且迟到不超过 kMaxLateCarryFrames 时
-    // 顺延到下一帧、排在该帧自身命令之前（保持命令先后顺序）并返回 true，否则丢弃并返回 false。
+    // 顺延到下一帧、排在该帧自身命令之前（保持命令先后顺序）并返回 true；迟到更久时只顺延最后一条
+    // 移动状态命令（跑动 / 待机），没有则丢弃并返回 false。
     bool submitInput(uint32_t slot, uint64_t frame, PlayerInput input);
     // 提交指定帧的房间级系统命令；与输入采用相同的领先限制。
     bool submitSystem(uint64_t frame, SystemCommand command);

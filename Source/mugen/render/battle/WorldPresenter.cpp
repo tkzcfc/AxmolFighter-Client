@@ -22,9 +22,6 @@ namespace
 {
 // 受击框调试色；引擎没有预置青色常量。
 const ax::Color4F kHurtBoxColor{0.0f, 1.0f, 1.0f, 1.0f};
-// 单帧位移平方超过该值视为瞬移（换房/位置吸附），跳过插值直接吸附。
-constexpr float kTeleportSnapDistanceSq = 500.0f * 500.0f;
-
 float renderValue(Fixed value)
 {
     return value.toFloatForRender();
@@ -226,27 +223,13 @@ void AvatarPresenter::present(sim::World& world, float alpha, float renderDelta)
         }
 
         // 仅逻辑帧推进时滚动采样：previous 取上一逻辑帧，current 取最新逻辑帧，
-        // 渲染帧按 alpha 在两者间插值，得到平滑运动而非 30Hz 阶梯。
-        const uint64_t frame = world.ecs().singleton<sim::WorldClock>().frame;
-        if (!state.hasPrevious)
-        {
-            // 首次出现：前后帧均取当前变换，避免从原点插值。
-            state.previous    = transform;
-            state.current     = transform;
-            state.lastFrame   = frame;
-            state.hasPrevious = true;
-        }
-        else if (frame != state.lastFrame)
-        {
-            const float dx = renderValue(transform.position.x - state.current.position.x);
-            const float dy = renderValue(transform.position.y - state.current.position.y);
-            const float dz = renderValue(transform.position.z - state.current.position.z);
-            // 跳帧或大幅瞬移（换房/位置吸附）直接吸附，避免插值拖尾。
-            const bool snap = frame - state.lastFrame > 1 || (dx * dx + dy * dy + dz * dz) > kTeleportSnapDistanceSq;
-            state.previous  = snap ? transform : state.current;
-            state.current   = transform;
-            state.lastFrame = frame;
-        }
+        // 渲染帧按 alpha 在两者间插值，得到平滑运动而非 30Hz 阶梯；回滚纠正偏移随渲染时间衰减。
+        state.track.sample(world.ecs().singleton<sim::WorldClock>().frame,
+                           {renderValue(transform.position.x), renderValue(transform.position.y),
+                            renderValue(transform.position.z)});
+        state.track.advance(renderDelta);
+        state.towardX = transform.towardX < 0 ? -1.0f : 1.0f;
+        state.towardZ = transform.vectorZ < Fixed{} ? -1.0f : 1.0f;
         const RenderPose pose = interpolatePose(state, alpha);
         // Spine 偏移：x 随水平朝向翻转，z 随纵深朝向翻转；层内按偏移后的纵深排序。
         const float depth = pose.z + pose.towardZ * offsetAxis(state.spineOffset, 2);
@@ -291,25 +274,30 @@ void AvatarPresenter::present(sim::World& world, float alpha, float renderDelta)
 
 AvatarPresenter::RenderPose AvatarPresenter::interpolatePose(const AvatarState& state, float alpha)
 {
+    const VisualPos shown = state.track.display(alpha);
     RenderPose pose;
-    pose.x = renderValue(state.previous.position.x) +
-             (renderValue(state.current.position.x) - renderValue(state.previous.position.x)) * alpha;
-    pose.y = renderValue(state.previous.position.y) +
-             (renderValue(state.current.position.y) - renderValue(state.previous.position.y)) * alpha;
-    pose.z = renderValue(state.previous.position.z) +
-             (renderValue(state.current.position.z) - renderValue(state.previous.position.z)) * alpha;
-    pose.towardX = state.current.towardX < 0 ? -1.0f : 1.0f;
-    pose.towardZ = state.current.vectorZ < Fixed{} ? -1.0f : 1.0f;
+    pose.x       = shown.x;
+    pose.y       = shown.y;
+    pose.z       = shown.z;
+    pose.towardX = state.towardX;
+    pose.towardZ = state.towardZ;
     return pose;
 }
 
 bool AvatarPresenter::samplePose(uint32_t entityValue, float alpha, RenderPose* out) const
 {
     const auto it = m_avatars.find(entityValue);
-    if (it == m_avatars.end() || !it->second.hasPrevious || !out)
+    if (it == m_avatars.end() || !it->second.track.hasSample() || !out)
         return false;
     *out = interpolatePose(it->second, alpha);
     return true;
+}
+
+void AvatarPresenter::applyCorrection(Entity entity, const VisualPos& shift)
+{
+    const auto it = m_avatars.find(entity.value);
+    if (it != m_avatars.end())
+        it->second.track.applyCorrection(shift);
 }
 
 FashionAppearance AvatarPresenter::buildRoleAppearance(const AvatarState& state, bool transformed)

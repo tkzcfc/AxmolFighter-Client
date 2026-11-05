@@ -7,6 +7,7 @@
 
 #    include "mugen/avatar/render/Avatar.h"
 #    include "mugen/render/battle/PetFollower.h"
+#    include "mugen/render/battle/PoseTrack.h"
 #    include "mugen/render/LayerRuntimeLoader.h"
 #    include "mugen/render/VirtualCamera.h"
 #    include "mugen/render/spine/MgSkeletonAnimation.h"
@@ -30,6 +31,8 @@ public:
     void setFollowEntity(Entity entity) { m_followEntity = entity; }
     void setPet(int32_t petId, int32_t spineId);
     void clearPet();
+    // 回滚把实体当前帧的模拟位置改写了 shift（新 - 旧，渲染单位）：平移其插值轨迹并平滑消化这次跳变。
+    void applyCorrection(Entity entity, const VisualPos& shift);
     // 为任意实体绑定/清除宠物（城镇远端玩家或本地玩家）。
     void setEntityPet(Entity entity, int32_t petId, int32_t spineId);
     void clearEntityPet(Entity entity);
@@ -72,13 +75,11 @@ private:
         std::string poolKey;
         // 配置的 Spine 相对偏移（x 随水平朝向、y 向上、z 随纵深朝向）。
         std::vector<int32_t> spineOffset;
-        // 插值用前后两帧变换：previous 为上一逻辑帧，current 为最新逻辑帧。
-        sim::Transform previous;
-        sim::Transform current;
-        // 采样 current 时的逻辑帧序号。
-        uint64_t lastFrame = 0;
-        // 是否已建立 previous/current 采样对。
-        bool hasPrevious = false;
+        // 位置插值轨迹：previous 为上一逻辑帧，current 为最新逻辑帧，并带回滚纠正偏移。
+        PoseTrack track;
+        // 最新逻辑帧的水平朝向与纵深朝向（±1）。
+        float towardX = 1.0f;
+        float towardZ = 1.0f;
         // 是否使用时装外观 Avatar（可热切换骨架与图集）。
         bool fashionAvatar = false;
         // 角色外观是否来自本地会话（使用会话时装与武器）。
@@ -285,6 +286,8 @@ public:
                        float interpolationAlpha,
                        float renderDelta);
     void setFollowEntity(Entity entity);
+    // 回滚纠正：见 AvatarPresenter::applyCorrection。联机模式在每次回滚后对位置被改写的角色调用。
+    void applyCorrection(Entity entity, const VisualPos& shift) { m_avatars.applyCorrection(entity, shift); }
     void setPet(int32_t petId);
     void setEntityPet(Entity entity, int32_t petId);
     void clearEntityPet(Entity entity);

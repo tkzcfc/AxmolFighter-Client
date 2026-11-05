@@ -77,6 +77,17 @@ bool LockstepAuthority::submitInput(uint32_t slot, uint64_t frame, PlayerInput i
         return true;
     if (m_lastTickedFrame - frame >= kMaxLateCarryFrames)
     {
+        // 过期太久：攻击等一次性边缘命令丢弃；移动状态命令（跑动 / 待机）是电平语义，只在方向变化时发出一次，
+        // 丢掉会让角色永久停留在旧状态（客户端回滚后也无从恢复），因此只保留其中最后一条继续顺延。
+        for (auto it = input.commands.rbegin(); it != input.commands.rend(); ++it)
+        {
+            if (it->controlEvent != ControlEvent::CTR_RUN && it->controlEvent != ControlEvent::CTR_IDLE)
+                continue;
+            ++stats.m_carriedInputs;
+            m_carry[slot].emplace(frame, std::vector<PlayerCommand>{*it});
+            MG_LOG_D("submitInput carried stale move state frame {} for slot {} (ticked {})", frame, slot, m_lastTickedFrame);
+            return true;
+        }
         ++stats.m_droppedInputs;
         MG_LOG_D("submitInput dropped stale input frame {} for slot {} (ticked {})", frame, slot, m_lastTickedFrame);
         return false;

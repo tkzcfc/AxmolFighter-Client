@@ -3,6 +3,7 @@
 #include "mugen/sim/BattleBootstrap.h"
 #include "mugen/sim/net/LockstepAuthority.h"
 #include "mugen/sim/net/NetBattleSync.h"
+#include "mugen/render/battle/PoseTrack.h"
 #include <array>
 #include <cstdint>
 #include <map>
@@ -404,10 +405,11 @@ TEST_CASE("NetBattleSync grows the input lead fast and ignores stale feedback")
     }
     sync.onServerFeedback(slackSample(-10, 30), 1300);  // 帧 30 ≥ 生效帧 1：采纳；单次最多 +8。
     CHECK(sync.inputLeadFrames() == 17);
-    // 新领先量下的生效帧 = 当前帧 + 1 = 21；途中仍在迟到的旧帧（帧号 < 21）被忽略，避免连续超调。
-    sync.onServerFeedback(slackSample(-10, 20), 1400);
+    // 新领先量下的生效帧 = max(当前帧 + 1, 估计服务器帧 + 新领先量 - 目标富余) = 9 + 17 - 2 = 24：
+    // 途中仍在迟到的旧帧与追帧期间的帧（帧号 < 24）被忽略，避免连续超调。
+    sync.onServerFeedback(slackSample(-10, 21), 1400);
     CHECK(sync.inputLeadFrames() == 17);
-    sync.onServerFeedback(slackSample(-10, 21), 1500);
+    sync.onServerFeedback(slackSample(-10, 24), 1500);
     CHECK(sync.inputLeadFrames() == 25);
     // 受上限封顶：回滚窗口 120 与服务器接受上限 90 之内，且不超过配置的 30。
     sync.onServerFeedback(slackSample(-30, 40), 1600);
@@ -619,4 +621,89 @@ TEST_CASE("LockstepAuthority drops stale late input, counts empty late input and
     // releaseSlot 清掉顺延与已收记录：同一帧号重新被接受（重连后的新客户端）。
     authority.releaseSlot(0);
     CHECK(authority.needsInput(0, 41));
+}
+
+TEST_CASE("LockstepAuthority keeps the last move state of a stale input instead of dropping it")
+{
+    test::ScenarioHarness::loadAssets();
+    LockstepAuthority authority(duelSetup(2, kTestSeed));
+    for (int i = 0; i < 40; ++i)
+        authority.step();
+
+    // 迟到超过上限的输入：攻击被丢弃，但跑动 / 待机是电平语义，只保留最后一条顺延，角色不会永久停在旧状态。
+    PlayerInput stale;
+    stale.slot = 0;
+    stale.commands.push_back({ControlEvent::CTR_ATKA, ControlQuadrant::None, 0, 1});
+    stale.commands.push_back({ControlEvent::CTR_RUN, ControlQuadrant::UpRight, 0, 1});
+    stale.commands.push_back({ControlEvent::CTR_IDLE, ControlQuadrant::None, 0, 0});
+    CHECK(authority.submitInput(0, 40 - kMaxLateCarryFrames, stale));
+    CHECK(authority.inputStats(0).m_carriedInputs == 1);
+    CHECK(authority.inputStats(0).m_droppedInputs == 0);
+    const auto frame = authority.step();
+    REQUIRE(frame.players[0].commands.size() == 1);
+    CHECK(frame.players[0].commands[0].controlEvent == ControlEvent::CTR_IDLE);
+}
+
+TEST_CASE("NetBattleSync calibrates the lead from the first RTT sample and gates local input until then")
+{
+    test::ScenarioHarness::loadAssets();
+    NetBattleSyncConfig config;
+    config.m_inputDelayFrames = 4;
+    NetBattleSync sync(0, 2, config);
+    sync.start(buildWorld(duelSetup(2, kTestSeed)), 1000, 1000);
+
+    // 校准前不采样本地输入；超时后放行。
+    CHECK_FALSE(sync.inputReady(1000, 5));
+    CHECK_FALSE(sync.inputReady(1000 + config.m_calibrationTimeoutMs - 1, 5));
+    CHECK(sync.inputReady(1000 + config.m_calibrationTimeoutMs, 5));
+
+    // 首个 RTT 样本 400ms：领先量直接抬到覆盖 RTT（含四分之一余量与目标富余），而不是等迟到反馈逐轮补。
+    sync.onServerFeedback(slackSample(5, 1, /*echo*/ 2000), 2400);
+    CHECK(sync.rttMs() == 400);
+    CHECK(sync.inputLeadFrames() >= (400 + 100) / 33);
+    // 追帧中的帧（早已落后于估计服务器帧 + 领先量）不采样输入；追到位的帧才放行。
+    const uint64_t serverFrame = sync.estimatedServerFrame(2400);
+    CHECK_FALSE(sync.inputReady(2400, serverFrame + 1));
+    CHECK(sync.inputReady(2400, serverFrame + sync.inputLeadFrames()));
+}
+
+TEST_CASE("PoseTrack turns a rollback position rewrite into a decaying offset instead of a snap")
+{
+    mugen::PoseTrack track;
+    track.sample(10, {100.0f, 0.0f, 50.0f});
+    track.sample(11, {110.0f, 0.0f, 50.0f});
+    const float before = track.display(1.0f).x;
+    CHECK(before == doctest::Approx(110.0f));
+
+    // 回滚把当前帧位置往回改写 40 单位：显示位置在应用纠正的那一刻不变。
+    track.applyCorrection({-40.0f, 0.0f, 0.0f});
+    CHECK(track.display(1.0f).x == doctest::Approx(before));
+    CHECK(track.offsetLength() == doctest::Approx(40.0f));
+
+    // 之后随渲染时间平滑衰减到模拟位置，不会反向跳。
+    float last = track.display(1.0f).x;
+    for (int i = 0; i < 60; ++i)
+    {
+        track.advance(1.0f / 60.0f);
+        const float now = track.display(1.0f).x;
+        CHECK(now <= last + 0.001f);
+        last = now;
+    }
+    CHECK(last == doctest::Approx(70.0f).epsilon(0.02));
+
+    // 跳帧过大（重同步）直接吸附并清掉偏移；追帧几帧仍平滑；回退帧号同样吸附。
+    track.applyCorrection({-30.0f, 0.0f, 0.0f});
+    track.sample(11 + mugen::PoseTrack::kMaxInterpolatedGap + 5, {500.0f, 0.0f, 50.0f});
+    CHECK(track.offsetLength() == 0.0f);
+    CHECK(track.display(0.0f).x == doctest::Approx(500.0f));
+
+    // tick 进度从 tick 起算且停在 1。
+    mugen::TickAlpha alpha;
+    alpha.onRenderFrame(0.016f, true);
+    CHECK(alpha.alpha(0.033f) == 0.0f);
+    alpha.onRenderFrame(0.016f, false);
+    CHECK(alpha.alpha(0.033f) == doctest::Approx(0.016f / 0.033f));
+    for (int i = 0; i < 10; ++i)
+        alpha.onRenderFrame(0.016f, false);
+    CHECK(alpha.alpha(0.033f) == 1.0f);
 }

@@ -64,4 +64,37 @@ void BattleDebugPanel::render(mugen::sim::World& world, bool& paused, bool& sing
     });
     ImGui::End();
 }
+
+void BattleDebugPanel::renderNetLatency(const BattleNetInfo& net)
+{
+    // 绿 / 黄 / 红：<100ms 流畅，<200ms 可接受，之后输入领先量会明显拉长。
+    ImVec4 color(0.4f, 1.0f, 0.4f, 1.0f);
+    if (net.m_rttMs >= 200)
+        color = ImVec4(1.0f, 0.4f, 0.3f, 1.0f);
+    else if (net.m_rttMs >= 100)
+        color = ImVec4(1.0f, 0.85f, 0.3f, 1.0f);
+    ImGui::TextColored(color, "延迟(RTT): %lld ms  抖动: %lld ms", static_cast<long long>(net.m_rttMs),
+                       static_cast<long long>(net.m_jitterMs));
+    ImGui::Text("输入领先: %u 帧 (~%u ms)", net.m_leadFrames, net.m_leadFrames * net.m_frameMs);
+}
+
+void BattleDebugPanel::renderNet(mugen::sim::World& world, const BattleNetInfo& net)
+{
+    ImGui::Begin("Battle Debug");
+    const auto& clock = world.ecs().singleton<mugen::sim::WorldClock>();
+    ImGui::Text("world hash %llu %016llx", static_cast<unsigned long long>(clock.frame),
+                static_cast<unsigned long long>(world.hash()));
+    ImGui::Text("Frame %llu  %.2fs", static_cast<unsigned long long>(clock.frame),
+                static_cast<double>(clock.frame) / 30.0);
+    renderNetLatency(net);
+    ImGui::Separator();
+    world.ecs().each<mugen::sim::RoleIdentity, mugen::sim::RoleStatus, mugen::sim::Transform>(
+        [](mugen::Entity entity, const mugen::sim::RoleIdentity& identity, const mugen::sim::RoleStatus& status,
+           const mugen::sim::Transform& transform) {
+        ImGui::Text("entity=%u role=%d level=%d status=%d pos=(%.2f, %.2f, %.2f)", entity.value, identity.roleId,
+                    identity.level, static_cast<int>(status.eEntityStatus), transform.position.x.toFloatForRender(),
+                    transform.position.y.toFloatForRender(), transform.position.z.toFloatForRender());
+    });
+    ImGui::End();
+}
 }  // namespace gameui

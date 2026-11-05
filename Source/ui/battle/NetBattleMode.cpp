@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <utility>
 
 namespace gameui
@@ -84,12 +85,12 @@ void NetBattleMode::registerPushes()
     m_agent.listenPush([this](const PB::Battle::BattleFramesPush& push) {
         if (push.battle_id() != m_params.battleId)
             return;
-        onFrames(push);
+        deliverFrames(push);
     });
     m_agent.listenPush([this](const PB::Battle::BattleSnapshotPush& push) {
         if (push.battle_id() != m_params.battleId)
             return;
-        onSnapshot(push);
+        deliverSnapshot(push);
     });
     m_agent.listenPush([this](const PB::Battle::BattleEndPush& push) {
         if (push.battle_id() != m_params.battleId)
@@ -188,6 +189,10 @@ void NetBattleMode::onFrames(const PB::Battle::BattleFramesPush& push)
 
     const double netBegin        = preciseNowMs();
     const uint64_t resimBefore   = m_sync->session().stats().resimFrames;
+    const uint64_t rollbacksBefore = m_sync->session().stats().rollbacks;
+    // 回滚在同一帧号上重推：记下回滚前各角色位置，回滚后的差就是这次纠正量，交给表现层平滑消化而不是硬跳。
+    std::vector<std::pair<mugen::Entity, mugen::FixedVec3>> rolesBefore;
+    collectRolePositions(rolesBefore);
 
     // 先应用确认输入，再做哈希对账：确认输入触发的回滚会把预测重推到一致状态。
     for (const auto& frame : push.frames())
@@ -224,11 +229,118 @@ void NetBattleMode::onFrames(const PB::Battle::BattleFramesPush& push)
 
     // 刷新待回滚后再对账，避免用回滚前的陈旧快照误判失步。
     m_sync->flushRollback();
+    if (m_sync->session().stats().rollbacks != rollbacksBefore)
+        applyRollbackCorrections(rolesBefore);
     for (const auto& hash : push.hashes())
         if (m_sync->checkServerHash(hash.frame(), hash.hash()))
             sendResync(hash.frame());
 
     recordNetCallback(preciseNowMs() - netBegin, m_sync->session().stats().resimFrames - resimBefore);
+}
+
+void NetBattleMode::collectRolePositions(std::vector<std::pair<mugen::Entity, mugen::FixedVec3>>& out)
+{
+    m_sync->session().world().ecs().each<mugen::sim::EntityGroup, mugen::sim::Transform>(
+        [&out](mugen::Entity entity, const mugen::sim::EntityGroup& group, const mugen::sim::Transform& transform) {
+            if (group.kind == mugen::sim::GroupKind::Role)
+                out.emplace_back(entity, transform.position);
+        });
+}
+
+void NetBattleMode::applyRollbackCorrections(const std::vector<std::pair<mugen::Entity, mugen::FixedVec3>>& before)
+{
+    std::vector<std::pair<mugen::Entity, mugen::FixedVec3>> after;
+    collectRolePositions(after);
+    for (const auto& [entity, oldPos] : before)
+    {
+        for (const auto& [afterEntity, newPos] : after)
+        {
+            if (afterEntity != entity)
+                continue;
+            const mugen::VisualPos shift{(newPos.x - oldPos.x).toFloatForRender(), (newPos.y - oldPos.y).toFloatForRender(),
+                                         (newPos.z - oldPos.z).toFloatForRender()};
+            if (shift.x == 0.0f && shift.y == 0.0f && shift.z == 0.0f)
+                break;
+            m_presenter->presenter->applyCorrection(entity, shift);
+            if (entity == m_localPlayer)
+            {
+                const float length = std::sqrt(shift.x * shift.x + shift.y * shift.y + shift.z * shift.z);
+                ++m_localCorrections;
+                m_lastLocalCorrection  = length;
+                m_worstLocalCorrection = std::max(m_worstLocalCorrection, length);
+            }
+            break;
+        }
+    }
+}
+
+int64_t NetBattleMode::simulatedDelayMs(int32_t baseMs)
+{
+    m_simRng = m_simRng * 1664525u + 1013904223u;
+    const int64_t jitter = m_sim.m_jitterMs > 0 ? static_cast<int64_t>((m_simRng >> 8) % static_cast<uint32_t>(m_sim.m_jitterMs + 1)) : 0;
+    return static_cast<int64_t>(baseMs) + jitter;
+}
+
+void NetBattleMode::deliverFrames(const PB::Battle::BattleFramesPush& push)
+{
+    if (m_sim.m_downMs <= 0 && m_sim.m_jitterMs <= 0 && m_inbound.empty())
+    {
+        onFrames(push);
+        return;
+    }
+    m_lastInboundDueMs = std::max(m_lastInboundDueMs, monotonicNowMs() + simulatedDelayMs(m_sim.m_downMs));
+    m_inbound.push_back({m_lastInboundDueMs, push});
+}
+
+void NetBattleMode::deliverSnapshot(const PB::Battle::BattleSnapshotPush& push)
+{
+    if (m_sim.m_downMs <= 0 && m_sim.m_jitterMs <= 0 && m_inbound.empty())
+    {
+        onSnapshot(push);
+        return;
+    }
+    m_lastInboundDueMs = std::max(m_lastInboundDueMs, monotonicNowMs() + simulatedDelayMs(m_sim.m_downMs));
+    m_inbound.push_back({m_lastInboundDueMs, push});
+}
+
+void NetBattleMode::dispatchInputPush(PB::Battle::BattleInputPush push)
+{
+    if (m_sim.m_upMs <= 0 && m_sim.m_jitterMs <= 0 && m_outbound.empty())
+    {
+        m_agent.notify(push);
+        return;
+    }
+    m_lastOutboundDueMs = std::max(m_lastOutboundDueMs, monotonicNowMs() + simulatedDelayMs(m_sim.m_upMs));
+    m_outbound.push_back({m_lastOutboundDueMs, std::move(push)});
+}
+
+void NetBattleMode::flushSimulatedMessages(int64_t nowMs)
+{
+    while (!m_inbound.empty() && m_inbound.front().m_dueMs <= nowMs)
+    {
+        auto delayed = std::move(m_inbound.front());
+        m_inbound.pop_front();
+        if (const auto* frames = std::get_if<PB::Battle::BattleFramesPush>(&delayed.m_push))
+            onFrames(*frames);
+        else
+            onSnapshot(std::get<PB::Battle::BattleSnapshotPush>(delayed.m_push));
+    }
+    while (!m_outbound.empty() && m_outbound.front().m_dueMs <= nowMs)
+    {
+        m_agent.notify(m_outbound.front().m_push);
+        m_outbound.pop_front();
+    }
+}
+
+bool NetBattleMode::netInfo(BattleNetInfo& out) const
+{
+    if (!m_started)
+        return false;
+    out.m_rttMs      = m_sync->rttMs();
+    out.m_jitterMs   = m_sync->rttJitterMs();
+    out.m_leadFrames = m_sync->inputLeadFrames();
+    out.m_frameMs    = m_frameMs;
+    return true;
 }
 
 void NetBattleMode::recordNetCallback(double ms, uint64_t resimFrames)
@@ -309,7 +421,7 @@ void NetBattleMode::sendInputPush()
         entry->set_hash(hash);
     }
 
-    m_agent.notify(push);
+    dispatchInputPush(std::move(push));
 }
 
 void NetBattleMode::sendResync(uint32_t frame)
@@ -335,23 +447,29 @@ void NetBattleMode::requestLeave()
 
 void NetBattleMode::onUpdate(float delta)
 {
+    flushSimulatedMessages(monotonicNowMs());
     if (!m_started || m_ended || m_awaitSnapshot)
         return;
 
     const double simBegin = preciseNowMs();
-    const uint64_t target = m_sync->targetFrame(static_cast<uint64_t>(monotonicNowMs()));
+    const auto nowMs      = static_cast<uint64_t>(monotonicNowMs());
+    const uint64_t target = m_sync->targetFrame(nowMs);
     uint32_t catchUp      = 0;
     bool advanced         = false;
     // 每个帧号只生成并提交一次输入：先确认预测窗口还允许推进，再消费控制命令，
     // 避免被停顿的帧把一次性的边缘命令吞掉。输入领先量缩小时 target 低于当前帧，此处自然等待。
     while (m_sync->session().currentFrame() < target && catchUp < kMaxCatchUpFrames && m_sync->session().canAdvance())
     {
+        const uint64_t frame = m_sync->session().currentFrame() + 1;
         std::vector<mugen::sim::PlayerCommand> commands;
-        m_control.advance(commands);
+        // 开局校准与领先量增大后的追帧期间，这些帧的输入送到服务器时早已过期；此时不采样控制，
+        // 按键状态保留，追上之后的第一帧照常发出，避免角色起步即被服务器改写、回滚拉回。
+        if (m_sync->inputReady(nowMs, frame))
+            m_control.advance(commands);
         mugen::sim::PlayerInput input;
         input.slot      = m_localSlot;
         input.commands  = std::move(commands);
-        m_sync->submitLocalInput(m_sync->session().currentFrame() + 1, std::move(input));
+        m_sync->submitLocalInput(frame, std::move(input));
         if (!m_sync->session().tick())
             break;  // 仅在待回滚无法执行时发生，预测窗口耗尽已由 canAdvance 提前挡住。
         advanced = true;
@@ -369,11 +487,9 @@ void NetBattleMode::onUpdate(float delta)
         m_perfWindow.maxTicksInFrame = std::max(m_perfWindow.maxTicksInFrame, catchUp);
     }
 
-    // 渲染插值 alpha：按服务器帧长累计墙钟帧内进度。
+    // 渲染插值进度：从本帧逻辑 tick 起算（与 tick 同相），tick 迟到时停在 1，不回绕。
     const float step = static_cast<float>(m_frameMs) / 1000.0f;
-    m_renderAccum += delta;
-    if (m_renderAccum >= step)
-        m_renderAccum -= step;
+    m_tickAlpha.onRenderFrame(delta, advanced);
 
     auto& session = m_sync->session();
     for (const auto& event : session.eventsToPresent())
@@ -384,7 +500,7 @@ void NetBattleMode::onUpdate(float delta)
                 m_lastHurtTarget = event.entity;
         }
     const double presentBegin = preciseNowMs();
-    m_presenter->presenter->presentEvents(session.eventsToPresent(), session.world(), m_renderAccum / step, delta);
+    m_presenter->presenter->presentEvents(session.eventsToPresent(), session.world(), m_tickAlpha.alpha(step), delta);
     session.clearEventsToPresent();
     const double presentMs = preciseNowMs() - presentBegin;
     m_perfWindow.presentMsTotal += presentMs;
@@ -488,18 +604,18 @@ void NetBattleMode::renderDebugPanel()
     const uint64_t confirmed = session.confirmedFrame();
 
     ImGui::SetNextWindowPos(ImVec2(20.0f, 60.0f), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(360.0f, 400.0f), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(360.0f, 480.0f), ImGuiCond_FirstUseEver);
     ImGui::Begin("联网战斗");
+    // 最醒目的一行：到战斗服务器的延迟，再附输入领先量。
+    BattleNetInfo net;
+    netInfo(net);
+    BattleDebugPanel::renderNetLatency(net);
+    ImGui::Separator();
     ImGui::Text("battle=%u slot=%u", m_params.battleId, m_localSlot);
     ImGui::Text("frame=%llu confirmed=%llu ahead=%llu",
                 static_cast<unsigned long long>(current),
                 static_cast<unsigned long long>(confirmed),
                 static_cast<unsigned long long>(m_sync->aheadFrames()));
-    ImGui::Text("input lead=%u frames (~%ums) rtt=%lldms jitter=%lldms",
-                m_sync->inputLeadFrames(),
-                m_sync->inputLeadFrames() * m_frameMs,
-                static_cast<long long>(m_sync->rttMs()),
-                static_cast<long long>(m_sync->rttJitterMs()));
     if (m_sync->lateInputs() > 0)
         ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.3f, 1.0f),
                            "late inputs=%u (last slack=%d)",
@@ -507,6 +623,10 @@ void NetBattleMode::renderDebugPanel()
                            m_sync->lastSlackFrames());
     else
         ImGui::Text("late inputs=0 (last slack=%d)", m_sync->lastSlackFrames());
+    ImGui::Text("local hero corrections=%u last=%.1f worst=%.1f",
+                m_localCorrections,
+                m_lastLocalCorrection,
+                m_worstLocalCorrection);
     ImGui::Text("rollbacks=%llu stalls=%llu mispredict=%llu (local=%llu remote=%llu) resync=%u",
                 static_cast<unsigned long long>(stats.rollbacks),
                 static_cast<unsigned long long>(stats.stalls),
@@ -542,9 +662,16 @@ void NetBattleMode::renderDebugPanel()
     ImGui::Text("worst: frame=%.1fms resim/frame=%u ticks/frame=%u", m_perfWorst.deltaMsMax, m_perfWorst.maxResimInFrame, m_perfWorst.maxTicksInFrame);
     ImGui::Text("worst: sim=%.3fms net=%.3fms present=%.3fms", m_perfWorst.simMsMax, m_perfWorst.netMsMax, m_perfWorst.presentMsMax);
     ImGui::Separator();
+    // 调试：本机复现高延迟。额外延迟只作用于本客户端收发的战斗消息，面板上的 RTT 会包含它。
+    ImGui::TextUnformatted("模拟延迟(调试，0=关闭)");
+    ImGui::SliderInt("上行额外延迟 ms", &m_sim.m_upMs, 0, 500);
+    ImGui::SliderInt("下行额外延迟 ms", &m_sim.m_downMs, 0, 500);
+    ImGui::SliderInt("抖动 ms", &m_sim.m_jitterMs, 0, 200);
+    ImGui::Separator();
     if (ImGui::Button("投降", ImVec2(-1, 0)))
         requestLeave();
     ImGui::End();
+    m_debugPanel.renderNet(m_sync->session().world(), net);
 }
 
 }  // namespace gameui
