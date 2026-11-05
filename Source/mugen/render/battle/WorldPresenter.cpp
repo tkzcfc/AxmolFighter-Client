@@ -224,6 +224,8 @@ void AvatarPresenter::present(sim::World& world, float alpha, float renderDelta)
 
         // 仅逻辑帧推进时滚动采样：previous 取上一逻辑帧，current 取最新逻辑帧，
         // 渲染帧按 alpha 在两者间插值，得到平滑运动而非 30Hz 阶梯；回滚纠正偏移随渲染时间衰减。
+        // 本地玩家用短时间常数跟手，其余实体（对端英雄等）的回滚纠正用长时间常数与大吸附阈值滑行消化。
+        state.track.setProfile(entity == m_followEntity ? CorrectionProfile::Local : CorrectionProfile::Remote);
         state.track.sample(world.ecs().singleton<sim::WorldClock>().frame,
                            {renderValue(transform.position.x), renderValue(transform.position.y),
                             renderValue(transform.position.z)});

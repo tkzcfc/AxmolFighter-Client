@@ -484,8 +484,21 @@ TEST_CASE("NetBattleSync shrinks the input lead slowly with hysteresis and an RT
             withRtt.onServerFeedback(slackSample(20, f), 2300);
             noRtt.onServerFeedback(slackSample(20, f), 2300);
         }
-        CHECK(withRtt.inputLeadFrames() == 19);  // ceil((300 + 2 * 150) / 33)
+        // 300ms 的 RTT 触发 1 帧本地输入延迟 D，领先量只需覆盖其余部分：领先量 + D 恒不低于 RTT 所需帧数。
+        CHECK(withRtt.localInputDelayFrames() == 1);
+        CHECK(withRtt.inputLeadFrames() + withRtt.localInputDelayFrames() == 19);  // ceil((300 + 2 * 150) / 33)
         CHECK(noRtt.inputLeadFrames() == high.m_minLeadFrames);
+
+        // 关闭本地输入延迟时领先量自己覆盖整个 RTT。
+        NetBattleSyncConfig off = high;
+        off.m_localDelayMode    = LocalDelayMode::Off;
+        NetBattleSync noDelay(0, 2, off);
+        noDelay.start(buildWorld(setup), 1000, 1000);
+        noDelay.onServerFeedback(slackSample(20, 1, 2000), 2300);
+        for (uint64_t f = 2; f <= 800; f += 5)
+            noDelay.onServerFeedback(slackSample(20, f), 2300);
+        CHECK(noDelay.localInputDelayFrames() == 0);
+        CHECK(noDelay.inputLeadFrames() == 19);
     }
 }
 
@@ -706,4 +719,423 @@ TEST_CASE("PoseTrack turns a rollback position rewrite into a decaying offset in
     for (int i = 0; i < 10; ++i)
         alpha.onRenderFrame(0.016f, false);
     CHECK(alpha.alpha(0.033f) == 1.0f);
+}
+
+TEST_CASE("PoseTrack remote profile glides large corrections and always decays to zero")
+{
+    using mugen::CorrectionProfile;
+    using mugen::PoseTrack;
+
+    // 本地档：超过 kMaxCorrection 的纠正直接吸附（偏移清零）；远端档同样大小仍然滑行。
+    {
+        PoseTrack local;
+        local.sample(10, {100.0f, 0.0f, 0.0f});
+        local.sample(11, {110.0f, 0.0f, 0.0f});
+        local.applyCorrection({-450.0f, 0.0f, 0.0f});
+        CHECK(local.offsetLength() == 0.0f);
+
+        PoseTrack remote;
+        remote.setProfile(CorrectionProfile::Remote);
+        remote.sample(10, {100.0f, 0.0f, 0.0f});
+        remote.sample(11, {110.0f, 0.0f, 0.0f});
+        const float before = remote.display(1.0f).x;
+        remote.applyCorrection({-450.0f, 0.0f, 0.0f});
+        CHECK(remote.offsetLength() == doctest::Approx(450.0f));
+        CHECK(remote.display(1.0f).x == doctest::Approx(before));  // 应用纠正的那一刻显示位置不变。
+    }
+    // 远端档的吸附阈值：900 以内滑行，超过才吸附。
+    {
+        PoseTrack remote;
+        remote.setProfile(CorrectionProfile::Remote);
+        remote.sample(10, {0.0f, 0.0f, 0.0f});
+        remote.sample(11, {10.0f, 0.0f, 0.0f});
+        remote.applyCorrection({-PoseTrack::kRemoteMaxCorrection + 1.0f, 0.0f, 0.0f});
+        CHECK(remote.offsetLength() > 0.0f);
+        remote.applyCorrection({-5.0f, 0.0f, 0.0f});
+        CHECK(remote.offsetLength() == 0.0f);
+    }
+    // 时间常数随偏移增大：偏移大时更长，偏移衰减后回落到最小值。
+    {
+        PoseTrack small;
+        PoseTrack large;
+        small.setProfile(CorrectionProfile::Remote);
+        large.setProfile(CorrectionProfile::Remote);
+        small.sample(1, {0.0f, 0.0f, 0.0f});
+        large.sample(1, {0.0f, 0.0f, 0.0f});
+        small.applyCorrection({-20.0f, 0.0f, 0.0f});
+        large.applyCorrection({-400.0f, 0.0f, 0.0f});
+        CHECK(small.correctionTauSec() < large.correctionTauSec());
+        CHECK(large.correctionTauSec() <= PoseTrack::kRemoteCorrectionTauMaxSec + 1e-6f);
+        CHECK(small.correctionTauSec() >= PoseTrack::kRemoteCorrectionTauMinSec - 1e-6f);
+        // 远端 400 单位的纠正比本地档同量级的 0.1s 常数慢得多：0.1s 后本地档只剩约 37%，远端档剩得更多。
+        PoseTrack localSmall;
+        localSmall.sample(1, {0.0f, 0.0f, 0.0f});
+        localSmall.applyCorrection({-300.0f, 0.0f, 0.0f});
+        PoseTrack remote300;
+        remote300.setProfile(CorrectionProfile::Remote);
+        remote300.sample(1, {0.0f, 0.0f, 0.0f});
+        remote300.applyCorrection({-300.0f, 0.0f, 0.0f});
+        for (int i = 0; i < 6; ++i)
+        {
+            localSmall.advance(1.0f / 60.0f);
+            remote300.advance(1.0f / 60.0f);
+        }
+        CHECK(remote300.offsetLength() > localSmall.offsetLength());
+    }
+    // 偏移单调衰减且最终严格归零（远端静止时不留下漂移）。
+    {
+        PoseTrack remote;
+        remote.setProfile(CorrectionProfile::Remote);
+        remote.sample(1, {50.0f, 0.0f, 20.0f});
+        remote.applyCorrection({-380.0f, 0.0f, 15.0f});
+        float last = remote.offsetLength();
+        int frames = 0;
+        while (remote.offsetLength() > 0.0f && frames < 3000)
+        {
+            remote.advance(1.0f / 60.0f);
+            CHECK(remote.offsetLength() <= last + 1e-4f);
+            last = remote.offsetLength();
+            ++frames;
+        }
+        CHECK(remote.offsetLength() == 0.0f);
+        CHECK(frames < 600);  // 10 秒内必然归零（实际约 2 秒）。
+        CHECK(remote.display(1.0f).x == doctest::Approx(50.0f - 380.0f));
+    }
+    // 重同步（跳帧 / 帧号回退）在远端档同样直接吸附并清掉偏移。
+    {
+        PoseTrack remote;
+        remote.setProfile(CorrectionProfile::Remote);
+        remote.sample(20, {0.0f, 0.0f, 0.0f});
+        remote.sample(21, {5.0f, 0.0f, 0.0f});
+        remote.applyCorrection({-200.0f, 0.0f, 0.0f});
+        remote.sample(15, {0.0f, 0.0f, 0.0f});
+        CHECK(remote.offsetLength() == 0.0f);
+    }
+}
+
+namespace
+{
+// 一条不含 RTT 的空反馈（仅用于驱动本地输入延迟的调整）。
+ServerInputFeedback emptyFeedback()
+{
+    return {};
+}
+
+// 喂入一个 RTT 样本：回显时间 = now - rtt。
+void feedRtt(NetBattleSync& sync, uint64_t now, int64_t rtt, uint64_t slackFrame = 1)
+{
+    sync.onServerFeedback(slackSample(30, slackFrame, now - static_cast<uint64_t>(rtt)), now);
+}
+}  // namespace
+
+TEST_CASE("NetBattleSync local input delay: threshold, ramp, cap")
+{
+    test::ScenarioHarness::loadAssets();
+    const auto setup = duelSetup(2, kTestSeed);
+
+    // 不超过阈值（250ms）为 0；超过 1ms 即 1 帧。
+    {
+        NetBattleSync sync(0, 2, {});
+        sync.start(buildWorld(setup), 1000, 1000);
+        feedRtt(sync, 5000, 250);
+        CHECK(sync.localInputDelayFrames() == 0);
+    }
+    {
+        NetBattleSync sync(0, 2, {});
+        sync.start(buildWorld(setup), 1000, 1000);
+        feedRtt(sync, 5000, 251);
+        CHECK(sync.localInputDelayFrames() == 1);
+    }
+    // 400ms：目标 ceil((400 - 250) / 2 / 33) = 3，每 100ms 升 1 帧（升得快、一次只升 1 帧）。
+    {
+        NetBattleSync sync(0, 2, {});
+        sync.start(buildWorld(setup), 1000, 1000);
+        feedRtt(sync, 5000, 400);
+        CHECK(sync.localInputDelayFrames() == 1);
+        feedRtt(sync, 5050, 400);
+        CHECK(sync.localInputDelayFrames() == 1);  // 间隔不足。
+        feedRtt(sync, 5100, 400);
+        CHECK(sync.localInputDelayFrames() == 2);
+        feedRtt(sync, 5200, 400);
+        CHECK(sync.localInputDelayFrames() == 3);
+        feedRtt(sync, 5300, 400);
+        feedRtt(sync, 5400, 400);
+        CHECK(sync.localInputDelayFrames() == 3);
+        // 领先量 + D 守恒：首个样本把领先量抬到覆盖 RTT，之后 D 每升 1 帧领先量降 1 帧。
+        CHECK(sync.inputLeadFrames() + sync.localInputDelayFrames() == (400 + 100 + 32) / 33 + 2);
+    }
+    // 极高 RTT 受上限封顶。
+    {
+        NetBattleSyncConfig config;
+        NetBattleSync sync(0, 2, config);
+        sync.start(buildWorld(setup), 1000, 1000);
+        for (uint64_t i = 0; i < 20; ++i)
+            feedRtt(sync, 5000 + i * 100, 1500, 1 + i);
+        CHECK(sync.localInputDelayFrames() == config.m_localDelayMaxFrames);
+    }
+}
+
+TEST_CASE("NetBattleSync local input delay lowers slowly with hysteresis, one frame at a time")
+{
+    test::ScenarioHarness::loadAssets();
+    const auto setup = duelSetup(2, kTestSeed);
+    NetBattleSyncConfig config;
+
+    // RTT 在阈值之下 30ms 的滞回带内：不降。
+    {
+        NetBattleSync sync(0, 2, config);
+        sync.start(buildWorld(setup), 1000, 1000);
+        feedRtt(sync, 5000, 270);
+        CHECK(sync.localInputDelayFrames() == 1);
+        uint64_t now = 5000;
+        for (int i = 0; i < 400; ++i)
+        {
+            now += 33;
+            feedRtt(sync, now, 245, 2 + i);  // 平滑 RTT 收敛到 245：低于阈值，但 245 + 30 仍高于阈值。
+        }
+        CHECK(sync.localInputDelayFrames() == 1);
+        // RTT 真正下降到滞回带之外，持续 2 秒后才降到 0。
+        const uint64_t lowStart = now;
+        uint64_t loweredAt      = 0;
+        for (int i = 0; i < 600 && loweredAt == 0; ++i)
+        {
+            now += 33;
+            feedRtt(sync, now, 150, 1000 + i);
+            if (sync.localInputDelayFrames() == 0)
+                loweredAt = now;
+        }
+        CHECK(loweredAt != 0);
+        CHECK(loweredAt - lowStart >= static_cast<uint64_t>(config.m_localDelayLowerHoldMs));
+    }
+    // 从 D = 3 逐帧下降：任意相邻两次反馈之间 D 至多变化 1，每次下降间隔不小于保持时长，最终稳定在 1。
+    {
+        NetBattleSync sync(0, 2, config);
+        sync.start(buildWorld(setup), 1000, 1000);
+        uint64_t now = 5000;
+        for (int i = 0; i < 10; ++i)
+        {
+            feedRtt(sync, now, 400, 1 + i);
+            now += 100;
+        }
+        CHECK(sync.localInputDelayFrames() == 3);
+        uint32_t last        = 3;
+        uint64_t lastDropAt  = 0;
+        for (int i = 0; i < 1000; ++i)
+        {
+            now += 33;
+            feedRtt(sync, now, 270, 100 + i);
+            const uint32_t d = sync.localInputDelayFrames();
+            CHECK(d <= last);
+            CHECK(last - d <= 1);
+            if (d < last && lastDropAt != 0)
+                CHECK(now - lastDropAt >= static_cast<uint64_t>(config.m_localDelayLowerHoldMs));
+            if (d < last)
+                lastDropAt = now;
+            last = d;
+        }
+        CHECK(last == 1);
+    }
+    // 强制 / 关闭模式：D 逐帧趋近目标。
+    {
+        NetBattleSync sync(0, 2, config);
+        sync.start(buildWorld(setup), 1000, 1000);
+        sync.setLocalDelayMode(LocalDelayMode::Forced, 4);
+        uint64_t now = 2000;
+        uint32_t last = 0;
+        for (int i = 0; i < 12; ++i)
+        {
+            sync.onServerFeedback(emptyFeedback(), now);
+            CHECK(sync.localInputDelayFrames() - last <= 1);
+            last = sync.localInputDelayFrames();
+            now += 100;
+        }
+        CHECK(sync.localInputDelayFrames() == 4);
+        sync.setLocalDelayMode(LocalDelayMode::Off, 0);
+        for (int i = 0; i < 12; ++i)
+        {
+            sync.onServerFeedback(emptyFeedback(), now);
+            now += 100;
+        }
+        CHECK(sync.localInputDelayFrames() == 0);
+    }
+}
+
+TEST_CASE("NetBattleSync local input delay never drops, duplicates or rewrites a local input frame")
+{
+    test::ScenarioHarness::loadAssets();
+    NetBattleSyncConfig config;
+    config.m_rollbackDepth = 120;
+    NetBattleSync sync(0, 2, config);
+    sync.start(buildWorld(duelSetup(2, kTestSeed)), 1000, 1000);
+    // 100ms RTT 校准后放行输入采样，D 由强制模式脚本驱动。
+    sync.onServerFeedback(slackSample(20, 1, 1900), 2000);
+    REQUIRE(sync.rttMs() == 100);
+
+    // 与 NetBattleMode::onUpdate 一致的推进循环：每个采样都带唯一编号（放在 angle 字段），
+    // 被采样的编号必须在发出的输入里恰好出现一次。
+    std::map<uint64_t, PlayerInput> sent;
+    std::vector<int32_t> sampledIds;
+    std::map<int32_t, int> idCount;
+    int32_t nextId     = 1;
+    uint32_t skipTicks = 0;
+    std::vector<uint32_t> delayTrace;
+    uint32_t lastDelay = sync.localInputDelayFrames();
+    auto drain = [&]() {
+        std::vector<std::pair<uint64_t, PlayerInput>> pending;
+        sync.collectPendingInputs(pending);
+        for (const auto& [f, input] : pending)
+        {
+            const auto [it, inserted] = sent.emplace(f, input);
+            if (!inserted)
+            {
+                // 冗余重发必须与首次发出逐字段一致。
+                REQUIRE(it->second.commands.size() == input.commands.size());
+                for (size_t i = 0; i < input.commands.size(); ++i)
+                    CHECK(it->second.commands[i].angle == input.commands[i].angle);
+            }
+        }
+    };
+    uint64_t nextFeedbackAt = 0;
+    auto runClock = [&](uint64_t fromMs, uint64_t toMs) {
+        for (uint64_t now = fromMs; now <= toMs; now += 16)
+        {
+            if (now >= nextFeedbackAt)
+            {
+                nextFeedbackAt = now + 96;
+                sync.onServerFeedback(emptyFeedback(), now);
+                if (sync.localInputDelayFrames() != lastDelay)
+                {
+                    CHECK((sync.localInputDelayFrames() > lastDelay ? sync.localInputDelayFrames() - lastDelay
+                                                                    : lastDelay - sync.localInputDelayFrames()) == 1);
+                    lastDelay = sync.localInputDelayFrames();
+                    delayTrace.push_back(lastDelay);
+                }
+            }
+            const uint64_t target = sync.targetFrame(now);
+            uint32_t catchUp      = 0;
+            while (sync.session().currentFrame() < target && catchUp < 4 && sync.session().canAdvance())
+            {
+                const uint64_t frame = sync.session().currentFrame() + 1;
+                PlayerInput in;
+                in.slot = 0;
+                if (sync.inputReady(now, frame))
+                {
+                    PlayerCommand command{ControlEvent::CTR_RUN, ControlQuadrant::UpRight, nextId, 1};
+                    in.commands.push_back(command);
+                    sampledIds.push_back(nextId);
+                    ++nextId;
+                }
+                else
+                    ++skipTicks;
+                sync.submitLocalInput(frame, in);
+                REQUIRE(sync.session().tick());
+                drain();
+                ++catchUp;
+            }
+        }
+    };
+
+    // 强制 D：0 -> 3（缓冲）-> 1（缩短，帧间不重不丢）-> 4 -> 0。
+    uint64_t t = 2000;
+    runClock(t, t + 800);
+    sync.setLocalDelayMode(LocalDelayMode::Forced, 3);
+    t += 800;
+    runClock(t, t + 1500);
+    CHECK(sync.localInputDelayFrames() == 3);
+    sync.setLocalDelayMode(LocalDelayMode::Forced, 1);
+    t += 1500;
+    runClock(t, t + 1500);
+    CHECK(sync.localInputDelayFrames() == 1);
+    sync.setLocalDelayMode(LocalDelayMode::Forced, 4);
+    t += 1500;
+    runClock(t, t + 1500);
+    CHECK(sync.localInputDelayFrames() == 4);
+    sync.setLocalDelayMode(LocalDelayMode::Off, 0);
+    t += 1500;
+    runClock(t, t + 1500);
+    CHECK(sync.localInputDelayFrames() == 0);
+    CHECK(skipTicks > 0);  // D 减小时确实跳过了采样（而不是改写已安排的帧）。
+
+    // D 的轨迹按 1 帧逐步变化。
+    const std::vector<uint32_t> expectedTrace = {1, 2, 3, 2, 1, 2, 3, 4, 3, 2, 1, 0};
+    CHECK(delayTrace == expectedTrace);
+
+    // 发出的输入帧号连续无空洞，每个采样编号恰好出现一次，且按帧序递增。
+    const uint64_t scheduled = sync.scheduledThroughFrame();
+    REQUIRE(scheduled > 100);
+    for (uint64_t f = 1; f <= scheduled; ++f)
+        CHECK(sent.contains(f));
+    int32_t lastSeen = 0;
+    for (const auto& [f, input] : sent)
+    {
+        for (const auto& command : input.commands)
+        {
+            ++idCount[command.angle];
+            CHECK(command.angle > lastSeen);
+            lastSeen = command.angle;
+        }
+    }
+    for (const int32_t id : sampledIds)
+        CHECK(idCount[id] == 1);
+    CHECK(idCount.size() == sampledIds.size());
+
+    // 本地英雄不被错误预测：服务器按发出的输入确认后，本地槽位没有任何错误预测与回滚。
+    const uint64_t current = sync.session().currentFrame();
+    for (uint64_t f = 1; f <= current; ++f)
+    {
+        sync.confirmInput(f, 0, sent.at(f));
+        sync.confirmInput(f, 1, PlayerInput{});
+    }
+    sync.flushRollback();
+    CHECK(sync.session().stats().localMispredictions == 0);
+    // 远端槽位这里确认的恰好是空输入，没有任何改写。
+    CHECK(sync.session().stats().rollbacks == 0);
+}
+
+TEST_CASE("NetBattleSync local input delay keeps lead plus delay and gates one tick when it shrinks")
+{
+    test::ScenarioHarness::loadAssets();
+    NetBattleSyncConfig config;
+    NetBattleSync sync(0, 2, config);
+    sync.start(buildWorld(duelSetup(2, kTestSeed)), 1000, 1000);
+    sync.onServerFeedback(slackSample(20, 1, 1840), 2000);  // RTT 160。
+    REQUIRE(sync.rttMs() == 160);
+    const uint32_t leadBase = sync.inputLeadFrames();
+
+    sync.setLocalDelayMode(LocalDelayMode::Forced, 3);
+    uint64_t now = 2000;
+    for (int i = 0; i < 4; ++i)
+    {
+        sync.onServerFeedback(emptyFeedback(), now);
+        now += 100;
+    }
+    CHECK(sync.localInputDelayFrames() == 3);
+    CHECK(sync.inputLeadFrames() + 3 == leadBase);
+
+    // 推进到稳态（按真实循环：放行才采样，每帧提交一次），时钟停在估计服务器帧 60 附近。
+    now = 1000 + 33 * 60;
+    while (sync.session().currentFrame() < sync.targetFrame(now))
+    {
+        const uint64_t f = sync.session().currentFrame() + 1;
+        PlayerInput in;
+        in.slot = 0;
+        if (sync.inputReady(now, f))
+            in = atkInput(0);
+        sync.submitLocalInput(f, in);
+        REQUIRE(sync.session().tick());
+    }
+    const uint64_t frame = sync.session().currentFrame() + 1;
+    // 稳态：输入帧领先推进帧恰好 D。
+    CHECK(sync.scheduledThroughFrame() == sync.session().currentFrame() + 3);
+    CHECK(sync.inputReady(now, frame));
+
+    // D 从 3 降到 2（领先量同时 +1）：本帧的生效帧 frame + 2 已被占用，不放行也不改写；下一帧恢复放行。
+    sync.setLocalDelayMode(LocalDelayMode::Forced, 2);
+    sync.onServerFeedback(emptyFeedback(), now + 200);
+    CHECK(sync.localInputDelayFrames() == 2);
+    CHECK(sync.inputLeadFrames() + 2 == leadBase);
+    CHECK_FALSE(sync.inputReady(now, frame));
+    sync.submitLocalInput(frame, PlayerInput{});
+    CHECK(sync.scheduledThroughFrame() == frame + 2);  // 没有新安排，也没有改写。
+    CHECK(sync.inputReady(now, frame + 1));
 }

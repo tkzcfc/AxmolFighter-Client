@@ -218,6 +218,7 @@ void NetBattleMode::onFrames(const PB::Battle::BattleFramesPush& push)
     feedback.m_slackSamples     = push.input_slack_samples();
     feedback.m_lateInputs       = push.late_inputs();
     const uint32_t leadBefore   = m_sync->inputLeadFrames();
+    const uint32_t delayBefore  = m_sync->localInputDelayFrames();
     m_sync->onServerFeedback(feedback, localNowMs);
     if (m_sync->inputLeadFrames() != leadBefore)
         AXLOGI("NetBattleMode: input lead {} -> {} (slack_min={} rtt={}ms late_inputs={})",
@@ -226,6 +227,12 @@ void NetBattleMode::onFrames(const PB::Battle::BattleFramesPush& push)
                push.input_slack_min(),
                m_sync->rttMs(),
                m_sync->lateInputs());
+    if (m_sync->localInputDelayFrames() != delayBefore)
+        AXLOGI("NetBattleMode: local input delay {} -> {} (rtt={}ms lead={})",
+               delayBefore,
+               m_sync->localInputDelayFrames(),
+               m_sync->rttMs(),
+               m_sync->inputLeadFrames());
 
     // 刷新待回滚后再对账，避免用回滚前的陈旧快照误判失步。
     m_sync->flushRollback();
@@ -262,12 +269,18 @@ void NetBattleMode::applyRollbackCorrections(const std::vector<std::pair<mugen::
             if (shift.x == 0.0f && shift.y == 0.0f && shift.z == 0.0f)
                 break;
             m_presenter->presenter->applyCorrection(entity, shift);
+            const float length = std::sqrt(shift.x * shift.x + shift.y * shift.y + shift.z * shift.z);
             if (entity == m_localPlayer)
             {
-                const float length = std::sqrt(shift.x * shift.x + shift.y * shift.y + shift.z * shift.z);
                 ++m_localCorrections;
                 m_lastLocalCorrection  = length;
                 m_worstLocalCorrection = std::max(m_worstLocalCorrection, length);
+            }
+            else
+            {
+                ++m_remoteCorrections;
+                m_lastRemoteCorrection  = length;
+                m_worstRemoteCorrection = std::max(m_worstRemoteCorrection, length);
             }
             break;
         }
@@ -340,6 +353,19 @@ bool NetBattleMode::netInfo(BattleNetInfo& out) const
     out.m_jitterMs   = m_sync->rttJitterMs();
     out.m_leadFrames = m_sync->inputLeadFrames();
     out.m_frameMs    = m_frameMs;
+    out.m_localDelayFrames = m_sync->localInputDelayFrames();
+    switch (m_sync->localDelayMode())
+    {
+    case mugen::sim::net::LocalDelayMode::Auto:
+        out.m_localDelayMode = "auto";
+        break;
+    case mugen::sim::net::LocalDelayMode::Forced:
+        out.m_localDelayMode = "forced";
+        break;
+    case mugen::sim::net::LocalDelayMode::Off:
+        out.m_localDelayMode = "off";
+        break;
+    }
     return true;
 }
 
@@ -458,12 +484,14 @@ void NetBattleMode::onUpdate(float delta)
     bool advanced         = false;
     // 每个帧号只生成并提交一次输入：先确认预测窗口还允许推进，再消费控制命令，
     // 避免被停顿的帧把一次性的边缘命令吞掉。输入领先量缩小时 target 低于当前帧，此处自然等待。
+    // 采样结果由 NetBattleSync 安排到「本帧 + 本地输入延迟 D」帧生效并提前发出，本帧自身用此前安排的输入。
     while (m_sync->session().currentFrame() < target && catchUp < kMaxCatchUpFrames && m_sync->session().canAdvance())
     {
         const uint64_t frame = m_sync->session().currentFrame() + 1;
         std::vector<mugen::sim::PlayerCommand> commands;
         // 开局校准与领先量增大后的追帧期间，这些帧的输入送到服务器时早已过期；此时不采样控制，
         // 按键状态保留，追上之后的第一帧照常发出，避免角色起步即被服务器改写、回滚拉回。
+        // D 刚减小时本帧的生效帧已被占用，同样跳过一次采样（按键状态保留到下一帧）。
         if (m_sync->inputReady(nowMs, frame))
             m_control.advance(commands);
         mugen::sim::PlayerInput input;
@@ -627,6 +655,10 @@ void NetBattleMode::renderDebugPanel()
                 m_localCorrections,
                 m_lastLocalCorrection,
                 m_worstLocalCorrection);
+    ImGui::Text("remote hero corrections=%u last=%.1f worst=%.1f (smoothed)",
+                m_remoteCorrections,
+                m_lastRemoteCorrection,
+                m_worstRemoteCorrection);
     ImGui::Text("rollbacks=%llu stalls=%llu mispredict=%llu (local=%llu remote=%llu) resync=%u",
                 static_cast<unsigned long long>(stats.rollbacks),
                 static_cast<unsigned long long>(stats.stalls),
@@ -661,6 +693,22 @@ void NetBattleMode::renderDebugPanel()
     ImGui::Separator();
     ImGui::Text("worst: frame=%.1fms resim/frame=%u ticks/frame=%u", m_perfWorst.deltaMsMax, m_perfWorst.maxResimInFrame, m_perfWorst.maxTicksInFrame);
     ImGui::Text("worst: sim=%.3fms net=%.3fms present=%.3fms", m_perfWorst.simMsMax, m_perfWorst.netMsMax, m_perfWorst.presentMsMax);
+    ImGui::Separator();
+    // 调试：本地输入延迟 D（输入晚 D 帧在本地生效，换取客户端少领先 D 帧、对端被回滚拉回的距离变小）。
+    ImGui::TextUnformatted("本地输入延迟(调试)");
+    bool delayChanged = ImGui::RadioButton("自动", &m_delayModeUi, 0);
+    ImGui::SameLine();
+    delayChanged |= ImGui::RadioButton("固定", &m_delayModeUi, 1);
+    ImGui::SameLine();
+    delayChanged |= ImGui::RadioButton("关闭", &m_delayModeUi, 2);
+    delayChanged |= ImGui::SliderInt("固定帧数", &m_delayForcedUi, 0, 10);
+    if (delayChanged)
+    {
+        constexpr mugen::sim::net::LocalDelayMode kModes[] = {mugen::sim::net::LocalDelayMode::Auto,
+                                                              mugen::sim::net::LocalDelayMode::Forced,
+                                                              mugen::sim::net::LocalDelayMode::Off};
+        m_sync->setLocalDelayMode(kModes[m_delayModeUi], static_cast<uint32_t>(m_delayForcedUi));
+    }
     ImGui::Separator();
     // 调试：本机复现高延迟。额外延迟只作用于本客户端收发的战斗消息，面板上的 RTT 会包含它。
     ImGui::TextUnformatted("模拟延迟(调试，0=关闭)");

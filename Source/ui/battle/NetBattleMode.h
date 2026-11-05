@@ -164,6 +164,13 @@ private:
     uint32_t m_localCorrections       = 0;
     float m_lastLocalCorrection       = 0.0f;
     float m_worstLocalCorrection      = 0.0f;
+    // 回滚改写了对端英雄位置的次数、最近一次与最大的改写距离（渲染单位；表现层以长时间常数滑行消化）。
+    uint32_t m_remoteCorrections      = 0;
+    float m_lastRemoteCorrection      = 0.0f;
+    float m_worstRemoteCorrection     = 0.0f;
+    // 调试面板的本地输入延迟设置：模式（0 自动 / 1 固定 / 2 关闭）与固定帧数。
+    int m_delayModeUi   = 0;
+    int m_delayForcedUi = 2;
 
     // 模拟时延设置与排队中的消息。
     SimulatedLatency m_sim;

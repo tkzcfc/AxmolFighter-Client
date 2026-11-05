@@ -76,6 +76,8 @@ void BattleDebugPanel::renderNetLatency(const BattleNetInfo& net)
     ImGui::TextColored(color, "延迟(RTT): %lld ms  抖动: %lld ms", static_cast<long long>(net.m_rttMs),
                        static_cast<long long>(net.m_jitterMs));
     ImGui::Text("输入领先: %u 帧 (~%u ms)", net.m_leadFrames, net.m_leadFrames * net.m_frameMs);
+    ImGui::Text("本地输入延迟: %u 帧 (~%u ms) [%s]", net.m_localDelayFrames, net.m_localDelayFrames * net.m_frameMs,
+                net.m_localDelayMode);
 }
 
 void BattleDebugPanel::renderNet(mugen::sim::World& world, const BattleNetInfo& net)

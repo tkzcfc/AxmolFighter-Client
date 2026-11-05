@@ -13,6 +13,17 @@
 namespace mugen::sim::net
 {
 
+// 本地输入延迟的控制模式（调试面板可切换）。
+enum class LocalDelayMode : uint8_t
+{
+    // 按平滑 RTT 自适应：低于阈值为 0，高于阈值覆盖超出部分的一半。
+    Auto,
+    // 固定为 m_localDelayForcedFrames（逐帧趋近，仍不丢输入）。
+    Forced,
+    // 关闭，恒为 0。
+    Off,
+};
+
 // 客户端联网同步的调参项。由 BattleStartPush 的帧参数与既定常量共同确定。
 struct NetBattleSyncConfig
 {
@@ -43,6 +54,25 @@ struct NetBattleSyncConfig
     int64_t m_clockSmoothingDiv = 10;
     // 冗余重发的最近本地输入帧数。
     uint32_t m_redundantInputFrames = 8;
+
+    // 本地输入延迟 D（帧）：采样于第 t 帧的本地输入安排到第 t + D 帧生效并提前发给服务器，
+    // 本地预测因此晚 D 帧才执行它，作为交换，客户端领先估计服务器帧的量同步减少 D 帧
+    // （领先量 + D 恒等于覆盖 RTT 所需的帧数），本地对远端预测得更少，远端被回滚拉回的距离随之变小。
+    LocalDelayMode m_localDelayMode = LocalDelayMode::Auto;
+    // Forced 模式下的目标延迟帧数（上限 m_localDelayDebugMaxFrames）。
+    uint32_t m_localDelayForcedFrames = 0;
+    // 平滑 RTT 不超过该毫秒数时不启用本地输入延迟；超出部分的一半（按帧向上取整）由 D 承担。
+    int64_t m_localDelayRttThresholdMs = 250;
+    // 自动模式下 D 的上限（帧）。
+    uint32_t m_localDelayMaxFrames = 5;
+    // 调试强制模式下 D 的上限（帧）。
+    uint32_t m_localDelayDebugMaxFrames = 10;
+    // 增大 D 的最小间隔（本地毫秒，每次 1 帧）：升得快，但不在同一瞬间连升多帧。
+    int64_t m_localDelayRaiseIntervalMs = 100;
+    // 减小 D 须持续满足条件的时长（本地毫秒，每次 1 帧）：降得慢。
+    int64_t m_localDelayLowerHoldMs = 2000;
+    // 减小 D 的 RTT 滞回量（毫秒）：RTT 加上该值之后算出的 D 仍低于当前值才计入降低时长，避免阈值附近来回抖动。
+    int64_t m_localDelayLowerMarginMs = 30;
 };
 
 // 服务器随 BattleFramesPush 下发的、针对本槽位的输入到达反馈（BattleFramesPush 字段的无协议镜像）。
@@ -80,12 +110,13 @@ public:
     // 缩小时在 targetFrame 追上之前暂停推进。
     void onServerFeedback(const ServerInputFeedback& feedback, uint64_t localNowMs);
 
-    // 本地输入此刻是否应当采样（frame 为即将生成输入的帧号）。调用方在返回 false 时跳过输入采样并提交空输入，
-    // 按键状态保留，放行后的第一帧照常发出。两种情况下该帧的输入必然迟到，被服务器顺延执行后客户端要回滚，
-    // 表现为角色被拉回：
+    // 本地输入此刻是否应当采样（frame 为即将推进的帧号）。调用方在返回 false 时跳过输入采样并提交空输入，
+    // 按键状态保留（不丢失、不重复），放行后的第一帧照常发出。以下情况返回 false：
     // 1) 首个 RTT 样本到达前：初始领先量远小于 RTT；
-    // 2) 领先量刚增大或刚从卡顿 / 重同步追帧期间：追帧生成的帧领先估计服务器帧不足（早已过去）。
-    // 校准超时后无条件放行。
+    // 2) 领先量刚增大或刚从卡顿 / 重同步追帧期间：追帧生成的帧领先估计服务器帧不足（早已过去），
+    //    其输入必然迟到，被服务器顺延执行后客户端要回滚，表现为角色被拉回；
+    // 3) 本地输入延迟 D 刚减小：本帧的生效帧（frame + D）已被上一次采样占用，不能改写，留到下一帧采样。
+    // 校准超时后无条件放行 1)。
     bool inputReady(uint64_t localNowMs, uint64_t frame) const;
     // 本地时钟下应预测到的目标帧号（估计服务器帧 + 当前输入领先量，受回滚窗口封顶）。
     uint64_t targetFrame(uint64_t localNowMs) const;
@@ -94,7 +125,10 @@ public:
     // 由时钟偏移估计服务端当前时间（本地单调时钟 + 平滑偏移）。
     uint64_t estimatedServerNowMs(uint64_t localNowMs) const;
 
-    // 提交本地预测输入并记录到冗余环。
+    // 提交即将推进的 frame 的本地输入（input 为 inputReady 放行时的采样结果，否则为空输入），并记录到冗余环。
+    // 采样结果被安排到 frame + D 帧（D 为当前本地输入延迟）：每个帧号恰好获得一份输入且之后不再改写——
+    // D 增大时中间空出的帧补空输入，D 减小时调用方因 inputReady 为 false 而不采样，本帧不安排新输入。
+    // frame 自身的输入取自此前安排的结果（D = 0 时即本次提交）。
     void submitLocalInput(uint64_t frame, PlayerInput input);
     // 服务器确认单帧输入 / 系统命令（委托给回滚会话）。
     void confirmInput(uint64_t frame, uint32_t slot, PlayerInput input);
@@ -117,6 +151,15 @@ public:
     int64_t clockOffsetMs() const { return m_clockOffsetMs; }
     // 当前自适应输入领先量（帧）：预测目标帧领先估计服务器帧的帧数。
     uint32_t inputLeadFrames() const { return m_leadFrames; }
+    // 当前本地输入延迟 D（帧）：本地输入晚 D 帧才在本地预测里生效。
+    uint32_t localInputDelayFrames() const { return m_localDelay; }
+    // 调试：切换本地输入延迟的控制模式（Auto / Forced / Off）；Forced 时 forcedFrames 为目标 D。
+    // D 仍按每次 1 帧趋近目标，切换过程中不丢输入。
+    void setLocalDelayMode(LocalDelayMode mode, uint32_t forcedFrames);
+    LocalDelayMode localDelayMode() const { return m_config.m_localDelayMode; }
+    uint32_t localDelayForcedFrames() const { return m_config.m_localDelayForcedFrames; }
+    // 最近一个已安排输入的帧号（含尚未推进到的未来帧）。
+    uint64_t scheduledThroughFrame() const { return m_scheduledThrough; }
     // 平滑 RTT 与抖动（ms，含至多一个服务器 tick 的持有时间）；尚无回显样本时为 0。
     int64_t rttMs() const { return m_rttMs; }
     int64_t rttJitterMs() const { return m_rttVarMs; }
@@ -129,12 +172,22 @@ public:
 private:
     // 领先量上限：配置上限，同时留出回滚窗口与服务器接受窗口的余量。
     uint32_t maxLead() const;
-    // 缩小领先量的下限：配置下限与按 RTT + 抖动估计的所需帧数取大。
+    // 缩小领先量的下限：配置下限与按 RTT + 抖动估计的所需帧数（扣除本地输入延迟 D 已承担的部分）取大。
     uint32_t shrinkFloor() const;
     // 设置新领先量；之后真正按新领先量发出（追帧完成后）的帧才算新领先量下的样本。
     void setLead(uint32_t lead, uint64_t localNowMs);
+    // 领先量或 D 变化后重置反馈样本的有效起点并清空缩小观察窗口。
+    void restartSlackSampling(uint64_t localNowMs);
     // 清空缩小观察窗口。
     void resetShrinkWindow();
+    // 自动模式的目标 D：按平滑 RTT 计算（可附加滞回量），受 m_localDelayMaxFrames 封顶。
+    uint32_t desiredLocalDelay(int64_t rttMs) const;
+    // 每次反馈后按滞回规则把 D 向目标靠拢（每次 1 帧），并让「领先量 + D」保持不变。
+    void updateLocalDelay(uint64_t localNowMs);
+    // 把 D 改成 delay（相差 1 帧），同步调整领先量并重置反馈样本的有效起点。
+    void setLocalDelay(uint32_t delay, uint64_t localNowMs);
+    // 安排帧 frame 的本地输入：记入回滚会话与冗余环（恰好一次，不改写）。
+    void scheduleLocalInput(uint64_t frame, PlayerInput input);
 
     // 以「服务端时间 - 本地单调时钟」为样本做 EMA 平滑。
     void updateClockOffset(uint64_t serverTimeMs, uint64_t localNowMs);
@@ -154,7 +207,7 @@ private:
     bool m_hasOffset = false;
     // 当前自适应输入领先量（帧）。
     uint32_t m_leadFrames = 2;
-    // 本领先量生效后首个发出的输入帧号；早于它的反馈样本属于旧领先量，忽略。
+    // 本领先量生效后首个发出的输入帧号（输入帧 = 推进帧 + D）；早于它的反馈样本属于旧领先量 / 旧 D，忽略。
     uint64_t m_leadEffectiveFrame = 0;
     // 缩小观察窗口：起点输入帧号与窗口内最小富余。
     uint64_t m_shrinkWindowStart = 0;
@@ -167,8 +220,16 @@ private:
     int32_t m_lastSlack = 0;
     // 最近一次已发送客户端哈希的帧号。
     uint64_t m_lastSentHashFrame = 0;
-    // 最近本地输入帧环（最新在尾部），用于冗余重发。
+    // 最近本地输入帧环（最新在尾部，含已安排但尚未推进到的未来帧），用于冗余重发。
     std::deque<std::pair<uint64_t, PlayerInput>> m_pendingInputs;
+    // 当前本地输入延迟 D（帧）。
+    uint32_t m_localDelay = 0;
+    // 已安排输入的最大帧号：此前每个帧号都恰好有一份已发出的输入。
+    uint64_t m_scheduledThrough = 0;
+    // 上一次增大 / 调整 D 的本地时间（毫秒），用于增大间隔。
+    uint64_t m_localDelayChangedMs = 0;
+    // 自动模式下「目标 D 低于当前 D」持续的起点（本地毫秒）；0 表示当前不满足。
+    uint64_t m_localDelayLowerSinceMs = 0;
 };
 
 }  // namespace mugen::sim::net

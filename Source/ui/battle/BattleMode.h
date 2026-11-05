@@ -15,6 +15,10 @@ struct BattleNetInfo
     // 当前自适应输入领先量（帧）与逻辑帧时长（毫秒）。
     uint32_t m_leadFrames = 0;
     uint32_t m_frameMs = 33;
+    // 当前本地输入延迟 D（帧）：本地输入晚 D 帧才在本地预测里生效，换取客户端少领先 D 帧。
+    uint32_t m_localDelayFrames = 0;
+    // 本地输入延迟的控制模式名（"auto" / "forced" / "off"，静态字符串）。
+    const char* m_localDelayMode = "auto";
 };
 
 class IBattleMode
