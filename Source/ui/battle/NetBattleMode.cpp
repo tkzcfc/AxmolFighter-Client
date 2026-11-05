@@ -25,11 +25,20 @@ namespace
 {
 // 逻辑帧步长由服务器 frame_ms 决定，渲染插值 alpha 用墙钟帧内进度近似。
 constexpr uint32_t kMaxCatchUpFrames = 4;
+// 一秒窗口内最长渲染帧间隔超过该毫秒数时记录一条卡顿日志。
+constexpr double kHitchLogThresholdMs = 60.0;
 
 int64_t monotonicNowMs()
 {
     using namespace std::chrono;
     return duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
+}
+
+// 高精度毫秒计时，仅用于调试统计。
+double preciseNowMs()
+{
+    using namespace std::chrono;
+    return duration<double, std::milli>(steady_clock::now().time_since_epoch()).count();
 }
 }  // namespace
 
@@ -177,6 +186,9 @@ void NetBattleMode::onFrames(const PB::Battle::BattleFramesPush& push)
     if (!m_started || m_awaitSnapshot)
         return;
 
+    const double netBegin        = preciseNowMs();
+    const uint64_t resimBefore   = m_sync->session().stats().resimFrames;
+
     // 先应用确认输入，再做哈希对账：确认输入触发的回滚会把预测重推到一致状态。
     for (const auto& frame : push.frames())
     {
@@ -192,13 +204,38 @@ void NetBattleMode::onFrames(const PB::Battle::BattleFramesPush& push)
             m_sync->confirmSystem(input.frame, command);
     }
 
-    m_sync->onServerClock(push.server_frame(), push.server_time_ms(), static_cast<uint64_t>(monotonicNowMs()));
+    const auto localNowMs = static_cast<uint64_t>(monotonicNowMs());
+    m_sync->onServerClock(push.server_frame(), push.server_time_ms(), localNowMs);
+    mugen::sim::net::ServerInputFeedback feedback;
+    feedback.m_echoClientTimeMs = push.echo_client_time_ms();
+    feedback.m_slackMin         = push.input_slack_min();
+    feedback.m_slackFrame       = push.input_slack_frame();
+    feedback.m_slackSamples     = push.input_slack_samples();
+    feedback.m_lateInputs       = push.late_inputs();
+    const uint32_t leadBefore   = m_sync->inputLeadFrames();
+    m_sync->onServerFeedback(feedback, localNowMs);
+    if (m_sync->inputLeadFrames() != leadBefore)
+        AXLOGI("NetBattleMode: input lead {} -> {} (slack_min={} rtt={}ms late_inputs={})",
+               leadBefore,
+               m_sync->inputLeadFrames(),
+               push.input_slack_min(),
+               m_sync->rttMs(),
+               m_sync->lateInputs());
 
     // 刷新待回滚后再对账，避免用回滚前的陈旧快照误判失步。
     m_sync->flushRollback();
     for (const auto& hash : push.hashes())
         if (m_sync->checkServerHash(hash.frame(), hash.hash()))
             sendResync(hash.frame());
+
+    recordNetCallback(preciseNowMs() - netBegin, m_sync->session().stats().resimFrames - resimBefore);
+}
+
+void NetBattleMode::recordNetCallback(double ms, uint64_t resimFrames)
+{
+    m_perfWindow.netMsTotal += ms;
+    m_perfWindow.netMsMax = std::max(m_perfWindow.netMsMax, ms);
+    m_frameResim += resimFrames;
 }
 
 void NetBattleMode::onSnapshot(const PB::Battle::BattleSnapshotPush& push)
@@ -252,6 +289,7 @@ void NetBattleMode::sendInputPush()
     PB::Battle::BattleInputPush push;
     push.set_battle_id(m_params.battleId);
     push.set_ack_frame(static_cast<uint32_t>(m_sync->session().confirmedFrame()));
+    push.set_client_time_ms(static_cast<uint64_t>(monotonicNowMs()));
 
     std::vector<std::pair<uint64_t, mugen::sim::PlayerInput>> inputs;
     m_sync->collectPendingInputs(inputs);
@@ -280,6 +318,7 @@ void NetBattleMode::sendResync(uint32_t frame)
     req.set_battle_id(m_params.battleId);
     req.set_frame(frame);
     m_agent.notify(req);
+    ++m_resyncRequests;
     AXLOGW("NetBattleMode: hash mismatch at frame {}, requesting resync", frame);
 }
 
@@ -299,10 +338,13 @@ void NetBattleMode::onUpdate(float delta)
     if (!m_started || m_ended || m_awaitSnapshot)
         return;
 
+    const double simBegin = preciseNowMs();
     const uint64_t target = m_sync->targetFrame(static_cast<uint64_t>(monotonicNowMs()));
     uint32_t catchUp      = 0;
     bool advanced         = false;
-    while (m_sync->session().currentFrame() < target && catchUp < kMaxCatchUpFrames)
+    // 每个帧号只生成并提交一次输入：先确认预测窗口还允许推进，再消费控制命令，
+    // 避免被停顿的帧把一次性的边缘命令吞掉。输入领先量缩小时 target 低于当前帧，此处自然等待。
+    while (m_sync->session().currentFrame() < target && catchUp < kMaxCatchUpFrames && m_sync->session().canAdvance())
     {
         std::vector<mugen::sim::PlayerCommand> commands;
         m_control.advance(commands);
@@ -311,12 +353,21 @@ void NetBattleMode::onUpdate(float delta)
         input.commands  = std::move(commands);
         m_sync->submitLocalInput(m_sync->session().currentFrame() + 1, std::move(input));
         if (!m_sync->session().tick())
-            break;  // 预测领先超出回滚窗口，优雅停顿。
+            break;  // 仅在待回滚无法执行时发生，预测窗口耗尽已由 canAdvance 提前挡住。
         advanced = true;
         ++catchUp;
     }
     if (advanced)
         sendInputPush();
+    {
+        const double simMs = preciseNowMs() - simBegin;
+        m_perfWindow.simMsTotal += simMs;
+        m_perfWindow.simMsMax = std::max(m_perfWindow.simMsMax, simMs);
+        m_perfWindow.tickedFrames += catchUp;
+        if (catchUp > 1)
+            m_perfWindow.catchUpFrames += catchUp - 1;
+        m_perfWindow.maxTicksInFrame = std::max(m_perfWindow.maxTicksInFrame, catchUp);
+    }
 
     // 渲染插值 alpha：按服务器帧长累计墙钟帧内进度。
     const float step = static_cast<float>(m_frameMs) / 1000.0f;
@@ -332,8 +383,52 @@ void NetBattleMode::onUpdate(float delta)
             if (identity && identity->roleType != static_cast<int32_t>(mugen::EntityRoleType::kHero))
                 m_lastHurtTarget = event.entity;
         }
+    const double presentBegin = preciseNowMs();
     m_presenter->presenter->presentEvents(session.eventsToPresent(), session.world(), m_renderAccum / step, delta);
     session.clearEventsToPresent();
+    const double presentMs = preciseNowMs() - presentBegin;
+    m_perfWindow.presentMsTotal += presentMs;
+    m_perfWindow.presentMsMax = std::max(m_perfWindow.presentMsMax, presentMs);
+    finishRenderFrame(delta);
+}
+
+void NetBattleMode::finishRenderFrame(float delta)
+{
+    ++m_perfWindow.renderFrames;
+    m_perfWindow.deltaMsMax = std::max(m_perfWindow.deltaMsMax, static_cast<double>(delta) * 1000.0);
+    m_perfWindow.maxResimInFrame = std::max(m_perfWindow.maxResimInFrame, static_cast<uint32_t>(m_frameResim));
+    m_frameResim = 0;
+
+    m_perfWindowElapsed += delta;
+    if (m_perfWindowElapsed < 1.0f)
+        return;
+    // 一秒窗口结束：回滚计数取会话累计统计的差值，其余由逐帧累计。
+    const auto& stats = m_sync->session().stats();
+    m_perfWindow.rollbacks           = stats.rollbacks - m_perfStatsBase.rollbacks;
+    m_perfWindow.resimFrames         = stats.resimFrames - m_perfStatsBase.resimFrames;
+    m_perfWindow.mispredictions      = stats.mispredictions - m_perfStatsBase.mispredictions;
+    m_perfWindow.localMispredictions = stats.localMispredictions - m_perfStatsBase.localMispredictions;
+    m_perfWindow.stalls              = stats.stalls - m_perfStatsBase.stalls;
+    m_perfStatsBase                  = stats;
+    // 一秒内出现过明显卡顿才记一行日志（最多每秒一条），附各阶段最大耗时便于定位。
+    if (m_perfWindow.deltaMsMax > kHitchLogThresholdMs)
+        AXLOGW("NetBattleMode: slow frame in last 1s: worst={:.1f}ms sim_max={:.2f}ms net_max={:.2f}ms "
+               "present_max={:.2f}ms resim_max={} rollbacks={}",
+               m_perfWindow.deltaMsMax,
+               m_perfWindow.simMsMax,
+               m_perfWindow.netMsMax,
+               m_perfWindow.presentMsMax,
+               m_perfWindow.maxResimInFrame,
+               m_perfWindow.rollbacks);
+    m_perfLast                       = m_perfWindow;
+    m_perfWorst.deltaMsMax           = std::max(m_perfWorst.deltaMsMax, m_perfWindow.deltaMsMax);
+    m_perfWorst.maxResimInFrame      = std::max(m_perfWorst.maxResimInFrame, m_perfWindow.maxResimInFrame);
+    m_perfWorst.maxTicksInFrame      = std::max(m_perfWorst.maxTicksInFrame, m_perfWindow.maxTicksInFrame);
+    m_perfWorst.simMsMax             = std::max(m_perfWorst.simMsMax, m_perfWindow.simMsMax);
+    m_perfWorst.netMsMax             = std::max(m_perfWorst.netMsMax, m_perfWindow.netMsMax);
+    m_perfWorst.presentMsMax         = std::max(m_perfWorst.presentMsMax, m_perfWindow.presentMsMax);
+    m_perfWindow                     = {};
+    m_perfWindowElapsed              = 0.0f;
 }
 
 void NetBattleMode::setInput(uint32_t slot, bool pressed)
@@ -393,20 +488,59 @@ void NetBattleMode::renderDebugPanel()
     const uint64_t confirmed = session.confirmedFrame();
 
     ImGui::SetNextWindowPos(ImVec2(20.0f, 60.0f), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(260.0f, 220.0f), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(360.0f, 400.0f), ImGuiCond_FirstUseEver);
     ImGui::Begin("联网战斗");
     ImGui::Text("battle=%u slot=%u", m_params.battleId, m_localSlot);
-    ImGui::Text("frame=%llu confirmed=%llu lead=%llu",
+    ImGui::Text("frame=%llu confirmed=%llu ahead=%llu",
                 static_cast<unsigned long long>(current),
                 static_cast<unsigned long long>(confirmed),
-                static_cast<unsigned long long>(m_sync->leadFrames()));
-    ImGui::Text("rollbacks=%llu stalls=%llu mispredict=%llu",
+                static_cast<unsigned long long>(m_sync->aheadFrames()));
+    ImGui::Text("input lead=%u frames (~%ums) rtt=%lldms jitter=%lldms",
+                m_sync->inputLeadFrames(),
+                m_sync->inputLeadFrames() * m_frameMs,
+                static_cast<long long>(m_sync->rttMs()),
+                static_cast<long long>(m_sync->rttJitterMs()));
+    if (m_sync->lateInputs() > 0)
+        ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.3f, 1.0f),
+                           "late inputs=%u (last slack=%d)",
+                           m_sync->lateInputs(),
+                           m_sync->lastSlackFrames());
+    else
+        ImGui::Text("late inputs=0 (last slack=%d)", m_sync->lastSlackFrames());
+    ImGui::Text("rollbacks=%llu stalls=%llu mispredict=%llu (local=%llu remote=%llu) resync=%u",
                 static_cast<unsigned long long>(stats.rollbacks),
                 static_cast<unsigned long long>(stats.stalls),
-                static_cast<unsigned long long>(stats.mispredictions));
-    ImGui::Text("ping(est)=%lldms clock_offset=%lldms",
-                static_cast<long long>(m_sync->estimatedOneWayDelayMs()),
-                static_cast<long long>(m_sync->clockOffsetMs()));
+                static_cast<unsigned long long>(stats.mispredictions),
+                static_cast<unsigned long long>(stats.localMispredictions),
+                static_cast<unsigned long long>(stats.remoteMispredictions),
+                m_resyncRequests);
+    ImGui::Text("clock_offset=%lldms", static_cast<long long>(m_sync->clockOffsetMs()));
+
+    // 最近一个完整一秒窗口：用来判断卡顿来自回滚 / 模拟还是表现层。
+    const auto& win = m_perfLast;
+    const double frames = win.renderFrames > 0 ? static_cast<double>(win.renderFrames) : 1.0;
+    ImGui::Separator();
+    ImGui::Text("last 1s: render=%u fps, worst frame=%.1fms", win.renderFrames, win.deltaMsMax);
+    ImGui::Text("rollbacks=%llu resim=%llu (max %u in one frame) mispredict=%llu",
+                static_cast<unsigned long long>(win.rollbacks),
+                static_cast<unsigned long long>(win.resimFrames),
+                win.maxResimInFrame,
+                static_cast<unsigned long long>(win.mispredictions));
+    if (win.localMispredictions > 0)
+        ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.3f, 1.0f),
+                           "local input rewritten by server x%llu (late input?)",
+                           static_cast<unsigned long long>(win.localMispredictions));
+    ImGui::Text("ticks=%u catch-up=%u (max %u/frame) stalls=%llu",
+                win.tickedFrames,
+                win.catchUpFrames,
+                win.maxTicksInFrame,
+                static_cast<unsigned long long>(win.stalls));
+    ImGui::Text("sim    avg=%.3fms max=%.3fms", win.simMsTotal / frames, win.simMsMax);
+    ImGui::Text("net    sum=%.3fms max=%.3fms (confirm + rollback)", win.netMsTotal, win.netMsMax);
+    ImGui::Text("present avg=%.3fms max=%.3fms", win.presentMsTotal / frames, win.presentMsMax);
+    ImGui::Separator();
+    ImGui::Text("worst: frame=%.1fms resim/frame=%u ticks/frame=%u", m_perfWorst.deltaMsMax, m_perfWorst.maxResimInFrame, m_perfWorst.maxTicksInFrame);
+    ImGui::Text("worst: sim=%.3fms net=%.3fms present=%.3fms", m_perfWorst.simMsMax, m_perfWorst.netMsMax, m_perfWorst.presentMsMax);
     ImGui::Separator();
     if (ImGui::Button("投降", ImVec2(-1, 0)))
         requestLeave();

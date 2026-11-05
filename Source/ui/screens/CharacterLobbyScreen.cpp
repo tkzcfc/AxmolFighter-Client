@@ -181,6 +181,9 @@ void CharacterLobbyScreen::onClickStartGameButton(EventContext* context)
             NetBattleParams params;
             params.battleId = resp->rejoin().battle_id();
             params.roomId   = resp->rejoin().room_id();
+            for (const int32_t classId : resp->rejoin().class_ids())
+                params.roleIds.push_back(
+                    mugen::type_conversions::toRoleConfigId(static_cast<mugen::CharacterClass>(classId)));
             rejoin          = params;
         }
 

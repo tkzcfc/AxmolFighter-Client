@@ -5,6 +5,7 @@
 #include "mugen/sim/net/NetBattleSync.h"
 #include <array>
 #include <cstdint>
+#include <map>
 #include <random>
 #include <string>
 #include <utility>
@@ -323,4 +324,299 @@ TEST_CASE("LockstepAuthority releaseSlot drops queued input and idles the slot")
     CHECK(f3.players[1].commands.empty());  // 已排队的跑动输入被丢弃。
     const auto f4 = authority.step();
     CHECK(f4.players[1].commands.empty());
+}
+
+namespace
+{
+// 构造一条首次到达输入的反馈样本。
+ServerInputFeedback slackSample(int32_t slack, uint64_t frame, uint64_t echoMs = 0, uint32_t late = 0)
+{
+    ServerInputFeedback fb;
+    fb.m_slackMin     = slack;
+    fb.m_slackFrame   = frame;
+    fb.m_slackSamples = 2;
+    fb.m_echoClientTimeMs = echoMs;
+    fb.m_lateInputs   = late;
+    return fb;
+}
+
+PlayerInput atkInput(uint32_t slot)
+{
+    PlayerInput in;
+    in.slot = slot;
+    in.commands.push_back({ControlEvent::CTR_ATKA, ControlQuadrant::None, 0, 1});
+    return in;
+}
+
+PlayerInput runInput(uint32_t slot)
+{
+    PlayerInput in;
+    in.slot = slot;
+    in.commands.push_back({ControlEvent::CTR_RUN, ControlQuadrant::UpRight, 0, 1});
+    return in;
+}
+}  // namespace
+
+TEST_CASE("NetBattleSync measures RTT from the echoed client timestamp")
+{
+    test::ScenarioHarness::loadAssets();
+    NetBattleSync sync(0, 2, {});
+    sync.start(buildWorld(duelSetup(2, kTestSeed)), 1000, 1000);
+    CHECK(sync.rttMs() == 0);
+
+    sync.onServerFeedback(slackSample(5, 10, /*echo*/ 2000), 2080);  // 首个样本 80ms。
+    CHECK(sync.rttMs() == 80);
+    CHECK(sync.rttJitterMs() == 40);
+    sync.onServerFeedback(slackSample(5, 12, /*echo*/ 3000), 3160);  // 160ms：EMA 1/8 逼近。
+    CHECK(sync.rttMs() == 90);
+    // 无回显或回显时间在未来的样本被忽略。
+    sync.onServerFeedback(slackSample(5, 14, 0), 4000);
+    sync.onServerFeedback(slackSample(5, 16, 9000), 4000);
+    CHECK(sync.rttMs() == 90);
+}
+
+TEST_CASE("NetBattleSync grows the input lead fast and ignores stale feedback")
+{
+    test::ScenarioHarness::loadAssets();
+    NetBattleSyncConfig config;
+    config.m_inputDelayFrames = 4;
+    NetBattleSync sync(0, 2, config);
+    sync.start(buildWorld(duelSetup(2, kTestSeed)), 1000, 1000);
+    CHECK(sync.inputLeadFrames() == 4);
+    CHECK(sync.targetFrame(1000) == 4);
+
+    // 富余充足：不变。
+    sync.onServerFeedback(slackSample(3, 5), 1100);
+    CHECK(sync.inputLeadFrames() == 4);
+
+    // 迟到 3 帧（富余 -3）：一次补足缺口 = 目标富余 2 - (-3) = 5。
+    sync.onServerFeedback(slackSample(-3, 6, 0, 7), 1200);
+    CHECK(sync.inputLeadFrames() == 9);
+    CHECK(sync.lateInputs() == 7);
+    CHECK(sync.lastSlackFrames() == -3);
+    CHECK(sync.targetFrame(1000) == 9);
+
+    // 领先量变化前发出的帧（帧号小于生效帧 1）已无参考价值；用推进过的会话模拟：先推进 20 帧再变化。
+    for (uint64_t f = 1; f <= 20; ++f)
+    {
+        sync.submitLocalInput(f, PlayerInput{});
+        sync.session().advanceTo(f);
+    }
+    sync.onServerFeedback(slackSample(-10, 30), 1300);  // 帧 30 ≥ 生效帧 1：采纳；单次最多 +8。
+    CHECK(sync.inputLeadFrames() == 17);
+    // 新领先量下的生效帧 = 当前帧 + 1 = 21；途中仍在迟到的旧帧（帧号 < 21）被忽略，避免连续超调。
+    sync.onServerFeedback(slackSample(-10, 20), 1400);
+    CHECK(sync.inputLeadFrames() == 17);
+    sync.onServerFeedback(slackSample(-10, 21), 1500);
+    CHECK(sync.inputLeadFrames() == 25);
+    // 受上限封顶：回滚窗口 120 与服务器接受上限 90 之内，且不超过配置的 30。
+    sync.onServerFeedback(slackSample(-30, 40), 1600);
+    sync.onServerFeedback(slackSample(-30, 50), 1700);
+    CHECK(sync.inputLeadFrames() == config.m_maxLeadFrames);
+}
+
+TEST_CASE("NetBattleSync shrinks the input lead slowly with hysteresis and an RTT floor")
+{
+    test::ScenarioHarness::loadAssets();
+    NetBattleSyncConfig config;
+    config.m_inputDelayFrames = 12;
+    const auto setup          = duelSetup(2, kTestSeed);
+
+    // 富余在滞回带内（目标 2 + 余量 2 = 4 以下）：不缩小。
+    {
+        NetBattleSync sync(0, 2, config);
+        sync.start(buildWorld(setup), 1000, 1000);
+        CHECK(sync.inputLeadFrames() == 12);
+        for (uint64_t f = 1; f <= 200; f += 5)
+            sync.onServerFeedback(slackSample(3, f), 1000);
+        CHECK(sync.inputLeadFrames() == 12);
+    }
+    // 窗口内最小富余 = 4：满足滞回，每个窗口（30 帧）只缩小 1 帧。
+    {
+        NetBattleSync sync(0, 2, config);
+        sync.start(buildWorld(setup), 1000, 1000);
+        for (uint64_t f = 1; f <= 36; f += 5)  // 恰好一个窗口。
+            sync.onServerFeedback(slackSample(4, f), 1000);
+        CHECK(sync.inputLeadFrames() == 11);
+        for (uint64_t f = 41; f <= 200; f += 5)
+            sync.onServerFeedback(slackSample(4, f), 1000);
+        CHECK(sync.inputLeadFrames() < 11);
+        CHECK(sync.inputLeadFrames() >= 12 - 5);  // 160 帧至多 5 个窗口，每窗口 1 帧。
+    }
+    // 富余很大时缩得更快（约三分之一的富余），但仍不低于配置下限。
+    {
+        NetBattleSync slow(0, 2, config);
+        NetBattleSync fast(0, 2, config);
+        slow.start(buildWorld(setup), 1000, 1000);
+        fast.start(buildWorld(setup), 1000, 1000);
+        for (uint64_t f = 1; f <= 36; f += 5)
+        {
+            slow.onServerFeedback(slackSample(4, f), 1000);
+            fast.onServerFeedback(slackSample(16, f), 1000);
+        }
+        CHECK(slow.inputLeadFrames() == 11);
+        CHECK(fast.inputLeadFrames() < slow.inputLeadFrames());
+        for (uint64_t f = 41; f <= 600; f += 5)
+            fast.onServerFeedback(slackSample(100, f), 1000);
+        CHECK(fast.inputLeadFrames() == config.m_minLeadFrames);
+    }
+    // 窗口内只要反复出现低于滞回线的样本，就不缩小。
+    {
+        NetBattleSync sync(0, 2, config);
+        sync.start(buildWorld(setup), 1000, 1000);
+        for (uint64_t f = 1; f <= 400; f += 5)
+            sync.onServerFeedback(slackSample(f % 10 == 1 ? 3 : 20, f), 1000);
+        CHECK(sync.inputLeadFrames() == 12);
+    }
+    // RTT 下限：测得 300ms RTT（含抖动约 19 帧）后，不会缩到该帧数以下；无 RTT 时则可缩到最小。
+    {
+        NetBattleSyncConfig high = config;
+        high.m_inputDelayFrames  = 24;
+        NetBattleSync withRtt(0, 2, high);
+        NetBattleSync noRtt(0, 2, high);
+        withRtt.start(buildWorld(setup), 1000, 1000);
+        noRtt.start(buildWorld(setup), 1000, 1000);
+        withRtt.onServerFeedback(slackSample(20, 1, 2000), 2300);  // RTT 300ms，偏差 150ms。
+        for (uint64_t f = 2; f <= 800; f += 5)
+        {
+            withRtt.onServerFeedback(slackSample(20, f), 2300);
+            noRtt.onServerFeedback(slackSample(20, f), 2300);
+        }
+        CHECK(withRtt.inputLeadFrames() == 19);  // ceil((300 + 2 * 150) / 33)
+        CHECK(noRtt.inputLeadFrames() == high.m_minLeadFrames);
+    }
+}
+
+TEST_CASE("NetBattleSync lead changes never skip or rewrite local input frames")
+{
+    test::ScenarioHarness::loadAssets();
+    NetBattleSyncConfig config;
+    config.m_inputDelayFrames = 4;
+    config.m_rollbackDepth    = 120;
+    NetBattleSync sync(0, 2, config);
+    sync.start(buildWorld(duelSetup(2, kTestSeed)), 1000, 1000);
+
+    std::map<uint64_t, std::string> sent;
+    uint64_t nextEdge = 0;
+    // 与 NetBattleMode::onUpdate 一致的推进循环：只在 当前帧 < 目标帧 时前进一帧，每帧号只生成一次输入。
+    auto runClock = [&](uint64_t fromMs, uint64_t toMs) {
+        for (uint64_t now = fromMs; now <= toMs; now += 16)
+        {
+            const uint64_t target = sync.targetFrame(now);
+            uint32_t catchUp      = 0;
+            while (sync.session().currentFrame() < target && catchUp < 4 && sync.session().canAdvance())
+            {
+                const uint64_t frame = sync.session().currentFrame() + 1;
+                PlayerInput in;
+                in.slot = 0;
+                if (frame % 3 == 0)
+                    in = atkInput(0);
+                sync.submitLocalInput(frame, in);
+                REQUIRE(sync.session().tick());
+                CHECK(sync.session().currentFrame() == frame);
+                std::vector<std::pair<uint64_t, PlayerInput>> pending;
+                sync.collectPendingInputs(pending);
+                for (const auto& [f, input] : pending)
+                {
+                    const std::string key = std::to_string(input.commands.size());
+                    const auto [it, inserted] = sent.emplace(f, key);
+                    CHECK((inserted || it->second == key));
+                }
+                nextEdge = frame;
+                ++catchUp;
+            }
+        }
+    };
+
+    runClock(1000, 1000 + 33 * 40);
+    const uint64_t frameBefore = sync.session().currentFrame();
+    CHECK(frameBefore >= 40);
+
+    // 增大领先量：多追几帧，帧号连续不跳。
+    sync.onServerFeedback(slackSample(-6, frameBefore + 1), 2000);
+    const uint32_t raised = sync.inputLeadFrames();
+    CHECK(raised > 4);
+    runClock(2000, 2000 + 33 * 10);
+    CHECK(sync.session().currentFrame() >= frameBefore + (raised - 4));
+
+    // 缩小领先量：目标帧回落，客户端等待（不再前进、不重发不同内容），直到目标帧重新追上。
+    const uint64_t frameHigh = sync.session().currentFrame();
+    for (uint64_t f = frameHigh + 1; f <= frameHigh + 200; f += 5)
+        sync.onServerFeedback(slackSample(30, f), 3000);
+    CHECK(sync.inputLeadFrames() < raised);
+    const uint64_t target = sync.targetFrame(3000 + 33 * 10);
+    runClock(3000 + 33 * 10, 3000 + 33 * 10);
+    CHECK(sync.session().currentFrame() >= frameHigh);
+    CHECK((target > frameHigh || sync.session().currentFrame() == frameHigh));
+    (void)nextEdge;
+}
+
+TEST_CASE("LockstepAuthority carries a late non-empty input into the next frame")
+{
+    test::ScenarioHarness::loadAssets();
+    LockstepAuthority authority(duelSetup(2, kTestSeed));
+    for (int i = 0; i < 5; ++i)
+        authority.step();  // 已 tick 到帧 5。
+    REQUIRE(authority.currentFrame() == 5);
+
+    // 帧 3 的攻击迟到：顺延到帧 6，排在帧 6 自身命令（跑动）之前。
+    CHECK(authority.needsInput(1, 3));
+    CHECK(authority.submitInput(1, 3, atkInput(1)));
+    CHECK_FALSE(authority.needsInput(1, 3));  // 已收到过，重发被跳过。
+    CHECK(authority.submitInput(1, 3, atkInput(1)));  // 重复提交视为已处理，不重复顺延。
+    CHECK(authority.submitInput(1, 6, runInput(1)));
+
+    const auto& stats = authority.inputStats(1);
+    CHECK(stats.m_lateInputs == 1);
+    CHECK(stats.m_carriedInputs == 1);
+    CHECK(stats.m_droppedInputs == 0);
+    CHECK(stats.m_windowSamples == 2);
+    CHECK(stats.m_windowMinSlack == -3);  // 3 - 5 - 1
+    CHECK(stats.m_windowMinFrame == 3);
+
+    const auto f6 = authority.step();
+    REQUIRE(f6.players[1].commands.size() == 2);
+    CHECK(f6.players[1].commands[0].controlEvent == ControlEvent::CTR_ATKA);
+    CHECK(f6.players[1].commands[1].controlEvent == ControlEvent::CTR_RUN);
+    // 顺延只发生一次。
+    const auto f7 = authority.step();
+    CHECK(f7.players[1].commands.empty());
+
+    // 槽位 0 完全不受影响。
+    CHECK(authority.inputStats(0).m_lateInputs == 0);
+}
+
+TEST_CASE("LockstepAuthority drops stale late input, counts empty late input and tracks slack")
+{
+    test::ScenarioHarness::loadAssets();
+    LockstepAuthority authority(duelSetup(2, kTestSeed));
+    for (int i = 0; i < 40; ++i)
+        authority.step();
+
+    // 迟到 kMaxLateCarryFrames 帧及以上：丢弃。
+    CHECK_FALSE(authority.submitInput(0, 40 - kMaxLateCarryFrames, atkInput(0)));
+    CHECK(authority.inputStats(0).m_droppedInputs == 1);
+    CHECK(authority.inputStats(0).m_carriedInputs == 0);
+    // 迟到但仍在上限内：顺延。
+    CHECK(authority.submitInput(0, 40 - kMaxLateCarryFrames + 1, atkInput(0)));
+    CHECK(authority.inputStats(0).m_carriedInputs == 1);
+    // 空输入迟到只计数，不顺延也不算丢弃。
+    CHECK(authority.submitInput(0, 39, PlayerInput{}));
+    CHECK(authority.inputStats(0).m_lateInputs == 3);
+    CHECK(authority.inputStats(0).m_droppedInputs == 1);
+    CHECK(authority.inputStats(0).m_carriedInputs == 1);
+
+    // 准时输入：富余 = 帧号 - 已 tick 帧 - 1；窗口记最小值，重置后清零而累计计数保留。
+    CHECK(authority.submitInput(1, 43, atkInput(1)));  // 富余 2
+    CHECK(authority.submitInput(1, 41, atkInput(1)));  // 富余 0
+    CHECK(authority.inputStats(1).m_windowMinSlack == 0);
+    CHECK(authority.inputStats(1).m_windowMinFrame == 41);
+    CHECK(authority.inputStats(1).m_windowSamples == 2);
+    authority.resetSlackWindow(1);
+    CHECK(authority.inputStats(1).m_windowSamples == 0);
+    CHECK(authority.inputStats(1).m_lateInputs == 0);
+
+    // releaseSlot 清掉顺延与已收记录：同一帧号重新被接受（重连后的新客户端）。
+    authority.releaseSlot(0);
+    CHECK(authority.needsInput(0, 41));
 }

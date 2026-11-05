@@ -268,7 +268,8 @@ void HitResolver::_endHit(Entity target, HitTrigger data, const conf::EffectConf
     if (!capability)
         m_world.hitHooks().m_ability(m_world, target, HitAbilityEvent::AfterToBeHit, data, -1);
     if (DamageCalculator(m_world).checkHurtPermit(target, data.m_effect, HurtPermit::Number))
-        m_world.emit(target, HurtNumber{data.m_damage.toInt()});
+        m_world.emit(target, HurtNumber{data.m_damage.toInt(), data.m_critical, true,
+                                        ecs.get<RoleHitState>(target).m_contact});
     const auto owner = DamageCalculator(m_world).finalOwner(data.m_attacker);
     ai::AiDriver(m_world, target).addThreat(data.m_attacker, data.m_damage);
     if (ecs.tryGet<RoleHitState>(owner))

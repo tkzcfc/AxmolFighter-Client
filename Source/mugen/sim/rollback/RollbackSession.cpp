@@ -59,6 +59,9 @@ void RollbackSession::addConfirmedInput(uint64_t frame, uint32_t slot, PlayerInp
         MG_ASSERT(frame != 0 && slot < m_slotCount);
         return;
     }
+    // 已落出回滚窗口的确认输入既不可能被回滚到也无需记录（其效果已包含在快照 / 已丢弃的历史里）。
+    if (frame <= m_minSnapshotFrame)
+        return;
     input.slot = slot;
     auto& entry = m_inputs[slot][frame];
     if (entry.confirmed)
@@ -69,7 +72,13 @@ void RollbackSession::addConfirmedInput(uint64_t frame, uint32_t slot, PlayerInp
     }
     // 该帧已用预测输入模拟过且与确认不一致时，记录错误预测并回滚。
     if (frame <= m_currentFrame && !samePlayerInput(entry.input, input))
+    {
         markMisprediction(frame);
+        if (slot == m_localSlot)
+            ++m_stats.localMispredictions;
+        else
+            ++m_stats.remoteMispredictions;
+    }
     entry = {input, true};
     noteConfirmed(slot, frame);
 }
@@ -82,6 +91,8 @@ void RollbackSession::addConfirmedSystem(uint64_t frame, SystemCommand command)
         MG_ASSERT(frame != 0);
         return;
     }
+    if (frame <= m_minSnapshotFrame)
+        return;
     auto& commands     = m_systemCommands[frame];
     const uint64_t key = hashCanonical(command);
     for (const auto& existing : commands)
@@ -110,6 +121,14 @@ bool RollbackSession::tick()
         if (!rollbackTo(m_pendingRollback))
             return false;
     }
+    if (!canAdvance())
+        return false;
+    advanceOneFrame();
+    return true;
+}
+
+bool RollbackSession::canAdvance()
+{
     const uint64_t nextFrame = m_currentFrame + 1;
     // 已确认帧可能领先于当前帧（启动阻塞或卡顿后追帧），此时没有预测领先，不得做无符号减法。
     const uint64_t confirmed = confirmedFrame();
@@ -118,7 +137,6 @@ bool RollbackSession::tick()
         ++m_stats.stalls;
         return false;
     }
-    advanceOneFrame();
     return true;
 }
 
@@ -257,7 +275,17 @@ void RollbackSession::advanceOneFrame()
     // 环形快照覆盖的最早帧号，受快照深度与最近一次复位点共同约束（不复位点之后不得回退）。
     const uint64_t ringMin = m_currentFrame >= m_depth ? m_currentFrame - m_depth : 0;
     m_minSnapshotFrame     = std::max(m_minSnapshotFrame, ringMin);
+    pruneHistory();
     collectEvents(nextFrame);
+}
+
+void RollbackSession::pruneHistory()
+{
+    // 回滚到帧 f 需要 f-1 的快照，故输入只需保留 m_minSnapshotFrame 之后的帧。
+    for (auto& slot : m_inputs)
+        slot.erase(slot.begin(), slot.upper_bound(m_minSnapshotFrame));
+    m_localInputs.erase(m_localInputs.begin(), m_localInputs.upper_bound(m_minSnapshotFrame));
+    m_systemCommands.erase(m_systemCommands.begin(), m_systemCommands.upper_bound(m_minSnapshotFrame));
 }
 
 void RollbackSession::storeSnapshot(uint64_t afterFrame)

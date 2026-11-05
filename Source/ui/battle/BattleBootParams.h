@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace gameui
 {
@@ -22,6 +23,8 @@ struct NetBattleParams
     std::int32_t roomId            = 0;
     std::int64_t opponentPlayerId  = 0;
     std::string opponentName;
+    // 全部参战者的角色配置 id（按槽位），用于预加载技能特效。
+    std::vector<std::int32_t> roleIds;
 };
 
 }  // namespace gameui

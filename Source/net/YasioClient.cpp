@@ -89,7 +89,7 @@ int YasioClient::send(int connectionId, const char* data, size_t length)
 
 int YasioClient::send(int connectionId, const yasio::obstream& obs)
 {
-    NET_LOGD("YasioClient: try send packet, id = {}, size = {}", connectionId, obs.length());
+//    NET_LOGD("YasioClient: try send packet, id = {}, size = {}", connectionId, obs.length());
     auto it = m_connections.find(connectionId);
     if (it == m_connections.end())
     {
@@ -104,7 +104,7 @@ int YasioClient::send(int connectionId, const yasio::obstream& obs)
         return -1001;
     }
 
-    NET_LOGD("YasioClient: do send packet, id = {}, size = {}", connectionId, obs.length());
+//    NET_LOGD("YasioClient: do send packet, id = {}, size = {}", connectionId, obs.length());
     return m_service->write(transport, std::move(obs.buffer()));
 }
 
@@ -157,7 +157,7 @@ void YasioClient::handleEvent(yasio::io_event* event)
     case yasio::YEK_ON_PACKET:
     {
         auto& packet = event->packet();
-        NET_LOGD("YasioClient: recv packet, id = {}, size = {}", connectionId, packet.size());
+//        NET_LOGD("YasioClient: recv packet, id = {}, size = {}", connectionId, packet.size());
         emitEvent(Event::RecvData, connectionId, packet.data(), packet.size());
     }
     break;

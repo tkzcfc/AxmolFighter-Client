@@ -3536,9 +3536,32 @@ class BattleRejoinInfo final :
   // accessors -------------------------------------------------------
 
   enum : int {
+    kClassIdsFieldNumber = 3,
     kBattleIdFieldNumber = 1,
     kRoomIdFieldNumber = 2,
   };
+  // repeated int32 class_ids = 3;
+  int class_ids_size() const;
+  private:
+  int _internal_class_ids_size() const;
+  public:
+  void clear_class_ids();
+  private:
+  int32_t _internal_class_ids(int index) const;
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >&
+      _internal_class_ids() const;
+  void _internal_add_class_ids(int32_t value);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >*
+      _internal_mutable_class_ids();
+  public:
+  int32_t class_ids(int index) const;
+  void set_class_ids(int index, int32_t value);
+  void add_class_ids(int32_t value);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >&
+      class_ids() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >*
+      mutable_class_ids();
+
   // uint32 battle_id = 1;
   void clear_battle_id();
   uint32_t battle_id() const;
@@ -3565,6 +3588,8 @@ class BattleRejoinInfo final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t > class_ids_;
+    mutable std::atomic<int> _class_ids_cached_byte_size_;
     uint32_t battle_id_;
     int32_t room_id_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
@@ -5816,11 +5841,34 @@ class DuelStartPush final :
   // accessors -------------------------------------------------------
 
   enum : int {
+    kClassIdsFieldNumber = 5,
     kOpponentNameFieldNumber = 4,
     kBattleIdFieldNumber = 1,
     kRoomIdFieldNumber = 2,
     kOpponentPlayerIdFieldNumber = 3,
   };
+  // repeated int32 class_ids = 5;
+  int class_ids_size() const;
+  private:
+  int _internal_class_ids_size() const;
+  public:
+  void clear_class_ids();
+  private:
+  int32_t _internal_class_ids(int index) const;
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >&
+      _internal_class_ids() const;
+  void _internal_add_class_ids(int32_t value);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >*
+      _internal_mutable_class_ids();
+  public:
+  int32_t class_ids(int index) const;
+  void set_class_ids(int index, int32_t value);
+  void add_class_ids(int32_t value);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >&
+      class_ids() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >*
+      mutable_class_ids();
+
   // string opponent_name = 4;
   void clear_opponent_name();
   const std::string& opponent_name() const;
@@ -5870,6 +5918,8 @@ class DuelStartPush final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t > class_ids_;
+    mutable std::atomic<int> _class_ids_cached_byte_size_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr opponent_name_;
     uint32_t battle_id_;
     int32_t room_id_;
@@ -9514,6 +9564,53 @@ inline void BattleRejoinInfo::set_room_id(int32_t value) {
   // @@protoc_insertion_point(field_set:PB.Game.BattleRejoinInfo.room_id)
 }
 
+// repeated int32 class_ids = 3;
+inline int BattleRejoinInfo::_internal_class_ids_size() const {
+  return _impl_.class_ids_.size();
+}
+inline int BattleRejoinInfo::class_ids_size() const {
+  return _internal_class_ids_size();
+}
+inline void BattleRejoinInfo::clear_class_ids() {
+  _impl_.class_ids_.Clear();
+}
+inline int32_t BattleRejoinInfo::_internal_class_ids(int index) const {
+  return _impl_.class_ids_.Get(index);
+}
+inline int32_t BattleRejoinInfo::class_ids(int index) const {
+  // @@protoc_insertion_point(field_get:PB.Game.BattleRejoinInfo.class_ids)
+  return _internal_class_ids(index);
+}
+inline void BattleRejoinInfo::set_class_ids(int index, int32_t value) {
+  _impl_.class_ids_.Set(index, value);
+  // @@protoc_insertion_point(field_set:PB.Game.BattleRejoinInfo.class_ids)
+}
+inline void BattleRejoinInfo::_internal_add_class_ids(int32_t value) {
+  _impl_.class_ids_.Add(value);
+}
+inline void BattleRejoinInfo::add_class_ids(int32_t value) {
+  _internal_add_class_ids(value);
+  // @@protoc_insertion_point(field_add:PB.Game.BattleRejoinInfo.class_ids)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >&
+BattleRejoinInfo::_internal_class_ids() const {
+  return _impl_.class_ids_;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >&
+BattleRejoinInfo::class_ids() const {
+  // @@protoc_insertion_point(field_list:PB.Game.BattleRejoinInfo.class_ids)
+  return _internal_class_ids();
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >*
+BattleRejoinInfo::_internal_mutable_class_ids() {
+  return &_impl_.class_ids_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >*
+BattleRejoinInfo::mutable_class_ids() {
+  // @@protoc_insertion_point(field_mutable_list:PB.Game.BattleRejoinInfo.class_ids)
+  return _internal_mutable_class_ids();
+}
+
 // -------------------------------------------------------------------
 
 // DuelInviteReq
@@ -10621,6 +10718,53 @@ inline void DuelStartPush::set_allocated_opponent_name(std::string* opponent_nam
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   // @@protoc_insertion_point(field_set_allocated:PB.Game.DuelStartPush.opponent_name)
+}
+
+// repeated int32 class_ids = 5;
+inline int DuelStartPush::_internal_class_ids_size() const {
+  return _impl_.class_ids_.size();
+}
+inline int DuelStartPush::class_ids_size() const {
+  return _internal_class_ids_size();
+}
+inline void DuelStartPush::clear_class_ids() {
+  _impl_.class_ids_.Clear();
+}
+inline int32_t DuelStartPush::_internal_class_ids(int index) const {
+  return _impl_.class_ids_.Get(index);
+}
+inline int32_t DuelStartPush::class_ids(int index) const {
+  // @@protoc_insertion_point(field_get:PB.Game.DuelStartPush.class_ids)
+  return _internal_class_ids(index);
+}
+inline void DuelStartPush::set_class_ids(int index, int32_t value) {
+  _impl_.class_ids_.Set(index, value);
+  // @@protoc_insertion_point(field_set:PB.Game.DuelStartPush.class_ids)
+}
+inline void DuelStartPush::_internal_add_class_ids(int32_t value) {
+  _impl_.class_ids_.Add(value);
+}
+inline void DuelStartPush::add_class_ids(int32_t value) {
+  _internal_add_class_ids(value);
+  // @@protoc_insertion_point(field_add:PB.Game.DuelStartPush.class_ids)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >&
+DuelStartPush::_internal_class_ids() const {
+  return _impl_.class_ids_;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >&
+DuelStartPush::class_ids() const {
+  // @@protoc_insertion_point(field_list:PB.Game.DuelStartPush.class_ids)
+  return _internal_class_ids();
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >*
+DuelStartPush::_internal_mutable_class_ids() {
+  return &_impl_.class_ids_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >*
+DuelStartPush::mutable_class_ids() {
+  // @@protoc_insertion_point(field_mutable_list:PB.Game.DuelStartPush.class_ids)
+  return _internal_mutable_class_ids();
 }
 
 // -------------------------------------------------------------------

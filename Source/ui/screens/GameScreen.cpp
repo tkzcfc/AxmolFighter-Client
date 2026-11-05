@@ -40,12 +40,18 @@ void GameScreen::onPrepareLoad()
     auto& loader = getResourceLoader();
     loader.add<gameres::MapResource>(layer);
 
-    if (!m_local)
-        return;  // 联网决斗地图已知，角色特效在战斗开始后按需加载。
-
-    const int32_t playerRole =
-        m_local && m_local->roleId > 0 ? m_local->roleId : resolveLocalPlayerRoleId();
     const int32_t difficulty = room->monsterAiDifficulty;
+    if (m_net)
+    {
+        // 联网决斗：双方职业 id 由 game 服随开始/重连消息下发，预加载全部参战者的技能特效。
+        for (const int32_t roleId : m_net->roleIds)
+            gameres::addRoleEffects(loader, roleId, difficulty);
+        return;
+    }
+    if (!m_local)
+        return;
+
+    const int32_t playerRole = m_local->roleId > 0 ? m_local->roleId : resolveLocalPlayerRoleId();
     gameres::addRoleEffects(loader, playerRole, difficulty);
     for (const int32_t monsterId : room->monsterIds)
         if (monsterId > 0)

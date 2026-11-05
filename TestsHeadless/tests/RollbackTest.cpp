@@ -277,3 +277,63 @@ TEST_CASE("Rollback presentation events have no duplicate identical events")
     }
     CHECK(eventCount > 0);
 }
+
+TEST_CASE("Rollback attributes mispredictions to local and remote slots")
+{
+    constexpr int playerCount = 2;
+    RollbackSession session(0, playerCount);
+    session.setWorld(buildDuelWorld(kDuelRoom, kTestSeed, playerCount));
+    // 无任何确认：全部帧用空输入预测。
+    REQUIRE(session.advanceTo(20));
+
+    PlayerInput attack;
+    attack.commands.push_back({ControlEvent::CTR_ATKA, ControlQuadrant::None, 0, 1});
+
+    // 远端槽位的边缘输入（攻击）与空预测不符：计入远端错误预测。
+    session.addConfirmedInput(10, 1, attack);
+    CHECK(session.stats().remoteMispredictions == 1);
+    CHECK(session.stats().localMispredictions == 0);
+
+    // 本地槽位的确认与本地预测不符（例如输入迟到被服务器补空后改写）：计入本地错误预测。
+    PlayerInput localRun;
+    localRun.commands.push_back({ControlEvent::CTR_RUN, ControlQuadrant::UpRight, 0, 1});
+    session.addConfirmedInput(12, 0, localRun);
+    CHECK(session.stats().localMispredictions == 1);
+    CHECK(session.stats().mispredictions == 2);
+
+    // 两次错误预测合并为一次回滚，从最早错误帧重推到当前帧。
+    session.flushPendingRollback();
+    CHECK(session.stats().rollbacks == 1);
+    CHECK(session.stats().resimFrames == 11);  // 帧 10..20
+    CHECK(session.currentFrame() == 20);
+}
+
+TEST_CASE("Rollback ignores confirmed inputs older than the rollback window")
+{
+    constexpr int playerCount = 2;
+    constexpr uint64_t frames = 60;
+    RollbackSession session(0, playerCount, 8);
+    session.setWorld(buildDuelWorld(kDuelRoom, kTestSeed, playerCount));
+    PlayerInput idle;
+    for (uint64_t frame = 1; frame <= frames; ++frame)
+    {
+        session.addConfirmedInput(frame, 0, idle);
+        session.addConfirmedInput(frame, 1, idle);
+        REQUIRE(session.tick());
+    }
+    const uint64_t hashBefore = session.hash();
+
+    // 落出窗口的迟到确认既不能回滚也不应制造错误预测，更不能卡死后续推进。
+    PlayerInput attack;
+    attack.commands.push_back({ControlEvent::CTR_ATKA, ControlQuadrant::None, 0, 1});
+    session.addConfirmedInput(3, 1, attack);
+    session.addConfirmedSystem(3, SystemCommand{});
+    CHECK(session.stats().mispredictions == 0);
+    CHECK(session.hash() == hashBefore);
+
+    session.addConfirmedInput(frames + 1, 0, idle);
+    session.addConfirmedInput(frames + 1, 1, idle);
+    CHECK(session.tick());
+    CHECK(session.stats().rollbacks == 0);
+    CHECK(session.currentFrame() == frames + 1);
+}

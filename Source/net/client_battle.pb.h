@@ -1016,6 +1016,7 @@ class BattleInputPush final :
     kClientHashesFieldNumber = 4,
     kBattleIdFieldNumber = 1,
     kAckFrameFieldNumber = 2,
+    kClientTimeMsFieldNumber = 5,
   };
   // repeated .PB.Battle.BattleInputFrame inputs = 3;
   int inputs_size() const;
@@ -1071,6 +1072,15 @@ class BattleInputPush final :
   void _internal_set_ack_frame(uint32_t value);
   public:
 
+  // uint64 client_time_ms = 5;
+  void clear_client_time_ms();
+  uint64_t client_time_ms() const;
+  void set_client_time_ms(uint64_t value);
+  private:
+  uint64_t _internal_client_time_ms() const;
+  void _internal_set_client_time_ms(uint64_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:PB.Battle.BattleInputPush)
  private:
   class _Internal;
@@ -1083,6 +1093,7 @@ class BattleInputPush final :
     ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Battle::BattleFrameHash > client_hashes_;
     uint32_t battle_id_;
     uint32_t ack_frame_;
+    uint64_t client_time_ms_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -1370,6 +1381,11 @@ class BattleFramesPush final :
     kBattleIdFieldNumber = 1,
     kServerFrameFieldNumber = 2,
     kServerTimeMsFieldNumber = 3,
+    kEchoClientTimeMsFieldNumber = 6,
+    kInputSlackMinFieldNumber = 7,
+    kInputSlackFrameFieldNumber = 8,
+    kInputSlackSamplesFieldNumber = 9,
+    kLateInputsFieldNumber = 10,
   };
   // repeated .PB.Battle.BattleConfirmedFrame frames = 4;
   int frames_size() const;
@@ -1434,6 +1450,51 @@ class BattleFramesPush final :
   void _internal_set_server_time_ms(uint64_t value);
   public:
 
+  // uint64 echo_client_time_ms = 6;
+  void clear_echo_client_time_ms();
+  uint64_t echo_client_time_ms() const;
+  void set_echo_client_time_ms(uint64_t value);
+  private:
+  uint64_t _internal_echo_client_time_ms() const;
+  void _internal_set_echo_client_time_ms(uint64_t value);
+  public:
+
+  // sint32 input_slack_min = 7;
+  void clear_input_slack_min();
+  int32_t input_slack_min() const;
+  void set_input_slack_min(int32_t value);
+  private:
+  int32_t _internal_input_slack_min() const;
+  void _internal_set_input_slack_min(int32_t value);
+  public:
+
+  // uint32 input_slack_frame = 8;
+  void clear_input_slack_frame();
+  uint32_t input_slack_frame() const;
+  void set_input_slack_frame(uint32_t value);
+  private:
+  uint32_t _internal_input_slack_frame() const;
+  void _internal_set_input_slack_frame(uint32_t value);
+  public:
+
+  // uint32 input_slack_samples = 9;
+  void clear_input_slack_samples();
+  uint32_t input_slack_samples() const;
+  void set_input_slack_samples(uint32_t value);
+  private:
+  uint32_t _internal_input_slack_samples() const;
+  void _internal_set_input_slack_samples(uint32_t value);
+  public:
+
+  // uint32 late_inputs = 10;
+  void clear_late_inputs();
+  uint32_t late_inputs() const;
+  void set_late_inputs(uint32_t value);
+  private:
+  uint32_t _internal_late_inputs() const;
+  void _internal_set_late_inputs(uint32_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:PB.Battle.BattleFramesPush)
  private:
   class _Internal;
@@ -1447,6 +1508,11 @@ class BattleFramesPush final :
     uint32_t battle_id_;
     uint32_t server_frame_;
     uint64_t server_time_ms_;
+    uint64_t echo_client_time_ms_;
+    int32_t input_slack_min_;
+    uint32_t input_slack_frame_;
+    uint32_t input_slack_samples_;
+    uint32_t late_inputs_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -3093,6 +3159,26 @@ BattleInputPush::client_hashes() const {
   return _impl_.client_hashes_;
 }
 
+// uint64 client_time_ms = 5;
+inline void BattleInputPush::clear_client_time_ms() {
+  _impl_.client_time_ms_ = uint64_t{0u};
+}
+inline uint64_t BattleInputPush::_internal_client_time_ms() const {
+  return _impl_.client_time_ms_;
+}
+inline uint64_t BattleInputPush::client_time_ms() const {
+  // @@protoc_insertion_point(field_get:PB.Battle.BattleInputPush.client_time_ms)
+  return _internal_client_time_ms();
+}
+inline void BattleInputPush::_internal_set_client_time_ms(uint64_t value) {
+  
+  _impl_.client_time_ms_ = value;
+}
+inline void BattleInputPush::set_client_time_ms(uint64_t value) {
+  _internal_set_client_time_ms(value);
+  // @@protoc_insertion_point(field_set:PB.Battle.BattleInputPush.client_time_ms)
+}
+
 // -------------------------------------------------------------------
 
 // BattleInputFrame
@@ -3309,6 +3395,106 @@ inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::PB::Battle::BattleFram
 BattleFramesPush::hashes() const {
   // @@protoc_insertion_point(field_list:PB.Battle.BattleFramesPush.hashes)
   return _impl_.hashes_;
+}
+
+// uint64 echo_client_time_ms = 6;
+inline void BattleFramesPush::clear_echo_client_time_ms() {
+  _impl_.echo_client_time_ms_ = uint64_t{0u};
+}
+inline uint64_t BattleFramesPush::_internal_echo_client_time_ms() const {
+  return _impl_.echo_client_time_ms_;
+}
+inline uint64_t BattleFramesPush::echo_client_time_ms() const {
+  // @@protoc_insertion_point(field_get:PB.Battle.BattleFramesPush.echo_client_time_ms)
+  return _internal_echo_client_time_ms();
+}
+inline void BattleFramesPush::_internal_set_echo_client_time_ms(uint64_t value) {
+  
+  _impl_.echo_client_time_ms_ = value;
+}
+inline void BattleFramesPush::set_echo_client_time_ms(uint64_t value) {
+  _internal_set_echo_client_time_ms(value);
+  // @@protoc_insertion_point(field_set:PB.Battle.BattleFramesPush.echo_client_time_ms)
+}
+
+// sint32 input_slack_min = 7;
+inline void BattleFramesPush::clear_input_slack_min() {
+  _impl_.input_slack_min_ = 0;
+}
+inline int32_t BattleFramesPush::_internal_input_slack_min() const {
+  return _impl_.input_slack_min_;
+}
+inline int32_t BattleFramesPush::input_slack_min() const {
+  // @@protoc_insertion_point(field_get:PB.Battle.BattleFramesPush.input_slack_min)
+  return _internal_input_slack_min();
+}
+inline void BattleFramesPush::_internal_set_input_slack_min(int32_t value) {
+  
+  _impl_.input_slack_min_ = value;
+}
+inline void BattleFramesPush::set_input_slack_min(int32_t value) {
+  _internal_set_input_slack_min(value);
+  // @@protoc_insertion_point(field_set:PB.Battle.BattleFramesPush.input_slack_min)
+}
+
+// uint32 input_slack_frame = 8;
+inline void BattleFramesPush::clear_input_slack_frame() {
+  _impl_.input_slack_frame_ = 0u;
+}
+inline uint32_t BattleFramesPush::_internal_input_slack_frame() const {
+  return _impl_.input_slack_frame_;
+}
+inline uint32_t BattleFramesPush::input_slack_frame() const {
+  // @@protoc_insertion_point(field_get:PB.Battle.BattleFramesPush.input_slack_frame)
+  return _internal_input_slack_frame();
+}
+inline void BattleFramesPush::_internal_set_input_slack_frame(uint32_t value) {
+  
+  _impl_.input_slack_frame_ = value;
+}
+inline void BattleFramesPush::set_input_slack_frame(uint32_t value) {
+  _internal_set_input_slack_frame(value);
+  // @@protoc_insertion_point(field_set:PB.Battle.BattleFramesPush.input_slack_frame)
+}
+
+// uint32 input_slack_samples = 9;
+inline void BattleFramesPush::clear_input_slack_samples() {
+  _impl_.input_slack_samples_ = 0u;
+}
+inline uint32_t BattleFramesPush::_internal_input_slack_samples() const {
+  return _impl_.input_slack_samples_;
+}
+inline uint32_t BattleFramesPush::input_slack_samples() const {
+  // @@protoc_insertion_point(field_get:PB.Battle.BattleFramesPush.input_slack_samples)
+  return _internal_input_slack_samples();
+}
+inline void BattleFramesPush::_internal_set_input_slack_samples(uint32_t value) {
+  
+  _impl_.input_slack_samples_ = value;
+}
+inline void BattleFramesPush::set_input_slack_samples(uint32_t value) {
+  _internal_set_input_slack_samples(value);
+  // @@protoc_insertion_point(field_set:PB.Battle.BattleFramesPush.input_slack_samples)
+}
+
+// uint32 late_inputs = 10;
+inline void BattleFramesPush::clear_late_inputs() {
+  _impl_.late_inputs_ = 0u;
+}
+inline uint32_t BattleFramesPush::_internal_late_inputs() const {
+  return _impl_.late_inputs_;
+}
+inline uint32_t BattleFramesPush::late_inputs() const {
+  // @@protoc_insertion_point(field_get:PB.Battle.BattleFramesPush.late_inputs)
+  return _internal_late_inputs();
+}
+inline void BattleFramesPush::_internal_set_late_inputs(uint32_t value) {
+  
+  _impl_.late_inputs_ = value;
+}
+inline void BattleFramesPush::set_late_inputs(uint32_t value) {
+  _internal_set_late_inputs(value);
+  // @@protoc_insertion_point(field_set:PB.Battle.BattleFramesPush.late_inputs)
 }
 
 // -------------------------------------------------------------------

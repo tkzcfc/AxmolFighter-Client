@@ -4,6 +4,7 @@
 #include "DungeonSelectScreen.h"
 #include "GameScreen.h"
 #include "mugen/conf/ReflectedConfig.h"
+#include "mugen/conf/TypeConversions.h"
 #include "mugen/render/battle/WorldPresenter.h"
 #include "AppContext.h"
 #include "core/event/EventDispatcher.h"
@@ -530,6 +531,9 @@ void TownScreen::addMessagePushReceiver()
         params.roomId          = push.room_id();
         params.opponentPlayerId = push.opponent_player_id();
         params.opponentName    = push.opponent_name();
+        for (const int32_t classId : push.class_ids())
+            params.roleIds.push_back(
+                mugen::type_conversions::toRoleConfigId(static_cast<mugen::CharacterClass>(classId)));
         AXLOGI("TownScreen: duel started, entering net battle {}", params.battleId);
         getScreenManager()->switchScreen<GameScreen>(params);
     });

@@ -27,6 +27,10 @@ struct RollbackStats
     uint64_t stalls = 0;
     // 累计发现的错误预测（确认输入与已用输入不一致）次数。
     uint64_t mispredictions = 0;
+    // 其中本地槽位的错误预测次数：本地输入被服务器改写（迟到被补空等），不应在正常网络下出现。
+    uint64_t localMispredictions = 0;
+    // 其中远端槽位的错误预测次数：远端边缘输入（如攻击）与“空输入”预测不符，属预期行为。
+    uint64_t remoteMispredictions = 0;
 };
 
 // 单槽位单帧的输入条目：实际使用的命令及是否已由服务器确认。
@@ -71,6 +75,9 @@ public:
     bool advanceTo(uint64_t frame);
     // 推进一帧；预测超前超过窗口深度时返回 false 且不推进。
     bool tick();
+    // 下一帧是否仍在预测窗口内；窗口耗尽时记一次停顿并返回 false。调用方在生成本帧输入前先问它，
+    // 保证被停顿的帧不会消费（丢弃）一次性的输入命令。
+    bool canAdvance();
     // 立即执行待回滚（若有），不推进新帧；供哈希对账前把世界刷新到一致状态。
     void flushPendingRollback();
 
@@ -123,6 +130,8 @@ private:
     void noteConfirmed(uint32_t slot, uint64_t frame);
     // 重置输入与快照历史到指定帧。
     void resetHistory(uint64_t frame);
+    // 丢弃已落出回滚窗口（不可能再被回滚到）的输入与系统命令，避免历史无限增长。
+    void pruneHistory();
 
     uint32_t m_localSlot = 0;
     uint32_t m_slotCount = 1;

@@ -216,7 +216,9 @@ struct SelectCharacterRespDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 SelectCharacterRespDefaultTypeInternal _SelectCharacterResp_default_instance_;
 PROTOBUF_CONSTEXPR BattleRejoinInfo::BattleRejoinInfo(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.battle_id_)*/0u
+    /*decltype(_impl_.class_ids_)*/{}
+  , /*decltype(_impl_._class_ids_cached_byte_size_)*/{0}
+  , /*decltype(_impl_.battle_id_)*/0u
   , /*decltype(_impl_.room_id_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct BattleRejoinInfoDefaultTypeInternal {
@@ -402,7 +404,9 @@ struct DuelInvitePushDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 DuelInvitePushDefaultTypeInternal _DuelInvitePush_default_instance_;
 PROTOBUF_CONSTEXPR DuelStartPush::DuelStartPush(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.opponent_name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+    /*decltype(_impl_.class_ids_)*/{}
+  , /*decltype(_impl_._class_ids_cached_byte_size_)*/{0}
+  , /*decltype(_impl_.opponent_name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.battle_id_)*/0u
   , /*decltype(_impl_.room_id_)*/0
   , /*decltype(_impl_.opponent_player_id_)*/int64_t{0}
@@ -6288,7 +6292,9 @@ BattleRejoinInfo::BattleRejoinInfo(const BattleRejoinInfo& from)
   : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
   BattleRejoinInfo* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.battle_id_){}
+      decltype(_impl_.class_ids_){from._impl_.class_ids_}
+    , /*decltype(_impl_._class_ids_cached_byte_size_)*/{0}
+    , decltype(_impl_.battle_id_){}
     , decltype(_impl_.room_id_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
@@ -6304,7 +6310,9 @@ inline void BattleRejoinInfo::SharedCtor(
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.battle_id_){0u}
+      decltype(_impl_.class_ids_){arena}
+    , /*decltype(_impl_._class_ids_cached_byte_size_)*/{0}
+    , decltype(_impl_.battle_id_){0u}
     , decltype(_impl_.room_id_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
@@ -6321,6 +6329,7 @@ BattleRejoinInfo::~BattleRejoinInfo() {
 
 inline void BattleRejoinInfo::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.class_ids_.~RepeatedField();
 }
 
 void BattleRejoinInfo::SetCachedSize(int size) const {
@@ -6333,6 +6342,7 @@ void BattleRejoinInfo::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
+  _impl_.class_ids_.Clear();
   ::memset(&_impl_.battle_id_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&_impl_.room_id_) -
       reinterpret_cast<char*>(&_impl_.battle_id_)) + sizeof(_impl_.room_id_));
@@ -6357,6 +6367,17 @@ const char* BattleRejoinInfo::_InternalParse(const char* ptr, ::_pbi::ParseConte
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
           _impl_.room_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated int32 class_ids = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedInt32Parser(_internal_mutable_class_ids(), ptr, ctx);
+          CHK_(ptr);
+        } else if (static_cast<uint8_t>(tag) == 24) {
+          _internal_add_class_ids(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr));
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -6402,6 +6423,15 @@ uint8_t* BattleRejoinInfo::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_room_id(), target);
   }
 
+  // repeated int32 class_ids = 3;
+  {
+    int byte_size = _impl_._class_ids_cached_byte_size_.load(std::memory_order_relaxed);
+    if (byte_size > 0) {
+      target = stream->WriteInt32Packed(
+          3, _internal_class_ids(), byte_size, target);
+    }
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
         static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
@@ -6417,6 +6447,20 @@ size_t BattleRejoinInfo::ByteSizeLong() const {
   uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
+
+  // repeated int32 class_ids = 3;
+  {
+    size_t data_size = ::_pbi::WireFormatLite::
+      Int32Size(this->_impl_.class_ids_);
+    if (data_size > 0) {
+      total_size += 1 +
+        ::_pbi::WireFormatLite::Int32Size(static_cast<int32_t>(data_size));
+    }
+    int cached_size = ::_pbi::ToCachedSize(data_size);
+    _impl_._class_ids_cached_byte_size_.store(cached_size,
+                                    std::memory_order_relaxed);
+    total_size += data_size;
+  }
 
   // uint32 battle_id = 1;
   if (this->_internal_battle_id() != 0) {
@@ -6449,6 +6493,7 @@ void BattleRejoinInfo::MergeFrom(const BattleRejoinInfo& from) {
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
+  _this->_impl_.class_ids_.MergeFrom(from._impl_.class_ids_);
   if (from._internal_battle_id() != 0) {
     _this->_internal_set_battle_id(from._internal_battle_id());
   }
@@ -6472,6 +6517,7 @@ bool BattleRejoinInfo::IsInitialized() const {
 void BattleRejoinInfo::InternalSwap(BattleRejoinInfo* other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  _impl_.class_ids_.InternalSwap(&other->_impl_.class_ids_);
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
       PROTOBUF_FIELD_OFFSET(BattleRejoinInfo, _impl_.room_id_)
       + sizeof(BattleRejoinInfo::_impl_.room_id_)
@@ -9364,7 +9410,9 @@ DuelStartPush::DuelStartPush(const DuelStartPush& from)
   : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
   DuelStartPush* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.opponent_name_){}
+      decltype(_impl_.class_ids_){from._impl_.class_ids_}
+    , /*decltype(_impl_._class_ids_cached_byte_size_)*/{0}
+    , decltype(_impl_.opponent_name_){}
     , decltype(_impl_.battle_id_){}
     , decltype(_impl_.room_id_){}
     , decltype(_impl_.opponent_player_id_){}
@@ -9390,7 +9438,9 @@ inline void DuelStartPush::SharedCtor(
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.opponent_name_){}
+      decltype(_impl_.class_ids_){arena}
+    , /*decltype(_impl_._class_ids_cached_byte_size_)*/{0}
+    , decltype(_impl_.opponent_name_){}
     , decltype(_impl_.battle_id_){0u}
     , decltype(_impl_.room_id_){0}
     , decltype(_impl_.opponent_player_id_){int64_t{0}}
@@ -9413,6 +9463,7 @@ DuelStartPush::~DuelStartPush() {
 
 inline void DuelStartPush::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  _impl_.class_ids_.~RepeatedField();
   _impl_.opponent_name_.Destroy();
 }
 
@@ -9426,6 +9477,7 @@ void DuelStartPush::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
+  _impl_.class_ids_.Clear();
   _impl_.opponent_name_.ClearToEmpty();
   ::memset(&_impl_.battle_id_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&_impl_.opponent_player_id_) -
@@ -9470,6 +9522,17 @@ const char* DuelStartPush::_InternalParse(const char* ptr, ::_pbi::ParseContext*
           ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
           CHK_(::_pbi::VerifyUTF8(str, nullptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // repeated int32 class_ids = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedInt32Parser(_internal_mutable_class_ids(), ptr, ctx);
+          CHK_(ptr);
+        } else if (static_cast<uint8_t>(tag) == 40) {
+          _internal_add_class_ids(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr));
+          CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
@@ -9530,6 +9593,15 @@ uint8_t* DuelStartPush::_InternalSerialize(
         4, this->_internal_opponent_name(), target);
   }
 
+  // repeated int32 class_ids = 5;
+  {
+    int byte_size = _impl_._class_ids_cached_byte_size_.load(std::memory_order_relaxed);
+    if (byte_size > 0) {
+      target = stream->WriteInt32Packed(
+          5, _internal_class_ids(), byte_size, target);
+    }
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
         static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
@@ -9545,6 +9617,20 @@ size_t DuelStartPush::ByteSizeLong() const {
   uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
+
+  // repeated int32 class_ids = 5;
+  {
+    size_t data_size = ::_pbi::WireFormatLite::
+      Int32Size(this->_impl_.class_ids_);
+    if (data_size > 0) {
+      total_size += 1 +
+        ::_pbi::WireFormatLite::Int32Size(static_cast<int32_t>(data_size));
+    }
+    int cached_size = ::_pbi::ToCachedSize(data_size);
+    _impl_._class_ids_cached_byte_size_.store(cached_size,
+                                    std::memory_order_relaxed);
+    total_size += data_size;
+  }
 
   // string opponent_name = 4;
   if (!this->_internal_opponent_name().empty()) {
@@ -9589,6 +9675,7 @@ void DuelStartPush::MergeFrom(const DuelStartPush& from) {
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
+  _this->_impl_.class_ids_.MergeFrom(from._impl_.class_ids_);
   if (!from._internal_opponent_name().empty()) {
     _this->_internal_set_opponent_name(from._internal_opponent_name());
   }
@@ -9620,6 +9707,7 @@ void DuelStartPush::InternalSwap(DuelStartPush* other) {
   auto* lhs_arena = GetArenaForAllocation();
   auto* rhs_arena = other->GetArenaForAllocation();
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  _impl_.class_ids_.InternalSwap(&other->_impl_.class_ids_);
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
       &_impl_.opponent_name_, lhs_arena,
       &other->_impl_.opponent_name_, rhs_arena

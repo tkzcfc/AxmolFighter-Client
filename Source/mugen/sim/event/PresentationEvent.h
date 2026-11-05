@@ -1,5 +1,6 @@
 #pragma once
 #include "mugen/core/ecs/Entity.h"
+#include "mugen/core/math/FixedVec2.h"
 
 namespace mugen::sim
 {
@@ -44,8 +45,14 @@ struct HurtNumber
 {
     // 显示的伤害或治疗数值。
     int64_t value = 0;
+    // 本次伤害是否暴击。
+    bool m_critical = false;
+    // 是否携带命中接触点；缺省时表现层取受击实体头顶。
+    bool m_hasContact = false;
+    // 命中接触点（屏幕平面：x 与高度加纵深），已叠加受击者的飘字偏移。
+    FixedVec2 m_contact;
     // 参与事件快照的数值字段。
-    MG_REFLECT(HurtNumber, value)
+    MG_REFLECT(HurtNumber, value, m_critical, m_hasContact, m_contact)
 };
 // 请求表现层保留残影。
 struct Ghost

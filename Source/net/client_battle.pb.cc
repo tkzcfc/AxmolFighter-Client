@@ -77,6 +77,7 @@ PROTOBUF_CONSTEXPR BattleInputPush::BattleInputPush(
   , /*decltype(_impl_.client_hashes_)*/{}
   , /*decltype(_impl_.battle_id_)*/0u
   , /*decltype(_impl_.ack_frame_)*/0u
+  , /*decltype(_impl_.client_time_ms_)*/uint64_t{0u}
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct BattleInputPushDefaultTypeInternal {
   PROTOBUF_CONSTEXPR BattleInputPushDefaultTypeInternal()
@@ -108,6 +109,11 @@ PROTOBUF_CONSTEXPR BattleFramesPush::BattleFramesPush(
   , /*decltype(_impl_.battle_id_)*/0u
   , /*decltype(_impl_.server_frame_)*/0u
   , /*decltype(_impl_.server_time_ms_)*/uint64_t{0u}
+  , /*decltype(_impl_.echo_client_time_ms_)*/uint64_t{0u}
+  , /*decltype(_impl_.input_slack_min_)*/0
+  , /*decltype(_impl_.input_slack_frame_)*/0u
+  , /*decltype(_impl_.input_slack_samples_)*/0u
+  , /*decltype(_impl_.late_inputs_)*/0u
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct BattleFramesPushDefaultTypeInternal {
   PROTOBUF_CONSTEXPR BattleFramesPushDefaultTypeInternal()
@@ -1650,12 +1656,13 @@ BattleInputPush::BattleInputPush(const BattleInputPush& from)
     , decltype(_impl_.client_hashes_){from._impl_.client_hashes_}
     , decltype(_impl_.battle_id_){}
     , decltype(_impl_.ack_frame_){}
+    , decltype(_impl_.client_time_ms_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
   ::memcpy(&_impl_.battle_id_, &from._impl_.battle_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.ack_frame_) -
-    reinterpret_cast<char*>(&_impl_.battle_id_)) + sizeof(_impl_.ack_frame_));
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.client_time_ms_) -
+    reinterpret_cast<char*>(&_impl_.battle_id_)) + sizeof(_impl_.client_time_ms_));
   // @@protoc_insertion_point(copy_constructor:PB.Battle.BattleInputPush)
 }
 
@@ -1668,6 +1675,7 @@ inline void BattleInputPush::SharedCtor(
     , decltype(_impl_.client_hashes_){arena}
     , decltype(_impl_.battle_id_){0u}
     , decltype(_impl_.ack_frame_){0u}
+    , decltype(_impl_.client_time_ms_){uint64_t{0u}}
     , /*decltype(_impl_._cached_size_)*/{}
   };
 }
@@ -1700,8 +1708,8 @@ void BattleInputPush::Clear() {
   _impl_.inputs_.Clear();
   _impl_.client_hashes_.Clear();
   ::memset(&_impl_.battle_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.ack_frame_) -
-      reinterpret_cast<char*>(&_impl_.battle_id_)) + sizeof(_impl_.ack_frame_));
+      reinterpret_cast<char*>(&_impl_.client_time_ms_) -
+      reinterpret_cast<char*>(&_impl_.battle_id_)) + sizeof(_impl_.client_time_ms_));
   _internal_metadata_.Clear<std::string>();
 }
 
@@ -1750,6 +1758,14 @@ const char* BattleInputPush::_InternalParse(const char* ptr, ::_pbi::ParseContex
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<34>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // uint64 client_time_ms = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 40)) {
+          _impl_.client_time_ms_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
@@ -1810,6 +1826,12 @@ uint8_t* BattleInputPush::_InternalSerialize(
         InternalWriteMessage(4, repfield, repfield.GetCachedSize(), target, stream);
   }
 
+  // uint64 client_time_ms = 5;
+  if (this->_internal_client_time_ms() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(5, this->_internal_client_time_ms(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
         static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
@@ -1850,6 +1872,11 @@ size_t BattleInputPush::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_ack_frame());
   }
 
+  // uint64 client_time_ms = 5;
+  if (this->_internal_client_time_ms() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_client_time_ms());
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
@@ -1879,6 +1906,9 @@ void BattleInputPush::MergeFrom(const BattleInputPush& from) {
   if (from._internal_ack_frame() != 0) {
     _this->_internal_set_ack_frame(from._internal_ack_frame());
   }
+  if (from._internal_client_time_ms() != 0) {
+    _this->_internal_set_client_time_ms(from._internal_client_time_ms());
+  }
   _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
@@ -1899,8 +1929,8 @@ void BattleInputPush::InternalSwap(BattleInputPush* other) {
   _impl_.inputs_.InternalSwap(&other->_impl_.inputs_);
   _impl_.client_hashes_.InternalSwap(&other->_impl_.client_hashes_);
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(BattleInputPush, _impl_.ack_frame_)
-      + sizeof(BattleInputPush::_impl_.ack_frame_)
+      PROTOBUF_FIELD_OFFSET(BattleInputPush, _impl_.client_time_ms_)
+      + sizeof(BattleInputPush::_impl_.client_time_ms_)
       - PROTOBUF_FIELD_OFFSET(BattleInputPush, _impl_.battle_id_)>(
           reinterpret_cast<char*>(&_impl_.battle_id_),
           reinterpret_cast<char*>(&other->_impl_.battle_id_));
@@ -2159,12 +2189,17 @@ BattleFramesPush::BattleFramesPush(const BattleFramesPush& from)
     , decltype(_impl_.battle_id_){}
     , decltype(_impl_.server_frame_){}
     , decltype(_impl_.server_time_ms_){}
+    , decltype(_impl_.echo_client_time_ms_){}
+    , decltype(_impl_.input_slack_min_){}
+    , decltype(_impl_.input_slack_frame_){}
+    , decltype(_impl_.input_slack_samples_){}
+    , decltype(_impl_.late_inputs_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
   ::memcpy(&_impl_.battle_id_, &from._impl_.battle_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.server_time_ms_) -
-    reinterpret_cast<char*>(&_impl_.battle_id_)) + sizeof(_impl_.server_time_ms_));
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.late_inputs_) -
+    reinterpret_cast<char*>(&_impl_.battle_id_)) + sizeof(_impl_.late_inputs_));
   // @@protoc_insertion_point(copy_constructor:PB.Battle.BattleFramesPush)
 }
 
@@ -2178,6 +2213,11 @@ inline void BattleFramesPush::SharedCtor(
     , decltype(_impl_.battle_id_){0u}
     , decltype(_impl_.server_frame_){0u}
     , decltype(_impl_.server_time_ms_){uint64_t{0u}}
+    , decltype(_impl_.echo_client_time_ms_){uint64_t{0u}}
+    , decltype(_impl_.input_slack_min_){0}
+    , decltype(_impl_.input_slack_frame_){0u}
+    , decltype(_impl_.input_slack_samples_){0u}
+    , decltype(_impl_.late_inputs_){0u}
     , /*decltype(_impl_._cached_size_)*/{}
   };
 }
@@ -2210,8 +2250,8 @@ void BattleFramesPush::Clear() {
   _impl_.frames_.Clear();
   _impl_.hashes_.Clear();
   ::memset(&_impl_.battle_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.server_time_ms_) -
-      reinterpret_cast<char*>(&_impl_.battle_id_)) + sizeof(_impl_.server_time_ms_));
+      reinterpret_cast<char*>(&_impl_.late_inputs_) -
+      reinterpret_cast<char*>(&_impl_.battle_id_)) + sizeof(_impl_.late_inputs_));
   _internal_metadata_.Clear<std::string>();
 }
 
@@ -2268,6 +2308,46 @@ const char* BattleFramesPush::_InternalParse(const char* ptr, ::_pbi::ParseConte
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<42>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      // uint64 echo_client_time_ms = 6;
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 48)) {
+          _impl_.echo_client_time_ms_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // sint32 input_slack_min = 7;
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 56)) {
+          _impl_.input_slack_min_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarintZigZag32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // uint32 input_slack_frame = 8;
+      case 8:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 64)) {
+          _impl_.input_slack_frame_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // uint32 input_slack_samples = 9;
+      case 9:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 72)) {
+          _impl_.input_slack_samples_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // uint32 late_inputs = 10;
+      case 10:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 80)) {
+          _impl_.late_inputs_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
@@ -2334,6 +2414,36 @@ uint8_t* BattleFramesPush::_InternalSerialize(
         InternalWriteMessage(5, repfield, repfield.GetCachedSize(), target, stream);
   }
 
+  // uint64 echo_client_time_ms = 6;
+  if (this->_internal_echo_client_time_ms() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(6, this->_internal_echo_client_time_ms(), target);
+  }
+
+  // sint32 input_slack_min = 7;
+  if (this->_internal_input_slack_min() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteSInt32ToArray(7, this->_internal_input_slack_min(), target);
+  }
+
+  // uint32 input_slack_frame = 8;
+  if (this->_internal_input_slack_frame() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(8, this->_internal_input_slack_frame(), target);
+  }
+
+  // uint32 input_slack_samples = 9;
+  if (this->_internal_input_slack_samples() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(9, this->_internal_input_slack_samples(), target);
+  }
+
+  // uint32 late_inputs = 10;
+  if (this->_internal_late_inputs() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(10, this->_internal_late_inputs(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
         static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
@@ -2379,6 +2489,31 @@ size_t BattleFramesPush::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_server_time_ms());
   }
 
+  // uint64 echo_client_time_ms = 6;
+  if (this->_internal_echo_client_time_ms() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_echo_client_time_ms());
+  }
+
+  // sint32 input_slack_min = 7;
+  if (this->_internal_input_slack_min() != 0) {
+    total_size += ::_pbi::WireFormatLite::SInt32SizePlusOne(this->_internal_input_slack_min());
+  }
+
+  // uint32 input_slack_frame = 8;
+  if (this->_internal_input_slack_frame() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_input_slack_frame());
+  }
+
+  // uint32 input_slack_samples = 9;
+  if (this->_internal_input_slack_samples() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_input_slack_samples());
+  }
+
+  // uint32 late_inputs = 10;
+  if (this->_internal_late_inputs() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_late_inputs());
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
   }
@@ -2411,6 +2546,21 @@ void BattleFramesPush::MergeFrom(const BattleFramesPush& from) {
   if (from._internal_server_time_ms() != 0) {
     _this->_internal_set_server_time_ms(from._internal_server_time_ms());
   }
+  if (from._internal_echo_client_time_ms() != 0) {
+    _this->_internal_set_echo_client_time_ms(from._internal_echo_client_time_ms());
+  }
+  if (from._internal_input_slack_min() != 0) {
+    _this->_internal_set_input_slack_min(from._internal_input_slack_min());
+  }
+  if (from._internal_input_slack_frame() != 0) {
+    _this->_internal_set_input_slack_frame(from._internal_input_slack_frame());
+  }
+  if (from._internal_input_slack_samples() != 0) {
+    _this->_internal_set_input_slack_samples(from._internal_input_slack_samples());
+  }
+  if (from._internal_late_inputs() != 0) {
+    _this->_internal_set_late_inputs(from._internal_late_inputs());
+  }
   _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
@@ -2431,8 +2581,8 @@ void BattleFramesPush::InternalSwap(BattleFramesPush* other) {
   _impl_.frames_.InternalSwap(&other->_impl_.frames_);
   _impl_.hashes_.InternalSwap(&other->_impl_.hashes_);
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(BattleFramesPush, _impl_.server_time_ms_)
-      + sizeof(BattleFramesPush::_impl_.server_time_ms_)
+      PROTOBUF_FIELD_OFFSET(BattleFramesPush, _impl_.late_inputs_)
+      + sizeof(BattleFramesPush::_impl_.late_inputs_)
       - PROTOBUF_FIELD_OFFSET(BattleFramesPush, _impl_.battle_id_)>(
           reinterpret_cast<char*>(&_impl_.battle_id_),
           reinterpret_cast<char*>(&other->_impl_.battle_id_));

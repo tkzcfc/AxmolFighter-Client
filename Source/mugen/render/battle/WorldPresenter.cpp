@@ -155,9 +155,14 @@ void AvatarPresenter::present(sim::World& world, float alpha, float renderDelta)
             const sim::MotionState& motion) {
         live.insert(entity.value);
         auto& state = m_avatars[entity.value];
+        // 回滚恢复快照后同一句柄可能指向另一个实体：身份变化则整体重建显示。
+        const LookIdentity identity{group.kind, lookConfigId(world, entity, group.kind), !motion.motionFile.empty()};
+        if (state.resolved && state.identity != identity)
+            resetState(entity.value, state);
         if (!state.resolved)
         {
             state.resolved        = true;
+            state.identity        = identity;
             const AvatarLook look = resolveLook(world, entity, group.kind);
             const SpineInfo spine = AvatarPaths::resolveSpine(look.resSpineId);
             if (!spine.valid)
@@ -169,19 +174,29 @@ void AvatarPresenter::present(sim::World& world, float alpha, float renderDelta)
             state.roleId            = look.roleId;
             state.partnerRageTransformed = motion.m_partnerRageTransformed;
             state.partnerRageStateKnown  = state.fashionAvatar;
-            if (motion.motionFile.empty())
-                state.skeleton = MgSkeletonAnimation::createFromCache(look.resSpineId);
-            else if (state.m_overrideAppearance.has_value())
+            // 无显式换装且非职业角色的节点按外观键复用；时装角色实例私有，不入池。
+            const bool poolable = motion.motionFile.empty() ||
+                                  (!state.m_overrideAppearance.has_value() &&
+                                   look.characterClass == CharacterClass::kUnknown);
+            if (poolable)
+                state.poolKey = motion.motionFile.empty() ? fmt::format("s:{}", look.resSpineId)
+                                                          : fmt::format("a:{}:{}", look.resSpineId, motion.motionFile);
+            if (!poolable || !acquirePooled(state))
             {
-                FashionAppearance appearance = *state.m_overrideAppearance;
-                if (appearance.roleId == 0)
-                    appearance.roleId = look.roleId;
-                appearance.transformed = motion.m_partnerRageTransformed;
-                state.avatar          = Avatar::create(appearance);
+                if (motion.motionFile.empty())
+                    state.skeleton = MgSkeletonAnimation::createFromCache(look.resSpineId);
+                else if (state.m_overrideAppearance.has_value())
+                {
+                    FashionAppearance appearance = *state.m_overrideAppearance;
+                    if (appearance.roleId == 0)
+                        appearance.roleId = look.roleId;
+                    appearance.transformed = motion.m_partnerRageTransformed;
+                    state.avatar          = Avatar::create(appearance);
+                }
+                else
+                    state.avatar = createAvatar(look, spine, motion.motionFile, state.useSessionFashion,
+                                                motion.m_partnerRageTransformed);
             }
-            else
-                state.avatar = createAvatar(look, spine, motion.motionFile, state.useSessionFashion,
-                                            motion.m_partnerRageTransformed);
             ax::Node* node = displayNode(state);
             if (!node)
                 return;
@@ -244,8 +259,7 @@ void AvatarPresenter::present(sim::World& world, float alpha, float renderDelta)
     {
         if (!live.contains(it->first))
         {
-            if (ax::Node* node = displayNode(it->second))
-                node->removeFromParent();
+            releaseNode(it->second);
             // 实体消失时同步清理其宠物。
             auto pet = m_petFollowers.find(it->first);
             if (pet != m_petFollowers.end())
@@ -384,6 +398,106 @@ ax::Node* AvatarPresenter::displayNode(const AvatarState& state)
     return state.skeleton;
 }
 
+int32_t AvatarPresenter::lookConfigId(sim::World& world, Entity entity, sim::GroupKind kind)
+{
+    auto& ecs = world.ecs();
+    switch (kind)
+    {
+    case sim::GroupKind::Role:
+        return ecs.get<sim::RoleIdentity>(entity).roleId;
+    case sim::GroupKind::Effect:
+        return ecs.get<sim::EffectState>(entity).m_configId;
+    case sim::GroupKind::Obstacle:
+        return ecs.get<sim::ObstacleState>(entity).m_id;
+    case sim::GroupKind::Goods:
+        return ecs.get<sim::GoodsState>(entity).m_id;
+    case sim::GroupKind::Portal:
+        return ecs.get<sim::PortalState>(entity).m_id;
+    case sim::GroupKind::Count:
+        break;
+    }
+    MG_LOG_E("AvatarPresenter: invalid entity group {}", static_cast<int>(kind));
+    MG_ASSERT(false && "Invalid entity group for avatar");
+    return 0;
+}
+
+bool AvatarPresenter::acquirePooled(AvatarState& state)
+{
+    const auto it = m_pool.find(state.poolKey);
+    if (it == m_pool.end() || it->second.empty())
+        return false;
+    const PooledNode pooled = it->second.back();
+    it->second.pop_back();
+    --m_poolCount;
+    state.avatar   = pooled.avatar;
+    state.skeleton = pooled.skeleton;
+    // 池中节点仅剩入池时的那一份引用：改为 autorelease，保证节点存活到随后的 addChild 接管引用，
+    // 直接 release 会让引用计数归零并立即析构。
+    if (state.avatar)
+        state.avatar->autorelease();
+    else
+        state.skeleton->autorelease();
+    return true;
+}
+
+void AvatarPresenter::releaseNode(AvatarState& state)
+{
+    ax::Node* node = displayNode(state);
+    if (!node)
+        return;
+    if (state.poolKey.empty() || m_poolCount >= kPoolMaxTotal)
+    {
+        node->removeFromParent();
+        return;
+    }
+    auto& bucket = m_pool[state.poolKey];
+    if (bucket.size() >= kPoolMaxPerKey)
+    {
+        node->removeFromParent();
+        return;
+    }
+    // 复位表现层改过的节点属性；动作与时间在复用时由 setMotion/seek 重新设置。
+    node->retain();
+    node->removeFromParent();
+    node->setColor(ax::Color3B::WHITE);
+    node->setOpacity(255);
+    node->setScale(1.0f);
+    node->setLocalZOrder(0);
+    if (state.skeleton)
+    {
+        state.skeleton->clearTracks();
+        state.skeleton->setSlotsToSetupPose();
+    }
+    bucket.push_back({state.avatar, state.skeleton});
+    ++m_poolCount;
+}
+
+void AvatarPresenter::resetState(uint32_t entityValue, AvatarState& state)
+{
+    releaseNode(state);
+    const auto pet = m_petFollowers.find(entityValue);
+    if (pet != m_petFollowers.end())
+    {
+        pet->second->clear();
+        m_petFollowers.erase(pet);
+    }
+    state = AvatarState{};
+}
+
+void AvatarPresenter::clearPool()
+{
+    for (auto& [_, bucket] : m_pool)
+        for (const PooledNode& pooled : bucket)
+        {
+            if (pooled.avatar)
+                pooled.avatar->release();
+            else
+                pooled.skeleton->release();
+        }
+    m_pool.clear();
+    m_poolCount = 0;
+}
+
 ax::Node& AvatarPresenter::tierLayer(int32_t tier)
 {
     auto& layer = m_tierLayers[tier];
@@ -405,6 +519,7 @@ void AvatarPresenter::clear()
     for (auto& [_, pet] : m_petFollowers)
         pet->clear();
     m_petFollowers.clear();
+    clearPool();
 }
 
 bool AvatarPresenter::setEntityAppearance(uint32_t entityValue, const FashionAppearance& appearance)
@@ -590,16 +705,192 @@ void SoundPlayer::clear()
     m_loopAudioByAction.clear();
 }
 
+namespace
+{
+// 飘字位图字体文件，下标与 HurtNumber::Face 一致。
+constexpr const char* kHurtFontFiles[] = {
+    "/mugen/font/hurt_normal.fnt",
+    "/mugen/font/hurt_hero.fnt",
+    "/mugen/font/hurt_crit.fnt",
+    "/mugen/font/hurt_word.fnt",
+};
+// 文字字体中的字符：M 为未命中、D 为闪避。
+constexpr const char* kMissGlyph  = "M";
+constexpr const char* kDodgeGlyph = "D";
+// 无接触点时飘字锚点相对实体纵深位置抬高的像素。
+constexpr float kHurtHeadHeight = 220.0f;
+// 文字相对数字锚点上抬的像素。
+constexpr float kHurtWordRise = 50.0f;
+// 动画步长（毫秒）与总步数；一步对应一次缩放/上升/淡出更新。
+constexpr float kHurtStepMs = 50.0f;
+constexpr int kHurtStepCount = 20;
+// 第 13 步起开始上升淡出；淡出每步减少的不透明度与上升像素。
+constexpr int kHurtFadeBeginStep = 13;
+constexpr int kHurtFadeAlphaStep = 37;
+constexpr float kHurtFadeRise    = 15.0f;
+// 同时存在的飘字上限，超出时回收最早的。
+constexpr size_t kHurtMaxActive = 64;
+// 随机偏移的最大像素。
+constexpr int kHurtRandomRange = 30;
+}  // namespace
+
 void HurtNumber::consume(const sim::PresentationEvent& event, sim::World& world)
 {
-    const auto* hurt      = std::get_if<sim::HurtNumber>(&event.payload);
-    const auto* transform = world.ecs().tryGet<sim::Transform>(event.entity);
-    if (!hurt || !transform)
+    auto& ecs = world.ecs();
+    if (const auto* tips = std::get_if<sim::Tips>(&event.payload))
+    {
+        // 闪避/未命中由逻辑侧以固定文本提示，数字以外的飘字走文字字体。
+        const char* glyph = tips->text == "MISS" ? kMissGlyph : tips->text == "DODGE" ? kDodgeGlyph : nullptr;
+        const auto* transform = ecs.tryGet<sim::Transform>(event.entity);
+        if (!glyph || !transform)
+            return;
+        spawn(Face::kWord, glyph, renderValue(transform->position.x),
+              renderValue(transform->position.y + transform->position.z) + kHurtHeadHeight);
         return;
-    auto* label = ax::Label::createWithSystemFont(std::to_string(hurt->value), "Arial", 24);
-    label->setPosition(renderValue(transform->position.x), renderValue(transform->position.y) + 48.0f);
+    }
+    const auto* hurt = std::get_if<sim::HurtNumber>(&event.payload);
+    if (!hurt)
+        return;
+    float x = 0.0f;
+    float y = 0.0f;
+    if (hurt->m_hasContact)
+    {
+        x = renderValue(hurt->m_contact.x);
+        y = renderValue(hurt->m_contact.y);
+    }
+    else
+    {
+        const auto* transform = ecs.tryGet<sim::Transform>(event.entity);
+        if (!transform)
+            return;
+        x = renderValue(transform->position.x);
+        y = renderValue(transform->position.y + transform->position.z) + kHurtHeadHeight;
+    }
+    // 暴击优先；否则敌方打到玩家方用受击字体，其余用普通字体。
+    Face face = Face::kNormal;
+    if (hurt->m_critical)
+        face = Face::kCrit;
+    else if (const auto* identity = ecs.tryGet<sim::RoleIdentity>(event.entity))
+    {
+        const bool enemyCamp = identity->camp == static_cast<int32_t>(EntityCamp::Enemy) ||
+                               identity->camp == static_cast<int32_t>(EntityCamp::EnemyFriend);
+        if (identity->roleType == static_cast<int32_t>(EntityRoleType::kHero) && !enemyCamp)
+            face = Face::kHero;
+    }
+    // 位图字体没有负号，持续回复按数值绝对值显示。
+    spawn(face, std::to_string(hurt->value < 0 ? -hurt->value : hurt->value), x, y);
+}
+
+float HurtNumber::randomOffset()
+{
+    std::uniform_int_distribution<int> magnitude(0, kHurtRandomRange);
+    const int value = magnitude(m_random);
+    return static_cast<float>((m_random() & 1u) ? value : -value);
+}
+
+ax::Label* HurtNumber::acquireLabel(Face face)
+{
+    auto& pool = m_pool[static_cast<size_t>(face)];
+    if (!pool.empty())
+    {
+        ax::Label* label = pool.back();
+        pool.pop_back();
+        label->setVisible(true);
+        return label;
+    }
+    auto* label = ax::Label::createWithBMFont(kHurtFontFiles[static_cast<size_t>(face)], "");
     m_root.addChild(label, 200);
-    label->runAction(ax::Sequence::create(ax::MoveBy::create(0.45f, {0.0f, 32.0f}), ax::RemoveSelf::create(), nullptr));
+    return label;
+}
+
+void HurtNumber::spawn(Face face, const std::string& text, float x, float y)
+{
+    if (m_active.size() >= kHurtMaxActive)
+    {
+        recycle(m_active.front());
+        m_active.erase(m_active.begin());
+    }
+    Item item;
+    item.face  = face;
+    item.x     = x + randomOffset();
+    item.y     = y + randomOffset();
+    item.label = acquireLabel(face);
+    item.label->setString(text);
+    item.label->setScale(1.0f);
+    item.label->setOpacity(255);
+    item.label->setPosition(item.x, item.y + (face == Face::kWord ? kHurtWordRise : 0.0f));
+    m_active.push_back(item);
+}
+
+void HurtNumber::applyStep(Item& item)
+{
+    const bool word = item.face == Face::kWord;
+    // 出现阶段缩放曲线（前 5 步），之后恒为 1；数字比文字起点更大。
+    static constexpr float kNumberScale[] = {3.0f, 2.0f, 1.4f, 0.8f, 0.6f};
+    static constexpr float kWordScale[]   = {2.0f, 1.4f, 1.4f, 0.8f, 0.6f};
+    const int step = item.step;
+    if (step < 5)
+    {
+        item.label->setScale(word ? kWordScale[step] : kNumberScale[step]);
+        // 数字第 0 步半透明闪入，第 1 步起全不透明。
+        if (!word && step == 0)
+            item.label->setOpacity(107);
+        else if (!word && step == 1)
+            item.label->setOpacity(255);
+    }
+    else if (step < kHurtFadeBeginStep)
+        item.label->setScale(1.0f);
+    else
+    {
+        item.alpha = std::max(0, item.alpha - kHurtFadeAlphaStep);
+        item.y += kHurtFadeRise;
+        item.label->setPosition(item.x, item.y + (word ? kHurtWordRise : 0.0f));
+        item.label->setOpacity(static_cast<uint8_t>(item.alpha));
+    }
+}
+
+void HurtNumber::update(float delta)
+{
+    for (auto& item : m_active)
+    {
+        item.carryMs += delta * 1000.0f;
+        while (item.carryMs >= kHurtStepMs && item.step < kHurtStepCount)
+        {
+            applyStep(item);
+            item.carryMs -= kHurtStepMs;
+            ++item.step;
+        }
+    }
+    for (auto it = m_active.begin(); it != m_active.end();)
+    {
+        if (it->step >= kHurtStepCount)
+        {
+            recycle(*it);
+            it = m_active.erase(it);
+        }
+        else
+            ++it;
+    }
+}
+
+void HurtNumber::recycle(Item& item)
+{
+    item.label->setVisible(false);
+    m_pool[static_cast<size_t>(item.face)].push_back(item.label);
+    item.label = nullptr;
+}
+
+void HurtNumber::clear()
+{
+    for (auto& item : m_active)
+        item.label->removeFromParent();
+    m_active.clear();
+    for (auto& pool : m_pool)
+    {
+        for (ax::Label* label : pool)
+            label->removeFromParent();
+        pool.clear();
+    }
 }
 
 DebugDraw::DebugDraw(ax::Node& root)
@@ -643,20 +934,25 @@ WorldPresenter::WorldPresenter(ax::Node& root)
 WorldPresenter::~WorldPresenter()
 {
     m_sound.clear();
+    m_hurtNumbers.clear();
     // 先拆掉角色/特效节点，让 MgSkeletonData 的节点引用在 ResourceLoader 释放之前掉干净。
     m_avatars.clear();
 }
 
 void WorldPresenter::loadMap(const std::string& mapKey)
 {
-    if (!mapKey.empty())
-        m_map.load(mapKey);
+    if (mapKey.empty())
+        return;
+    m_map.load(mapKey);
+    // 换图后旧外观的复用节点基本不会再命中，及时释放。
+    m_avatars.clearPool();
 }
 
 void WorldPresenter::present(sim::World& world, float interpolationAlpha, float renderDelta)
 {
     m_avatars.present(world, std::clamp(interpolationAlpha, 0.0f, 1.0f), renderDelta);
     consumeEvents(world.ecs().singleton<sim::PresentationEvents>().events, world, true);
+    m_hurtNumbers.update(renderDelta);
     m_camera.follow(world, m_followEntity);
     m_camera.update(renderDelta);
     m_debugDraw.present(world);
@@ -669,6 +965,7 @@ void WorldPresenter::presentEvents(const std::vector<sim::PresentationEvent>& ev
 {
     m_avatars.present(world, std::clamp(interpolationAlpha, 0.0f, 1.0f), renderDelta);
     consumeEvents(events, world, false);
+    m_hurtNumbers.update(renderDelta);
     m_camera.follow(world, m_followEntity);
     m_camera.update(renderDelta);
     m_debugDraw.present(world);
