@@ -6,7 +6,7 @@
 #include "mugen/sim/buff/BuffPool.h"
 #include "mugen/sim/input/ControlManagerCore.h"
 #include "mugen/sim/skill/Skill.h"
-#include "ui/battle/LocalBattleMode.h"
+#include "ui/battle/BattleMode.h"
 #include "ui/widgets/common/MessageDialog.h"
 
 #include <algorithm>
@@ -64,12 +64,6 @@ void styleRageBar(GProgressBar* bar, bool transformed)
             title->setColor(transformed ? ax::Color3B(243, 217, 255) : ax::Color3B(255, 229, 184));
 }
 
-mugen::Entity localPlayer(const mugen::sim::World& world)
-{
-    const auto& slots = world.ecs().singleton<mugen::sim::PlayerSlots>().entities;
-    const auto it     = slots.find(0);
-    return it == slots.end() ? mugen::Entity{} : it->second;
-}
 }  // namespace
 
 void BattleHudPanel::onCreate()
@@ -105,7 +99,7 @@ void BattleHudPanel::onDestroy()
 void BattleHudPanel::bindSkillButtons()
 {
     const auto& world  = m_battle.world();
-    const auto player  = localPlayer(world);
+    const auto player  = m_battle.localPlayer();
     const auto& ident  = world.ecs().get<mugen::sim::RoleIdentity>(player);
     const auto rows    = mugen::sim::skill::SkillAssembly::offlineKitRows(
         mugen::type_conversions::toCharacterClass(ident.roleId));
@@ -199,7 +193,7 @@ void BattleHudPanel::bindRageHud()
         m_rageSkillButton.m_cdText->setText("");
 
     const auto& world = m_battle.world();
-    const auto player = localPlayer(world);
+    const auto player = m_battle.localPlayer();
     const bool hasRage = world.ecs().alive(player) && world.ecs().tryGet<mugen::sim::PartnerRageState>(player) != nullptr;
     m_playerRage->setVisible(hasRage);
     rageBtn->setVisible(hasRage);
@@ -265,7 +259,7 @@ void BattleHudPanel::onClickPause(EventContext* /*context*/)
 
 void BattleHudPanel::onUpdate(float /*dt*/)
 {
-    const auto player = localPlayer(m_battle.world());
+    const auto player = m_battle.localPlayer();
     if (!m_battle.world().ecs().alive(player))
         return;
     updatePlayer(player);

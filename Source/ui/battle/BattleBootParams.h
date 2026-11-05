@@ -1,17 +1,27 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 namespace gameui
 {
 
-// 本地副本启动参数。联网战斗入口在重写期间关闭。
+// 本地副本启动参数。
 struct LocalBattleParams
 {
     std::int32_t roomId         = 0;
     std::int32_t roleId         = 0;
     std::int32_t petId          = 0;
     std::int32_t autotestFrames = 0;
+};
+
+// 联网 1v1 决斗启动参数（来自 game 服 DuelStartPush）。
+struct NetBattleParams
+{
+    std::uint32_t battleId         = 0;
+    std::int32_t roomId            = 0;
+    std::int64_t opponentPlayerId  = 0;
+    std::string opponentName;
 };
 
 }  // namespace gameui

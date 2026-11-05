@@ -198,14 +198,18 @@ TEST_CASE("Pvp bootstrap scales player HP by m_pvpHpScale")
 
     World world;
     auto setup               = test::ScenarioHarness::roomSetup(30002);
-    setup.m_playerClass      = CharacterClass::kSwordman;
-    setup.m_playerRoleId     = roleId;
-    setup.m_playerLevel      = 1;
-    setup.m_playerCamp       = 2;
-    setup.m_playerSlot       = 0;
+    PlayerSetup player;
+    player.m_class           = CharacterClass::kSwordman;
+    player.m_roleId          = roleId;
+    player.m_level           = 1;
+    player.m_camp            = 2;
+    player.m_slot            = 0;
+    setup.m_players.push_back(player);
     setup.m_pvp              = true;
     setup.m_pvpHpScale       = "2"_fx;
-    const Entity hero        = bootstrapBattle(world, setup);
+    const auto heroes        = bootstrapBattle(world, setup);
+    REQUIRE(heroes.size() == 1);
+    const Entity hero        = heroes.front();
     REQUIRE(hero.value != 0);
     const auto& vitals       = world.ecs().get<Vitals>(hero);
     CHECK(vitals.maxHp == base.maxHp() * "2"_fx);

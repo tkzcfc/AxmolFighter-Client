@@ -6,6 +6,7 @@
 #include "resource/builtin/RoleEffectHelper.h"
 #include "ui/battle/BattleHudPanel.h"
 #include "ui/battle/LocalBattleMode.h"
+#include "ui/battle/NetBattleMode.h"
 #include "ui/battle/LocalRoleUtils.h"
 #include "ui/core/ScreenManager.h"
 #include "ui/widgets/common/MessageDialog.h"
@@ -21,11 +22,13 @@ GameScreen::GameScreen() = default;
 
 GameScreen::GameScreen(LocalBattleParams local) : m_local(std::move(local)) {}
 
+GameScreen::GameScreen(NetBattleParams net) : m_net(std::move(net)) {}
+
 GameScreen::~GameScreen() = default;
 
 void GameScreen::onPrepareLoad()
 {
-    const int32_t roomId = m_local ? m_local->roomId : 0;
+    const int32_t roomId = m_local ? m_local->roomId : (m_net ? m_net->roomId : 0);
     if (roomId <= 0)
         return;
     const auto* room = mugen::conf::Config::instance().find<mugen::conf::RoomConfig>(roomId);
@@ -36,6 +39,9 @@ void GameScreen::onPrepareLoad()
         layer = "/mugen/map/" + layer + ".layer";
     auto& loader = getResourceLoader();
     loader.add<gameres::MapResource>(layer);
+
+    if (!m_local)
+        return;  // 联网决斗地图已知，角色特效在战斗开始后按需加载。
 
     const int32_t playerRole =
         m_local && m_local->roleId > 0 ? m_local->roleId : resolveLocalPlayerRoleId();
@@ -62,7 +68,9 @@ void GameScreen::onEnter()
         MessageDialog::showGlobal("初始化失败", []() { ax::Director::getInstance()->end(); });
         return;
     }
-    leaveTownScene();
+    // 联网战斗由 game 服在创建时已让双方离开城镇，这里不要再发 LeaveSceneReq。
+    if (!m_net)
+        leaveTownScene();
     if (auto* local = dynamic_cast<LocalBattleMode*>(m_battleMode.get()))
         getScreenManager()->getUIManager()->open<BattleHudPanel>(*local);
     m_slotMap.clear();
@@ -89,7 +97,9 @@ void GameScreen::onEnter()
     m_slotMap[Key::KEY_Y]           = static_cast<uint32_t>(ControlKey::AttackO);
     m_slotMap[Key::KEY_U]           = static_cast<uint32_t>(ControlKey::AttackQ);
     m_slotMap[Key::KEY_P]           = static_cast<uint32_t>(ControlKey::AttackQ);
-    AXLOGI("GameScreen: entered (localRoom={})", m_local.has_value() ? m_local->roomId : 0);
+    AXLOGI("GameScreen: entered (localRoom={}, netBattle={})",
+           m_local.has_value() ? m_local->roomId : 0,
+           m_net.has_value() ? m_net->battleId : 0);
 }
 
 void GameScreen::onExit()
@@ -115,6 +125,17 @@ void GameScreen::onUpdate(float delta)
         m_battleMode->onUpdate(delta);
     if (auto* local = dynamic_cast<LocalBattleMode*>(m_battleMode.get()); local && local->returnToTownRequested())
         getScreenManager()->switchScreen<TownScreen>();
+    if (auto* net = dynamic_cast<NetBattleMode*>(m_battleMode.get()))
+    {
+        // 世界引导完成后才打开 HUD（HUD 需要读取已初始化的世界）。
+        if (net->isStarted() && !m_hudOpened)
+        {
+            m_hudOpened = true;
+            getScreenManager()->getUIManager()->open<BattleHudPanel>(*net);
+        }
+        if (net->returnToTownRequested())
+            getScreenManager()->switchScreen<TownScreen>();
+    }
 }
 
 void GameScreen::onKeyPressed(ax::EventKeyboard::KeyCode code, ax::Event* /*event*/)
@@ -166,6 +187,8 @@ std::unique_ptr<IBattleMode> GameScreen::createBattleMode()
 {
     if (m_local)
         return std::make_unique<LocalBattleMode>(*m_local);
+    if (m_net)
+        return std::make_unique<NetBattleMode>(*m_net, *this);
     return std::make_unique<LocalBattleMode>();
 }
 
@@ -187,6 +210,8 @@ void GameScreen::onImGUIRender()
 {
     if (auto* localBattle = dynamic_cast<LocalBattleMode*>(m_battleMode.get()))
         localBattle->renderDebugPanel();
+    if (auto* netBattle = dynamic_cast<NetBattleMode*>(m_battleMode.get()))
+        netBattle->renderDebugPanel();
     if (!m_local || m_local->roomId <= 0)
         return;
 

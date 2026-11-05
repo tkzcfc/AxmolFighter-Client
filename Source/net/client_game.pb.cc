@@ -202,6 +202,7 @@ PROTOBUF_CONSTEXPR SelectCharacterResp::SelectCharacterResp(
     /*decltype(_impl_.message_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.character_)*/nullptr
   , /*decltype(_impl_.inventory_)*/nullptr
+  , /*decltype(_impl_.rejoin_)*/nullptr
   , /*decltype(_impl_.code_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct SelectCharacterRespDefaultTypeInternal {
@@ -213,39 +214,20 @@ struct SelectCharacterRespDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 SelectCharacterRespDefaultTypeInternal _SelectCharacterResp_default_instance_;
-PROTOBUF_CONSTEXPR BattleJoinReq::BattleJoinReq(
+PROTOBUF_CONSTEXPR BattleRejoinInfo::BattleRejoinInfo(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.player_id_)*/int64_t{0}
-  , /*decltype(_impl_.map_id_)*/0
+    /*decltype(_impl_.battle_id_)*/0u
+  , /*decltype(_impl_.room_id_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
-struct BattleJoinReqDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR BattleJoinReqDefaultTypeInternal()
+struct BattleRejoinInfoDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR BattleRejoinInfoDefaultTypeInternal()
       : _instance(::_pbi::ConstantInitialized{}) {}
-  ~BattleJoinReqDefaultTypeInternal() {}
+  ~BattleRejoinInfoDefaultTypeInternal() {}
   union {
-    BattleJoinReq _instance;
+    BattleRejoinInfo _instance;
   };
 };
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 BattleJoinReqDefaultTypeInternal _BattleJoinReq_default_instance_;
-PROTOBUF_CONSTEXPR BattleJoinResp::BattleJoinResp(
-    ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.message_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
-  , /*decltype(_impl_.world_dump_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
-  , /*decltype(_impl_.code_)*/0
-  , /*decltype(_impl_.battle_id_)*/0u
-  , /*decltype(_impl_.server_frame_)*/0u
-  , /*decltype(_impl_.actor_entity_id_)*/0u
-  , /*decltype(_impl_.random_seed_)*/uint64_t{0u}
-  , /*decltype(_impl_._cached_size_)*/{}} {}
-struct BattleJoinRespDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR BattleJoinRespDefaultTypeInternal()
-      : _instance(::_pbi::ConstantInitialized{}) {}
-  ~BattleJoinRespDefaultTypeInternal() {}
-  union {
-    BattleJoinResp _instance;
-  };
-};
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 BattleJoinRespDefaultTypeInternal _BattleJoinResp_default_instance_;
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 BattleRejoinInfoDefaultTypeInternal _BattleRejoinInfo_default_instance_;
 PROTOBUF_CONSTEXPR DuelInviteReq::DuelInviteReq(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.target_player_id_)*/int64_t{0}
@@ -420,12 +402,10 @@ struct DuelInvitePushDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 DuelInvitePushDefaultTypeInternal _DuelInvitePush_default_instance_;
 PROTOBUF_CONSTEXPR DuelStartPush::DuelStartPush(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.world_dump_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+    /*decltype(_impl_.opponent_name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.battle_id_)*/0u
-  , /*decltype(_impl_.server_frame_)*/0u
-  , /*decltype(_impl_.actor_entity_id_)*/0u
-  , /*decltype(_impl_.map_id_)*/0
-  , /*decltype(_impl_.random_seed_)*/uint64_t{0u}
+  , /*decltype(_impl_.room_id_)*/0
+  , /*decltype(_impl_.opponent_player_id_)*/int64_t{0}
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct DuelStartPushDefaultTypeInternal {
   PROTOBUF_CONSTEXPR DuelStartPushDefaultTypeInternal()
@@ -1345,122 +1325,6 @@ constexpr SelectCharacterResp_MsgId SelectCharacterResp::Id;
 constexpr SelectCharacterResp_MsgId SelectCharacterResp::MsgId_MIN;
 constexpr SelectCharacterResp_MsgId SelectCharacterResp::MsgId_MAX;
 constexpr int SelectCharacterResp::MsgId_ARRAYSIZE;
-#endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
-bool BattleJoinReq_MsgId_IsValid(int value) {
-  switch (value) {
-    case 0:
-    case 1300:
-      return true;
-    default:
-      return false;
-  }
-}
-
-static ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<std::string> BattleJoinReq_MsgId_strings[2] = {};
-
-static const char BattleJoinReq_MsgId_names[] =
-  "Id"
-  "None";
-
-static const ::PROTOBUF_NAMESPACE_ID::internal::EnumEntry BattleJoinReq_MsgId_entries[] = {
-  { {BattleJoinReq_MsgId_names + 0, 2}, 1300 },
-  { {BattleJoinReq_MsgId_names + 2, 4}, 0 },
-};
-
-static const int BattleJoinReq_MsgId_entries_by_number[] = {
-  1, // 0 -> None
-  0, // 1300 -> Id
-};
-
-const std::string& BattleJoinReq_MsgId_Name(
-    BattleJoinReq_MsgId value) {
-  static const bool dummy =
-      ::PROTOBUF_NAMESPACE_ID::internal::InitializeEnumStrings(
-          BattleJoinReq_MsgId_entries,
-          BattleJoinReq_MsgId_entries_by_number,
-          2, BattleJoinReq_MsgId_strings);
-  (void) dummy;
-  int idx = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumName(
-      BattleJoinReq_MsgId_entries,
-      BattleJoinReq_MsgId_entries_by_number,
-      2, value);
-  return idx == -1 ? ::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString() :
-                     BattleJoinReq_MsgId_strings[idx].get();
-}
-bool BattleJoinReq_MsgId_Parse(
-    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, BattleJoinReq_MsgId* value) {
-  int int_value;
-  bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
-      BattleJoinReq_MsgId_entries, 2, name, &int_value);
-  if (success) {
-    *value = static_cast<BattleJoinReq_MsgId>(int_value);
-  }
-  return success;
-}
-#if (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
-constexpr BattleJoinReq_MsgId BattleJoinReq::None;
-constexpr BattleJoinReq_MsgId BattleJoinReq::Id;
-constexpr BattleJoinReq_MsgId BattleJoinReq::MsgId_MIN;
-constexpr BattleJoinReq_MsgId BattleJoinReq::MsgId_MAX;
-constexpr int BattleJoinReq::MsgId_ARRAYSIZE;
-#endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
-bool BattleJoinResp_MsgId_IsValid(int value) {
-  switch (value) {
-    case 0:
-    case 1301:
-      return true;
-    default:
-      return false;
-  }
-}
-
-static ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<std::string> BattleJoinResp_MsgId_strings[2] = {};
-
-static const char BattleJoinResp_MsgId_names[] =
-  "Id"
-  "None";
-
-static const ::PROTOBUF_NAMESPACE_ID::internal::EnumEntry BattleJoinResp_MsgId_entries[] = {
-  { {BattleJoinResp_MsgId_names + 0, 2}, 1301 },
-  { {BattleJoinResp_MsgId_names + 2, 4}, 0 },
-};
-
-static const int BattleJoinResp_MsgId_entries_by_number[] = {
-  1, // 0 -> None
-  0, // 1301 -> Id
-};
-
-const std::string& BattleJoinResp_MsgId_Name(
-    BattleJoinResp_MsgId value) {
-  static const bool dummy =
-      ::PROTOBUF_NAMESPACE_ID::internal::InitializeEnumStrings(
-          BattleJoinResp_MsgId_entries,
-          BattleJoinResp_MsgId_entries_by_number,
-          2, BattleJoinResp_MsgId_strings);
-  (void) dummy;
-  int idx = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumName(
-      BattleJoinResp_MsgId_entries,
-      BattleJoinResp_MsgId_entries_by_number,
-      2, value);
-  return idx == -1 ? ::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString() :
-                     BattleJoinResp_MsgId_strings[idx].get();
-}
-bool BattleJoinResp_MsgId_Parse(
-    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, BattleJoinResp_MsgId* value) {
-  int int_value;
-  bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
-      BattleJoinResp_MsgId_entries, 2, name, &int_value);
-  if (success) {
-    *value = static_cast<BattleJoinResp_MsgId>(int_value);
-  }
-  return success;
-}
-#if (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
-constexpr BattleJoinResp_MsgId BattleJoinResp::None;
-constexpr BattleJoinResp_MsgId BattleJoinResp::Id;
-constexpr BattleJoinResp_MsgId BattleJoinResp::MsgId_MIN;
-constexpr BattleJoinResp_MsgId BattleJoinResp::MsgId_MAX;
-constexpr int BattleJoinResp::MsgId_ARRAYSIZE;
 #endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 bool DuelInviteReq_MsgId_IsValid(int value) {
   switch (value) {
@@ -6042,6 +5906,7 @@ class SelectCharacterResp::_Internal {
  public:
   static const ::PB::Types::CharacterInfo& character(const SelectCharacterResp* msg);
   static const ::PB::Types::InventoryInfo& inventory(const SelectCharacterResp* msg);
+  static const ::PB::Game::BattleRejoinInfo& rejoin(const SelectCharacterResp* msg);
 };
 
 const ::PB::Types::CharacterInfo&
@@ -6051,6 +5916,10 @@ SelectCharacterResp::_Internal::character(const SelectCharacterResp* msg) {
 const ::PB::Types::InventoryInfo&
 SelectCharacterResp::_Internal::inventory(const SelectCharacterResp* msg) {
   return *msg->_impl_.inventory_;
+}
+const ::PB::Game::BattleRejoinInfo&
+SelectCharacterResp::_Internal::rejoin(const SelectCharacterResp* msg) {
+  return *msg->_impl_.rejoin_;
 }
 void SelectCharacterResp::clear_character() {
   if (GetArenaForAllocation() == nullptr && _impl_.character_ != nullptr) {
@@ -6077,6 +5946,7 @@ SelectCharacterResp::SelectCharacterResp(const SelectCharacterResp& from)
       decltype(_impl_.message_){}
     , decltype(_impl_.character_){nullptr}
     , decltype(_impl_.inventory_){nullptr}
+    , decltype(_impl_.rejoin_){nullptr}
     , decltype(_impl_.code_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
@@ -6095,6 +5965,9 @@ SelectCharacterResp::SelectCharacterResp(const SelectCharacterResp& from)
   if (from._internal_has_inventory()) {
     _this->_impl_.inventory_ = new ::PB::Types::InventoryInfo(*from._impl_.inventory_);
   }
+  if (from._internal_has_rejoin()) {
+    _this->_impl_.rejoin_ = new ::PB::Game::BattleRejoinInfo(*from._impl_.rejoin_);
+  }
   _this->_impl_.code_ = from._impl_.code_;
   // @@protoc_insertion_point(copy_constructor:PB.Game.SelectCharacterResp)
 }
@@ -6107,6 +5980,7 @@ inline void SelectCharacterResp::SharedCtor(
       decltype(_impl_.message_){}
     , decltype(_impl_.character_){nullptr}
     , decltype(_impl_.inventory_){nullptr}
+    , decltype(_impl_.rejoin_){nullptr}
     , decltype(_impl_.code_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
@@ -6130,6 +6004,7 @@ inline void SelectCharacterResp::SharedDtor() {
   _impl_.message_.Destroy();
   if (this != internal_default_instance()) delete _impl_.character_;
   if (this != internal_default_instance()) delete _impl_.inventory_;
+  if (this != internal_default_instance()) delete _impl_.rejoin_;
 }
 
 void SelectCharacterResp::SetCachedSize(int size) const {
@@ -6151,6 +6026,10 @@ void SelectCharacterResp::Clear() {
     delete _impl_.inventory_;
   }
   _impl_.inventory_ = nullptr;
+  if (GetArenaForAllocation() == nullptr && _impl_.rejoin_ != nullptr) {
+    delete _impl_.rejoin_;
+  }
+  _impl_.rejoin_ = nullptr;
   _impl_.code_ = 0;
   _internal_metadata_.Clear<std::string>();
 }
@@ -6191,6 +6070,14 @@ const char* SelectCharacterResp::_InternalParse(const char* ptr, ::_pbi::ParseCo
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
           ptr = ctx->ParseMessage(_internal_mutable_inventory(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // .PB.Game.BattleRejoinInfo rejoin = 5;
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
+          ptr = ctx->ParseMessage(_internal_mutable_rejoin(), ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -6254,6 +6141,13 @@ uint8_t* SelectCharacterResp::_InternalSerialize(
         _Internal::inventory(this).GetCachedSize(), target, stream);
   }
 
+  // .PB.Game.BattleRejoinInfo rejoin = 5;
+  if (this->_internal_has_rejoin()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(5, _Internal::rejoin(this),
+        _Internal::rejoin(this).GetCachedSize(), target, stream);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
         static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
@@ -6289,6 +6183,13 @@ size_t SelectCharacterResp::ByteSizeLong() const {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
         *_impl_.inventory_);
+  }
+
+  // .PB.Game.BattleRejoinInfo rejoin = 5;
+  if (this->_internal_has_rejoin()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *_impl_.rejoin_);
   }
 
   // int32 code = 1;
@@ -6327,6 +6228,10 @@ void SelectCharacterResp::MergeFrom(const SelectCharacterResp& from) {
   if (from._internal_has_inventory()) {
     _this->_internal_mutable_inventory()->::PB::Types::InventoryInfo::MergeFrom(
         from._internal_inventory());
+  }
+  if (from._internal_has_rejoin()) {
+    _this->_internal_mutable_rejoin()->::PB::Game::BattleRejoinInfo::MergeFrom(
+        from._internal_rejoin());
   }
   if (from._internal_code() != 0) {
     _this->_internal_set_code(from._internal_code());
@@ -6369,44 +6274,44 @@ std::string SelectCharacterResp::GetTypeName() const {
 
 // ===================================================================
 
-class BattleJoinReq::_Internal {
+class BattleRejoinInfo::_Internal {
  public:
 };
 
-BattleJoinReq::BattleJoinReq(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+BattleRejoinInfo::BattleRejoinInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
   : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
   SharedCtor(arena, is_message_owned);
-  // @@protoc_insertion_point(arena_constructor:PB.Game.BattleJoinReq)
+  // @@protoc_insertion_point(arena_constructor:PB.Game.BattleRejoinInfo)
 }
-BattleJoinReq::BattleJoinReq(const BattleJoinReq& from)
+BattleRejoinInfo::BattleRejoinInfo(const BattleRejoinInfo& from)
   : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
-  BattleJoinReq* const _this = this; (void)_this;
+  BattleRejoinInfo* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.player_id_){}
-    , decltype(_impl_.map_id_){}
+      decltype(_impl_.battle_id_){}
+    , decltype(_impl_.room_id_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
-  ::memcpy(&_impl_.player_id_, &from._impl_.player_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.map_id_) -
-    reinterpret_cast<char*>(&_impl_.player_id_)) + sizeof(_impl_.map_id_));
-  // @@protoc_insertion_point(copy_constructor:PB.Game.BattleJoinReq)
+  ::memcpy(&_impl_.battle_id_, &from._impl_.battle_id_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.room_id_) -
+    reinterpret_cast<char*>(&_impl_.battle_id_)) + sizeof(_impl_.room_id_));
+  // @@protoc_insertion_point(copy_constructor:PB.Game.BattleRejoinInfo)
 }
 
-inline void BattleJoinReq::SharedCtor(
+inline void BattleRejoinInfo::SharedCtor(
     ::_pb::Arena* arena, bool is_message_owned) {
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.player_id_){int64_t{0}}
-    , decltype(_impl_.map_id_){0}
+      decltype(_impl_.battle_id_){0u}
+    , decltype(_impl_.room_id_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
 }
 
-BattleJoinReq::~BattleJoinReq() {
-  // @@protoc_insertion_point(destructor:PB.Game.BattleJoinReq)
+BattleRejoinInfo::~BattleRejoinInfo() {
+  // @@protoc_insertion_point(destructor:PB.Game.BattleRejoinInfo)
   if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
   (void)arena;
     return;
@@ -6414,338 +6319,44 @@ BattleJoinReq::~BattleJoinReq() {
   SharedDtor();
 }
 
-inline void BattleJoinReq::SharedDtor() {
+inline void BattleRejoinInfo::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
 }
 
-void BattleJoinReq::SetCachedSize(int size) const {
+void BattleRejoinInfo::SetCachedSize(int size) const {
   _impl_._cached_size_.Set(size);
 }
 
-void BattleJoinReq::Clear() {
-// @@protoc_insertion_point(message_clear_start:PB.Game.BattleJoinReq)
+void BattleRejoinInfo::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Game.BattleRejoinInfo)
   uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  ::memset(&_impl_.player_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.map_id_) -
-      reinterpret_cast<char*>(&_impl_.player_id_)) + sizeof(_impl_.map_id_));
+  ::memset(&_impl_.battle_id_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.room_id_) -
+      reinterpret_cast<char*>(&_impl_.battle_id_)) + sizeof(_impl_.room_id_));
   _internal_metadata_.Clear<std::string>();
 }
 
-const char* BattleJoinReq::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+const char* BattleRejoinInfo::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
     uint32_t tag;
     ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
-      // int64 player_id = 1;
+      // uint32 battle_id = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
-          _impl_.player_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // int32 map_id = 2;
-      case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
-          _impl_.map_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      default:
-        goto handle_unusual;
-    }  // switch
-  handle_unusual:
-    if ((tag == 0) || ((tag & 7) == 4)) {
-      CHK_(ptr);
-      ctx->SetLastTag(tag);
-      goto message_done;
-    }
-    ptr = UnknownFieldParse(
-        tag,
-        _internal_metadata_.mutable_unknown_fields<std::string>(),
-        ptr, ctx);
-    CHK_(ptr != nullptr);
-  }  // while
-message_done:
-  return ptr;
-failure:
-  ptr = nullptr;
-  goto message_done;
-#undef CHK_
-}
-
-uint8_t* BattleJoinReq::_InternalSerialize(
-    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
-  // @@protoc_insertion_point(serialize_to_array_start:PB.Game.BattleJoinReq)
-  uint32_t cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // int64 player_id = 1;
-  if (this->_internal_player_id() != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt64ToArray(1, this->_internal_player_id(), target);
-  }
-
-  // int32 map_id = 2;
-  if (this->_internal_map_id() != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_map_id(), target);
-  }
-
-  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
-        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
-  }
-  // @@protoc_insertion_point(serialize_to_array_end:PB.Game.BattleJoinReq)
-  return target;
-}
-
-size_t BattleJoinReq::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:PB.Game.BattleJoinReq)
-  size_t total_size = 0;
-
-  uint32_t cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  // int64 player_id = 1;
-  if (this->_internal_player_id() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_player_id());
-  }
-
-  // int32 map_id = 2;
-  if (this->_internal_map_id() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_map_id());
-  }
-
-  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
-  }
-  int cached_size = ::_pbi::ToCachedSize(total_size);
-  SetCachedSize(cached_size);
-  return total_size;
-}
-
-void BattleJoinReq::CheckTypeAndMergeFrom(
-    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::_pbi::DownCast<const BattleJoinReq*>(
-      &from));
-}
-
-void BattleJoinReq::MergeFrom(const BattleJoinReq& from) {
-  BattleJoinReq* const _this = this;
-  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Game.BattleJoinReq)
-  GOOGLE_DCHECK_NE(&from, _this);
-  uint32_t cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  if (from._internal_player_id() != 0) {
-    _this->_internal_set_player_id(from._internal_player_id());
-  }
-  if (from._internal_map_id() != 0) {
-    _this->_internal_set_map_id(from._internal_map_id());
-  }
-  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
-}
-
-void BattleJoinReq::CopyFrom(const BattleJoinReq& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:PB.Game.BattleJoinReq)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool BattleJoinReq::IsInitialized() const {
-  return true;
-}
-
-void BattleJoinReq::InternalSwap(BattleJoinReq* other) {
-  using std::swap;
-  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(BattleJoinReq, _impl_.map_id_)
-      + sizeof(BattleJoinReq::_impl_.map_id_)
-      - PROTOBUF_FIELD_OFFSET(BattleJoinReq, _impl_.player_id_)>(
-          reinterpret_cast<char*>(&_impl_.player_id_),
-          reinterpret_cast<char*>(&other->_impl_.player_id_));
-}
-
-std::string BattleJoinReq::GetTypeName() const {
-  return "PB.Game.BattleJoinReq";
-}
-
-
-// ===================================================================
-
-class BattleJoinResp::_Internal {
- public:
-};
-
-BattleJoinResp::BattleJoinResp(::PROTOBUF_NAMESPACE_ID::Arena* arena,
-                         bool is_message_owned)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
-  SharedCtor(arena, is_message_owned);
-  // @@protoc_insertion_point(arena_constructor:PB.Game.BattleJoinResp)
-}
-BattleJoinResp::BattleJoinResp(const BattleJoinResp& from)
-  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
-  BattleJoinResp* const _this = this; (void)_this;
-  new (&_impl_) Impl_{
-      decltype(_impl_.message_){}
-    , decltype(_impl_.world_dump_){}
-    , decltype(_impl_.code_){}
-    , decltype(_impl_.battle_id_){}
-    , decltype(_impl_.server_frame_){}
-    , decltype(_impl_.actor_entity_id_){}
-    , decltype(_impl_.random_seed_){}
-    , /*decltype(_impl_._cached_size_)*/{}};
-
-  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
-  _impl_.message_.InitDefault();
-  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.message_.Set("", GetArenaForAllocation());
-  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (!from._internal_message().empty()) {
-    _this->_impl_.message_.Set(from._internal_message(), 
-      _this->GetArenaForAllocation());
-  }
-  _impl_.world_dump_.InitDefault();
-  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.world_dump_.Set("", GetArenaForAllocation());
-  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (!from._internal_world_dump().empty()) {
-    _this->_impl_.world_dump_.Set(from._internal_world_dump(), 
-      _this->GetArenaForAllocation());
-  }
-  ::memcpy(&_impl_.code_, &from._impl_.code_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.random_seed_) -
-    reinterpret_cast<char*>(&_impl_.code_)) + sizeof(_impl_.random_seed_));
-  // @@protoc_insertion_point(copy_constructor:PB.Game.BattleJoinResp)
-}
-
-inline void BattleJoinResp::SharedCtor(
-    ::_pb::Arena* arena, bool is_message_owned) {
-  (void)arena;
-  (void)is_message_owned;
-  new (&_impl_) Impl_{
-      decltype(_impl_.message_){}
-    , decltype(_impl_.world_dump_){}
-    , decltype(_impl_.code_){0}
-    , decltype(_impl_.battle_id_){0u}
-    , decltype(_impl_.server_frame_){0u}
-    , decltype(_impl_.actor_entity_id_){0u}
-    , decltype(_impl_.random_seed_){uint64_t{0u}}
-    , /*decltype(_impl_._cached_size_)*/{}
-  };
-  _impl_.message_.InitDefault();
-  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.message_.Set("", GetArenaForAllocation());
-  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  _impl_.world_dump_.InitDefault();
-  #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.world_dump_.Set("", GetArenaForAllocation());
-  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-}
-
-BattleJoinResp::~BattleJoinResp() {
-  // @@protoc_insertion_point(destructor:PB.Game.BattleJoinResp)
-  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
-  (void)arena;
-    return;
-  }
-  SharedDtor();
-}
-
-inline void BattleJoinResp::SharedDtor() {
-  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
-  _impl_.message_.Destroy();
-  _impl_.world_dump_.Destroy();
-}
-
-void BattleJoinResp::SetCachedSize(int size) const {
-  _impl_._cached_size_.Set(size);
-}
-
-void BattleJoinResp::Clear() {
-// @@protoc_insertion_point(message_clear_start:PB.Game.BattleJoinResp)
-  uint32_t cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  _impl_.message_.ClearToEmpty();
-  _impl_.world_dump_.ClearToEmpty();
-  ::memset(&_impl_.code_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.random_seed_) -
-      reinterpret_cast<char*>(&_impl_.code_)) + sizeof(_impl_.random_seed_));
-  _internal_metadata_.Clear<std::string>();
-}
-
-const char* BattleJoinResp::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
-#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
-  while (!ctx->Done(&ptr)) {
-    uint32_t tag;
-    ptr = ::_pbi::ReadTag(ptr, &tag);
-    switch (tag >> 3) {
-      // int32 code = 1;
-      case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
-          _impl_.code_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // string message = 2;
-      case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
-          auto str = _internal_mutable_message();
-          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
-          CHK_(ptr);
-          CHK_(::_pbi::VerifyUTF8(str, nullptr));
-        } else
-          goto handle_unusual;
-        continue;
-      // uint32 battle_id = 3;
-      case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
           _impl_.battle_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
-      // uint32 server_frame = 4;
-      case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
-          _impl_.server_frame_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // bytes world_dump = 5;
-      case 5:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 42)) {
-          auto str = _internal_mutable_world_dump();
-          ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // uint32 actor_entity_id = 6;
-      case 6:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 48)) {
-          _impl_.actor_entity_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // uint64 random_seed = 7;
-      case 7:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 56)) {
-          _impl_.random_seed_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+      // int32 room_id = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.room_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -6773,111 +6384,48 @@ failure:
 #undef CHK_
 }
 
-uint8_t* BattleJoinResp::_InternalSerialize(
+uint8_t* BattleRejoinInfo::_InternalSerialize(
     uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
-  // @@protoc_insertion_point(serialize_to_array_start:PB.Game.BattleJoinResp)
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Game.BattleRejoinInfo)
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // int32 code = 1;
-  if (this->_internal_code() != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(1, this->_internal_code(), target);
-  }
-
-  // string message = 2;
-  if (!this->_internal_message().empty()) {
-    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
-      this->_internal_message().data(), static_cast<int>(this->_internal_message().length()),
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
-      "PB.Game.BattleJoinResp.message");
-    target = stream->WriteStringMaybeAliased(
-        2, this->_internal_message(), target);
-  }
-
-  // uint32 battle_id = 3;
+  // uint32 battle_id = 1;
   if (this->_internal_battle_id() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(3, this->_internal_battle_id(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(1, this->_internal_battle_id(), target);
   }
 
-  // uint32 server_frame = 4;
-  if (this->_internal_server_frame() != 0) {
+  // int32 room_id = 2;
+  if (this->_internal_room_id() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(4, this->_internal_server_frame(), target);
-  }
-
-  // bytes world_dump = 5;
-  if (!this->_internal_world_dump().empty()) {
-    target = stream->WriteBytesMaybeAliased(
-        5, this->_internal_world_dump(), target);
-  }
-
-  // uint32 actor_entity_id = 6;
-  if (this->_internal_actor_entity_id() != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(6, this->_internal_actor_entity_id(), target);
-  }
-
-  // uint64 random_seed = 7;
-  if (this->_internal_random_seed() != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(7, this->_internal_random_seed(), target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_room_id(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
         static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
   }
-  // @@protoc_insertion_point(serialize_to_array_end:PB.Game.BattleJoinResp)
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Game.BattleRejoinInfo)
   return target;
 }
 
-size_t BattleJoinResp::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:PB.Game.BattleJoinResp)
+size_t BattleRejoinInfo::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Game.BattleRejoinInfo)
   size_t total_size = 0;
 
   uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // string message = 2;
-  if (!this->_internal_message().empty()) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
-        this->_internal_message());
-  }
-
-  // bytes world_dump = 5;
-  if (!this->_internal_world_dump().empty()) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
-        this->_internal_world_dump());
-  }
-
-  // int32 code = 1;
-  if (this->_internal_code() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_code());
-  }
-
-  // uint32 battle_id = 3;
+  // uint32 battle_id = 1;
   if (this->_internal_battle_id() != 0) {
     total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_battle_id());
   }
 
-  // uint32 server_frame = 4;
-  if (this->_internal_server_frame() != 0) {
-    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_server_frame());
-  }
-
-  // uint32 actor_entity_id = 6;
-  if (this->_internal_actor_entity_id() != 0) {
-    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_actor_entity_id());
-  }
-
-  // uint64 random_seed = 7;
-  if (this->_internal_random_seed() != 0) {
-    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_random_seed());
+  // int32 room_id = 2;
+  if (this->_internal_room_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_room_id());
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -6888,77 +6436,52 @@ size_t BattleJoinResp::ByteSizeLong() const {
   return total_size;
 }
 
-void BattleJoinResp::CheckTypeAndMergeFrom(
+void BattleRejoinInfo::CheckTypeAndMergeFrom(
     const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
-  MergeFrom(*::_pbi::DownCast<const BattleJoinResp*>(
+  MergeFrom(*::_pbi::DownCast<const BattleRejoinInfo*>(
       &from));
 }
 
-void BattleJoinResp::MergeFrom(const BattleJoinResp& from) {
-  BattleJoinResp* const _this = this;
-  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Game.BattleJoinResp)
+void BattleRejoinInfo::MergeFrom(const BattleRejoinInfo& from) {
+  BattleRejoinInfo* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Game.BattleRejoinInfo)
   GOOGLE_DCHECK_NE(&from, _this);
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (!from._internal_message().empty()) {
-    _this->_internal_set_message(from._internal_message());
-  }
-  if (!from._internal_world_dump().empty()) {
-    _this->_internal_set_world_dump(from._internal_world_dump());
-  }
-  if (from._internal_code() != 0) {
-    _this->_internal_set_code(from._internal_code());
-  }
   if (from._internal_battle_id() != 0) {
     _this->_internal_set_battle_id(from._internal_battle_id());
   }
-  if (from._internal_server_frame() != 0) {
-    _this->_internal_set_server_frame(from._internal_server_frame());
-  }
-  if (from._internal_actor_entity_id() != 0) {
-    _this->_internal_set_actor_entity_id(from._internal_actor_entity_id());
-  }
-  if (from._internal_random_seed() != 0) {
-    _this->_internal_set_random_seed(from._internal_random_seed());
+  if (from._internal_room_id() != 0) {
+    _this->_internal_set_room_id(from._internal_room_id());
   }
   _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
 
-void BattleJoinResp::CopyFrom(const BattleJoinResp& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:PB.Game.BattleJoinResp)
+void BattleRejoinInfo::CopyFrom(const BattleRejoinInfo& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Game.BattleRejoinInfo)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-bool BattleJoinResp::IsInitialized() const {
+bool BattleRejoinInfo::IsInitialized() const {
   return true;
 }
 
-void BattleJoinResp::InternalSwap(BattleJoinResp* other) {
+void BattleRejoinInfo::InternalSwap(BattleRejoinInfo* other) {
   using std::swap;
-  auto* lhs_arena = GetArenaForAllocation();
-  auto* rhs_arena = other->GetArenaForAllocation();
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
-      &_impl_.message_, lhs_arena,
-      &other->_impl_.message_, rhs_arena
-  );
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
-      &_impl_.world_dump_, lhs_arena,
-      &other->_impl_.world_dump_, rhs_arena
-  );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(BattleJoinResp, _impl_.random_seed_)
-      + sizeof(BattleJoinResp::_impl_.random_seed_)
-      - PROTOBUF_FIELD_OFFSET(BattleJoinResp, _impl_.code_)>(
-          reinterpret_cast<char*>(&_impl_.code_),
-          reinterpret_cast<char*>(&other->_impl_.code_));
+      PROTOBUF_FIELD_OFFSET(BattleRejoinInfo, _impl_.room_id_)
+      + sizeof(BattleRejoinInfo::_impl_.room_id_)
+      - PROTOBUF_FIELD_OFFSET(BattleRejoinInfo, _impl_.battle_id_)>(
+          reinterpret_cast<char*>(&_impl_.battle_id_),
+          reinterpret_cast<char*>(&other->_impl_.battle_id_));
 }
 
-std::string BattleJoinResp::GetTypeName() const {
-  return "PB.Game.BattleJoinResp";
+std::string BattleRejoinInfo::GetTypeName() const {
+  return "PB.Game.BattleRejoinInfo";
 }
 
 
@@ -9841,26 +9364,24 @@ DuelStartPush::DuelStartPush(const DuelStartPush& from)
   : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
   DuelStartPush* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.world_dump_){}
+      decltype(_impl_.opponent_name_){}
     , decltype(_impl_.battle_id_){}
-    , decltype(_impl_.server_frame_){}
-    , decltype(_impl_.actor_entity_id_){}
-    , decltype(_impl_.map_id_){}
-    , decltype(_impl_.random_seed_){}
+    , decltype(_impl_.room_id_){}
+    , decltype(_impl_.opponent_player_id_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
-  _impl_.world_dump_.InitDefault();
+  _impl_.opponent_name_.InitDefault();
   #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.world_dump_.Set("", GetArenaForAllocation());
+    _impl_.opponent_name_.Set("", GetArenaForAllocation());
   #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  if (!from._internal_world_dump().empty()) {
-    _this->_impl_.world_dump_.Set(from._internal_world_dump(), 
+  if (!from._internal_opponent_name().empty()) {
+    _this->_impl_.opponent_name_.Set(from._internal_opponent_name(), 
       _this->GetArenaForAllocation());
   }
   ::memcpy(&_impl_.battle_id_, &from._impl_.battle_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.random_seed_) -
-    reinterpret_cast<char*>(&_impl_.battle_id_)) + sizeof(_impl_.random_seed_));
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.opponent_player_id_) -
+    reinterpret_cast<char*>(&_impl_.battle_id_)) + sizeof(_impl_.opponent_player_id_));
   // @@protoc_insertion_point(copy_constructor:PB.Game.DuelStartPush)
 }
 
@@ -9869,17 +9390,15 @@ inline void DuelStartPush::SharedCtor(
   (void)arena;
   (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.world_dump_){}
+      decltype(_impl_.opponent_name_){}
     , decltype(_impl_.battle_id_){0u}
-    , decltype(_impl_.server_frame_){0u}
-    , decltype(_impl_.actor_entity_id_){0u}
-    , decltype(_impl_.map_id_){0}
-    , decltype(_impl_.random_seed_){uint64_t{0u}}
+    , decltype(_impl_.room_id_){0}
+    , decltype(_impl_.opponent_player_id_){int64_t{0}}
     , /*decltype(_impl_._cached_size_)*/{}
   };
-  _impl_.world_dump_.InitDefault();
+  _impl_.opponent_name_.InitDefault();
   #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.world_dump_.Set("", GetArenaForAllocation());
+    _impl_.opponent_name_.Set("", GetArenaForAllocation());
   #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
@@ -9894,7 +9413,7 @@ DuelStartPush::~DuelStartPush() {
 
 inline void DuelStartPush::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
-  _impl_.world_dump_.Destroy();
+  _impl_.opponent_name_.Destroy();
 }
 
 void DuelStartPush::SetCachedSize(int size) const {
@@ -9907,10 +9426,10 @@ void DuelStartPush::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  _impl_.world_dump_.ClearToEmpty();
+  _impl_.opponent_name_.ClearToEmpty();
   ::memset(&_impl_.battle_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.random_seed_) -
-      reinterpret_cast<char*>(&_impl_.battle_id_)) + sizeof(_impl_.random_seed_));
+      reinterpret_cast<char*>(&_impl_.opponent_player_id_) -
+      reinterpret_cast<char*>(&_impl_.battle_id_)) + sizeof(_impl_.opponent_player_id_));
   _internal_metadata_.Clear<std::string>();
 }
 
@@ -9928,44 +9447,29 @@ const char* DuelStartPush::_InternalParse(const char* ptr, ::_pbi::ParseContext*
         } else
           goto handle_unusual;
         continue;
-      // uint32 server_frame = 2;
+      // int32 room_id = 2;
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
-          _impl_.server_frame_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          _impl_.room_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
-      // bytes world_dump = 3;
+      // int64 opponent_player_id = 3;
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
-          auto str = _internal_mutable_world_dump();
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.opponent_player_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // string opponent_name = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
+          auto str = _internal_mutable_opponent_name();
           ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // uint32 actor_entity_id = 4;
-      case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
-          _impl_.actor_entity_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // int32 map_id = 5;
-      case 5:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 40)) {
-          _impl_.map_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // uint64 random_seed = 6;
-      case 6:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 48)) {
-          _impl_.random_seed_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
-          CHK_(ptr);
+          CHK_(::_pbi::VerifyUTF8(str, nullptr));
         } else
           goto handle_unusual;
         continue;
@@ -10004,34 +9508,26 @@ uint8_t* DuelStartPush::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteUInt32ToArray(1, this->_internal_battle_id(), target);
   }
 
-  // uint32 server_frame = 2;
-  if (this->_internal_server_frame() != 0) {
+  // int32 room_id = 2;
+  if (this->_internal_room_id() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(2, this->_internal_server_frame(), target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_room_id(), target);
   }
 
-  // bytes world_dump = 3;
-  if (!this->_internal_world_dump().empty()) {
-    target = stream->WriteBytesMaybeAliased(
-        3, this->_internal_world_dump(), target);
+  // int64 opponent_player_id = 3;
+  if (this->_internal_opponent_player_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(3, this->_internal_opponent_player_id(), target);
   }
 
-  // uint32 actor_entity_id = 4;
-  if (this->_internal_actor_entity_id() != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(4, this->_internal_actor_entity_id(), target);
-  }
-
-  // int32 map_id = 5;
-  if (this->_internal_map_id() != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(5, this->_internal_map_id(), target);
-  }
-
-  // uint64 random_seed = 6;
-  if (this->_internal_random_seed() != 0) {
-    target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(6, this->_internal_random_seed(), target);
+  // string opponent_name = 4;
+  if (!this->_internal_opponent_name().empty()) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_opponent_name().data(), static_cast<int>(this->_internal_opponent_name().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "PB.Game.DuelStartPush.opponent_name");
+    target = stream->WriteStringMaybeAliased(
+        4, this->_internal_opponent_name(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -10050,11 +9546,11 @@ size_t DuelStartPush::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // bytes world_dump = 3;
-  if (!this->_internal_world_dump().empty()) {
+  // string opponent_name = 4;
+  if (!this->_internal_opponent_name().empty()) {
     total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::BytesSize(
-        this->_internal_world_dump());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_opponent_name());
   }
 
   // uint32 battle_id = 1;
@@ -10062,24 +9558,14 @@ size_t DuelStartPush::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_battle_id());
   }
 
-  // uint32 server_frame = 2;
-  if (this->_internal_server_frame() != 0) {
-    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_server_frame());
+  // int32 room_id = 2;
+  if (this->_internal_room_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_room_id());
   }
 
-  // uint32 actor_entity_id = 4;
-  if (this->_internal_actor_entity_id() != 0) {
-    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_actor_entity_id());
-  }
-
-  // int32 map_id = 5;
-  if (this->_internal_map_id() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_map_id());
-  }
-
-  // uint64 random_seed = 6;
-  if (this->_internal_random_seed() != 0) {
-    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_random_seed());
+  // int64 opponent_player_id = 3;
+  if (this->_internal_opponent_player_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_opponent_player_id());
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -10103,23 +9589,17 @@ void DuelStartPush::MergeFrom(const DuelStartPush& from) {
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (!from._internal_world_dump().empty()) {
-    _this->_internal_set_world_dump(from._internal_world_dump());
+  if (!from._internal_opponent_name().empty()) {
+    _this->_internal_set_opponent_name(from._internal_opponent_name());
   }
   if (from._internal_battle_id() != 0) {
     _this->_internal_set_battle_id(from._internal_battle_id());
   }
-  if (from._internal_server_frame() != 0) {
-    _this->_internal_set_server_frame(from._internal_server_frame());
+  if (from._internal_room_id() != 0) {
+    _this->_internal_set_room_id(from._internal_room_id());
   }
-  if (from._internal_actor_entity_id() != 0) {
-    _this->_internal_set_actor_entity_id(from._internal_actor_entity_id());
-  }
-  if (from._internal_map_id() != 0) {
-    _this->_internal_set_map_id(from._internal_map_id());
-  }
-  if (from._internal_random_seed() != 0) {
-    _this->_internal_set_random_seed(from._internal_random_seed());
+  if (from._internal_opponent_player_id() != 0) {
+    _this->_internal_set_opponent_player_id(from._internal_opponent_player_id());
   }
   _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
@@ -10141,12 +9621,12 @@ void DuelStartPush::InternalSwap(DuelStartPush* other) {
   auto* rhs_arena = other->GetArenaForAllocation();
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
-      &_impl_.world_dump_, lhs_arena,
-      &other->_impl_.world_dump_, rhs_arena
+      &_impl_.opponent_name_, lhs_arena,
+      &other->_impl_.opponent_name_, rhs_arena
   );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(DuelStartPush, _impl_.random_seed_)
-      + sizeof(DuelStartPush::_impl_.random_seed_)
+      PROTOBUF_FIELD_OFFSET(DuelStartPush, _impl_.opponent_player_id_)
+      + sizeof(DuelStartPush::_impl_.opponent_player_id_)
       - PROTOBUF_FIELD_OFFSET(DuelStartPush, _impl_.battle_id_)>(
           reinterpret_cast<char*>(&_impl_.battle_id_),
           reinterpret_cast<char*>(&other->_impl_.battle_id_));
@@ -12636,13 +12116,9 @@ template<> PROTOBUF_NOINLINE ::PB::Game::SelectCharacterResp*
 Arena::CreateMaybeMessage< ::PB::Game::SelectCharacterResp >(Arena* arena) {
   return Arena::CreateMessageInternal< ::PB::Game::SelectCharacterResp >(arena);
 }
-template<> PROTOBUF_NOINLINE ::PB::Game::BattleJoinReq*
-Arena::CreateMaybeMessage< ::PB::Game::BattleJoinReq >(Arena* arena) {
-  return Arena::CreateMessageInternal< ::PB::Game::BattleJoinReq >(arena);
-}
-template<> PROTOBUF_NOINLINE ::PB::Game::BattleJoinResp*
-Arena::CreateMaybeMessage< ::PB::Game::BattleJoinResp >(Arena* arena) {
-  return Arena::CreateMessageInternal< ::PB::Game::BattleJoinResp >(arena);
+template<> PROTOBUF_NOINLINE ::PB::Game::BattleRejoinInfo*
+Arena::CreateMaybeMessage< ::PB::Game::BattleRejoinInfo >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Game::BattleRejoinInfo >(arena);
 }
 template<> PROTOBUF_NOINLINE ::PB::Game::DuelInviteReq*
 Arena::CreateMaybeMessage< ::PB::Game::DuelInviteReq >(Arena* arena) {

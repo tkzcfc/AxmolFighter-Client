@@ -41,8 +41,9 @@ struct SlotFrameEntry
 // 整个世界的输入预测与回滚会话，编译进客户端与战斗服。
 //
 // 服务器权威：服务器按帧广播各槽位的确认输入。会话对缺失输入做本地预测
-// （本地槽位用 addLocalInput 提交的输入，远端槽位重复该槽位最近一次确认输入），
+// （本地槽位用 addLocalInput 提交的输入，缺失或远端槽位使用空输入），
 // 当确认输入与已用预测不一致时，回滚到最早不一致帧之前的快照并按新输入重推。
+// 缺失输入使用空输入而非重复最近确认输入，避免重复触发边缘事件（如攻击按键）。
 // 预测帧数受 m_depth 限制，超前过多时停止推进，避免快照被覆盖而无法回滚。
 class RollbackSession
 {
@@ -70,6 +71,8 @@ public:
     bool advanceTo(uint64_t frame);
     // 推进一帧；预测超前超过窗口深度时返回 false 且不推进。
     bool tick();
+    // 立即执行待回滚（若有），不推进新帧；供哈希对账前把世界刷新到一致状态。
+    void flushPendingRollback();
 
     // 已模拟到的最新帧号。
     uint64_t currentFrame() const { return m_currentFrame; }
@@ -116,8 +119,8 @@ private:
     void collectEvents(uint64_t frame);
     // 事件稳定标识：帧、实体、帧内序号与载荷内容的哈希，独立于全局单调 seq。
     static uint64_t eventKey(const PresentationEvent& event);
-    // 更新槽位最近确认输入与连续确认进度。
-    void noteConfirmed(uint32_t slot, uint64_t frame, const PlayerInput& input);
+    // 更新槽位连续确认进度。
+    void noteConfirmed(uint32_t slot, uint64_t frame);
     // 重置输入与快照历史到指定帧。
     void resetHistory(uint64_t frame);
 
@@ -137,9 +140,6 @@ private:
     std::vector<std::map<uint64_t, SlotFrameEntry>> m_inputs;
     // 本地槽位的预测输入，按帧保存。
     std::map<uint64_t, PlayerInput> m_localInputs;
-    // 每槽位最近一次确认输入及其帧号。
-    std::vector<PlayerInput> m_lastConfirmedInput;
-    std::vector<uint64_t> m_lastConfirmedFrame;
     // 每槽位连续确认到的最晚帧号。
     std::vector<uint64_t> m_confirmedUpTo;
     // 每帧已确认的房间级系统命令。

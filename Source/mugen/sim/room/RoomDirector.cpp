@@ -6,11 +6,23 @@
 #include "mugen/sim/skill/SkillCaster.h"
 #include "mugen/sim/hit/HitResolver.h"
 #include <algorithm>
+#include <array>
 #include <map>
 
 namespace mugen::sim::room
 {
 using State = mugen::RoomState;
+
+namespace
+{
+// PVP 决斗的右侧队伍阵营位；其余阵营归入左侧队伍。
+constexpr int32_t kPvpRightCamp = 2;
+// PVP 决斗左右两队的出生横坐标；左队朝右，右队朝左。
+constexpr int32_t kPvpLeftX  = 300;
+constexpr int32_t kPvpRightX = 1900;
+// PVP 同队成员按出生顺序占用的纵深坐标。
+constexpr std::array<int32_t, 3> kPvpSpawnZ = {200, 150, 50};
+}  // namespace
 
 // 构造房间视图，只保存世界引用。
 RoomDirector::RoomDirector(World& world) : m_world(world) {}
@@ -186,12 +198,26 @@ bool RoomDirector::enter(const conf::RoomConfig& config, int32_t stageId, int32_
         room.m_limitSeconds = Fixed::fromInt(_value(config.battleRuleParam, 0, 0));
     const auto players = m_world.ecs().singleton<PlayerSlots>().entities;
     size_t index       = 0;
+    // PVP 决斗按阵营分左右两队出生，同队按出生顺序占用不同纵深位置。
+    std::array<size_t, 2> teamCounts{};
     for (const auto& [slot, entity] : players)
     {
-        auto& transform    = m_world.ecs().get<Transform>(entity);
-        transform.position = {
-            Fixed::fromInt(_value(config.actorPosX, index, 0)), {}, Fixed::fromInt(_value(config.actorPosZ, index, 0))};
-        transform.towardX = _value(config.actorVectorX, index++, 1) < 0 ? -1 : 1;
+        auto& transform = m_world.ecs().get<Transform>(entity);
+        if (room.m_pvp)
+        {
+            const bool rightTeam = m_world.ecs().get<RoleIdentity>(entity).camp == kPvpRightCamp;
+            const size_t team    = rightTeam ? 1 : 0;
+            const size_t lane    = std::min(teamCounts[team]++, kPvpSpawnZ.size() - 1);
+            transform.position   = {Fixed::fromInt(rightTeam ? kPvpRightX : kPvpLeftX), {}, Fixed::fromInt(kPvpSpawnZ[lane])};
+            transform.towardX    = rightTeam ? -1 : 1;
+        }
+        else
+        {
+            transform.position = {Fixed::fromInt(_value(config.actorPosX, index, 0)),
+                                  {},
+                                  Fixed::fromInt(_value(config.actorPosZ, index, 0))};
+            transform.towardX  = _value(config.actorVectorX, index++, 1) < 0 ? -1 : 1;
+        }
         for (int32_t id : config.actorBuffIds)
             if (id != -1)
                 hit::HitResolver(m_world, entity).addEntityBuff(id);

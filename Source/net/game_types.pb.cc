@@ -343,10 +343,14 @@ PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORIT
 PROTOBUF_CONSTEXPR BattlePlayerSpec::BattlePlayerSpec(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+  , /*decltype(_impl_.appearance_)*/nullptr
   , /*decltype(_impl_.player_id_)*/int64_t{0}
+  , /*decltype(_impl_.character_id_)*/int64_t{0}
   , /*decltype(_impl_.session_id_)*/0u
   , /*decltype(_impl_.class_id_)*/0
-  , /*decltype(_impl_.character_id_)*/int64_t{0}
+  , /*decltype(_impl_.slot_)*/0
+  , /*decltype(_impl_.camp_)*/0
+  , /*decltype(_impl_.level_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct BattlePlayerSpecDefaultTypeInternal {
   PROTOBUF_CONSTEXPR BattlePlayerSpecDefaultTypeInternal()
@@ -357,6 +361,22 @@ struct BattlePlayerSpecDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 BattlePlayerSpecDefaultTypeInternal _BattlePlayerSpec_default_instance_;
+PROTOBUF_CONSTEXPR BattlePlayerResult::BattlePlayerResult(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.player_id_)*/int64_t{0}
+  , /*decltype(_impl_.slot_)*/0
+  , /*decltype(_impl_.camp_)*/0
+  , /*decltype(_impl_.win_)*/false
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct BattlePlayerResultDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR BattlePlayerResultDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~BattlePlayerResultDefaultTypeInternal() {}
+  union {
+    BattlePlayerResult _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 BattlePlayerResultDefaultTypeInternal _BattlePlayerResult_default_instance_;
 }  // namespace Types
 }  // namespace PB
 namespace PB {
@@ -6008,8 +6028,13 @@ std::string SceneInfo::GetTypeName() const {
 
 class BattlePlayerSpec::_Internal {
  public:
+  static const ::PB::Types::TownAppearance& appearance(const BattlePlayerSpec* msg);
 };
 
+const ::PB::Types::TownAppearance&
+BattlePlayerSpec::_Internal::appearance(const BattlePlayerSpec* msg) {
+  return *msg->_impl_.appearance_;
+}
 BattlePlayerSpec::BattlePlayerSpec(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
   : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
@@ -6021,10 +6046,14 @@ BattlePlayerSpec::BattlePlayerSpec(const BattlePlayerSpec& from)
   BattlePlayerSpec* const _this = this; (void)_this;
   new (&_impl_) Impl_{
       decltype(_impl_.name_){}
+    , decltype(_impl_.appearance_){nullptr}
     , decltype(_impl_.player_id_){}
+    , decltype(_impl_.character_id_){}
     , decltype(_impl_.session_id_){}
     , decltype(_impl_.class_id_){}
-    , decltype(_impl_.character_id_){}
+    , decltype(_impl_.slot_){}
+    , decltype(_impl_.camp_){}
+    , decltype(_impl_.level_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
@@ -6036,9 +6065,12 @@ BattlePlayerSpec::BattlePlayerSpec(const BattlePlayerSpec& from)
     _this->_impl_.name_.Set(from._internal_name(), 
       _this->GetArenaForAllocation());
   }
+  if (from._internal_has_appearance()) {
+    _this->_impl_.appearance_ = new ::PB::Types::TownAppearance(*from._impl_.appearance_);
+  }
   ::memcpy(&_impl_.player_id_, &from._impl_.player_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.character_id_) -
-    reinterpret_cast<char*>(&_impl_.player_id_)) + sizeof(_impl_.character_id_));
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.level_) -
+    reinterpret_cast<char*>(&_impl_.player_id_)) + sizeof(_impl_.level_));
   // @@protoc_insertion_point(copy_constructor:PB.Types.BattlePlayerSpec)
 }
 
@@ -6048,10 +6080,14 @@ inline void BattlePlayerSpec::SharedCtor(
   (void)is_message_owned;
   new (&_impl_) Impl_{
       decltype(_impl_.name_){}
+    , decltype(_impl_.appearance_){nullptr}
     , decltype(_impl_.player_id_){int64_t{0}}
+    , decltype(_impl_.character_id_){int64_t{0}}
     , decltype(_impl_.session_id_){0u}
     , decltype(_impl_.class_id_){0}
-    , decltype(_impl_.character_id_){int64_t{0}}
+    , decltype(_impl_.slot_){0}
+    , decltype(_impl_.camp_){0}
+    , decltype(_impl_.level_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
   _impl_.name_.InitDefault();
@@ -6072,6 +6108,7 @@ BattlePlayerSpec::~BattlePlayerSpec() {
 inline void BattlePlayerSpec::SharedDtor() {
   GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
   _impl_.name_.Destroy();
+  if (this != internal_default_instance()) delete _impl_.appearance_;
 }
 
 void BattlePlayerSpec::SetCachedSize(int size) const {
@@ -6085,9 +6122,13 @@ void BattlePlayerSpec::Clear() {
   (void) cached_has_bits;
 
   _impl_.name_.ClearToEmpty();
+  if (GetArenaForAllocation() == nullptr && _impl_.appearance_ != nullptr) {
+    delete _impl_.appearance_;
+  }
+  _impl_.appearance_ = nullptr;
   ::memset(&_impl_.player_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.character_id_) -
-      reinterpret_cast<char*>(&_impl_.player_id_)) + sizeof(_impl_.character_id_));
+      reinterpret_cast<char*>(&_impl_.level_) -
+      reinterpret_cast<char*>(&_impl_.player_id_)) + sizeof(_impl_.level_));
   _internal_metadata_.Clear<std::string>();
 }
 
@@ -6113,10 +6154,10 @@ const char* BattlePlayerSpec::_InternalParse(const char* ptr, ::_pbi::ParseConte
         } else
           goto handle_unusual;
         continue;
-      // int32 class_id = 3;
+      // int64 character_id = 3;
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
-          _impl_.class_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          _impl_.character_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -6131,10 +6172,42 @@ const char* BattlePlayerSpec::_InternalParse(const char* ptr, ::_pbi::ParseConte
         } else
           goto handle_unusual;
         continue;
-      // int64 character_id = 5;
+      // int32 class_id = 5;
       case 5:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 40)) {
-          _impl_.character_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          _impl_.class_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 slot = 6;
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 48)) {
+          _impl_.slot_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 camp = 7;
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 56)) {
+          _impl_.camp_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 level = 8;
+      case 8:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 64)) {
+          _impl_.level_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // .PB.Types.TownAppearance appearance = 9;
+      case 9:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 74)) {
+          ptr = ctx->ParseMessage(_internal_mutable_appearance(), ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -6180,10 +6253,10 @@ uint8_t* BattlePlayerSpec::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteInt64ToArray(2, this->_internal_player_id(), target);
   }
 
-  // int32 class_id = 3;
-  if (this->_internal_class_id() != 0) {
+  // int64 character_id = 3;
+  if (this->_internal_character_id() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(3, this->_internal_class_id(), target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(3, this->_internal_character_id(), target);
   }
 
   // string name = 4;
@@ -6196,10 +6269,35 @@ uint8_t* BattlePlayerSpec::_InternalSerialize(
         4, this->_internal_name(), target);
   }
 
-  // int64 character_id = 5;
-  if (this->_internal_character_id() != 0) {
+  // int32 class_id = 5;
+  if (this->_internal_class_id() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt64ToArray(5, this->_internal_character_id(), target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(5, this->_internal_class_id(), target);
+  }
+
+  // int32 slot = 6;
+  if (this->_internal_slot() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(6, this->_internal_slot(), target);
+  }
+
+  // int32 camp = 7;
+  if (this->_internal_camp() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(7, this->_internal_camp(), target);
+  }
+
+  // int32 level = 8;
+  if (this->_internal_level() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(8, this->_internal_level(), target);
+  }
+
+  // .PB.Types.TownAppearance appearance = 9;
+  if (this->_internal_has_appearance()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(9, _Internal::appearance(this),
+        _Internal::appearance(this).GetCachedSize(), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -6225,9 +6323,21 @@ size_t BattlePlayerSpec::ByteSizeLong() const {
         this->_internal_name());
   }
 
+  // .PB.Types.TownAppearance appearance = 9;
+  if (this->_internal_has_appearance()) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *_impl_.appearance_);
+  }
+
   // int64 player_id = 2;
   if (this->_internal_player_id() != 0) {
     total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_player_id());
+  }
+
+  // int64 character_id = 3;
+  if (this->_internal_character_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_character_id());
   }
 
   // uint32 session_id = 1;
@@ -6235,14 +6345,24 @@ size_t BattlePlayerSpec::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_session_id());
   }
 
-  // int32 class_id = 3;
+  // int32 class_id = 5;
   if (this->_internal_class_id() != 0) {
     total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_class_id());
   }
 
-  // int64 character_id = 5;
-  if (this->_internal_character_id() != 0) {
-    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_character_id());
+  // int32 slot = 6;
+  if (this->_internal_slot() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_slot());
+  }
+
+  // int32 camp = 7;
+  if (this->_internal_camp() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_camp());
+  }
+
+  // int32 level = 8;
+  if (this->_internal_level() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_level());
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -6269,8 +6389,15 @@ void BattlePlayerSpec::MergeFrom(const BattlePlayerSpec& from) {
   if (!from._internal_name().empty()) {
     _this->_internal_set_name(from._internal_name());
   }
+  if (from._internal_has_appearance()) {
+    _this->_internal_mutable_appearance()->::PB::Types::TownAppearance::MergeFrom(
+        from._internal_appearance());
+  }
   if (from._internal_player_id() != 0) {
     _this->_internal_set_player_id(from._internal_player_id());
+  }
+  if (from._internal_character_id() != 0) {
+    _this->_internal_set_character_id(from._internal_character_id());
   }
   if (from._internal_session_id() != 0) {
     _this->_internal_set_session_id(from._internal_session_id());
@@ -6278,8 +6405,14 @@ void BattlePlayerSpec::MergeFrom(const BattlePlayerSpec& from) {
   if (from._internal_class_id() != 0) {
     _this->_internal_set_class_id(from._internal_class_id());
   }
-  if (from._internal_character_id() != 0) {
-    _this->_internal_set_character_id(from._internal_character_id());
+  if (from._internal_slot() != 0) {
+    _this->_internal_set_slot(from._internal_slot());
+  }
+  if (from._internal_camp() != 0) {
+    _this->_internal_set_camp(from._internal_camp());
+  }
+  if (from._internal_level() != 0) {
+    _this->_internal_set_level(from._internal_level());
   }
   _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
 }
@@ -6305,15 +6438,276 @@ void BattlePlayerSpec::InternalSwap(BattlePlayerSpec* other) {
       &other->_impl_.name_, rhs_arena
   );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(BattlePlayerSpec, _impl_.character_id_)
-      + sizeof(BattlePlayerSpec::_impl_.character_id_)
-      - PROTOBUF_FIELD_OFFSET(BattlePlayerSpec, _impl_.player_id_)>(
-          reinterpret_cast<char*>(&_impl_.player_id_),
-          reinterpret_cast<char*>(&other->_impl_.player_id_));
+      PROTOBUF_FIELD_OFFSET(BattlePlayerSpec, _impl_.level_)
+      + sizeof(BattlePlayerSpec::_impl_.level_)
+      - PROTOBUF_FIELD_OFFSET(BattlePlayerSpec, _impl_.appearance_)>(
+          reinterpret_cast<char*>(&_impl_.appearance_),
+          reinterpret_cast<char*>(&other->_impl_.appearance_));
 }
 
 std::string BattlePlayerSpec::GetTypeName() const {
   return "PB.Types.BattlePlayerSpec";
+}
+
+
+// ===================================================================
+
+class BattlePlayerResult::_Internal {
+ public:
+};
+
+BattlePlayerResult::BattlePlayerResult(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:PB.Types.BattlePlayerResult)
+}
+BattlePlayerResult::BattlePlayerResult(const BattlePlayerResult& from)
+  : ::PROTOBUF_NAMESPACE_ID::MessageLite() {
+  BattlePlayerResult* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.player_id_){}
+    , decltype(_impl_.slot_){}
+    , decltype(_impl_.camp_){}
+    , decltype(_impl_.win_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+  ::memcpy(&_impl_.player_id_, &from._impl_.player_id_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.win_) -
+    reinterpret_cast<char*>(&_impl_.player_id_)) + sizeof(_impl_.win_));
+  // @@protoc_insertion_point(copy_constructor:PB.Types.BattlePlayerResult)
+}
+
+inline void BattlePlayerResult::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.player_id_){int64_t{0}}
+    , decltype(_impl_.slot_){0}
+    , decltype(_impl_.camp_){0}
+    , decltype(_impl_.win_){false}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+BattlePlayerResult::~BattlePlayerResult() {
+  // @@protoc_insertion_point(destructor:PB.Types.BattlePlayerResult)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<std::string>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void BattlePlayerResult::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+}
+
+void BattlePlayerResult::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void BattlePlayerResult::Clear() {
+// @@protoc_insertion_point(message_clear_start:PB.Types.BattlePlayerResult)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  ::memset(&_impl_.player_id_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.win_) -
+      reinterpret_cast<char*>(&_impl_.player_id_)) + sizeof(_impl_.win_));
+  _internal_metadata_.Clear<std::string>();
+}
+
+const char* BattlePlayerResult::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // int64 player_id = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.player_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 slot = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.slot_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 camp = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.camp_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // bool win = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
+          _impl_.win_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<std::string>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* BattlePlayerResult::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:PB.Types.BattlePlayerResult)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // int64 player_id = 1;
+  if (this->_internal_player_id() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(1, this->_internal_player_id(), target);
+  }
+
+  // int32 slot = 2;
+  if (this->_internal_slot() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(2, this->_internal_slot(), target);
+  }
+
+  // int32 camp = 3;
+  if (this->_internal_camp() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(3, this->_internal_camp(), target);
+  }
+
+  // bool win = 4;
+  if (this->_internal_win() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteBoolToArray(4, this->_internal_win(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = stream->WriteRaw(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).data(),
+        static_cast<int>(_internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size()), target);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:PB.Types.BattlePlayerResult)
+  return target;
+}
+
+size_t BattlePlayerResult::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:PB.Types.BattlePlayerResult)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // int64 player_id = 1;
+  if (this->_internal_player_id() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(this->_internal_player_id());
+  }
+
+  // int32 slot = 2;
+  if (this->_internal_slot() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_slot());
+  }
+
+  // int32 camp = 3;
+  if (this->_internal_camp() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_camp());
+  }
+
+  // bool win = 4;
+  if (this->_internal_win() != 0) {
+    total_size += 1 + 1;
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    total_size += _internal_metadata_.unknown_fields<std::string>(::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString).size();
+  }
+  int cached_size = ::_pbi::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
+  return total_size;
+}
+
+void BattlePlayerResult::CheckTypeAndMergeFrom(
+    const ::PROTOBUF_NAMESPACE_ID::MessageLite& from) {
+  MergeFrom(*::_pbi::DownCast<const BattlePlayerResult*>(
+      &from));
+}
+
+void BattlePlayerResult::MergeFrom(const BattlePlayerResult& from) {
+  BattlePlayerResult* const _this = this;
+  // @@protoc_insertion_point(class_specific_merge_from_start:PB.Types.BattlePlayerResult)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_player_id() != 0) {
+    _this->_internal_set_player_id(from._internal_player_id());
+  }
+  if (from._internal_slot() != 0) {
+    _this->_internal_set_slot(from._internal_slot());
+  }
+  if (from._internal_camp() != 0) {
+    _this->_internal_set_camp(from._internal_camp());
+  }
+  if (from._internal_win() != 0) {
+    _this->_internal_set_win(from._internal_win());
+  }
+  _this->_internal_metadata_.MergeFrom<std::string>(from._internal_metadata_);
+}
+
+void BattlePlayerResult::CopyFrom(const BattlePlayerResult& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:PB.Types.BattlePlayerResult)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool BattlePlayerResult::IsInitialized() const {
+  return true;
+}
+
+void BattlePlayerResult::InternalSwap(BattlePlayerResult* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(BattlePlayerResult, _impl_.win_)
+      + sizeof(BattlePlayerResult::_impl_.win_)
+      - PROTOBUF_FIELD_OFFSET(BattlePlayerResult, _impl_.player_id_)>(
+          reinterpret_cast<char*>(&_impl_.player_id_),
+          reinterpret_cast<char*>(&other->_impl_.player_id_));
+}
+
+std::string BattlePlayerResult::GetTypeName() const {
+  return "PB.Types.BattlePlayerResult";
 }
 
 
@@ -6404,6 +6798,10 @@ Arena::CreateMaybeMessage< ::PB::Types::SceneInfo >(Arena* arena) {
 template<> PROTOBUF_NOINLINE ::PB::Types::BattlePlayerSpec*
 Arena::CreateMaybeMessage< ::PB::Types::BattlePlayerSpec >(Arena* arena) {
   return Arena::CreateMessageInternal< ::PB::Types::BattlePlayerSpec >(arena);
+}
+template<> PROTOBUF_NOINLINE ::PB::Types::BattlePlayerResult*
+Arena::CreateMaybeMessage< ::PB::Types::BattlePlayerResult >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::PB::Types::BattlePlayerResult >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

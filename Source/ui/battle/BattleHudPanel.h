@@ -11,14 +11,14 @@
 namespace gameui
 {
 
-class LocalBattleMode;
+class IBattleMode;
 
 // 战斗内 HUD：玩家状态、技能按钮与冷却、摇杆、目标/首领血条、Buff 图标和暂停按钮。
-// 每帧只读取战斗世界数据，输入通过 LocalBattleMode::setInput 提交，与键盘输入同一通路。
+// 每帧只读取战斗世界数据，输入通过 IBattleMode::setInput 提交，与键盘输入同一通路。
 class BattleHudPanel : public Panel
 {
 public:
-    explicit BattleHudPanel(LocalBattleMode& battle) : m_battle(battle) {}
+    explicit BattleHudPanel(IBattleMode& battle) : m_battle(battle) {}
 
 protected:
     std::vector<std::string> getPackages() const override
@@ -58,7 +58,7 @@ private:
     void updateBuffs(mugen::Entity player);
     void updateTarget(mugen::Entity player);
 
-    LocalBattleMode& m_battle;
+    IBattleMode& m_battle;
 
     GComponent* m_playerStatus = nullptr;
     GProgressBar* m_playerHp = nullptr;

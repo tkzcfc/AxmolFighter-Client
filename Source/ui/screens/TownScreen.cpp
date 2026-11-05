@@ -2,6 +2,7 @@
 
 #include "AppContext.h"
 #include "DungeonSelectScreen.h"
+#include "GameScreen.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/render/battle/WorldPresenter.h"
 #include "AppContext.h"
@@ -523,7 +524,15 @@ void TownScreen::addMessagePushReceiver()
         m_showDuelInvite  = true;
     });
 
-    this->listenPush([this](PB::Game::DuelStartPush&) { AXLOGI("Online battle disabled during rewrite"); });
+    this->listenPush([this](PB::Game::DuelStartPush& push) {
+        NetBattleParams params;
+        params.battleId        = push.battle_id();
+        params.roomId          = push.room_id();
+        params.opponentPlayerId = push.opponent_player_id();
+        params.opponentName    = push.opponent_name();
+        AXLOGI("TownScreen: duel started, entering net battle {}", params.battleId);
+        getScreenManager()->switchScreen<GameScreen>(params);
+    });
 
     this->listenPush([this](PB::Game::DuelEndPush& push) {
         m_showDuelInvite = false;
@@ -794,6 +803,23 @@ void TownScreen::onImGUIRender()
             closeMainMenu();
         else
             openMainMenu();
+    }
+
+    ImGui::Separator();
+    const auto remotes = m_townSync ? m_townSync->remotePlayers() : std::vector<TownSync::RemotePlayerInfo>{};
+    ImGui::Text("同场景玩家: %d", static_cast<int>(remotes.size()));
+    if (remotes.empty())
+        ImGui::TextDisabled("  (暂无其他玩家)");
+    for (const auto& remote : remotes)
+    {
+        ImGui::Text("  %s  Lv%d  职业%d", remote.name.empty() ? "???" : remote.name.c_str(), remote.level,
+                    remote.classId);
+        ImGui::SameLine();
+        const std::string btn = fmt::format("邀请决斗##duel_{}", remote.playerId);
+        ImGui::BeginDisabled(!m_enteredScene);
+        if (ImGui::SmallButton(btn.c_str()))
+            sendDuelInvite(remote.playerId);
+        ImGui::EndDisabled();
     }
 
     if (m_showDuelInvite)

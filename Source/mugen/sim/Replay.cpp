@@ -10,7 +10,7 @@ void Replay::serialize(ByteBuffer& buffer) const
     BinaryWriter writer(buffer);
     for (uint8_t byte : {'M', 'G', 'R', 'P'})
         writer.write(byte);
-    writer.write(uint32_t{3});
+    writer.write(uint32_t{4});
     writer.write(schemaHash);
     writer.write(setup.seed);
     writer.write(setup);
@@ -34,7 +34,7 @@ bool Replay::deserialize(ByteBuffer& buffer, uint64_t loadedSchemaHash, std::str
     uint32_t version = 0;
     Replay result;
     uint64_t seed = 0;
-    if (!reader.read(version) || version != 3 || !reader.read(result.schemaHash))
+    if (!reader.read(version) || version != 4 || !reader.read(result.schemaHash))
     {
         error = "Unsupported or truncated replay header";
         return false;

@@ -108,12 +108,6 @@ AvatarLook resolveLook(sim::World& world, Entity entity, sim::GroupKind kind)
     return {};
 }
 
-bool isLocalPlayerRole(sim::World& world, Entity entity)
-{
-    const auto* identity = world.ecs().tryGet<sim::RoleIdentity>(entity);
-    return identity && identity->playerSlot.has_value() && !identity->isAi;
-}
-
 // 按外观配置创建 Avatar，动作文件与逻辑侧绑定的同一份。
 // 职业角色按职业默认外观创建：时装图集与皮肤、默认武器挂件（待机时显示，其余动作嫁接到身体插槽）。
 // 本地玩家用会话时装/武器外观（可后续 setAppearance 换装）。
@@ -170,7 +164,8 @@ void AvatarPresenter::present(sim::World& world, float alpha, float renderDelta)
                 return;
             const bool roleEntity = group.kind == sim::GroupKind::Role;
             state.fashionAvatar   = roleEntity && look.characterClass != CharacterClass::kUnknown;
-            state.useSessionFashion = roleEntity && isLocalPlayerRole(world, entity);
+            // 只有被镜头跟随的本地玩家使用会话时装；对端玩家按各自职业默认外观创建。
+            state.useSessionFashion = roleEntity && entity == m_followEntity;
             state.roleId            = look.roleId;
             state.partnerRageTransformed = motion.m_partnerRageTransformed;
             state.partnerRageStateKnown  = state.fashionAvatar;
@@ -492,18 +487,9 @@ void WorldPresenter::clearEntityPet(Entity entity)
 
 bool WorldPresenter::refreshLocalPlayerAppearance(sim::World& world)
 {
-    Entity local{};
-    bool found = false;
-    world.ecs().each<sim::RoleIdentity>([&](Entity entity, const sim::RoleIdentity& identity) {
-        if (found)
-            return;
-        if (identity.playerSlot.has_value() && !identity.isAi)
-        {
-            local = entity;
-            found = true;
-        }
-    });
-    if (!found)
+    // 本地玩家即镜头跟随实体；联网对端玩家不套用本机会话时装。
+    const Entity local = m_followEntity;
+    if (local.value == 0 || !world.ecs().alive(local))
         return false;
     FashionAppearance appearance = gameui::buildSessionFashionAppearance();
     if (appearance.roleId == 0)

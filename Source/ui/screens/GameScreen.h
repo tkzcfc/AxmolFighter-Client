@@ -18,6 +18,7 @@ public:
 public:
     GameScreen();
     explicit GameScreen(LocalBattleParams local);
+    explicit GameScreen(NetBattleParams net);
     ~GameScreen() override;
 
     virtual void onEnter() override;
@@ -38,9 +39,11 @@ private:
 
 private:
     std::optional<LocalBattleParams> m_local;
+    std::optional<NetBattleParams> m_net;
     std::unique_ptr<IBattleMode> m_battleMode;
     std::map<ax::EventKeyboard::KeyCode, uint32_t> m_slotMap;
     ax::EventListenerKeyboard* m_keyboardListener = nullptr;
+    bool m_hudOpened = false;
 };
 
 }  // namespace gameui

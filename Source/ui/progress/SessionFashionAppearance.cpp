@@ -20,6 +20,31 @@ int32_t armamentWeaponSpineId(int32_t armamentId, mugen::CharacterClass cls)
     return cfg->spineId;
 }
 
+mugen::FashionAppearance fashionAppearanceFromTown(const PB::Types::TownAppearance& appearance)
+{
+    mugen::FashionAppearance fa;
+    const auto cls = static_cast<mugen::CharacterClass>(appearance.class_id());
+    fa.roleId      = mugen::type_conversions::toRoleConfigId(cls);
+    for (int i = 0; i < appearance.base_skins_size(); ++i)
+    {
+        const auto& skin = appearance.base_skins(i);
+        if (skin.res_fashion_id() <= 0)
+            continue;
+        fa.baseFashion[static_cast<mugen::FashionPosition>(skin.position())] = skin.res_fashion_id();
+    }
+    for (int i = 0; i < appearance.fashions_size(); ++i)
+    {
+        const auto& item = appearance.fashions(i);
+        if (item.config_id() <= 0)
+            continue;
+        fa.equipFashion[static_cast<mugen::FashionPosition>(item.position())] = item.config_id();
+    }
+    const int32_t weapon = armamentWeaponSpineId(appearance.armament_id(), cls);
+    if (weapon > 0)
+        fa.baseFashion[mugen::FashionPosition::kWeapon] = weapon;
+    return fa;
+}
+
 mugen::FashionAppearance buildSessionFashionAppearance()
 {
     mugen::FashionAppearance appearance;

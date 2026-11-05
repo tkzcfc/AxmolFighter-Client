@@ -1,6 +1,7 @@
 #include "CharacterLobbyScreen.h"
 
 #include "AppContext.h"
+#include "GameScreen.h"
 #include "TownScreen.h"
 #include "mugen/avatar/render/Avatar.h"
 #include "mugen/conf/TypeConversions.h"
@@ -9,6 +10,8 @@
 #include "core/audio/AudioManager.h"
 #include "fairygui/GLoader3D.h"
 #include <net/client_game.pb.h>
+
+#include <optional>
 
 namespace gameui
 {
@@ -170,10 +173,24 @@ void CharacterLobbyScreen::onClickStartGameButton(EventContext* context)
             session->setSelectedFromSelectResp(*resp);
         }
 
+        // 账号仍在进行中的联网战斗里（关闭客户端 / 断线后重新登录）：game 服已把本会话接回战斗，
+        // 不进城镇，直接进入战斗界面，由 BattleReadyReq 触发开始参数 + 快照同步。
+        std::optional<NetBattleParams> rejoin;
+        if (resp->has_rejoin())
+        {
+            NetBattleParams params;
+            params.battleId = resp->rejoin().battle_id();
+            params.roomId   = resp->rejoin().room_id();
+            rejoin          = params;
+        }
+
         m_isWillEnterGame = true;
-        m_startGameBtn->getTransition("t_click")->play([this]() {
+        m_startGameBtn->getTransition("t_click")->play([this, rejoin]() {
             game::AudioManager::getInstance()->stopBGM();
-            getScreenManager()->switchScreen<TownScreen>();
+            if (rejoin)
+                getScreenManager()->switchScreen<GameScreen>(*rejoin);
+            else
+                getScreenManager()->switchScreen<TownScreen>();
         });
     });
 }

@@ -29,17 +29,17 @@ public:
     void toggleCollisionDebug();
 
     void setReplayPath(std::string path) { m_replayPath = std::move(path); }
-    mugen::sim::World& world() { return m_world; }
-    const mugen::sim::World& world() const { return m_world; }
+    const mugen::sim::World& world() const override { return m_world; }
+    mugen::Entity localPlayer() const override { return m_localPlayer; }
 
     int32_t roomId() const { return m_roomId; }
     int32_t autotestFrames() const { return m_autotestFrames; }
     // 按钮只提交下一帧系统命令。
     void requestReturnToTown() { m_systemCommands.push_back(mugen::sim::ReturnToTownCommand{}); }
     // HUD 暂停按钮复用调试暂停开关，只停止本地推进。
-    void setPaused(bool paused) { m_debugPaused = paused; }
+    void setPaused(bool paused) override { m_debugPaused = paused; }
     // 最近一次受到伤害数字事件的非英雄角色，供 HUD 目标血条使用。
-    mugen::Entity lastHurtTarget() const { return m_lastHurtTarget; }
+    mugen::Entity lastHurtTarget() const override { return m_lastHurtTarget; }
     bool returnToTownRequested() const { return m_world.ecs().singleton<mugen::sim::RoomState>().m_returnToTown; }
 
 private:

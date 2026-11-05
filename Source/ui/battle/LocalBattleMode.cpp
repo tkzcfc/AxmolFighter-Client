@@ -97,16 +97,18 @@ bool LocalBattleMode::init()
     setup.roomId         = m_roomId;
     setup.mapKey         = room->mapKey;
     setup.m_aiEnabled    = true;
-    setup.m_playerClass  = characterClass;
-    setup.m_playerRoleId = roleId;
-    setup.m_playerLevel  = 1;
-    setup.m_playerSlot   = 0;
-    setup.m_playerIsAi   = false;
+    mugen::sim::PlayerSetup playerSetup;
+    playerSetup.m_slot   = 0;
+    playerSetup.m_roleId = roleId;
+    playerSetup.m_class  = characterClass;
+    playerSetup.m_level  = 1;
+    setup.m_players.push_back(playerSetup);
     setup.m_stageId      = stageId;
     setup.m_copyId       = copyId;
-    const mugen::Entity player = mugen::sim::bootstrapBattle(m_world, setup);
-    if (player.value == 0)
+    const auto players = mugen::sim::bootstrapBattle(m_world, setup);
+    if (players.empty())
         return false;
+    const mugen::Entity player = players.front();
     auto* scene = ax::Director::getInstance()->getRunningScene();
     auto* root  = ax::Node::create();
     scene->addChild(root, 10);

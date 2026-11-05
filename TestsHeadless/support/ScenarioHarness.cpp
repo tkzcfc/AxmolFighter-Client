@@ -68,15 +68,17 @@ sim::WorldSetup ScenarioHarness::roomSetup(int32_t roomId, uint64_t seed)
 }
 sim::World ScenarioHarness::roomWorld(int32_t roomId, uint64_t seed)
 {
-    auto setup                = roomSetup(roomId, seed);
-    setup.m_playerRoleId      = 0;
-    setup.m_playerCamp        = 2;
-    setup.m_playerSlot        = 0;
-    setup.m_stageId           = 0;
-    setup.m_copyId            = 0;
-    setup.m_useScenarioHooks  = true;
+    auto setup               = roomSetup(roomId, seed);
+    sim::PlayerSetup player;
+    player.m_roleId          = 0;
+    player.m_camp            = 2;
+    player.m_slot            = 0;
+    setup.m_players.push_back(player);
+    setup.m_stageId          = 0;
+    setup.m_copyId           = 0;
+    setup.m_useScenarioHooks = true;
     sim::World world(roomHooks());
-    if (sim::bootstrapBattle(world, setup).value == 0)
+    if (sim::bootstrapBattle(world, setup).empty())
         MG_LOG_E("Cannot enter recorded room {}", roomId);
     return world;
 }

@@ -113,7 +113,7 @@ World recordedWorld(const WorldSetup& setup)
     {
         test::ScenarioHarness::loadAssets();
         World world(setup.m_useScenarioHooks ? test::ScenarioHarness::roomHooks() : WorldHooks{});
-        if (bootstrapBattle(world, setup).value == 0)
+        if (bootstrapBattle(world, setup).empty())
             throw std::runtime_error("Cannot bootstrap replay world");
         return world;
     }
@@ -143,16 +143,18 @@ World combatWorld(int32_t roomId, uint64_t seed, int32_t occupation, int32_t lev
     test::ScenarioHarness::loadAssets();
     World world;  // 默认 WorldHooks：Role 组走真实 role::update 战斗逻辑
     auto setup               = test::ScenarioHarness::roomSetup(roomId, seed);
-    setup.m_playerClass      = static_cast<CharacterClass>(occupation);
-    setup.m_playerRoleId     = type_conversions::toRoleConfigId(setup.m_playerClass);
-    setup.m_playerLevel      = level;
-    setup.m_playerCamp       = 2;
-    setup.m_playerSlot       = 0;
-    setup.m_playerIsAi       = false;
+    PlayerSetup player;
+    player.m_class           = static_cast<CharacterClass>(occupation);
+    player.m_roleId          = type_conversions::toRoleConfigId(player.m_class);
+    player.m_level           = level;
+    player.m_camp            = 2;
+    player.m_slot            = 0;
+    player.m_isAi            = false;
+    setup.m_players.push_back(player);
     setup.m_stageId          = 0;
     setup.m_copyId           = 0;
     setup.m_useScenarioHooks = false;
-    if (bootstrapBattle(world, setup).value == 0)
+    if (bootstrapBattle(world, setup).empty())
         throw std::runtime_error("Cannot enter room " + std::to_string(roomId));
     if (std::getenv("MUGEN_TRACE_DUMP_SKILLS"))
     {
@@ -237,7 +239,7 @@ World benchWorld(int32_t roomId, uint64_t seed, int playerCount)
     for (int slot = 0; slot < playerCount; ++slot)
     {
         RoleSpawnParams params;
-        params.camp       = slot == 0 ? 2 : 1;  // 槽位 0 与其余槽位互为敌对
+        params.camp       = slot == 0 ? 2 : 8;  // 槽位 0 与其余槽位互为敌对
         params.level      = 100;                 // 与怪物等级接近，避免热身阶段清场
         params.isAi       = false;  // 由脚本输入驱动
         params.playerSlot = static_cast<uint32_t>(slot);
@@ -441,13 +443,15 @@ int main(int argc, char** argv)
             Replay replay;
             replay.schemaHash = conf::configSchemaHash();
             replay.setup      = test::ScenarioHarness::roomSetup(static_cast<int32_t>(roomId), 31);
-            replay.setup.m_playerRoleId      = 0;
-            replay.setup.m_playerCamp        = 2;
-            replay.setup.m_playerSlot        = 0;
-            replay.setup.m_stageId           = 0;
-            replay.setup.m_copyId            = 0;
-            replay.setup.m_aiEnabled         = aiEnabled;
-            replay.setup.m_useScenarioHooks  = true;
+            PlayerSetup recordPlayer;
+            recordPlayer.m_roleId = 0;
+            recordPlayer.m_camp   = 2;
+            recordPlayer.m_slot   = 0;
+            replay.setup.m_players.push_back(recordPlayer);
+            replay.setup.m_stageId          = 0;
+            replay.setup.m_copyId           = 0;
+            replay.setup.m_aiEnabled        = aiEnabled;
+            replay.setup.m_useScenarioHooks = true;
             World world       = recordedWorld(replay.setup);
             for (uint64_t frame = 1; frame <= frames; ++frame)
             {

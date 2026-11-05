@@ -64,7 +64,7 @@ World buildDuelWorld(int32_t roomId, uint64_t seed, int playerCount)
     for (int slot = 0; slot < playerCount; ++slot)
     {
         RoleSpawnParams params;
-        params.camp       = slot == 0 ? 2 : 1;  // 槽位 0 与其余槽位互为敌对
+        params.camp       = slot == 0 ? 2 : 8;  // 槽位 0 与其余槽位互为敌对
         params.level      = 100;
         params.isAi       = false;
         params.playerSlot = static_cast<uint32_t>(slot);
@@ -209,6 +209,25 @@ TEST_CASE("Rollback stalls when prediction runs beyond snapshot depth")
     CHECK_FALSE(session.advanceTo(frames));
     CHECK(session.currentFrame() == 8);
     CHECK(session.stats().stalls > 0);
+}
+
+TEST_CASE("Rollback keeps ticking when confirmed frames are ahead of the current frame")
+{
+    constexpr int playerCount = 2;
+    constexpr uint64_t frames = 300;
+    const auto script         = makeScript(frames, playerCount, kTestSeed);
+
+    // 深度 8：服务器确认帧远超当前帧（客户端启动阻塞后追帧）时，
+    // 当前帧与确认帧之差不得做无符号减法而被误判为预测过深。
+    RollbackSession session(0, playerCount, 8);
+    session.setWorld(buildDuelWorld(kDuelRoom, kTestSeed, playerCount));
+    for (uint64_t frame = 1; frame <= frames; ++frame)
+        for (int slot = 0; slot < playerCount; ++slot)
+            session.addConfirmedInput(frame, static_cast<uint32_t>(slot), script[frame - 1][slot]);
+    CHECK(session.confirmedFrame() == frames);
+    CHECK(session.advanceTo(frames));
+    CHECK(session.currentFrame() == frames);
+    CHECK(session.stats().stalls == 0);
 }
 
 TEST_CASE("Rollback resync recovers a desynced session")

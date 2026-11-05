@@ -19,8 +19,6 @@ RollbackSession::RollbackSession(uint32_t localSlot, uint32_t slotCount, uint32_
         m_slotCount = 1;
     m_snapshots.resize(m_depth);
     m_inputs.resize(m_slotCount);
-    m_lastConfirmedInput.resize(m_slotCount);
-    m_lastConfirmedFrame.assign(m_slotCount, 0);
     m_confirmedUpTo.assign(m_slotCount, 0);
     m_presentedKeys.resize(m_depth);
     m_presentedKeyFrame.assign(m_depth, kNoFrame);
@@ -37,11 +35,7 @@ void RollbackSession::setWorld(World world)
     for (auto& slot : m_inputs)
         slot.clear();
     for (uint32_t slot = 0; slot < m_slotCount; ++slot)
-    {
-        m_lastConfirmedInput[slot]  = PlayerInput{slot, {}};
-        m_lastConfirmedFrame[slot]  = 0;
-        m_confirmedUpTo[slot]       = 0;
-    }
+        m_confirmedUpTo[slot] = 0;
     m_pendingRollback = 0;
     m_stats           = {};
     for (auto& keys : m_presentedKeys)
@@ -77,7 +71,7 @@ void RollbackSession::addConfirmedInput(uint64_t frame, uint32_t slot, PlayerInp
     if (frame <= m_currentFrame && !samePlayerInput(entry.input, input))
         markMisprediction(frame);
     entry = {input, true};
-    noteConfirmed(slot, frame, input);
+    noteConfirmed(slot, frame);
 }
 
 void RollbackSession::addConfirmedSystem(uint64_t frame, SystemCommand command)
@@ -117,13 +111,21 @@ bool RollbackSession::tick()
             return false;
     }
     const uint64_t nextFrame = m_currentFrame + 1;
-    if (nextFrame - confirmedFrame() > m_depth)
+    // 已确认帧可能领先于当前帧（启动阻塞或卡顿后追帧），此时没有预测领先，不得做无符号减法。
+    const uint64_t confirmed = confirmedFrame();
+    if (nextFrame > confirmed && nextFrame - confirmed > m_depth)
     {
         ++m_stats.stalls;
         return false;
     }
     advanceOneFrame();
     return true;
+}
+
+void RollbackSession::flushPendingRollback()
+{
+    if (m_pendingRollback != 0)
+        rollbackTo(m_pendingRollback);
 }
 
 uint64_t RollbackSession::confirmedFrame() const
@@ -202,8 +204,8 @@ FrameInput RollbackSession::buildInput(uint64_t frame)
         }
         else
         {
-            // 远端槽位预测：重复该槽位最近一次确认输入；从未确认则为空输入。
-            used = m_lastConfirmedInput[slot];
+            // 远端槽位预测：缺失输入时使用空输入，避免重复触发边缘事件（如攻击按键）。
+            used.commands.clear();
         }
         if (it == m_inputs[slot].end() || !it->second.confirmed)
             m_inputs[slot][frame] = {used, false};
@@ -293,13 +295,8 @@ uint64_t RollbackSession::eventKey(const PresentationEvent& event)
     return xxh64(buffer.data(), buffer.len());
 }
 
-void RollbackSession::noteConfirmed(uint32_t slot, uint64_t frame, const PlayerInput& input)
+void RollbackSession::noteConfirmed(uint32_t slot, uint64_t frame)
 {
-    if (frame > m_lastConfirmedFrame[slot])
-    {
-        m_lastConfirmedFrame[slot] = frame;
-        m_lastConfirmedInput[slot] = input;
-    }
     if (frame == m_confirmedUpTo[slot] + 1)
     {
         ++m_confirmedUpTo[slot];
@@ -321,11 +318,7 @@ void RollbackSession::resetHistory(uint64_t frame)
     for (auto& slot : m_inputs)
         slot.clear();
     for (uint32_t slot = 0; slot < m_slotCount; ++slot)
-    {
-        m_lastConfirmedInput[slot] = PlayerInput{slot, {}};
-        m_lastConfirmedFrame[slot] = frame;
-        m_confirmedUpTo[slot]      = frame;
-    }
+        m_confirmedUpTo[slot] = frame;
     m_pendingRollback = 0;
     m_snapshots[snapshotIndex(frame)] = m_world;
     m_minSnapshotFrame                = frame;

@@ -1,6 +1,7 @@
 #pragma once
 #include "mugen/core/reflect/Reflect.h"
 #include "mugen/conf/GameDef.h"
+#include <vector>
 
 namespace mugen::sim
 {
@@ -11,6 +12,26 @@ enum class WorldMode : uint8_t
     Battle,
     // 城镇场景模式。
     Town
+};
+// 单个玩家槽位的出生配置。
+struct PlayerSetup
+{
+    // 玩家槽位，须在世界内唯一。
+    uint32_t m_slot = 0;
+    // 玩家角色配置标识；未知时按 m_class 转职业后出生。
+    int32_t m_roleId = 0;
+    // 玩家职业；未知时按 m_roleId 直接出生。
+    CharacterClass m_class = CharacterClass::kUnknown;
+    // 玩家等级。
+    int32_t m_level = 1;
+    // 可选覆盖角色默认阵营；0 表示使用角色配置默认值。不得为中立阵营 1（特效无法命中）。
+    int32_t m_camp = 0;
+    // 玩家 AI 难度。
+    int32_t m_aiDifficulty = 1;
+    // 玩家是否由 AI 驱动。
+    bool m_isAi = false;
+    // 参与世界配置归档的字段。
+    MG_REFLECT(PlayerSetup, m_slot, m_roleId, m_class, m_level, m_camp, m_aiDifficulty, m_isAi)
 };
 // 创建世界时写入回放和快照的固定参数。
 struct WorldSetup
@@ -33,20 +54,8 @@ struct WorldSetup
     Fixed m_pvpHpScale = Fixed::fromInt(1);
     // 为假时角色更新跳过怪物 AI。写入回放与快照，保证重放一致。
     bool m_aiEnabled = true;
-    // 玩家职业；未知时按 m_playerRoleId 直接出生。
-    CharacterClass m_playerClass = CharacterClass::kUnknown;
-    // 玩家角色配置标识；用于按角色配置直接出生。
-    int32_t m_playerRoleId = 0;
-    // 玩家等级。
-    int32_t m_playerLevel = 1;
-    // 可选覆盖角色默认阵营；0 表示使用角色配置默认值。
-    int32_t m_playerCamp = 0;
-    // 玩家 AI 难度。
-    int32_t m_playerAiDifficulty = 1;
-    // 玩家槽位。
-    uint32_t m_playerSlot = 0;
-    // 玩家是否由 AI 驱动。
-    bool m_playerIsAi = false;
+    // 参与本场战斗的玩家槽位，按出生顺序保存。
+    std::vector<PlayerSetup> m_players;
     // 进入房间时使用的关卡标识。
     int32_t m_stageId = 0;
     // 进入房间时使用的副本标识。
@@ -64,13 +73,7 @@ struct WorldSetup
                m_pvpTimeLimit,
                m_pvpHpScale,
                m_aiEnabled,
-               m_playerClass,
-               m_playerRoleId,
-               m_playerLevel,
-               m_playerCamp,
-               m_playerAiDifficulty,
-               m_playerSlot,
-               m_playerIsAi,
+               m_players,
                m_stageId,
                m_copyId,
                m_useScenarioHooks)

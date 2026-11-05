@@ -43,6 +43,18 @@ public:
 
     void setLocalPlayerId(int64_t id) { m_localPlayerId = id; }
 
+    // 远端玩家摘要（供调试面板列出并发起决斗邀请）。
+    struct RemotePlayerInfo
+    {
+        int64_t playerId = 0;
+        std::string name;
+        int32_t classId = 0;
+        int32_t level   = 0;
+    };
+
+    // 按 player_id 升序返回当前场景内的远端玩家。
+    std::vector<RemotePlayerInfo> remotePlayers() const;
+
 private:
     // 单个服务端状态快照（线路定点已转成像素浮点，仅供表现层插值）。
     struct Snapshot
@@ -63,7 +75,12 @@ private:
     {
         mugen::Entity entity;
         std::map<uint64_t, Snapshot> snapshots;  // 以 server_time_ms 为键
+        std::string name;
+        int32_t classId = 0;
+        int32_t level   = 0;
     };
+
+    static void rememberAppearance(RemotePlayer& player, const PB::Types::TownAppearance& appearance);
 
     void addRemotePlayer(const PB::Types::TownPlayerInfo& info);
     void removeRemotePlayer(int64_t playerId);

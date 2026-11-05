@@ -50,6 +50,9 @@ extern AccountInfoDefaultTypeInternal _AccountInfo_default_instance_;
 class ArmamentInfo;
 struct ArmamentInfoDefaultTypeInternal;
 extern ArmamentInfoDefaultTypeInternal _ArmamentInfo_default_instance_;
+class BattlePlayerResult;
+struct BattlePlayerResultDefaultTypeInternal;
+extern BattlePlayerResultDefaultTypeInternal _BattlePlayerResult_default_instance_;
 class BattlePlayerSpec;
 struct BattlePlayerSpecDefaultTypeInternal;
 extern BattlePlayerSpecDefaultTypeInternal _BattlePlayerSpec_default_instance_;
@@ -112,6 +115,7 @@ extern TownVelDefaultTypeInternal _TownVel_default_instance_;
 PROTOBUF_NAMESPACE_OPEN
 template<> ::PB::Types::AccountInfo* Arena::CreateMaybeMessage<::PB::Types::AccountInfo>(Arena*);
 template<> ::PB::Types::ArmamentInfo* Arena::CreateMaybeMessage<::PB::Types::ArmamentInfo>(Arena*);
+template<> ::PB::Types::BattlePlayerResult* Arena::CreateMaybeMessage<::PB::Types::BattlePlayerResult>(Arena*);
 template<> ::PB::Types::BattlePlayerSpec* Arena::CreateMaybeMessage<::PB::Types::BattlePlayerSpec>(Arena*);
 template<> ::PB::Types::CharacterInfo* Arena::CreateMaybeMessage<::PB::Types::CharacterInfo>(Arena*);
 template<> ::PB::Types::DefaultSkin* Arena::CreateMaybeMessage<::PB::Types::DefaultSkin>(Arena*);
@@ -3712,10 +3716,14 @@ class BattlePlayerSpec final :
 
   enum : int {
     kNameFieldNumber = 4,
+    kAppearanceFieldNumber = 9,
     kPlayerIdFieldNumber = 2,
+    kCharacterIdFieldNumber = 3,
     kSessionIdFieldNumber = 1,
-    kClassIdFieldNumber = 3,
-    kCharacterIdFieldNumber = 5,
+    kClassIdFieldNumber = 5,
+    kSlotFieldNumber = 6,
+    kCampFieldNumber = 7,
+    kLevelFieldNumber = 8,
   };
   // string name = 4;
   void clear_name();
@@ -3731,6 +3739,24 @@ class BattlePlayerSpec final :
   std::string* _internal_mutable_name();
   public:
 
+  // .PB.Types.TownAppearance appearance = 9;
+  bool has_appearance() const;
+  private:
+  bool _internal_has_appearance() const;
+  public:
+  void clear_appearance();
+  const ::PB::Types::TownAppearance& appearance() const;
+  PROTOBUF_NODISCARD ::PB::Types::TownAppearance* release_appearance();
+  ::PB::Types::TownAppearance* mutable_appearance();
+  void set_allocated_appearance(::PB::Types::TownAppearance* appearance);
+  private:
+  const ::PB::Types::TownAppearance& _internal_appearance() const;
+  ::PB::Types::TownAppearance* _internal_mutable_appearance();
+  public:
+  void unsafe_arena_set_allocated_appearance(
+      ::PB::Types::TownAppearance* appearance);
+  ::PB::Types::TownAppearance* unsafe_arena_release_appearance();
+
   // int64 player_id = 2;
   void clear_player_id();
   int64_t player_id() const;
@@ -3738,6 +3764,15 @@ class BattlePlayerSpec final :
   private:
   int64_t _internal_player_id() const;
   void _internal_set_player_id(int64_t value);
+  public:
+
+  // int64 character_id = 3;
+  void clear_character_id();
+  int64_t character_id() const;
+  void set_character_id(int64_t value);
+  private:
+  int64_t _internal_character_id() const;
+  void _internal_set_character_id(int64_t value);
   public:
 
   // uint32 session_id = 1;
@@ -3749,7 +3784,7 @@ class BattlePlayerSpec final :
   void _internal_set_session_id(uint32_t value);
   public:
 
-  // int32 class_id = 3;
+  // int32 class_id = 5;
   void clear_class_id();
   int32_t class_id() const;
   void set_class_id(int32_t value);
@@ -3758,13 +3793,31 @@ class BattlePlayerSpec final :
   void _internal_set_class_id(int32_t value);
   public:
 
-  // int64 character_id = 5;
-  void clear_character_id();
-  int64_t character_id() const;
-  void set_character_id(int64_t value);
+  // int32 slot = 6;
+  void clear_slot();
+  int32_t slot() const;
+  void set_slot(int32_t value);
   private:
-  int64_t _internal_character_id() const;
-  void _internal_set_character_id(int64_t value);
+  int32_t _internal_slot() const;
+  void _internal_set_slot(int32_t value);
+  public:
+
+  // int32 camp = 7;
+  void clear_camp();
+  int32_t camp() const;
+  void set_camp(int32_t value);
+  private:
+  int32_t _internal_camp() const;
+  void _internal_set_camp(int32_t value);
+  public:
+
+  // int32 level = 8;
+  void clear_level();
+  int32_t level() const;
+  void set_level(int32_t value);
+  private:
+  int32_t _internal_level() const;
+  void _internal_set_level(int32_t value);
   public:
 
   // @@protoc_insertion_point(class_scope:PB.Types.BattlePlayerSpec)
@@ -3776,10 +3829,177 @@ class BattlePlayerSpec final :
   typedef void DestructorSkippable_;
   struct Impl_ {
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr name_;
+    ::PB::Types::TownAppearance* appearance_;
     int64_t player_id_;
+    int64_t character_id_;
     uint32_t session_id_;
     int32_t class_id_;
-    int64_t character_id_;
+    int32_t slot_;
+    int32_t camp_;
+    int32_t level_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_game_5ftypes_2eproto;
+};
+// -------------------------------------------------------------------
+
+class BattlePlayerResult final :
+    public ::PROTOBUF_NAMESPACE_ID::MessageLite /* @@protoc_insertion_point(class_definition:PB.Types.BattlePlayerResult) */ {
+ public:
+  inline BattlePlayerResult() : BattlePlayerResult(nullptr) {}
+  ~BattlePlayerResult() override;
+  explicit PROTOBUF_CONSTEXPR BattlePlayerResult(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  BattlePlayerResult(const BattlePlayerResult& from);
+  BattlePlayerResult(BattlePlayerResult&& from) noexcept
+    : BattlePlayerResult() {
+    *this = ::std::move(from);
+  }
+
+  inline BattlePlayerResult& operator=(const BattlePlayerResult& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline BattlePlayerResult& operator=(BattlePlayerResult&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const BattlePlayerResult& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const BattlePlayerResult* internal_default_instance() {
+    return reinterpret_cast<const BattlePlayerResult*>(
+               &_BattlePlayerResult_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    21;
+
+  friend void swap(BattlePlayerResult& a, BattlePlayerResult& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(BattlePlayerResult* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(BattlePlayerResult* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  BattlePlayerResult* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<BattlePlayerResult>(arena);
+  }
+  void CheckTypeAndMergeFrom(const ::PROTOBUF_NAMESPACE_ID::MessageLite& from)  final;
+  void CopyFrom(const BattlePlayerResult& from);
+  void MergeFrom(const BattlePlayerResult& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(BattlePlayerResult* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "PB.Types.BattlePlayerResult";
+  }
+  protected:
+  explicit BattlePlayerResult(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  std::string GetTypeName() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kPlayerIdFieldNumber = 1,
+    kSlotFieldNumber = 2,
+    kCampFieldNumber = 3,
+    kWinFieldNumber = 4,
+  };
+  // int64 player_id = 1;
+  void clear_player_id();
+  int64_t player_id() const;
+  void set_player_id(int64_t value);
+  private:
+  int64_t _internal_player_id() const;
+  void _internal_set_player_id(int64_t value);
+  public:
+
+  // int32 slot = 2;
+  void clear_slot();
+  int32_t slot() const;
+  void set_slot(int32_t value);
+  private:
+  int32_t _internal_slot() const;
+  void _internal_set_slot(int32_t value);
+  public:
+
+  // int32 camp = 3;
+  void clear_camp();
+  int32_t camp() const;
+  void set_camp(int32_t value);
+  private:
+  int32_t _internal_camp() const;
+  void _internal_set_camp(int32_t value);
+  public:
+
+  // bool win = 4;
+  void clear_win();
+  bool win() const;
+  void set_win(bool value);
+  private:
+  bool _internal_win() const;
+  void _internal_set_win(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:PB.Types.BattlePlayerResult)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    int64_t player_id_;
+    int32_t slot_;
+    int32_t camp_;
+    bool win_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -6226,24 +6446,24 @@ inline void BattlePlayerSpec::set_player_id(int64_t value) {
   // @@protoc_insertion_point(field_set:PB.Types.BattlePlayerSpec.player_id)
 }
 
-// int32 class_id = 3;
-inline void BattlePlayerSpec::clear_class_id() {
-  _impl_.class_id_ = 0;
+// int64 character_id = 3;
+inline void BattlePlayerSpec::clear_character_id() {
+  _impl_.character_id_ = int64_t{0};
 }
-inline int32_t BattlePlayerSpec::_internal_class_id() const {
-  return _impl_.class_id_;
+inline int64_t BattlePlayerSpec::_internal_character_id() const {
+  return _impl_.character_id_;
 }
-inline int32_t BattlePlayerSpec::class_id() const {
-  // @@protoc_insertion_point(field_get:PB.Types.BattlePlayerSpec.class_id)
-  return _internal_class_id();
+inline int64_t BattlePlayerSpec::character_id() const {
+  // @@protoc_insertion_point(field_get:PB.Types.BattlePlayerSpec.character_id)
+  return _internal_character_id();
 }
-inline void BattlePlayerSpec::_internal_set_class_id(int32_t value) {
+inline void BattlePlayerSpec::_internal_set_character_id(int64_t value) {
   
-  _impl_.class_id_ = value;
+  _impl_.character_id_ = value;
 }
-inline void BattlePlayerSpec::set_class_id(int32_t value) {
-  _internal_set_class_id(value);
-  // @@protoc_insertion_point(field_set:PB.Types.BattlePlayerSpec.class_id)
+inline void BattlePlayerSpec::set_character_id(int64_t value) {
+  _internal_set_character_id(value);
+  // @@protoc_insertion_point(field_set:PB.Types.BattlePlayerSpec.character_id)
 }
 
 // string name = 4;
@@ -6296,29 +6516,265 @@ inline void BattlePlayerSpec::set_allocated_name(std::string* name) {
   // @@protoc_insertion_point(field_set_allocated:PB.Types.BattlePlayerSpec.name)
 }
 
-// int64 character_id = 5;
-inline void BattlePlayerSpec::clear_character_id() {
-  _impl_.character_id_ = int64_t{0};
+// int32 class_id = 5;
+inline void BattlePlayerSpec::clear_class_id() {
+  _impl_.class_id_ = 0;
 }
-inline int64_t BattlePlayerSpec::_internal_character_id() const {
-  return _impl_.character_id_;
+inline int32_t BattlePlayerSpec::_internal_class_id() const {
+  return _impl_.class_id_;
 }
-inline int64_t BattlePlayerSpec::character_id() const {
-  // @@protoc_insertion_point(field_get:PB.Types.BattlePlayerSpec.character_id)
-  return _internal_character_id();
+inline int32_t BattlePlayerSpec::class_id() const {
+  // @@protoc_insertion_point(field_get:PB.Types.BattlePlayerSpec.class_id)
+  return _internal_class_id();
 }
-inline void BattlePlayerSpec::_internal_set_character_id(int64_t value) {
+inline void BattlePlayerSpec::_internal_set_class_id(int32_t value) {
   
-  _impl_.character_id_ = value;
+  _impl_.class_id_ = value;
 }
-inline void BattlePlayerSpec::set_character_id(int64_t value) {
-  _internal_set_character_id(value);
-  // @@protoc_insertion_point(field_set:PB.Types.BattlePlayerSpec.character_id)
+inline void BattlePlayerSpec::set_class_id(int32_t value) {
+  _internal_set_class_id(value);
+  // @@protoc_insertion_point(field_set:PB.Types.BattlePlayerSpec.class_id)
+}
+
+// int32 slot = 6;
+inline void BattlePlayerSpec::clear_slot() {
+  _impl_.slot_ = 0;
+}
+inline int32_t BattlePlayerSpec::_internal_slot() const {
+  return _impl_.slot_;
+}
+inline int32_t BattlePlayerSpec::slot() const {
+  // @@protoc_insertion_point(field_get:PB.Types.BattlePlayerSpec.slot)
+  return _internal_slot();
+}
+inline void BattlePlayerSpec::_internal_set_slot(int32_t value) {
+  
+  _impl_.slot_ = value;
+}
+inline void BattlePlayerSpec::set_slot(int32_t value) {
+  _internal_set_slot(value);
+  // @@protoc_insertion_point(field_set:PB.Types.BattlePlayerSpec.slot)
+}
+
+// int32 camp = 7;
+inline void BattlePlayerSpec::clear_camp() {
+  _impl_.camp_ = 0;
+}
+inline int32_t BattlePlayerSpec::_internal_camp() const {
+  return _impl_.camp_;
+}
+inline int32_t BattlePlayerSpec::camp() const {
+  // @@protoc_insertion_point(field_get:PB.Types.BattlePlayerSpec.camp)
+  return _internal_camp();
+}
+inline void BattlePlayerSpec::_internal_set_camp(int32_t value) {
+  
+  _impl_.camp_ = value;
+}
+inline void BattlePlayerSpec::set_camp(int32_t value) {
+  _internal_set_camp(value);
+  // @@protoc_insertion_point(field_set:PB.Types.BattlePlayerSpec.camp)
+}
+
+// int32 level = 8;
+inline void BattlePlayerSpec::clear_level() {
+  _impl_.level_ = 0;
+}
+inline int32_t BattlePlayerSpec::_internal_level() const {
+  return _impl_.level_;
+}
+inline int32_t BattlePlayerSpec::level() const {
+  // @@protoc_insertion_point(field_get:PB.Types.BattlePlayerSpec.level)
+  return _internal_level();
+}
+inline void BattlePlayerSpec::_internal_set_level(int32_t value) {
+  
+  _impl_.level_ = value;
+}
+inline void BattlePlayerSpec::set_level(int32_t value) {
+  _internal_set_level(value);
+  // @@protoc_insertion_point(field_set:PB.Types.BattlePlayerSpec.level)
+}
+
+// .PB.Types.TownAppearance appearance = 9;
+inline bool BattlePlayerSpec::_internal_has_appearance() const {
+  return this != internal_default_instance() && _impl_.appearance_ != nullptr;
+}
+inline bool BattlePlayerSpec::has_appearance() const {
+  return _internal_has_appearance();
+}
+inline void BattlePlayerSpec::clear_appearance() {
+  if (GetArenaForAllocation() == nullptr && _impl_.appearance_ != nullptr) {
+    delete _impl_.appearance_;
+  }
+  _impl_.appearance_ = nullptr;
+}
+inline const ::PB::Types::TownAppearance& BattlePlayerSpec::_internal_appearance() const {
+  const ::PB::Types::TownAppearance* p = _impl_.appearance_;
+  return p != nullptr ? *p : reinterpret_cast<const ::PB::Types::TownAppearance&>(
+      ::PB::Types::_TownAppearance_default_instance_);
+}
+inline const ::PB::Types::TownAppearance& BattlePlayerSpec::appearance() const {
+  // @@protoc_insertion_point(field_get:PB.Types.BattlePlayerSpec.appearance)
+  return _internal_appearance();
+}
+inline void BattlePlayerSpec::unsafe_arena_set_allocated_appearance(
+    ::PB::Types::TownAppearance* appearance) {
+  if (GetArenaForAllocation() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.appearance_);
+  }
+  _impl_.appearance_ = appearance;
+  if (appearance) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:PB.Types.BattlePlayerSpec.appearance)
+}
+inline ::PB::Types::TownAppearance* BattlePlayerSpec::release_appearance() {
+  
+  ::PB::Types::TownAppearance* temp = _impl_.appearance_;
+  _impl_.appearance_ = nullptr;
+#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
+  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
+  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  if (GetArenaForAllocation() == nullptr) { delete old; }
+#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
+  if (GetArenaForAllocation() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
+  return temp;
+}
+inline ::PB::Types::TownAppearance* BattlePlayerSpec::unsafe_arena_release_appearance() {
+  // @@protoc_insertion_point(field_release:PB.Types.BattlePlayerSpec.appearance)
+  
+  ::PB::Types::TownAppearance* temp = _impl_.appearance_;
+  _impl_.appearance_ = nullptr;
+  return temp;
+}
+inline ::PB::Types::TownAppearance* BattlePlayerSpec::_internal_mutable_appearance() {
+  
+  if (_impl_.appearance_ == nullptr) {
+    auto* p = CreateMaybeMessage<::PB::Types::TownAppearance>(GetArenaForAllocation());
+    _impl_.appearance_ = p;
+  }
+  return _impl_.appearance_;
+}
+inline ::PB::Types::TownAppearance* BattlePlayerSpec::mutable_appearance() {
+  ::PB::Types::TownAppearance* _msg = _internal_mutable_appearance();
+  // @@protoc_insertion_point(field_mutable:PB.Types.BattlePlayerSpec.appearance)
+  return _msg;
+}
+inline void BattlePlayerSpec::set_allocated_appearance(::PB::Types::TownAppearance* appearance) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  if (message_arena == nullptr) {
+    delete _impl_.appearance_;
+  }
+  if (appearance) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(appearance);
+    if (message_arena != submessage_arena) {
+      appearance = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, appearance, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  _impl_.appearance_ = appearance;
+  // @@protoc_insertion_point(field_set_allocated:PB.Types.BattlePlayerSpec.appearance)
+}
+
+// -------------------------------------------------------------------
+
+// BattlePlayerResult
+
+// int64 player_id = 1;
+inline void BattlePlayerResult::clear_player_id() {
+  _impl_.player_id_ = int64_t{0};
+}
+inline int64_t BattlePlayerResult::_internal_player_id() const {
+  return _impl_.player_id_;
+}
+inline int64_t BattlePlayerResult::player_id() const {
+  // @@protoc_insertion_point(field_get:PB.Types.BattlePlayerResult.player_id)
+  return _internal_player_id();
+}
+inline void BattlePlayerResult::_internal_set_player_id(int64_t value) {
+  
+  _impl_.player_id_ = value;
+}
+inline void BattlePlayerResult::set_player_id(int64_t value) {
+  _internal_set_player_id(value);
+  // @@protoc_insertion_point(field_set:PB.Types.BattlePlayerResult.player_id)
+}
+
+// int32 slot = 2;
+inline void BattlePlayerResult::clear_slot() {
+  _impl_.slot_ = 0;
+}
+inline int32_t BattlePlayerResult::_internal_slot() const {
+  return _impl_.slot_;
+}
+inline int32_t BattlePlayerResult::slot() const {
+  // @@protoc_insertion_point(field_get:PB.Types.BattlePlayerResult.slot)
+  return _internal_slot();
+}
+inline void BattlePlayerResult::_internal_set_slot(int32_t value) {
+  
+  _impl_.slot_ = value;
+}
+inline void BattlePlayerResult::set_slot(int32_t value) {
+  _internal_set_slot(value);
+  // @@protoc_insertion_point(field_set:PB.Types.BattlePlayerResult.slot)
+}
+
+// int32 camp = 3;
+inline void BattlePlayerResult::clear_camp() {
+  _impl_.camp_ = 0;
+}
+inline int32_t BattlePlayerResult::_internal_camp() const {
+  return _impl_.camp_;
+}
+inline int32_t BattlePlayerResult::camp() const {
+  // @@protoc_insertion_point(field_get:PB.Types.BattlePlayerResult.camp)
+  return _internal_camp();
+}
+inline void BattlePlayerResult::_internal_set_camp(int32_t value) {
+  
+  _impl_.camp_ = value;
+}
+inline void BattlePlayerResult::set_camp(int32_t value) {
+  _internal_set_camp(value);
+  // @@protoc_insertion_point(field_set:PB.Types.BattlePlayerResult.camp)
+}
+
+// bool win = 4;
+inline void BattlePlayerResult::clear_win() {
+  _impl_.win_ = false;
+}
+inline bool BattlePlayerResult::_internal_win() const {
+  return _impl_.win_;
+}
+inline bool BattlePlayerResult::win() const {
+  // @@protoc_insertion_point(field_get:PB.Types.BattlePlayerResult.win)
+  return _internal_win();
+}
+inline void BattlePlayerResult::_internal_set_win(bool value) {
+  
+  _impl_.win_ = value;
+}
+inline void BattlePlayerResult::set_win(bool value) {
+  _internal_set_win(value);
+  // @@protoc_insertion_point(field_set:PB.Types.BattlePlayerResult.win)
 }
 
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

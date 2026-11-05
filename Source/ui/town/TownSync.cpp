@@ -63,7 +63,10 @@ void TownSync::start()
         if (it == m_players.end())
             return;
         if (push.has_appearance())
+        {
+            rememberAppearance(it->second, push.appearance());
             applyAppearance(it->second.entity, push.appearance());
+        }
     });
 
     m_agent.listenPush([this](PB::Town::ScenePlayerStatesPush& push) {
@@ -121,6 +124,22 @@ void TownSync::clear()
     m_pendingPuppetUpdates.clear();
 }
 
+std::vector<TownSync::RemotePlayerInfo> TownSync::remotePlayers() const
+{
+    std::vector<RemotePlayerInfo> out;
+    out.reserve(m_players.size());
+    for (const auto& [playerId, player] : m_players)
+        out.push_back({playerId, player.name, player.classId, player.level});
+    return out;
+}
+
+void TownSync::rememberAppearance(RemotePlayer& player, const PB::Types::TownAppearance& appearance)
+{
+    player.name    = appearance.name();
+    player.classId = appearance.class_id();
+    player.level   = appearance.level();
+}
+
 void TownSync::addRemotePlayer(const PB::Types::TownPlayerInfo& info)
 {
     if (info.player_id() == m_localPlayerId)
@@ -130,7 +149,10 @@ void TownSync::addRemotePlayer(const PB::Types::TownPlayerInfo& info)
     if (existing != m_players.end())
     {
         if (info.has_appearance())
+        {
+            rememberAppearance(existing->second, info.appearance());
             applyAppearance(existing->second.entity, info.appearance());
+        }
         if (info.has_movement())
             pushSnapshot(info.player_id(), estimatedServerNowMs(), info.movement());
         return;
@@ -148,6 +170,7 @@ void TownSync::addRemotePlayer(const PB::Types::TownPlayerInfo& info)
 
     RemotePlayer player;
     player.entity = entity;
+    rememberAppearance(player, appearance);
     m_players.emplace(info.player_id(), std::move(player));
 
     applyAppearance(entity, appearance);
@@ -167,27 +190,7 @@ void TownSync::removeRemotePlayer(int64_t playerId)
 
 void TownSync::applyAppearance(mugen::Entity entity, const PB::Types::TownAppearance& appearance)
 {
-    mugen::FashionAppearance fa;
-    const auto cls = static_cast<mugen::CharacterClass>(appearance.class_id());
-    fa.roleId      = mugen::type_conversions::toRoleConfigId(cls);
-    for (int i = 0; i < appearance.base_skins_size(); ++i)
-    {
-        const auto& skin = appearance.base_skins(i);
-        if (skin.res_fashion_id() <= 0)
-            continue;
-        fa.baseFashion[static_cast<mugen::FashionPosition>(skin.position())] = skin.res_fashion_id();
-    }
-    for (int i = 0; i < appearance.fashions_size(); ++i)
-    {
-        const auto& item = appearance.fashions(i);
-        if (item.config_id() <= 0)
-            continue;
-        fa.equipFashion[static_cast<mugen::FashionPosition>(item.position())] = item.config_id();
-    }
-    const int32_t weapon = armamentWeaponSpineId(appearance.armament_id(), cls);
-    if (weapon > 0)
-        fa.baseFashion[mugen::FashionPosition::kWeapon] = weapon;
-    m_presenter.setEntityAppearance(entity, fa);
+    m_presenter.setEntityAppearance(entity, fashionAppearanceFromTown(appearance));
     m_presenter.setEntityPet(entity, appearance.pet_id());
 }
 
