@@ -8,8 +8,14 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '_platform.ps1')
 Set-Location $PSScriptRoot
 if (-not $Platform) { $Platform = Get-DefaultAxPlatform }
-$axArgs = @('build', '-p', $Platform, '-c')
-if ($ExtraArgs) { $axArgs += $ExtraArgs }
-Write-Host "axmol $($axArgs -join ' ')"
-& axmol @axArgs
+# IMPORTANT: do not put `-c` into a string array and splat it.
+# PowerShell array splatting (@('-c')) passes a plain string, so axmol/build.ps1's
+# [switch]$configOnly never binds, and 1kiss proceeds to `cmake --build`.
+# Passing `-c` as a real switch argument preserves configOnly=true (generate only).
+Write-Host "axmol build -p $Platform -c $($ExtraArgs -join ' ')"
+if ($ExtraArgs) {
+    & axmol build -p $Platform -c @ExtraArgs
+} else {
+    & axmol build -p $Platform -c
+}
 exit $LASTEXITCODE
