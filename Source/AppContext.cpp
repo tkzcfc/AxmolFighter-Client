@@ -17,7 +17,7 @@ using namespace fairygui;
 
 namespace
 {
-constexpr const char* kDefaultServerHost = "10.0.1.183";
+constexpr const char* kDefaultServerHost = "ngm.argc.online";
 constexpr int kDefaultServerPort         = 17000;
 
 // 与 AppContext 生命周期相同的常驻 FairyGUI 包，按顺序加载，按逆序卸载。
