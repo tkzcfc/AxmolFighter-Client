@@ -69,6 +69,12 @@ else()
   file(GLOB SPINE34_C_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd/spine_3_4/*.c")
   set_source_files_properties(${SPINE34_C_SOURCES} PROPERTIES LANGUAGE C)
+  # Spine 3.4 用普通 char 承载有符号字节（readSByte → IK bendDirection = -1）。
+  # ARM Android 上 char 默认无符号，-1 会变成 255，导致双骨骼 IK（大腿/小腿）角度乘 255 后乱转。
+  # 不改 3rd 源码，统一按有符号 char 编译这些 C 文件，与 x86 / Apple arm64 行为一致。
+  if(NOT MSVC)
+    set_source_files_properties(${SPINE34_C_SOURCES} PROPERTIES COMPILE_OPTIONS "-fsigned-char")
+  endif()
 endif()
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/VfsSources.cmake")
