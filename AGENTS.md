@@ -4,6 +4,7 @@ Game client written in C++ on Axmol (custom fork). It uses CMake, FairyGUI, prot
 
 ## Commands (Windows)
 - Build: `pwsh build.ps1 [-Platform win32|osx|linux] [-Config Debug|Release]` (runs `axmol build`; platform defaults to the host OS). To generate the project only: `pwsh gen_project.ps1 [-Platform ...]`.
+- Android signed APK/AAB: `pwsh build_apk.ps1 [-Arch arm64] [-Config Release] [-Aab]`. Keystore lives in `proj.android/keystore/` (`.jks` + `keystore.properties` are gitignored; auto-created on first run). Output is copied to `proj.android/dist/`.
 - Run: `pwsh run.ps1 [-Config Debug|Release]`. The binary is in `build*/bin/AxmolFighter-Client/<cfg>/` (`.exe` on Windows, `.app` on macOS), and the working directory is `Content`.
 - Offline mode: add `--offline-room=<roomId>`, `--offline-role=<roleId|class>`, `--autotest-frames=N` to the command line (Windows/Linux/macOS; parsed by `Source/LaunchOptions`). `run.ps1` forwards extra arguments, e.g. `pwsh run.ps1 -Config Debug --offline-room=<roomId>`.
 - Tests: `axmol build -p win32 -xc -D_AX_TESTS=ON` (doctest, in `Tests/`).

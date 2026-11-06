@@ -6,3 +6,9 @@
 /build
 /captures
 /.externalNativeBuild
+
+# Local release signing (created by build_apk.ps1 / keytool)
+/keystore/*.jks
+/keystore/*.keystore
+/keystore/keystore.properties
+/dist/
