@@ -200,6 +200,18 @@ struct SpawnRequest
     int32_t m_lifetimeMs = 0;
     // 继承主人属性的位掩码。
     uint32_t m_inheritMask = 0;
+    // 角色等级（角色出生时使用）。
+    int32_t m_level = 1;
+    // 阵营覆盖；0 表示使用角色配置默认阵营。
+    int32_t m_camp = 0;
+    // 玩家槽位；0 表示非玩家控制（配合 m_hasPlayerSlot 区分槽位 0）。
+    uint32_t m_playerSlot = 0;
+    // 是否有玩家槽位（槽位 0 也是有效槽位）。
+    bool m_hasPlayerSlot = false;
+    // 是否由 AI 驱动。
+    bool m_isAi = false;
+    // AI 难度等级。
+    int32_t m_aiDifficulty = 1;
     MG_REFLECT(SpawnRequest,
                m_kind,
                m_configId,
@@ -210,7 +222,13 @@ struct SpawnRequest
                m_vectorX,
                m_vectorZ,
                m_lifetimeMs,
-               m_inheritMask)
+               m_inheritMask,
+               m_level,
+               m_camp,
+               m_playerSlot,
+               m_hasPlayerSlot,
+               m_isAi,
+               m_aiDifficulty)
 };
 // 请求销毁实体（同时已立即打上 Despawning）。
 struct DespawnRequest
@@ -296,6 +314,8 @@ struct HitEvent
     Entity m_target;
     // 命中定义标识。
     int32_t m_hitDefId = 0;
+    // 特效配置标识（供摘要 dmg 行使用）。
+    int32_t m_effectId = 0;
     // 命中结果。
     HitResult m_result = HitResult::Hit;
     // 最终伤害。
@@ -306,7 +326,8 @@ struct HitEvent
     bool m_killed = false;
     // 接触点。
     FixedVec3 m_contact;
-    MG_REFLECT(HitEvent, m_attacker, m_effect, m_target, m_hitDefId, m_result, m_damage, m_critical, m_killed, m_contact)
+    MG_REFLECT(HitEvent, m_attacker, m_effect, m_target, m_hitDefId, m_effectId, m_result, m_damage, m_critical,
+               m_killed, m_contact)
 };
 // 生命值变化。
 struct HpEvent
@@ -337,8 +358,8 @@ struct CastEvent
     Entity m_entity;
     // 技能标识。
     int32_t m_skillId = 0;
-    // 技能槽位。
-    int32_t m_slot = 0;
+    // 技能槽位名称（A、Y、F…）。
+    std::string m_slot;
     // 阶段。
     CastPhase m_phase = CastPhase::Prepared;
     MG_REFLECT(CastEvent, m_entity, m_skillId, m_slot, m_phase)
@@ -408,5 +429,27 @@ struct DespawnEvent
     // 销毁原因。
     DespawnReason m_reason = DespawnReason::ClipEnd;
     MG_REFLECT(DespawnEvent, m_entity, m_reason)
+};
+// 位移开始或结束（供摘要 disp+/disp- 行使用）。
+struct DispEvent
+{
+    // 位移所属实体。
+    Entity m_entity;
+    // 位移配置标识。
+    int32_t m_displacementId = 0;
+    // 阶段：0 开始，1 结束。
+    int32_t m_phase = 0;
+    // 结束时的终点坐标。
+    FixedVec3 m_endpoint;
+    MG_REFLECT(DispEvent, m_entity, m_displacementId, m_phase, m_endpoint)
+};
+// 顿帧写入（供摘要 stop 行使用，帧数 = ceil(freezeMs/dtMs)）。
+struct StopEvent
+{
+    // 被顿帧的实体。
+    Entity m_entity;
+    // 顿帧帧数。
+    int32_t m_frames = 0;
+    MG_REFLECT(StopEvent, m_entity, m_frames)
 };
 }  // namespace mugen::sim

@@ -2,9 +2,13 @@
 #include "Components.h"
 #include "Singletons.h"
 #include "WorldSetup.h"
+#include "DrawPolicy.h"
 #include "input/FrameInput.h"
 #include "mugen/core/ecs/ECSManager.h"
 #include "mugen/core/serialize/BinaryArchive.h"
+#include <map>
+#include <string>
+#include <vector>
 
 namespace mugen::sim
 {
@@ -38,6 +42,30 @@ public:
     const WorldECS& ecs() const { return m_ecs; }
     // 本帧输入，仅在 tick 执行期间有效。
     const FrameInput& input() const { return *m_input; }
+    // 挂载抽样策略，传入空指针即恢复使用世界随机数。
+    void setDrawPolicy(const DrawPolicy* policy) { m_drawPolicy = policy; }
+    // 返回当前抽样策略，未设置时为空。
+    const DrawPolicy* drawPolicy() const { return m_drawPolicy; }
+    // DebugSink 写入的追踪行（非序列化，下一帧 ClockSystem 清空），供摘要导出读取。
+    const std::vector<std::string>& traceLines() const { return m_traceLines; }
+    // 追加一条追踪行（DebugSink 调用）。
+    void appendTrace(std::string line) { m_traceLines.push_back(std::move(line)); }
+    // 清空追踪行（ClockSystem 调用）。
+    void clearTraceLines() { m_traceLines.clear(); }
+    // 待结算的上一段位移 disp-（实体 -> 旧曲线 id），由 DisplacementSystem 积分后结算；非序列化的表现层簿记。
+    int32_t pendingDispEnd(Entity entity) const
+    {
+        const auto it = m_pendingDispEnds.find(entity.value);
+        return it == m_pendingDispEnds.end() ? -1 : it->second;
+    }
+    void setPendingDispEnd(Entity entity, int32_t id)
+    {
+        if (id == -1)
+            m_pendingDispEnds.erase(entity.value);
+        else
+            m_pendingDispEnds[entity.value] = id;
+    }
+    void clearPendingDispEnds() { m_pendingDispEnds.clear(); }
 
 private:
     // 初始化时传入的世界配置。
@@ -48,5 +76,11 @@ private:
     bool m_initialized = false;
     // tick 期间指向本帧输入的非拥有指针，不参与快照与克隆。
     const FrameInput* m_input = nullptr;
+    // 抽样策略，非拥有、不参与快照/哈希/克隆。
+    const DrawPolicy* m_drawPolicy = nullptr;
+    // DebugSink 追踪行（非拥有、不参与快照/哈希/克隆）。
+    std::vector<std::string> m_traceLines;
+    // 待结算 disp-（非拥有、不参与快照/哈希/克隆；表现层簿记）。
+    std::map<uint32_t, int32_t> m_pendingDispEnds;
 };
 }  // namespace mugen::sim

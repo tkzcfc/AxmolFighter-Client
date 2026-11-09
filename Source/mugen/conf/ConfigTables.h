@@ -1,6 +1,11 @@
 #pragma once
 
 #include "tables/SkillTables.h"
+#include "battle/ClipDef.h"
+#include "battle/EffectDef.h"
+#include "battle/HitDef.h"
+#include "battle/RoleDef.h"
+#include "battle/SkillDef.h"
 
 #include <cstdint>
 #include <utility>
@@ -98,6 +103,15 @@ struct ArmamentConfig;
 struct PetConfig;
 struct PartnerConfig;
 struct CreateRoleConfig;
+namespace battle
+{
+struct SkillDef;
+struct ClipDef;
+struct EffectClipDef;
+struct EffectDef;
+struct HitDef;
+struct RoleDef;
+}  // namespace battle
 
 // 按单一 id 建立索引的表键策略。
 struct KeyById
@@ -177,4 +191,20 @@ struct KeyByOrdinal
     X(armament, ArmamentConfig, KeyByIdAndOccupation) \
     X(pet, PetConfig, KeyById) \
     X(partner, PartnerConfig, KeyById) \
-    X(create_role, CreateRoleConfig, KeyById)
+    X(create_role, CreateRoleConfig, KeyById) \
+    X(battle_skill, battle::SkillDef, KeyById) \
+    X(battle_clip, battle::ClipDef, KeyById) \
+    X(battle_effect_clip, battle::EffectClipDef, KeyById) \
+    X(battle_effect, battle::EffectDef, KeyById) \
+    X(battle_hit, battle::HitDef, KeyById) \
+    X(battle_role, battle::RoleDef, KeyById)
+
+// 派生表：不读取 Lua，而是由转换器在读取全部源表后降级计算得出。
+// 必须是 MG_CONFIG_TABLES 的子集。
+#define MG_DERIVED_TABLES(X) \
+    X(battle_skill, battle::SkillDef, KeyById) \
+    X(battle_clip, battle::ClipDef, KeyById) \
+    X(battle_effect_clip, battle::EffectClipDef, KeyById) \
+    X(battle_effect, battle::EffectDef, KeyById) \
+    X(battle_hit, battle::HitDef, KeyById) \
+    X(battle_role, battle::RoleDef, KeyById)

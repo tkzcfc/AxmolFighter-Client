@@ -16,7 +16,13 @@ void World::init(const WorldSetup& setup)
     }
     m_ecs   = WorldECS{};
     m_setup = setup;
+    clearPendingDispEnds();
+    clearTraceLines();
     m_ecs.singleton<RngState>().m_random.seed(m_setup.seed);
+    auto& region = m_ecs.singleton<MapRegion>();
+    region.m_mapKey = m_setup.mapKey;
+    if (!m_setup.mapKey.empty())
+        region.load(m_setup.mapKey.ends_with(".layer") ? m_setup.mapKey : "/mugen/map/" + m_setup.mapKey + ".layer");
     m_initialized = true;
     m_input       = nullptr;
 }

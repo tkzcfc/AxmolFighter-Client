@@ -17,12 +17,23 @@ Source/mugen/
   avatar/    MotionPlayer and avatar/data (.motion, .box, avatar.bin). No engine headers.
   render/    Client only. The whole tree is inside #ifdef RUNTIME_IN_AXMOL.
   sim_legacy/ namespace mugen::sim_legacy. Current battle logic, frozen (no new features; the new ECS sim goes into a new `sim/` per DESIGN.md). No engine dependency.
-  sim/       namespace mugen::sim. New ECS battle sim (DESIGN.md, slices S0–S8; currently S0 skeleton). `kSchedule` in sim/Schedule.h is the only frame order; systems are `void runXxx(World&)` in `XxxSystem.cpp`, talk only through components and `EventQueue` singletons, and never include each other. Never include sim_legacy.
+  sim/       namespace mugen::sim. New ECS battle sim (DESIGN.md, slices S0–S8; S0 + S1 done). See "New sim (sim/)" below. Never include sim_legacy.
 ```
 
 Headless targets: `mugen_tests` and `mugen_legacy_cli` link `sim_legacy`; `mugen_sim_tests` and `mugen_sim_cli` link `sim`. No binary links both. Equivalence is checked with effect-summary goldens in `TestsHeadless/data/golden_summaries/` (`mugen_legacy_cli export-summary`, `compare-summary`, `run_summary_export.ps1`; format in DESIGN.md appendix A).
 
 `render/` and `Source/ui/` are the only places that may include the engine. `avatar/` must not include engine or spine headers.
+
+## New sim (`sim/`)
+
+- `kSchedule` in `sim/Schedule.cpp` is the only frame order (phases P0..P12, see `Schedule.h`). Each system is `void runXxx(World&)` in `<domain>/XxxSystem.cpp`, declared in `Systems.h`.
+- Every system file starts with a four-line header: `// [row] Name`, `// 读：…`, `// 写：…`, `// 消费：…`, `// 产生：…` (reads / writes / consumes / produces), matching the DESIGN §3.2 row.
+- Systems never include or call each other. They communicate only through components and the `EventQueue<T>` singletons registered in `Singletons.h`. Requests (`XxxRequest`) have one draining owner system; facts (`XxxEvent`) are read-only and cleared by `FlushSystem`. All event structs live in `Events.h`.
+- Stateless rule libraries live in `<domain>/XxxRules.{h,cpp}` under `mugen::sim::<domain>::rules` (e.g. `skill::rules::beginCast`, `buff::rules::admit/remove`, `displacement::rules::set`). They write only their own domain's components and may append events; they are the only sanctioned synchronous chain (DESIGN P-1).
+- `MG_COMPONENT_LIST` in `sim/Components.h` and `MG_SINGLETON_LIST` in `sim/Singletons.h` are the only registries; their order fixes snapshot type ids. Components hold gameplay state only. Summary / trace bookkeeping (trace lines, pending `disp-` endpoints) lives on `World` as non-serialized, non-hashed members.
+- Buff data model is op-based (`BuffOp` kinds, DESIGN §5), not per-rule classes. S1 implements only the `Flag` op (super armor via `StatusFlags` refcount); clip buffs are admitted on clip enter and removed on clip exit (`BuffEvent` Added/Removed; Removed is emitted by `BuffTickSystem` on the next frame).
+- Runtime battle tables are `conf::battle::*Def` (derived tables lowered by the converter; do not edit by hand).
+- Golden equivalence: `mugen_sim_cli compare-scenario --all` (run from `TestsHeadless`) against `data/golden_summaries/`. Never edit a golden to make a scenario pass; list differences as proposals in a report.
 
 ## Prohibitions
 

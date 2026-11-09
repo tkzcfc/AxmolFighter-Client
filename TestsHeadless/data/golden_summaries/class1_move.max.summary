@@ -1,0 +1,45 @@
+# mugen effect summary v1
+# scenario class1_move room 2071501 seed 31 ai off
+# draw crit=max float=mid dodge=never prob=pass choice=first
+5 state role:101#1 Idle Run,Idle
+5 actionend role:101#1 stand
+5 action role:101#1 walk
+25 state role:101#1 Run,Idle Idle
+25 actionend role:101#1 walk
+25 action role:101#1 stand
+30 state role:101#1 Idle Run,Idle
+30 actionend role:101#1 stand
+30 action role:101#1 walk
+40 state role:101#1 Run,Idle Idle
+40 actionend role:101#1 walk
+40 action role:101#1 stand
+45 state role:101#1 Idle Run,Idle
+45 actionend role:101#1 stand
+45 action role:101#1 walk
+55 state role:101#1 Run,Idle Idle
+55 actionend role:101#1 walk
+55 action role:101#1 stand
+60 state role:101#1 Idle Run,Idle
+60 actionend role:101#1 stand
+60 action role:101#1 walk
+70 state role:101#1 Run,Idle Idle
+70 actionend role:101#1 walk
+70 action role:101#1 stand
+75 state role:101#1 Idle Run,Idle
+75 actionend role:101#1 stand
+75 action role:101#1 walk
+85 state role:101#1 Run,Idle Idle
+85 actionend role:101#1 walk
+85 action role:101#1 stand
+90 state role:101#1 Idle Run,Idle
+90 actionend role:101#1 stand
+90 action role:101#1 walk
+100 state role:101#1 Run,Idle Idle
+100 actionend role:101#1 walk
+100 action role:101#1 stand
+105 state role:101#1 Idle Run,Idle
+105 actionend role:101#1 stand
+105 action role:101#1 walk
+final role:101#1 413387979 53.500 0.000 208.000 Run,Idle
+final role:61300#1 12101080 1006.000 0.000 250.000 Idle
+final role:61320#1 12101080 1186.000 0.000 250.000 Idle

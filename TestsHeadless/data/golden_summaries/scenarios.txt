@@ -2,6 +2,9 @@
 # script 相对本文件所在目录；room/class/level/seed 与 run_trace_baseline.ps1 的场景基线一致。
 # 导出：pwsh TestsHeadless/run_summary_export.ps1
 class1_swordman   ../scenarios/class1_swordman.script   2071501 1 1000 31 700
+class1_move       ../scenarios/class1_move.script       2071501 1 1000 31 240
+class1_a_dummy    ../scenarios/class1_a_dummy.script    2071501 1 1000 31 260
+class1_superarmor ../scenarios/class1_superarmor.script 2071501 1 1000 31 200
 class2_ranger     ../scenarios/class2_ranger.script     2071501 2 1000 31 700
 class4_mage       ../scenarios/class4_mage.script       2071501 4 1000 31 700
 copy_room_class1  ../scenarios/copy_room_class1.script  2010101 1 1000 31 700

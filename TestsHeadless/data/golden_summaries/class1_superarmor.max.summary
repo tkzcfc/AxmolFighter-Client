@@ -1,0 +1,57 @@
+# mugen effect summary v1
+# scenario class1_superarmor room 2071501 seed 31 ai off
+# draw crit=max float=mid dodge=never prob=pass choice=first
+5 cast role:101#1 920120 C
+5 disp+ role:101#1 922610
+5 buff+ role:101#1 101
+5 state role:101#1 Idle Attack,Idle
+5 actionend role:101#1 stand
+5 action role:101#1 10600
+12 disp- role:101#1 922610 2022.676 0.000 254.000
+12 disp+ role:101#1 922620
+12 buff+ role:101#1 102
+12 actionend role:101#1 10600
+12 action role:101#1 10602
+13 buff- role:101#1 101
+13 spawn role:101#1 fx:920300#1
+13 spawn role:101#1 fx:920310#1
+13 disp- role:101#1 922620 1966.009 0.000 254.000
+13 disp+ role:101#1 922630
+13 buff+ role:101#1 102
+13 actionend role:101#1 10602
+13 action role:101#1 10604
+14 buff- role:101#1 102
+14 disp- role:101#1 922630 1926.009 0.000 254.000
+14 disp+ role:101#1 922640
+14 buff+ role:101#1 102
+14 actionend role:101#1 10604
+14 action role:101#1 10606
+15 buff- role:101#1 102
+15 spawn role:101#1 fx:920330#1
+19 spawn role:101#1 fx:920320#1
+24 disp- role:101#1 922640 1861.838 0.000 254.000
+25 disp+ role:101#1 922650
+25 buff+ role:101#1 102
+25 actionend role:101#1 10606
+25 action role:101#1 10608
+26 buff- role:101#1 102
+26 disp- role:101#1 922650 1846.949 0.000 254.000
+26 disp+ role:101#1 922660
+26 buff+ role:101#1 102
+26 actionend role:101#1 10608
+26 action role:101#1 10610
+27 buff- role:101#1 102
+27 spawn role:101#1 fx:920340#1
+36 disp- role:101#1 922660 1808.749 0.000 254.000
+38 disp+ role:101#1 922670
+38 actionend role:101#1 10610
+38 action role:101#1 10612
+38 disp- role:101#1 922670 1808.749 0.000 254.000
+39 buff- role:101#1 102
+42 castend role:101#1 920120 done
+42 state role:101#1 Attack,Idle Idle
+42 actionend role:101#1 10612
+42 action role:101#1 stand
+final role:101#1 413387979 1808.749 0.000 254.000 Idle
+final role:61300#1 12101080 1006.000 0.000 250.000 Idle
+final role:61320#1 12101080 1186.000 0.000 250.000 Idle

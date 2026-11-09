@@ -32,6 +32,8 @@ void clearEventQueues(World& world)
     ecs.singleton<EventQueue<CueEvent>>().clear();
     ecs.singleton<EventQueue<RoomEvent>>().clear();
     ecs.singleton<EventQueue<DespawnEvent>>().clear();
+    ecs.singleton<EventQueue<DispEvent>>().clear();
+    ecs.singleton<EventQueue<StopEvent>>().clear();
 }
 }  // namespace
 
