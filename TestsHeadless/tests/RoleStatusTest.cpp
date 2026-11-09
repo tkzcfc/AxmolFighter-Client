@@ -1,11 +1,11 @@
 #include "doctest.h"
-#include "mugen/sim/World.h"
-#include "mugen/sim/role/Role.h"
+#include "mugen/sim_legacy/World.h"
+#include "mugen/sim_legacy/role/Role.h"
 
 TEST_CASE("Status attack refuses walk hit resets and death is terminal")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     World world;
     world.init({});
     const auto entity = world.create(GroupKind::Role);
@@ -35,7 +35,7 @@ TEST_CASE("Status attack refuses walk hit resets and death is terminal")
 
 TEST_CASE("Status extra state references retain overlapping effects")
 {
-    mugen::sim::ExtraState state;
+    mugen::sim_legacy::ExtraState state;
     state.add(mugen::ExtraState::Stun);
     state.add(mugen::ExtraState::Stun);
     state.remove(mugen::ExtraState::Stun);

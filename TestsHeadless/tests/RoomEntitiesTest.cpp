@@ -1,9 +1,9 @@
 #include "SkillTestSupport.h"
-#include "mugen/sim/room/RoomDirector.h"
-#include "mugen/sim/obstacle/Obstacle.h"
-#include "mugen/sim/hit/HitResolver.h"
-#include "mugen/sim/role/Role.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
+#include "mugen/sim_legacy/room/RoomDirector.h"
+#include "mugen/sim_legacy/obstacle/Obstacle.h"
+#include "mugen/sim_legacy/hit/HitResolver.h"
+#include "mugen/sim_legacy/role/Role.h"
+#include "mugen/sim_legacy/spawn/RoleSpawn.h"
 #include "../support/ScenarioHarness.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
 using namespace skill_test;
@@ -76,16 +76,16 @@ TEST_CASE("Portal hook-driven room-flow integration copy101 stage40101 visits bo
     {
         FrameInput input;
         input.frame = world.ecs().singleton<WorldClock>().frame + 1;
-        const auto& state = world.ecs().singleton<sim::RoomState>();
+        const auto& state = world.ecs().singleton<sim_legacy::RoomState>();
         if (state.m_state == mugen::RoomState::ReadySpine) input.systemCommands.push_back(RoomWarningDone{state.roomId});
         PlayerCommand command;
         command.controlEvent = state.m_victory ? ControlEvent::CTR_RUN : ControlEvent::CTR_ATKA;
         input.players.push_back({0, {command}});
         world.tick(input);
-        const auto& next = world.ecs().singleton<sim::RoomState>();
+        const auto& next = world.ecs().singleton<sim_legacy::RoomState>();
         if (next.roomId == 2010102 && next.m_state == mugen::RoomState::End) break;
     }
-    const auto& state = world.ecs().singleton<sim::RoomState>();
+    const auto& state = world.ecs().singleton<sim_legacy::RoomState>();
     CHECK(state.roomId == 2010102);
     CHECK(state.m_victory);
     CHECK(state.m_state == mugen::RoomState::End);
@@ -111,7 +111,7 @@ TEST_CASE("Portal Closed rejects contact then FightEnd opens and transfer preser
     world.ecs().get<EntityGroup>(player).suspended = false;
     room_entities::RoomEntity(world, door).onCollision(player, CollisionEvent::Continue);
     CHECK(world.ecs().get<PortalState>(door).m_phase == PortalPhase::Close);
-    CHECK(world.ecs().singleton<sim::RoomState>().m_transferRoom == 0);
+    CHECK(world.ecs().singleton<sim_legacy::RoomState>().m_transferRoom == 0);
     for (int i = 0; i < 12; ++i) tick(world);
     REQUIRE(world.ecs().get<PortalState>(door).m_phase == PortalPhase::Active);
     world.ecs().get<RoleIdentity>(player).roleType = 3;
@@ -128,7 +128,7 @@ TEST_CASE("Portal Closed rejects contact then FightEnd opens and transfer preser
     tick(world);
     REQUIRE(world.ecs().get<PortalState>(door).m_phase == PortalPhase::Transfer);
     tick(world);
-    CHECK(world.ecs().singleton<sim::RoomState>().roomId == 20002);
+    CHECK(world.ecs().singleton<sim_legacy::RoomState>().roomId == 20002);
     CHECK(world.ecs().singleton<PlayerSlots>().entities.at(0) == player);
     CHECK(world.ecs().get<Vitals>(player).hp == "123"_fx);
     CHECK(world.ecs().get<Vitals>(player).ep == "456"_fx);

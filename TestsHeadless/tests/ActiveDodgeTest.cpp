@@ -1,9 +1,9 @@
 #include "SkillTestSupport.h"
 #include "../support/ContentVfs.h"
-#include "mugen/sim/effect/Effect.h"
-#include "mugen/sim/hit/HitResolver.h"
-#include "mugen/sim/hit/Damage.h"
-#include "mugen/sim/hit/DamageCalculator.h"
+#include "mugen/sim_legacy/effect/Effect.h"
+#include "mugen/sim_legacy/hit/HitResolver.h"
+#include "mugen/sim_legacy/hit/Damage.h"
+#include "mugen/sim_legacy/hit/DamageCalculator.h"
 #include <algorithm>
 
 namespace
@@ -103,7 +103,7 @@ struct DodgeHit
         identity.hostileCamp = camp == 2 ? 25 : 7;
         ecs.add(entity, identity);
         ecs.add(entity, RoleStatus{});
-        ecs.add(entity, sim::ExtraState{});
+        ecs.add(entity, sim_legacy::ExtraState{});
         ecs.add(entity, Transform{});
         ecs.add(entity, RoleTimers{});
         ecs.add(entity, RoleHitState{});
@@ -171,7 +171,7 @@ TEST_CASE("Active Dodge on skill slot F skips damage and emits DODGE")
 {
     DodgeHit scene;
     scene.arm("F");
-    REQUIRE_FALSE(scene.m_world.ecs().get<sim::ExtraState>(scene.m_monster).active(mugen::ExtraState::Invincible));
+    REQUIRE_FALSE(scene.m_world.ecs().get<sim_legacy::ExtraState>(scene.m_monster).active(mugen::ExtraState::Invincible));
     const auto hp = scene.m_world.ecs().get<Vitals>(scene.m_monster).hp;
     scene.strike();
     CHECK(scene.m_world.ecs().get<Vitals>(scene.m_monster).hp == hp);

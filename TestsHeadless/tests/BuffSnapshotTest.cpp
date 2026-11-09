@@ -1,11 +1,11 @@
 #include "doctest.h"
-#include "mugen/sim/World.h"
+#include "mugen/sim_legacy/World.h"
 
 // 克隆与归档必须保留实例插入顺序、冷却、免疫和规则引用计数。
 TEST_CASE("BuffPool component survives clone and snapshot without shared state")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     World world;
     world.init({});
     const auto entity = world.create(GroupKind::Role);

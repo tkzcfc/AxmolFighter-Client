@@ -1,5 +1,5 @@
 #include "SkillTestSupport.h"
-#include "mugen/sim/spawn/RoleEffectAssets.h"
+#include "mugen/sim_legacy/spawn/RoleEffectAssets.h"
 
 #include <algorithm>
 #include <variant>

@@ -1,7 +1,7 @@
 #include "ui/town/TownSync.h"
 
 #include "mugen/conf/TypeConversions.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
+#include "mugen/sim_legacy/spawn/RoleSpawn.h"
 #include "ui/progress/SessionFashionAppearance.h"
 #include "ui/town/TownFixed.h"
 
@@ -42,7 +42,7 @@ mugen::FixedVec3 movementPos(const PB::Types::TownMovement& movement)
 }
 }  // namespace
 
-TownSync::TownSync(mugen::sim::World& world, mugen::WorldPresenter& presenter, net::NetAgent& agent)
+TownSync::TownSync(mugen::sim_legacy::World& world, mugen::WorldPresenter& presenter, net::NetAgent& agent)
     : m_world(world)
     , m_presenter(presenter)
     , m_agent(agent)
@@ -106,9 +106,9 @@ void TownSync::tick(float /*logicDt*/)
     }
 }
 
-std::vector<mugen::sim::PuppetUpdate> TownSync::takePuppetUpdates()
+std::vector<mugen::sim_legacy::PuppetUpdate> TownSync::takePuppetUpdates()
 {
-    std::vector<mugen::sim::PuppetUpdate> result;
+    std::vector<mugen::sim_legacy::PuppetUpdate> result;
     result.swap(m_pendingPuppetUpdates);
     return result;
 }
@@ -164,7 +164,7 @@ void TownSync::addRemotePlayer(const PB::Types::TownPlayerInfo& info)
     const int32_t toward = info.movement().facing() == 0 ? -1 : 1;
 
     const mugen::Entity entity =
-        mugen::sim::RoleSpawner(m_world).spawnPuppet(info.player_id(), roleId, movementPos(info.movement()), toward);
+        mugen::sim_legacy::RoleSpawner(m_world).spawnPuppet(info.player_id(), roleId, movementPos(info.movement()), toward);
     if (entity.value == 0)
         return;
 

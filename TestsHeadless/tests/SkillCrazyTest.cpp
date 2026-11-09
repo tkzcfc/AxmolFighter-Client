@@ -1,15 +1,15 @@
 #include "doctest.h"
 #include "../support/ContentVfs.h"
 #include "SkillTestSupport.h"
-#include "mugen/sim/skill/SkillCaster.h"
-#include "mugen/sim/role/brain/states/HitStates.h"
+#include "mugen/sim_legacy/skill/SkillCaster.h"
+#include "mugen/sim_legacy/role/brain/states/HitStates.h"
 #include <filesystem>
 #include <fstream>
 #include <set>
 #include <sstream>
 
 using namespace mugen;
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 
 // 表征测试：固定疯狂（E 槽 / crazy）模式与技能槽位命名行为。
 namespace

@@ -1,12 +1,12 @@
 #include "doctest.h"
 #include "SkillTestSupport.h"
-#include "mugen/sim/buff/BuffHolder.h"
+#include "mugen/sim_legacy/buff/BuffHolder.h"
 
 // 周期伤害保留符号和向下取整，不因普通伤害的非负限制而变成零。
 TEST_CASE("BuffDamage signed formula has no defense critical or spread")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     CHECK(buff::BuffHolder::calculateBuffDamage("101"_fx, "-0.5"_fx, {}) == "-51"_fx);
     CHECK(buff::BuffHolder::calculateBuffDamage("101"_fx, "0.5"_fx, {}) == "50"_fx);
     CHECK(buff::BuffHolder::calculateBuffDamage("100"_fx, "-0.5"_fx, "1"_fx) == "-100"_fx);

@@ -2,9 +2,9 @@
 
 #include "ui/battle/BattleMode.h"
 #include "ui/battle/BattleBootParams.h"
-#include "mugen/sim/Replay.h"
-#include "mugen/sim/World.h"
-#include "mugen/sim/input/ControlManagerCore.h"
+#include "mugen/sim_legacy/Replay.h"
+#include "mugen/sim_legacy/World.h"
+#include "mugen/sim_legacy/input/ControlManagerCore.h"
 #include "ui/battle/BattleDebugPanel.h"
 
 #include <cstdint>
@@ -29,27 +29,27 @@ public:
     void toggleCollisionDebug();
 
     void setReplayPath(std::string path) { m_replayPath = std::move(path); }
-    const mugen::sim::World& world() const override { return m_world; }
+    const mugen::sim_legacy::World& world() const override { return m_world; }
     mugen::Entity localPlayer() const override { return m_localPlayer; }
 
     int32_t roomId() const { return m_roomId; }
     int32_t autotestFrames() const { return m_autotestFrames; }
     // 按钮只提交下一帧系统命令。
-    void requestReturnToTown() { m_systemCommands.push_back(mugen::sim::ReturnToTownCommand{}); }
+    void requestReturnToTown() { m_systemCommands.push_back(mugen::sim_legacy::ReturnToTownCommand{}); }
     // HUD 暂停按钮复用调试暂停开关，只停止本地推进。
     void setPaused(bool paused) override { m_debugPaused = paused; }
     // 最近一次受到伤害数字事件的非英雄角色，供 HUD 目标血条使用。
     mugen::Entity lastHurtTarget() const override { return m_lastHurtTarget; }
-    bool returnToTownRequested() const { return m_world.ecs().singleton<mugen::sim::RoomState>().m_returnToTown; }
+    bool returnToTownRequested() const { return m_world.ecs().singleton<mugen::sim_legacy::RoomState>().m_returnToTown; }
 
 private:
     int32_t m_roomId         = 0;
     int32_t m_roleId         = 0;
     int32_t m_petId          = 0;
     int32_t m_autotestFrames = 0;
-    mugen::sim::World m_world;
-    mugen::sim::ControlManagerCore m_control;
-    mugen::sim::Replay m_replay;
+    mugen::sim_legacy::World m_world;
+    mugen::sim_legacy::ControlManagerCore m_control;
+    mugen::sim_legacy::Replay m_replay;
     std::string m_replayPath;
     float m_accumulator    = 0.0f;
     bool m_initialized     = false;
@@ -57,7 +57,7 @@ private:
     bool m_debugSingleStep = false;
     BattleDebugPanel m_debugPanel;
     // 待提交输入及最近的房间表现消息。
-    std::vector<mugen::sim::SystemCommand> m_systemCommands;
+    std::vector<mugen::sim_legacy::SystemCommand> m_systemCommands;
     std::string m_roomMessage;
     mugen::Entity m_lastHurtTarget;
     void subscribeAppearanceEvents();

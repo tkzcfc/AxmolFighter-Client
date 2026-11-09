@@ -1,14 +1,14 @@
 #include "SkillTestSupport.h"
-#include "mugen/sim/role/Role.h"
-#include "mugen/sim/role/brain/RoleBrain.h"
-#include "mugen/sim/role/brain/states/CastState.h"
-#include "mugen/sim/trace/TraceSink.h"
+#include "mugen/sim_legacy/role/Role.h"
+#include "mugen/sim_legacy/role/brain/RoleBrain.h"
+#include "mugen/sim_legacy/role/brain/states/CastState.h"
+#include "mugen/sim_legacy/trace/TraceSink.h"
 #include <string>
 
 using namespace mugen;
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 using namespace skill_test;
-namespace states = mugen::sim::role::brain::states;
+namespace states = mugen::sim_legacy::role::brain::states;
 
 namespace
 {

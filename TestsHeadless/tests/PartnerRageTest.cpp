@@ -1,11 +1,11 @@
 #include "SkillTestSupport.h"
 #include "mugen/avatar/AvatarPaths.h"
 #include "mugen/conf/BattleConst.h"
-#include "mugen/sim/buff/BuffHolder.h"
-#include "mugen/sim/buff/BuffRules.h"
-#include "mugen/sim/hit/HitResolver.h"
-#include "mugen/sim/role/RoleActor.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
+#include "mugen/sim_legacy/buff/BuffHolder.h"
+#include "mugen/sim_legacy/buff/BuffRules.h"
+#include "mugen/sim_legacy/hit/HitResolver.h"
+#include "mugen/sim_legacy/role/RoleActor.h"
+#include "mugen/sim_legacy/spawn/RoleSpawn.h"
 
 #include <algorithm>
 

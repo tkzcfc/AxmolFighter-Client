@@ -1,9 +1,9 @@
 #include "doctest.h"
-#include "mugen/sim/room/RoomEntities.h"
+#include "mugen/sim_legacy/room/RoomEntities.h"
 #include "../support/ScenarioHarness.h"
 
 using namespace mugen;
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 
 TEST_CASE("Room 20002 portals keep an empty motion file and a radius damage box")
 {

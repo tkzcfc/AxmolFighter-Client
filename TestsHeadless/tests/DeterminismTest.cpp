@@ -1,8 +1,8 @@
 #include <doctest.h>
 #include "../support/ScenarioHarness.h"
 #include "mugen/conf/ConfigFormat.h"
-#include "mugen/sim/Replay.h"
-#include "mugen/sim/buff/BuffLifecycle.h"
+#include "mugen/sim_legacy/Replay.h"
+#include "mugen/sim_legacy/buff/BuffLifecycle.h"
 #include <algorithm>
 #include <array>
 #include <cstring>
@@ -11,7 +11,7 @@
 #include <sstream>
 
 using namespace mugen;
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 
 namespace
 {

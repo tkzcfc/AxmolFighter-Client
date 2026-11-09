@@ -1,7 +1,7 @@
 #include "doctest.h"
 #include "../support/ContentVfs.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
-#include "mugen/sim/input/ControlManagerCore.h"
+#include "mugen/sim_legacy/spawn/RoleSpawn.h"
+#include "mugen/sim_legacy/input/ControlManagerCore.h"
 #include "mugen/conf/BattleConst.h"
 #include <fstream>
 #include <filesystem>
@@ -9,7 +9,7 @@
 #include <cmath>
 
 using namespace mugen;
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 namespace
 {
 Entity setup(World& world, bool moving = false)
@@ -133,7 +133,7 @@ TEST_CASE("Displacement zero VelocityScale preserves falling height")
     World world;
     const Entity entity                           = setup(world);
     world.ecs().get<Transform>(entity).position.y = "100"_fx;
-    world.ecs().get<sim::ExtraState>(entity).add(mugen::ExtraState::Durance);
+    world.ecs().get<sim_legacy::ExtraState>(entity).add(mugen::ExtraState::Durance);
     world.ecs().get<Displacement>(entity).velocityScale = {};
     displacement::DisplacementDriver(world, entity).update();
     CHECK(world.ecs().get<Transform>(entity).position.y < "100"_fx);

@@ -2,8 +2,8 @@
 
 #include "ui/core/Screen.h"
 #include "ui/widgets/common/VirtualJoystick.h"
-#include "mugen/sim/World.h"
-#include "mugen/sim/input/ControlManagerCore.h"
+#include "mugen/sim_legacy/World.h"
+#include "mugen/sim_legacy/input/ControlManagerCore.h"
 #include "mugen/core/math/FixedVec3.h"
 
 #include <array>
@@ -102,7 +102,7 @@ private:
     void onKeyReleased(ax::EventKeyboard::KeyCode code, ax::Event* event);
     void setInputFromKey(ax::EventKeyboard::KeyCode code, bool pressed);
     void bindJoystick();
-    void refreshControlKey(mugen::sim::ControlKey key);
+    void refreshControlKey(mugen::sim_legacy::ControlKey key);
 
     void sendDuelInvite(int64_t targetPlayerId);
     void respondDuelInvite(int32_t accept);
@@ -125,12 +125,12 @@ private:
 private:
     TownBootParams m_boot;
     std::vector<TownPortal> m_portals;
-    mugen::sim::World m_world;
-    mugen::sim::ControlManagerCore m_control;
+    mugen::sim_legacy::World m_world;
+    mugen::sim_legacy::ControlManagerCore m_control;
     mugen::Entity m_localEntity;
     std::unique_ptr<TownSync> m_townSync;
     std::map<ax::EventKeyboard::KeyCode, uint32_t> m_slotMap;
-    std::array<bool, static_cast<size_t>(mugen::sim::ControlKey::Count)> m_keyboardHeld{};
+    std::array<bool, static_cast<size_t>(mugen::sim_legacy::ControlKey::Count)> m_keyboardHeld{};
     VirtualJoystick m_joystick;
     ax::EventListenerKeyboard* m_keyboardListener = nullptr;
     float m_accumulator                           = 0.0f;

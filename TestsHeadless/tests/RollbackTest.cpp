@@ -2,9 +2,9 @@
 #include "../support/ScenarioHarness.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/core/serialize/Hash.h"
-#include "mugen/sim/rollback/RollbackSession.h"
-#include "mugen/sim/room/RoomDirector.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
+#include "mugen/sim_legacy/rollback/RollbackSession.h"
+#include "mugen/sim_legacy/room/RoomDirector.h"
+#include "mugen/sim_legacy/spawn/RoleSpawn.h"
 #include <array>
 #include <cstdint>
 #include <random>
@@ -14,8 +14,8 @@
 #include <vector>
 
 using namespace mugen;
-using namespace mugen::sim;
-using namespace mugen::sim::rollback;
+using namespace mugen::sim_legacy;
+using namespace mugen::sim_legacy::rollback;
 
 namespace
 {

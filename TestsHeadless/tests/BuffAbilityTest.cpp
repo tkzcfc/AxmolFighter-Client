@@ -1,13 +1,13 @@
 #include "SkillTestSupport.h"
-#include "mugen/sim/buff/BuffHolder.h"
+#include "mugen/sim_legacy/buff/BuffHolder.h"
 
 namespace
 {
 // 能力回调记录真实输入并删除实例，验证调用者不会继续使用旧指针。
-void consumeBoundAbility(mugen::sim::World& world, mugen::Entity entity, int32_t id,
-                         mugen::BFEvent event, const mugen::sim::BuffContext& context)
+void consumeBoundAbility(mugen::sim_legacy::World& world, mugen::Entity entity, int32_t id,
+                         mugen::BFEvent event, const mugen::sim_legacy::BuffContext& context)
 {
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     CHECK(id > 0);
     CHECK(static_cast<int32_t>(event) > 0);
     auto& pool = world.ecs().get<BuffPool>(entity);
@@ -15,7 +15,7 @@ void consumeBoundAbility(mugen::sim::World& world, mugen::Entity entity, int32_t
     CHECK_FALSE(pool.m_instances.front().m_lifecycle.m_active);
     CHECK(pool.m_instances.front().m_context.m_currentSkill == context.m_currentSkill);
     world.emit(entity, Tips{"Bound ability invoked"});
-    mugen::sim::buff::BuffHolder(world, entity).destroyBuff();
+    mugen::sim_legacy::buff::BuffHolder(world, entity).destroyBuff();
 }
 }
 
@@ -23,7 +23,7 @@ void consumeBoundAbility(mugen::sim::World& world, mugen::Entity entity, int32_t
 TEST_CASE("BuffAbility binding callback precedes activation and may destroy instance")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     const auto& rows = conf::Config::instance().table<conf::BuffConfig>();
     const auto row = std::find_if(rows.begin(), rows.end(), [](const auto& value) {

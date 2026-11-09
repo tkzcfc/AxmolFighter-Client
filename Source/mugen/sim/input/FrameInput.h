@@ -1,5 +1,5 @@
 #pragma once
-#include "PlayerCommand.h"
+#include "mugen/sim/input/PlayerCommand.h"
 #include "mugen/core/ecs/Entity.h"
 
 namespace mugen::sim

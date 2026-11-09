@@ -1,6 +1,6 @@
 #include "SkillTestSupport.h"
-#include "mugen/sim/buff/BuffHolder.h"
-#include "mugen/sim/hit/HitResolver.h"
+#include "mugen/sim_legacy/buff/BuffHolder.h"
+#include "mugen/sim_legacy/hit/HitResolver.h"
 
 using namespace skill_test;
 

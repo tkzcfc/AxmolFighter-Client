@@ -1,5 +1,5 @@
 #include "SkillTestSupport.h"
-#include "mugen/sim/role/brain/RoleContext.h"
+#include "mugen/sim_legacy/role/brain/RoleContext.h"
 
 #include <array>
 #include <vector>
@@ -9,15 +9,15 @@ using namespace skill_test;
 namespace
 {
 // 以指定世界配置初始化并创建角色实体，组件与 skill_test::actor 保持一致。
-mugen::Entity actorWithSetup(mugen::sim::World& world, mugen::sim::WorldSetup setup)
+mugen::Entity actorWithSetup(mugen::sim_legacy::World& world, mugen::sim_legacy::WorldSetup setup)
 {
     world.init(setup);
-    const auto entity = world.create(mugen::sim::GroupKind::Role);
-    world.ecs().add(entity, mugen::sim::RoleIdentity{});
-    world.ecs().add(entity, mugen::sim::RoleStatus{});
-    world.ecs().add(entity, mugen::sim::ExtraState{});
-    world.ecs().add(entity, mugen::sim::Transform{});
-    mugen::sim::Vitals vitals;
+    const auto entity = world.create(mugen::sim_legacy::GroupKind::Role);
+    world.ecs().add(entity, mugen::sim_legacy::RoleIdentity{});
+    world.ecs().add(entity, mugen::sim_legacy::RoleStatus{});
+    world.ecs().add(entity, mugen::sim_legacy::ExtraState{});
+    world.ecs().add(entity, mugen::sim_legacy::Transform{});
+    mugen::sim_legacy::Vitals vitals;
     vitals.hp = vitals.maxHp = "1000"_fx;
     vitals.mp = vitals.maxMp = "1000000"_fx;
     vitals.ep = vitals.maxEp = "1000000"_fx;
@@ -42,7 +42,7 @@ std::array<int32_t, 6> takeCheapSkills()
 }
 
 // 在槽位 A/B/C/I/J/K 各装配一个技能，供控制事件命中对应槽位。
-void loadLetterSlots(mugen::sim::World& world, mugen::Entity entity, const std::array<int32_t, 6>& skills)
+void loadLetterSlots(mugen::sim_legacy::World& world, mugen::Entity entity, const std::array<int32_t, 6>& skills)
 {
     skill::SkillLoadout loadout(5);
     loadout[0].resize(11);
@@ -59,7 +59,7 @@ void loadLetterSlots(mugen::sim::World& world, mugen::Entity entity, const std::
 }
 
 // 通过控制命令消费路径派发一次按键，返回是否实际选定了技能。
-bool cast(mugen::sim::World& world, mugen::Entity entity, ControlEvent event)
+bool cast(mugen::sim_legacy::World& world, mugen::Entity entity, ControlEvent event)
 {
     idle(world, entity);
     world.ecs().get<ControlEventQueue>(entity).commands.push_back({event, ControlQuadrant::None, 0, 1});
@@ -72,7 +72,7 @@ bool cast(mugen::sim::World& world, mugen::Entity entity, ControlEvent event)
 TEST_CASE("PvpSkill cooldown uses pvpCd in PVP and cd otherwise")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     loadConfig();
     const auto id = findSkill([](const auto&) { return true; });
     auto row      = conf::Config::instance().get<conf::SkillAttackConfig>(id);
@@ -104,7 +104,7 @@ TEST_CASE("PvpSkill cooldown uses pvpCd in PVP and cd otherwise")
 TEST_CASE("PvpSkill ultimate I J K locked in PVP while A B C still cast")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     loadConfig();
     const auto skills = takeCheapSkills();
 
@@ -126,7 +126,7 @@ TEST_CASE("PvpSkill ultimate I J K locked in PVP while A B C still cast")
 TEST_CASE("PvpSkill ultimate I J K cast normally outside PVP")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     loadConfig();
     const auto skills = takeCheapSkills();
 

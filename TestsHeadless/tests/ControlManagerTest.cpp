@@ -1,8 +1,8 @@
 #include <doctest.h>
 
-#include "mugen/sim/input/ControlManagerCore.h"
+#include "mugen/sim_legacy/input/ControlManagerCore.h"
 
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 
 TEST_CASE("ControlManager combo emits joystick event")
 {

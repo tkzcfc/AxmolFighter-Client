@@ -1,14 +1,14 @@
 #include <doctest.h>
 #include "../support/ScenarioHarness.h"
-#include "mugen/sim/World.h"
+#include "mugen/sim_legacy/World.h"
 #include "mugen/conf/ReflectedConfig.h"
-#include "mugen/sim/role/brain/RoleBrainDriver.h"
-#include "mugen/sim/role/brain/RoleContext.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
-#include "mugen/sim/role/Role.h"
+#include "mugen/sim_legacy/role/brain/RoleBrainDriver.h"
+#include "mugen/sim_legacy/role/brain/RoleContext.h"
+#include "mugen/sim_legacy/spawn/RoleSpawn.h"
+#include "mugen/sim_legacy/role/Role.h"
 
 using namespace mugen;
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 
 TEST_CASE("Portal Finding consumes ordered path points before returning Idle")
 {
@@ -68,7 +68,7 @@ TEST_CASE("Portal Jostled registered leaf completes on brake and resets displace
         ecs.add(entity, Displacement{});
         ecs.add(entity, RoleBrain{});
         ecs.add(entity, RoleControl{});
-        ecs.add(entity, sim::ExtraState{});
+        ecs.add(entity, sim_legacy::ExtraState{});
         ecs.add(entity, ControlEventQueue{});
         role::brain::RoleBrainDriver(world, entity, ecs.get<RoleBrain>(entity), false).update();
         CHECK(ecs.get<Transform>(entity).towardX == (horizontal ? -1 : 1));

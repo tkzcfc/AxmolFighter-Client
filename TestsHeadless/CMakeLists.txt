@@ -54,26 +54,39 @@ mugen_collect_sources(MUGEN_AVATAR_SOURCES
     "${MUGEN_DIR}/avatar/*.cpp"
     "${MUGEN_DIR}/avatar/*.c"
 )
-# sim/ may not exist yet. CONFIGURE_DEPENDS still picks it up once files appear.
+# 旧实现（冻结）。
+mugen_collect_sources(MUGEN_SIM_LEGACY_SOURCES
+    "${MUGEN_DIR}/sim_legacy/*.h"
+    "${MUGEN_DIR}/sim_legacy/*.hpp"
+    "${MUGEN_DIR}/sim_legacy/*.cpp"
+    "${MUGEN_DIR}/sim_legacy/*.c"
+)
+# 新 ECS 实现（见 Source/mugen/DESIGN.md）。
 mugen_collect_sources(MUGEN_SIM_SOURCES
     "${MUGEN_DIR}/sim/*.h"
-    "${MUGEN_DIR}/sim/*.hpp"
     "${MUGEN_DIR}/sim/*.cpp"
-    "${MUGEN_DIR}/sim/*.c"
+)
+# 效果摘要格式（附录 A）：解析、比对，两套 sim 都不依赖。
+mugen_collect_sources(SUMMARY_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/summary/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/summary/*.cpp"
+)
+list(FILTER SUMMARY_SOURCES EXCLUDE REGEX ".*/summary/tests/.*")
+mugen_collect_sources(SUMMARY_TEST_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/summary/tests/*.cpp"
 )
 
-set(MUGEN_SOURCES
+set(MUGEN_BASE_SOURCES
     ${MUGEN_CORE_SOURCES}
     ${MUGEN_CONF_SOURCES}
     ${MUGEN_AVATAR_SOURCES}
-    ${MUGEN_SIM_SOURCES}
 )
 
 # Rendering stays on the client.
-list(FILTER MUGEN_SOURCES EXCLUDE REGEX ".*/avatar/render/.*")
+list(FILTER MUGEN_BASE_SOURCES EXCLUDE REGEX ".*/avatar/render/.*")
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/../cmake/VfsSources.cmake")
-list(APPEND MUGEN_SOURCES ${VFS_SOURCES})
+list(APPEND MUGEN_BASE_SOURCES ${VFS_SOURCES})
 
 set(MUGEN_COMMON_INCLUDES
     "${CLIENT_SOURCE_DIR}"
@@ -99,23 +112,73 @@ file(GLOB_RECURSE MUGEN_TEST_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp"
 )
 
+mugen_collect_sources(MUGEN_SIM_TEST_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/sim_tests/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/sim_tests/*.cpp"
+)
+mugen_collect_sources(LEGACY_CLI_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/legacy_cli/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/legacy_cli/*.cpp"
+)
+mugen_collect_sources(SIM_CLI_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/sim_cli/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/sim_cli/*.cpp"
+)
+
+# 公共部分只编译一次。用 OBJECT 库而不是静态库，避免链接器丢弃只靠静态初始化注册的目标文件。
+add_library(mugen_base OBJECT ${MUGEN_BASE_SOURCES} ${SUMMARY_SOURCES})
+mugen_apply_compile_settings(mugen_base)
+add_library(mugen_sim_legacy OBJECT ${MUGEN_SIM_LEGACY_SOURCES})
+mugen_apply_compile_settings(mugen_sim_legacy)
+
+# 旧实现测试与工具。任何二进制都不同时链接两套 sim。
 add_executable(mugen_tests
-    ${MUGEN_SOURCES}
+    $<TARGET_OBJECTS:mugen_base>
+    $<TARGET_OBJECTS:mugen_sim_legacy>
     ${MUGEN_TEST_SOURCES}
+    ${SUMMARY_TEST_SOURCES}
     "${CMAKE_CURRENT_SOURCE_DIR}/support/ScenarioHarness.cpp"
     "${DOCTEST_INCLUDE_DIR}/doctest.cpp"
 )
 target_include_directories(mugen_tests PRIVATE "${DOCTEST_INCLUDE_DIR}")
 mugen_apply_compile_settings(mugen_tests)
 
-add_executable(mugen_sim_cli
-    ${MUGEN_SOURCES}
+add_executable(mugen_legacy_cli
+    $<TARGET_OBJECTS:mugen_base>
+    $<TARGET_OBJECTS:mugen_sim_legacy>
+    ${LEGACY_CLI_SOURCES}
     "${CMAKE_CURRENT_SOURCE_DIR}/support/ScenarioHarness.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/sim_cli_main.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/legacy_cli_main.cpp"
+)
+mugen_apply_compile_settings(mugen_legacy_cli)
+
+# 新 sim 测试与工具（sim/ 有源码后才生成目标）。
+set(MUGEN_HEADLESS_TARGETS mugen_tests mugen_legacy_cli)
+if(MUGEN_SIM_SOURCES)
+add_library(mugen_sim OBJECT ${MUGEN_SIM_SOURCES})
+mugen_apply_compile_settings(mugen_sim)
+
+add_executable(mugen_sim_tests
+    $<TARGET_OBJECTS:mugen_base>
+    $<TARGET_OBJECTS:mugen_sim>
+    ${MUGEN_SIM_TEST_SOURCES}
+    ${SUMMARY_TEST_SOURCES}
+    "${DOCTEST_INCLUDE_DIR}/doctest.cpp"
+)
+target_include_directories(mugen_sim_tests PRIVATE "${DOCTEST_INCLUDE_DIR}")
+mugen_apply_compile_settings(mugen_sim_tests)
+
+add_executable(mugen_sim_cli
+    $<TARGET_OBJECTS:mugen_base>
+    $<TARGET_OBJECTS:mugen_sim>
+    ${SIM_CLI_SOURCES}
 )
 mugen_apply_compile_settings(mugen_sim_cli)
+list(APPEND MUGEN_HEADLESS_TARGETS mugen_sim_tests mugen_sim_cli)
+endif()
+
 find_package(Threads REQUIRED)
-foreach(target mugen_tests mugen_sim_cli)
+foreach(target IN LISTS MUGEN_HEADLESS_TARGETS)
     target_compile_definitions(${target} PRIVATE MUGEN_CONTENT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../Content")
     target_link_libraries(${target} PRIVATE Threads::Threads)
 endforeach()

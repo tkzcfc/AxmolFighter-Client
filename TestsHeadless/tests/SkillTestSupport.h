@@ -1,15 +1,15 @@
 #pragma once
 #include "../support/ContentVfs.h"
 #include "doctest.h"
-#include "mugen/sim/World.h"
-#include "mugen/sim/skill/SkillCaster.h"
+#include "mugen/sim_legacy/World.h"
+#include "mugen/sim_legacy/skill/SkillCaster.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/core/serialize/BinaryArchive.h"
 
 namespace skill_test
 {
 using namespace mugen;
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 inline void loadConfig()
 {
     REQUIRE(mugen::test::ensureContentVfs());
@@ -54,7 +54,7 @@ inline Entity actor(World& world)
     const auto entity = world.create(GroupKind::Role);
     world.ecs().add(entity, RoleIdentity{});
     world.ecs().add(entity, RoleStatus{});
-    world.ecs().add(entity, sim::ExtraState{});
+    world.ecs().add(entity, sim_legacy::ExtraState{});
     world.ecs().add(entity, Transform{});
     Vitals vitals;
     vitals.hp = vitals.maxHp = "1000"_fx;

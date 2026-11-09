@@ -1,7 +1,7 @@
 #include "doctest.h"
 #include "../support/ContentVfs.h"
 #include "SkillTestSupport.h"
-#include "mugen/sim/buff/BuffHolder.h"
+#include "mugen/sim_legacy/buff/BuffHolder.h"
 #include "mugen/avatar/AvatarPaths.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
 
@@ -32,7 +32,7 @@ struct MotionOverride
 TEST_CASE("BuffPresentation resolved motion schedules appearance and disappearance")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     const auto& spine = conf::Config::instance().get<conf::ResSpineConfig>(2214);
     CombatTimeline timeline;
@@ -70,7 +70,7 @@ TEST_CASE("BuffPresentation resolved motion schedules appearance and disappearan
 TEST_CASE("BuffPresentation continuation timer is cancelled by exit")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     World world;
     const auto entity = skill_test::actor(world);
@@ -102,7 +102,7 @@ TEST_CASE("BuffPresentation continuation timer is cancelled by exit")
 TEST_CASE("BuffPresentation production disappearance resolves or exits immediately")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     auto* assets = AvatarAssetCache::getInstance();
     REQUIRE(mugen::test::ensureContentVfs());
@@ -134,7 +134,7 @@ TEST_CASE("BuffPresentation production disappearance resolves or exits immediate
         CHECK(std::get<BuffSpine>(events.back().payload).m_serial == 1);
         CHECK(std::get<BuffSpine>(events.back().payload).m_buffId == 25);
         if (!duration)
-            CHECK(world.ecs().singleton<sim::RoomState>().m_missingBuffMotionIds == std::vector<int32_t>{25});
+            CHECK(world.ecs().singleton<sim_legacy::RoomState>().m_missingBuffMotionIds == std::vector<int32_t>{25});
     }
     else
     {
@@ -148,7 +148,7 @@ TEST_CASE("BuffPresentation production disappearance resolves or exits immediate
 TEST_CASE("BuffPresentation exit timer dispatch survives world clone")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     World world;
     const auto entity = skill_test::actor(world);

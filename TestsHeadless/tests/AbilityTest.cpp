@@ -1,10 +1,10 @@
 #include "SkillTestSupport.h"
-#include "mugen/sim/ability/AbilityHolder.h"
+#include "mugen/sim_legacy/ability/AbilityHolder.h"
 
 namespace
 {
 // 查找可无条件触发指定事件的生产能力配置。
-const mugen::conf::SpecialAbilityConfig& abilityFor(mugen::sim::ability::Event event, int32_t excludedId = -1)
+const mugen::conf::SpecialAbilityConfig& abilityFor(mugen::sim_legacy::ability::Event event, int32_t excludedId = -1)
 {
     using namespace mugen;
     const auto& rows = mugen::conf::Config::instance().table<mugen::conf::SpecialAbilityConfig>();
@@ -21,7 +21,7 @@ const mugen::conf::SpecialAbilityConfig& abilityFor(mugen::sim::ability::Event e
 TEST_CASE("Ability pool dispatches cast and hit events")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     World world;
     const Entity entity = skill_test::actor(world);
@@ -45,7 +45,7 @@ TEST_CASE("Ability pool dispatches cast and hit events")
 TEST_CASE("Ability condition blocks non-critical event")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     World world;
     const Entity entity = skill_test::actor(world);
     conf::SpecialAbilityConfig config;

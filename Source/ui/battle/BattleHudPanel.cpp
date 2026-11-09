@@ -3,9 +3,9 @@
 #include "mugen/conf/BattleConst.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/TypeConversions.h"
-#include "mugen/sim/buff/BuffPool.h"
-#include "mugen/sim/input/ControlManagerCore.h"
-#include "mugen/sim/skill/Skill.h"
+#include "mugen/sim_legacy/buff/BuffPool.h"
+#include "mugen/sim_legacy/input/ControlManagerCore.h"
+#include "mugen/sim_legacy/skill/Skill.h"
 #include "ui/battle/BattleMode.h"
 #include "ui/widgets/common/MessageDialog.h"
 
@@ -17,7 +17,7 @@ namespace gameui
 {
 namespace
 {
-using mugen::sim::ControlKey;
+using mugen::sim_legacy::ControlKey;
 
 // Unwrap config icon variant; tables already store FairyGUI ui:// URLs (or int sentinel).
 std::string configIconString(const std::variant<int32_t, std::string>& icon)
@@ -100,10 +100,10 @@ void BattleHudPanel::bindSkillButtons()
 {
     const auto& world  = m_battle.world();
     const auto player  = m_battle.localPlayer();
-    const auto& ident  = world.ecs().get<mugen::sim::RoleIdentity>(player);
-    const auto rows    = mugen::sim::skill::SkillAssembly::offlineKitRows(
+    const auto& ident  = world.ecs().get<mugen::sim_legacy::RoleIdentity>(player);
+    const auto rows    = mugen::sim_legacy::skill::SkillAssembly::offlineKitRows(
         mugen::type_conversions::toCharacterClass(ident.roleId));
-    auto findRow = [&rows](mugen::EnumSkillSlot slot) -> const mugen::sim::skill::OfflineKitRow* {
+    auto findRow = [&rows](mugen::EnumSkillSlot slot) -> const mugen::sim_legacy::skill::OfflineKitRow* {
         for (const auto& row : rows)
             if (row.slot == slot)
                 return &row;
@@ -194,14 +194,14 @@ void BattleHudPanel::bindRageHud()
 
     const auto& world = m_battle.world();
     const auto player = m_battle.localPlayer();
-    const bool hasRage = world.ecs().alive(player) && world.ecs().tryGet<mugen::sim::PartnerRageState>(player) != nullptr;
+    const bool hasRage = world.ecs().alive(player) && world.ecs().tryGet<mugen::sim_legacy::PartnerRageState>(player) != nullptr;
     m_playerRage->setVisible(hasRage);
     rageBtn->setVisible(hasRage);
     if (!hasRage)
         return;
 
-    const auto& ident = world.ecs().get<mugen::sim::RoleIdentity>(player);
-    const auto rows   = mugen::sim::skill::SkillAssembly::offlineKitRows(
+    const auto& ident = world.ecs().get<mugen::sim_legacy::RoleIdentity>(player);
+    const auto rows   = mugen::sim_legacy::skill::SkillAssembly::offlineKitRows(
         mugen::type_conversions::toCharacterClass(ident.roleId));
     for (const auto& row : rows)
     {
@@ -272,8 +272,8 @@ void BattleHudPanel::onUpdate(float /*dt*/)
 void BattleHudPanel::updatePlayer(mugen::Entity player)
 {
     const auto& ecs    = m_battle.world().ecs();
-    const auto& vitals = ecs.get<mugen::sim::Vitals>(player);
-    const auto& ident  = ecs.get<mugen::sim::RoleIdentity>(player);
+    const auto& vitals = ecs.get<mugen::sim_legacy::Vitals>(player);
+    const auto& ident  = ecs.get<mugen::sim_legacy::RoleIdentity>(player);
     setProgress(m_playerHp, vitals.hp, vitals.maxHp);
     setProgress(m_playerMp, vitals.mp, vitals.maxMp);
     m_playerStatus->getChild("level")->setText(fmt::format("Lv.{}", ident.level));
@@ -290,7 +290,7 @@ void BattleHudPanel::updateRage(mugen::Entity player)
         return;
 
     const auto& ecs  = m_battle.world().ecs();
-    const auto* rage = ecs.tryGet<mugen::sim::PartnerRageState>(player);
+    const auto* rage = ecs.tryGet<mugen::sim_legacy::PartnerRageState>(player);
     const bool hasRage = rage != nullptr;
     m_playerRage->setVisible(hasRage);
     m_rageSkillButton.m_button->setVisible(hasRage);
@@ -325,13 +325,13 @@ void BattleHudPanel::updateRage(mugen::Entity player)
 
 void BattleHudPanel::updateSkills(mugen::Entity player)
 {
-    const auto& pool = m_battle.world().ecs().get<mugen::sim::SkillPool>(player);
+    const auto& pool = m_battle.world().ecs().get<mugen::sim_legacy::SkillPool>(player);
     for (auto& binding : m_skillButtons)
     {
         if (binding.m_poolSlot.empty())
             continue;
-        const int32_t index = mugen::sim::skill::getGivenSkill(pool, binding.m_poolSlot);
-        const bool cooling  = index != mugen::sim::kNoSkill && pool.m_skills.at(index).isCooling();
+        const int32_t index = mugen::sim_legacy::skill::getGivenSkill(pool, binding.m_poolSlot);
+        const bool cooling  = index != mugen::sim_legacy::kNoSkill && pool.m_skills.at(index).isCooling();
         binding.m_cdMask->setVisible(cooling);
         if (!cooling)
         {
@@ -349,7 +349,7 @@ void BattleHudPanel::updateSkills(mugen::Entity player)
 
 void BattleHudPanel::updateBuffs(mugen::Entity player)
 {
-    const auto& pool   = m_battle.world().ecs().get<mugen::sim::BuffPool>(player);
+    const auto& pool   = m_battle.world().ecs().get<mugen::sim_legacy::BuffPool>(player);
     const auto& config = mugen::conf::Config::instance();
     int count          = 0;
     for (const auto& instance : pool.m_instances)
@@ -377,8 +377,8 @@ void BattleHudPanel::updateTarget(mugen::Entity /*player*/)
 {
     const auto& ecs     = m_battle.world().ecs();
     const auto target   = m_battle.lastHurtTarget();
-    const auto* vitals  = ecs.tryGet<mugen::sim::Vitals>(target);
-    const auto* ident   = ecs.tryGet<mugen::sim::RoleIdentity>(target);
+    const auto* vitals  = ecs.tryGet<mugen::sim_legacy::Vitals>(target);
+    const auto* ident   = ecs.tryGet<mugen::sim_legacy::RoleIdentity>(target);
     const bool hasTarget = vitals && ident && !vitals->isDead();
     const bool isBoss    = hasTarget && ident->roleType == static_cast<int32_t>(mugen::EntityRoleType::kBoss);
     m_targetBar->setVisible(hasTarget && !isBoss);

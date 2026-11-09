@@ -1,13 +1,13 @@
 #include "doctest.h"
 #include "SkillTestSupport.h"
-#include "mugen/sim/buff/BuffPool.h"
-#include "mugen/sim/buff/BuffHolder.h"
+#include "mugen/sim_legacy/buff/BuffPool.h"
+#include "mugen/sim_legacy/buff/BuffHolder.h"
 
 // 验证免疫与冷却边界，零冷却在下一次更新才删除。
 TEST_CASE("BuffAdmission immunity cooldown and area checks")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     World world;
     const auto entity = skill_test::actor(world);
     world.ecs().add(entity, BuffPool{});
@@ -42,7 +42,7 @@ TEST_CASE("BuffAdmission immunity cooldown and area checks")
 TEST_CASE("BuffAdmission probability repeat uses first matching stack")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     auto config = conf::Config::instance().get<conf::BuffConfig>(1);
     config.probability = "20"_fx;
@@ -70,7 +70,7 @@ TEST_CASE("BuffAdmission probability repeat uses first matching stack")
 TEST_CASE("BuffAdmission ImmuneDebuff blocks types three and four")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     World world;
     const auto entity = skill_test::actor(world);

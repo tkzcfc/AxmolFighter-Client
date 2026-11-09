@@ -1,11 +1,11 @@
 #include "SkillTestSupport.h"
-#include "mugen/sim/buff/BuffHolder.h"
+#include "mugen/sim_legacy/buff/BuffHolder.h"
 
 // 按标识和规则删除只影响匹配实例，并取消各自的退出定时器。
 TEST_CASE("BuffDestroy selects instances and cancels pending exits")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     World world;
     const auto entity = skill_test::actor(world);

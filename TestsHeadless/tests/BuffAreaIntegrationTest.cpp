@@ -1,12 +1,12 @@
 #include "SkillTestSupport.h"
-#include "mugen/sim/buff/BuffHolder.h"
-#include "mugen/sim/hit/HitResolver.h"
+#include "mugen/sim_legacy/buff/BuffHolder.h"
+#include "mugen/sim_legacy/hit/HitResolver.h"
 
 // 使用实际限制场景的配置证明生产施加入口读取世界战斗类型。
 TEST_CASE("BuffAreaIntegration world fight type controls production admission")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     const auto& rows = conf::Config::instance().table<conf::BuffConfig>();
     const auto row = std::find_if(rows.begin(), rows.end(), [](const auto& value) {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "mugen/core/ecs/Entity.h"
-#include "mugen/sim/World.h"
+#include "mugen/sim_legacy/World.h"
 
 namespace gameui
 {
@@ -36,7 +36,7 @@ public:
     // 最近一次受到伤害数字的非英雄目标（HUD 目标血条），无则返回空实体。
     virtual mugen::Entity lastHurtTarget() const { return {}; }
     // 只读访问战斗世界（HUD 读取状态）。
-    virtual const mugen::sim::World& world() const = 0;
+    virtual const mugen::sim_legacy::World& world() const = 0;
     // 联网模式填充延迟概况并返回 true；本地模式返回 false。
     virtual bool netInfo(BattleNetInfo& /*out*/) const { return false; }
     // 暂停本地推进；仅本地模式支持，联网模式默认无操作。

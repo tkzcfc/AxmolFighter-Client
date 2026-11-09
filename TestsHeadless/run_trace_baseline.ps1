@@ -9,14 +9,14 @@ param(
 $ErrorActionPreference = 'Stop'
 $root       = Split-Path -Parent $MyInvocation.MyCommand.Path
 $clientRoot = Split-Path -Parent $root
-$cli        = Join-Path $root 'build/mugen_sim_cli'
+$cli        = Join-Path $root 'build/mugen_legacy_cli'
 $replayDir  = Join-Path $root 'data/replays'
 $scenarioDir = Join-Path $root 'data/scenarios'
 $traceName  = if ($Mode -eq 'effects') { if ($AiOff) { 'effects' } else { 'effects_ai' } } else { 'traces' }
 $traceDir   = if ($OutDir) { $OutDir } else { Join-Path $replayDir $traceName }
 
 if (-not (Test-Path -LiteralPath $cli)) {
-    Write-Error "mugen_sim_cli not found; build it first (Release)"
+    Write-Error "mugen_legacy_cli not found; build it first (Release)"
     exit 1
 }
 if (-not $Revision) {

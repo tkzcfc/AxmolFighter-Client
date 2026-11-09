@@ -1,6 +1,6 @@
 #include "doctest.h"
-#include "mugen/sim/hit/Damage.h"
-#include "mugen/sim/World.h"
+#include "mugen/sim_legacy/hit/Damage.h"
+#include "mugen/sim_legacy/World.h"
 #include <fstream>
 #include <sstream>
 #include <cmath>
@@ -8,7 +8,7 @@
 namespace
 {
 using namespace mugen;
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 // 注入顺序固定的抽样并记录消费次数。
 struct Sequence
 {

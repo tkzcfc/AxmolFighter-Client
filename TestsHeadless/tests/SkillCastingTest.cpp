@@ -112,8 +112,8 @@ TEST_CASE("Skill silence stun and resource refusal emit body shake hint")
     const auto entity = actor(world);
     slots(world, entity, {id});
     const auto index = skill::getGivenSkill(world.ecs().get<SkillPool>(entity), "A");
-    SUBCASE("silence") { world.ecs().get<sim::ExtraState>(entity).add(mugen::ExtraState::Silence); }
-    SUBCASE("stun") { world.ecs().get<sim::ExtraState>(entity).add(mugen::ExtraState::Stun); }
+    SUBCASE("silence") { world.ecs().get<sim_legacy::ExtraState>(entity).add(mugen::ExtraState::Silence); }
+    SUBCASE("stun") { world.ecs().get<sim_legacy::ExtraState>(entity).add(mugen::ExtraState::Stun); }
     SUBCASE("MP") { world.ecs().get<Vitals>(entity).mp = {}; }
     SUBCASE("EP") { world.ecs().get<Vitals>(entity).ep = {}; }
     CHECK_FALSE(skill::SkillCaster(world, entity).isAllowCast(index));

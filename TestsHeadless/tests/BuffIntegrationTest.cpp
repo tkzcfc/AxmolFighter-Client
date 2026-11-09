@@ -1,12 +1,12 @@
 #include "SkillTestSupport.h"
-#include "mugen/sim/buff/BuffHolder.h"
-#include "mugen/sim/hit/HitResolver.h"
+#include "mugen/sim_legacy/buff/BuffHolder.h"
+#include "mugen/sim_legacy/hit/HitResolver.h"
 
 // 命中事件必须通过真实接缝过滤绑定技能，再激活池内实例。
 TEST_CASE("BuffIntegration hit trigger binding gates activation")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     World world;
     const auto entity = skill_test::actor(world);
@@ -37,7 +37,7 @@ TEST_CASE("BuffIntegration hit trigger binding gates activation")
 TEST_CASE("BuffIntegration negative interval preserves exhausted finite instance")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     World world;
     const auto entity = skill_test::actor(world);
@@ -63,7 +63,7 @@ TEST_CASE("BuffIntegration negative interval preserves exhausted finite instance
 TEST_CASE("BuffIntegration stun interrupts skill and restores movement")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     World world;
     const auto entity = skill_test::actor(world);
@@ -89,11 +89,11 @@ TEST_CASE("BuffIntegration stun interrupts skill and restores movement")
     world.ecs().add(entity, pool);
     buff::BuffHolder(world, entity).invokeRule(1, buff::RuleHook::Enter);
     CHECK(world.ecs().get<SkillPool>(entity).m_current == kNoSkill);
-    CHECK(world.ecs().get<sim::ExtraState>(entity).active(mugen::ExtraState::Stun));
+    CHECK(world.ecs().get<sim_legacy::ExtraState>(entity).active(mugen::ExtraState::Stun));
     CHECK(world.ecs().get<Displacement>(entity).velocityScale.x == Fixed{});
     CHECK(world.ecs().get<Displacement>(entity).velocityScale.z == Fixed{});
     buff::BuffHolder(world, entity).destroyBuff();
-    CHECK_FALSE(world.ecs().get<sim::ExtraState>(entity).active(mugen::ExtraState::Stun));
+    CHECK_FALSE(world.ecs().get<sim_legacy::ExtraState>(entity).active(mugen::ExtraState::Stun));
     CHECK(world.ecs().get<Displacement>(entity).velocityScale.x == "1"_fx);
     CHECK(world.ecs().get<Displacement>(entity).velocityScale.z == "1"_fx);
 }
@@ -102,7 +102,7 @@ TEST_CASE("BuffIntegration stun interrupts skill and restores movement")
 TEST_CASE("BuffIntegration real invincibility application removal and update")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     World world;
     const auto entity = skill_test::actor(world);
@@ -110,18 +110,18 @@ TEST_CASE("BuffIntegration real invincibility application removal and update")
     hit::HitResolver(world, entity).addEntityBuff(201);
     REQUIRE(world.ecs().has<BuffPool>(entity));
     REQUIRE(world.hitHooks().m_hasBuff(world, entity, 201));
-    CHECK(world.ecs().get<sim::ExtraState>(entity).active(mugen::ExtraState::Invincible));
+    CHECK(world.ecs().get<sim_legacy::ExtraState>(entity).active(mugen::ExtraState::Invincible));
     buff::BuffHolder(world, entity).removeBuff(201, true);
     buff::BuffHolder(world, entity).update();
     CHECK_FALSE(world.hitHooks().m_hasBuff(world, entity, 201));
-    CHECK_FALSE(world.ecs().get<sim::ExtraState>(entity).active(mugen::ExtraState::Invincible));
+    CHECK_FALSE(world.ecs().get<sim_legacy::ExtraState>(entity).active(mugen::ExtraState::Invincible));
 }
 
 // 技能和命中接缝都必须进入同一个池，而非只记录请求。
 TEST_CASE("BuffIntegration hit application reaches pool and clones deterministically")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     World world;
     const auto entity = skill_test::actor(world);
@@ -138,6 +138,6 @@ TEST_CASE("BuffIntegration hit application reaches pool and clones deterministic
         REQUIRE(world.hash() == clone.hash());
     }
     buff::BuffHolder(world, entity).destroyBuff();
-    CHECK_FALSE(world.ecs().get<sim::ExtraState>(entity).active(mugen::ExtraState::Invincible));
+    CHECK_FALSE(world.ecs().get<sim_legacy::ExtraState>(entity).active(mugen::ExtraState::Invincible));
     CHECK(world.ecs().get<BuffPool>(entity).m_instances.empty());
 }

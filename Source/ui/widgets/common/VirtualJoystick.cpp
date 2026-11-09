@@ -65,11 +65,11 @@ void VirtualJoystick::release()
 void VirtualJoystick::setDirection(bool left, bool right, bool up, bool down)
 {
     const std::array<bool, 4> next = {left, right, up, down};
-    const std::array<mugen::sim::ControlKey, 4> keys = {
-        mugen::sim::ControlKey::Left,
-        mugen::sim::ControlKey::Right,
-        mugen::sim::ControlKey::Up,
-        mugen::sim::ControlKey::Down,
+    const std::array<mugen::sim_legacy::ControlKey, 4> keys = {
+        mugen::sim_legacy::ControlKey::Left,
+        mugen::sim_legacy::ControlKey::Right,
+        mugen::sim_legacy::ControlKey::Up,
+        mugen::sim_legacy::ControlKey::Down,
     };
     for (size_t i = 0; i < next.size(); ++i)
     {
@@ -81,17 +81,17 @@ void VirtualJoystick::setDirection(bool left, bool right, bool up, bool down)
     }
 }
 
-bool VirtualJoystick::isDirectionPressed(mugen::sim::ControlKey key) const
+bool VirtualJoystick::isDirectionPressed(mugen::sim_legacy::ControlKey key) const
 {
     switch (key)
     {
-    case mugen::sim::ControlKey::Left:
+    case mugen::sim_legacy::ControlKey::Left:
         return m_direction[0];
-    case mugen::sim::ControlKey::Right:
+    case mugen::sim_legacy::ControlKey::Right:
         return m_direction[1];
-    case mugen::sim::ControlKey::Up:
+    case mugen::sim_legacy::ControlKey::Up:
         return m_direction[2];
-    case mugen::sim::ControlKey::Down:
+    case mugen::sim_legacy::ControlKey::Down:
         return m_direction[3];
     default:
         return false;

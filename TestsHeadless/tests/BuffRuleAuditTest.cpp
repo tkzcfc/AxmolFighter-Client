@@ -1,9 +1,9 @@
 #include "doctest.h"
 #include "SkillTestSupport.h"
-#include "mugen/sim/buff/BuffRules.h"
-#include "mugen/sim/buff/BuffPool.h"
-#include "mugen/sim/buff/BuffHolder.h"
-#include "mugen/sim/Singletons.h"
+#include "mugen/sim_legacy/buff/BuffRules.h"
+#include "mugen/sim_legacy/buff/BuffPool.h"
+#include "mugen/sim_legacy/buff/BuffHolder.h"
+#include "mugen/sim_legacy/Singletons.h"
 
 #include <array>
 
@@ -29,7 +29,7 @@ constexpr std::array markers{
 TEST_CASE("BuffRuleAudit marker rules are ported no-ops and never warn")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     loadConfig();
     World world;
     const auto entity = actor(world);
@@ -40,7 +40,7 @@ TEST_CASE("BuffRuleAudit marker rules are ported no-ops and never warn")
         const auto& dispatch = buff::ruleDispatch(rule);
         for (const auto& hook : dispatch.m_hooks)
             hook(world, entity, 1, {});
-        CHECK(world.ecs().singleton<mugen::sim::RoomState>().m_unportedBuffIds.empty());
+        CHECK(world.ecs().singleton<mugen::sim_legacy::RoomState>().m_unportedBuffIds.empty());
     }
 }
 
@@ -48,7 +48,7 @@ TEST_CASE("BuffRuleAudit marker rules are ported no-ops and never warn")
 TEST_CASE("BuffRuleAudit ImmuneDebuff rejects debuff admission")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     loadConfig();
     World world;
     const auto entity = actor(world);

@@ -1,8 +1,8 @@
 #include <doctest.h>
-#include "mugen/sim/World.h"
+#include "mugen/sim_legacy/World.h"
 
 using namespace mugen;
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 
 TEST_CASE("Room KO curve preserves sequential phase boundaries")
 {

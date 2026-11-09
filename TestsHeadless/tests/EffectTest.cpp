@@ -1,8 +1,8 @@
 #include "SkillTestSupport.h"
 #include "../support/ContentVfs.h"
-#include "mugen/sim/effect/Effect.h"
-#include "mugen/sim/skill/SkillCaster.h"
-#include "mugen/sim/hit/DamageCalculator.h"
+#include "mugen/sim_legacy/effect/Effect.h"
+#include "mugen/sim_legacy/skill/SkillCaster.h"
+#include "mugen/sim_legacy/hit/DamageCalculator.h"
 
 using namespace skill_test;
 namespace

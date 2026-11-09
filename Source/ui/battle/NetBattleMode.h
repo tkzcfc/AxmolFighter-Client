@@ -4,8 +4,8 @@
 #include "ui/battle/BattleBootParams.h"
 #include "ui/battle/BattleDebugPanel.h"
 #include "mugen/render/battle/PoseTrack.h"
-#include "mugen/sim/input/ControlManagerCore.h"
-#include "mugen/sim/net/NetBattleSync.h"
+#include "mugen/sim_legacy/input/ControlManagerCore.h"
+#include "mugen/sim_legacy/net/NetBattleSync.h"
 
 #include <net/client_battle.pb.h>
 
@@ -81,7 +81,7 @@ public:
     void onExit() override;
     void renderDebugPanel();
 
-    const mugen::sim::World& world() const override;
+    const mugen::sim_legacy::World& world() const override;
     mugen::Entity localPlayer() const override { return m_localPlayer; }
     mugen::Entity lastHurtTarget() const override { return m_lastHurtTarget; }
     bool netInfo(BattleNetInfo& out) const override;
@@ -127,11 +127,11 @@ private:
 
     class WorldPresenterHolder;
     std::unique_ptr<WorldPresenterHolder> m_presenter;
-    std::unique_ptr<mugen::sim::net::NetBattleSync> m_sync;
+    std::unique_ptr<mugen::sim_legacy::net::NetBattleSync> m_sync;
 
     NetBattleParams m_params;
     net::NetAgent& m_agent;
-    mugen::sim::ControlManagerCore m_control;
+    mugen::sim_legacy::ControlManagerCore m_control;
     BattleDebugPanel m_debugPanel;
 
     uint32_t m_localSlot = 0;
@@ -154,7 +154,7 @@ private:
     // 整场战斗中出现过的最坏值，便于复现后读取。
     NetBattlePerfWindow m_perfWorst;
     // 当前窗口起点的回滚统计，窗口结束时求差。
-    mugen::sim::rollback::RollbackStats m_perfStatsBase;
+    mugen::sim_legacy::rollback::RollbackStats m_perfStatsBase;
     float m_perfWindowElapsed = 0.0f;
     // 当前渲染帧内网络回调累计重推帧数。
     uint64_t m_frameResim = 0;

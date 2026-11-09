@@ -1,7 +1,7 @@
 #include "SkillTestSupport.h"
 #include "../support/ContentVfs.h"
-#include "mugen/sim/attack/AttackRole.h"
-#include "mugen/sim/attack/ActionAttack.h"
+#include "mugen/sim_legacy/attack/AttackRole.h"
+#include "mugen/sim_legacy/attack/ActionAttack.h"
 
 using namespace skill_test;
 namespace

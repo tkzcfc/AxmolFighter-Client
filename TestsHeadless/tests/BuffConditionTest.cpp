@@ -1,11 +1,11 @@
 #include "SkillTestSupport.h"
-#include "mugen/sim/buff/BuffHolder.h"
+#include "mugen/sim_legacy/buff/BuffHolder.h"
 
 // 同一条件入口检查资源阈值、控制状态、绑定上下文和源顺序短路。
 TEST_CASE("BuffCondition predicates read entity and event state")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     World world;
     const auto entity = skill_test::actor(world);
     BuffInstance instance;
@@ -20,7 +20,7 @@ TEST_CASE("BuffCondition predicates read entity and event state")
     CHECK(buff::BuffHolder(world, entity).checkConditions(instance, config));
     config.condition = {103};
     CHECK_FALSE(buff::BuffHolder(world, entity).checkConditions(instance, config));
-    world.ecs().get<sim::ExtraState>(entity).add(mugen::ExtraState::SuperArmor);
+    world.ecs().get<sim_legacy::ExtraState>(entity).add(mugen::ExtraState::SuperArmor);
     CHECK(buff::BuffHolder(world, entity).checkConditions(instance, config));
     config.condition = {238, 155};
     config.conditionParam = {{"123"_fx}, {"5"_fx}};
@@ -60,7 +60,7 @@ TEST_CASE("BuffCondition predicates read entity and event state")
 TEST_CASE("BuffCondition slot identities and sampled resource changes")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     World world;
     const auto entity = skill_test::actor(world);
     SkillPool skills;

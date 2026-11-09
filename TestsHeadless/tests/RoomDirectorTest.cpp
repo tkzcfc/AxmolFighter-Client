@@ -1,10 +1,10 @@
 #include <doctest.h>
 #include "../support/ScenarioHarness.h"
-#include "mugen/sim/room/RoomDirector.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
+#include "mugen/sim_legacy/room/RoomDirector.h"
+#include "mugen/sim_legacy/spawn/RoleSpawn.h"
 
 using namespace mugen;
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 namespace
 {
 struct RoomFixture
@@ -41,7 +41,7 @@ struct RoomFixture
         ticks(6);
         REQUIRE(state().m_state == mugen::RoomState::Process);
     }
-    sim::RoomState& state() { return m_world.ecs().singleton<sim::RoomState>(); }
+    sim_legacy::RoomState& state() { return m_world.ecs().singleton<sim_legacy::RoomState>(); }
     void ticks(int count)
     {
         for (int i = 0; i < count; ++i)
@@ -167,7 +167,7 @@ TEST_CASE("Room FrameInput revive reaches ActionRevive in real role pipeline")
     config.battleRuleType = 3;
     config.battleRuleParam = {100};
     REQUIRE(room::RoomDirector(world).enter(config, 0, 0));
-    auto& state = world.ecs().singleton<sim::RoomState>();
+    auto& state = world.ecs().singleton<sim_legacy::RoomState>();
     state.m_maxRevives = 1;
     state.m_reviving = true;
     world.ecs().get<RoleStatus>(entity).eEntityStatus = EntityRoleStatus::Death;

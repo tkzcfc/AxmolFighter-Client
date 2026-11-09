@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mugen/sim/World.h"
-#include "mugen/sim/input/FrameInput.h"
+#include "mugen/sim_legacy/World.h"
+#include "mugen/sim_legacy/input/FrameInput.h"
 #include "mugen/core/math/FixedVec3.h"
 #include "mugen/render/battle/WorldPresenter.h"
 #include "net/NetAgent.h"
@@ -24,7 +24,7 @@ namespace gameui
 class TownSync
 {
 public:
-    TownSync(mugen::sim::World& world, mugen::WorldPresenter& presenter, net::NetAgent& agent);
+    TownSync(mugen::sim_legacy::World& world, mugen::WorldPresenter& presenter, net::NetAgent& agent);
 
     // 注册城镇推送监听（enter/leave/appearance/states）。在 Agent 生命周期内调用一次。
     void start();
@@ -36,7 +36,7 @@ public:
     void tick(float logicDt);
 
     // 取走并清空本逻辑帧累积的木偶更新。
-    std::vector<mugen::sim::PuppetUpdate> takePuppetUpdates();
+    std::vector<mugen::sim_legacy::PuppetUpdate> takePuppetUpdates();
 
     // 清空全部远端玩家（含宠物）。
     void clear();
@@ -96,7 +96,7 @@ private:
 
     static mugen::FixedVec3 toFixedVec3(float x, float y, float z);
 
-    mugen::sim::World& m_world;
+    mugen::sim_legacy::World& m_world;
     mugen::WorldPresenter& m_presenter;
     net::NetAgent& m_agent;
     int64_t m_localPlayerId = 0;
@@ -106,7 +106,7 @@ private:
     bool m_hasOffset       = false;
 
     std::map<int64_t, RemotePlayer> m_players;
-    std::vector<mugen::sim::PuppetUpdate> m_pendingPuppetUpdates;
+    std::vector<mugen::sim_legacy::PuppetUpdate> m_pendingPuppetUpdates;
 };
 
 }  // namespace gameui

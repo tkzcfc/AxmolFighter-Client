@@ -1,5 +1,5 @@
 #pragma once
-#include "ControlQuadrant.h"
+#include "mugen/sim/input/ControlQuadrant.h"
 #include "mugen/conf/GameDef.h"
 #include "mugen/core/reflect/Reflect.h"
 

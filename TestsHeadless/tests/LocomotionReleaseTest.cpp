@@ -1,10 +1,10 @@
 #include "doctest.h"
 #include "../support/ContentVfs.h"
-#include "mugen/sim/input/ControlManagerCore.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
+#include "mugen/sim_legacy/input/ControlManagerCore.h"
+#include "mugen/sim_legacy/spawn/RoleSpawn.h"
 
 using namespace mugen;
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 
 namespace
 {

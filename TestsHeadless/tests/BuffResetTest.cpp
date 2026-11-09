@@ -1,12 +1,12 @@
 #include "doctest.h"
 #include "SkillTestSupport.h"
-#include "mugen/sim/buff/BuffHolder.h"
+#include "mugen/sim_legacy/buff/BuffHolder.h"
 
 // 全部移层和强制单层分支使用同一真实配置，刷新取消旧退出定时器。
 TEST_CASE("BuffReset remove repeat all and forced single layer")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     REQUIRE(conf::Config::instance().get<conf::BuffConfig>(1).removeRepeatAll == 1);
     for (const bool force : {false, true})
@@ -39,7 +39,7 @@ TEST_CASE("BuffReset remove repeat all and forced single layer")
 TEST_CASE("BuffReset all eight policies update instance counters and stacks")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     const auto& rows = conf::Config::instance().table<conf::BuffConfig>();
     const auto selected = std::find_if(rows.begin(), rows.end(), [](const auto& row) {
@@ -75,7 +75,7 @@ TEST_CASE("BuffReset all eight policies update instance counters and stacks")
 TEST_CASE("BuffReset stacking does not enter invincibility on a dead role")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     const auto config = conf::Config::instance().get<conf::BuffConfig>(201);
     REQUIRE(config.executeType == 1);
@@ -95,7 +95,7 @@ TEST_CASE("BuffReset stacking does not enter invincibility on a dead role")
         auto incoming = config;
         incoming.resetType = 4;
         buff::BuffHolder(world, entity).resetInstance(1, incoming);
-        CHECK(world.ecs().get<sim::ExtraState>(entity).active(mugen::ExtraState::Invincible) == !dead);
+        CHECK(world.ecs().get<sim_legacy::ExtraState>(entity).active(mugen::ExtraState::Invincible) == !dead);
         CHECK(buff::BuffHolder(world, entity).findInstance(1)->m_appliedRefs == (dead ? 0 : 1));
     }
 }

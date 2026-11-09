@@ -1,11 +1,11 @@
 #include "doctest.h"
-#include "mugen/sim/hit/Damage.h"
+#include "mugen/sim_legacy/hit/Damage.h"
 #include <array>
 
 namespace
 {
 using namespace mugen;
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 // 固定顺序的抽样，供暴击与浮动两次读取。
 struct Sequence
 {

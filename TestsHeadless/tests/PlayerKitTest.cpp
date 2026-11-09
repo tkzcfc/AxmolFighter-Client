@@ -1,5 +1,5 @@
 #include "SkillTestSupport.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
+#include "mugen/sim_legacy/spawn/RoleSpawn.h"
 #include <algorithm>
 #include <variant>
 

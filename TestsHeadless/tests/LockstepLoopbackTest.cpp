@@ -1,9 +1,9 @@
 #include <doctest.h>
 #include "../support/ScenarioHarness.h"
-#include "mugen/sim/BattleBootstrap.h"
-#include "mugen/sim/net/LockstepAuthority.h"
-#include "mugen/sim/net/NetCodec.h"
-#include "mugen/sim/rollback/RollbackSession.h"
+#include "mugen/sim_legacy/BattleBootstrap.h"
+#include "mugen/sim_legacy/net/LockstepAuthority.h"
+#include "mugen/sim_legacy/net/NetCodec.h"
+#include "mugen/sim_legacy/rollback/RollbackSession.h"
 #include <array>
 #include <cstdint>
 #include <limits>
@@ -14,9 +14,9 @@
 #include <vector>
 
 using namespace mugen;
-using namespace mugen::sim;
-using namespace mugen::sim::net;
-using namespace mugen::sim::rollback;
+using namespace mugen::sim_legacy;
+using namespace mugen::sim_legacy::net;
+using namespace mugen::sim_legacy::rollback;
 
 namespace
 {

@@ -16,14 +16,17 @@ Source/mugen/
   conf/      namespace mugen::conf. Reflected config tables and runtime Config.
   avatar/    MotionPlayer and avatar/data (.motion, .box, avatar.bin). No engine headers.
   render/    Client only. The whole tree is inside #ifdef RUNTIME_IN_AXMOL.
-  sim/       namespace mugen::sim. Battle logic. No engine dependency.
+  sim_legacy/ namespace mugen::sim_legacy. Current battle logic, frozen (no new features; the new ECS sim goes into a new `sim/` per DESIGN.md). No engine dependency.
+  sim/       namespace mugen::sim. New ECS battle sim (DESIGN.md, slices S0–S8; currently S0 skeleton). `kSchedule` in sim/Schedule.h is the only frame order; systems are `void runXxx(World&)` in `XxxSystem.cpp`, talk only through components and `EventQueue` singletons, and never include each other. Never include sim_legacy.
 ```
+
+Headless targets: `mugen_tests` and `mugen_legacy_cli` link `sim_legacy`; `mugen_sim_tests` and `mugen_sim_cli` link `sim`. No binary links both. Equivalence is checked with effect-summary goldens in `TestsHeadless/data/golden_summaries/` (`mugen_legacy_cli export-summary`, `compare-summary`, `run_summary_export.ps1`; format in DESIGN.md appendix A).
 
 `render/` and `Source/ui/` are the only places that may include the engine. `avatar/` must not include engine or spine headers.
 
 ## Prohibitions
 
-In `core/` and `sim/`:
+In `core/`, `sim/` and `sim_legacy/`:
 
 - Do not include engine, spine, imgui, or rapidjson headers.
 - Do not use `float` or `double`. The exception is a function whose name says it converts for rendering.
@@ -36,7 +39,7 @@ Comments may be Chinese. Log, error, and assert strings are English. Comments mu
 ## Binding code conventions
 
 - Comment every type, member variable, and function with a concise Chinese comment. Trivial accessors may omit one.
-- In `core/` and `sim/`, do not use runtime exceptions for error handling. Use English `MG_ASSERT` plus `MG_LOG_E`; return `bool`, `std::optional`, or `nullptr` only when a caller must gracefully handle failure.
+- In `core/` and `sim_legacy/`, do not use runtime exceptions for error handling. Use English `MG_ASSERT` plus `MG_LOG_E`; return `bool`, `std::optional`, or `nullptr` only when a caller must gracefully handle failure.
 - Put readability first: use plain, explicit constructs; do not introduce clever templates or surprising implicit conversions.
 - Mugen may run multiple instances in one server process: only process-wide read-only data may be singleton or static; per-battle mutable state must be owned by an instance.
 
@@ -46,24 +49,24 @@ No compatibility shim. Interfaces can change. Do not null-check a value the type
 
 - `Entity` is a generational handle. Index 20 bits, generation 12 bits, `0` is invalid. Freed slots recycle FIFO.
 - Components are copyable reflected structs. No virtual functions, no owning pointers.
-- `MG_COMPONENT_LIST` in `sim/Components.h` is the only component registry. `MG_SINGLETON_LIST` in `sim/Singletons.h` is the only singleton registry.
+- `MG_COMPONENT_LIST` in `sim_legacy/Components.h` is the only component registry. `MG_SINGLETON_LIST` in `sim_legacy/Singletons.h` is the only singleton registry.
 - `each<Ts...>()` walks in creation order. The upper bound is fixed when the walk starts, so entities created during the walk are not visited in the same frame.
 - `destroy()` marks. `flushDestroyed()` recycles. `serialize`, `deserialize`, `clone`, and `hash` round-trip the manager.
 
 ## Behavior tree
 
-- Behavior trees now only drive effects; role brains are driven by the explicit state machine in `sim/role/brain/`.
+- Behavior trees now only drive effects; role brains are driven by the explicit state machine in `sim_legacy/role/brain/`.
 - `BTDef` is immutable and shared. `BTInstance` is a value stored on a component. Snapshots store the definition key plus the instance, not the topology.
 - Composites are Selector, Sequence, and Parallel. A guard failure makes the composite return Success. A Selector does not preempt a running child. The root does not restart itself.
 - Leaves and conditions register function pointers on `BTRegistry`. An unported leaf is `kUnimplementedLeaf`. Nothing else is a placeholder.
 
 ## Monster AI
 
-- Monster decisions are the constexpr rule table `kMonsterRules` in `sim/ai/AiRules.h`. Each row has up to three tests, one action, an optional alert flag and an optional cooldown. Add behaviour by adding a row, an `AiCondition` or an `AiAction`; do not add a tree.
+- Monster decisions are the constexpr rule table `kMonsterRules` in `sim_legacy/ai/AiRules.h`. Each row has up to three tests, one action, an optional alert flag and an optional cooldown. Add behaviour by adding a row, an `AiCondition` or an `AiAction`; do not add a tree.
 - `AiDriver::update` selects the target in code, builds a read-only `AiFacts` with `gather()`, and runs the first matching row from `pickRule`. No decision is made during an attack. While a move runs, only a higher-priority row may preempt it.
 - Actions only start a status through `Role::changeStatus`. The role state machine (`CastState`, `AiMove`) executes them.
 - `ChancePercent` must be the last test of its row, so failed tests never consume the random stream.
-- `WorldSetup::m_aiEnabled` (`mugen_sim_cli --ai off`) turns monster decisions off. It is not part of the archived setup.
+- `WorldSetup::m_aiEnabled` (`mugen_legacy_cli --ai off`) turns monster decisions off. It is not part of the archived setup.
 
 ## Config
 
@@ -74,7 +77,7 @@ No compatibility shim. Interfaces can change. Do not null-check a value the type
 
 ## Simulation
 
-- `sim::World::tick(const FrameInput&)` is the only frame step. Order: clock, logic timers, control events, camera and slow motion, entity groups (Role, Effect, Obstacle, Goods, Portal), scene, collision, `flushDestroyed`.
+- `sim_legacy::World::tick(const FrameInput&)` is the only frame step. Order: clock, logic timers, control events, camera and slow motion, entity groups (Role, Effect, Obstacle, Goods, Portal), scene, collision, `flushDestroyed`.
 - Position is `(x, y, z)`: horizontal, height, depth. Facing is `towardX` in `{-1, 1}`.
 - Status bits are the only character state. Components may have non-virtual member functions over their own data; temporary view classes are allowed; no owning pointers, no virtuals.
 - Cross-entity references are `Entity` handles.
@@ -87,10 +90,10 @@ From the client repo:
 
 ```
 pwsh TestsHeadless/run_headless_tests.ps1 [-Filter <doctest filter>] [-Config Release|Debug]
-pwsh TestsHeadless/check_rules.ps1 [-Paths core,conf,avatar,sim]
+pwsh TestsHeadless/check_rules.ps1 [-Paths core,conf,avatar,sim_legacy]
 ```
 
-`run_headless_tests.ps1` configures, builds, runs `mugen_tests`, and returns its exit code. `check_rules.ps1` prints `file:line: rule` and returns non-zero on a violation. `mugen_sim_cli` replays and runs rooms headless.
+`run_headless_tests.ps1` configures, builds, runs `mugen_tests`, and returns its exit code. `check_rules.ps1` prints `file:line: rule` and returns non-zero on a violation. `mugen_legacy_cli` replays and runs rooms headless.
 
 
 ## VFS mount topology (client)

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "FairyGUI.h"
-#include "mugen/sim/input/ControlManagerCore.h"
+#include "mugen/sim_legacy/input/ControlManagerCore.h"
 
 #include <array>
 #include <functional>
@@ -14,7 +14,7 @@ namespace gameui
 class VirtualJoystick
 {
 public:
-    using DirectionCallback = std::function<void(mugen::sim::ControlKey key, bool pressed)>;
+    using DirectionCallback = std::function<void(mugen::sim_legacy::ControlKey key, bool pressed)>;
 
     // 摇杆死区占半径的比例。
     static constexpr float kDeadZone = 0.25f;
@@ -22,7 +22,7 @@ public:
     bool bind(fairygui::GComponent* joystick, DirectionCallback onDirectionChanged);
     void release();
 
-    bool isDirectionPressed(mugen::sim::ControlKey key) const;
+    bool isDirectionPressed(mugen::sim_legacy::ControlKey key) const;
     const std::array<bool, 4>& directions() const { return m_direction; }
 
 private:

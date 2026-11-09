@@ -1,8 +1,8 @@
 #include "doctest.h"
-#include "mugen/sim/buff/BuffLifecycle.h"
+#include "mugen/sim_legacy/buff/BuffLifecycle.h"
 
 using namespace mugen;
-using namespace mugen::sim::buff;
+using namespace mugen::sim_legacy::buff;
 
 // 验证周期检查先于秒制累加以及每帧一次的规则。
 TEST_CASE("BuffLifecycle interval branches retain check before accumulation")

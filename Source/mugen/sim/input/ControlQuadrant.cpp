@@ -1,4 +1,4 @@
-#include "ControlQuadrant.h"
+#include "mugen/sim/input/ControlQuadrant.h"
 
 namespace mugen::sim
 {

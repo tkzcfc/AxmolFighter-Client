@@ -1,12 +1,12 @@
 #include "doctest.h"
 #include "SkillTestSupport.h"
-#include "mugen/sim/buff/BuffRules.h"
+#include "mugen/sim_legacy/buff/BuffRules.h"
 
 // 通过生产分派表验证状态引用和所有规则的非空钩子。
 TEST_CASE("BuffRules dispatch owns state references")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     World world;
     const auto entity = skill_test::actor(world);
@@ -33,12 +33,12 @@ TEST_CASE("BuffRules dispatch owns state references")
         const auto& dispatch = buff::ruleDispatch(rule);
         dispatch.m_hooks[0](world, entity, instance.m_serial, {});
         dispatch.m_hooks[0](world, entity, instance.m_serial, {});
-        CHECK(world.ecs().get<sim::ExtraState>(entity).active(state));
+        CHECK(world.ecs().get<sim_legacy::ExtraState>(entity).active(state));
         CHECK(world.ecs().get<BuffPool>(entity).m_ruleCounters.at(row->ruleId) == 2);
         dispatch.m_hooks[1](world, entity, instance.m_serial, {});
-        CHECK(world.ecs().get<sim::ExtraState>(entity).active(state));
+        CHECK(world.ecs().get<sim_legacy::ExtraState>(entity).active(state));
         dispatch.m_hooks[1](world, entity, instance.m_serial, {});
-        CHECK_FALSE(world.ecs().get<sim::ExtraState>(entity).active(state));
+        CHECK_FALSE(world.ecs().get<sim_legacy::ExtraState>(entity).active(state));
     }
     for (size_t index = 0; index < conf::kBuffRuleNames.size(); ++index)
         for (auto hook : buff::ruleDispatch(static_cast<conf::BuffRuleId>(index)).m_hooks)

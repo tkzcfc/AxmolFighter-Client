@@ -2,7 +2,7 @@
 #include "../support/ScenarioHarness.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
 #include "mugen/conf/ReflectedConfig.h"
-#include "mugen/sim/Replay.h"
+#include "mugen/sim_legacy/Replay.h"
 #include <cstring>
 #include <cstdlib>
 #include <filesystem>
@@ -13,7 +13,7 @@ extern std::string executablePath;
 }
 
 using namespace mugen;
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 
 namespace
 {
@@ -216,7 +216,7 @@ TEST_CASE("World input queues preserve ordering and reject frames transactionall
     CHECK(commands[0].angle == 45000);
     CHECK(commands[1].controlEvent == ControlEvent::CTR_ATKA);
     CHECK(world.ecs().singleton<WorldClock>().dtMs == Fixed{});
-    CHECK(world.ecs().singleton<sim::RoomState>().reviveRequests[0].slot == 4);
+    CHECK(world.ecs().singleton<sim_legacy::RoomState>().reviveRequests[0].slot == 4);
     const auto before = world.hash();
 #if !defined(NDEBUG)
     const std::string executable = ecs_test::executablePath;
@@ -233,7 +233,7 @@ TEST_CASE("World input queues preserve ordering and reject frames transactionall
     input.systemCommands.push_back(PauseCommand{false});
     input.puppetUpdates.push_back({entity, {Fixed::fromInt(1), {}, Fixed::fromInt(3)}, -1, EntityRoleStatus::None});
     world.tick(input);
-    CHECK(world.ecs().singleton<sim::RoomState>().puppetUpdates[0].position.z == Fixed::fromInt(3));
+    CHECK(world.ecs().singleton<sim_legacy::RoomState>().puppetUpdates[0].position.z == Fixed::fromInt(3));
     CHECK(world.ecs().singleton<WorldClock>().dtMs == kLogicDtMs);
     CHECK(harness.expectEntityCount(1));
     CHECK_FALSE(harness.expectEntityCount(2));

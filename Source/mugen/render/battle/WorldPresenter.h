@@ -1,7 +1,7 @@
 #pragma once
 
 #include "mugen/core/StdC.h"
-#include "mugen/sim/World.h"
+#include "mugen/sim_legacy/World.h"
 
 #ifdef RUNTIME_IN_AXMOL
 
@@ -27,7 +27,7 @@ class AvatarPresenter
 public:
     explicit AvatarPresenter(ax::Node& root) : m_root(root) {}
 
-    void present(sim::World& world, float alpha, float renderDelta);
+    void present(sim_legacy::World& world, float alpha, float renderDelta);
     void setFollowEntity(Entity entity) { m_followEntity = entity; }
     void setPet(int32_t petId, int32_t spineId);
     void clearPet();
@@ -40,7 +40,7 @@ public:
     // Re-apply fashion on an already-created exclusive Avatar (town/battle local player).
     bool setEntityAppearance(uint32_t entityValue, const FashionAppearance& appearance);
     // 根据怒气变身事件刷新实体外观。
-    void onPartnerRageChanged(sim::World& world, Entity entity, bool active);
+    void onPartnerRageChanged(sim_legacy::World& world, Entity entity, bool active);
     // 清空节点复用池（换图时调用，池内骨架按外观分组，跨图基本不会再命中）。
     void clearPool();
     // 应用受击亮度到实体显示节点；返回是否命中已有实体。
@@ -51,7 +51,7 @@ private:
     struct LookIdentity
     {
         // 所属实体组。
-        sim::GroupKind kind = sim::GroupKind::Count;
+        sim_legacy::GroupKind kind = sim_legacy::GroupKind::Count;
         // 该组配置表中的行 id（角色 id、特效 id 等）。
         int32_t configId = 0;
         // 逻辑侧是否绑定了动作文件（决定走 Avatar 还是直接播放 Spine 动画）。
@@ -110,7 +110,7 @@ private:
     // 返回实体当前的显示节点；未创建时为空。
     static ax::Node* displayNode(const AvatarState& state);
     // 读取实体在其配置表中的行 id，用于身份比对。
-    static int32_t lookConfigId(sim::World& world, Entity entity, sim::GroupKind kind);
+    static int32_t lookConfigId(sim_legacy::World& world, Entity entity, sim_legacy::GroupKind kind);
     // 从复用池取出同外观键的节点并复位，池空返回 false。
     bool acquirePooled(AvatarState& state);
     // 摘下实体的显示节点：可复用的入池，否则直接销毁。
@@ -134,7 +134,7 @@ private:
     static FashionAppearance buildRoleAppearance(const AvatarState& state, bool transformed);
     // 刷新角色怒气变身外观并重放当前动作时间。
     bool syncPartnerRageAppearance(uint32_t entityValue,
-                                   const sim::MotionState& motion,
+                                   const sim_legacy::MotionState& motion,
                                    bool transformed,
                                    bool force);
     // 返回配置层级对应的绘制层，首次使用时按层级值作为 z 序创建。
@@ -177,8 +177,8 @@ class CameraDirector
 public:
     explicit CameraDirector(MapPresenter& map) : m_map(map) {}
 
-    void follow(sim::World& world, Entity entity);
-    void consume(const sim::PresentationEvent& event);
+    void follow(sim_legacy::World& world, Entity entity);
+    void consume(const sim_legacy::PresentationEvent& event);
     void update(float delta);
 
 private:
@@ -191,7 +191,7 @@ class SoundPlayer
 public:
     explicit SoundPlayer(uint32_t seed = 0x51A7u) : m_random(seed) {}
 
-    void consume(const sim::PresentationEvent& event);
+    void consume(const sim_legacy::PresentationEvent& event);
     void clear();
 
 private:
@@ -207,7 +207,7 @@ class HurtNumber
 public:
     explicit HurtNumber(ax::Node& root) : m_root(root) {}
     // 消费伤害数值与闪避提示事件，创建飘字。
-    void consume(const sim::PresentationEvent& event, sim::World& world);
+    void consume(const sim_legacy::PresentationEvent& event, sim_legacy::World& world);
     // 按渲染帧推进全部飘字动画。
     void update(float delta);
     // 摘除全部飘字与池内标签。
@@ -263,7 +263,7 @@ class DebugDraw
 {
 public:
     explicit DebugDraw(ax::Node& root);
-    void present(sim::World& world);
+    void present(sim_legacy::World& world);
     void setEnabled(bool enabled) { m_enabled = enabled; }
     bool enabled() const { return m_enabled; }
 
@@ -279,10 +279,10 @@ public:
     ~WorldPresenter();
 
     void loadMap(const std::string& mapKey);
-    void present(sim::World& world, float interpolationAlpha, float renderDelta);
+    void present(sim_legacy::World& world, float interpolationAlpha, float renderDelta);
     // 消费回滚会话去重后的表现事件列表（联机路径），不做 seq 单调去重。
-    void presentEvents(const std::vector<sim::PresentationEvent>& events,
-                       sim::World& world,
+    void presentEvents(const std::vector<sim_legacy::PresentationEvent>& events,
+                       sim_legacy::World& world,
                        float interpolationAlpha,
                        float renderDelta);
     void setFollowEntity(Entity entity);
@@ -297,11 +297,11 @@ public:
     // Update an existing Avatar's fashion (kAsyncExclusive only).
     bool setEntityAppearance(Entity entity, const FashionAppearance& appearance);
     // Find local player Role (!isAi + playerSlot) and apply session fashion/weapon.
-    bool refreshLocalPlayerAppearance(sim::World& world);
+    bool refreshLocalPlayerAppearance(sim_legacy::World& world);
 
 private:
     // 逐条消费表现事件；dedupeBySeq 为真时按全局单调 seq 去重（离线路径）。
-    void consumeEvents(const std::vector<sim::PresentationEvent>& events, sim::World& world, bool dedupeBySeq);
+    void consumeEvents(const std::vector<sim_legacy::PresentationEvent>& events, sim_legacy::World& world, bool dedupeBySeq);
 
     // 世界内容层，必须先于其余成员构造
     ax::Node& m_worldLayer;

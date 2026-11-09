@@ -1,13 +1,13 @@
 #include "doctest.h"
 #include "SkillTestSupport.h"
-#include "mugen/sim/buff/BuffRules.h"
-#include "mugen/sim/buff/BuffHolder.h"
-#include "mugen/sim/motion/Displacement.h"
+#include "mugen/sim_legacy/buff/BuffRules.h"
+#include "mugen/sim_legacy/buff/BuffHolder.h"
+#include "mugen/sim_legacy/motion/Displacement.h"
 
 namespace
 {
 // 为指定规则建立一个可直接调用生命周期钩子的池内实例。
-mugen::sim::BuffInstance& addRuleInstance(mugen::sim::World& world,
+mugen::sim_legacy::BuffInstance& addRuleInstance(mugen::sim_legacy::World& world,
                                           mugen::Entity entity,
                                           mugen::conf::BuffRuleId rule,
                                           uint64_t serial)
@@ -21,11 +21,11 @@ mugen::sim::BuffInstance& addRuleInstance(mugen::sim::World& world,
     const auto row =
         std::find_if(buffs.begin(), buffs.end(), [&](const auto& buff) { return buff.ruleId == ruleRow->id; });
     REQUIRE(row != buffs.end());
-    mugen::sim::BuffInstance instance;
+    mugen::sim_legacy::BuffInstance instance;
     instance.m_id     = row->id;
     instance.m_serial = serial;
-    world.ecs().get<mugen::sim::BuffPool>(entity).m_instances.push_back(instance);
-    return world.ecs().get<mugen::sim::BuffPool>(entity).m_instances.back();
+    world.ecs().get<mugen::sim_legacy::BuffPool>(entity).m_instances.push_back(instance);
+    return world.ecs().get<mugen::sim_legacy::BuffPool>(entity).m_instances.back();
 }
 }  // namespace
 
@@ -33,7 +33,7 @@ mugen::sim::BuffInstance& addRuleInstance(mugen::sim::World& world,
 TEST_CASE("BuffStatus control and movement rule families preserve state")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     World world;
     const auto entity = skill_test::actor(world);
@@ -45,11 +45,11 @@ TEST_CASE("BuffStatus control and movement rule families preserve state")
     auto& frozen               = addRuleInstance(world, entity, conf::BuffRuleId::BuffFrozen, 1);
     const auto& frozenDispatch = buff::ruleDispatch(conf::BuffRuleId::BuffFrozen);
     frozenDispatch.m_hooks[static_cast<size_t>(buff::RuleHook::Enter)](world, entity, frozen.m_serial, {});
-    CHECK(world.ecs().get<sim::ExtraState>(entity).active(mugen::ExtraState::Frozen));
+    CHECK(world.ecs().get<sim_legacy::ExtraState>(entity).active(mugen::ExtraState::Frozen));
     CHECK(world.ecs().get<Displacement>(entity).velocityScale.x == Fixed{});
     CHECK(world.ecs().get<Displacement>(entity).velocityScale.z == Fixed{});
     frozenDispatch.m_hooks[static_cast<size_t>(buff::RuleHook::Exit)](world, entity, frozen.m_serial, {});
-    CHECK_FALSE(world.ecs().get<sim::ExtraState>(entity).active(mugen::ExtraState::Frozen));
+    CHECK_FALSE(world.ecs().get<sim_legacy::ExtraState>(entity).active(mugen::ExtraState::Frozen));
     CHECK(world.ecs().get<Displacement>(entity).velocityScale.x == "1"_fx);
     CHECK(world.ecs().get<Displacement>(entity).velocityScale.z == "1"_fx);
 
@@ -74,7 +74,7 @@ TEST_CASE("BuffStatus control and movement rule families preserve state")
 TEST_CASE("BuffStatus Sneer query and WhiteFrame presentation event")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     World world;
     const auto entity = skill_test::actor(world);
@@ -101,7 +101,7 @@ TEST_CASE("BuffStatus Sneer query and WhiteFrame presentation event")
 TEST_CASE("BuffStatus reachable xstatus rules have concrete dispatch")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     constexpr std::array rules{
         conf::BuffRuleId::BuffAdjudication, conf::BuffRuleId::BuffBleeding,   conf::BuffRuleId::BuffBurn,
         conf::BuffRuleId::BuffChill,        conf::BuffRuleId::BuffCrazy,      conf::BuffRuleId::BuffCutSakura,

@@ -9,7 +9,7 @@
 #include "AppContext.h"
 #include "core/event/EventDispatcher.h"
 #include "core/event/GameEvents.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
+#include "mugen/sim_legacy/spawn/RoleSpawn.h"
 #include "resource/builtin/MapResource.h"
 #include "ui/battle/LocalRoleUtils.h"
 #include "ui/core/FeatureEntry.h"
@@ -147,9 +147,9 @@ void TownScreen::onUpdate(float delta)
     while (m_accumulator >= LOGIC_DT && catchUp < 4)
     {
         m_townSync->tick(LOGIC_DT);
-        sim::FrameInput input;
-        input.frame = m_world.ecs().singleton<sim::WorldClock>().frame + 1;
-        std::vector<sim::PlayerCommand> commands;
+        sim_legacy::FrameInput input;
+        input.frame = m_world.ecs().singleton<sim_legacy::WorldClock>().frame + 1;
+        std::vector<sim_legacy::PlayerCommand> commands;
         // 进入场景前不把本地控制输入喂进模拟：避免在服务器尚未就绪时移动，
         // 使首帧上报被服务器按出生点钳制。
         if (m_enteredScene)
@@ -347,13 +347,13 @@ bool TownScreen::initTown()
     }
 
     const auto* town = conf::Config::instance().find<conf::TownConfig>(m_boot.townId);
-    m_world.init({1, sim::WorldMode::Town, m_boot.townId, town->mapKey});
+    m_world.init({1, sim_legacy::WorldMode::Town, m_boot.townId, town->mapKey});
     const int32_t spawnX = m_boot.spawnX >= 0 ? m_boot.spawnX : town->actorPosX;
     const int32_t spawnZ = m_boot.spawnZ >= 0 ? m_boot.spawnZ : town->actorPosZ;
     const int32_t localRoleId = resolveLocalPlayerRoleId();
     m_roleRadius              = Fixed::fromInt(conf::Config::instance().getById<conf::RoleConfig>(localRoleId).radius);
     m_localEntity =
-        sim::RoleSpawner(m_world).spawnRole({.roleId     = localRoleId,
+        sim_legacy::RoleSpawner(m_world).spawnRole({.roleId     = localRoleId,
                                              .level      = 1,
                                              .position   = {Fixed::fromInt(spawnX), {}, Fixed::fromInt(spawnZ)},
                                              .toward     = m_boot.facing < 0 ? -1 : 1,
@@ -437,9 +437,9 @@ void TownScreen::fillLocalMovement(PB::Types::TownMovement* movement) const
 {
     if (!m_initialized)
         return;
-    const auto& transform = m_world.ecs().get<sim::Transform>(m_localEntity);
-    const auto& motion    = m_world.ecs().get<sim::MotionState>(m_localEntity);
-    const auto& status    = m_world.ecs().get<sim::RoleStatus>(m_localEntity);
+    const auto& transform = m_world.ecs().get<sim_legacy::Transform>(m_localEntity);
+    const auto& motion    = m_world.ecs().get<sim_legacy::MotionState>(m_localEntity);
+    const auto& status    = m_world.ecs().get<sim_legacy::RoleStatus>(m_localEntity);
     auto* pos             = movement->mutable_pos();
     pos->set_x(townToFixedPoint(transform.position.x.toFloatForRender()));
     pos->set_y(townToFixedPoint(transform.position.y.toFloatForRender()));
@@ -448,7 +448,7 @@ void TownScreen::fillLocalMovement(PB::Types::TownMovement* movement) const
     movement->set_state(motion.motionName);
     movement->set_moving(status.isMove());
     // 附带当前水平速度（像素/秒），供远端在快照不足时斜向外推。
-    const auto& hit = m_world.ecs().get<sim::RoleHitState>(m_localEntity);
+    const auto& hit = m_world.ecs().get<sim_legacy::RoleHitState>(m_localEntity);
     auto* vel       = movement->mutable_vel();
     vel->set_x(hit.forceVelocity.x.toFloatForRender());
     vel->set_y(hit.forceVelocity.y.toFloatForRender());
@@ -460,9 +460,9 @@ void TownScreen::reportLocalState(float delta)
     if (!m_enteredScene || !m_initialized)
         return;
 
-    const auto& transform = m_world.ecs().get<sim::Transform>(m_localEntity);
-    const auto& motion    = m_world.ecs().get<sim::MotionState>(m_localEntity);
-    const auto& status    = m_world.ecs().get<sim::RoleStatus>(m_localEntity);
+    const auto& transform = m_world.ecs().get<sim_legacy::Transform>(m_localEntity);
+    const auto& motion    = m_world.ecs().get<sim_legacy::MotionState>(m_localEntity);
+    const auto& status    = m_world.ecs().get<sim_legacy::RoleStatus>(m_localEntity);
     const int32_t facing  = transform.towardX < 0 ? 0 : 1;
     const bool moving     = status.isMove();
 
@@ -491,7 +491,7 @@ void TownScreen::applyLocalCorrection()
 {
     if (!m_pendingCorrection)
         return;
-    m_world.ecs().get<sim::Transform>(m_localEntity).position = *m_pendingCorrection;
+    m_world.ecs().get<sim_legacy::Transform>(m_localEntity).position = *m_pendingCorrection;
     m_pendingCorrection.reset();
     // 校正已吸附到权威位置：确认该校正序号，并强制下一帧立即上报 ack。
     m_ackCorrectionSeq = m_lastCorrectionSeq;
@@ -602,7 +602,7 @@ bool TownScreen::initInput()
         return false;
     }
     using Key                         = ax::EventKeyboard::KeyCode;
-    using ControlKey                  = sim::ControlKey;
+    using ControlKey                  = sim_legacy::ControlKey;
     m_slotMap[Key::KEY_LEFT_ARROW]    = static_cast<uint32_t>(ControlKey::Left);
     m_slotMap[Key::KEY_RIGHT_ARROW]   = static_cast<uint32_t>(ControlKey::Right);
     m_slotMap[Key::KEY_UP_ARROW]      = static_cast<uint32_t>(ControlKey::Up);
@@ -630,7 +630,7 @@ void TownScreen::setInputFromKey(ax::EventKeyboard::KeyCode code, bool pressed)
     const auto it = m_slotMap.find(code);
     if (it == m_slotMap.end())
         return;
-    const auto key = static_cast<sim::ControlKey>(it->second);
+    const auto key = static_cast<sim_legacy::ControlKey>(it->second);
     const auto idx = static_cast<size_t>(key);
     if (idx < m_keyboardHeld.size())
         m_keyboardHeld[idx] = pressed;
@@ -640,7 +640,7 @@ void TownScreen::setInputFromKey(ax::EventKeyboard::KeyCode code, bool pressed)
 void TownScreen::bindJoystick()
 {
     auto* joystick = dynamic_cast<GComponent*>(getContent()->getChild("joystick"));
-    if (!m_joystick.bind(joystick, [this](sim::ControlKey key, bool /*pressed*/) { refreshControlKey(key); }))
+    if (!m_joystick.bind(joystick, [this](sim_legacy::ControlKey key, bool /*pressed*/) { refreshControlKey(key); }))
     {
         static bool s_warnedMissingJoystick = false;
         if (!s_warnedMissingJoystick)
@@ -651,7 +651,7 @@ void TownScreen::bindJoystick()
     }
 }
 
-void TownScreen::refreshControlKey(sim::ControlKey key)
+void TownScreen::refreshControlKey(sim_legacy::ControlKey key)
 {
     const auto idx          = static_cast<size_t>(key);
     const bool keyboardHeld = idx < m_keyboardHeld.size() && m_keyboardHeld[idx];
@@ -660,7 +660,7 @@ void TownScreen::refreshControlKey(sim::ControlKey key)
 
 bool TownScreen::portalContains(const TownPortal& portal) const
 {
-    const auto& t   = m_world.ecs().get<sim::Transform>(m_localEntity);
+    const auto& t   = m_world.ecs().get<sim_legacy::Transform>(m_localEntity);
     const Fixed dx  = t.position.x - portal.posX;
     const Fixed dz  = t.position.z - portal.posZ;
     const Fixed sum = portal.radius + m_roleRadius;

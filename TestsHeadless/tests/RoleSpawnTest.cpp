@@ -1,7 +1,7 @@
 #include "doctest.h"
 #include "../support/ContentVfs.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
-#include "mugen/sim/role/RoleActor.h"
+#include "mugen/sim_legacy/spawn/RoleSpawn.h"
+#include "mugen/sim_legacy/role/RoleActor.h"
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -40,7 +40,7 @@ TEST_CASE("Attribute golden compares three role curves at two levels")
         int id, level;
         REQUIRE(static_cast<bool>(input >> id >> level));
         const auto actual =
-            mugen::sim::RoleSpawner::loadAttributes(mugen::conf::Config::instance().get<mugen::conf::RoleConfig>(id), level);
+            mugen::sim_legacy::RoleSpawner::loadAttributes(mugen::conf::Config::instance().get<mugen::conf::RoleConfig>(id), level);
         for (const auto value : actual.basic)
         {
             double expected;
@@ -58,7 +58,7 @@ TEST_CASE("Attribute golden compares three role curves at two levels")
 TEST_CASE("Spawn freezes component stage while MP regeneration continues")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     loadConfig();
     World world;
     world.init({});
@@ -85,13 +85,13 @@ TEST_CASE("Spawn freezes component stage while MP regeneration continues")
 TEST_CASE("Collider mirrors scaled box about role position")
 {
     using namespace mugen;
-    sim::Transform t;
+    sim_legacy::Transform t;
     t.position = {Fixed::fromInt(100), Fixed::fromInt(10), Fixed::fromInt(20)};
     t.scale    = Fixed::fromInt(2);
     DamageBox box{{3, 4, 5}, {7, 8, 9}};
-    const auto right = sim::role::RoleActor::transformBox(box, t);
+    const auto right = sim_legacy::role::RoleActor::transformBox(box, t);
     t.towardX        = -1;
-    const auto left  = sim::role::RoleActor::transformBox(box, t);
+    const auto left  = sim_legacy::role::RoleActor::transformBox(box, t);
     CHECK(right.pos.x == Fixed::fromInt(106));
     CHECK(left.pos.x == Fixed::fromInt(80));
     CHECK(left.size.x == right.size.x);
@@ -101,7 +101,7 @@ TEST_CASE("Collider mirrors scaled box about role position")
 TEST_CASE("Collider real motion advances after freeze expires and restores identically")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     loadConfig();
     auto* cache = AvatarAssetCache::getInstance();
     REQUIRE(mugen::test::ensureContentVfs());
@@ -136,7 +136,7 @@ TEST_CASE("Spawn MapRegion loads real layer and clamps half unit boundaries")
 {
     using namespace mugen;
     REQUIRE(mugen::test::ensureContentVfs());
-    sim::MapRegion region;
+    sim_legacy::MapRegion region;
     region.load("/mugen/map/stage9_room5_2.layer");
     REQUIRE_FALSE(region.moveRanges.empty());
     region.moveRanges = {{"7.5"_fx, "-13.5"_fx, "5"_fx, "7"_fx}};

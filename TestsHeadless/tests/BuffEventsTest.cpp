@@ -1,11 +1,11 @@
 #include "doctest.h"
-#include "mugen/sim/buff/BuffEvents.h"
+#include "mugen/sim_legacy/buff/BuffEvents.h"
 
 // 绑定技能与目标过滤必须同时满足，重置不替换初始化事件表。
 TEST_CASE("BuffEvents binding accepts only matching skill and event")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     conf::BuffConfig config;
     config.began = 4;
     config.ended = 6;

@@ -1,12 +1,12 @@
 #include <doctest.h>
 #include "../support/ScenarioHarness.h"
 #include "mugen/conf/TypeConversions.h"
-#include "mugen/sim/BattleBootstrap.h"
+#include "mugen/sim_legacy/BattleBootstrap.h"
 
 #include <array>
 
 using namespace mugen;
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 
 namespace
 {
@@ -49,7 +49,7 @@ Fixed attackDamage(CharacterClass first, CharacterClass second, uint32_t attacke
     auto& ecs = world.ecs();
     for (int i = 0; i < 12; ++i)
         tickWith(world, {});
-    REQUIRE(ecs.singleton<sim::RoomState>().m_state == mugen::RoomState::Process);
+    REQUIRE(ecs.singleton<sim_legacy::RoomState>().m_state == mugen::RoomState::Process);
 
     const Entity attacker = heroes[attackerSlot];
     const Entity target   = heroes[1 - attackerSlot];

@@ -1,14 +1,14 @@
 #include <doctest/doctest.h>
 #include "../support/ContentVfs.h"
-#include "mugen/sim/role/Role.h"
+#include "mugen/sim_legacy/role/Role.h"
 #include "SkillTestSupport.h"
-#include "mugen/sim/role/brain/RoleBrainDriver.h"
-#include "mugen/sim/role/brain/states/HitStates.h"
+#include "mugen/sim_legacy/role/brain/RoleBrainDriver.h"
+#include "mugen/sim_legacy/role/brain/states/HitStates.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
 #include <iostream>
 
 using namespace mugen;
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 
 namespace
 {
@@ -194,8 +194,8 @@ TEST_CASE("HitState World death on floor reaches destroy and both events")
     CHECK(death);
     CHECK_FALSE(ecs.alive(f.m_entity));
     CHECK(presentation);
-    REQUIRE(ecs.singleton<sim::RoomState>().m_roleDeaths.size() == 1);
-    CHECK(ecs.singleton<sim::RoomState>().m_roleDeaths.front() == f.m_entity);
+    REQUIRE(ecs.singleton<sim_legacy::RoomState>().m_roleDeaths.size() == 1);
+    CHECK(ecs.singleton<sim_legacy::RoomState>().m_roleDeaths.front() == f.m_entity);
 }
 
 // 真实死亡配置必须生成中立效果并调用一次物品接缝。
@@ -374,11 +374,11 @@ TEST_CASE("HitState Controlled preserves Palsy animation unless Stun is active")
     HitStateWorld f;
     auto& ecs = f.m_world.ecs();
     ecs.get<MotionState>(f.m_entity).motionName = "stand";
-    ecs.get<sim::ExtraState>(f.m_entity).add(mugen::ExtraState::Palsy);
+    ecs.get<sim_legacy::ExtraState>(f.m_entity).add(mugen::ExtraState::Palsy);
     behavior::HitActionState leaf;
     hitEnter(f.m_world, f.m_entity, behavior::ActionType::Controlled, leaf);
     CHECK(ecs.get<MotionState>(f.m_entity).motionName == "stand");
-    ecs.get<sim::ExtraState>(f.m_entity).add(mugen::ExtraState::Stun);
+    ecs.get<sim_legacy::ExtraState>(f.m_entity).add(mugen::ExtraState::Stun);
     hitEnter(f.m_world, f.m_entity, behavior::ActionType::Controlled, leaf);
     CHECK(ecs.get<MotionState>(f.m_entity).motionName == "hit");
     const auto& events = ecs.singleton<PresentationEvents>().events;

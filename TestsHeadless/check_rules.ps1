@@ -184,7 +184,7 @@ function Test-ForbiddenTokens {
         [string[]]$Lines
     )
     $full = $File.FullName.Replace('\', '/')
-    $inCoreOrSim = $full -match '/mugen/(core|sim)/'
+    $inCoreOrSim = $full -match '/mugen/(core|sim_legacy|sim)/'
     $checkDeterminismTokens = $inCoreOrSim
     for ($i = 0; $i -lt $Lines.Count; $i++) {
         $line = $Lines[$i]

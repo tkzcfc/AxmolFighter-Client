@@ -8,9 +8,9 @@
 #    include "mugen/conf/ReflectedConfig.h"
 #    include "mugen/conf/TypeConversions.h"
 #    include "mugen/conf/tables/PetTables.h"
-#    include "mugen/sim/effect/Effect.h"
-#    include "mugen/sim/room/RoomEntities.h"
-#    include "mugen/sim/role/RoleComponents.h"
+#    include "mugen/sim_legacy/effect/Effect.h"
+#    include "mugen/sim_legacy/room/RoomEntities.h"
+#    include "mugen/sim_legacy/role/RoleComponents.h"
 #    include "ui/progress/SessionFashionAppearance.h"
 
 #    include <algorithm>
@@ -27,7 +27,7 @@ float renderValue(Fixed value)
     return value.toFloatForRender();
 }
 
-int32_t chooseSoundId(const sim::Sound& sound, std::minstd_rand& random)
+int32_t chooseSoundId(const sim_legacy::Sound& sound, std::minstd_rand& random)
 {
     if (sound.id > 0)
         return sound.id;
@@ -75,29 +75,29 @@ AvatarLook lookFromRow(const Row& row)
 }
 
 // 按实体组找到对应配置行；各组的配置 id 均已在生成时校验。
-AvatarLook resolveLook(sim::World& world, Entity entity, sim::GroupKind kind)
+AvatarLook resolveLook(sim_legacy::World& world, Entity entity, sim_legacy::GroupKind kind)
 {
     auto& ecs          = world.ecs();
     const auto& config = conf::Config::instance();
     switch (kind)
     {
-    case sim::GroupKind::Role:
+    case sim_legacy::GroupKind::Role:
     {
-        const int32_t roleId = ecs.get<sim::RoleIdentity>(entity).roleId;
+        const int32_t roleId = ecs.get<sim_legacy::RoleIdentity>(entity).roleId;
         AvatarLook look      = lookFromRow(config.get<conf::RoleConfig>(roleId));
         look.roleId          = roleId;
         look.characterClass  = type_conversions::toCharacterClass(roleId);
         return look;
     }
-    case sim::GroupKind::Effect:
-        return lookFromRow(config.get<conf::EffectConfig>(ecs.get<sim::EffectState>(entity).m_configId));
-    case sim::GroupKind::Obstacle:
-        return lookFromRow(config.get<conf::ObstacleConfig>(ecs.get<sim::ObstacleState>(entity).m_id));
-    case sim::GroupKind::Goods:
-        return lookFromRow(config.get<conf::GoodsConfig>(ecs.get<sim::GoodsState>(entity).m_id));
-    case sim::GroupKind::Portal:
-        return lookFromRow(config.get<conf::PortalConfig>(ecs.get<sim::PortalState>(entity).m_id));
-    case sim::GroupKind::Count:
+    case sim_legacy::GroupKind::Effect:
+        return lookFromRow(config.get<conf::EffectConfig>(ecs.get<sim_legacy::EffectState>(entity).m_configId));
+    case sim_legacy::GroupKind::Obstacle:
+        return lookFromRow(config.get<conf::ObstacleConfig>(ecs.get<sim_legacy::ObstacleState>(entity).m_id));
+    case sim_legacy::GroupKind::Goods:
+        return lookFromRow(config.get<conf::GoodsConfig>(ecs.get<sim_legacy::GoodsState>(entity).m_id));
+    case sim_legacy::GroupKind::Portal:
+        return lookFromRow(config.get<conf::PortalConfig>(ecs.get<sim_legacy::PortalState>(entity).m_id));
+    case sim_legacy::GroupKind::Count:
         break;
     }
     MG_LOG_E("AvatarPresenter: invalid entity group {}", static_cast<int>(kind));
@@ -144,12 +144,12 @@ float offsetAxis(const std::vector<int32_t>& offset, size_t index)
 }
 }  // namespace
 
-void AvatarPresenter::present(sim::World& world, float alpha, float renderDelta)
+void AvatarPresenter::present(sim_legacy::World& world, float alpha, float renderDelta)
 {
     std::set<uint32_t> live;
-    world.ecs().each<sim::EntityGroup, sim::Transform, sim::MotionState>(
-        [&](Entity entity, const sim::EntityGroup& group, const sim::Transform& transform,
-            const sim::MotionState& motion) {
+    world.ecs().each<sim_legacy::EntityGroup, sim_legacy::Transform, sim_legacy::MotionState>(
+        [&](Entity entity, const sim_legacy::EntityGroup& group, const sim_legacy::Transform& transform,
+            const sim_legacy::MotionState& motion) {
         live.insert(entity.value);
         auto& state = m_avatars[entity.value];
         // 回滚恢复快照后同一句柄可能指向另一个实体：身份变化则整体重建显示。
@@ -164,7 +164,7 @@ void AvatarPresenter::present(sim::World& world, float alpha, float renderDelta)
             const SpineInfo spine = AvatarPaths::resolveSpine(look.resSpineId);
             if (!spine.valid)
                 return;
-            const bool roleEntity = group.kind == sim::GroupKind::Role;
+            const bool roleEntity = group.kind == sim_legacy::GroupKind::Role;
             state.fashionAvatar   = roleEntity && look.characterClass != CharacterClass::kUnknown;
             // 只有被镜头跟随的本地玩家使用会话时装；对端玩家按各自职业默认外观创建。
             state.useSessionFashion = roleEntity && entity == m_followEntity;
@@ -226,7 +226,7 @@ void AvatarPresenter::present(sim::World& world, float alpha, float renderDelta)
         // 渲染帧按 alpha 在两者间插值，得到平滑运动而非 30Hz 阶梯；回滚纠正偏移随渲染时间衰减。
         // 本地玩家用短时间常数跟手，其余实体（对端英雄等）的回滚纠正用长时间常数与大吸附阈值滑行消化。
         state.track.setProfile(entity == m_followEntity ? CorrectionProfile::Local : CorrectionProfile::Remote);
-        state.track.sample(world.ecs().singleton<sim::WorldClock>().frame,
+        state.track.sample(world.ecs().singleton<sim_legacy::WorldClock>().frame,
                            {renderValue(transform.position.x), renderValue(transform.position.y),
                             renderValue(transform.position.z)});
         state.track.advance(renderDelta);
@@ -316,7 +316,7 @@ FashionAppearance AvatarPresenter::buildRoleAppearance(const AvatarState& state,
 }
 
 bool AvatarPresenter::syncPartnerRageAppearance(uint32_t entityValue,
-                                                const sim::MotionState& motion,
+                                                const sim_legacy::MotionState& motion,
                                                 bool transformed,
                                                 bool force)
 {
@@ -341,9 +341,9 @@ bool AvatarPresenter::syncPartnerRageAppearance(uint32_t entityValue,
     return true;
 }
 
-void AvatarPresenter::onPartnerRageChanged(sim::World& world, Entity entity, bool active)
+void AvatarPresenter::onPartnerRageChanged(sim_legacy::World& world, Entity entity, bool active)
 {
-    const auto* motion = world.ecs().tryGet<sim::MotionState>(entity);
+    const auto* motion = world.ecs().tryGet<sim_legacy::MotionState>(entity);
     if (!motion)
         return;
     syncPartnerRageAppearance(entity.value, *motion, active, true);
@@ -388,22 +388,22 @@ ax::Node* AvatarPresenter::displayNode(const AvatarState& state)
     return state.skeleton;
 }
 
-int32_t AvatarPresenter::lookConfigId(sim::World& world, Entity entity, sim::GroupKind kind)
+int32_t AvatarPresenter::lookConfigId(sim_legacy::World& world, Entity entity, sim_legacy::GroupKind kind)
 {
     auto& ecs = world.ecs();
     switch (kind)
     {
-    case sim::GroupKind::Role:
-        return ecs.get<sim::RoleIdentity>(entity).roleId;
-    case sim::GroupKind::Effect:
-        return ecs.get<sim::EffectState>(entity).m_configId;
-    case sim::GroupKind::Obstacle:
-        return ecs.get<sim::ObstacleState>(entity).m_id;
-    case sim::GroupKind::Goods:
-        return ecs.get<sim::GoodsState>(entity).m_id;
-    case sim::GroupKind::Portal:
-        return ecs.get<sim::PortalState>(entity).m_id;
-    case sim::GroupKind::Count:
+    case sim_legacy::GroupKind::Role:
+        return ecs.get<sim_legacy::RoleIdentity>(entity).roleId;
+    case sim_legacy::GroupKind::Effect:
+        return ecs.get<sim_legacy::EffectState>(entity).m_configId;
+    case sim_legacy::GroupKind::Obstacle:
+        return ecs.get<sim_legacy::ObstacleState>(entity).m_id;
+    case sim_legacy::GroupKind::Goods:
+        return ecs.get<sim_legacy::GoodsState>(entity).m_id;
+    case sim_legacy::GroupKind::Portal:
+        return ecs.get<sim_legacy::PortalState>(entity).m_id;
+    case sim_legacy::GroupKind::Count:
         break;
     }
     MG_LOG_E("AvatarPresenter: invalid entity group {}", static_cast<int>(kind));
@@ -590,7 +590,7 @@ void WorldPresenter::clearEntityPet(Entity entity)
     m_avatars.clearEntityPet(entity);
 }
 
-bool WorldPresenter::refreshLocalPlayerAppearance(sim::World& world)
+bool WorldPresenter::refreshLocalPlayerAppearance(sim_legacy::World& world)
 {
     // 本地玩家即镜头跟随实体；联网对端玩家不套用本机会话时装。
     const Entity local = m_followEntity;
@@ -598,8 +598,8 @@ bool WorldPresenter::refreshLocalPlayerAppearance(sim::World& world)
         return false;
     FashionAppearance appearance = gameui::buildSessionFashionAppearance();
     if (appearance.roleId == 0)
-        appearance.roleId = world.ecs().get<sim::RoleIdentity>(local).roleId;
-    appearance.transformed = world.ecs().get<sim::MotionState>(local).m_partnerRageTransformed;
+        appearance.roleId = world.ecs().get<sim_legacy::RoleIdentity>(local).roleId;
+    appearance.transformed = world.ecs().get<sim_legacy::MotionState>(local).m_partnerRageTransformed;
     return setEntityAppearance(local, appearance);
 }
 
@@ -633,19 +633,19 @@ void MapPresenter::update(float delta)
         m_camera->doUpdate(delta);
 }
 
-void CameraDirector::follow(sim::World& world, Entity entity)
+void CameraDirector::follow(sim_legacy::World& world, Entity entity)
 {
-    const auto* transform = world.ecs().tryGet<sim::Transform>(entity);
+    const auto* transform = world.ecs().tryGet<sim_legacy::Transform>(entity);
     if (!transform || !m_map.camera())
         return;
     m_map.camera()->setFocusPosition({renderValue(transform->position.x), renderValue(transform->position.z)});
 }
 
-void CameraDirector::consume(const sim::PresentationEvent& event)
+void CameraDirector::consume(const sim_legacy::PresentationEvent& event)
 {
-    if (const auto* shake = std::get_if<sim::CameraShake>(&event.payload); shake && m_map.camera())
+    if (const auto* shake = std::get_if<sim_legacy::CameraShake>(&event.payload); shake && m_map.camera())
         m_map.camera()->shake(renderValue(shake->strength), renderValue(shake->durationMs));
-    if (std::holds_alternative<sim::DisplaySpine>(event.payload))
+    if (std::holds_alternative<sim_legacy::DisplaySpine>(event.payload))
         m_displaySlowScale = 0.35f;
 }
 
@@ -655,9 +655,9 @@ void CameraDirector::update(float delta)
     m_map.update(delta * m_displaySlowScale);
 }
 
-void SoundPlayer::consume(const sim::PresentationEvent& event)
+void SoundPlayer::consume(const sim_legacy::PresentationEvent& event)
 {
-    const auto* sound = std::get_if<sim::Sound>(&event.payload);
+    const auto* sound = std::get_if<sim_legacy::Sound>(&event.payload);
     if (!sound)
         return;
 
@@ -724,21 +724,21 @@ constexpr size_t kHurtMaxActive = 64;
 constexpr int kHurtRandomRange = 30;
 }  // namespace
 
-void HurtNumber::consume(const sim::PresentationEvent& event, sim::World& world)
+void HurtNumber::consume(const sim_legacy::PresentationEvent& event, sim_legacy::World& world)
 {
     auto& ecs = world.ecs();
-    if (const auto* tips = std::get_if<sim::Tips>(&event.payload))
+    if (const auto* tips = std::get_if<sim_legacy::Tips>(&event.payload))
     {
         // 闪避/未命中由逻辑侧以固定文本提示，数字以外的飘字走文字字体。
         const char* glyph = tips->text == "MISS" ? kMissGlyph : tips->text == "DODGE" ? kDodgeGlyph : nullptr;
-        const auto* transform = ecs.tryGet<sim::Transform>(event.entity);
+        const auto* transform = ecs.tryGet<sim_legacy::Transform>(event.entity);
         if (!glyph || !transform)
             return;
         spawn(Face::kWord, glyph, renderValue(transform->position.x),
               renderValue(transform->position.y + transform->position.z) + kHurtHeadHeight);
         return;
     }
-    const auto* hurt = std::get_if<sim::HurtNumber>(&event.payload);
+    const auto* hurt = std::get_if<sim_legacy::HurtNumber>(&event.payload);
     if (!hurt)
         return;
     float x = 0.0f;
@@ -750,7 +750,7 @@ void HurtNumber::consume(const sim::PresentationEvent& event, sim::World& world)
     }
     else
     {
-        const auto* transform = ecs.tryGet<sim::Transform>(event.entity);
+        const auto* transform = ecs.tryGet<sim_legacy::Transform>(event.entity);
         if (!transform)
             return;
         x = renderValue(transform->position.x);
@@ -760,7 +760,7 @@ void HurtNumber::consume(const sim::PresentationEvent& event, sim::World& world)
     Face face = Face::kNormal;
     if (hurt->m_critical)
         face = Face::kCrit;
-    else if (const auto* identity = ecs.tryGet<sim::RoleIdentity>(event.entity))
+    else if (const auto* identity = ecs.tryGet<sim_legacy::RoleIdentity>(event.entity))
     {
         const bool enemyCamp = identity->camp == static_cast<int32_t>(EntityCamp::Enemy) ||
                                identity->camp == static_cast<int32_t>(EntityCamp::EnemyFriend);
@@ -889,25 +889,25 @@ DebugDraw::DebugDraw(ax::Node& root)
     root.addChild(m_node, 300);
 }
 
-void DebugDraw::present(sim::World& world)
+void DebugDraw::present(sim_legacy::World& world)
 {
     m_node->clear();
     if (!m_enabled)
         return;
     // WorldBox 已是世界坐标，pos 为 x/z 平面最小角，与碰撞判定的轴对齐框一致
-    const auto drawBoxes = [this](const std::vector<sim::WorldBox>& boxes, const ax::Color4F& color) {
+    const auto drawBoxes = [this](const std::vector<sim_legacy::WorldBox>& boxes, const ax::Color4F& color) {
         for (const auto& box : boxes)
             m_node->drawRect({renderValue(box.pos.x), renderValue(box.pos.z)},
                              {renderValue(box.pos.x + box.size.x), renderValue(box.pos.z + box.size.z)}, color);
     };
-    world.ecs().each<sim::Transform, sim::ColliderState>(
-        [&](Entity, const sim::Transform& transform, const sim::ColliderState& collider) {
+    world.ecs().each<sim_legacy::Transform, sim_legacy::ColliderState>(
+        [&](Entity, const sim_legacy::Transform& transform, const sim_legacy::ColliderState& collider) {
         const ax::Vec2 center{renderValue(transform.position.x), renderValue(transform.position.z)};
         m_node->drawCircle(center, renderValue(collider.radius), 0.0f, 16, false, ax::Color4F::YELLOW);
         drawBoxes(collider.attack, ax::Color4F::RED);
         drawBoxes(collider.damage, kHurtBoxColor);
     });
-    for (const auto& range : world.ecs().singleton<sim::MapRegion>().moveRanges)
+    for (const auto& range : world.ecs().singleton<sim_legacy::MapRegion>().moveRanges)
         m_node->drawRect({renderValue(range.x), renderValue(range.y)},
                          {renderValue(range.x + range.width), renderValue(range.y + range.height)}, ax::Color4F::GREEN);
 }
@@ -938,18 +938,18 @@ void WorldPresenter::loadMap(const std::string& mapKey)
     m_avatars.clearPool();
 }
 
-void WorldPresenter::present(sim::World& world, float interpolationAlpha, float renderDelta)
+void WorldPresenter::present(sim_legacy::World& world, float interpolationAlpha, float renderDelta)
 {
     m_avatars.present(world, std::clamp(interpolationAlpha, 0.0f, 1.0f), renderDelta);
-    consumeEvents(world.ecs().singleton<sim::PresentationEvents>().events, world, true);
+    consumeEvents(world.ecs().singleton<sim_legacy::PresentationEvents>().events, world, true);
     m_hurtNumbers.update(renderDelta);
     m_camera.follow(world, m_followEntity);
     m_camera.update(renderDelta);
     m_debugDraw.present(world);
 }
 
-void WorldPresenter::presentEvents(const std::vector<sim::PresentationEvent>& events,
-                                   sim::World& world,
+void WorldPresenter::presentEvents(const std::vector<sim_legacy::PresentationEvent>& events,
+                                   sim_legacy::World& world,
                                    float interpolationAlpha,
                                    float renderDelta)
 {
@@ -961,8 +961,8 @@ void WorldPresenter::presentEvents(const std::vector<sim::PresentationEvent>& ev
     m_debugDraw.present(world);
 }
 
-void WorldPresenter::consumeEvents(const std::vector<sim::PresentationEvent>& events,
-                                   sim::World& world,
+void WorldPresenter::consumeEvents(const std::vector<sim_legacy::PresentationEvent>& events,
+                                   sim_legacy::World& world,
                                    bool dedupeBySeq)
 {
     for (const auto& event : events)
@@ -972,9 +972,9 @@ void WorldPresenter::consumeEvents(const std::vector<sim::PresentationEvent>& ev
         m_camera.consume(event);
         m_sound.consume(event);
         m_hurtNumbers.consume(event, world);
-        if (const auto* intensity = std::get_if<sim::RoleIntensity>(&event.payload))
+        if (const auto* intensity = std::get_if<sim_legacy::RoleIntensity>(&event.payload))
             m_avatars.setEntityIntensity(event.entity.value, renderValue(intensity->m_value));
-        if (const auto* partnerRage = std::get_if<sim::PartnerRageChanged>(&event.payload))
+        if (const auto* partnerRage = std::get_if<sim_legacy::PartnerRageChanged>(&event.payload))
             m_avatars.onPartnerRageChanged(world, event.entity, partnerRage->m_active);
         if (dedupeBySeq)
             m_lastEventSequence = event.seq + 1;

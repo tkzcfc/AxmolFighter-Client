@@ -3,7 +3,7 @@
 #include "SkillTypes.h"
 
 #include "net/game_types.pb.h"
-#include "mugen/sim/skill/Skill.h"
+#include "mugen/sim_legacy/skill/Skill.h"
 
 #include <unordered_map>
 #include <vector>
@@ -33,7 +33,7 @@ public:
     void resetSlotsToDefault();
 
     // PlayerSkill list for SkillAssembly::playerLoadout (future battle hookup).
-    std::vector<mugen::sim::skill::PlayerSkill> playerSkills() const;
+    std::vector<mugen::sim_legacy::skill::PlayerSkill> playerSkills() const;
 
 private:
     void seedLeaves(int32_t occupation);

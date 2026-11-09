@@ -3,10 +3,10 @@
 #include "BTTestTypes.h"
 #include "SkillTestSupport.h"
 #include "../support/ScenarioHarness.h"
-#include "mugen/sim/attack/AttackRole.h"
-#include "mugen/sim/role/brain/states/HitStates.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
-#include "mugen/sim/room/RoomDirector.h"
+#include "mugen/sim_legacy/attack/AttackRole.h"
+#include "mugen/sim_legacy/role/brain/states/HitStates.h"
+#include "mugen/sim_legacy/spawn/RoleSpawn.h"
+#include "mugen/sim_legacy/room/RoomDirector.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include <fstream>
@@ -14,7 +14,7 @@
 #include <vector>
 
 using namespace mugen;
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 
 // 表征测试：固定角色脑状态机与旧 BT 代码的行为，供后续重构做行为等价对照。
 namespace
@@ -98,10 +98,10 @@ TEST_CASE("First frame after spawn only enters, first tick updates once")
     test::ScenarioHarness::loadAssets();
     World world;
     world.init(test::ScenarioHarness::roomSetup(2071501, 31));
-    sim::RoleSpawnParams player;
+    sim_legacy::RoleSpawnParams player;
     player.camp       = 2;
     player.playerSlot = 0;
-    const auto entity = sim::RoleSpawner(world).spawnPlayer(CharacterClass::kSwordman, player);
+    const auto entity = sim_legacy::RoleSpawner(world).spawnPlayer(CharacterClass::kSwordman, player);
     REQUIRE(entity.value != 0);
     auto& brain = world.ecs().get<RoleBrain>(entity);
     REQUIRE(brain.m_phase == role::brain::BrainPhase::Running);
@@ -217,17 +217,17 @@ TEST_CASE("Room change exits previous leaf and enters plus updates once")
     test::ScenarioHarness::loadAssets();
     World world;
     world.init(test::ScenarioHarness::roomSetup(2071501, 31));
-    sim::RoleSpawnParams player;
+    sim_legacy::RoleSpawnParams player;
     player.camp       = 2;
     player.playerSlot = 0;
-    const auto entity = sim::RoleSpawner(world).spawnPlayer(CharacterClass::kSwordman, player);
+    const auto entity = sim_legacy::RoleSpawner(world).spawnPlayer(CharacterClass::kSwordman, player);
     REQUIRE(entity.value != 0);
     const auto* config = conf::Config::instance().find<conf::RoomConfig>(2071501);
     REQUIRE(config);
-    REQUIRE(sim::room::RoomDirector(world).enter(*config, 0, 0));
+    REQUIRE(sim_legacy::room::RoomDirector(world).enter(*config, 0, 0));
     REQUIRE(world.ecs().get<RoleBrain>(entity).m_phase == role::brain::BrainPhase::Running);
     // 触发房间切换（传送到另一个房间）。
-    world.ecs().singleton<sim::RoomState>().m_transferRoom = 2010101;
+    world.ecs().singleton<sim_legacy::RoomState>().m_transferRoom = 2010101;
     world.tick({1, {}, {}, {}});
     // 切换后：旧分支已退出，阶段重置，控制被清除。
     CHECK(world.ecs().get<RoleBrain>(entity).m_phase == role::brain::BrainPhase::NotEntered);

@@ -1,12 +1,12 @@
 #include "doctest.h"
 #include "SkillTestSupport.h"
-#include "mugen/sim/buff/BuffRules.h"
-#include "mugen/sim/role/Role.h"
+#include "mugen/sim_legacy/buff/BuffRules.h"
+#include "mugen/sim_legacy/role/Role.h"
 
 namespace
 {
 // 为规则建立可直接调用的配置实例。
-mugen::sim::BuffInstance& addBasicRule(mugen::sim::World& world, mugen::Entity entity,
+mugen::sim_legacy::BuffInstance& addBasicRule(mugen::sim_legacy::World& world, mugen::Entity entity,
                                        mugen::conf::BuffRuleId rule, uint64_t serial)
 {
     const auto& rules = mugen::conf::Config::instance().table<mugen::conf::BuffRuleConfig>();
@@ -17,11 +17,11 @@ mugen::sim::BuffInstance& addBasicRule(mugen::sim::World& world, mugen::Entity e
     const auto& buffs = mugen::conf::Config::instance().table<mugen::conf::BuffConfig>();
     const auto row = std::find_if(buffs.begin(), buffs.end(), [&](const auto& buff) { return buff.ruleId == ruleRow->id; });
     REQUIRE(row != buffs.end());
-    mugen::sim::BuffInstance instance;
+    mugen::sim_legacy::BuffInstance instance;
     instance.m_id = row->id;
     instance.m_serial = serial;
-    world.ecs().get<mugen::sim::BuffPool>(entity).m_instances.push_back(instance);
-    return world.ecs().get<mugen::sim::BuffPool>(entity).m_instances.back();
+    world.ecs().get<mugen::sim_legacy::BuffPool>(entity).m_instances.push_back(instance);
+    return world.ecs().get<mugen::sim_legacy::BuffPool>(entity).m_instances.back();
 }
 }
 
@@ -29,7 +29,7 @@ mugen::sim::BuffInstance& addBasicRule(mugen::sim::World& world, mugen::Entity e
 TEST_CASE("BuffBasic Shield numeric absorption")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     World world;
     const auto entity = skill_test::actor(world);
@@ -52,7 +52,7 @@ TEST_CASE("BuffBasic Shield numeric absorption")
 TEST_CASE("BuffBasic HPLock damage and cooldown modifiers")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     skill_test::loadConfig();
     World world;
     const auto entity = skill_test::actor(world);
@@ -97,5 +97,5 @@ TEST_CASE("BuffBasic reachable xbasic rules have concrete dispatch")
         BuffRuleId::BuffSpecialAbilityApplicator, BuffRuleId::BuffTP, BuffRuleId::BuffTPConsumeScale,
         BuffRuleId::BuffTPRecoveryScale};
     for (const auto rule : rules)
-        CHECK_FALSE(mugen::sim::buff::isUnportedRule(rule));
+        CHECK_FALSE(mugen::sim_legacy::buff::isUnportedRule(rule));
 }

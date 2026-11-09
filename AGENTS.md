@@ -8,8 +8,8 @@ Game client written in C++ on Axmol (custom fork). It uses CMake, FairyGUI, prot
 - Offline mode: add `--offline-room=<roomId>`, `--offline-role=<roleId|class>`, `--autotest-frames=N` to the command line (Windows/Linux/macOS; parsed by `Source/LaunchOptions`). `run.ps1` forwards extra arguments, e.g. `pwsh run.ps1 -Config Debug --offline-room=<roomId>`.
 - Tests: `axmol build -p win32 -xc -D_AX_TESTS=ON` (doctest, in `Tests/`).
 - Headless tests: `pwsh TestsHeadless/run_headless_tests.ps1 [-Filter <doctest-filter>] [-Config Release|Debug]`.
-- Check rules: `pwsh TestsHeadless/check_rules.ps1 [-Paths core,conf,avatar,sim]`.
-- Sim CLI: `mugen_sim_cli replay <file.mgrp> [--compare <hash-file>]`, `mugen_sim_cli run-room <roomId> [--frames N]`, `mugen_sim_cli record-room <roomId> --frames N --output <file.mgrp>`.
+- Check rules: `pwsh TestsHeadless/check_rules.ps1 [-Paths core,conf,avatar,sim_legacy]`.
+- Sim CLI: `mugen_legacy_cli replay <file.mgrp> [--compare <hash-file>]`, `mugen_legacy_cli run-room <roomId> [--frames N]`, `mugen_legacy_cli record-room <roomId> --frames N --output <file.mgrp>`.
 - Format: `format_code.ps1` (clang-format). It skips `Source/3rd` and the generated `*.pb.*` files.
 - Sources are collected with GLOB `CONFIGURE_DEPENDS`, so **re-run configure after adding files**.
 

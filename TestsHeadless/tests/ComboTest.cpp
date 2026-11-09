@@ -1,26 +1,26 @@
 #include "doctest.h"
 #include "../support/ContentVfs.h"
-#include "mugen/sim/World.h"
-#include "mugen/sim/role/RoleCombo.h"
-#include "mugen/sim/role/Role.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
+#include "mugen/sim_legacy/World.h"
+#include "mugen/sim_legacy/role/RoleCombo.h"
+#include "mugen/sim_legacy/role/Role.h"
+#include "mugen/sim_legacy/spawn/RoleSpawn.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/BattleConst.h"
 
 namespace
 {
 // 创建带连击状态、外部条件与受击判定所需组件的角色实体。
-mugen::Entity comboActor(mugen::sim::World& world, int32_t roleType = 1)
+mugen::Entity comboActor(mugen::sim_legacy::World& world, int32_t roleType = 1)
 {
-    const auto entity = world.create(mugen::sim::GroupKind::Role);
-    mugen::sim::RoleIdentity identity;
+    const auto entity = world.create(mugen::sim_legacy::GroupKind::Role);
+    mugen::sim_legacy::RoleIdentity identity;
     identity.roleType = roleType;
     world.ecs().add(entity, identity);
-    world.ecs().add(entity, mugen::sim::RoleStatus{});
-    world.ecs().add(entity, mugen::sim::ExtraState{});
-    world.ecs().add(entity, mugen::sim::RoleHitState{});
-    world.ecs().add(entity, mugen::sim::BuffExternalConditions{});
-    mugen::sim::Vitals vitals;
+    world.ecs().add(entity, mugen::sim_legacy::RoleStatus{});
+    world.ecs().add(entity, mugen::sim_legacy::ExtraState{});
+    world.ecs().add(entity, mugen::sim_legacy::RoleHitState{});
+    world.ecs().add(entity, mugen::sim_legacy::BuffExternalConditions{});
+    mugen::sim_legacy::Vitals vitals;
     vitals.hp = vitals.maxHp = mugen::Fixed::fromInt(1000);
     world.ecs().add(entity, vitals);
     return entity;
@@ -30,7 +30,7 @@ mugen::Entity comboActor(mugen::sim::World& world, int32_t roleType = 1)
 TEST_CASE("Combo evaluation maps experience to stage thresholds")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     World world;
     world.init({});
     const auto owner  = comboActor(world, 1);
@@ -57,7 +57,7 @@ TEST_CASE("Combo evaluation maps experience to stage thresholds")
 TEST_CASE("Combo evaluation experience caps at the maximum stage")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     World world;
     world.init({});
     const auto owner  = comboActor(world, 1);
@@ -77,7 +77,7 @@ TEST_CASE("Combo evaluation experience caps at the maximum stage")
 TEST_CASE("Combo counter resets after timeout")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     World world;
     world.init({});
     const auto owner  = comboActor(world, 1);
@@ -97,7 +97,7 @@ TEST_CASE("Combo counter resets after timeout")
 TEST_CASE("Combo evaluation experience decays per frame")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     World world;
     world.init({});
     const auto owner  = comboActor(world, 1);
@@ -120,7 +120,7 @@ TEST_CASE("Combo evaluation experience decays per frame")
 TEST_CASE("Combo kill bonus applies once per target")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     World world;
     world.init({});
     const auto owner = comboActor(world, 1);
@@ -142,12 +142,12 @@ TEST_CASE("Combo kill bonus applies once per target")
 TEST_CASE("Combo stun bonus adds experience")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     World world;
     world.init({});
     const auto owner   = comboActor(world, 1);
     const auto stunned = comboActor(world, 1);
-    world.ecs().get<mugen::sim::ExtraState>(stunned).add(mugen::ExtraState::Stun);
+    world.ecs().get<mugen::sim_legacy::ExtraState>(stunned).add(mugen::ExtraState::Stun);
     auto& state = world.ecs().get<RoleHitState>(owner);
 
     role::RoleCombo(world, owner).reset();
@@ -159,7 +159,7 @@ TEST_CASE("Combo stun bonus adds experience")
 TEST_CASE("Combo boss hit multiplies experience")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     World world;
     world.init({});
     const auto owner = comboActor(world, 1);
@@ -175,7 +175,7 @@ TEST_CASE("Combo boss hit multiplies experience")
 TEST_CASE("Combo evaluation syncs to buff external conditions")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     World world;
     world.init({});
     const auto owner  = comboActor(world, 1);
@@ -193,7 +193,7 @@ TEST_CASE("Combo evaluation syncs to buff external conditions")
 TEST_CASE("Spawned role carries buff external conditions and default combo scale")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
     REQUIRE(mugen::test::ensureContentVfs());
     REQUIRE(conf::Config::instance().load("/mugen/config/config.bin"));
     World world;

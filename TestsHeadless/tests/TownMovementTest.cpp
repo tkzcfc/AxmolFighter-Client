@@ -1,12 +1,12 @@
 #include "doctest.h"
 #include "../support/ContentVfs.h"
-#include "mugen/sim/input/ControlManagerCore.h"
-#include "mugen/sim/role/brain/RoleBrain.h"
-#include "mugen/sim/role/brain/RoleBrainDriver.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
+#include "mugen/sim_legacy/input/ControlManagerCore.h"
+#include "mugen/sim_legacy/role/brain/RoleBrain.h"
+#include "mugen/sim_legacy/role/brain/RoleBrainDriver.h"
+#include "mugen/sim_legacy/spawn/RoleSpawn.h"
 
 using namespace mugen;
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 
 namespace
 {

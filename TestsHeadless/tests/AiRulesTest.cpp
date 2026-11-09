@@ -1,13 +1,13 @@
 #include <doctest.h>
 #include "../support/ScenarioHarness.h"
 #include "mugen/core/math/Random.h"
-#include "mugen/sim/ai/AiAgent.h"
-#include "mugen/sim/ai/AiRules.h"
+#include "mugen/sim_legacy/ai/AiAgent.h"
+#include "mugen/sim_legacy/ai/AiRules.h"
 #include <array>
 
 using namespace mugen;
-using namespace mugen::sim;
-using namespace mugen::sim::ai;
+using namespace mugen::sim_legacy;
+using namespace mugen::sim_legacy::ai;
 
 namespace
 {

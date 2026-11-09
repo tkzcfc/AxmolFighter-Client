@@ -3,7 +3,7 @@
 #include "mugen/core/math/Fixed.h"
 #include "BTTestTypes.h"
 #include "EcsTestTypes.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
+#include "mugen/sim_legacy/spawn/RoleSpawn.h"
 
 #include <cstring>
 #include <filesystem>
@@ -23,11 +23,11 @@ int main(int argc, char** argv)
         _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
         _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
 #endif
-        mugen::sim::World world;
+        mugen::sim_legacy::World world;
         world.init({});
-        mugen::sim::RoleSpawnParams params;
+        mugen::sim_legacy::RoleSpawnParams params;
         params.roleId = -123456;
-        mugen::sim::RoleSpawner(world).spawnRole(params);
+        mugen::sim_legacy::RoleSpawner(world).spawnRole(params);
         return 0;
     }
     if (argc == 2 && std::strcmp(argv[1], "--ecs-probe-ok") == 0)
@@ -90,12 +90,12 @@ int main(int argc, char** argv)
         const int probe = std::atoi(argv[2]);
         if (probe == 0)
         {
-            mugen::sim::LogicTimers timers;
-            timers.add({}, mugen::Fixed::fromInt(-1), false, mugen::sim::DestroyEntity{});
+            mugen::sim_legacy::LogicTimers timers;
+            timers.add({}, mugen::Fixed::fromInt(-1), false, mugen::sim_legacy::DestroyEntity{});
         }
         else if (probe == 1)
         {
-            mugen::sim::World world;
+            mugen::sim_legacy::World world;
             world.init({});
             world.tick({1, {}, {}, {}});
             world.tick({1, {}, {}, {}});

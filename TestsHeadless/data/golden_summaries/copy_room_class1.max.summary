@@ -1,0 +1,619 @@
+# mugen effect summary v1
+# scenario copy_room_class1 room 2010101 seed 31 ai off
+# draw crit=max float=mid dodge=never prob=pass choice=first
+5 state role:101#1 Idle Run,Idle
+5 actionend role:101#1 stand
+5 action role:101#1 walk
+45 cast role:101#1 920090 Y
+45 disp+ role:101#1 922400
+45 state role:101#1 Run,Idle Attack,Idle
+45 actionend role:101#1 walk
+45 action role:101#1 10300
+47 disp- role:101#1 922400 68.000 0.000 130.000
+47 disp+ role:101#1 922410
+47 actionend role:101#1 10300
+47 action role:101#1 10302
+49 spawn role:101#1 fx:920210#1
+56 disp- role:101#1 922410 68.000 0.000 130.000
+56 disp+ role:101#1 922420
+56 actionend role:101#1 10302
+56 action role:101#1 10304
+56 disp- role:101#1 922420 68.000 0.000 130.000
+57 castend role:101#1 920090 done
+57 cast role:101#1 920000 A
+57 disp+ role:101#1 922000
+57 actionend role:101#1 10304
+57 action role:101#1 10118
+57 disp- role:101#1 922000 68.000 0.000 130.000
+62 disp+ role:101#1 922010
+62 actionend role:101#1 10118
+62 action role:101#1 10120
+64 spawn role:101#1 fx:920000#1
+65 disp- role:101#1 922010 68.000 0.000 130.000
+65 disp+ role:101#1 922020
+65 actionend role:101#1 10120
+65 action role:101#1 10122
+65 disp- role:101#1 922020 68.000 0.000 130.000
+66 castend role:101#1 920000 done
+66 cast role:101#1 920010 A
+66 disp+ role:101#1 922030
+66 actionend role:101#1 10122
+66 action role:101#1 10124
+66 disp- role:101#1 922030 68.000 0.000 130.000
+72 disp+ role:101#1 922040
+72 actionend role:101#1 10124
+72 action role:101#1 10126
+73 spawn role:101#1 fx:920010#1
+74 disp- role:101#1 922040 68.000 0.000 130.000
+74 disp+ role:101#1 922050
+74 actionend role:101#1 10126
+74 action role:101#1 10128
+74 disp- role:101#1 922050 68.000 0.000 130.000
+87 castend role:101#1 920010 done
+87 state role:101#1 Attack,Idle Idle
+87 actionend role:101#1 10128
+87 action role:101#1 stand
+90 cast role:101#1 920100 B
+90 disp+ role:101#1 922430
+90 state role:101#1 Idle Attack,Idle
+90 actionend role:101#1 stand
+90 action role:101#1 10500
+97 disp- role:101#1 922430 80.832 0.000 130.000
+98 disp+ role:101#1 922440
+98 actionend role:101#1 10500
+98 action role:101#1 10502
+99 spawn role:101#1 fx:920220#1
+104 disp- role:101#1 922440 68.555 0.000 130.000
+104 disp+ role:101#1 922450
+104 actionend role:101#1 10502
+104 action role:101#1 10504
+106 disp- role:101#1 922450 68.000 0.000 130.000
+106 disp+ role:101#1 922460
+106 actionend role:101#1 10504
+106 action role:101#1 10506
+107 spawn role:101#1 fx:920230#1
+111 disp- role:101#1 922460 68.555 0.000 130.000
+111 disp+ role:101#1 922470
+111 actionend role:101#1 10506
+111 action role:101#1 10508
+115 disp- role:101#1 922470 68.000 0.000 130.000
+115 disp+ role:101#1 922480
+115 actionend role:101#1 10508
+115 action role:101#1 10510
+116 spawn role:101#1 fx:920240#1
+125 disp- role:101#1 922480 68.000 0.000 130.000
+126 disp+ role:101#1 922490
+126 actionend role:101#1 10510
+126 action role:101#1 10512
+126 disp- role:101#1 922490 68.000 0.000 130.000
+127 castend role:101#1 920100 done
+127 cast role:101#1 920120 C
+127 disp+ role:101#1 922610
+127 buff+ role:101#1 101
+127 actionend role:101#1 10512
+127 action role:101#1 10600
+134 disp- role:101#1 922610 68.000 0.000 130.000
+134 disp+ role:101#1 922620
+134 buff+ role:101#1 102
+134 actionend role:101#1 10600
+134 action role:101#1 10602
+135 buff- role:101#1 101
+135 spawn role:101#1 fx:920300#1
+135 spawn role:101#1 fx:920310#1
+135 disp- role:101#1 922620 68.000 0.000 130.000
+135 disp+ role:101#1 922630
+135 buff+ role:101#1 102
+135 actionend role:101#1 10602
+135 action role:101#1 10604
+136 buff- role:101#1 102
+136 disp- role:101#1 922630 68.000 0.000 130.000
+136 disp+ role:101#1 922640
+136 buff+ role:101#1 102
+136 actionend role:101#1 10604
+136 action role:101#1 10606
+137 buff- role:101#1 102
+137 spawn role:101#1 fx:920330#1
+141 spawn role:101#1 fx:920320#1
+146 disp- role:101#1 922640 68.000 0.000 130.000
+147 disp+ role:101#1 922650
+147 buff+ role:101#1 102
+147 actionend role:101#1 10606
+147 action role:101#1 10608
+148 buff- role:101#1 102
+148 disp- role:101#1 922650 68.000 0.000 130.000
+148 disp+ role:101#1 922660
+148 buff+ role:101#1 102
+148 actionend role:101#1 10608
+148 action role:101#1 10610
+149 buff- role:101#1 102
+149 spawn role:101#1 fx:920340#1
+158 disp- role:101#1 922660 68.000 0.000 130.000
+160 disp+ role:101#1 922670
+160 actionend role:101#1 10610
+160 action role:101#1 10612
+160 disp- role:101#1 922670 68.000 0.000 130.000
+161 buff- role:101#1 102
+161 castend role:101#1 920120 done
+161 cast role:101#1 920150 D
+161 disp+ role:101#1 922790
+161 actionend role:101#1 10612
+161 action role:101#1 10700
+161 disp- role:101#1 922790 68.000 0.000 130.000
+168 disp+ role:101#1 922800
+168 buff+ role:101#1 101
+168 actionend role:101#1 10700
+168 action role:101#1 10702
+169 spawn role:101#1 fx:920430#1
+183 disp- role:101#1 922800 68.000 0.000 130.000
+183 disp+ role:101#1 922810
+183 buff+ role:101#1 102
+183 actionend role:101#1 10702
+183 action role:101#1 10704
+183 disp- role:101#1 922810 68.000 0.000 130.000
+184 buff- role:101#1 101
+184 spawn role:101#1 fx:920440#1
+184 spawn role:101#1 fx:920450#1
+184 disp+ role:101#1 922820
+184 actionend role:101#1 10704
+184 action role:101#1 10706
+184 disp- role:101#1 922820 68.000 0.000 130.000
+185 buff- role:101#1 102
+185 castend role:101#1 920150 done
+185 cast role:101#1 920080 F
+185 disp+ role:101#1 922250
+185 buff+ role:101#1 200
+185 actionend role:101#1 10706
+185 action role:101#1 10400
+186 spawn role:101#1 fx:920100#1
+190 disp- role:101#1 922250 68.000 0.000 130.000
+190 disp+ role:101#1 922260
+190 buff+ role:101#1 200
+190 actionend role:101#1 10400
+190 action role:101#1 10402
+191 buff- role:101#1 200
+198 disp- role:101#1 922260 68.000 0.000 130.000
+198 disp+ role:101#1 922270
+198 buff+ role:101#1 200
+198 actionend role:101#1 10402
+198 action role:101#1 10404
+199 buff- role:101#1 200
+199 spawn role:101#1 fx:920110#1
+202 castend role:101#1 920080 done
+202 state role:101#1 Attack,Idle Idle
+202 actionend role:101#1 10404
+202 action role:101#1 stand
+202 disp- role:101#1 922270 68.001 0.000 130.000
+203 buff- role:101#1 200
+210 cast role:101#1 920180 G
+210 disp+ role:101#1 922980
+210 state role:101#1 Idle Attack,Idle
+210 actionend role:101#1 stand
+210 action role:101#1 10806
+222 disp- role:101#1 922980 68.000 0.000 130.000
+222 disp+ role:101#1 922990
+222 actionend role:101#1 10806
+222 action role:101#1 10808
+223 spawn role:101#1 fx:920520#1
+223 spawn role:101#1 fx:920531#1
+225 spawn role:101#1 fx:920530#1
+232 disp- role:101#1 922990 68.000 0.000 130.000
+236 disp+ role:101#1 923000
+236 actionend role:101#1 10808
+236 action role:101#1 10810
+236 disp- role:101#1 923000 68.000 0.000 130.000
+240 castend role:101#1 920180 done
+240 cast role:101#1 920210 H
+240 disp+ role:101#1 923070
+240 actionend role:101#1 10810
+240 action role:101#1 11000
+240 disp- role:101#1 923070 68.000 0.000 130.000
+242 disp+ role:101#1 923080
+242 actionend role:101#1 11000
+242 action role:101#1 11002
+243 spawn role:101#1 fx:920610#1
+253 disp- role:101#1 923080 68.000 0.000 130.000
+253 disp+ role:101#1 923090
+253 actionend role:101#1 11002
+253 action role:101#1 11004
+253 disp- role:101#1 923090 68.000 0.000 130.000
+259 castend role:101#1 920210 done
+259 state role:101#1 Attack,Idle Idle
+259 actionend role:101#1 11004
+259 action role:101#1 stand
+270 cast role:101#1 920490 I
+270 buff+ role:101#1 200
+270 state role:101#1 Idle Attack,Idle
+270 actionend role:101#1 stand
+270 action role:101#1 20616
+271 spawn role:101#1 fx:921040#1
+271 spawn role:101#1 fx:921060#1
+280 buff+ role:101#1 200
+280 actionend role:101#1 20616
+280 action role:101#1 20618
+281 buff- role:101#1 200
+281 spawn role:101#1 fx:921061#1
+281 buff+ role:101#1 208
+281 buff+ role:101#1 154
+281 actionend role:101#1 20618
+281 action role:101#1 20620
+282 buff- role:101#1 200
+282 spawn role:101#1 fx:921050#1
+292 castend role:101#1 920490 done
+292 state role:101#1 Attack,Idle Idle
+292 actionend role:101#1 20620
+292 action role:101#1 stand
+293 buff- role:101#1 154
+300 cast role:101#1 920460 J
+300 state role:101#1 Idle Attack,Idle
+300 actionend role:101#1 stand
+300 action role:101#1 10200
+313 actionend role:101#1 10200
+313 action role:101#1 10202
+314 spawn role:101#1 fx:920910#1
+315 actionend role:101#1 10202
+315 action role:101#1 10204
+321 castend role:101#1 920460 done
+321 state role:101#1 Attack,Idle Idle
+321 actionend role:101#1 10204
+321 action role:101#1 stand
+328 buff- role:101#1 208
+330 cast role:101#1 920260 M
+330 disp+ role:101#1 923220
+330 buff+ role:101#1 101
+330 state role:101#1 Idle Attack,Idle
+330 actionend role:101#1 stand
+330 action role:101#1 11100
+330 disp- role:101#1 923220 68.000 0.000 130.000
+340 disp+ role:101#1 923230
+340 buff+ role:101#1 102
+340 actionend role:101#1 11100
+340 action role:101#1 11102
+340 disp- role:101#1 923230 68.000 0.000 130.000
+341 buff- role:101#1 101
+341 spawn role:101#1 fx:920670#1
+341 spawn role:101#1 fx:920680#1
+352 disp+ role:101#1 923230
+352 buff+ role:101#1 102
+352 actionend role:101#1 11102
+352 action role:101#1 11104
+352 disp- role:101#1 923230 68.000 0.000 130.000
+353 buff- role:101#1 102
+362 disp+ role:101#1 923230
+362 buff+ role:101#1 102
+362 actionend role:101#1 11104
+362 action role:101#1 11106
+362 disp- role:101#1 923230 68.000 0.000 130.000
+363 buff- role:101#1 102
+363 spawn role:101#1 fx:920690#1
+364 spawn role:101#1 fx:920700#1
+375 disp+ role:101#1 923240
+375 actionend role:101#1 11106
+375 action role:101#1 11108
+375 disp- role:101#1 923240 68.000 0.000 130.000
+376 buff- role:101#1 102
+379 castend role:101#1 920260 done
+379 cast role:101#1 920000 A
+379 disp+ role:101#1 922000
+379 actionend role:101#1 11108
+379 action role:101#1 10118
+379 disp- role:101#1 922000 68.000 0.000 130.000
+384 disp+ role:101#1 922010
+384 actionend role:101#1 10118
+384 action role:101#1 10120
+386 spawn role:101#1 fx:920000#2
+387 disp- role:101#1 922010 68.000 0.000 130.000
+387 disp+ role:101#1 922020
+387 actionend role:101#1 10120
+387 action role:101#1 10122
+387 disp- role:101#1 922020 68.000 0.000 130.000
+388 castend role:101#1 920000 done
+388 cast role:101#1 920010 A
+388 disp+ role:101#1 922030
+388 actionend role:101#1 10122
+388 action role:101#1 10124
+388 disp- role:101#1 922030 68.000 0.000 130.000
+394 disp+ role:101#1 922040
+394 actionend role:101#1 10124
+394 action role:101#1 10126
+395 spawn role:101#1 fx:920010#2
+396 disp- role:101#1 922040 68.000 0.000 130.000
+396 disp+ role:101#1 922050
+396 actionend role:101#1 10126
+396 action role:101#1 10128
+396 disp- role:101#1 922050 68.000 0.000 130.000
+397 castend role:101#1 920010 done
+397 cast role:101#1 920020 A
+397 disp+ role:101#1 922060
+397 actionend role:101#1 10128
+397 action role:101#1 10130
+397 disp- role:101#1 922060 68.000 0.000 130.000
+406 disp+ role:101#1 922070
+406 actionend role:101#1 10130
+406 action role:101#1 10132
+407 spawn role:101#1 fx:920020#1
+412 disp- role:101#1 922070 216.333 0.000 130.000
+412 disp+ role:101#1 922080
+412 actionend role:101#1 10132
+412 action role:101#1 10134
+414 spawn role:101#1 fx:920030#1
+415 hit fx:920030#1 role:21881#1 920030 hit
+415 dmg role:101#1 role:21881#1 920030 2338002 1
+415 death role:21881#1
+415 stop fx:920030#1 1
+415 stop role:101#1 1
+415 spawn role:101#1 fx:882475#1
+415 hit fx:920030#1 role:21881#3 920030 hit
+415 dmg role:101#1 role:21881#3 920030 2338002 1
+415 death role:21881#3
+415 stop fx:920030#1 1
+415 stop role:101#1 1
+415 spawn role:101#1 fx:882475#2
+415 state role:21881#1 Idle Death
+415 state role:21881#3 Idle Death
+416 stop role:21881#1 1
+416 stop role:21881#3 1
+416 disp+ role:21881#1 133
+416 disp+ role:21881#3 133
+416 actionend role:21881#1 stand
+416 action role:21881#1 death
+416 actionend role:21881#3 stand
+416 action role:21881#3 death
+419 disp- role:101#1 922080 480.066 0.000 130.000
+419 disp+ role:101#1 922090
+419 actionend role:101#1 10134
+419 action role:101#1 10136
+419 disp- role:101#1 922090 480.066 0.000 130.000
+420 castend role:101#1 920020 done
+420 cast role:101#1 920030 A
+420 disp+ role:101#1 922100
+420 actionend role:101#1 10136
+420 action role:101#1 10138
+428 disp- role:101#1 922100 381.878 0.000 130.000
+428 disp+ role:101#1 922110
+428 actionend role:101#1 10138
+428 action role:101#1 10140
+429 spawn role:101#1 fx:920040#1
+437 disp- role:101#1 922110 317.511 0.000 130.000
+437 disp+ role:101#1 922120
+437 actionend role:101#1 10140
+437 action role:101#1 10142
+437 disp- role:101#1 922120 317.511 0.000 130.000
+438 castend role:101#1 920030 done
+438 cast role:101#1 920040 A
+438 disp+ role:101#1 922130
+438 actionend role:101#1 10142
+438 action role:101#1 10144
+438 disp- role:101#1 922130 317.511 0.000 130.000
+439 spawn role:101#1 fx:920050#1
+443 disp- role:21881#1 133 429.999 0.000 107.000
+443 disp- role:21881#3 133 429.999 0.000 83.000
+444 spawn role:21881#1 fx:8#1
+444 spawn role:21881#3 fx:8#2
+450 disp+ role:101#1 922140
+450 actionend role:101#1 10144
+450 action role:101#1 10146
+451 spawn role:101#1 fx:920060#1
+458 disp- role:101#1 922140 74.180 0.000 130.000
+458 disp+ role:101#1 922150
+458 actionend role:101#1 10146
+458 action role:101#1 10148
+458 disp- role:101#1 922150 74.180 0.000 130.000
+473 castend role:101#1 920040 done
+473 state role:101#1 Attack,Idle Idle
+473 actionend role:101#1 10148
+473 action role:101#1 stand
+476 cast role:101#1 920000 A
+476 disp+ role:101#1 922000
+476 state role:101#1 Idle Attack,Idle
+476 actionend role:101#1 stand
+476 action role:101#1 10118
+476 disp- role:101#1 922000 74.180 0.000 130.000
+481 disp+ role:101#1 922010
+481 actionend role:101#1 10118
+481 action role:101#1 10120
+483 spawn role:101#1 fx:920000#3
+484 disp- role:101#1 922010 68.000 0.000 130.000
+484 disp+ role:101#1 922020
+484 actionend role:101#1 10120
+484 action role:101#1 10122
+484 disp- role:101#1 922020 68.000 0.000 130.000
+485 castend role:101#1 920000 done
+485 cast role:101#1 920010 A
+485 disp+ role:101#1 922030
+485 actionend role:101#1 10122
+485 action role:101#1 10124
+485 disp- role:101#1 922030 68.000 0.000 130.000
+491 disp+ role:101#1 922040
+491 actionend role:101#1 10124
+491 action role:101#1 10126
+492 spawn role:101#1 fx:920010#3
+493 disp- role:101#1 922040 68.000 0.000 130.000
+493 disp+ role:101#1 922050
+493 actionend role:101#1 10126
+493 action role:101#1 10128
+493 disp- role:101#1 922050 68.000 0.000 130.000
+494 castend role:101#1 920010 done
+494 cast role:101#1 920020 A
+494 disp+ role:101#1 922060
+494 actionend role:101#1 10128
+494 action role:101#1 10130
+494 disp- role:101#1 922060 68.000 0.000 130.000
+503 disp+ role:101#1 922070
+503 actionend role:101#1 10130
+503 action role:101#1 10132
+504 spawn role:101#1 fx:920020#2
+509 disp- role:101#1 922070 216.333 0.000 130.000
+509 disp+ role:101#1 922080
+509 actionend role:101#1 10132
+509 action role:101#1 10134
+511 spawn role:101#1 fx:920030#2
+516 disp- role:101#1 922080 480.066 0.000 130.000
+516 disp+ role:101#1 922090
+516 actionend role:101#1 10134
+516 action role:101#1 10136
+516 disp- role:101#1 922090 480.066 0.000 130.000
+517 castend role:101#1 920020 done
+517 cast role:101#1 920030 A
+517 disp+ role:101#1 922100
+517 actionend role:101#1 10136
+517 action role:101#1 10138
+525 disp- role:101#1 922100 381.878 0.000 130.000
+525 disp+ role:101#1 922110
+525 actionend role:101#1 10138
+525 action role:101#1 10140
+526 spawn role:101#1 fx:920040#2
+534 disp- role:101#1 922110 317.511 0.000 130.000
+534 disp+ role:101#1 922120
+534 actionend role:101#1 10140
+534 action role:101#1 10142
+534 disp- role:101#1 922120 317.511 0.000 130.000
+535 castend role:101#1 920030 done
+535 cast role:101#1 920040 A
+535 disp+ role:101#1 922130
+535 actionend role:101#1 10142
+535 action role:101#1 10144
+535 disp- role:101#1 922130 317.511 0.000 130.000
+536 spawn role:101#1 fx:920050#2
+547 disp+ role:101#1 922140
+547 actionend role:101#1 10144
+547 action role:101#1 10146
+548 spawn role:101#1 fx:920060#2
+555 disp- role:101#1 922140 74.180 0.000 130.000
+555 disp+ role:101#1 922150
+555 actionend role:101#1 10146
+555 action role:101#1 10148
+555 disp- role:101#1 922150 74.180 0.000 130.000
+570 castend role:101#1 920040 done
+570 state role:101#1 Attack,Idle Idle
+570 actionend role:101#1 10148
+570 action role:101#1 stand
+572 cast role:101#1 920000 A
+572 disp+ role:101#1 922000
+572 state role:101#1 Idle Attack,Idle
+572 actionend role:101#1 stand
+572 action role:101#1 10118
+572 disp- role:101#1 922000 74.180 0.000 130.000
+577 disp+ role:101#1 922010
+577 actionend role:101#1 10118
+577 action role:101#1 10120
+579 spawn role:101#1 fx:920000#4
+580 disp- role:101#1 922010 68.000 0.000 130.000
+580 disp+ role:101#1 922020
+580 actionend role:101#1 10120
+580 action role:101#1 10122
+580 disp- role:101#1 922020 68.000 0.000 130.000
+581 castend role:101#1 920000 done
+581 cast role:101#1 920010 A
+581 disp+ role:101#1 922030
+581 actionend role:101#1 10122
+581 action role:101#1 10124
+581 disp- role:101#1 922030 68.000 0.000 130.000
+587 disp+ role:101#1 922040
+587 actionend role:101#1 10124
+587 action role:101#1 10126
+588 spawn role:101#1 fx:920010#4
+589 disp- role:101#1 922040 68.000 0.000 130.000
+589 disp+ role:101#1 922050
+589 actionend role:101#1 10126
+589 action role:101#1 10128
+589 disp- role:101#1 922050 68.000 0.000 130.000
+590 castend role:101#1 920010 done
+590 cast role:101#1 920020 A
+590 disp+ role:101#1 922060
+590 actionend role:101#1 10128
+590 action role:101#1 10130
+590 disp- role:101#1 922060 68.000 0.000 130.000
+599 disp+ role:101#1 922070
+599 actionend role:101#1 10130
+599 action role:101#1 10132
+600 spawn role:101#1 fx:920020#3
+605 disp- role:101#1 922070 216.333 0.000 130.000
+605 disp+ role:101#1 922080
+605 actionend role:101#1 10132
+605 action role:101#1 10134
+607 spawn role:101#1 fx:920030#3
+612 disp- role:101#1 922080 480.066 0.000 130.000
+612 disp+ role:101#1 922090
+612 actionend role:101#1 10134
+612 action role:101#1 10136
+612 disp- role:101#1 922090 480.066 0.000 130.000
+613 castend role:101#1 920020 done
+613 cast role:101#1 920030 A
+613 disp+ role:101#1 922100
+613 actionend role:101#1 10136
+613 action role:101#1 10138
+621 disp- role:101#1 922100 381.878 0.000 130.000
+621 disp+ role:101#1 922110
+621 actionend role:101#1 10138
+621 action role:101#1 10140
+622 spawn role:101#1 fx:920040#3
+630 disp- role:101#1 922110 317.511 0.000 130.000
+630 disp+ role:101#1 922120
+630 actionend role:101#1 10140
+630 action role:101#1 10142
+630 disp- role:101#1 922120 317.511 0.000 130.000
+631 castend role:101#1 920030 done
+631 cast role:101#1 920040 A
+631 disp+ role:101#1 922130
+631 actionend role:101#1 10142
+631 action role:101#1 10144
+631 disp- role:101#1 922130 317.511 0.000 130.000
+632 spawn role:101#1 fx:920050#3
+643 disp+ role:101#1 922140
+643 actionend role:101#1 10144
+643 action role:101#1 10146
+644 spawn role:101#1 fx:920060#3
+651 disp- role:101#1 922140 74.180 0.000 130.000
+651 disp+ role:101#1 922150
+651 actionend role:101#1 10146
+651 action role:101#1 10148
+651 disp- role:101#1 922150 74.180 0.000 130.000
+666 castend role:101#1 920040 done
+666 state role:101#1 Attack,Idle Idle
+666 actionend role:101#1 10148
+666 action role:101#1 stand
+668 cast role:101#1 920000 A
+668 disp+ role:101#1 922000
+668 state role:101#1 Idle Attack,Idle
+668 actionend role:101#1 stand
+668 action role:101#1 10118
+668 disp- role:101#1 922000 74.180 0.000 130.000
+673 disp+ role:101#1 922010
+673 actionend role:101#1 10118
+673 action role:101#1 10120
+675 spawn role:101#1 fx:920000#5
+676 disp- role:101#1 922010 68.000 0.000 130.000
+676 disp+ role:101#1 922020
+676 actionend role:101#1 10120
+676 action role:101#1 10122
+676 disp- role:101#1 922020 68.000 0.000 130.000
+677 castend role:101#1 920000 done
+677 cast role:101#1 920010 A
+677 disp+ role:101#1 922030
+677 actionend role:101#1 10122
+677 action role:101#1 10124
+677 disp- role:101#1 922030 68.000 0.000 130.000
+683 disp+ role:101#1 922040
+683 actionend role:101#1 10124
+683 action role:101#1 10126
+684 spawn role:101#1 fx:920010#5
+685 disp- role:101#1 922040 68.000 0.000 130.000
+685 disp+ role:101#1 922050
+685 actionend role:101#1 10126
+685 action role:101#1 10128
+685 disp- role:101#1 922050 68.000 0.000 130.000
+686 castend role:101#1 920010 done
+686 cast role:101#1 920020 A
+686 disp+ role:101#1 922060
+686 actionend role:101#1 10128
+686 action role:101#1 10130
+686 disp- role:101#1 922060 68.000 0.000 130.000
+695 disp+ role:101#1 922070
+695 actionend role:101#1 10130
+695 action role:101#1 10132
+696 spawn role:101#1 fx:920020#4
+final role:101#1 413387979 68.000 0.000 130.000 Attack,Idle
+final role:21881#1 0 429.999 0.000 107.000 Death
+final role:21881#2 18540 898.000 0.000 107.000 Idle
+final role:21881#3 0 429.999 0.000 83.000 Death
+final role:21881#4 18540 898.000 0.000 83.000 Idle

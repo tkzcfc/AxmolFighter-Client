@@ -81,7 +81,7 @@ void GameScreen::onEnter()
         getScreenManager()->getUIManager()->open<BattleHudPanel>(*local);
     m_slotMap.clear();
     using Key                       = ax::EventKeyboard::KeyCode;
-    using ControlKey                = mugen::sim::ControlKey;
+    using ControlKey                = mugen::sim_legacy::ControlKey;
     m_slotMap[Key::KEY_LEFT_ARROW]  = static_cast<uint32_t>(ControlKey::Left);
     m_slotMap[Key::KEY_RIGHT_ARROW] = static_cast<uint32_t>(ControlKey::Right);
     m_slotMap[Key::KEY_UP_ARROW]    = static_cast<uint32_t>(ControlKey::Up);

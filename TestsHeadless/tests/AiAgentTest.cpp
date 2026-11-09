@@ -1,7 +1,7 @@
 #include "SkillTestSupport.h"
 #include "../support/ContentVfs.h"
-#include "mugen/sim/ai/AiAgent.h"
-#include "mugen/sim/buff/BuffHolder.h"
+#include "mugen/sim_legacy/ai/AiAgent.h"
+#include "mugen/sim_legacy/buff/BuffHolder.h"
 
 using namespace skill_test;
 
@@ -69,7 +69,7 @@ struct MonsterFixture
         auto& ecs = world.ecs();
         RoleIdentity identity; identity.roleId = roleId; identity.roleType = 2;
         identity.aiId = aiRow.id; identity.isAi = aiEnabled; identity.camp = camp;
-        ecs.add(entity, identity); ecs.add(entity, RoleStatus{}); ecs.add(entity, sim::ExtraState{});
+        ecs.add(entity, identity); ecs.add(entity, RoleStatus{}); ecs.add(entity, sim_legacy::ExtraState{});
         Vitals vitals; vitals.hp = vitals.maxHp = "1000"_fx;
         vitals.mp = vitals.maxMp = "1000000"_fx; vitals.ep = vitals.maxEp = "1000000"_fx;
         Transform transform;

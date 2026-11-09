@@ -1,10 +1,10 @@
 #include "SkillTestSupport.h"
 #include "../support/ContentVfs.h"
-#include "mugen/sim/hit/HitResolver.h"
-#include "mugen/sim/hit/Damage.h"
-#include "mugen/sim/hit/DamageCalculator.h"
-#include "mugen/sim/role/Role.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
+#include "mugen/sim_legacy/hit/HitResolver.h"
+#include "mugen/sim_legacy/hit/Damage.h"
+#include "mugen/sim_legacy/hit/DamageCalculator.h"
+#include "mugen/sim_legacy/role/Role.h"
+#include "mugen/sim_legacy/spawn/RoleSpawn.h"
 #include <iostream>
 
 namespace
@@ -119,7 +119,7 @@ struct HitFixture
         const auto entity = m_world.create(GroupKind::Role);
         RoleIdentity identity;
         identity.roleId = it->id; identity.roleType = type; identity.camp = camp; identity.hostileCamp = camp == 2 ? 25 : 7;
-        ecs.add(entity, identity); ecs.add(entity, RoleStatus{}); ecs.add(entity, sim::ExtraState{});
+        ecs.add(entity, identity); ecs.add(entity, RoleStatus{}); ecs.add(entity, sim_legacy::ExtraState{});
         ecs.add(entity, Transform{}); ecs.add(entity, RoleTimers{}); ecs.add(entity, RoleHitState{});
         ecs.add(entity, Displacement{}); ecs.add(entity, MotionState{});
         Attributes attributes; attributes.basic[4] = "100000"_fx; attributes.basic[5] = "800"_fx;
@@ -304,7 +304,7 @@ TEST_CASE("Hp chill healing change and shield layer seams")
 TEST_CASE("Hit super armor has no stun freeze or facing change")
 {
     HitFixture f; auto& ecs = f.m_world.ecs();
-    ecs.get<sim::ExtraState>(f.m_monster).add(mugen::ExtraState::SuperArmor);
+    ecs.get<sim_legacy::ExtraState>(f.m_monster).add(mugen::ExtraState::SuperArmor);
     f.tick();
     CHECK(ecs.get<Vitals>(f.m_monster).hp < "100000"_fx);
     CHECK_FALSE(ecs.get<RoleStatus>(f.m_monster).isHit());

@@ -1,33 +1,33 @@
 #pragma once
-#include "EntityGroup.h"
-#include "input/ControlEventQueue.h"
-#include "role/RoleComponents.h"
-#include "role/brain/RoleBrain.h"
-#include "skill/SkillComponents.h"
-#include "effect/Effect.h"
-#include "buff/BuffComponents.h"
-#include "ability/AbilityComponents.h"
-#include "ai/AiAgent.h"
-#include "room/RoomEntities.h"
+#include "mugen/core/reflect/Reflect.h"
 #include <tuple>
 
-// 生产世界允许挂载的组件注册表，顺序固定类型标识。
-#define MG_COMPONENT_LIST(X)                                                                                          \
-    X(EntityGroup)                                                                                                    \
-    X(ControlEventQueue)                                                                                              \
-    X(RoleIdentity) X(RoleStatus) X(ExtraState) X(Attributes) X(Vitals) X(Transform) X(MotionState)                   \
-        X(PartnerRageState) X(Puppet)                                                                                   \
-        X(ColliderState) X(CollisionState) X(RoleTimers) X(RoleHitState) X(Displacement) X(RoleBrain) X(RoleControl)  \
-            X(SkillPool) X(EffectState) X(EffectTree) X(BuffPool) X(BuffExternalConditions) X(AbilityPool) X(AiAgent) \
-                X(PortalState) X(ObstacleState) X(GoodsState) X(DropGoods)
 namespace mugen::sim
 {
-// 角色脑与控制组件位于 role::brain，此处引入便于组件注册表展开。
-using role::brain::RoleBrain;
-using role::brain::RoleControl;
+// 标签组件：变身后休眠、跨房缓冲、房间挂起；所有系统遍历时跳过。
+struct Inactive
+{
+    // 占位字节：零字段的 MG_REFLECT 会产生未使用参数告警，标签仍视为无数据。
+    uint8_t m_tag = 0;
+    MG_REFLECT(Inactive, m_tag)
+};
+// 标签组件：本帧待回收（R4）；打上后本帧其余系统一律跳过，物理回收在 FlushSystem。
+struct Despawning
+{
+    // 占位字节：零字段的 MG_REFLECT 会产生未使用参数告警，标签仍视为无数据。
+    uint8_t m_tag = 0;
+    MG_REFLECT(Despawning, m_tag)
+};
+}  // namespace mugen::sim
+
+// 新 sim 组件唯一登记表，顺序固定序列化类型编号；S0 只登记骨架用到的标签。
+#define MG_COMPONENT_LIST(X) X(Inactive) X(Despawning)
+
+namespace mugen::sim
+{
 #define MG_SIM_COMPONENT_TUPLE(T) \
     , std::tuple<T> {}
-// 由注册表展开的 ECS 组件元组。
+// 由登记表展开的 ECS 组件元组。
 using Components = decltype(std::tuple_cat(std::tuple<> {} MG_COMPONENT_LIST(MG_SIM_COMPONENT_TUPLE)));
 #undef MG_SIM_COMPONENT_TUPLE
 }  // namespace mugen::sim

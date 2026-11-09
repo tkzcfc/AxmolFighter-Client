@@ -38,7 +38,7 @@ struct Queue
     MG_REFLECT(Queue, entities)
 };
 
-// Test-only registries. Production lists belong to sim/Components.h and sim/Singletons.h in Todo 12.
+// Test-only registries. Production lists belong to sim_legacy/Components.h and sim_legacy/Singletons.h in Todo 12.
 #define MG_COMPONENT_LIST(X) X(Position) X(Velocity) X(Weight) X(Payload)
 #define MG_SINGLETON_LIST(X) X(Clock) X(Queue)
 #define MG_ECS_TEST_TUPLE(T) \

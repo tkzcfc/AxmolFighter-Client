@@ -1,16 +1,16 @@
 #include "doctest.h"
 #include "SkillTestSupport.h"
 #include "../support/ScenarioHarness.h"
-#include "mugen/sim/role/brain/RoleBrain.h"
-#include "mugen/sim/role/brain/RoleBrainDriver.h"
-#include "mugen/sim/role/brain/RoleContext.h"
-#include "mugen/sim/role/brain/RoleBranches.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
-#include "mugen/sim/room/RoomDirector.h"
-#include "mugen/sim/role/Role.h"
+#include "mugen/sim_legacy/role/brain/RoleBrain.h"
+#include "mugen/sim_legacy/role/brain/RoleBrainDriver.h"
+#include "mugen/sim_legacy/role/brain/RoleContext.h"
+#include "mugen/sim_legacy/role/brain/RoleBranches.h"
+#include "mugen/sim_legacy/spawn/RoleSpawn.h"
+#include "mugen/sim_legacy/room/RoomDirector.h"
+#include "mugen/sim_legacy/role/Role.h"
 
 using namespace mugen;
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 
 namespace
 {
@@ -26,10 +26,10 @@ struct BrainFixture
     {
         test::ScenarioHarness::loadAssets();
         world.init(test::ScenarioHarness::roomSetup(2071501, 31));
-        sim::RoleSpawnParams p;
+        sim_legacy::RoleSpawnParams p;
         p.camp       = 2;
         p.playerSlot = 0;
-        entity       = sim::RoleSpawner(world).spawnPlayer(CharacterClass::kSwordman, p);
+        entity       = sim_legacy::RoleSpawner(world).spawnPlayer(CharacterClass::kSwordman, p);
         REQUIRE(entity.value != 0);
     }
 };

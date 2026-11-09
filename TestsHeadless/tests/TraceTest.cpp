@@ -2,15 +2,15 @@
 #include "../support/ScenarioHarness.h"
 #include "mugen/conf/ConfigFormat.h"
 #include "mugen/conf/ReflectedConfig.h"
-#include "mugen/sim/Replay.h"
-#include "mugen/sim/World.h"
-#include "mugen/sim/room/RoomDirector.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
-#include "mugen/sim/trace/TraceSink.h"
+#include "mugen/sim_legacy/Replay.h"
+#include "mugen/sim_legacy/World.h"
+#include "mugen/sim_legacy/room/RoomDirector.h"
+#include "mugen/sim_legacy/spawn/RoleSpawn.h"
+#include "mugen/sim_legacy/trace/TraceSink.h"
 #include <filesystem>
 
 using namespace mugen;
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 
 namespace
 {
@@ -95,13 +95,13 @@ TEST_CASE("Trace combat scenario captures skill cast and is deterministic")
     auto build           = [&]() {
         World world;  // 默认 WorldHooks，Role 组走真实 role::update
         world.init(test::ScenarioHarness::roomSetup(roomId, 31));
-        sim::RoleSpawnParams player;
+        sim_legacy::RoleSpawnParams player;
         player.camp       = 2;
         player.playerSlot = 0;
-        sim::RoleSpawner(world).spawnPlayer(CharacterClass::kSwordman, std::move(player));
+        sim_legacy::RoleSpawner(world).spawnPlayer(CharacterClass::kSwordman, std::move(player));
         const auto* config = conf::Config::instance().find<conf::RoomConfig>(roomId);
         REQUIRE(config);
-        REQUIRE(sim::room::RoomDirector(world).enter(*config, 0, 0));
+        REQUIRE(sim_legacy::room::RoomDirector(world).enter(*config, 0, 0));
         return world;
     };
     auto drive = [](World& world) {

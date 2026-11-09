@@ -1,12 +1,12 @@
 #include "doctest.h"
 #include "../support/ContentVfs.h"
-#include "mugen/sim/motion/MapRegion.h"
-#include "mugen/sim/motion/Displacement.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
+#include "mugen/sim_legacy/motion/MapRegion.h"
+#include "mugen/sim_legacy/motion/Displacement.h"
+#include "mugen/sim_legacy/spawn/RoleSpawn.h"
 #include "mugen/conf/ReflectedConfig.h"
 
 using namespace mugen;
-using namespace mugen::sim;
+using namespace mugen::sim_legacy;
 
 namespace
 {

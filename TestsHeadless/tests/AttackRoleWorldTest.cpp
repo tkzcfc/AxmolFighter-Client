@@ -296,7 +296,7 @@ TEST_CASE("AttackRole World static targets expire reset and pause leaf")
             ecs.add(e, identity);
             ecs.add(e, RoleTimers{});
             ecs.add(e, Vitals{});
-            ecs.add(e, sim::ExtraState{});
+            ecs.add(e, sim_legacy::ExtraState{});
             ecs.add(e, RoleStatus{});
             ecs.add(e, Transform{});
             ecs.add(e, RoleHitState{});

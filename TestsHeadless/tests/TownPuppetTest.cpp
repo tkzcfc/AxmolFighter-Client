@@ -1,12 +1,12 @@
 #include "doctest.h"
 #include "../support/ContentVfs.h"
 #include "mugen/conf/ReflectedConfig.h"
-#include "mugen/sim/spawn/RoleSpawn.h"
+#include "mugen/sim_legacy/spawn/RoleSpawn.h"
 
 TEST_CASE("Town puppet updates synchronize position, facing, and motion")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
 
     REQUIRE((mugen::test::ensureContentVfs() && conf::Config::instance().load("/mugen/config/config.bin")));
     World world;
@@ -32,7 +32,7 @@ TEST_CASE("Town puppet updates synchronize position, facing, and motion")
 TEST_CASE("Town ignores a puppet update for an entity that does not exist")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
 
     World world;
     world.init({1, WorldMode::Town, 41, {}});
@@ -45,7 +45,7 @@ TEST_CASE("Town ignores a puppet update for an entity that does not exist")
 TEST_CASE("Town puppet motion time advances continuously and resets on motion change")
 {
     using namespace mugen;
-    using namespace mugen::sim;
+    using namespace mugen::sim_legacy;
 
     REQUIRE((mugen::test::ensureContentVfs() && conf::Config::instance().load("/mugen/config/config.bin")));
     World world;
