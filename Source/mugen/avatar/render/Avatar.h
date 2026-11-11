@@ -34,16 +34,19 @@ public:
     // 切换动作（entryId 为空从首段起播）
     void setMotion(const std::string& motionName, const std::string& entryId, bool loop);
 
-    // 步进时间
+    // 步进身体动作时间并推进挂件（整数毫秒）
     void step(int dtMs);
 
-    // 跳跃到绝对时间点
+    // 按渲染帧推进身体动作时间（秒，内部累积余量到整毫秒）。不推进挂件。
+    void advance(float dtSec);
+
+    // 跳跃到绝对时间点（动作切换、首次显示、换装、偏差超过一逻辑帧）
     void seek(int timeMs);
 
-    // 推进独立挂件的循环动画（战斗中身体时间由 seek 驱动，挂件按渲染帧推进）
+    // 推进独立挂件的循环动画（身体时间由 advance/seek 驱动，挂件按渲染帧推进）
     void stepAccessories(float dtSec);
 
-    // 自动播放时步进
+    // UI 自动播放：等就绪后按 delta 步进身体与挂件
     void update(float delta) override;
 
     // 身体与初始挂件均已加载并浮现

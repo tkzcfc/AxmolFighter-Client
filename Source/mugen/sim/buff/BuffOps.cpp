@@ -138,11 +138,12 @@ std::vector<Entity> selectTargets(Exec& exec, int32_t selector)
                 out.push_back(entity);
             break;
         case 6:
-            if (identity.m_roleType == 5 || identity.m_roleType == 6)
+            if (identity.m_roleType == static_cast<int32_t>(mugen::EntityRoleType::kBoss))
                 out.push_back(entity);
             break;
         case 7:
-            if (identity.m_roleType == 4)
+            if (identity.m_roleType == static_cast<int32_t>(mugen::EntityRoleType::kMonster) ||
+                identity.m_roleType == static_cast<int32_t>(mugen::EntityRoleType::kElite))
                 out.push_back(entity);
             break;
         case 8:

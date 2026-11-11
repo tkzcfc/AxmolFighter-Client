@@ -587,6 +587,11 @@ LayerResourceList LayerRuntimeLoader::collectResources(const std::string& layerF
     return result;
 }
 
+ax::Node* LayerRuntimeLoader::findLayer(ax::Node& mapRoot, const std::string& name)
+{
+    return mapRoot.getChildByName(name);
+}
+
 NS_MG_END
 
 #endif

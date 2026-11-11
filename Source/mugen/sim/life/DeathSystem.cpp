@@ -23,10 +23,6 @@ void announceDeath(World& world, Entity entity, RoleState& state)
     deathEvent.m_entity = entity;
     deathEvent.m_killer = state.m_deathKiller;
     world.ecs().singleton<EventQueue<DeathEvent>>().push(deathEvent);
-    const auto* role = conf::Config::instance().find<conf::battle::RoleDef>(
-        world.ecs().get<Identity>(entity).m_configId);
-    if (role && role->koEffectId > 0)
-        effect::rules::spawnFromRole(world, entity, role->koEffectId, {});
     const Entity owner = world.ecs().get<Identity>(entity).m_owner;
     if (owner.value != 0 && world.ecs().alive(owner))
         buff::rules::notifySummonDeath(world, owner);
@@ -54,6 +50,11 @@ void runDeath(World& world)
             continue;
         state.m_deathRequested = true;
         state.m_deathKiller    = request.m_killer;
+        // KO 特效在生命归零当帧生成；死亡状态再等 FSM 进入 Death 后宣布（受击族延迟到硬直/倒地结束）。
+        const auto* role = conf::Config::instance().find<conf::battle::RoleDef>(
+            world.ecs().get<Identity>(request.m_entity).m_configId);
+        if (role && role->koEffectId > 0)
+            effect::rules::spawnFromRole(world, request.m_entity, role->koEffectId, {});
     }
     requests.clear();
 

@@ -29,6 +29,9 @@ public:
 
     // 只解析、不创建节点；供预加载使用
     static LayerResourceList collectResources(const std::string& layerFile);
+
+    // 按层名取地图根下的直接子层（distant/middle/nearby/ground/region/trigger/entity/case/light）
+    static ax::Node* findLayer(ax::Node& mapRoot, const std::string& name);
 };
 
 NS_MG_END

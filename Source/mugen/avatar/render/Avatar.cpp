@@ -65,7 +65,7 @@ bool Avatar::initWithDesc(const AvatarDesc& desc, AvatarLoadMode mode)
     if (!rebuild(desc))
         return false;
 
-    // 始终挂上 update；是否推进由 m_autoPlay 控制（战斗 Avatar 保持 false，由 AvatarRenderSystem 驱动）
+    // 始终挂上 update；是否推进由 m_autoPlay 控制（战斗 Avatar 保持 false，由 AvatarPresenter 显式 advance）
     scheduleUpdate();
     return true;
 }
@@ -288,15 +288,23 @@ void Avatar::step(int dtMs)
 {
     if (dtMs <= 0)
         return;
-
-    if (m_motion)
-    {
-        m_timeMs += dtMs;
-        normalizeTime();
-        applyTime();
-    }
-
+    advance(static_cast<float>(dtMs) / 1000.0f);
     stepAccessories(static_cast<float>(dtMs) / 1000.0f);
+}
+
+// 按秒推进身体动作时间，余量累积到整毫秒。
+void Avatar::advance(float dtSec)
+{
+    if (dtSec <= 0.0f || !m_motion)
+        return;
+    m_autoPlayCarry += dtSec * 1000.0f;
+    const int dtMs = static_cast<int>(m_autoPlayCarry);
+    if (dtMs == 0)
+        return;
+    m_autoPlayCarry -= static_cast<float>(dtMs);
+    m_timeMs += dtMs;
+    normalizeTime();
+    applyTime();
 }
 
 // 推进已加载挂件的独立循环动画。

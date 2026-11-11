@@ -181,9 +181,14 @@ void requestHitReaction(World& world, const HitContext& ctx)
     auto& ecs              = world.ecs();
     const auto& roleState  = ecs.get<RoleState>(ctx.m_target);
     const bool inHitFamily = role::isHitState(roleState.m_state);
-    const bool dead        = health::rules::isDead(ecs.get<Health>(ctx.m_target));
+    const auto& targetIdentity = ecs.get<Identity>(ctx.m_target);
+    const bool dead             = health::rules::isDead(ecs.get<Health>(ctx.m_target));
     const auto* roleRow =
-        conf::Config::instance().find<conf::battle::RoleDef>(ecs.get<Identity>(ctx.m_target).m_configId);
+        conf::Config::instance().find<conf::battle::RoleDef>(targetIdentity.m_configId);
+    // 受击族内再次被击中时，旧实现只对非英雄/非 Boss 或未死目标排队 hit_id；英雄和 Boss 已死时不排队，
+    // 因此不重启位移（对应 _hitReaction 的 isTobeHit 分支）。
+    const bool heroOrBoss = targetIdentity.m_roleType == 1 || targetIdentity.m_roleType == 4;
+    const bool skipHitQueue = inHitFamily && dead && heroOrBoss;
 
     auto& hitState              = ecs.get<HitState>(ctx.m_target);
     const auto& effectTransform = ecs.get<Transform>(ctx.m_effect);
@@ -198,10 +203,13 @@ void requestHitReaction(World& world, const HitContext& ctx)
     if (roleRow && roleRow->hitDisplacementId != 0)
         displacementId = (roleRow->hitDisplacementId == -1 || ctx.m_hit->hitType == 0) ? ctx.m_hit->displacementId
                                                                                         : roleRow->hitDisplacementId;
-    hitState.m_pendingHitDefId       = ctx.m_hit->id;
-    hitState.m_pendingHitType        = ctx.m_hit->hitType;
-    hitState.m_pendingDisplacementId = displacementId;
-    hitState.m_pendingTowardX        = facing;
+    if (!skipHitQueue)
+    {
+        hitState.m_pendingHitDefId       = ctx.m_hit->id;
+        hitState.m_pendingHitType        = ctx.m_hit->hitType;
+        hitState.m_pendingDisplacementId = displacementId;
+        hitState.m_pendingTowardX        = facing;
+    }
     if (!inHitFamily && !dead && ctx.m_hit->hitType != -1)
         skill::rules::forceInterrupt(world, ctx.m_target);
 }

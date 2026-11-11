@@ -15,7 +15,7 @@ Source/mugen/
     io/ utils/ StdC.h MacroDefinition.h。io 只持有进程入口 set 的 VFS 指针（实现在 Source/3rd/vfs）；Content 挂在虚根 `/`，资源路径为 /mugen/...
   conf/      namespace mugen::conf. Reflected config tables and runtime Config.
   avatar/    MotionPlayer and avatar/data (.motion, .box, avatar.bin). No engine headers.
-  render/    Client only. The whole tree is inside #ifdef RUNTIME_IN_AXMOL.
+  render/    Client only. The whole tree is inside #ifdef RUNTIME_IN_AXMOL. Battle presenters live in render/battle/ (one class per .h/.cpp). Roles attach under the map entity layer.
   sim_legacy/ namespace mugen::sim_legacy. Current battle logic, frozen (no new features; the new ECS sim goes into a new `sim/` per DESIGN.md). No engine dependency.
   sim/       namespace mugen::sim. New ECS battle sim (DESIGN.md, slices S0–S8; S0 + S1 + S2 done). See "New sim (sim/)" below. Never include sim_legacy.
 ```

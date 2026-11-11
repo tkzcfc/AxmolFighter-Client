@@ -115,9 +115,9 @@ void updateDeath(const MotionState& motion, const Displacement& disp, HitState& 
     if (disp.m_brake || disp.m_lie)
         hit.m_displacementEnd = true;
 }
-// 受击自然推进。硬直结束时进入 HitSwitch。
+// 受击自然推进。硬直结束时：已死直接进死亡，否则进 HitSwitch。
 void updateHit(World& world, Entity entity, RoleState& state, HitState& hit, MotionState& motion,
-               const Displacement& disp, Fixed dtMs)
+               Displacement& disp, const Identity& identity, Fixed dtMs)
 {
     if (motion.m_completedThisFrame)
         hit.m_animationEnd = true;
@@ -128,6 +128,12 @@ void updateHit(World& world, Entity entity, RoleState& state, HitState& hit, Mot
     if (!done)
     {
         state.m_stateMs += dtMs;
+        return;
+    }
+    if (state.m_deathRequested)
+    {
+        transition(world, entity, state, RoleStateId::Death);
+        enterDeath(world, entity, state, hit, motion, disp, identity);
         return;
     }
     transition(world, entity, state, RoleStateId::HitSwitch);
@@ -239,11 +245,11 @@ void runRoleFsm(World& world)
                 return;
             }
 
-            // 3. 已在 Hit：先按完成条件进 HitSwitch，本帧不消费待处理受击。
+            // 3. 已在 Hit：先按完成条件进 HitSwitch（已死则进 Death），本帧不消费待处理受击。
             if (state.m_state == RoleStateId::Hit && hit.m_pendingHitDefId != 0)
             {
-                updateHit(world, entity, state, hit, motion, disp, dtMs);
-                if (state.m_state == RoleStateId::HitSwitch)
+                updateHit(world, entity, state, hit, motion, disp, identity, dtMs);
+                if (state.m_state == RoleStateId::HitSwitch || state.m_state == RoleStateId::Death)
                     return;
             }
             // 4. 待处理受击。已在 Hit 上追击重播；其余（含 HitSwitch）重新进入并复位计时。
@@ -262,7 +268,7 @@ void runRoleFsm(World& world)
             // 4. 受击族自然推进。完成位是上一帧 AnimationSystem 写入的（R10）。
             if (state.m_state == RoleStateId::Hit)
             {
-                updateHit(world, entity, state, hit, motion, disp, dtMs);
+                updateHit(world, entity, state, hit, motion, disp, identity, dtMs);
                 return;
             }
             if (state.m_state == RoleStateId::HitSwitch)
