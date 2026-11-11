@@ -1,0 +1,81 @@
+# ruleId	className	buffId	scenario	frame	target	proof
+# proof is filled from the exported summary. Applicator is always the slot-0 hero.
+4	BuffBurn	7	buff_dot	8	dummy1	hp dot -5198 on role:61300#1 at frame 8, same frame as buff+ 7; repeats every ~31 frames until buff-
+10	BuffBleeding	11012043	buff_dot	8	dummy2	hp dot -51957 on role:61320#1 at frame 8, same frame as buff+ 11012043
+5	BuffPoison	70670	buff_dot	78	dummy1	hp dot -519558 on role:61300#1 at frame 78, same frame as buff+ 70670
+33	BuffChill	11005210	buff_dot	78	dummy2	hp dot -519558 on role:61320#1 at frame 78, same frame as buff+ 11005210. Heal-block is not exercised
+57	BuffElectron	10019701	buff_dot	148	dummy1	hp dot -1039111 on role:61300#1 at frame 148, same frame as buff+ 10019701
+29	BuffRepent	77	buff_dot	148	dummy2	hp dot -519558 on role:61320#1 at frame 148, the inject frame, with buff+ 77
+23	BuffCold	71	buff_dot	218	dummy1	hp dot -25979 on role:61300#1 at frame 218, same frame as buff+ 71
+5150	BuffShield	11001010	buff_heal_shield	64	dummy2	buff+ 11001010 at frame 64; the next hit writes hp shield 484042 on role:61320#1 at frame 67
+2000	BuffHP	10012103	buff_heal_shield	80	dummy1	hp heal 6047 on role:61300#1 at frame 80 with buff+ 10012103, then again at 111/142/173/204
+1000	BuffDamageHurt	11264	buff_damagehurt	47	hero	dmg 1683361 versus 1558668 on the unbuffed two-hit run (both dummies, frames 58 and 67)
+1001	BuffDamageHurt2	11960	buff_damagehurt2	47	hero	dmg 1636601 versus 1558668 on the unbuffed two-hit run
+1010	BuffDamageCrit	30070030	buff_damagecrit	47	hero	crit=max dmg 2649735 versus unbuffed 2338002. crit=min stays 1558668 because the hit is not a crit
+5050	BuffCrit	11265	buff_crit	47	hero	buff+ 11265 only. crit=min dmg 1558668 and crit=max dmg 2338002 match the unbuffed run; DrawPolicy forces the roll
+30	BuffFall	10003051	buff_fall	47	hero	dmg 1402800 versus unbuffed 1558668. final x is unchanged because the buff is applied after the run stops
+8001	BuffHit	37013	buff_hit	47	hero	buff+ 37013 only. hit stays hit and dmg stays 1558668 / 2338002
+36	BuffGhostWalk	86	buff_ghostwalk	4	hero	final role:101#1 x 53.500 versus 1258.945 on the same inputs without the buff. No hit is reached
+55	BuffSuperBlind	37001	buff_superblind	47	hero	buff+ 37001 only. hit stays hit and dmg is unchanged
+19	BuffBreakArmor	15301	buff_breakarmor	47	hero	buff+ 15301 only. dmg stays 1558668 / 2338002
+1040	BuffDamageReduction	11301	buff_damagereduction	47	dummy1	role:61300#1 dmg 1246934 versus role:61320#1 1558668 on the same hit
+35	BuffStarShield	10006202	buff_starshield	47	dummy1	role:61300#1 dmg 3117336 versus role:61320#1 1558668 (exactly 2x). No hp shield line
+8000	BuffDodge	607000	buff_dodge	47	dummy1	buff+ 607000 only. hit stays hit; dodge policy is never
+5160	BuffAvoidCrit	10019271	buff_avoidcrit	47	dummy1	buff+ 10019271 only. crit=max dmg stays 2338002 with crit flag 1
+3	BuffInvincible	201	buff_invincible	47	dummy2	role:61320#1 hit result none at frames 58 and 67; role:61300#1 on the same swings is hit
+8	BuffHPLock	11302	buff_hplock	47	dummy1	buff+ 11302 only. Both dummies take dmg 1558668 and finish at the same hp, so the floor is not reached
+1050	BuffDamageHPLoss	11012002	buff_damagehploss	47	hero	after burn 7 drops hero hp, dmg is 1558675 versus unbuffed 1558668. began=BeforeHit so the holder is the hero
+1100	BuffDamageTypeGradation	11	buff_damagetypegradation	47	dummy1	buff+ 11 only. dmg stays 1558668 on both dummies
+7	BuffStun	114	buff_control	56	hero	frame 56 buff+ 114, castend 920000 done, state Attack,Idle -> Idle
+60	BuffFrozen	37104	buff_control	166	hero	frame 166 buff+ 37104, castend 920000 done, state Attack,Idle -> Idle
+31	BuffPalsy	15531364	buff_control	226	hero	buff+ and buff- 15531364 on the same frame 226. No state or castend change
+11	BuffDurance	11230	buff_control	286	hero	buff+ 11230 at 286 and buff- at 377. No state or castend change
+44	BuffSilence	99	buff_control	346	hero	buff+ 99 at 346 while the cast continues and castend 920000 done at 360
+59	BuffStealth	3004	buff_control	406	dummy1	buff+ 3004 at 406 and buff- at 497. No hit result or state change
+6	BuffSneer	11291	buff_control	466	dummy1	buff+ 11291 at 466. AI is off, so no target change appears
+9	BuffSpeed	11360	buff_speed	4	hero	final role:101#1 x 1523.666 versus 1303.667 on the same run without the buff
+51	BuffSpeedStep	11019001	buff_speedstep	4	hero	buff+ 11019001 only. final x 2138.500 matches the same run without the buff
+22	BuffSeparate	30	buff_separate	20	hero	buff+ 30 at frame 20 and no hp line, while the hero is already running
+100	BuffAddByApplicator	154	buff_spawn	50	hero	buff+ 154 at 50 and child buff+ 208 on the same frame
+102	BuffAddByApplicator3	10005000	buff_spawn	90	hero	buff+ 10005000 at 90 plus children 10005001-10005005, hp 0 dot, and fx spawns
+103	BuffAddByApplicator4	37100	buff_spawn	130	hero	buff+ 37100 at 130 only. No child buff id appears
+300	BuffAddByDetector	60110	buff_spawn	170	hero	buff+ 60110 at 170 and child buff+ 60111 on both dummies from that frame
+7000	BuffLoopCheck	100271	buff_spawn	210	hero	buff+ 100271 at 210 only. No child buff id appears
+7002	BuffLoopCheck2	100830	buff_spawn	250	hero	buff+ 100830 at 250 only. No child buff id appears
+750	BuffRemoveById	177	buff_remove	14	dummy1	buff+ 175 at frame 8, then buff- 175 at frame 14 together with buff+ 177
+751	BuffRemoveById2	30070076	buff_remove	44	dummy1	buff- 30070072 at frame 44 together with buff+ 30070076
+700	BuffRemoveByRule	11296	buff_remove	74	dummy1	buff- 11144 at frame 74 together with buff+ 11296
+400	BuffRemoveByType	60180	buff_remove	104	dummy1	buff- 50071 at frame 104 together with buff+ 60180
+6000	BuffImmuneDebuff	61	buff_immune	20	dummy2	probe buff+ 50071 at frame 8, immune buff+ 61 at frame 20, and the frame-40 probe does not appear
+26	BuffPurplePoison	12010011	buff_marker	4	dummy2	buff+ 12010011 at frame 4 only. No hp line; the rule spends EP
+2	BuffCrazy	1001	buff_marker	6	dummy2	buff+ 1001 at frame 6 and buff- at frame 7. No other line
+47	BuffAdjudication	10005004	buff_marker	8	dummy2	buff+ 10005004 at frame 8 only. Empty marker rule
+12	BuffDark	50081	buff_marker	10	dummy2	buff+ 50081 at frame 10 only. Empty marker rule
+54	BuffDarkMark	10018000	buff_marker	12	dummy2	buff+ 10018000 at frame 12 only. Empty marker rule
+63	BuffDarkMark2	10019830	buff_marker	14	dummy2	buff+ 10019830 at frame 14 only. Empty marker rule
+13	BuffThunder1	50091	buff_marker	16	dummy2	buff+ 50091 at frame 16 only. Empty marker rule
+14	BuffThunder2	50101	buff_marker	18	dummy2	buff+ 50101 at frame 18 only. Empty marker rule
+25	BuffDeathMark	75	buff_marker	20	dummy2	buff+ 75 at frame 20 only. Empty marker rule
+45	BuffLightMark	10000001	buff_marker	22	dummy2	buff+ 10000001 at frame 22 only. Empty marker rule
+46	BuffStoneSkin	10003002	buff_marker	24	dummy2	buff+ 10003002 at frame 24 only. Empty marker rule
+53	BuffUnstable	10014050	buff_marker	26	dummy2	buff+ 10014050 at frame 26 only. Empty marker rule
+48	BuffReverse	10005008	buff_marker	28	dummy2	buff+ 10005008 at frame 28 only. Empty marker rule
+56	BuffMight	30050036	buff_marker	30	dummy2	buff+ 30050036 at frame 30 only. Empty marker rule
+43	BuffCutSakura	101271	buff_marker	32	dummy2	buff+ 101271 at frame 32 only. Empty marker rule
+49	BuffElectricEye	10008030	buff_marker	34	dummy2	buff+ 10008030 at frame 34 only. Empty marker rule
+20001	BuffSkyProtect	155	buff_marker	36	dummy2	no buff+ for 155. areaSetting whitelist excludes fightType 0, so addBuff does not admit it
+58	BuffElectron2	10019690	buff_marker	38	dummy2	buff+ 10019690 at frame 38 only. Empty marker rule
+20000	BuffWhiteFrame	159	buff_marker	40	dummy2	no buff+ for 159. areaSetting whitelist excludes fightType 0, and the hook only emits a presentation event
+500	BuffAddByState	600	buff_marker	42	dummy2	buff+ 600 at frame 42 only. Legacy Begin/Update/Exit hooks are empty
+11000	BuffAngerAdd	41	buff_marker	44	dummy2	buff+ 41 at frame 44 and buff- at frame 60. No anger resource line exists
+5000	BuffCDSkill	60320	buff_marker	46	dummy2	buff+ 60320 at frame 46 only. No second cast, so cooldown is not visible
+5110	BuffComboExp	11002000	buff_marker	48	dummy2	buff+ 11002000 at frame 48 only. Combo score is not a summary line
+3000	BuffEP	402	buff_marker	50	dummy2	buff+ 402 at frame 50 only. EP is not a summary line
+3010	BuffEPConsumeScale	15371	buff_marker	52	dummy2	buff+ 15371 at frame 52 only. EP is not a summary line
+3020	BuffEPRecoveryScale	2007	buff_marker	54	dummy2	buff+ 2007 at frame 54 only. EP is not a summary line
+5070	BuffSign	15031580	buff_marker	56	dummy2	buff+ 15031580 at frame 56 only. Empty marker rule
+7004	BuffSpecialAbilityApplicator	15030906	buff_marker	58	dummy2	buff+ 15030906 at frame 58 only. No child buff or ability line
+4000	BuffTP	10017000	buff_marker	60	dummy2	buff+ and buff- 10017000 on frame 60. TP is not a summary line
+4010	BuffTPConsumeScale	98	buff_marker	62	dummy2	buff+ 98 at frame 62 only. TP is not a summary line
+4030	BuffTPRecoveryScale	11750	buff_marker	64	dummy2	buff+ 11750 at frame 64 only. TP is not a summary line
+1	BuffSuperArmor	101	class1_superarmor	5	hero	class1_superarmor frame 5 buff+ 101, buff- 101 at frame 13. Clip buff, not an inject

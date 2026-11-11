@@ -73,7 +73,8 @@ bool set(World& world, Entity entity, int32_t id)
     auto& d        = world.ecs().get<Displacement>(entity);
     auto& velocity = d.m_velocity;
     const auto& t  = world.ecs().get<Transform>(entity);
-    if (d.m_curveId != -1 && d.m_curveId != id)
+    // 旧实现每次设置位移都先结束进行中的位移（同 id 也结束），再开始新位移。
+    if (d.m_curveId != -1)
         emit(world, entity, DispPhase::Replaced, d.m_curveId);
     // B2 不实现追踪位移（isTrace），按普通三轴配置。
     velocity            = {t.m_vectorX * axis(row->velocity, 0), axis(row->velocity, 1),

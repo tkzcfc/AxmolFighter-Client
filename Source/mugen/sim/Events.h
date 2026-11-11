@@ -143,7 +143,9 @@ enum class CueKind : uint8_t
     // 隐身视图。
     StealthView = 7,
     // 霸体描边。
-    SuperArmorOutline = 8
+    SuperArmorOutline = 8,
+    // 墨汁屏。
+    InkScreen = 9
 };
 // 房间事件种类。
 enum class RoomEventKind : uint8_t
@@ -212,6 +214,8 @@ struct SpawnRequest
     bool m_isAi = false;
     // AI 难度等级。
     int32_t m_aiDifficulty = 1;
+    // 受击特效要记住的目标。只有没有后继的特效才写入身份。
+    Entity m_hitEntity;
     MG_REFLECT(SpawnRequest,
                m_kind,
                m_configId,
@@ -228,7 +232,8 @@ struct SpawnRequest
                m_playerSlot,
                m_hasPlayerSlot,
                m_isAi,
-               m_aiDifficulty)
+               m_aiDifficulty,
+               m_hitEntity)
 };
 // 请求销毁实体（同时已立即打上 Despawning）。
 struct DespawnRequest

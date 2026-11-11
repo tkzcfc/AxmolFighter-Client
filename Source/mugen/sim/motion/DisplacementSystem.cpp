@@ -33,6 +33,9 @@ void runDisplacement(World& world)
         [&](Entity entity, Transform& transform, Displacement& d, const Hitboxes& hitboxes) {
             if (world.ecs().has<Despawning>(entity) || world.ecs().has<Inactive>(entity))
                 return;
+            if (const Pause* pause = world.ecs().tryGet<Pause>(entity))
+                if (pause->m_paused)
+                    return;
             const auto last   = transform.m_position;
             auto& velocity    = d.m_velocity;
             const auto* roleState = world.ecs().tryGet<RoleState>(entity);

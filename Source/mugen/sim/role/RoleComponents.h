@@ -27,8 +27,12 @@ struct RoleState
     RoleStateId m_puppetState = RoleStateId::Idle;
     // 本帧有木偶同步请求。
     bool m_puppetRequested = false;
+    // 连续移动秒数（只计跑）。
+    Fixed m_movedSec;
+    // 连续站立秒数。
+    Fixed m_standingSec;
     MG_REFLECT(RoleState, m_state, m_prev, m_stateMs, m_deathRequested, m_reviveRequested, m_deathAnnounced,
-               m_deathKiller, m_puppetState, m_puppetRequested)
+               m_deathKiller, m_puppetState, m_puppetRequested, m_movedSec, m_standingSec)
 };
 // 受击与击退流程的运行时状态（B2 实现 Hit/HitSwitch 状态机）。
 struct HitState

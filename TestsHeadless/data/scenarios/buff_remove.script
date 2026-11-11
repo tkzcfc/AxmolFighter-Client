@@ -1,0 +1,9 @@
+# S2 remove rules. The victim is injected first.
+8 buff dummy1 175
+14 buff dummy1 177
+38 buff dummy1 30070072
+44 buff dummy1 30070076
+68 buff dummy1 11144
+74 buff dummy1 11296
+98 buff dummy1 50071
+104 buff dummy1 60180

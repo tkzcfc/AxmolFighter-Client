@@ -775,6 +775,13 @@ BuffDef
 
 `special_ability`（854 行）与 Buff 共用触发点、谓词与 op 解释器（P-6）。转换器把每行降级为 `AbilityDef`：触发点（event）+ 谓词（condition/condition_value）+ 概率 + CD（含 PVP）+ 周期 + 结束方式（0 不结束 / 1 倒计时）+ op（`SpawnEffect(effect_id, effect_id_type)`、`Apply(bind_buff_id)`）。`pvp_setting` 在准入时处理（0 在 PVP 中禁用，>1 替换为该 id）。实例存放在 `AbilityList`，与 `BuffList` 分开以保持两张表的字段清晰。
 
+实现注记（S2 降级，与上文不一致的地方）：
+
+- `BuffDef` / `AbilityDef` 的查找键是 `m_id`（`KeyByMId`）。Op、ValueExpr、Predicate 是带 kind 的扁平结构；`Choice` 的分支放在 `BuffDef::m_choicePool`，不递归嵌套 op。
+- 取值补了四式，都只服务既有规则：`CurMul`（2010 激活时 `hp×p`）、`HpMaxAdjust`（2010 退出时 `hp/(1+p)−hp`）、`RegOfMax`（401 的 `上限×r0×p`）、`MaxTimes`（1101 的 `上限×TypeCount`）。`ComboTable` 另有偏置，5110 为 −1。
+- 特殊能力的事件编号与 Buff 触发点不是同一套。降级时映射为 `TriggerPoint`：1–8 对应施法/命中/受击/曝气，9–14 为 `AbilityTime`、`InitAbility`、`GetUp`、`HitRepel`、`HitFly`、`ArtifactButton`（60 起）。能力条件 1/2/3 分别是暴击、连击评价、曝气，不复用同号的 Buff 条件。
+- 神器、晶体、可控特效（`effect.control=1`）的 op 保留原 kind，`OpEffect` 标成空作用，整行记为 noop 并写入 `lower_report.txt`。规则 2002、5080、5090 与非法 ruleId（22120、22130）记为 unsupported，不写有效 op，不因此让打包失败。
+
 ---
 
 ## 6. 技能时间轴、角色状态机、命中、位移、特效与召唤
@@ -1178,7 +1185,7 @@ PVP 机器人、自动战斗、走向传送门不在范围内。
 # draw crit=min float=mid dodge=never prob=pass choice=first
 ```
 
-- 输入：沿用 `TestsHeadless/data/scenarios/*.script`（`帧 槽位 控制事件 象限 角度 按下类型`），两条通道读同一份脚本。
+- 输入：沿用 `TestsHeadless/data/scenarios/*.script`。控制行仍是 `帧 槽位 控制事件 象限 角度 按下类型`。可另加 `frame buff` 注入行（见 A.6），不写入 `FrameInput`。两条通道读同一份脚本，注入语义必须一致。
 
 ### A.2 抽样策略 DrawPolicy
 
@@ -1219,6 +1226,31 @@ PVP 机器人、自动战斗、走向传送门不在范围内。
 2. 对齐后逐行检查上表规则；多出或缺失的行报错。
 3. `TestsHeadless/data/golden_summaries/known_deviations.txt` 列出已知偏差（规则 id 或行类型 + 场景模式 + 原因，例如 R18、Chill 禁疗、DamageTypeGradation 数池对象），匹配的差异只告警不失败。
 4. 输出：第一个差异的上下文（前后 5 行）+ 汇总计数。
+
+### A.6 脚本 buff 注入（`frame buff`）
+
+效果摘要脚本可以在控制行之外插入 buff 注入行。空行与 `#` 注释仍忽略。旧的六列控制行不变。本行不进 `FrameInput`，也不由回放 / `run-room` 执行（那些命令遇到本行应拒绝）。
+
+```text
+<frame> buff <target> <buffId>
+```
+
+- `frame`：逻辑帧，从 1 起，且不超过场景帧数。可与同一帧的控制行共存。
+- `target`：`hero` | `dummy1` | `dummy2` | `all-dummies`。
+- `buffId`：buff 表配置 id，正整数。
+
+两条通道的语义：
+
+1. 时机：在该帧 `tick` 之前施加。同一帧多行按脚本出现顺序依次施加，全部完成后再 `tick`。施加当下产生的追踪（`buff+`、`hp` 等）记在这一帧的摘要里。
+2. 目标在施加当下按 ECS 创建顺序解析，不缓存：
+   - `hero`：`playerSlot == 0` 的角色。
+   - `dummy1` / `dummy2`：没有 `playerSlot`、且没有召唤者（`m_owner` 无效）的角色中，创建顺序的第 1 / 第 2 个。房间 2071501 即怪物 61300、61320。召唤物不占用这两个槽位。
+   - `all-dummies`：上述全部角色，按创建顺序各施加一次。
+   - 目标不存在：导出失败（英文错误），不静默跳过。
+3. 施加：对每个目标调用 `BuffHolder::addBuff(buffId, context, world.setup().m_fightType)`。
+   - `context.m_applicator` 始终是 hero（槽位 0），包括目标就是 hero 的自我施加。
+   - 不设置 `m_target`、不绑定技能，其余上下文保持默认。与动作给自己挂 buff、以及命中把施加者记成攻击者的路径一致。
+   - 准入失败（配置缺失、区域、免疫、冷却、概率）不报错，该帧没有对应 `buff+`。概率仍走 `DrawPolicy`（golden 为 `prob=pass`，抽样 0，概率大于 0 即通过）。
 
 ---
 

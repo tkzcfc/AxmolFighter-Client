@@ -94,16 +94,23 @@ void runDebugSink(World& world)
         const std::string attacker = entityKey(world, event.m_attacker);
         world.appendTrace("hit " + effect + ' ' + target + ' ' + std::to_string(event.m_hitDefId) + ' ' +
                           hitResultName(event.m_result));
-        world.appendTrace("dmg " + attacker + ' ' + target + ' ' + std::to_string(event.m_effectId) + ' ' +
-                          std::to_string(event.m_damage.toInt()) + ' ' + (event.m_critical ? '1' : '0'));
+        if (event.m_result == HitResult::Hit)
+            world.appendTrace("dmg " + attacker + ' ' + target + ' ' + std::to_string(event.m_effectId) + ' ' +
+                              std::to_string(event.m_damage.toInt()) + ' ' + (event.m_critical ? '1' : '0'));
     }
     for (const HpEvent& event : ecs.singleton<EventQueue<HpEvent>>().m_items)
     {
         if (event.m_cause == HpCause::Hit)
             continue;
         const std::string key = entityKey(world, event.m_entity);
-        world.appendTrace("hp " + key + ' ' + std::to_string(event.m_delta.toInt()) + ' ' +
-                          (event.m_cause == HpCause::Dot ? "dot" : event.m_cause == HpCause::Heal ? "heal" : "other"));
+        const char* reason = "other";
+        if (event.m_cause == HpCause::Dot)
+            reason = "dot";
+        else if (event.m_cause == HpCause::Heal)
+            reason = "heal";
+        else if (event.m_cause == HpCause::Shield)
+            reason = "shield";
+        world.appendTrace("hp " + key + ' ' + std::to_string(event.m_delta.toInt()) + ' ' + reason);
     }
     for (const HitStopEvent& event : ecs.singleton<EventQueue<HitStopEvent>>().m_items)
         world.appendTrace("stop " + entityKey(world, event.m_entity) + ' ' +

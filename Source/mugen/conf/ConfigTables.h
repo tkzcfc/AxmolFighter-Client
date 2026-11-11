@@ -4,6 +4,8 @@
 #include "battle/ClipDef.h"
 #include "battle/EffectDef.h"
 #include "battle/HitDef.h"
+#include "battle/AbilityDef.h"
+#include "battle/BuffDef.h"
 #include "battle/RoleDef.h"
 #include "battle/SkillDef.h"
 
@@ -111,6 +113,8 @@ struct EffectClipDef;
 struct EffectDef;
 struct HitDef;
 struct RoleDef;
+struct BuffDef;
+struct AbilityDef;
 }  // namespace battle
 
 // 按单一 id 建立索引的表键策略。
@@ -131,6 +135,16 @@ struct KeyByIdAndOccupation
     static std::pair<int32_t, int32_t> get(const T& row)
     {
         return {row.id, row.occupation};
+    }
+};
+// 按 m_id 建立索引的表键策略（新派生表成员使用 m_ 前缀）。
+struct KeyByMId
+{
+    // 从行数据提取 m_id 键。
+    template <class T>
+    static int32_t get(const T& row)
+    {
+        return row.m_id;
     }
 };
 // 保留源表顺序的一基序号键策略。
@@ -197,7 +211,9 @@ struct KeyByOrdinal
     X(battle_effect_clip, battle::EffectClipDef, KeyById) \
     X(battle_effect, battle::EffectDef, KeyById) \
     X(battle_hit, battle::HitDef, KeyById) \
-    X(battle_role, battle::RoleDef, KeyById)
+    X(battle_role, battle::RoleDef, KeyById) \
+    X(battle_buff, battle::BuffDef, KeyByMId) \
+    X(battle_ability, battle::AbilityDef, KeyByMId)
 
 // 派生表：不读取 Lua，而是由转换器在读取全部源表后降级计算得出。
 // 必须是 MG_CONFIG_TABLES 的子集。
@@ -207,4 +223,6 @@ struct KeyByOrdinal
     X(battle_effect_clip, battle::EffectClipDef, KeyById) \
     X(battle_effect, battle::EffectDef, KeyById) \
     X(battle_hit, battle::HitDef, KeyById) \
-    X(battle_role, battle::RoleDef, KeyById)
+    X(battle_role, battle::RoleDef, KeyById) \
+    X(battle_buff, battle::BuffDef, KeyByMId) \
+    X(battle_ability, battle::AbilityDef, KeyByMId)

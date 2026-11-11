@@ -1,5 +1,7 @@
 #include "mugen/sim/skill/SkillRules.h"
 #include "mugen/sim/skill/TimelineRules.h"
+#include "mugen/sim/buff/BuffRules.h"
+#include "mugen/sim/motion/DisplacementRules.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/GameDef.h"
 #include <algorithm>
@@ -184,6 +186,13 @@ bool isAllowCast(World& world, Entity entity, int32_t index)
     auto& skill = book.m_skills[static_cast<size_t>(index)];
     if (skill.m_releaseCount == 0 && skill.m_cd > Fixed{})
         return false;
+    if (world.ecs().has<StatusFlags>(entity) &&
+        world.ecs().get<StatusFlags>(entity).active(mugen::ExtraState::Silence))
+        return false;
+    for (const auto& mod : book.m_mods)
+        if (mod.m_field == static_cast<int32_t>(conf::battle::SkillModField::DisableSlot) && mod.m_value > Fixed{} &&
+            (mod.m_slot < 0 || mod.m_slot == skill.m_slot))
+            return false;
     const auto& health = world.ecs().get<Health>(entity);
     const auto* def    = conf::Config::instance().find<conf::battle::SkillDef>(skill.m_configId);
     if (def && (def->costMp > 0 || def->costEp > 0 || def->costCrystal > 0))
@@ -215,6 +224,10 @@ bool dealButton(World& world, Entity entity, ControlEvent event)
     const int32_t next = getFightSkill(world, entity, slot);
     if (next == kNoSkill)
         return false;
+    BuffContext prepare;
+    prepare.m_target  = entity;
+    prepare.m_skillId = book.m_skills[static_cast<size_t>(next)].m_configId;
+    buff::rules::fire(world, entity, conf::battle::TriggerPoint::BeforePrepareSkill, prepare);
     if (!isAllowCast(world, entity, next))
         return false;
     if (cast.m_skill == kNoSkill)
@@ -240,7 +253,16 @@ void beginCast(World& world, Entity entity, int32_t index, bool deferFirstClip)
     auto& skill = book.m_skills[static_cast<size_t>(index)];
     const auto* def = conf::Config::instance().find<conf::battle::SkillDef>(skill.m_configId);
     timeline::rules::exitClip(world, entity);
-    skill.m_coldMaxTime = Fixed::fromInt(def ? def->cdMs : 0);
+    BuffContext castCtx;
+    castCtx.m_target  = entity;
+    castCtx.m_skillId = skill.m_configId;
+    if (skill.m_step == 1)
+        buff::rules::fire(world, entity, conf::battle::TriggerPoint::BeforeNextSkill, castCtx);
+    Fixed cdScale = Fixed::fromInt(1);
+    for (const auto& mod : book.m_mods)
+        if (mod.m_field == static_cast<int32_t>(conf::battle::SkillModField::CdScale))
+            cdScale += mod.m_value;
+    skill.m_coldMaxTime = Fixed::fromInt(def ? def->cdMs : 0) * cdScale;
     skill.m_cd          = skill.m_coldMaxTime;
     skill.m_timing      = skill.m_coldMaxTime > Fixed{};
     skill.m_releaseCount = std::max(0, skill.m_releaseCount - 1);
@@ -250,6 +272,33 @@ void beginCast(World& world, Entity entity, int32_t index, bool deferFirstClip)
     cast.m_allowInterrupt   = false;
     cast.m_allowExtraInterrupt = false;
     cast.m_interrupted      = false;
+    if (def && world.ecs().has<Health>(entity))
+    {
+        auto& health = world.ecs().get<Health>(entity);
+        Fixed mpFactor = Fixed::fromInt(1);
+        for (const auto& mod : book.m_mods)
+            if (mod.m_field == static_cast<int32_t>(conf::battle::SkillModField::MpCostScale))
+                mpFactor += mod.m_value;
+        if (world.ecs().has<Stats>(entity))
+            mpFactor *= world.ecs().get<Stats>(entity).finalStat(205);
+        const Fixed mpCost = Fixed::fromInt(def->costMp) * mpFactor;
+        const Fixed epCost = Fixed::fromInt(def->costEp) *
+                             (world.ecs().has<Stats>(entity) ? world.ecs().get<Stats>(entity).finalStat(206)
+                                                            : Fixed::fromInt(1));
+        if (def->costMp > 0)
+        {
+            health.m_mp = std::max(Fixed{}, health.m_mp - mpCost);
+            castCtx.m_tpSpent = mpCost;
+            buff::rules::fire(world, entity, conf::battle::TriggerPoint::UseTp, castCtx);
+        }
+        if (def->costEp > 0)
+        {
+            health.m_ep = std::max(Fixed{}, health.m_ep - epCost);
+            buff::rules::fire(world, entity, conf::battle::TriggerPoint::UseEp, castCtx);
+        }
+    }
+    buff::rules::fire(world, entity, conf::battle::TriggerPoint::SkillColdStart, castCtx);
+    buff::rules::fire(world, entity, conf::battle::TriggerPoint::BeforeCastSkill, castCtx);
     // 建立动作时间轴（B2 无摇杆，取第 0 方向列）并同步进入首片段。
     ActionTimeline timeline;
     if (def && !def->sequences.empty())
@@ -277,6 +326,12 @@ void endCast(World& world, Entity entity)
         return;
     timeline::rules::exitClip(world, entity);
     const auto& skill = book.m_skills[static_cast<size_t>(cast.m_skill)];
+    BuffContext castCtx;
+    castCtx.m_target  = entity;
+    castCtx.m_skillId = skill.m_configId;
+    buff::rules::fire(world, entity, conf::battle::TriggerPoint::AfterCastSkill, castCtx);
+    if (skill.m_finally || skill.m_step >= skill.m_stepCount)
+        buff::rules::fire(world, entity, conf::battle::TriggerPoint::AfterNextSkill, castCtx);
     CastEvent event;
     event.m_entity  = entity;
     event.m_skillId = skill.m_configId;
@@ -309,6 +364,7 @@ void forceInterrupt(World& world, Entity entity)
     if (cast.m_skill == kNoSkill)
         return;
     timeline::rules::exitClip(world, entity);
+    displacement::rules::reset(world, entity);
     const auto& skill = book.m_skills[static_cast<size_t>(cast.m_skill)];
     const int32_t skillId = skill.m_configId;
     CastEvent event;

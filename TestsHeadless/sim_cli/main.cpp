@@ -9,6 +9,7 @@
 
 #include <charconv>
 #include <cinttypes>
+#include <climits>
 #include <cstdio>
 #include <cstring>
 #include <fstream>
@@ -107,36 +108,61 @@ World combatWorld(int32_t roomId, uint64_t seed, int32_t occupation, int32_t lev
     return world;
 }
 
-// 读取脚本：frame slot event quadrant angle pressType。
-std::map<uint64_t, FrameInput> loadScript(const std::string& path, uint64_t frames)
+// 读取脚本：控制行 frame slot event quadrant angle pressType，以及 frame buff target buffId。
+struct LoadedScript
+{
+    std::map<uint64_t, FrameInput> inputs;
+    std::vector<sim_cli::BuffInject> buffs;
+};
+LoadedScript loadScript(const std::string& path, uint64_t frames)
 {
     std::ifstream file(path);
     if (!file)
         throw std::runtime_error("Cannot open command script: " + path);
-    std::map<uint64_t, FrameInput> inputs;
+    LoadedScript script;
     std::string line;
     uint64_t lineNumber = 0;
     while (std::getline(file, line))
     {
         ++lineNumber;
+        if (!line.empty() && line.back() == '\r')
+            line.pop_back();
         if (line.empty() || line.front() == '#')
             continue;
         std::istringstream row(line);
-        uint64_t frame;
-        uint32_t slot, event;
+        uint64_t frame = 0;
+        std::string head;
+        if (!(row >> frame >> head))
+            throw std::invalid_argument("Invalid command script line " + std::to_string(lineNumber));
+        if (head == "buff")
+        {
+            std::string target;
+            int64_t buffId = 0;
+            std::string extra;
+            if (!(row >> target >> buffId) || (row >> extra) || frame == 0 || frame > frames || buffId <= 0 ||
+                buffId > INT32_MAX ||
+                (target != "hero" && target != "dummy1" && target != "dummy2" && target != "all-dummies"))
+                throw std::invalid_argument("Invalid command script line " + std::to_string(lineNumber));
+            script.buffs.push_back({frame, target, static_cast<int32_t>(buffId)});
+            continue;
+        }
+        uint32_t slot = 0;
+        const auto [slotEnd, slotError] = std::from_chars(head.data(), head.data() + head.size(), slot);
+        uint32_t event = 0;
         int32_t quadrant = 0;
         PlayerCommand command;
         std::string extra;
-        if (!(row >> frame >> slot >> event >> quadrant >> command.angle >> command.pressType) || (row >> extra) ||
-            frame == 0 || frame > frames || event > 255)
+        if (slotError != std::errc{} || slotEnd != head.data() + head.size() ||
+            !(row >> event >> quadrant >> command.angle >> command.pressType) || (row >> extra) || frame == 0 ||
+            frame > frames || event > 255)
             throw std::invalid_argument("Invalid command script line " + std::to_string(lineNumber));
         command.quadrant     = static_cast<ControlQuadrant>(quadrant);
         command.controlEvent = static_cast<ControlEvent>(event);
-        auto& input          = inputs[frame];
+        auto& input          = script.inputs[frame];
         input.frame          = frame;
         input.players.push_back({slot, {command}});
     }
-    return inputs;
+    return script;
 }
 
 // 读取场景清单：name script room class level seed frames。
@@ -197,7 +223,7 @@ int runEmpty(int argc, char** argv)
 // 按清单条目运行一次并写出摘要；outputPath 为空时打印到 stdout。
 void runOne(const ManifestEntry& entry, const std::string& crit, const std::string& outputPath)
 {
-    const auto inputs = loadScript(entry.script, entry.frames);
+    const auto script = loadScript(entry.script, entry.frames);
     World world       = combatWorld(entry.room, entry.seed, entry.occupation, entry.level);
     sim_cli::ExportParams params;
     params.scenario = entry.name;
@@ -205,7 +231,7 @@ void runOne(const ManifestEntry& entry, const std::string& crit, const std::stri
     params.seed     = entry.seed;
     params.frames   = entry.frames;
     params.crit     = crit;
-    const auto result = sim_cli::exportSummary(world, inputs, params);
+    const auto result = sim_cli::exportSummary(world, script.inputs, script.buffs, params);
     if (outputPath.empty())
     {
         std::cout << summary::writeSummary(result);
@@ -271,7 +297,7 @@ int compareOne(const ManifestEntry& entry, const std::string& crit, const std::s
     if (!summary::parseSummary(readText(goldenPath), golden, parseError))
         throw std::runtime_error("Cannot parse golden: " + parseError);
 
-    const auto inputs = loadScript(entry.script, entry.frames);
+    const auto script = loadScript(entry.script, entry.frames);
     World world       = combatWorld(entry.room, entry.seed, entry.occupation, entry.level);
     sim_cli::ExportParams params;
     params.scenario = entry.name;
@@ -279,7 +305,7 @@ int compareOne(const ManifestEntry& entry, const std::string& crit, const std::s
     params.seed     = entry.seed;
     params.frames   = entry.frames;
     params.crit     = crit;
-    const auto actual = sim_cli::exportSummary(world, inputs, params);
+    const auto actual = sim_cli::exportSummary(world, script.inputs, script.buffs, params);
 
     const auto report = summary::compareSummaries(golden, actual, deviations);
     out << (report.passed() ? "PASS" : "FAIL") << ' ' << entry.name << ' ' << crit;

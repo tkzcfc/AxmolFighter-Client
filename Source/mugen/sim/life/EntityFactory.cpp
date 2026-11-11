@@ -17,6 +17,12 @@ std::string motionFile(int32_t resSpineId)
     const auto* spine = conf::Config::instance().find<conf::ResSpineConfig>(resSpineId);
     return spine ? AvatarPaths::motionFileFromSpine(spine->fileName) : std::string{};
 }
+// 骨骼缩放。碰撞框按 Transform.m_scale 换到世界坐标。
+Fixed spineScale(int32_t resSpineId)
+{
+    const auto* spine = conf::Config::instance().find<conf::ResSpineConfig>(resSpineId);
+    return spine ? spine->scale : Fixed::fromInt(1);
+}
 
 // 由 SpawnRequest 装配一个角色实体（原型装配，移植旧实现 RoleSpawner::spawnRole）。
 Entity materializeRole(World& world, const SpawnRequest& request, SpawnStage stage)
@@ -50,6 +56,7 @@ Entity materializeRole(World& world, const SpawnRequest& request, SpawnStage sta
     transform.m_towardX  = request.m_towardX == -1 ? -1 : 1;
     transform.m_vectorX  = Fixed::fromInt(transform.m_towardX);
     transform.m_vectorZ  = request.m_vectorZ;
+    transform.m_scale    = spineScale(row->resSpineId);
     ecs.add(entity, transform);
 
     MotionState motion;
@@ -66,14 +73,20 @@ Entity materializeRole(World& world, const SpawnRequest& request, SpawnStage sta
     ecs.add(entity, stats);
 
     Health health;
-    health.m_maxHp = stats.maxHp();
-    health.m_hp    = health.m_maxHp;
+    health.m_maxHp  = stats.maxHp();
+    health.m_hp     = health.m_maxHp;
+    health.m_prevHp = health.m_hp;
+    health.m_prevEp = health.m_ep;
     ecs.add(entity, health);
 
     ecs.add(entity, StatusFlags{});
     ecs.add(entity, Pause{});
     ecs.add(entity, Intent{});
     ecs.add(entity, BuffList{});
+    ecs.add(entity, AbilityList{});
+    ecs.add(entity, TauntTable{});
+    ecs.add(entity, ComboMeter{});
+    ecs.add(entity, RageState{});
 
     RoleState roleState;
     roleState.m_state = RoleStateId::Idle;
@@ -143,6 +156,7 @@ Entity materializeEffect(World& world, const SpawnRequest& request, SpawnStage s
     transform.m_towardX  = request.m_towardX == -1 ? -1 : 1;
     transform.m_vectorX  = request.m_vectorX;
     transform.m_vectorZ  = request.m_vectorZ;
+    transform.m_scale    = spineScale(row->resSpineId);
     ecs.add(entity, transform);
 
     MotionState motion;
@@ -156,6 +170,9 @@ Entity materializeEffect(World& world, const SpawnRequest& request, SpawnStage s
     info.m_baseSkillId = request.m_source.m_baseSkillId;
     info.m_slot            = request.m_source.m_slot;
     info.m_attributeSource = request.m_owner;
+    // 没有后继的受击特效记住目标，后续命中复用同一实例。
+    if (row->nextEffectId == -1)
+        info.m_hitEntity = request.m_hitEntity;
     ecs.add(entity, info);
     ecs.add(entity, Pause{});
 

@@ -47,6 +47,9 @@ void runTimelineRoles(World& world)
                 timeline.m_deferAdvance = false;
                 return;
             }
+            if (const Pause* pause = world.ecs().tryGet<Pause>(entity))
+                if (pause->m_paused)
+                    return;
             if (timeline.m_clips.empty() || timeline.m_clipId == 0)
             {
                 skill::rules::endCast(world, entity);
@@ -79,6 +82,9 @@ void runTimelineEffects(World& world)
                 timeline.m_deferAdvance = false;
                 return;
             }
+            if (const Pause* pause = world.ecs().tryGet<Pause>(entity))
+                if (pause->m_paused)
+                    return;
             if (timeline.m_clipId == 0)
             {
                 timeline.m_finished = true;

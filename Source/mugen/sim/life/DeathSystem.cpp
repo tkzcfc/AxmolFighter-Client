@@ -5,6 +5,7 @@
 // 产生：`DeathEvent`、`SpawnRequest`(ko/死亡特效)、`DespawnRequest`
 #include "mugen/sim/Systems.h"
 #include "mugen/sim/World.h"
+#include "mugen/sim/buff/BuffRules.h"
 #include "mugen/sim/effect/EffectRules.h"
 #include "mugen/conf/ReflectedConfig.h"
 
@@ -26,6 +27,9 @@ void announceDeath(World& world, Entity entity, RoleState& state)
         world.ecs().get<Identity>(entity).m_configId);
     if (role && role->koEffectId > 0)
         effect::rules::spawnFromRole(world, entity, role->koEffectId, {});
+    const Entity owner = world.ecs().get<Identity>(entity).m_owner;
+    if (owner.value != 0 && world.ecs().alive(owner))
+        buff::rules::notifySummonDeath(world, owner);
 }
 }  // namespace
 

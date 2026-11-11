@@ -73,6 +73,7 @@ World World::clone() const
     copy.m_input     = nullptr;
     copy.m_drawPolicy = nullptr;
     copy.m_traceLines.clear();
+    copy.m_buffChain = {};
     return copy;
 }
 

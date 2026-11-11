@@ -11,6 +11,7 @@ TEST_CASE("Status attack refuses walk hit resets and death is terminal")
     const auto entity = world.create(GroupKind::Role);
     world.ecs().add(entity, RoleStatus{});
     world.ecs().add(entity, RoleHitState{});
+    world.ecs().add(entity, Vitals{});
     CHECK(Role(world, entity).changeStatus(EntityRoleStatus::Attack));
     CHECK_FALSE(Role(world, entity).changeStatus(EntityRoleStatus::Walk));
     CHECK(Role(world, entity).changeStatus(EntityRoleStatus::Hit, 42));

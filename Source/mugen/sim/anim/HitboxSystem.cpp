@@ -32,6 +32,9 @@ void runHitbox(World& world)
         [&](Entity entity, const MotionState& motion, Hitboxes& hitboxes, const Transform& transform) {
             if (world.ecs().has<Despawning>(entity) || world.ecs().has<Inactive>(entity))
                 return;
+            if (const Pause* pause = world.ecs().tryGet<Pause>(entity))
+                if (pause->m_paused)
+                    return;
             hitboxes.m_attack.clear();
             hitboxes.m_damage.clear();
             hitboxes.m_sampledFrame = world.frame();

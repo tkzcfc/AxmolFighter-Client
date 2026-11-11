@@ -5,7 +5,10 @@
 // 产生：`HitEvent`、`HpEvent`、`DeathRequest`、`HitStopEvent`、`SpawnRequest`(受击特效)、`DespawnRequest`、`CastEvent`(Cancelled)；RNG
 #include "mugen/sim/Systems.h"
 #include "mugen/sim/World.h"
+#include "mugen/sim/buff/BuffRules.h"
 #include "mugen/sim/combat/CombatRules.h"
+#include "mugen/conf/battle/EffectDef.h"
+#include "mugen/conf/battle/HitDef.h"
 #include <algorithm>
 #include <vector>
 
@@ -35,6 +38,7 @@ void runCombat(World& world)
         return creationRank(created, a.m_b) < creationRank(created, b.m_b);
     });
 
+    std::vector<Entity> hitEffects;
     for (const ContactEvent& contact : contacts)
     {
         if (contact.m_phase == ContactPhase::End)
@@ -43,14 +47,54 @@ void runCombat(World& world)
         if (!combat::rules::gate(world, contact, ctx))
             continue;
         combat::rules::recordHit(world, ctx);
-        // S2: trigger EvadeSuccess on invulnerable or an active dodge skill (steps 3-4).
-        if (combat::rules::resolveDodge(world, ctx))
+        hitEffects.push_back(ctx.m_effect);
+        BuffContext hitCtx;
+        hitCtx.m_applicator = ctx.m_attacker;
+        hitCtx.m_target     = ctx.m_target;
+        hitCtx.m_skillId    = ctx.m_baseSkillId > 0 ? ctx.m_baseSkillId : ctx.m_skillId;
+        hitCtx.m_boundSkill = hitCtx.m_skillId;
+        hitCtx.m_effectId   = ctx.m_effectId;
+        const bool invincible = world.ecs().has<StatusFlags>(ctx.m_target) &&
+                                world.ecs().get<StatusFlags>(ctx.m_target).active(mugen::ExtraState::Invincible);
+        const bool invincibleGate = invincible && ctx.m_effectRow && !ctx.m_effectRow->hitExtraControl.empty() &&
+                                    ctx.m_effectRow->hitExtraControl.front() == 0 && ctx.m_hit->hitMust != 1;
+        if (invincibleGate)
+        {
+            bool dodging = false;
+            if (world.ecs().has<SkillCast>(ctx.m_target) && world.ecs().has<SkillBook>(ctx.m_target))
+            {
+                const auto& cast = world.ecs().get<SkillCast>(ctx.m_target);
+                const auto& book = world.ecs().get<SkillBook>(ctx.m_target);
+                if (cast.m_skill >= 0 && static_cast<size_t>(cast.m_skill) < book.m_skills.size())
+                {
+                    const int32_t slot = book.m_skills[static_cast<size_t>(cast.m_skill)].m_slot;
+                    dodging = slot >= 0 && static_cast<size_t>(slot) < book.m_slots.size() &&
+                              book.m_slots[static_cast<size_t>(slot)] == "F";
+                }
+            }
+            HitEvent event;
+            event.m_effect   = ctx.m_effect;
+            event.m_target   = ctx.m_target;
+            event.m_attacker = ctx.m_attacker;
+            event.m_hitDefId = ctx.m_hit->id;
+            event.m_effectId = ctx.m_effectId;
+            event.m_result   = dodging ? HitResult::Evade : HitResult::NoDamage;
+            world.ecs().singleton<EventQueue<HitEvent>>().push(event);
+            if (dodging)
+                buff::rules::fire(world, ctx.m_target, conf::battle::TriggerPoint::EvadeSuccess, hitCtx);
             continue;
-        // S2: trigger BeforeToBeHit (step 6). hit_type == -1 skips damage but still spawns hit effects.
-        // S2: trigger BeforeHit (step 7).
-        // S2: trigger op probability draws (R15, after dodge, before crit).
+        }
+        if (combat::rules::resolveDodge(world, ctx))
+        {
+            buff::rules::fire(world, ctx.m_target, conf::battle::TriggerPoint::AttackMiss, hitCtx);
+            continue;
+        }
+        buff::rules::fire(world, ctx.m_target, conf::battle::TriggerPoint::BeforeToBeHit, hitCtx);
+        buff::rules::fire(world, ctx.m_attacker, conf::battle::TriggerPoint::BeforeHit, hitCtx);
         combat::rules::computeDamage(world, ctx);
         combat::rules::applyDamage(world, ctx);
+        hitCtx.m_damage   = ctx.m_damage;
+        hitCtx.m_critical = ctx.m_critical;
         const bool superArmor = world.ecs().has<StatusFlags>(ctx.m_target) &&
                                 world.ecs().get<StatusFlags>(ctx.m_target).active(mugen::ExtraState::SuperArmor);
         if (!superArmor)
@@ -58,12 +102,33 @@ void runCombat(World& world)
             combat::rules::applyHitStop(world, ctx);
             combat::rules::requestHitReaction(world, ctx);
         }
-        // S2: trigger rage and partner rage (step 11).
-        // S2: trigger AfterToBeHit / AfterHit (step 12).
-        // S2: trigger debuff admit when the target is not dodging (step 13).
+        const bool dead = world.ecs().has<Health>(ctx.m_target) && world.ecs().get<Health>(ctx.m_target).m_dead;
+        hitCtx.m_targetDead = dead;
+        if (!dead)
+            buff::rules::fire(world, ctx.m_target, conf::battle::TriggerPoint::AfterToBeHit, hitCtx);
+        buff::rules::fire(world, ctx.m_attacker, conf::battle::TriggerPoint::AfterHit, hitCtx);
+        bool dodging = false;
+        if (world.ecs().has<SkillCast>(ctx.m_target) && world.ecs().has<SkillBook>(ctx.m_target))
+        {
+            const auto& cast = world.ecs().get<SkillCast>(ctx.m_target);
+            const auto& book = world.ecs().get<SkillBook>(ctx.m_target);
+            if (cast.m_skill != kNoSkill && cast.m_skill >= 0 &&
+                static_cast<size_t>(cast.m_skill) < book.m_skills.size())
+            {
+                const auto slot = book.m_skills[static_cast<size_t>(cast.m_skill)].m_slot;
+                dodging         = slot >= 0 && static_cast<size_t>(slot) < book.m_slots.size() &&
+                          book.m_slots[static_cast<size_t>(slot)] == "F";
+            }
+        }
+        if (!dodging && ctx.m_effectRow)
+            for (const int32_t id : ctx.m_effectRow->debuffId)
+                if (id > 0)
+                    buff::rules::admit(world, ctx.m_target, id, hitCtx);
         combat::rules::emitHit(world, ctx);
         combat::rules::spawnHitEffects(world, ctx);
-        // S2: trigger CueEvent from the target sound_type (step 15).
     }
+    // 帧末统一提交命中间隔（旧实现同帧多目标都能命中）。
+    for (const Entity effect : hitEffects)
+        combat::rules::commitHitInterval(world, effect);
 }
 }  // namespace mugen::sim

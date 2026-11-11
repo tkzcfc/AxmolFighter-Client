@@ -11,6 +11,14 @@
 
 namespace mugen::sim
 {
+// 同步触发链的重入状态。不进快照、哈希与克隆。
+struct BuffDispatch
+{
+    // 当前链深度。
+    int32_t m_depth = 0;
+    // 本条链已执行的（实例序号，触发点）。
+    std::vector<uint64_t> m_seen;
+};
 // 世界使用的组件与单例 ECS 存储类型。
 using WorldECS = ECSManager<Components, Singletons>;
 // 新 sim 快照格式版本。
@@ -51,6 +59,8 @@ public:
     void appendTrace(std::string line) { m_traceLines.push_back(std::move(line)); }
     // 清空追踪行（DebugSink 调用）。
     void clearTraceLines() { m_traceLines.clear(); }
+    // 同步触发链重入状态。不进快照。
+    BuffDispatch& buffChain() { return m_buffChain; }
 
 private:
     // 初始化时传入的世界配置。
@@ -65,5 +75,7 @@ private:
     const DrawPolicy* m_drawPolicy = nullptr;
     // DebugSink 追踪行。不参与快照、哈希与克隆。
     std::vector<std::string> m_traceLines;
+    // 同步触发链。不进快照、哈希与克隆。
+    BuffDispatch m_buffChain;
 };
 }  // namespace mugen::sim

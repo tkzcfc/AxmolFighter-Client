@@ -73,7 +73,8 @@ struct Despawning
 #define MG_COMPONENT_LIST(X)                                                                                          \
     X(Inactive) X(Despawning) X(Identity) X(PlayerControl) X(Intent) X(Transform) X(Displacement) X(MotionState)      \
         X(Hitboxes) X(Stats) X(StatusFlags) X(Health) X(Pause) X(RoleState) X(HitState) X(SkillBook) X(SkillCast)      \
-            X(ActionTimeline) X(EffectInfo) X(HitTracker) X(Lifetime) X(Follow) X(ContactMemory) X(BuffList)
+            X(ActionTimeline) X(EffectInfo) X(HitTracker) X(Lifetime) X(Follow) X(ContactMemory) X(BuffList) \
+                X(AbilityList) X(TauntTable) X(ComboMeter) X(RageState)
 
 namespace mugen::sim
 {

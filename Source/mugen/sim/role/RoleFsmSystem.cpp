@@ -5,6 +5,7 @@
 // 产生：`StateEvent`、`CastEvent`
 #include "mugen/sim/Systems.h"
 #include "mugen/sim/World.h"
+#include "mugen/sim/buff/BuffRules.h"
 #include "mugen/sim/motion/DisplacementRules.h"
 #include "mugen/sim/skill/SkillRules.h"
 #include "mugen/conf/BattleConst.h"
@@ -20,8 +21,14 @@ void transition(World& world, Entity entity, RoleState& state, RoleStateId to)
     if (state.m_state == to)
         return;
     const RoleStateId from = state.m_state;
-    state.m_state          = to;
-    state.m_stateMs        = {};
+    BuffContext ended;
+    ended.m_target = entity;
+    buff::rules::fire(world, entity, conf::battle::TriggerPoint::BehaviorStateEnd, ended);
+    state.m_state   = to;
+    state.m_stateMs = {};
+    BuffContext began;
+    began.m_target = entity;
+    buff::rules::fire(world, entity, conf::battle::TriggerPoint::BehaviorStateStart, began);
     StateEvent event;
     event.m_entity = entity;
     event.m_from   = static_cast<int32_t>(from);
@@ -66,6 +73,7 @@ void replayHit(World& world, Entity entity, HitState& hit, MotionState& motion)
     hit.m_towardX         = hit.m_pendingTowardX;
     hit.m_pendingHitDefId = 0;
     hit.m_displacementEnd = false;
+    hit.m_animationEnd    = false;
     playHitMotion(motion);
     setHitDisplacement(world, entity, hit);
 }
@@ -205,6 +213,9 @@ void runRoleFsm(World& world)
             if (world.ecs().has<Despawning>(entity) || world.ecs().has<Inactive>(entity))
                 return;
             state.m_prev = state.m_state;
+            if (const Pause* pause = world.ecs().tryGet<Pause>(entity))
+                if (pause->m_paused)
+                    return;
 
             // 1. 已在死亡：只维持完成位。进入动作在转移当帧执行。
             if (state.m_state == RoleStateId::Death)
@@ -228,7 +239,14 @@ void runRoleFsm(World& world)
                 return;
             }
 
-            // 3. 待处理受击。已在 Hit 上追击重播；其余（含 HitSwitch）重新进入并复位计时。
+            // 3. 已在 Hit：先按完成条件进 HitSwitch，本帧不消费待处理受击。
+            if (state.m_state == RoleStateId::Hit && hit.m_pendingHitDefId != 0)
+            {
+                updateHit(world, entity, state, hit, motion, disp, dtMs);
+                if (state.m_state == RoleStateId::HitSwitch)
+                    return;
+            }
+            // 4. 待处理受击。已在 Hit 上追击重播；其余（含 HitSwitch）重新进入并复位计时。
             if (hit.m_pendingHitDefId != 0)
             {
                 if (state.m_state == RoleStateId::Hit)

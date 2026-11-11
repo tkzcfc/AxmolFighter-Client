@@ -1,5 +1,5 @@
 // [4.5] LocomotionSystem
-// 读：`RoleState`、`Intent.m_move`、`Stats`(移速)、`StatusFlags`(canMove)
+// 读：`RoleState`、`Intent.m_move`、`Pause`
 // 写：`Displacement`（控制速度）、`Transform`（朝向）
 // 消费：—
 // 产生：—
@@ -19,6 +19,9 @@ void runLocomotion(World& world)
             Displacement& displacement, const Identity& identity) {
             if (world.ecs().has<Despawning>(entity) || world.ecs().has<Inactive>(entity))
                 return;
+            if (const Pause* pause = world.ecs().tryGet<Pause>(entity))
+                if (pause->m_paused)
+                    return;
             // 过渡帧不写速度（与旧实现一致：状态进入帧只播动作，不推进位移）。
             if (state.m_state != state.m_prev)
                 return;
@@ -49,6 +52,7 @@ void runLocomotion(World& world)
             {
                 const Fixed rate  = state.m_state == RoleStateId::Run ? conf::kRunRate : conf::kWalkRate;
                 const Fixed speed = row->velocity * rate;
+                // 移速修正只由 Displacement 乘 velocityScale，这里写原始速度。
                 displacement.m_velocity.x = FixedMath::cosDeg(angle) * speed * transform.m_vectorX;
                 displacement.m_velocity.z = FixedMath::sinDeg(angle) * speed * transform.m_vectorZ;
                 displacement.m_velocity.y = {};

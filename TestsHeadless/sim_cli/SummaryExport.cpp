@@ -1,9 +1,10 @@
 #include "SummaryExport.h"
 
 #include "mugen/sim/DrawPolicy.h"
-#include "mugen/conf/GameDef.h"
+#include "mugen/sim/buff/BuffRules.h"
 #include <map>
 #include <sstream>
+#include <stdexcept>
 
 namespace mugen::sim_cli
 {
@@ -177,7 +178,52 @@ private:
 };
 }  // namespace
 
-summary::Summary exportSummary(World& world, const std::map<uint64_t, FrameInput>& inputs, const ExportParams& params)
+// 在该帧 tick 之前按脚本顺序准入 Buff。目标按当下创建顺序解析。
+void applyBuffs(World& world, uint64_t frame, const std::vector<BuffInject>& buffs)
+{
+    Entity hero;
+    std::vector<Entity> dummies;
+    world.ecs().each<Identity>([&](Entity entity, const Identity& identity) {
+        if (identity.m_kind != SpawnKind::Role)
+            return;
+        if (identity.m_playerSlot && *identity.m_playerSlot == 0)
+            hero = entity;
+        else if (!identity.m_playerSlot && identity.m_owner.value == 0)
+            dummies.push_back(entity);
+    });
+    if (hero.value == 0)
+        throw std::runtime_error("Buff inject: hero is missing");
+    auto admitOne = [&](Entity target, int32_t buffId) {
+        if (target.value == 0 || !world.ecs().alive(target))
+            throw std::runtime_error("Buff inject: target is missing at frame " + std::to_string(frame));
+        BuffContext ctx;
+        ctx.m_applicator = hero;
+        buff::rules::admit(world, target, buffId, ctx);
+    };
+    for (const auto& row : buffs)
+    {
+        if (row.frame != frame)
+            continue;
+        if (row.target == "hero")
+            admitOne(hero, row.buffId);
+        else if (row.target == "dummy1")
+            admitOne(dummies.empty() ? Entity{} : dummies[0], row.buffId);
+        else if (row.target == "dummy2")
+            admitOne(dummies.size() < 2 ? Entity{} : dummies[1], row.buffId);
+        else if (row.target == "all-dummies")
+        {
+            if (dummies.empty())
+                throw std::runtime_error("Buff inject: target is missing at frame " + std::to_string(frame));
+            for (Entity dummy : dummies)
+                admitOne(dummy, row.buffId);
+        }
+        else
+            throw std::runtime_error("Buff inject: unknown target " + row.target);
+    }
+}
+
+summary::Summary exportSummary(World& world, const std::map<uint64_t, FrameInput>& inputs,
+                               const std::vector<BuffInject>& buffs, const ExportParams& params)
 {
     if (params.crit != "min" && params.crit != "max")
         throw std::invalid_argument("--crit must be min or max");
@@ -194,6 +240,7 @@ summary::Summary exportSummary(World& world, const std::map<uint64_t, FrameInput
     exporter.scanInitial();
     for (uint64_t frame = 1; frame <= params.frames; ++frame)
     {
+        applyBuffs(world, frame, buffs);
         const auto input = inputs.find(frame);
         world.tick(input == inputs.end() ? FrameInput{frame, {}, {}, {}} : input->second);
         exporter.afterTick(static_cast<int64_t>(frame));

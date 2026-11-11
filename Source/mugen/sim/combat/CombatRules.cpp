@@ -87,14 +87,29 @@ bool gate(World& world, const ContactEvent& contact, HitContext& ctx)
 }
 
 // 步骤 2：记一次命中。hitInterval 为 -1 时按目标去重。
+// 命中间隔不在本步写入：旧实现把间隔推迟到帧末（下一帧初）才设置，同帧多个目标都能命中。
 void recordHit(World& world, const HitContext& ctx)
 {
     auto& tracker = world.ecs().get<HitTracker>(ctx.m_effect);
     if (ctx.m_hit->hitInterval == -1)
         tracker.m_hitTargets.push_back(ctx.m_target);
     ++tracker.m_hitCount;
-    if (ctx.m_hit->hitInterval != -1)
-        tracker.m_hitInterval = Fixed::fromInt(ctx.m_hit->hitInterval);
+}
+
+// 帧末提交命中间隔：本帧发生过命中的特效从下一帧起进入间隔冷却。
+void commitHitInterval(World& world, Entity effect)
+{
+    auto& tracker = world.ecs().get<HitTracker>(effect);
+    if (world.ecs().has<EffectInfo>(effect))
+    {
+        const auto& info = world.ecs().get<EffectInfo>(effect);
+        const auto* effectRow = conf::Config::instance().find<conf::battle::EffectDef>(info.m_configId);
+        const auto* hitRow = effectRow && effectRow->hitId > 0
+                                 ? conf::Config::instance().find<conf::battle::HitDef>(effectRow->hitId)
+                                 : nullptr;
+        if (hitRow && hitRow->hitInterval != -1)
+            tracker.m_hitInterval = Fixed::fromInt(hitRow->hitInterval);
+    }
 }
 
 // 步骤 5：非必中才抽样 Dodge。成功发出 Miss。
@@ -196,8 +211,9 @@ void spawnHitEffects(World& world, const HitContext& ctx)
 {
     for (const int32_t id : ctx.m_effectRow->hitEffectIds)
         if (id > 0)
-            effect::rules::spawnHitEffect(world, ctx.m_attacker, id, ctx.m_target,
-                                          {ctx.m_skillId, ctx.m_baseSkillId, ctx.m_slot, 0, 0});
+            effect::rules::spawnHitEffect(world, ctx.m_attacker, ctx.m_effect, id, ctx.m_target,
+                                          {ctx.m_skillId, ctx.m_baseSkillId, ctx.m_slot, 0, 0},
+                                          ctx.m_contact);
 }
 
 // 步骤 15：命中结果。音效 Cue 留给 S2。

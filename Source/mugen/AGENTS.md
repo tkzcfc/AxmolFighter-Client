@@ -17,7 +17,7 @@ Source/mugen/
   avatar/    MotionPlayer and avatar/data (.motion, .box, avatar.bin). No engine headers.
   render/    Client only. The whole tree is inside #ifdef RUNTIME_IN_AXMOL.
   sim_legacy/ namespace mugen::sim_legacy. Current battle logic, frozen (no new features; the new ECS sim goes into a new `sim/` per DESIGN.md). No engine dependency.
-  sim/       namespace mugen::sim. New ECS battle sim (DESIGN.md, slices S0–S8; S0 + S1 done). See "New sim (sim/)" below. Never include sim_legacy.
+  sim/       namespace mugen::sim. New ECS battle sim (DESIGN.md, slices S0–S8; S0 + S1 + S2 done). See "New sim (sim/)" below. Never include sim_legacy.
 ```
 
 Headless targets: `mugen_tests` and `mugen_legacy_cli` link `sim_legacy`; `mugen_sim_tests` and `mugen_sim_cli` link `sim`. No binary links both. Equivalence is checked with effect-summary goldens in `TestsHeadless/data/golden_summaries/` (`mugen_legacy_cli export-summary`, `compare-summary`, `run_summary_export.ps1`; format in DESIGN.md appendix A).
@@ -31,9 +31,10 @@ Headless targets: `mugen_tests` and `mugen_legacy_cli` link `sim_legacy`; `mugen
 - Systems never include or call each other. They communicate only through components and the `EventQueue<T>` singletons registered in `Singletons.h`. Requests (`XxxRequest`) have one draining owner system; facts (`XxxEvent`) are read-only and cleared by `FlushSystem`. All event structs live in `Events.h`.
 - Stateless rule libraries live in `<domain>/XxxRules.{h,cpp}` under `mugen::sim::<domain>::rules` (e.g. `skill::rules::beginCast`, `buff::rules::admit/remove`, `displacement::rules::set`). They write only their own domain's components and may append events; they are the only sanctioned synchronous chain (DESIGN P-1).
 - `MG_COMPONENT_LIST` in `sim/Components.h` and `MG_SINGLETON_LIST` in `sim/Singletons.h` are the only registries; their order fixes snapshot type ids. Components hold gameplay state only. Summary / trace bookkeeping (trace lines, pending `disp-` endpoints) lives on `World` as non-serialized, non-hashed members.
-- Buff data model is op-based (`BuffOp` kinds, DESIGN §5), not per-rule classes. S1 implements only the `Flag` op (super armor via `StatusFlags` refcount); clip buffs are admitted on clip enter and removed on clip exit (`BuffEvent` Added/Removed; Removed is emitted by `BuffTickSystem` on the next frame).
+- Buff engine lives in `sim/buff/` (DESIGN §5, slice S2), op-based rather than per-rule classes: `BuffComponents.h` (`BuffList`/`AbilityList`), `BuffRules.h/.cpp` (`admit`/`remove`/`fire`/`tick`), `BuffEval.cpp` (`ValueExpr`/`Predicate`), `BuffOps.cpp` (op interpreter), `BuffInternal.h` (exec state), `BuffTickSystem.cpp` (P2). Buff interval/times/duration, add-CD, and special-ability CD/period continue during hit-stop (DESIGN §3.4). Clip buffs are still admitted on clip enter and removed on clip exit.
+- Data flow: source tables `buff`/`buff_rule`/`special_ability` → `config_converter/lower/` (`BuffLower`/`AbilityLower`/`LowerBuffShared`) → `conf/battle::{BuffDef,AbilityDef}` → `config.bin` → runtime interpreter (op / predicate / `ValueExpr`). Lowering (`Content/mugen/config/lower_report.txt`): buff 9337 rows (9203 lowered, 128 no-op, 6 unsupported); ability 854 rows (308 lowered, 546 no-op). No-op scope is artifact, crystal, and controllable-effect ops.
 - Runtime battle tables are `conf::battle::*Def` (derived tables lowered by the converter; do not edit by hand).
-- Golden equivalence: `mugen_sim_cli compare-scenario --all` (run from `TestsHeadless`) against `data/golden_summaries/`. Never edit a golden to make a scenario pass; list differences as proposals in a report.
+- Golden equivalence: `mugen_sim_cli compare-scenario --all` (run from `TestsHeadless`) against `data/golden_summaries/`. Never edit a golden to make a scenario pass; list differences as proposals in a report. S2 buff goldens are `data/scenarios/buff_*.script` with coverage map `data/golden_summaries/buff_coverage.txt`. Scripts may inject `frame buff <target> <buffId>` (DESIGN A.6; not written into `FrameInput`). `buff_spawn` currently fails; that is S3 hit-state work, not an S2 gap.
 
 ## Prohibitions
 
@@ -83,7 +84,7 @@ No compatibility shim. Interfaces can change. Do not null-check a value the type
 
 - `MG_CONFIG_TABLES` in `conf/ConfigTables.h` is the only table registry. `MG_CONFIG_REFS` declares cross-table references.
 - A C++ struct is the schema. The packer matches Lua fields both ways and reports the path of every mismatch.
-- `config.bin` starts with magic `MGCF`, a version, and a schema hash. A hash mismatch refuses to load.
+- `config.bin` starts with magic `MGCF`, a version, and a schema hash. A hash mismatch refuses to load. Derived `conf/battle::*Def` (including `BuffDef`/`AbilityDef`) are packed into the same archive and participate in `schemaHash`.
 - `Config::find<T>()` may return null. `Config::get<T>()` asserts and logs.
 
 ## Simulation
@@ -104,7 +105,7 @@ pwsh TestsHeadless/run_headless_tests.ps1 [-Filter <doctest filter>] [-Config Re
 pwsh TestsHeadless/check_rules.ps1 [-Paths core,conf,avatar,sim_legacy]
 ```
 
-`run_headless_tests.ps1` configures, builds, runs `mugen_tests`, and returns its exit code. `check_rules.ps1` prints `file:line: rule` and returns non-zero on a violation. `mugen_legacy_cli` replays and runs rooms headless.
+`run_headless_tests.ps1` configures, builds, runs `mugen_tests`, and returns its exit code. `check_rules.ps1` prints `file:line: rule` and returns non-zero on a violation. `mugen_legacy_cli` replays and runs rooms headless. `mugen_sim_tests` Buff unit tests: `TestsHeadless/sim_tests/BuffLifecycleTest.cpp`, `BuffOpsTest.cpp`, `BuffPredicateTest.cpp`, `BuffRulesRefTest.cpp`.
 
 
 ## VFS mount topology (client)

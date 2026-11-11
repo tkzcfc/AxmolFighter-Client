@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <charconv>
 #include <chrono>
+#include <climits>
 #include <cstdint>
 #include <cstdlib>
 #include <fstream>
@@ -78,37 +79,81 @@ std::map<uint64_t, uint64_t> loadHashes(const std::string& path)
         throw std::runtime_error("Cannot read hash file: " + path);
     return hashes;
 }
-std::map<uint64_t, FrameInput> loadScript(const std::string& path, uint64_t frames)
+// 控制行与可选的 buff 注入行。注入只在 export-summary 里执行。
+struct LoadedScript
+{
+    std::map<uint64_t, FrameInput> inputs;
+    std::vector<legacy_cli::BuffInject> buffs;
+};
+legacy_cli::BuffInjectTarget buffTarget(std::string_view text)
+{
+    if (text == "hero")
+        return legacy_cli::BuffInjectTarget::Hero;
+    if (text == "dummy1")
+        return legacy_cli::BuffInjectTarget::Dummy1;
+    if (text == "dummy2")
+        return legacy_cli::BuffInjectTarget::Dummy2;
+    if (text == "all-dummies")
+        return legacy_cli::BuffInjectTarget::AllDummies;
+    throw std::invalid_argument("Invalid buff target: " + std::string(text));
+}
+LoadedScript loadScript(const std::string& path, uint64_t frames, bool allowBuffInject)
 {
     std::ifstream file(path);
     if (!file)
         throw std::runtime_error("Cannot open command script: " + path);
-    std::map<uint64_t, FrameInput> inputs;
+    LoadedScript script;
     std::string line;
     uint64_t lineNumber = 0;
     while (std::getline(file, line))
     {
         ++lineNumber;
+        if (!line.empty() && line.back() == '\r')
+            line.pop_back();
         if (line.empty() || line.front() == '#')
             continue;
         std::istringstream row(line);
-        uint64_t frame;
-        uint32_t slot, event;
-        int32_t quadrant = 0;
+        uint64_t frame = 0;
+        std::string head;
+        if (!(row >> frame >> head))
+            throw std::invalid_argument("Invalid command script line " + std::to_string(lineNumber));
+        if (head == "buff")
+        {
+            if (!allowBuffInject)
+                throw std::invalid_argument("Buff inject lines are only valid for export-summary, line " +
+                                            std::to_string(lineNumber));
+            std::string target;
+            int64_t buffId = 0;
+            std::string extra;
+            if (!(row >> target >> buffId) || (row >> extra) || frame == 0 || frame > frames || buffId <= 0 ||
+                buffId > INT32_MAX)
+                throw std::invalid_argument("Invalid command script line " + std::to_string(lineNumber));
+            legacy_cli::BuffInject inject;
+            inject.frame  = frame;
+            inject.target = buffTarget(target);
+            inject.buffId = static_cast<int32_t>(buffId);
+            script.buffs.push_back(inject);
+            continue;
+        }
+        uint32_t slot = 0;
+        const auto [slotEnd, slotError] = std::from_chars(head.data(), head.data() + head.size(), slot);
+        uint32_t event          = 0;
+        int32_t quadrant        = 0;
         PlayerCommand command;
         std::string extra;
-        if (!(row >> frame >> slot >> event >> quadrant >> command.angle >> command.pressType) || (row >> extra) ||
-            frame == 0 || frame > frames || event > 255)
+        if (slotError != std::errc{} || slotEnd != head.data() + head.size() ||
+            !(row >> event >> quadrant >> command.angle >> command.pressType) || (row >> extra) || frame == 0 ||
+            frame > frames || event > 255)
             throw std::invalid_argument("Invalid command script line " + std::to_string(lineNumber));
         command.quadrant     = static_cast<ControlQuadrant>(quadrant);
         command.controlEvent = static_cast<ControlEvent>(event);
-        auto& input          = inputs[frame];
+        auto& input          = script.inputs[frame];
         input.frame          = frame;
         input.players.push_back({slot, {command}});
     }
     if (!file.eof())
         throw std::runtime_error("Cannot read command script: " + path);
-    return inputs;
+    return script;
 }
 World recordedWorld(const WorldSetup& setup)
 {
@@ -189,7 +234,7 @@ World combatWorld(int32_t roomId, uint64_t seed, int32_t occupation, int32_t lev
 // 导出一份场景摘要：按清单条目装配世界、读脚本并写文件。
 void exportOne(const legacy_cli::ManifestEntry& entry, const std::string& crit, const std::string& outputPath)
 {
-    const auto inputs = loadScript(entry.script, entry.frames);
+    const auto script = loadScript(entry.script, entry.frames, true);
     World world       = combatWorld(entry.room, entry.seed, entry.occupation, entry.level);
     legacy_cli::ExportParams params;
     params.scenario = entry.name;
@@ -197,7 +242,7 @@ void exportOne(const legacy_cli::ManifestEntry& entry, const std::string& crit, 
     params.seed     = entry.seed;
     params.frames   = entry.frames;
     params.crit     = crit;
-    const auto result = legacy_cli::exportSummary(world, inputs, params);
+    const auto result = legacy_cli::exportSummary(world, script.inputs, params, script.buffs);
     if (outputPath.empty())
     {
         std::cout << summary::writeSummary(result);
@@ -580,7 +625,7 @@ int main(int argc, char** argv)
                         "Expected run-room <roomId> --frames N [--class 1-7] [--seed N] [--level N] [--script file] "
                         "[--trace file] [--revision rev] [--ai on|off]");
                 if (std::string_view(argv[index]) == "--script")
-                    inputs = loadScript(argv[index + 1], frames);
+                    inputs = loadScript(argv[index + 1], frames, false).inputs;
                 else if (std::string_view(argv[index]) == "--trace")
                     tracePath = argv[index + 1];
                 else if (std::string_view(argv[index]) == "--revision")
@@ -885,7 +930,8 @@ int main(int argc, char** argv)
                "rollback-sim [--room N] [--players N] [--frames N] [--lag N] [--seed N] | "
                "export-summary (--scenario <name> --crit min|max [--output path] | --all [--out-dir dir]) "
                "[--manifest path]\n"
-               "script rows: frame slot controlEvent quadrant angleX1000 pressType\n";
+               "script rows: frame slot controlEvent quadrant angleX1000 pressType\n"
+               "export-summary also accepts: frame buff <hero|dummy1|dummy2|all-dummies> <buffId>\n";
         return 1;
     }
     catch (const std::exception& error)

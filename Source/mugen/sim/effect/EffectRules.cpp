@@ -1,4 +1,5 @@
 #include "mugen/sim/effect/EffectRules.h"
+#include "mugen/sim/skill/TimelineRules.h"
 #include "mugen/conf/ReflectedConfig.h"
 
 namespace mugen::sim
@@ -53,20 +54,72 @@ void spawnFromRole(World& world, Entity owner, int32_t effectId, const SourceCon
     world.ecs().singleton<EventQueue<SpawnRequest>>().push(request);
 }
 
-// 生成受击特效（复用同配置同目标或新建）。
-void spawnHitEffect(World& world, Entity owner, int32_t effectId, Entity hitEntity, const SourceContext& source)
+// 后继特效以父特效为放置基准，归属仍是父特效的主人。
+void spawnChild(World& world, Entity parent, int32_t effectId)
+{
+    const auto& info = world.ecs().get<EffectInfo>(parent);
+    const auto* row  = conf::Config::instance().find<conf::battle::EffectDef>(effectId);
+    if (!row)
+        return;
+    SpawnRequest request;
+    request.m_kind     = SpawnKind::Effect;
+    request.m_configId = effectId;
+    request.m_owner    = info.m_owner;
+    request.m_source.m_skillId     = info.m_skillId;
+    request.m_source.m_baseSkillId = info.m_baseSkillId;
+    request.m_source.m_slot        = info.m_slot;
+    Transform target;
+    placement(*row, world.ecs().get<Transform>(parent), world.ecs().singleton<MapRegion>(), target);
+    request.m_position = target.m_position;
+    request.m_towardX  = target.m_towardX;
+    request.m_vectorX  = target.m_vectorX;
+    request.m_vectorZ  = target.m_vectorZ;
+    world.ecs().singleton<EventQueue<SpawnRequest>>().push(request);
+}
+
+// 生成受击特效。同目标已有实例时改放到新接触点并重播动作，否则新建。
+void spawnHitEffect(World& world, Entity owner, Entity sourceEffect, int32_t effectId, Entity hitEntity,
+                    const SourceContext& source, const ContactEvent& contact)
 {
     const auto* row = conf::Config::instance().find<conf::battle::EffectDef>(effectId);
     if (!row)
         return;
+    const auto& targetPos = world.ecs().get<Transform>(hitEntity).m_position;
+    const auto& facing    = world.ecs().get<Transform>(sourceEffect);
+    const FixedVec3 position{contact.m_point.x, contact.m_point.z - targetPos.z, targetPos.z - Fixed::fromInt(1)};
     Entity reused;
     world.ecs().each<EffectInfo>([&](Entity entity, const EffectInfo& info) {
-        if (reused.value == 0 && info.m_configId == effectId && info.m_hitEntity == hitEntity)
+        if (reused.value == 0 && info.m_configId == effectId && info.m_hitEntity == hitEntity &&
+            !world.ecs().has<Despawning>(entity))
             reused = entity;
     });
     if (reused.value != 0)
+    {
+        auto& transform        = world.ecs().get<Transform>(reused);
+        transform.m_position   = position;
+        transform.m_towardX    = facing.m_towardX;
+        transform.m_vectorX    = facing.m_vectorX;
+        transform.m_vectorZ    = facing.m_vectorZ;
+        auto& info             = world.ecs().get<EffectInfo>(reused);
+        info.m_skillId         = source.m_skillId;
+        info.m_baseSkillId     = source.m_baseSkillId;
+        info.m_slot            = source.m_slot;
+        const auto& timeline   = world.ecs().get<ActionTimeline>(reused);
+        if (!timeline.m_clips.empty())
+            timeline::rules::enterClip(world, reused, timeline.m_clips.front(), true, true);
         return;
-    spawnFromRole(world, owner, effectId, source);
+    }
+    SpawnRequest request;
+    request.m_kind             = SpawnKind::Effect;
+    request.m_configId         = effectId;
+    request.m_owner            = owner;
+    request.m_source           = source;
+    request.m_position         = position;
+    request.m_towardX          = facing.m_towardX;
+    request.m_vectorX          = facing.m_vectorX;
+    request.m_vectorZ          = facing.m_vectorZ;
+    request.m_hitEntity        = hitEntity;
+    world.ecs().singleton<EventQueue<SpawnRequest>>().push(request);
 }
 }  // namespace effect::rules
 }  // namespace mugen::sim

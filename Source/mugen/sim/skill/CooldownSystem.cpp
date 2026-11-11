@@ -5,6 +5,7 @@
 // 产生：—
 #include "mugen/sim/Systems.h"
 #include "mugen/sim/World.h"
+#include "mugen/sim/buff/BuffRules.h"
 
 namespace mugen::sim
 {
@@ -22,8 +23,12 @@ void runCooldown(World& world)
             skill.m_cd = std::max(Fixed{}, skill.m_cd - dt);
             if (skill.m_cd == Fixed{})
             {
-                skill.m_timing      = false;
+                skill.m_timing       = false;
                 skill.m_releaseCount = std::min(skill.m_releaseCount + 1, skill.m_releaseMax);
+                BuffContext ctx;
+                ctx.m_target  = entity;
+                ctx.m_skillId = skill.m_configId;
+                buff::rules::fire(world, entity, conf::battle::TriggerPoint::SkillColdEnd, ctx);
             }
         }
     });

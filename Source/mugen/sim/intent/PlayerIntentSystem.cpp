@@ -33,11 +33,14 @@ void runPlayerIntent(World& world)
     const bool paused = world.ecs().singleton<RoomState>().m_paused;
     world.ecs().each<PlayerControl, Intent, StatusFlags, Pause>(
         [&](Entity, PlayerControl& control, Intent& intent, const StatusFlags& flags, const Pause& pause) {
-            if (!flags.canControl())
-                return;
-            // 未暂停时排空命令，暂停期间命令保留（R9）。
+            // 暂停期间命令保留（R9）。无法控制时命令直接丢弃，不留到解除后。
             if (paused || pause.m_paused)
                 return;
+            if (!flags.canControl())
+            {
+                control.m_commands.clear();
+                return;
+            }
             intent.m_buttons.clear();
             for (const auto& command : control.m_commands)
             {

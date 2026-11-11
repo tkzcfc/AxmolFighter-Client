@@ -1,0 +1,4 @@
+# S2 immunity. The second probe should not add once immune is active.
+8 buff dummy2 50071
+20 buff dummy2 61
+40 buff dummy2 50071

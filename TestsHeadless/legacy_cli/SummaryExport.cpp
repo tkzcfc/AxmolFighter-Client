@@ -1,7 +1,10 @@
 #include "SummaryExport.h"
 
 #include "mugen/sim_legacy/DrawPolicy.h"
+#include "mugen/sim_legacy/buff/BuffHolder.h"
+#include "mugen/sim_legacy/role/RoleComponents.h"
 #include "mugen/sim_legacy/trace/TraceSink.h"
+#include <algorithm>
 #include <sstream>
 #include <stdexcept>
 #include <utility>
@@ -338,9 +341,58 @@ private:
     // 进行中的位移。
     std::map<uint32_t, DispWatch> m_disps;
 };
+
+// 施加当下解析目标。hero 固定为槽位 0；木桩不含玩家槽位和召唤物。
+void applyBuffInject(World& world, const BuffInject& inject)
+{
+    Entity hero{};
+    std::vector<Entity> dummies;
+    world.ecs().each<RoleIdentity>([&](Entity entity, const RoleIdentity& identity) {
+        if (identity.playerSlot && *identity.playerSlot == 0)
+            hero = entity;
+        else if (!identity.playerSlot && identity.m_owner.value == 0)
+            dummies.push_back(entity);
+    });
+    if (hero.value == 0)
+        throw std::runtime_error("Buff inject requires player slot 0");
+    std::vector<Entity> targets;
+    switch (inject.target)
+    {
+    case BuffInjectTarget::Hero:
+        targets.push_back(hero);
+        break;
+    case BuffInjectTarget::Dummy1:
+        if (dummies.empty())
+            throw std::runtime_error("Buff inject dummy1 requires a non-player role");
+        targets.push_back(dummies[0]);
+        break;
+    case BuffInjectTarget::Dummy2:
+        if (dummies.size() < 2)
+            throw std::runtime_error("Buff inject dummy2 requires two non-player roles");
+        targets.push_back(dummies[1]);
+        break;
+    case BuffInjectTarget::AllDummies:
+        if (dummies.empty())
+            throw std::runtime_error("Buff inject all-dummies requires a non-player role");
+        targets = dummies;
+        break;
+    default:
+        throw std::runtime_error("Buff inject target is invalid");
+    }
+    for (const Entity target : targets)
+    {
+        // 施加者始终是 hero，自身目标也是自我施加。不填 m_target、不绑技能。
+        if (!world.ecs().alive(target) || !world.ecs().has<RoleIdentity>(target) || !world.ecs().has<Vitals>(target))
+            throw std::runtime_error("Buff inject target is not a living role");
+        BuffContext context;
+        context.m_applicator = hero;
+        buff::BuffHolder(world, target).addBuff(inject.buffId, context, world.setup().m_fightType);
+    }
+}
 }  // namespace
 
-summary::Summary exportSummary(World& world, const std::map<uint64_t, FrameInput>& inputs, const ExportParams& params)
+summary::Summary exportSummary(World& world, const std::map<uint64_t, FrameInput>& inputs, const ExportParams& params,
+                               const std::vector<BuffInject>& injects)
 {
     if (params.crit != "min" && params.crit != "max")
         throw std::invalid_argument("--crit must be min or max");
@@ -359,8 +411,14 @@ summary::Summary exportSummary(World& world, const std::map<uint64_t, FrameInput
 
     Exporter exporter(world, result);
     exporter.scanInitial();
+    std::vector<BuffInject> ordered = injects;
+    std::stable_sort(ordered.begin(), ordered.end(),
+                     [](const BuffInject& left, const BuffInject& right) { return left.frame < right.frame; });
+    size_t nextInject = 0;
     for (uint64_t frame = 1; frame <= params.frames; ++frame)
     {
+        while (nextInject < ordered.size() && ordered[nextInject].frame == frame)
+            applyBuffInject(world, ordered[nextInject++]);
         const auto input = inputs.find(frame);
         world.tick(input == inputs.end() ? FrameInput{frame, {}, {}, {}} : input->second);
         exporter.afterTick(static_cast<int64_t>(frame), sink.text());

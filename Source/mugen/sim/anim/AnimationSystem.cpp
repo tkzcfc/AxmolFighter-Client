@@ -16,17 +16,23 @@ void runAnimation(World& world)
     world.ecs().each<MotionState>([&](Entity entity, MotionState& motion) {
         if (world.ecs().has<Despawning>(entity) || world.ecs().has<Inactive>(entity))
             return;
+        if (const Pause* pause = world.ecs().tryGet<Pause>(entity))
+            if (pause->m_paused)
+                return;
         motion.m_completedThisFrame = false;
         if (!motion.m_playing || motion.m_motionName.empty())
             return;
+        const Fixed actionScale = world.ecs().has<Stats>(entity)
+                                      ? world.ecs().get<Stats>(entity).finalStat(202)
+                                      : Fixed::fromInt(1);
         MotionPlayer player;
         if (!player.bind(motion.m_motionFile) || !player.play(motion.m_motionName, motion.m_entryId, motion.m_loop))
         {
-            motion.m_timeMs += dtMs * motion.m_rate;
+            motion.m_timeMs += dtMs * motion.m_rate * actionScale;
             return;
         }
         const Fixed duration = Fixed::fromInt(player.getDurationMs());
-        motion.m_timeMs += dtMs * motion.m_rate;
+        motion.m_timeMs += dtMs * motion.m_rate * actionScale;
         if (duration > Fixed{})
         {
             if (motion.m_timeMs >= duration && (motion.m_loop || motion.m_completedLoops == 0))

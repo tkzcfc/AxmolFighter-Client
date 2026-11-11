@@ -1,6 +1,6 @@
 // [2.4] PauseTickSystem
-// 读：`Pause`（角色与特效）、`WorldClock`
-// 写：`Pause`（顿帧/定身递减并计算 `m_paused`）
+// 读：`Pause`（角色与特效）、`HitTracker`、`WorldClock`
+// 写：`Pause`（顿帧/定身递减并计算 `m_paused`）、未暂停时的 `HitTracker.m_hitInterval`
 // 消费：—
 // 产生：—
 #include "mugen/sim/Systems.h"
@@ -18,6 +18,11 @@ void runPauseTick(World& world)
         pause.m_freezeMs = std::max(Fixed{}, pause.m_freezeMs - dt);
         pause.m_staticMs = std::max(Fixed{}, pause.m_staticMs - dt);
         pause.m_paused   = pause.m_freezeMs > Fixed{} || pause.m_staticMs > Fixed{};
+        // 特效命中间隔随特效暂停；未暂停时递减，0 与负值保留。
+        if (!pause.m_paused)
+            if (auto* tracker = world.ecs().tryGet<HitTracker>(entity))
+                if (tracker->m_hitInterval > Fixed{})
+                    tracker->m_hitInterval = std::max(Fixed{}, tracker->m_hitInterval - dt);
     });
 }
 }  // namespace mugen::sim

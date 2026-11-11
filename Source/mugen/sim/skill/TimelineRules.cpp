@@ -117,9 +117,22 @@ bool enterClip(World& world, Entity entity, int32_t clipId, bool effect, bool de
     timeline.m_spawnedEffects.clear();
     timeline.m_deferAdvance = deferAdvance;
     timeline.m_finished     = false;
+    BuffContext clipCtx;
+    clipCtx.m_applicator = entity;
+    clipCtx.m_target     = entity;
+    if (world.ecs().has<SkillCast>(entity) && world.ecs().has<SkillBook>(entity))
+    {
+        const auto& cast = world.ecs().get<SkillCast>(entity);
+        const auto& book = world.ecs().get<SkillBook>(entity);
+        if (cast.m_skill != kNoSkill)
+            clipCtx.m_boundSkill = book.m_skills[static_cast<size_t>(cast.m_skill)].m_configId;
+        clipCtx.m_skillId = clipCtx.m_boundSkill;
+    }
     for (const int32_t id : row.m_clipBuffs)
         if (id != -1)
-            buff::rules::admit(world, entity, id);
+            buff::rules::admit(world, entity, id, clipCtx);
+    if (!effect)
+        buff::rules::fire(world, entity, conf::battle::TriggerPoint::BeforeRoleSkillAction, clipCtx);
     if (row.m_displacementId != -1)
         displacement::rules::set(world, entity, row.m_displacementId);
     else
@@ -137,6 +150,9 @@ void exitClip(World& world, Entity entity)
     {
         if (const auto* row = conf::Config::instance().find<conf::battle::ClipDef>(timeline.m_clipId))
         {
+            BuffContext clipCtx;
+            clipCtx.m_target = entity;
+            buff::rules::fire(world, entity, conf::battle::TriggerPoint::AfterRoleSkillAction, clipCtx);
             for (const int32_t id : row->clipBuffs)
                 if (id != -1)
                     buff::rules::remove(world, entity, id);
@@ -154,7 +170,9 @@ bool advanceClip(World& world, Entity entity)
     ClipCommon row;
     if (!loadClip(world, entity, timeline.m_clipId, effect, row))
         return true;
-    const Fixed dtMs     = world.ecs().singleton<WorldClock>().m_dtMs;
+    const Fixed actionScale = world.ecs().has<Stats>(entity) ? world.ecs().get<Stats>(entity).finalStat(202)
+                                                                    : Fixed::fromInt(1);
+    const Fixed dtMs     = world.ecs().singleton<WorldClock>().m_dtMs * actionScale;
     const Fixed interval = clipInterval(row.m_rate);
     if (!timeline.m_animationEnd && row.m_loops != "-1"_fx && Fixed::fromInt(motion.m_completedLoops) >= row.m_loops)
     {

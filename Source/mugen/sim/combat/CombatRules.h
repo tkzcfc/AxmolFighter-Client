@@ -45,6 +45,8 @@ struct HitContext
 bool gate(World& world, const ContactEvent& contact, HitContext& ctx);
 // 步骤 2：更新 HitTracker（次数、间隔、目标去重）。
 void recordHit(World& world, const HitContext& ctx);
+// 帧末提交命中间隔（本帧命中后从下一帧起进入间隔冷却）。
+void commitHitInterval(World& world, Entity effect);
 // 步骤 5：属性闪避。成功则发出 Miss 并结束本次管线。
 bool resolveDodge(World& world, const HitContext& ctx);
 // 步骤 8：伤害公式。抽样顺序为 Crit 再 Float。

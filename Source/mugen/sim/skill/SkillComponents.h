@@ -1,4 +1,5 @@
 #pragma once
+#include "mugen/core/math/Fixed.h"
 #include "mugen/core/reflect/Reflect.h"
 #include "mugen/core/ecs/Entity.h"
 #include <string>
@@ -34,6 +35,21 @@ struct SkillRuntime
     MG_REFLECT(SkillRuntime, m_slot, m_configId, m_step, m_stepCount, m_cd, m_coldMaxTime, m_releaseCount, m_releaseMax,
                m_timing, m_finally)
 };
+// 一条技能修正，按来源实例撤销。
+struct SkillMod
+{
+    // SkillModField 数值。
+    int32_t m_field = 0;
+    // SkillScope 数值。
+    int32_t m_scope = 0;
+    // 槽位下标；非逐槽时为 −1。
+    int32_t m_slot = -1;
+    // 已求值的增量。
+    Fixed m_value;
+    // 来源实例序号。
+    uint32_t m_source = 0;
+    MG_REFLECT(SkillMod, m_field, m_scope, m_slot, m_value, m_source)
+};
 // 角色持有的全部技能运行数据（槽位名 + 技能运行数据）。
 struct SkillBook
 {
@@ -41,9 +57,11 @@ struct SkillBook
     std::vector<std::string> m_slots;
     // 全部技能运行数据（按槽位 + 链内顺序）。
     std::vector<SkillRuntime> m_skills;
+    // 技能级修正。
+    std::vector<SkillMod> m_mods;
     // 查找指定槽位名、步骤的技能下标；不存在返回 kNoSkill。
     int32_t find(std::string_view slot, int32_t step) const;
-    MG_REFLECT(SkillBook, m_slots, m_skills)
+    MG_REFLECT(SkillBook, m_slots, m_skills, m_mods)
 };
 // 当前施法状态（当前技能、缓存下一招、打断窗口）。
 struct SkillCast
@@ -60,7 +78,10 @@ struct SkillCast
     bool m_allowExtraInterrupt = false;
     // 是否被强制打断。
     bool m_interrupted = false;
-    MG_REFLECT(SkillCast, m_skill, m_nextSkill, m_nextRun, m_allowInterrupt, m_allowExtraInterrupt, m_interrupted)
+    // 是否处于曝气。
+    bool m_crazy = false;
+    MG_REFLECT(SkillCast, m_skill, m_nextSkill, m_nextRun, m_allowInterrupt, m_allowExtraInterrupt, m_interrupted,
+               m_crazy)
 };
 // 角色 / 特效的动作时间轴（片段列表与逐片段运行状态）。
 struct ActionTimeline
