@@ -1,5 +1,5 @@
 // [2.4] PauseTickSystem
-// 读：`Pause`、`WorldClock`
+// 读：`Pause`（角色与特效）、`WorldClock`
 // 写：`Pause`（顿帧/定身递减并计算 `m_paused`）
 // 消费：—
 // 产生：—

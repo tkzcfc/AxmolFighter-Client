@@ -2,7 +2,7 @@
 // 读：`ScheduledActions`、`WorldClock`
 // 写：`Pause`（受击者顿帧）
 // 消费：`ScheduledActions`
-// 产生：`StopEvent`
+// 产生：`HitStopEvent`
 #include "mugen/sim/Systems.h"
 #include "mugen/sim/World.h"
 
@@ -13,7 +13,6 @@ void runScheduledAction(World& world)
 {
     auto& actions = world.ecs().singleton<ScheduledActions>();
     const Fixed dt = world.ecs().singleton<WorldClock>().m_dtMs;
-    const auto& clock = world.ecs().singleton<WorldClock>();
     for (size_t i = 0; i < actions.m_actions.size();)
     {
         auto& action = actions.m_actions[i];
@@ -27,10 +26,10 @@ void runScheduledAction(World& world)
         if (world.ecs().alive(action.m_owner) && world.ecs().has<Pause>(action.m_owner))
         {
             world.ecs().get<Pause>(action.m_owner).m_freezeMs = action.m_freezeMs;
-            StopEvent event;
-            event.m_entity = action.m_owner;
-            event.m_frames = static_cast<int32_t>((action.m_freezeMs.raw + clock.m_dtMs.raw - 1) / clock.m_dtMs.raw);
-            world.ecs().singleton<EventQueue<StopEvent>>().push(event);
+            HitStopEvent event;
+            event.m_entity   = action.m_owner;
+            event.m_freezeMs = action.m_freezeMs;
+            world.ecs().singleton<EventQueue<HitStopEvent>>().push(event);
         }
         actions.m_actions.erase(actions.m_actions.begin() + static_cast<std::ptrdiff_t>(i));
     }

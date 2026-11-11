@@ -189,7 +189,7 @@ P0 FrameBegin → P1 Input → P2 Tick → P3 Intent → P4 Action → P5 Moveme
 | 3.2 | P3 | PlayerIntentSystem | `PlayerControl`、`StatusFlags`(canControl)、`Pause` | `Intent`；未暂停时排空 `PlayerControl.m_commands` | — | — |
 | 4.1 | P4 Action | SkillRequestSystem | `Intent`、`SkillBook`、`SkillCast`、`Stats`、`Health`、`StatusFlags`、`RoleState` | `SkillCast`（当前施法/缓存下一招/nextRun）、`SkillBook` | — | `CastEvent`(Prepared)；同步触发 BeforePrepareSkill |
 | 4.2 | P4 | RoleFsmSystem | `RoleState`、`SkillCast`、`Intent.m_move`、`HitState`、`Health`、`Displacement` 事件位、`MotionState` 完成位 | `RoleState`；进入/退出动作写 `MotionState`、`Displacement`、`SkillCast`、`ActionTimeline`（经 `skill::rules::beginCast/endCast`） | — | `StateEvent`、`CastEvent`(Began/Ended)；同步触发施法、连招、行为状态、ColdStart、UseTp/UseEp |
-| 4.3a | P4 | TimelineSystem（角色遍） | `ActionTimeline`、`SkillCast`、`MotionState` 完成位、`Stats`(动作速率) | `ActionTimeline`、`SkillCast`（取消窗口、切招）、`Transform`（瞬移/转向）、`Displacement`（片段位移） | — | `SpawnRequest`、`TransformRequest`、`CueEvent`、`ActionEvent`；同步：片段 Buff、BeforeRoleSkillAction/After |
+| 4.3a | P4 | TimelineSystem（角色遍，仅 `RoleState==Attack` 时推进） | `ActionTimeline`、`SkillCast`、`MotionState` 完成位、`Stats`(动作速率) | `ActionTimeline`、`SkillCast`（取消窗口、切招）、`Transform`（瞬移/转向）、`Displacement`（片段位移） | — | `SpawnRequest`、`TransformRequest`、`CueEvent`、`ActionEvent`；同步：片段 Buff、BeforeRoleSkillAction/After |
 | 4.3s | P4 | SpawnFlush | `SpawnRequest` | 新实体（出生阶段 RoleTimeline：本帧参与 4.3b、P5、P6） | `SpawnRequest` | `SpawnEvent` |
 | 4.3b | P4 | TimelineSystem（特效遍） | 同上（特效实体） | 同上；特效片段放完时打 `Despawning` | — | `SpawnRequest`（子特效、后继特效、召唤）、`DespawnRequest`、`CueEvent` |
 | 4.3t | P4 | SpawnFlush | | 新实体（出生阶段 EffectTimeline：下一帧起行动） | `SpawnRequest` | `SpawnEvent` |
@@ -224,7 +224,7 @@ P0 FrameBegin → P1 Input → P2 Tick → P3 Intent → P4 Action → P5 Moveme
 | R1 | 阶段与系统顺序是全序。系统内按实体创建顺序遍历。`TimelineSystem` 分角色遍与特效遍，复刻旧实现“角色组先于特效组” | 旧实现 `World::tick` 组顺序 |
 | R2 | 实体只在同步点创建，组件增删只在遍历之外进行（先收集再应用）。生成请求在业务发生处产生（时间轴结束处、命中处），同步点按入队顺序实体化，所以“创建顺序 = 入队顺序” | 避免遍历中组件池扩容使引用失效；创建顺序决定后续所有遍历顺序 |
 | R3 | **出生门控**：`Identity.m_born = {frame, stage}`。出生帧内，`stage > RoleTimeline` 的实体不参与任何逐实体推进（时间轴、位移、跟随、动画、受击框）；所有出生帧内的实体都不参与本帧碰撞。效果：角色时间轴生成的特效本帧即跑特效遍、位移、动画；特效生成的子特效、受击特效、掉落、召唤物、波次怪下一帧起行动 | 复刻旧实现（组内创建、注册帧不碰撞），P-2 |
-| R4 | **销毁即时可见**：请求销毁时立即加 `Despawning` 标签；本帧之后的所有系统（碰撞、命中、触发分派、AI 选目标、跟随）都跳过它；物理回收在 12.2 | 旧实现 `destroyRequested` 语义 |
+| R4 | **销毁即时可见**：请求销毁时立即加 `Despawning` 标签；本帧之后的所有系统（碰撞、命中、触发分派、AI 选目标、跟随）都跳过它；物理回收在 12.2。遍历中打 `Despawning` 标签是 R2 唯一允许的例外；同步规则链里不得增删其他组件（需要的组件由 EntityFactory 在生成时挂好） | 旧实现 `destroyRequested` 语义 |
 | R5 | **命中顺序与互殴**：接触按（攻击实体创建序，目标创建序）排序，逐个走完整微管线。先处理的命中若打断对方施法，对方本技能 `autoRelease=0` 的特效立即 `Despawning`，本帧不再命中（先手胜）；其余情况双方都命中（相杀），各自顿帧。攻击者本帧死亡不取消其在途特效 | 旧实现碰撞遍历顺序与 `clearSkillEffectsByInterrupt` |
 | R6 | **伤害与死亡判定**：扣血即时生效；hp≤0 时同步触发 BeforeDeath（免死、锁血可改变结果）；仍≤0 则立即 `Health.m_dead = true`，本帧后续指向它的接触在门控处被拒；死亡状态由 DeathSystem 提请、下一帧 FSM 执行（受击族在自然出口转入，§6.5） | 参照工程 `modifyHp` 与“目标已死则返回” |
 | R7 | **Buff 同帧增删**：准入同步生效；一次触发分派开始时固定实例序号列表，分派中新增的实例不接收本次触发；同帧先加后删 → Enter 与 Exit 都执行，两条 `BuffEvent` 都发；先删后加同 id → 新实例而非叠层；持续时间到期在 P2，先于本帧命中（到期的 Buff 不影响本帧伤害） | 旧实现 `dispatchEvent` 与更新顺序 |
@@ -330,7 +330,7 @@ P0 FrameBegin → P1 Input → P2 Tick → P3 Intent → P4 Action → P5 Moveme
 | 事件队列（§4.4） | 每种事件一个 `EventQueue<T>` | 见 §4.4 |
 | `PresentationEvents` | `m_events`、`m_nextSeq` | Present |
 
-`DrawPolicy`（测试用的 RNG 覆盖）和外部追踪输出不是单例，作为 `World` 的非序列化成员（与旧实现 `WorldHooks` 同类）。
+`DrawPolicy`（测试用的 RNG 覆盖）和外部追踪输出不是单例，作为 `World` 的非序列化成员（与旧实现 `WorldHooks` 同类）。`World::clone()` 只复制 ECS 状态（组件与单例），不复制非序列化成员（抽样策略、追踪行、本帧输入指针）；克隆体需要时由调用方重新挂接。追踪行由 DebugSink 在帧初清空，玩法系统不碰。
 
 ### 4.4 事件类型
 
@@ -353,6 +353,10 @@ P0 FrameBegin → P1 Input → P2 Tick → P3 Intent → P4 Action → P5 Moveme
 | `CueEvent` | 事实 | entity、kind（音效/震屏/残影/提示/对白/全屏演出/白框/隐身视图/霸体描边…）、ids | 时间轴、`buff::rules`、Combat | Present |
 | `RoomEvent` | 事实 | kind（状态变化/胜利/失败/警告/PVP 结束）、载荷 | Room | Present |
 | `DespawnEvent` | 事实 | entity、reason | DespawnSystem | Present、Debug |
+| `DisplacementEvent` | 事实 | entity、phase(Began/Ended/Replaced)、curveId | `displacement::rules`、DisplacementSystem | Present、Debug（终点坐标由 DebugSink 在 P11 读 `Transform`） |
+| `HitStopEvent` | 事实 | entity、freezeMs | `combat::rules`（命中微管线）、ScheduledAction（延迟顿帧到时） | Present、Debug（毫秒→帧数在 DebugSink 换算） |
+
+事件只能是**玩法事实**或**请求**：凡是登记为单例队列的事件，都必须是表现层或玩法也可用的事实，不得为 golden 摘要专门造事件。摘要需要的派生信息（帧数换算、终点坐标、动作名差分）一律在 DebugSink / 导出器里从事实与组件推出，不写回任何玩法组件或 `World` 的序列化状态。
 
 ### 4.5 队列语义
 
@@ -877,6 +881,11 @@ ClipDef
 | Wake | 英雄：挂 Buff 201（无敌）；恢复浮空值；重置受击保护 | — |
 | Death | 死亡位移、清技能、通知变身组；死亡动作结束后 Despawn | — |
 | Idle / 移动 | 播放 stand / walk / run | — |
+
+实现约定（S1 后补充）：
+- 所有转移经 FSM 内唯一的 `transition()`：写 `m_state/m_prev/m_stateMs` 并发 `StateEvent`。每个状态一组 `enterXxx/updateXxx` 函数，不写成内联 if 链。其他系统只写请求位（`HitState` 待处理受击、`m_deathRequested`、`m_puppetRequested` 等），EntityFactory 只做初始化。
+- 进入/退出动作本身是同步规则链（§4.6），受同样约束。
+- Combat 在 P8 写受击请求，FSM 在下一帧 P4 才转移，比旧实现晚一帧；在 ±1 帧容差内，接受为设计差异，不列入 `known_deviations`。动画完成位同理：FSM 读上一帧 P6 的完成位（R10），HitSwitch 等“动画结束即转移”的状态因此也可能晚一帧。
 
 ### 6.5 受击状态机
 

@@ -19,15 +19,12 @@ struct EffectInfo
     int32_t m_baseSkillId = -1;
     // 技能槽位下标。
     int32_t m_slot = 0;
-    // 技能属性来源实体。
-    Entity m_skillAttribute;
-    // 当前顿帧剩余时间与上一帧冻结状态。
-    Fixed m_freezeMs;
-    bool m_frozen = false;
+    // 技能属性来源实体（伤害公式读它的属性；出生时等于主人）。
+    Entity m_attributeSource;
     // 是否允许结束后派生后继特效。
     bool m_next = true;
-    MG_REFLECT(EffectInfo, m_configId, m_owner, m_hitEntity, m_skillId, m_baseSkillId, m_slot, m_skillAttribute,
-               m_freezeMs, m_frozen, m_next)
+    MG_REFLECT(EffectInfo, m_configId, m_owner, m_hitEntity, m_skillId, m_baseSkillId, m_slot, m_attributeSource,
+               m_next)
 };
 // 特效命中追踪：本帧命中数、命中间隔、已命中目标去重。
 struct HitTracker

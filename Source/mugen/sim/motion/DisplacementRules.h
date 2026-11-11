@@ -23,10 +23,12 @@ AxisStep integrate(Fixed time,
                    Fixed gravity = {});
 namespace rules
 {
-// 按配置标识设置位移状态；配置缺失返回 false。
+// 按配置标识设置位移状态；配置缺失返回 false。替换活动曲线时发出 Replaced，成功后发出 Began。
 bool set(World& world, Entity entity, int32_t id);
-// 重置位移状态与速度。
+// 重置位移状态与速度。活动曲线被清空时发出 Ended。
 void reset(World& world, Entity entity);
+// 速度与加速度都耗尽时发出 Ended，并清掉活动曲线 id。
+void settle(World& world, Entity entity);
 }  // namespace rules
 }  // namespace displacement
 }  // namespace mugen::sim

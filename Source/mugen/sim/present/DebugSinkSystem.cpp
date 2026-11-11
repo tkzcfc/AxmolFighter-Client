@@ -1,6 +1,6 @@
 // [11.2] DebugSink
-// 读：全部事实队列
-// 写：外部追踪行（World::appendTrace）
+// 读：全部事实队列、`Transform`（位移终点）、`WorldClock`（顿帧毫秒换帧）、`SkillBook`（槽位下标换字母）
+// 写：追踪行（本系统拥有生命周期，帧初清空）
 // 消费：—
 // 产生：—
 #include "mugen/sim/Systems.h"
@@ -45,17 +45,34 @@ const char* hitResultName(HitResult result)
     }
     return "hit";
 }
+// 槽位下标 → 槽位字母。
+std::string slotLetter(World& world, const CastEvent& event)
+{
+    if (!world.ecs().has<SkillBook>(event.m_entity))
+        return "?";
+    const auto& slots = world.ecs().get<SkillBook>(event.m_entity).m_slots;
+    if (event.m_slot < 0 || static_cast<size_t>(event.m_slot) >= slots.size())
+        return "?";
+    return slots[static_cast<size_t>(event.m_slot)];
+}
+// 顿帧帧数 = ceil(freezeMs / dtMs)。
+int32_t stopFrames(Fixed freezeMs, Fixed dtMs)
+{
+    return static_cast<int32_t>((freezeMs.raw + dtMs.raw - 1) / dtMs.raw);
+}
 }  // namespace
 
 // 系统 DebugSink：11.2 行，见 DESIGN.md §3.2。把事实队列翻译成追踪行。
 void runDebugSink(World& world)
 {
-    auto& ecs = world.ecs();
+    world.clearTraceLines();
+    auto& ecs        = world.ecs();
+    const Fixed dtMs = ecs.singleton<WorldClock>().m_dtMs;
     for (const CastEvent& event : ecs.singleton<EventQueue<CastEvent>>().m_items)
     {
         const std::string key = entityKey(world, event.m_entity);
         if (event.m_phase == CastPhase::Began)
-            world.appendTrace("cast " + key + ' ' + std::to_string(event.m_skillId) + ' ' + event.m_slot);
+            world.appendTrace("cast " + key + ' ' + std::to_string(event.m_skillId) + ' ' + slotLetter(world, event));
         else if (event.m_phase == CastPhase::Ended)
             world.appendTrace("castend " + key + ' ' + std::to_string(event.m_skillId));
         else if (event.m_phase == CastPhase::Cancelled)
@@ -65,8 +82,7 @@ void runDebugSink(World& world)
     {
         const std::string owner = entityKey(world, event.m_owner);
         const std::string key   = entityKey(world, event.m_entity);
-        // 初始出生（帧 0）不宣告，仅运行期生成的实体产出 spawn 行。
-        const auto& identity = ecs.get<Identity>(event.m_entity);
+        const auto& identity    = ecs.get<Identity>(event.m_entity);
         if (event.m_kind == SpawnKind::Effect || event.m_kind == SpawnKind::Role)
             if (identity.m_born.m_frame != 0)
                 world.appendTrace("spawn " + owner + ' ' + key);
@@ -89,8 +105,9 @@ void runDebugSink(World& world)
         world.appendTrace("hp " + key + ' ' + std::to_string(event.m_delta.toInt()) + ' ' +
                           (event.m_cause == HpCause::Dot ? "dot" : event.m_cause == HpCause::Heal ? "heal" : "other"));
     }
-    for (const StopEvent& event : ecs.singleton<EventQueue<StopEvent>>().m_items)
-        world.appendTrace("stop " + entityKey(world, event.m_entity) + ' ' + std::to_string(event.m_frames));
+    for (const HitStopEvent& event : ecs.singleton<EventQueue<HitStopEvent>>().m_items)
+        world.appendTrace("stop " + entityKey(world, event.m_entity) + ' ' +
+                          std::to_string(stopFrames(event.m_freezeMs, dtMs)));
     for (const BuffEvent& event : ecs.singleton<EventQueue<BuffEvent>>().m_items)
     {
         const std::string key = entityKey(world, event.m_entity);
@@ -99,16 +116,20 @@ void runDebugSink(World& world)
         else if (event.m_phase == BuffPhase::Removed)
             world.appendTrace("buff - " + key + ' ' + std::to_string(event.m_buffId));
     }
-    for (const DispEvent& event : ecs.singleton<EventQueue<DispEvent>>().m_items)
+    for (const DisplacementEvent& event : ecs.singleton<EventQueue<DisplacementEvent>>().m_items)
     {
+        if (!ecs.alive(event.m_entity))
+            continue;
         const std::string key = entityKey(world, event.m_entity);
-        if (event.m_phase == 0)
-            world.appendTrace("disp+ " + key + ' ' + std::to_string(event.m_displacementId));
+        if (event.m_phase == DispPhase::Began)
+            world.appendTrace("disp+ " + key + ' ' + std::to_string(event.m_curveId));
         else
-            world.appendTrace("disp- " + key + ' ' + std::to_string(event.m_displacementId) + ' ' +
-                              std::to_string(toMilli(event.m_endpoint.x)) + ' ' +
-                              std::to_string(toMilli(event.m_endpoint.y)) + ' ' +
-                              std::to_string(toMilli(event.m_endpoint.z)));
+        {
+            const auto& pos = ecs.get<Transform>(event.m_entity).m_position;
+            world.appendTrace("disp- " + key + ' ' + std::to_string(event.m_curveId) + ' ' +
+                              std::to_string(toMilli(pos.x)) + ' ' + std::to_string(toMilli(pos.y)) + ' ' +
+                              std::to_string(toMilli(pos.z)));
+        }
     }
     for (const DeathEvent& event : ecs.singleton<EventQueue<DeathEvent>>().m_items)
         world.appendTrace("death " + entityKey(world, event.m_entity));

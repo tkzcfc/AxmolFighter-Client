@@ -1,5 +1,6 @@
 #pragma once
 #include "mugen/sim/role/RoleState.h"
+#include "mugen/core/ecs/Entity.h"
 #include "mugen/core/reflect/Reflect.h"
 #include "mugen/core/math/FixedVec3.h"
 
@@ -18,7 +19,16 @@ struct RoleState
     bool m_deathRequested = false;
     // 复活请求位（Room 写，FSM 读）。
     bool m_reviveRequested = false;
-    MG_REFLECT(RoleState, m_state, m_prev, m_stateMs, m_deathRequested, m_reviveRequested)
+    // 死亡事实是否已宣布（DeathSystem 写）。
+    bool m_deathAnnounced = false;
+    // 击杀者（DeathSystem 从 DeathRequest 写入）。
+    Entity m_deathKiller;
+    // 木偶同步请求的目标状态（InputSystem 写，FSM 消费）。
+    RoleStateId m_puppetState = RoleStateId::Idle;
+    // 本帧有木偶同步请求。
+    bool m_puppetRequested = false;
+    MG_REFLECT(RoleState, m_state, m_prev, m_stateMs, m_deathRequested, m_reviveRequested, m_deathAnnounced,
+               m_deathKiller, m_puppetState, m_puppetRequested)
 };
 // 受击与击退流程的运行时状态（B2 实现 Hit/HitSwitch 状态机）。
 struct HitState

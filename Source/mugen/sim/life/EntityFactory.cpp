@@ -2,6 +2,7 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/role/RoleSpawn.h"
 #include "mugen/sim/skill/SkillRules.h"
+#include "mugen/sim/skill/TimelineRules.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/TypeConversions.h"
 #include "mugen/avatar/AvatarPaths.h"
@@ -128,6 +129,7 @@ Entity materializeEffect(World& world, const SpawnRequest& request, SpawnStage s
     Identity identity;
     identity.m_kind        = SpawnKind::Effect;
     identity.m_configId    = request.m_configId;
+    // 与 sim_legacy EffectActor::create 一致：特效身份固定 camp=1、hostileMask=30，不继承主人。
     identity.m_camp        = 1;
     identity.m_hostileMask = 30;
     identity.m_roleType    = 0;
@@ -152,9 +154,10 @@ Entity materializeEffect(World& world, const SpawnRequest& request, SpawnStage s
     info.m_owner       = request.m_owner;
     info.m_skillId     = request.m_source.m_skillId;
     info.m_baseSkillId = request.m_source.m_baseSkillId;
-    info.m_slot        = request.m_source.m_slot;
-    info.m_skillAttribute = request.m_owner;
+    info.m_slot            = request.m_source.m_slot;
+    info.m_attributeSource = request.m_owner;
     ecs.add(entity, info);
+    ecs.add(entity, Pause{});
 
     Hitboxes hitboxes;
     hitboxes.m_radius = Fixed::fromInt(row->radius);
@@ -178,8 +181,12 @@ Entity materializeEffect(World& world, const SpawnRequest& request, SpawnStage s
     ActionTimeline timeline;
     timeline.m_clips    = row->clips;
     timeline.m_index    = 0;
-    timeline.m_finished = false;
-    ecs.add(entity, timeline);
+    timeline.m_finished = row->clips.empty();
+    const int32_t firstClip = timeline.m_finished ? 0 : timeline.m_clips.front();
+    ecs.add(entity, std::move(timeline));
+    // 出生时同步进入首片段；下一次特效遍只消费延迟标记，不在进入帧推进。
+    if (firstClip != 0 && !timeline::rules::enterClip(world, entity, firstClip, true, true))
+        ecs.get<ActionTimeline>(entity).m_finished = true;
 
     ecs.add(entity, ContactMemory{});
     return entity;

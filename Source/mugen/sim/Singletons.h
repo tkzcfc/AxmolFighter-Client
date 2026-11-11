@@ -162,8 +162,8 @@ struct ScheduledActions
             X(EventQueue<ContactEvent>) X(EventQueue<HitEvent>) X(EventQueue<HpEvent>)                         \
                 X(EventQueue<DeathEvent>) X(EventQueue<CastEvent>) X(EventQueue<ActionEvent>)                  \
                     X(EventQueue<StateEvent>) X(EventQueue<BuffEvent>) X(EventQueue<CueEvent>)                 \
-                        X(EventQueue<RoomEvent>) X(EventQueue<DespawnEvent>) X(EventQueue<DispEvent>)          \
-                            X(EventQueue<StopEvent>)
+                        X(EventQueue<RoomEvent>) X(EventQueue<DespawnEvent>) X(EventQueue<DisplacementEvent>) \
+                            X(EventQueue<HitStopEvent>)
 
 namespace mugen::sim
 {

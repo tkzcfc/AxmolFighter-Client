@@ -85,7 +85,9 @@ struct ActionTimeline
     std::vector<Entity> m_spawnedEffects;
     // 当前片段 id（供摘要 action 行使用）。
     int32_t m_clipId = 0;
+    // 刚进入的片段要求下一次时间轴遍历不推进。
+    bool m_deferAdvance = false;
     MG_REFLECT(ActionTimeline, m_clips, m_index, m_clipMs, m_loops, m_tailMs, m_animationEnd, m_finished, m_nextCue,
-               m_spawnedEffects, m_clipId)
+               m_spawnedEffects, m_clipId, m_deferAdvance)
 };
 }  // namespace mugen::sim

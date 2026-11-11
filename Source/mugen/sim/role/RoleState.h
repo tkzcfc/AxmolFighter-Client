@@ -76,6 +76,17 @@ inline EntityRoleStatus statusBits(RoleStateId state)
     }
     return B::Idle;
 }
+// 由状态位还原单值状态。无法唯一对应时回到 Idle。
+inline RoleStateId stateFromStatus(EntityRoleStatus status)
+{
+    for (uint8_t index = 0; index <= static_cast<uint8_t>(RoleStateId::Puppet); ++index)
+    {
+        const auto state = static_cast<RoleStateId>(index);
+        if (statusBits(state) == status)
+            return state;
+    }
+    return RoleStateId::Idle;
+}
 // 状态对应的动作名称（与旧实现 ActionNames::animationName 一致）。
 inline const char* motionName(RoleStateId state)
 {

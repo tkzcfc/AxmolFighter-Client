@@ -6,7 +6,6 @@
 #include "input/FrameInput.h"
 #include "mugen/core/ecs/ECSManager.h"
 #include "mugen/core/serialize/BinaryArchive.h"
-#include <map>
 #include <string>
 #include <vector>
 
@@ -28,7 +27,7 @@ public:
     void serialize(ByteBuffer& buffer) const;
     // 仅在完整有效快照时替换当前世界状态。
     bool deserialize(ByteBuffer& buffer);
-    // 返回独立副本（不携带本帧输入指针）。
+    // 返回可序列化状态的独立副本。抽样策略、追踪行与本帧输入指针不复制。
     World clone() const;
     // 对规范序列化的世界状态计算 xxh64 哈希。
     uint64_t hash() const;
@@ -46,26 +45,12 @@ public:
     void setDrawPolicy(const DrawPolicy* policy) { m_drawPolicy = policy; }
     // 返回当前抽样策略，未设置时为空。
     const DrawPolicy* drawPolicy() const { return m_drawPolicy; }
-    // DebugSink 写入的追踪行（非序列化，下一帧 ClockSystem 清空），供摘要导出读取。
+    // DebugSink 写入的追踪行（非序列化）。DebugSink 每帧开始时清空，摘要导出在 tick 之后读取。
     const std::vector<std::string>& traceLines() const { return m_traceLines; }
     // 追加一条追踪行（DebugSink 调用）。
     void appendTrace(std::string line) { m_traceLines.push_back(std::move(line)); }
-    // 清空追踪行（ClockSystem 调用）。
+    // 清空追踪行（DebugSink 调用）。
     void clearTraceLines() { m_traceLines.clear(); }
-    // 待结算的上一段位移 disp-（实体 -> 旧曲线 id），由 DisplacementSystem 积分后结算；非序列化的表现层簿记。
-    int32_t pendingDispEnd(Entity entity) const
-    {
-        const auto it = m_pendingDispEnds.find(entity.value);
-        return it == m_pendingDispEnds.end() ? -1 : it->second;
-    }
-    void setPendingDispEnd(Entity entity, int32_t id)
-    {
-        if (id == -1)
-            m_pendingDispEnds.erase(entity.value);
-        else
-            m_pendingDispEnds[entity.value] = id;
-    }
-    void clearPendingDispEnds() { m_pendingDispEnds.clear(); }
 
 private:
     // 初始化时传入的世界配置。
@@ -78,9 +63,7 @@ private:
     const FrameInput* m_input = nullptr;
     // 抽样策略，非拥有、不参与快照/哈希/克隆。
     const DrawPolicy* m_drawPolicy = nullptr;
-    // DebugSink 追踪行（非拥有、不参与快照/哈希/克隆）。
+    // DebugSink 追踪行。不参与快照、哈希与克隆。
     std::vector<std::string> m_traceLines;
-    // 待结算 disp-（非拥有、不参与快照/哈希/克隆；表现层簿记）。
-    std::map<uint32_t, int32_t> m_pendingDispEnds;
 };
 }  // namespace mugen::sim

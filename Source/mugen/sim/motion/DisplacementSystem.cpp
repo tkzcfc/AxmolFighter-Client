@@ -2,7 +2,7 @@
 // 读：`Displacement`、`Transform`、`Stats`、`StatusFlags`、`MapRegion`
 // 写：`Transform`、`Displacement`（积分、事件位、内建策略反应）
 // 消费：—
-// 产生：—
+// 产生：`DisplacementEvent`（曲线耗尽时经 displacement::rules::settle）
 #include "mugen/sim/Systems.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/motion/DisplacementRules.h"
@@ -155,35 +155,7 @@ void runDisplacement(World& world)
             }
             d.m_offset = {transform.m_position.x - last.x, transform.m_position.y - last.y,
                           transform.m_position.z - last.z};
-            // 覆盖结算：上一段位移被新位移替换，发出 disp-（终点取帧末位置）。
-            if (const int32_t pending = world.pendingDispEnd(entity); pending != -1)
-            {
-                DispEvent ended;
-                ended.m_entity         = entity;
-                ended.m_displacementId = pending;
-                ended.m_phase          = 1;
-                ended.m_endpoint       = transform.m_position;
-                world.ecs().singleton<EventQueue<DispEvent>>().push(ended);
-                world.setPendingDispEnd(entity, -1);
-            }
-            // 曲线位移自然结束（速度与加速度耗尽）时发出 disp-（供摘要）。
-            if (d.m_curveId != -1)
-            {
-                const bool moving = d.m_velocity.x != Fixed{} || d.m_velocity.y != Fixed{} || d.m_velocity.z != Fixed{};
-                const bool accelerating = (d.m_acceleration.x != Fixed{} && d.m_elapsedMs < d.m_accelerationTime.x) ||
-                                           (d.m_acceleration.y != Fixed{} && d.m_elapsedMs < d.m_accelerationTime.y) ||
-                                           (d.m_acceleration.z != Fixed{} && d.m_elapsedMs < d.m_accelerationTime.z);
-                if (!moving && !accelerating)
-                {
-                    DispEvent event;
-                    event.m_entity         = entity;
-                    event.m_displacementId = d.m_curveId;
-                    event.m_phase          = 1;
-                    event.m_endpoint       = transform.m_position;
-                    world.ecs().singleton<EventQueue<DispEvent>>().push(event);
-                    d.m_curveId = -1;
-                }
-            }
+            displacement::rules::settle(world, entity);
         });
 }
 }  // namespace mugen::sim

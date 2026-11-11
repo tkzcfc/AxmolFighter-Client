@@ -37,8 +37,6 @@ void admit(World& world, Entity entity, int32_t buffId)
     const auto* config = conf::Config::instance().find<conf::BuffConfig>(buffId);
     if (!config)
         return;
-    if (!world.ecs().has<BuffList>(entity))
-        world.ecs().add(entity, BuffList{});
     auto& list = world.ecs().get<BuffList>(entity);
     BuffInstance instance;
     instance.m_serial       = list.m_nextSerial++;

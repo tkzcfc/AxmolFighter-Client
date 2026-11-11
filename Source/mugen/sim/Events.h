@@ -358,8 +358,8 @@ struct CastEvent
     Entity m_entity;
     // 技能标识。
     int32_t m_skillId = 0;
-    // 技能槽位名称（A、Y、F…）。
-    std::string m_slot;
+    // 技能槽位下标（SkillBook::m_slots）。摘要导出再映射成字母。
+    int32_t m_slot = 0;
     // 阶段。
     CastPhase m_phase = CastPhase::Prepared;
     MG_REFLECT(CastEvent, m_entity, m_skillId, m_slot, m_phase)
@@ -430,26 +430,34 @@ struct DespawnEvent
     DespawnReason m_reason = DespawnReason::ClipEnd;
     MG_REFLECT(DespawnEvent, m_entity, m_reason)
 };
-// 位移开始或结束（供摘要 disp+/disp- 行使用）。
-struct DispEvent
+// 位移事实的阶段。只由 displacement::rules 产生。
+enum class DispPhase : int32_t
+{
+    // 曲线开始。
+    Began = 0,
+    // 曲线自然结束或被清空。
+    Ended = 1,
+    // 活动曲线被另一条曲线替换。
+    Replaced = 2
+};
+// 位移事实。终点不入事件，由 DebugSink 在 P11 读 Transform。
+struct DisplacementEvent
 {
     // 位移所属实体。
     Entity m_entity;
-    // 位移配置标识。
-    int32_t m_displacementId = 0;
-    // 阶段：0 开始，1 结束。
-    int32_t m_phase = 0;
-    // 结束时的终点坐标。
-    FixedVec3 m_endpoint;
-    MG_REFLECT(DispEvent, m_entity, m_displacementId, m_phase, m_endpoint)
+    // 阶段。
+    DispPhase m_phase = DispPhase::Began;
+    // 曲线配置标识。
+    int32_t m_curveId = 0;
+    MG_REFLECT(DisplacementEvent, m_entity, m_phase, m_curveId)
 };
-// 顿帧写入（供摘要 stop 行使用，帧数 = ceil(freezeMs/dtMs)）。
-struct StopEvent
+// 顿帧事实。毫秒到帧的换算在 DebugSink。
+struct HitStopEvent
 {
     // 被顿帧的实体。
     Entity m_entity;
-    // 顿帧帧数。
-    int32_t m_frames = 0;
-    MG_REFLECT(StopEvent, m_entity, m_frames)
+    // 写入的顿帧毫秒。
+    Fixed m_freezeMs;
+    MG_REFLECT(HitStopEvent, m_entity, m_freezeMs)
 };
 }  // namespace mugen::sim

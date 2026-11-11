@@ -28,6 +28,5 @@ void runClock(World& world)
     clock.m_dtMs  = kLogicDtMs * scale;
     clock.m_elapsedMs += clock.m_dtMs;
     world.ecs().singleton<PresentationEvents>().m_events.clear();
-    world.clearTraceLines();
 }
 }  // namespace mugen::sim

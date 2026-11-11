@@ -16,7 +16,6 @@ void World::init(const WorldSetup& setup)
     }
     m_ecs   = WorldECS{};
     m_setup = setup;
-    clearPendingDispEnds();
     clearTraceLines();
     m_ecs.singleton<RngState>().m_random.seed(m_setup.seed);
     auto& region = m_ecs.singleton<MapRegion>();
@@ -67,11 +66,13 @@ bool World::deserialize(ByteBuffer& buffer)
     return true;
 }
 
-// 复制本场全部可序列化状态。
+// 复制可序列化状态。抽样策略、追踪行与输入指针属于调试/驱动状态，不进入副本。
 World World::clone() const
 {
-    World copy   = *this;
-    copy.m_input = nullptr;
+    World copy       = *this;
+    copy.m_input     = nullptr;
+    copy.m_drawPolicy = nullptr;
+    copy.m_traceLines.clear();
     return copy;
 }
 

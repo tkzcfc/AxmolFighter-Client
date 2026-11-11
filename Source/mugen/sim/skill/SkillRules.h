@@ -20,13 +20,12 @@ int32_t getFightSkill(World& world, Entity entity, std::string_view slot);
 bool isAllowCast(World& world, Entity entity, int32_t index);
 // 按钮事件 → 槽位处理；返回是否成功预约施法。
 bool dealButton(World& world, Entity entity, ControlEvent event);
-// 开始一次施法（写入 SkillCast + ActionTimeline，发出 CastEvent Began）。
-void beginCast(World& world, Entity entity, int32_t index);
-// 结束当前施法（发出 CastEvent Ended）；若有缓存下一招则接续。
+// 开始一次施法：写入 SkillCast，同步进入首片段，发出 CastEvent Began。
+// deferFirstClip 为 true 时，本帧时间轴不推进该片段（施法请求在时间轴之前）。
+void beginCast(World& world, Entity entity, int32_t index, bool deferFirstClip = true);
+// 结束当前施法：同步退出当前片段并移除片段 Buff，发出 CastEvent Ended；有缓存下一招则接续。
 void endCast(World& world, Entity entity);
-// 强制中断当前施法（发出 CastEvent Cancelled）。
+// 强制中断：退出当前片段、清空施法，并立即销毁本技能 autoRelease=0 的特效。
 void forceInterrupt(World& world, Entity entity);
-// 进入当前技能的下一个片段（时间轴推进用）。
-void enterClip(World& world, Entity entity);
 }  // namespace skill::rules
 }  // namespace mugen::sim

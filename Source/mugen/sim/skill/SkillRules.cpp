@@ -1,4 +1,5 @@
 #include "mugen/sim/skill/SkillRules.h"
+#include "mugen/sim/skill/TimelineRules.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/GameDef.h"
 #include <algorithm>
@@ -231,13 +232,14 @@ bool dealButton(World& world, Entity entity, ControlEvent event)
     return true;
 }
 
-// 开始一次施法。
-void beginCast(World& world, Entity entity, int32_t index)
+// 开始一次施法。deferFirstClip 为 true 时本帧时间轴不推进首片段。
+void beginCast(World& world, Entity entity, int32_t index, bool deferFirstClip)
 {
     auto& book = world.ecs().get<SkillBook>(entity);
     auto& cast = world.ecs().get<SkillCast>(entity);
     auto& skill = book.m_skills[static_cast<size_t>(index)];
     const auto* def = conf::Config::instance().find<conf::battle::SkillDef>(skill.m_configId);
+    timeline::rules::exitClip(world, entity);
     skill.m_coldMaxTime = Fixed::fromInt(def ? def->cdMs : 0);
     skill.m_cd          = skill.m_coldMaxTime;
     skill.m_timing      = skill.m_coldMaxTime > Fixed{};
@@ -248,7 +250,7 @@ void beginCast(World& world, Entity entity, int32_t index)
     cast.m_allowInterrupt   = false;
     cast.m_allowExtraInterrupt = false;
     cast.m_interrupted      = false;
-    // 建立动作时间轴（B2 无摇杆，取第 0 方向列）。
+    // 建立动作时间轴（B2 无摇杆，取第 0 方向列）并同步进入首片段。
     ActionTimeline timeline;
     if (def && !def->sequences.empty())
         timeline.m_clips = def->sequences[0];
@@ -258,52 +260,77 @@ void beginCast(World& world, Entity entity, int32_t index)
     CastEvent event;
     event.m_entity  = entity;
     event.m_skillId = skill.m_configId;
-    event.m_slot    = book.m_slots[static_cast<size_t>(skill.m_slot)];
+    event.m_slot    = skill.m_slot;
     event.m_phase   = CastPhase::Began;
     world.ecs().singleton<EventQueue<CastEvent>>().push(event);
+    auto& clips = world.ecs().get<ActionTimeline>(entity).m_clips;
+    if (clips.empty() || !timeline::rules::enterClip(world, entity, clips.front(), false, deferFirstClip))
+        endCast(world, entity);
 }
 
-// 结束当前施法；有缓存下一招则接续。
+// 结束当前施法：同步退出当前片段；有缓存下一招则同帧接续。
 void endCast(World& world, Entity entity)
 {
     auto& book = world.ecs().get<SkillBook>(entity);
     auto& cast = world.ecs().get<SkillCast>(entity);
     if (cast.m_skill == kNoSkill)
         return;
+    timeline::rules::exitClip(world, entity);
     const auto& skill = book.m_skills[static_cast<size_t>(cast.m_skill)];
     CastEvent event;
     event.m_entity  = entity;
     event.m_skillId = skill.m_configId;
-    event.m_slot    = book.m_slots[static_cast<size_t>(skill.m_slot)];
+    event.m_slot    = skill.m_slot;
     event.m_phase   = CastPhase::Ended;
     world.ecs().singleton<EventQueue<CastEvent>>().push(event);
     const int32_t next = cast.m_nextSkill;
     if (next != kNoSkill)
     {
         cast.m_nextSkill = kNoSkill;
-        beginCast(world, entity, next);
+        // 时间轴内接续：本帧不再推进，下一帧正常计时。
+        beginCast(world, entity, next, false);
     }
     else
+    {
         cast.m_skill = kNoSkill;
+        auto& timeline = world.ecs().get<ActionTimeline>(entity);
+        timeline.m_finished     = true;
+        timeline.m_deferAdvance = false;
+    }
 }
 
-// 强制中断当前施法。
+// 强制中断当前施法：退出片段 Buff，并立即销毁 autoRelease=0 的特效。
 void forceInterrupt(World& world, Entity entity)
 {
+    if (!world.ecs().has<SkillBook>(entity) || !world.ecs().has<SkillCast>(entity))
+        return;
     auto& book = world.ecs().get<SkillBook>(entity);
     auto& cast = world.ecs().get<SkillCast>(entity);
     if (cast.m_skill == kNoSkill)
         return;
+    timeline::rules::exitClip(world, entity);
     const auto& skill = book.m_skills[static_cast<size_t>(cast.m_skill)];
+    const int32_t skillId = skill.m_configId;
     CastEvent event;
     event.m_entity  = entity;
-    event.m_skillId = skill.m_configId;
-    event.m_slot    = book.m_slots[static_cast<size_t>(skill.m_slot)];
+    event.m_skillId = skillId;
+    event.m_slot    = skill.m_slot;
     event.m_phase   = CastPhase::Cancelled;
     world.ecs().singleton<EventQueue<CastEvent>>().push(event);
-    cast.m_skill     = kNoSkill;
-    cast.m_nextSkill = kNoSkill;
+    cast.m_skill       = kNoSkill;
+    cast.m_nextSkill   = kNoSkill;
     cast.m_interrupted = true;
+    auto& timeline = world.ecs().get<ActionTimeline>(entity);
+    timeline.m_finished     = true;
+    timeline.m_deferAdvance = false;
+    world.ecs().each<EffectInfo, Lifetime>([&](Entity effect, const EffectInfo& info, const Lifetime& life) {
+        if (info.m_owner == entity && info.m_baseSkillId == skillId && life.m_autoRelease == 0 &&
+            !world.ecs().has<Despawning>(effect))
+        {
+            world.ecs().add(effect, Despawning{});
+            world.ecs().singleton<EventQueue<DespawnRequest>>().push({effect, DespawnReason::Interrupted});
+        }
+    });
 }
 }  // namespace skill::rules
 }  // namespace mugen::sim

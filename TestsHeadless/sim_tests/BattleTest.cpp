@@ -3,6 +3,10 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/BattleBootstrap.h"
 #include "mugen/sim/buff/BuffRules.h"
+#include "mugen/sim/combat/HealthRules.h"
+#include "mugen/sim/effect/EffectRules.h"
+#include "mugen/sim/life/EntityFactory.h"
+#include "mugen/sim/skill/SkillRules.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/TypeConversions.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
@@ -408,4 +412,150 @@ TEST_CASE("sim buff: class1_superarmor hash is stable across two runs and clip b
         hashes[run] = world.hash();
     }
     CHECK(hashes[0] == hashes[1]);
+}
+
+TEST_CASE("sim hit: two separate hit cycles reset hit timers")
+{
+    World world        = makeWorld();
+    const Entity dummy = roleByConfig(world, 61300);
+    const auto inputs  = aComboInputs();
+    int cycles         = 0;
+    RoleStateId prev   = RoleStateId::Idle;
+    for (uint64_t f = 1; f <= 140; ++f)
+    {
+        const auto it = inputs.find(f);
+        world.tick(it == inputs.end() ? FrameInput{f, {}, {}, {}} : it->second);
+        const auto state = world.ecs().get<RoleState>(dummy).m_state;
+        if (state == RoleStateId::Hit && prev != RoleStateId::Hit)
+        {
+            const auto& hit = world.ecs().get<HitState>(dummy);
+            CHECK_FALSE(hit.m_animationEnd);
+            CHECK(hit.m_hitTimeMs == Fixed{});
+            ++cycles;
+        }
+        prev = state;
+    }
+    CHECK(cycles >= 2);
+}
+
+TEST_CASE("sim skill: cast rejected while in Hit")
+{
+    World world       = makeWorld();
+    const Entity hero = roleByConfig(world, 101);
+    world.ecs().get<RoleState>(hero).m_state = RoleStateId::Hit;
+    auto& hit = world.ecs().get<HitState>(hero);
+    hit.m_stiffTime       = Fixed::fromInt(5000);
+    hit.m_hitTimeMs       = {};
+    hit.m_animationEnd    = false;
+    hit.m_displacementEnd = false;
+    world.ecs().get<MotionState>(hero).m_completedThisFrame = false;
+    world.tick(cmdInput(world.frame() + 1, ControlEvent::CTR_ATKA, ControlQuadrant::None, 1));
+    CHECK(world.ecs().get<SkillCast>(hero).m_skill == kNoSkill);
+    CHECK(world.ecs().get<RoleState>(hero).m_state == RoleStateId::Hit);
+}
+
+TEST_CASE("sim timeline stays frozen while Hit")
+{
+    World world       = makeWorld();
+    const Entity hero = roleByConfig(world, 101);
+    driveCombo(world, 52);
+    REQUIRE(world.ecs().get<RoleState>(hero).m_state == RoleStateId::Attack);
+    const Fixed clipMs = world.ecs().get<ActionTimeline>(hero).m_clipMs;
+    REQUIRE(clipMs > Fixed{});
+    world.ecs().get<RoleState>(hero).m_state = RoleStateId::Hit;
+    auto& hit = world.ecs().get<HitState>(hero);
+    hit.m_stiffTime       = Fixed::fromInt(5000);
+    hit.m_hitTimeMs       = {};
+    hit.m_animationEnd    = false;
+    hit.m_displacementEnd = false;
+    world.ecs().get<MotionState>(hero).m_completedThisFrame = false;
+    world.ecs().get<Displacement>(hero).m_brake = false;
+    world.tick(FrameInput{world.frame() + 1, {}, {}, {}});
+    CHECK(world.ecs().get<ActionTimeline>(hero).m_clipMs == clipMs);
+    CHECK(world.ecs().get<RoleState>(hero).m_state == RoleStateId::Hit);
+}
+
+TEST_CASE("sim death is requested then entered by the fsm")
+{
+    World world        = makeWorld();
+    const Entity dummy = roleByConfig(world, 61300);
+    const Fixed hp     = world.ecs().get<Health>(dummy).m_hp;
+    health::rules::applyDelta(world, dummy, -hp, HpCause::Hit, dummy, {});
+    CHECK(world.ecs().get<Health>(dummy).m_dead);
+    CHECK_FALSE(world.ecs().singleton<EventQueue<DeathRequest>>().empty());
+    world.tick(FrameInput{world.frame() + 1, {}, {}, {}});
+    CHECK(world.ecs().singleton<EventQueue<DeathRequest>>().empty());
+    CHECK(world.ecs().get<RoleState>(dummy).m_deathRequested);
+    CHECK(world.ecs().get<RoleState>(dummy).m_deathAnnounced);
+    CHECK(world.ecs().get<RoleState>(dummy).m_state != RoleStateId::Death);
+    world.tick(FrameInput{world.frame() + 1, {}, {}, {}});
+    CHECK(world.ecs().get<RoleState>(dummy).m_state == RoleStateId::Death);
+    CHECK(world.ecs().get<MotionState>(dummy).m_motionName == "death");
+}
+
+TEST_CASE("sim clip buffs released when a cast is interrupted")
+{
+    World world       = makeWorld();
+    const Entity hero = roleByConfig(world, 101);
+    const auto inputs = superArmorInputs();
+    bool armed        = false;
+    for (uint64_t f = 1; f <= 40 && !armed; ++f)
+    {
+        const auto it = inputs.find(f);
+        world.tick(it == inputs.end() ? FrameInput{f, {}, {}, {}} : it->second);
+        armed = world.ecs().get<StatusFlags>(hero).active(ExtraState::SuperArmor) &&
+                world.ecs().get<SkillCast>(hero).m_skill != kNoSkill;
+    }
+    REQUIRE(armed);
+    const auto armor = static_cast<size_t>(ExtraState::SuperArmor) - 1;
+    CHECK(world.ecs().get<StatusFlags>(hero).m_refs[armor] > 0);
+    skill::rules::forceInterrupt(world, hero);
+    CHECK(world.ecs().get<SkillCast>(hero).m_skill == kNoSkill);
+    CHECK(world.ecs().get<StatusFlags>(hero).m_refs[armor] == 0);
+}
+
+TEST_CASE("sim combat hit interrupts a cast")
+{
+    World world        = makeWorld();
+    const Entity hero  = roleByConfig(world, 101);
+    const Entity dummy = roleByConfig(world, 61300);
+    driveCombo(world, 52);
+    REQUIRE(world.ecs().get<RoleState>(hero).m_state == RoleStateId::Attack);
+    REQUIRE(world.ecs().get<SkillCast>(hero).m_skill != kNoSkill);
+    effect::rules::spawnFromRole(world, dummy, 920000, {});
+    life::rules::spawnFlush(world, SpawnStage::Combat);
+    Entity effect;
+    world.ecs().each<EffectInfo>([&](Entity entity, const EffectInfo& info) {
+        if (info.m_configId == 920000 && info.m_owner == dummy)
+            effect = entity;
+    });
+    REQUIRE(effect.value != 0);
+    ContactEvent contact;
+    contact.m_a     = effect;
+    contact.m_b     = hero;
+    contact.m_phase = ContactPhase::Began;
+    world.ecs().singleton<EventQueue<ContactEvent>>().push(contact);
+    world.tick(FrameInput{world.frame() + 1, {}, {}, {}});
+    CHECK(world.ecs().get<SkillCast>(hero).m_skill == kNoSkill);
+    CHECK(world.ecs().get<SkillCast>(hero).m_interrupted);
+}
+
+TEST_CASE("sim rng: identical runs without DrawPolicy match, different seeds can change damage")
+{
+    auto drive = [](uint32_t seed) {
+        World world = makeWorld();
+        world.ecs().singleton<RngState>().m_random.seed(seed);
+        const Entity dummy = roleByConfig(world, 61300);
+        driveCombo(world, 58);
+        return std::pair{world.hash(), world.ecs().get<Health>(dummy).m_hp.toInt()};
+    };
+    const auto first  = drive(31);
+    const auto second = drive(31);
+    CHECK(first.first == second.first);
+    CHECK(first.second == second.second);
+    bool damageDiffers = false;
+    for (uint32_t seed = 1; seed <= 16; ++seed)
+        if (drive(seed).second != first.second)
+            damageDiffers = true;
+    CHECK(damageDiffers);
 }
