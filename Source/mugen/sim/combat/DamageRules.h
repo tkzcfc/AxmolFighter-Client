@@ -12,9 +12,9 @@ namespace combat::rules
 struct DamageInput
 {
     // 攻击方属性。
-    const Stats* m_attacker;
+    const StatsComponent* m_attacker;
     // 受击方属性。
-    const Stats* m_target;
+    const StatsComponent* m_target;
     // 命中配置。
     const conf::battle::HitDef* m_hit;
     // 已解析的标准伤害。
@@ -37,8 +37,8 @@ inline bool attributeDodge(const DamageInput& input, Fixed draw)
 // 按攻防、倍率、暴击、增减伤、浮动的顺序计算伤害（crit 与 float 各抽样一次）。
 inline Fixed calculateDamage(const DamageInput& input, Fixed critDraw, Fixed floatDraw, bool& critical)
 {
-    const Stats& attack = *input.m_attacker;
-    const Stats& target = *input.m_target;
+    const StatsComponent& attack = *input.m_attacker;
+    const StatsComponent& target = *input.m_target;
     const auto& hit     = *input.m_hit;
     const bool physical = hit.hurtType == 0 || (hit.hurtType == 2 && attack.value(5) >= attack.value(7));
     Fixed atk           = attack.value(physical ? 5 : 7);

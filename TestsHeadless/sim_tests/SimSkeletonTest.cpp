@@ -113,12 +113,12 @@ TEST_CASE("sim schedule table is ordered unique and complete")
         "ClockSystem",           "ScheduledActionSystem",  "InputSystem",           "CooldownSystem",
         "BuffTickSystem",        "VitalsTickSystem",       "PauseTickSystem",       "AiSystem",
         "PlayerIntentSystem",    "SkillRequestSystem",     "RoleFsmSystem",         "TimelineSystem(roles)",
-        "SpawnFlush(RoleTimeline)", "TimelineSystem(effects)", "SpawnFlush(EffectTimeline)", "HitReactionSystem",
+        "SpawnFlushSystem(RoleTimeline)", "TimelineSystem(effects)", "SpawnFlushSystem(EffectTimeline)", "HitReactionSystem",
         "LocomotionSystem",      "DisplacementSystem",     "FollowSystem",          "AnimationSystem",
         "HitboxSystem",          "CollisionSystem",        "CombatSystem",          "ObstacleSystem",
-        "InteractSystem",        "SpawnFlush(Combat)",     "DeathSystem",           "TransformSystem",
-        "DespawnSystem",         "SpawnFlush(Lifecycle)",  "RoomDirectorSystem",    "SpawnFlush(Room)",
-        "PresentationSystem",    "DebugSink",              "RoomTransferSystem",    "FlushSystem"};
+        "InteractSystem",        "SpawnFlushSystem(Combat)",     "DeathSystem",           "TransformSystem",
+        "DespawnSystem",         "SpawnFlushSystem(Lifecycle)",  "RoomDirectorSystem",    "SpawnFlushSystem(Room)",
+        "PresentationSystem",    "DebugSinkSystem",              "RoomTransferSystem",    "FlushSystem"};
     REQUIRE(kSchedule.size() == expected.size());
     for (std::size_t i = 0; i < expected.size(); ++i)
         CHECK(expected[i] == kSchedule[i].m_name);
@@ -159,7 +159,7 @@ TEST_CASE("sim frame end flushes destroyed entities and clears fact queues")
     World world;
     world.init(emptySetup());
     const Entity e = world.ecs().create();
-    world.ecs().add(e, Despawning{});
+    world.ecs().add(e, DespawningComponent{});
     world.ecs().destroy(e);
     world.ecs().singleton<EventQueue<HitEvent>>().push(HitEvent{});
     world.ecs().singleton<EventQueue<SpawnRequest>>().push(SpawnRequest{});

@@ -167,7 +167,7 @@ inline BuffOp resourceOp(ResourceId res, ValueExpr expr)
 inline Entity spawnActor(World& world, int32_t roleType, int32_t camp, int32_t hostileMask, int32_t level = 100)
 {
     const Entity entity = world.ecs().create();
-    Identity identity;
+    IdentityComponent identity;
     identity.m_kind        = SpawnKind::Role;
     identity.m_roleType    = roleType;
     identity.m_camp        = camp;
@@ -175,13 +175,13 @@ inline Entity spawnActor(World& world, int32_t roleType, int32_t camp, int32_t h
     identity.m_level       = level;
     world.ecs().add(entity, identity);
 
-    Stats stats;
+    StatsComponent stats;
     stats.m_base[4]  = Fixed::fromInt(10000);
     stats.m_base[5]  = Fixed::fromInt(200);
     stats.m_base[15] = Fixed::fromInt(50);
     world.ecs().add(entity, stats);
 
-    Health health;
+    HealthComponent health;
     health.m_maxHp  = stats.maxHp();
     health.m_hp     = health.m_maxHp;
     health.m_prevHp = health.m_hp;
@@ -192,28 +192,28 @@ inline Entity spawnActor(World& world, int32_t roleType, int32_t camp, int32_t h
     health.m_prevEp = health.m_ep;
     world.ecs().add(entity, health);
 
-    world.ecs().add(entity, StatusFlags{});
-    world.ecs().add(entity, BuffList{});
-    world.ecs().add(entity, AbilityList{});
-    world.ecs().add(entity, TauntTable{});
-    world.ecs().add(entity, ComboMeter{});
-    world.ecs().add(entity, RageState{});
-    world.ecs().add(entity, SkillBook{});
-    world.ecs().add(entity, SkillCast{});
-    world.ecs().add(entity, ActionTimeline{});
-    world.ecs().add(entity, RoleState{});
-    world.ecs().add(entity, Transform{});
-    world.ecs().add(entity, Displacement{});
-    world.ecs().add(entity, Pause{});
-    world.ecs().add(entity, MotionState{});
+    world.ecs().add(entity, StatusFlagsComponent{});
+    world.ecs().add(entity, BuffListComponent{});
+    world.ecs().add(entity, AbilityListComponent{});
+    world.ecs().add(entity, TauntTableComponent{});
+    world.ecs().add(entity, ComboMeterComponent{});
+    world.ecs().add(entity, RageStateComponent{});
+    world.ecs().add(entity, SkillBookComponent{});
+    world.ecs().add(entity, SkillCastComponent{});
+    world.ecs().add(entity, ActionTimelineComponent{});
+    world.ecs().add(entity, RoleStateComponent{});
+    world.ecs().add(entity, TransformComponent{});
+    world.ecs().add(entity, DisplacementComponent{});
+    world.ecs().add(entity, PauseComponent{});
+    world.ecs().add(entity, MotionStateComponent{});
     return entity;
 }
 
 inline BuffInstance* findBuff(World& world, Entity entity, int32_t id)
 {
-    if (!world.ecs().has<BuffList>(entity))
+    if (!world.ecs().has<BuffListComponent>(entity))
         return nullptr;
-    for (auto& inst : world.ecs().get<BuffList>(entity).m_instances)
+    for (auto& inst : world.ecs().get<BuffListComponent>(entity).m_instances)
         if (inst.m_id == id && !inst.m_removing)
             return &inst;
     return nullptr;
@@ -227,12 +227,12 @@ inline int32_t stackOf(World& world, Entity entity, int32_t id)
 
 inline Fixed statSum(World& world, Entity entity, int32_t stat)
 {
-    return world.ecs().get<Stats>(entity).sumMods(stat);
+    return world.ecs().get<StatsComponent>(entity).sumMods(stat);
 }
 
 inline bool hasFlag(World& world, Entity entity, ExtraState state)
 {
-    return world.ecs().get<StatusFlags>(entity).active(state);
+    return world.ecs().get<StatusFlagsComponent>(entity).active(state);
 }
 
 inline int32_t eventCount(World& world, BuffPhase phase, int32_t buffId = 0)

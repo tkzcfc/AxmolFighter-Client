@@ -1,6 +1,6 @@
 // [4.2] RoleFsmSystem
-// 读：`RoleState`（含木偶请求）、`SkillCast`、`Intent.m_move`、`HitState`、`Health`、`Displacement` 事件位、`MotionState` 完成位
-// 写：`RoleState`（工厂初始化之外的唯一写入者）；进入/退出动作写 `MotionState`、`Displacement`、`SkillCast`、`ActionTimeline`（经 skill::rules）
+// 读：`RoleStateComponent`（含木偶请求）、`SkillCastComponent`、`IntentComponent.m_move`、`HitStateComponent`、`HealthComponent`、`DisplacementComponent` 事件位、`MotionStateComponent` 完成位
+// 写：`RoleStateComponent`（工厂初始化之外的唯一写入者）；进入/退出动作写 `MotionStateComponent`、`DisplacementComponent`、`SkillCastComponent`、`ActionTimelineComponent`（经 skill::rules）
 // 消费：—
 // 产生：`StateEvent`、`CastEvent`
 #include "mugen/sim/Systems.h"
@@ -16,7 +16,7 @@ namespace mugen::sim
 namespace
 {
 // 唯一状态写入：更新状态、清零计时并发出带正确 m_from 的 StateEvent。
-void transition(World& world, Entity entity, RoleState& state, RoleStateId to)
+void transition(World& world, Entity entity, RoleStateComponent& state, RoleStateId to)
 {
     if (state.m_state == to)
         return;
@@ -36,7 +36,7 @@ void transition(World& world, Entity entity, RoleState& state, RoleStateId to)
     world.ecs().singleton<EventQueue<StateEvent>>().push(event);
 }
 // 播放受击动作。
-void playHitMotion(MotionState& motion)
+void playHitMotion(MotionStateComponent& motion)
 {
     motion.m_motionName     = role::motionName(RoleStateId::Hit);
     motion.m_timeMs         = {};
@@ -46,13 +46,13 @@ void playHitMotion(MotionState& motion)
     motion.m_playing        = true;
 }
 // 启动受击位移。Began 由 displacement::rules::set 发出。
-void setHitDisplacement(World& world, Entity entity, HitState& hit)
+void setHitDisplacement(World& world, Entity entity, HitStateComponent& hit)
 {
     if (hit.m_displacementId != -1)
         displacement::rules::set(world, entity, hit.m_displacementId);
 }
 // 进入受击：首次进入与跨周期重进都复位硬直计时、完成位与状态计时。
-void enterHit(World& world, Entity entity, RoleState& state, HitState& hit, MotionState& motion)
+void enterHit(World& world, Entity entity, RoleStateComponent& state, HitStateComponent& hit, MotionStateComponent& motion)
 {
     hit.m_hitDefId             = hit.m_pendingHitDefId;
     hit.m_displacementId       = hit.m_pendingDisplacementId;
@@ -66,7 +66,7 @@ void enterHit(World& world, Entity entity, RoleState& state, HitState& hit, Moti
     state.m_stateMs = {};
 }
 // 受击追击重播：保留动画完成位与硬直计时，只复位位移完成位。
-void replayHit(World& world, Entity entity, HitState& hit, MotionState& motion)
+void replayHit(World& world, Entity entity, HitStateComponent& hit, MotionStateComponent& motion)
 {
     hit.m_hitDefId        = hit.m_pendingHitDefId;
     hit.m_displacementId  = hit.m_pendingDisplacementId;
@@ -78,7 +78,7 @@ void replayHit(World& world, Entity entity, HitState& hit, MotionState& motion)
     setHitDisplacement(world, entity, hit);
 }
 // 播放待机动作。
-void playIdle(MotionState& motion)
+void playIdle(MotionStateComponent& motion)
 {
     motion.m_motionName     = role::motionName(RoleStateId::Idle);
     motion.m_timeMs         = {};
@@ -88,8 +88,8 @@ void playIdle(MotionState& motion)
     motion.m_playing        = true;
 }
 // 进入死亡：清施法、播放死亡动作并启动死亡位移。
-void enterDeath(World& world, Entity entity, RoleState& state, HitState& hit, MotionState& motion,
-                Displacement& disp, const Identity& identity)
+void enterDeath(World& world, Entity entity, RoleStateComponent& state, HitStateComponent& hit, MotionStateComponent& motion,
+                DisplacementComponent& disp, const IdentityComponent& identity)
 {
     skill::rules::forceInterrupt(world, entity);
     motion.m_motionName     = role::motionName(RoleStateId::Death);
@@ -108,7 +108,7 @@ void enterDeath(World& world, Entity entity, RoleState& state, HitState& hit, Mo
         displacement::rules::set(world, entity, role->deathDisplacementId);
 }
 // 死亡体维持：读上一帧动画与位移完成位。
-void updateDeath(const MotionState& motion, const Displacement& disp, HitState& hit)
+void updateDeath(const MotionStateComponent& motion, const DisplacementComponent& disp, HitStateComponent& hit)
 {
     if (motion.m_completedLoops > 0)
         hit.m_animationEnd = true;
@@ -116,8 +116,8 @@ void updateDeath(const MotionState& motion, const Displacement& disp, HitState& 
         hit.m_displacementEnd = true;
 }
 // 受击自然推进。硬直结束时：已死直接进死亡，否则进 HitSwitch。
-void updateHit(World& world, Entity entity, RoleState& state, HitState& hit, MotionState& motion,
-               Displacement& disp, const Identity& identity, Fixed dtMs)
+void updateHit(World& world, Entity entity, RoleStateComponent& state, HitStateComponent& hit, MotionStateComponent& motion,
+               DisplacementComponent& disp, const IdentityComponent& identity, Fixed dtMs)
 {
     if (motion.m_completedThisFrame)
         hit.m_animationEnd = true;
@@ -144,8 +144,8 @@ void updateHit(World& world, Entity entity, RoleState& state, HitState& hit, Mot
     motion.m_playing        = true;
 }
 // 受击恢复：上一帧动画完成则回到待机；已死则进入死亡。
-void updateHitSwitch(World& world, Entity entity, RoleState& state, HitState& hit, MotionState& motion,
-                     Displacement& disp, const Identity& identity, Fixed dtMs)
+void updateHitSwitch(World& world, Entity entity, RoleStateComponent& state, HitStateComponent& hit, MotionStateComponent& motion,
+                     DisplacementComponent& disp, const IdentityComponent& identity, Fixed dtMs)
 {
     if (!motion.m_completedThisFrame)
     {
@@ -162,7 +162,7 @@ void updateHitSwitch(World& world, Entity entity, RoleState& state, HitState& hi
     playIdle(motion);
 }
 // 施法结束回到待机；仍在施法则累计状态时间。
-void updateAttack(World& world, Entity entity, RoleState& state, const SkillCast& cast, MotionState& motion, Fixed dtMs)
+void updateAttack(World& world, Entity entity, RoleStateComponent& state, const SkillCastComponent& cast, MotionStateComponent& motion, Fixed dtMs)
 {
     if (cast.m_skill == kNoSkill)
     {
@@ -173,8 +173,8 @@ void updateAttack(World& world, Entity entity, RoleState& state, const SkillCast
     state.m_stateMs += dtMs;
 }
 // 移动 / 待机。
-void updateLocomotion(World& world, Entity entity, RoleState& state, const Intent& intent, MotionState& motion,
-                      Displacement& disp, Fixed dtMs)
+void updateLocomotion(World& world, Entity entity, RoleStateComponent& state, const IntentComponent& intent, MotionStateComponent& motion,
+                      DisplacementComponent& disp, Fixed dtMs)
 {
     RoleStateId next = state.m_state;
     if (state.m_state == RoleStateId::Idle)
@@ -208,18 +208,18 @@ void updateLocomotion(World& world, Entity entity, RoleState& state, const Inten
 }
 }  // namespace
 
-// 系统 RoleFsmSystem：4.2 行，见 DESIGN.md §3.2。唯一写 RoleState 的系统。
+// 系统 RoleFsmSystem：4.2 行，见 DESIGN.md §3.2。唯一写 RoleStateComponent 的系统。
 // B2 实现 Idle/Walk/Run/Attack/Hit/HitSwitch/Death；HitUp 等受击族后续切片再接。
 void runRoleFsm(World& world)
 {
     const Fixed dtMs = world.ecs().singleton<WorldClock>().m_dtMs;
-    world.ecs().each<RoleState, Intent, MotionState, Displacement, SkillCast, HitState, Identity>(
-        [&](Entity entity, RoleState& state, const Intent& intent, MotionState& motion, Displacement& disp,
-            const SkillCast& cast, HitState& hit, const Identity& identity) {
-            if (world.ecs().has<Despawning>(entity) || world.ecs().has<Inactive>(entity))
+    world.ecs().each<RoleStateComponent, IntentComponent, MotionStateComponent, DisplacementComponent, SkillCastComponent, HitStateComponent, IdentityComponent>(
+        [&](Entity entity, RoleStateComponent& state, const IntentComponent& intent, MotionStateComponent& motion, DisplacementComponent& disp,
+            const SkillCastComponent& cast, HitStateComponent& hit, const IdentityComponent& identity) {
+            if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
                 return;
             state.m_prev = state.m_state;
-            if (const Pause* pause = world.ecs().tryGet<Pause>(entity))
+            if (const PauseComponent* pause = world.ecs().tryGet<PauseComponent>(entity))
                 if (pause->m_paused)
                     return;
 

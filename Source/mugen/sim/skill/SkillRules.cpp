@@ -8,8 +8,8 @@
 
 namespace mugen::sim
 {
-// SkillBook::find 实现：按槽位名 + 步骤查找技能下标。
-int32_t SkillBook::find(std::string_view slot, int32_t step) const
+// SkillBookComponent::find 实现：按槽位名 + 步骤查找技能下标。
+int32_t SkillBookComponent::find(std::string_view slot, int32_t step) const
 {
     for (size_t i = 0; i < m_skills.size(); ++i)
         if (m_slots[static_cast<size_t>(m_skills[i].m_slot)] == slot && m_skills[i].m_step == step)
@@ -117,10 +117,10 @@ std::vector<std::pair<std::string, int32_t>> offlineKit(CharacterClass occupatio
     return result;
 }
 
-// 构建角色技能簿并挂载 SkillBook / SkillCast。
+// 构建角色技能簿并挂载 SkillBookComponent / SkillCastComponent。
 void buildSkillBook(World& world, Entity entity, CharacterClass occupation)
 {
-    SkillBook book;
+    SkillBookComponent book;
     for (const auto& [slot, firstId] : offlineKit(occupation))
     {
         const int32_t slotIndex = static_cast<int32_t>(book.m_slots.size());
@@ -151,15 +151,15 @@ void buildSkillBook(World& world, Entity entity, CharacterClass occupation)
             book.m_skills.back().m_finally = true;
     }
     world.ecs().add(entity, std::move(book));
-    world.ecs().add(entity, SkillCast{});
-    world.ecs().add(entity, ActionTimeline{});
+    world.ecs().add(entity, SkillCastComponent{});
+    world.ecs().add(entity, ActionTimelineComponent{});
 }
 
 // 由输入槽位解析下一个可施放技能下标。
 int32_t getFightSkill(World& world, Entity entity, std::string_view slot)
 {
-    auto& book = world.ecs().get<SkillBook>(entity);
-    auto& cast = world.ecs().get<SkillCast>(entity);
+    auto& book = world.ecs().get<SkillBookComponent>(entity);
+    auto& cast = world.ecs().get<SkillCastComponent>(entity);
     int32_t step = 1;
     if (cast.m_skill != kNoSkill)
     {
@@ -182,18 +182,18 @@ int32_t getFightSkill(World& world, Entity entity, std::string_view slot)
 // 检查技能是否可施放。
 bool isAllowCast(World& world, Entity entity, int32_t index)
 {
-    auto& book  = world.ecs().get<SkillBook>(entity);
+    auto& book  = world.ecs().get<SkillBookComponent>(entity);
     auto& skill = book.m_skills[static_cast<size_t>(index)];
     if (skill.m_releaseCount == 0 && skill.m_cd > Fixed{})
         return false;
-    if (world.ecs().has<StatusFlags>(entity) &&
-        world.ecs().get<StatusFlags>(entity).active(mugen::ExtraState::Silence))
+    if (world.ecs().has<StatusFlagsComponent>(entity) &&
+        world.ecs().get<StatusFlagsComponent>(entity).active(mugen::ExtraState::Silence))
         return false;
     for (const auto& mod : book.m_mods)
         if (mod.m_field == static_cast<int32_t>(conf::battle::SkillModField::DisableSlot) && mod.m_value > Fixed{} &&
             (mod.m_slot < 0 || mod.m_slot == skill.m_slot))
             return false;
-    const auto& health = world.ecs().get<Health>(entity);
+    const auto& health = world.ecs().get<HealthComponent>(entity);
     const auto* def    = conf::Config::instance().find<conf::battle::SkillDef>(skill.m_configId);
     if (def && (def->costMp > 0 || def->costEp > 0 || def->costCrystal > 0))
     {
@@ -209,9 +209,9 @@ bool dealButton(World& world, Entity entity, ControlEvent event)
     auto slot = eventSlot(event);
     if (slot.empty())
         return false;
-    auto& cast = world.ecs().get<SkillCast>(entity);
-    auto& book = world.ecs().get<SkillBook>(entity);
-    const auto& state = world.ecs().get<RoleState>(entity);
+    auto& cast = world.ecs().get<SkillCastComponent>(entity);
+    auto& book = world.ecs().get<SkillBookComponent>(entity);
+    const auto& state = world.ecs().get<RoleStateComponent>(entity);
     if (slot == "A")
     {
         const bool sprint = cast.m_skill != kNoSkill &&
@@ -248,8 +248,8 @@ bool dealButton(World& world, Entity entity, ControlEvent event)
 // 开始一次施法。deferFirstClip 为 true 时本帧时间轴不推进首片段。
 void beginCast(World& world, Entity entity, int32_t index, bool deferFirstClip)
 {
-    auto& book = world.ecs().get<SkillBook>(entity);
-    auto& cast = world.ecs().get<SkillCast>(entity);
+    auto& book = world.ecs().get<SkillBookComponent>(entity);
+    auto& cast = world.ecs().get<SkillCastComponent>(entity);
     auto& skill = book.m_skills[static_cast<size_t>(index)];
     const auto* def = conf::Config::instance().find<conf::battle::SkillDef>(skill.m_configId);
     timeline::rules::exitClip(world, entity);
@@ -272,18 +272,18 @@ void beginCast(World& world, Entity entity, int32_t index, bool deferFirstClip)
     cast.m_allowInterrupt   = false;
     cast.m_allowExtraInterrupt = false;
     cast.m_interrupted      = false;
-    if (def && world.ecs().has<Health>(entity))
+    if (def && world.ecs().has<HealthComponent>(entity))
     {
-        auto& health = world.ecs().get<Health>(entity);
+        auto& health = world.ecs().get<HealthComponent>(entity);
         Fixed mpFactor = Fixed::fromInt(1);
         for (const auto& mod : book.m_mods)
             if (mod.m_field == static_cast<int32_t>(conf::battle::SkillModField::MpCostScale))
                 mpFactor += mod.m_value;
-        if (world.ecs().has<Stats>(entity))
-            mpFactor *= world.ecs().get<Stats>(entity).finalStat(205);
+        if (world.ecs().has<StatsComponent>(entity))
+            mpFactor *= world.ecs().get<StatsComponent>(entity).finalStat(205);
         const Fixed mpCost = Fixed::fromInt(def->costMp) * mpFactor;
         const Fixed epCost = Fixed::fromInt(def->costEp) *
-                             (world.ecs().has<Stats>(entity) ? world.ecs().get<Stats>(entity).finalStat(206)
+                             (world.ecs().has<StatsComponent>(entity) ? world.ecs().get<StatsComponent>(entity).finalStat(206)
                                                             : Fixed::fromInt(1));
         if (def->costMp > 0)
         {
@@ -300,19 +300,19 @@ void beginCast(World& world, Entity entity, int32_t index, bool deferFirstClip)
     buff::rules::fire(world, entity, conf::battle::TriggerPoint::SkillColdStart, castCtx);
     buff::rules::fire(world, entity, conf::battle::TriggerPoint::BeforeCastSkill, castCtx);
     // 建立动作时间轴（B2 无摇杆，取第 0 方向列）并同步进入首片段。
-    ActionTimeline timeline;
+    ActionTimelineComponent timeline;
     if (def && !def->sequences.empty())
         timeline.m_clips = def->sequences[0];
     timeline.m_index    = 0;
     timeline.m_finished = false;
-    world.ecs().get<ActionTimeline>(entity) = std::move(timeline);
+    world.ecs().get<ActionTimelineComponent>(entity) = std::move(timeline);
     CastEvent event;
     event.m_entity  = entity;
     event.m_skillId = skill.m_configId;
     event.m_slot    = skill.m_slot;
     event.m_phase   = CastPhase::Began;
     world.ecs().singleton<EventQueue<CastEvent>>().push(event);
-    auto& clips = world.ecs().get<ActionTimeline>(entity).m_clips;
+    auto& clips = world.ecs().get<ActionTimelineComponent>(entity).m_clips;
     if (clips.empty() || !timeline::rules::enterClip(world, entity, clips.front(), false, deferFirstClip))
         endCast(world, entity);
 }
@@ -320,8 +320,8 @@ void beginCast(World& world, Entity entity, int32_t index, bool deferFirstClip)
 // 结束当前施法：同步退出当前片段；有缓存下一招则同帧接续。
 void endCast(World& world, Entity entity)
 {
-    auto& book = world.ecs().get<SkillBook>(entity);
-    auto& cast = world.ecs().get<SkillCast>(entity);
+    auto& book = world.ecs().get<SkillBookComponent>(entity);
+    auto& cast = world.ecs().get<SkillCastComponent>(entity);
     if (cast.m_skill == kNoSkill)
         return;
     timeline::rules::exitClip(world, entity);
@@ -348,7 +348,7 @@ void endCast(World& world, Entity entity)
     else
     {
         cast.m_skill = kNoSkill;
-        auto& timeline = world.ecs().get<ActionTimeline>(entity);
+        auto& timeline = world.ecs().get<ActionTimelineComponent>(entity);
         timeline.m_finished     = true;
         timeline.m_deferAdvance = false;
     }
@@ -357,10 +357,10 @@ void endCast(World& world, Entity entity)
 // 强制中断当前施法：退出片段 Buff，并立即销毁 autoRelease=0 的特效。
 void forceInterrupt(World& world, Entity entity)
 {
-    if (!world.ecs().has<SkillBook>(entity) || !world.ecs().has<SkillCast>(entity))
+    if (!world.ecs().has<SkillBookComponent>(entity) || !world.ecs().has<SkillCastComponent>(entity))
         return;
-    auto& book = world.ecs().get<SkillBook>(entity);
-    auto& cast = world.ecs().get<SkillCast>(entity);
+    auto& book = world.ecs().get<SkillBookComponent>(entity);
+    auto& cast = world.ecs().get<SkillCastComponent>(entity);
     if (cast.m_skill == kNoSkill)
         return;
     timeline::rules::exitClip(world, entity);
@@ -376,14 +376,14 @@ void forceInterrupt(World& world, Entity entity)
     cast.m_skill       = kNoSkill;
     cast.m_nextSkill   = kNoSkill;
     cast.m_interrupted = true;
-    auto& timeline = world.ecs().get<ActionTimeline>(entity);
+    auto& timeline = world.ecs().get<ActionTimelineComponent>(entity);
     timeline.m_finished     = true;
     timeline.m_deferAdvance = false;
-    world.ecs().each<EffectInfo, Lifetime>([&](Entity effect, const EffectInfo& info, const Lifetime& life) {
+    world.ecs().each<EffectInfoComponent, LifetimeComponent>([&](Entity effect, const EffectInfoComponent& info, const LifetimeComponent& life) {
         if (info.m_owner == entity && info.m_baseSkillId == skillId && life.m_autoRelease == 0 &&
-            !world.ecs().has<Despawning>(effect))
+            !world.ecs().has<DespawningComponent>(effect))
         {
-            world.ecs().add(effect, Despawning{});
+            world.ecs().add(effect, DespawningComponent{});
             world.ecs().singleton<EventQueue<DespawnRequest>>().push({effect, DespawnReason::Interrupted});
         }
     });

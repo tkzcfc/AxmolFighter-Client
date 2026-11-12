@@ -1,6 +1,6 @@
 // [2.2] BuffTickSystem
-// 读：`BuffList`、`AbilityList`、`BuffDef`
-// 写：两个列表的计时；经 op 写 `Stats`/`Health`/`StatusFlags`/`SkillBook`
+// 读：`BuffListComponent`、`AbilityListComponent`、`BuffDef`
+// 写：两个列表的计时；经 op 写 `StatsComponent`/`HealthComponent`/`StatusFlagsComponent`/`SkillBookComponent`
 // 消费：—
 // 产生：`BuffEvent`、`HpEvent`、`DeathRequest`、`SpawnRequest`、`CueEvent`
 #include "mugen/sim/Systems.h"

@@ -1,5 +1,5 @@
 // [10.1] RoomDirectorSystem
-// 读：`DeathEvent`、`RoomRequest`、`RoomState`、`Identity`、`Health`
+// 读：`DeathEvent`、`RoomRequest`、`RoomState`、`IdentityComponent`、`HealthComponent`
 // 写：`RoomState`、`SlowMotion`(KO 慢放)、复活
 // 消费：`RoomRequest`
 // 产生：`RoomEvent`、`SpawnRequest`(波次)
@@ -25,7 +25,7 @@ void runRoomDirector(World& world)
     if (!room.m_ko && room.m_haveBoss && room.m_roomType != 0 && room.m_battleRuleType < 2)
     {
         bool bossAlive = false;
-        world.ecs().each<Identity, Health>([&](Entity, const Identity& identity, const Health& health) {
+        world.ecs().each<IdentityComponent, HealthComponent>([&](Entity, const IdentityComponent& identity, const HealthComponent& health) {
             if (identity.m_roleType == 4 && health.m_hp > Fixed{})
                 bossAlive = true;
         });

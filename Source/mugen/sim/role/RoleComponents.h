@@ -7,7 +7,7 @@
 namespace mugen::sim
 {
 // 角色状态机组件：唯一转移者 RoleFsmSystem 写状态，Death/Room 只写请求位。
-struct RoleState
+struct RoleStateComponent
 {
     // 当前状态。
     RoleStateId m_state = RoleStateId::Idle;
@@ -31,11 +31,11 @@ struct RoleState
     Fixed m_movedSec;
     // 连续站立秒数。
     Fixed m_standingSec;
-    MG_REFLECT(RoleState, m_state, m_prev, m_stateMs, m_deathRequested, m_reviveRequested, m_deathAnnounced,
+    MG_REFLECT(RoleStateComponent, m_state, m_prev, m_stateMs, m_deathRequested, m_reviveRequested, m_deathAnnounced,
                m_deathKiller, m_puppetState, m_puppetRequested, m_movedSec, m_standingSec)
 };
 // 受击与击退流程的运行时状态（B2 实现 Hit/HitSwitch 状态机）。
-struct HitState
+struct HitStateComponent
 {
     // 当前韧性值。
     Fixed m_rigidity;
@@ -60,7 +60,7 @@ struct HitState
     Fixed m_hitTimeMs;
     // 受击来源朝向。
     int32_t m_towardX = 1;
-    MG_REFLECT(HitState, m_rigidity, m_weight, m_fatigue, m_hitCounts, m_stiffTime, m_pendingHitDefId,
+    MG_REFLECT(HitStateComponent, m_rigidity, m_weight, m_fatigue, m_hitCounts, m_stiffTime, m_pendingHitDefId,
                m_pendingHitType, m_pendingDisplacementId, m_pendingTowardX, m_hitDefId, m_displacementId,
                m_animationEnd, m_displacementEnd, m_hitTimeMs, m_towardX)
 };

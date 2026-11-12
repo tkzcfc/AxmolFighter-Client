@@ -92,8 +92,7 @@ World combatWorld(int32_t roomId, uint64_t seed, int32_t occupation, int32_t lev
     World world;
     auto setup = roomSetup(roomId, seed);
     PlayerSetup player;
-    player.m_class  = static_cast<CharacterClass>(occupation);
-    player.m_roleId = type_conversions::toRoleConfigId(player.m_class);
+    player.m_roleId = type_conversions::toRoleConfigId(static_cast<CharacterClass>(occupation));
     player.m_level  = level;
     player.m_camp   = 2;
     player.m_slot   = 0;

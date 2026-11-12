@@ -212,7 +212,7 @@ const BuffOp* firstKind(const std::vector<BuffOp>& ops, BuffOpKind kind)
 
 void seedBaseSlots(Harness& h, int32_t cooling = 1)
 {
-    auto& book = h.world.ecs().get<SkillBook>(h.self);
+    auto& book = h.world.ecs().get<SkillBookComponent>(h.self);
     book.m_slots = {"A", "B", "C", "D", "E", "F", "Y"};
     book.m_skills.clear();
     for (int32_t i = 0; i < 7; ++i)
@@ -231,7 +231,7 @@ void prepareValue(Harness& h, const ValueExpr& expr)
 {
     if (expr.m_kind == ValueKind::Lost)
     {
-        auto& health = h.world.ecs().get<Health>(h.self);
+        auto& health = h.world.ecs().get<HealthComponent>(h.self);
         if (expr.m_res == ResourceId::Hp)
             health.m_hp = health.m_maxHp / Fixed::fromInt(2);
         else if (expr.m_res == ResourceId::Mp)
@@ -241,12 +241,12 @@ void prepareValue(Harness& h, const ValueExpr& expr)
     }
     else if (expr.m_kind == ValueKind::SpeedBonus)
     {
-        h.world.ecs().get<Stats>(h.self).m_mods.push_back(
+        h.world.ecs().get<StatsComponent>(h.self).m_mods.push_back(
             {static_cast<int32_t>(BuffStat::MoveScaleX), "0.5"_fx, 0, false});
     }
     else if (expr.m_kind == ValueKind::ComboTable)
     {
-        auto& combo = h.world.ecs().get<ComboMeter>(h.self);
+        auto& combo = h.world.ecs().get<ComboMeterComponent>(h.self);
         combo.m_grade = 0;
         for (int32_t i = static_cast<int32_t>(expr.m_table.size()) - 1; i >= 0; --i)
             if (expr.m_table[static_cast<size_t>(i)] != Fixed{})
@@ -303,7 +303,7 @@ void satisfy(Harness& h, const BuffDef& def, BuffContext& ctx)
             needSkill = true;
             if (pred.m_subKind == static_cast<int32_t>(SkillCheck::ActionId))
             {
-                auto& timeline = h.world.ecs().get<ActionTimeline>(h.self);
+                auto& timeline = h.world.ecs().get<ActionTimelineComponent>(h.self);
                 timeline.m_clipId = pred.m_id != 0 ? pred.m_id : (pred.m_ids.empty() ? 0 : pred.m_ids.front());
             }
         }
@@ -319,9 +319,9 @@ void satisfy(Harness& h, const BuffDef& def, BuffContext& ctx)
         applyPred(pred);
     if (needSkill)
     {
-        if (h.world.ecs().get<SkillBook>(h.self).m_skills.empty())
+        if (h.world.ecs().get<SkillBookComponent>(h.self).m_skills.empty())
             seedBaseSlots(h, 1);
-        h.world.ecs().get<SkillCast>(h.self).m_skill = 0;
+        h.world.ecs().get<SkillCastComponent>(h.self).m_skill = 0;
     }
     if (def.m_activation.m_eventFilter == 2)
         ctx.m_target = h.other;
@@ -350,7 +350,7 @@ void activate(Harness& h, int32_t id, const BuffContext& ctx = {})
 
 bool anyFlag(World& world, Entity entity)
 {
-    const auto& flags = world.ecs().get<StatusFlags>(entity);
+    const auto& flags = world.ecs().get<StatusFlagsComponent>(entity);
     for (int32_t i = 1; i <= 8; ++i)
         if (flags.active(static_cast<ExtraState>(i)))
             return true;
@@ -360,7 +360,7 @@ bool anyFlag(World& world, Entity entity)
 int32_t coolingCount(World& world, Entity entity)
 {
     int32_t n        = 0;
-    const auto& book = world.ecs().get<SkillBook>(entity);
+    const auto& book = world.ecs().get<SkillBookComponent>(entity);
     for (const auto& skill : book.m_skills)
         if (skill.m_timing && skill.m_cd > Fixed{})
             ++n;
@@ -376,12 +376,12 @@ void checkMarker(int32_t ruleId, const char* name)
     CHECK(def->m_persistent.empty());
     CHECK_FALSE(hasActiveKind(*def, BuffOpKind::Dot));
     CHECK_FALSE(hasActiveKind(*def, BuffOpKind::Stat));
-    const Fixed hp    = h.world.ecs().get<Health>(h.self).m_hp;
-    const auto mods   = h.world.ecs().get<Stats>(h.self).m_mods.size();
+    const Fixed hp    = h.world.ecs().get<HealthComponent>(h.self).m_hp;
+    const auto mods   = h.world.ecs().get<StatsComponent>(h.self).m_mods.size();
     activate(h, def->m_id);
     REQUIRE(findBuff(h.world, h.self, def->m_id) != nullptr);
-    CHECK(h.world.ecs().get<Health>(h.self).m_hp == hp);
-    CHECK(h.world.ecs().get<Stats>(h.self).m_mods.size() == mods);
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_hp == hp);
+    CHECK(h.world.ecs().get<StatsComponent>(h.self).m_mods.size() == mods);
     CHECK_FALSE(anyFlag(h.world, h.self));
     CHECK(reportLists(name));
 }
@@ -394,7 +394,7 @@ void checkDot(int32_t ruleId, const char* name)
     const auto* dot = firstKind(def->m_onEnter, BuffOpKind::Dot);
     REQUIRE(dot != nullptr);
     CHECK(dot->m_effect == OpEffect::Active);
-    const Fixed hp = h.world.ecs().get<Health>(h.self).m_hp;
+    const Fixed hp = h.world.ecs().get<HealthComponent>(h.self).m_hp;
     activate(h, def->m_id);
     REQUIRE(findBuff(h.world, h.self, def->m_id) != nullptr);
     if (def->m_lifecycle.m_executeType == 2)
@@ -402,7 +402,7 @@ void checkDot(int32_t ruleId, const char* name)
         h.setTickSeconds(1);
         h.tickBuff(3);
     }
-    const Fixed after = h.world.ecs().get<Health>(h.self).m_hp;
+    const Fixed after = h.world.ecs().get<HealthComponent>(h.self).m_hp;
     if (dot->m_value.m_a < Fixed{})
         CHECK(after < hp);
     else if (dot->m_value.m_a > Fixed{})
@@ -432,22 +432,22 @@ void checkStatLatch(int32_t ruleId, const char* name)
         }
         else if (op.m_kind == BuffOpKind::SkillMod)
         {
-            CHECK_FALSE(h.world.ecs().get<SkillBook>(h.self).m_mods.empty());
+            CHECK_FALSE(h.world.ecs().get<SkillBookComponent>(h.self).m_mods.empty());
             ++checked;
         }
         else if (op.m_kind == BuffOpKind::Flag)
         {
             if (op.m_flag == BuffFlag::NoHeal)
-                CHECK(h.world.ecs().get<StatusFlags>(h.self).m_noHeal > 0);
+                CHECK(h.world.ecs().get<StatusFlagsComponent>(h.self).m_noHeal > 0);
             else if (op.m_flag == BuffFlag::NoCrystalCost)
-                CHECK(h.world.ecs().get<StatusFlags>(h.self).m_noCrystal > 0);
+                CHECK(h.world.ecs().get<StatusFlagsComponent>(h.self).m_noCrystal > 0);
             else
                 CHECK(hasFlag(h.world, h.self, static_cast<ExtraState>(op.m_flag)));
             ++checked;
         }
         else if (op.m_kind == BuffOpKind::Immune)
         {
-            CHECK_FALSE(h.world.ecs().get<BuffList>(h.self).m_immunity.empty());
+            CHECK_FALSE(h.world.ecs().get<BuffListComponent>(h.self).m_immunity.empty());
             ++checked;
         }
         else if (op.m_kind == BuffOpKind::HpLock)
@@ -475,13 +475,13 @@ void checkNoop(int32_t ruleId, const char* name)
     REQUIRE(def != nullptr);
     CHECK(def->m_status == LowerStatus::Noop);
     CHECK(reportLists(name));
-    const Fixed hp    = h.world.ecs().get<Health>(h.self).m_hp;
-    const auto mods   = h.world.ecs().get<Stats>(h.self).m_mods.size();
-    const auto skills = h.world.ecs().get<SkillBook>(h.self).m_mods.size();
+    const Fixed hp    = h.world.ecs().get<HealthComponent>(h.self).m_hp;
+    const auto mods   = h.world.ecs().get<StatsComponent>(h.self).m_mods.size();
+    const auto skills = h.world.ecs().get<SkillBookComponent>(h.self).m_mods.size();
     h.admit(def->m_id);
-    CHECK(h.world.ecs().get<Health>(h.self).m_hp == hp);
-    CHECK(h.world.ecs().get<Stats>(h.self).m_mods.size() == mods);
-    CHECK(h.world.ecs().get<SkillBook>(h.self).m_mods.size() == skills);
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_hp == hp);
+    CHECK(h.world.ecs().get<StatsComponent>(h.self).m_mods.size() == mods);
+    CHECK(h.world.ecs().get<SkillBookComponent>(h.self).m_mods.size() == skills);
     CHECK_FALSE(anyFlag(h.world, h.self));
 }
 
@@ -493,10 +493,10 @@ void checkUnsupported(int32_t ruleId, const char* name)
     CHECK(def->m_status == LowerStatus::Unsupported);
     CHECK(reportLists(name));
     CHECK(lowerReport().find("unsupported") != std::string::npos);
-    const Fixed hp = h.world.ecs().get<Health>(h.self).m_hp;
+    const Fixed hp = h.world.ecs().get<HealthComponent>(h.self).m_hp;
     h.admit(def->m_id);
     CHECK(findBuff(h.world, h.self, def->m_id) == nullptr);
-    CHECK(h.world.ecs().get<Health>(h.self).m_hp == hp);
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_hp == hp);
     CHECK_FALSE(anyFlag(h.world, h.self));
 }
 }  // namespace
@@ -563,7 +563,7 @@ TEST_CASE("buff rule BuffRemoveByTypeAddExtra counts then mods")
     const int32_t markId        = h.add(mark);
     h.admit(markId);
     REQUIRE(findBuff(h.world, h.self, markId) != nullptr);
-    auto& health = h.world.ecs().get<Health>(h.self);
+    auto& health = h.world.ecs().get<HealthComponent>(h.self);
     health.m_mp  = Fixed::fromInt(10);
     activate(h, def->m_id);
     CHECK(findBuff(h.world, h.self, markId) == nullptr);
@@ -584,13 +584,13 @@ TEST_CASE("buff rule BuffAddByComboEvaluate watches kids")
     activate(h, def->m_id);
     REQUIRE(findBuff(h.world, h.self, def->m_id) != nullptr);
     // 先满足条件合上门闩（bits=1、不挂子），再落到未满足以挂子。
-    h.world.ecs().get<ComboMeter>(h.self).m_grade = 99;
+    h.world.ecs().get<ComboMeterComponent>(h.self).m_grade = 99;
     h.tickBuff();
     CHECK(findBuff(h.world, h.self, kid) == nullptr);
-    h.world.ecs().get<ComboMeter>(h.self).m_grade = 0;
+    h.world.ecs().get<ComboMeterComponent>(h.self).m_grade = 0;
     h.tickBuff();
     CHECK(findBuff(h.world, h.self, kid) != nullptr);
-    h.world.ecs().get<ComboMeter>(h.self).m_grade = 99;
+    h.world.ecs().get<ComboMeterComponent>(h.self).m_grade = 99;
     h.tickBuff();
     CHECK(findBuff(h.world, h.self, kid) == nullptr);
 }
@@ -611,12 +611,12 @@ TEST_CASE("buff rule BuffHPTypeGradation MaxTimes heal")
     const auto* def = findRule(1101);
     REQUIRE(def != nullptr);
     prepareDef(h, *def);
-    auto& health = h.world.ecs().get<Health>(h.self);
+    auto& health = h.world.ecs().get<HealthComponent>(h.self);
     health.m_hp  = health.m_maxHp / Fixed::fromInt(2);
     const Fixed hp = health.m_hp;
     activate(h, def->m_id);
     REQUIRE(findBuff(h.world, h.self, def->m_id) != nullptr);
-    CHECK(h.world.ecs().get<Health>(h.self).m_hp != hp);
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_hp != hp);
 }
 
 TEST_CASE("buff rule BuffCritTypeGradation TypeCount") { checkStatLatch(1102, "BuffCritTypeGradation"); }
@@ -640,15 +640,15 @@ TEST_CASE("buff rule BuffHPMAX scales max and current hp")
     REQUIRE(stat != nullptr);
     CHECK(stat->m_stat == BuffStat::AddMaxHp);
     const Fixed p    = stat->m_value.m_a;
-    auto& health     = h.world.ecs().get<Health>(h.self);
+    auto& health     = h.world.ecs().get<HealthComponent>(h.self);
     const Fixed hp   = health.m_hp;
     activate(h, def->m_id);
     REQUIRE(findBuff(h.world, h.self, def->m_id) != nullptr);
     CHECK(statSum(h.world, h.self, static_cast<int32_t>(BuffStat::AddMaxHp)) == hp * p);
-    CHECK(h.world.ecs().get<Health>(h.self).m_hp == hp + hp * p);
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_hp == hp + hp * p);
     h.remove(def->m_id);
     CHECK(statSum(h.world, h.self, static_cast<int32_t>(BuffStat::AddMaxHp)) == Fixed{});
-    CHECK(h.world.ecs().get<Health>(h.self).m_hp == hp);
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_hp == hp);
 }
 
 TEST_CASE("buff rule BuffHealingChange scales heal")
@@ -659,13 +659,13 @@ TEST_CASE("buff rule BuffHealingChange scales heal")
     const auto* stat = firstKind(def->m_persistent, BuffOpKind::Stat);
     REQUIRE(stat != nullptr);
     CHECK(stat->m_stat == BuffStat::HealingScale);
-    auto& health   = h.world.ecs().get<Health>(h.self);
+    auto& health   = h.world.ecs().get<HealthComponent>(h.self);
     health.m_hp    = Fixed::fromInt(5000);
     activate(h, def->m_id);
     REQUIRE(findBuff(h.world, h.self, def->m_id) != nullptr);
     CHECK(statSum(h.world, h.self, static_cast<int32_t>(BuffStat::HealingScale)) == stat->m_value.m_a);
     health::rules::applyDelta(h.world, h.self, Fixed::fromInt(100), HpCause::Heal, h.self);
-    CHECK(h.world.ecs().get<Health>(h.self).m_hp ==
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_hp ==
           Fixed::fromInt(5000) + Fixed::fromInt(100) * (Fixed::fromInt(1) + stat->m_value.m_a));
     h.remove(def->m_id);
     CHECK(statSum(h.world, h.self, static_cast<int32_t>(BuffStat::HealingScale)) == Fixed{});
@@ -705,7 +705,7 @@ TEST_CASE("buff rule BuffHemophagia heals on Begin")
     const auto* res = firstKind(def->m_onBegin, BuffOpKind::Resource);
     REQUIRE(res != nullptr);
     CHECK(res->m_res == ResourceId::Hp);
-    auto& health = h.world.ecs().get<Health>(h.self);
+    auto& health = h.world.ecs().get<HealthComponent>(h.self);
     health.m_hp  = Fixed::fromInt(4000);
     BuffContext ctx;
     ctx.m_damage   = Fixed::fromInt(200);
@@ -713,7 +713,7 @@ TEST_CASE("buff rule BuffHemophagia heals on Begin")
     ctx.m_target   = h.other;
     activate(h, def->m_id, ctx);
     // 参照回血走表现血球到达；新 sim 在 Begin 直接 Resource，一次性行也可能已销毁实例。
-    CHECK(h.world.ecs().get<Health>(h.self).m_hp > Fixed::fromInt(4000));
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_hp > Fixed::fromInt(4000));
 }
 
 TEST_CASE("buff rule BuffModifyCDSkill SetRatio")
@@ -730,7 +730,7 @@ TEST_CASE("buff rule BuffModifyCDSkill SetRatio")
     activate(h, def->m_id);
     h.setTickSeconds(1);
     h.tickBuff(1);
-    const auto& skill = h.world.ecs().get<SkillBook>(h.self).m_skills.front();
+    const auto& skill = h.world.ecs().get<SkillBookComponent>(h.self).m_skills.front();
     CHECK(skill.m_cd != Fixed::fromInt(4000));
 }
 
@@ -873,7 +873,7 @@ TEST_CASE("buff rule BuffModifyCDSkillNew PerSlot")
     const auto* op    = cd ? cd : begin;
     REQUIRE(op != nullptr);
     CHECK(op->m_cdMode == CdMode::PerSlot);
-    auto& book = h.world.ecs().get<SkillBook>(h.self);
+    auto& book = h.world.ecs().get<SkillBookComponent>(h.self);
     for (const int32_t slot : op->m_ids)
     {
         bool have = false;
@@ -901,7 +901,7 @@ TEST_CASE("buff rule BuffModifyCDSkillNew PerSlot")
     activate(h, def->m_id);
     REQUIRE(findBuff(h.world, h.self, def->m_id) != nullptr);
     Fixed after = before;
-    for (const auto& skill : h.world.ecs().get<SkillBook>(h.self).m_skills)
+    for (const auto& skill : h.world.ecs().get<SkillBookComponent>(h.self).m_skills)
         if (skill.m_slot == targetSlot)
         {
             after = skill.m_cd;
@@ -922,13 +922,13 @@ TEST_CASE("buff rule BuffChangeRoleAcitonScaleTime ActionScale")
     REQUIRE(stat != nullptr);
     CHECK(stat->m_stat == BuffStat::ActionScale);
     seedBaseSlots(h, 0);
-    h.world.ecs().get<SkillCast>(h.self).m_skill = 0;
+    h.world.ecs().get<SkillCastComponent>(h.self).m_skill = 0;
     const Predicate* action = nullptr;
     for (const auto& pred : def->m_activation.m_conditions)
         if (pred.m_kind == PredKind::Skill && pred.m_subKind == static_cast<int32_t>(SkillCheck::ActionId))
             action = &pred;
     if (action && !action->m_ids.empty())
-        h.world.ecs().get<ActionTimeline>(h.self).m_clipId = action->m_ids.front();
+        h.world.ecs().get<ActionTimelineComponent>(h.self).m_clipId = action->m_ids.front();
     activate(h, def->m_id);
     REQUIRE(findBuff(h.world, h.self, def->m_id) != nullptr);
     CHECK(statSum(h.world, h.self, static_cast<int32_t>(BuffStat::ActionScale)) != Fixed{});
@@ -949,7 +949,7 @@ TEST_CASE("buff rule BuffSealSkill Choice disable")
     CHECK(inst->m_latched);
     h.remove(def->m_id);
     CHECK(findBuff(h.world, h.self, def->m_id) == nullptr);
-    CHECK(h.world.ecs().get<SkillBook>(h.self).m_mods.empty());
+    CHECK(h.world.ecs().get<SkillBookComponent>(h.self).m_mods.empty());
 }
 
 TEST_CASE("buff rule BuffSummonDummy AvoidHurt HpLock SummonLink")

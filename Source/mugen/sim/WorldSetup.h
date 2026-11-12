@@ -1,6 +1,6 @@
 #pragma once
 #include "mugen/core/reflect/Reflect.h"
-#include "mugen/conf/GameDef.h"
+#include "mugen/core/math/Fixed.h"
 #include <vector>
 
 namespace mugen::sim
@@ -18,10 +18,8 @@ struct PlayerSetup
 {
     // 玩家槽位，须在世界内唯一。
     uint32_t m_slot = 0;
-    // 玩家角色配置标识；未知时按 m_class 转职业后出生。
+    // 玩家角色配置标识；职业一律由 roleId 推出。
     int32_t m_roleId = 0;
-    // 玩家职业；未知时按 m_roleId 直接出生。
-    CharacterClass m_class = CharacterClass::kUnknown;
     // 玩家等级。
     int32_t m_level = 1;
     // 可选覆盖角色默认阵营；0 表示使用角色配置默认值。不得为中立阵营 1（特效无法命中）。
@@ -31,7 +29,7 @@ struct PlayerSetup
     // 玩家是否由 AI 驱动。
     bool m_isAi = false;
     // 参与世界配置归档的字段。
-    MG_REFLECT(PlayerSetup, m_slot, m_roleId, m_class, m_level, m_camp, m_aiDifficulty, m_isAi)
+    MG_REFLECT(PlayerSetup, m_slot, m_roleId, m_level, m_camp, m_aiDifficulty, m_isAi)
 };
 // 创建世界时写入回放和快照的固定参数。
 struct WorldSetup

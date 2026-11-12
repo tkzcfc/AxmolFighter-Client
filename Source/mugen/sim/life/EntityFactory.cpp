@@ -17,7 +17,7 @@ std::string motionFile(int32_t resSpineId)
     const auto* spine = conf::Config::instance().find<conf::ResSpineConfig>(resSpineId);
     return spine ? AvatarPaths::motionFileFromSpine(spine->fileName) : std::string{};
 }
-// 骨骼缩放。碰撞框按 Transform.m_scale 换到世界坐标。
+// 骨骼缩放。碰撞框按 TransformComponent.m_scale 换到世界坐标。
 Fixed spineScale(int32_t resSpineId)
 {
     const auto* spine = conf::Config::instance().find<conf::ResSpineConfig>(resSpineId);
@@ -30,14 +30,14 @@ Entity materializeRole(World& world, const SpawnRequest& request, SpawnStage sta
     const auto* row = conf::Config::instance().find<conf::battle::RoleDef>(request.m_configId);
     if (!row)
     {
-        MG_LOG_E("SpawnFlush: missing role config {}", request.m_configId);
-        MG_ASSERT(row != nullptr && "SpawnFlush: missing role config");
+        MG_LOG_E("SpawnFlushSystem: missing role config {}", request.m_configId);
+        MG_ASSERT(row != nullptr && "SpawnFlushSystem: missing role config");
         return {};
     }
     auto& ecs = world.ecs();
     const Entity entity = ecs.create();
 
-    Identity identity;
+    IdentityComponent identity;
     identity.m_kind        = SpawnKind::Role;
     identity.m_configId    = request.m_configId;
     identity.m_camp        = request.m_camp != 0 ? request.m_camp : row->monsterCamps;
@@ -51,7 +51,7 @@ Entity materializeRole(World& world, const SpawnRequest& request, SpawnStage sta
     identity.m_ordinal = ecs.singleton<SpawnRegistry>().next(request.m_configId);
     ecs.add(entity, identity);
 
-    Transform transform;
+    TransformComponent transform;
     transform.m_position = request.m_position;
     transform.m_towardX  = request.m_towardX == -1 ? -1 : 1;
     transform.m_vectorX  = Fixed::fromInt(transform.m_towardX);
@@ -59,7 +59,7 @@ Entity materializeRole(World& world, const SpawnRequest& request, SpawnStage sta
     transform.m_scale    = spineScale(row->resSpineId);
     ecs.add(entity, transform);
 
-    MotionState motion;
+    MotionStateComponent motion;
     motion.m_motionFile = motionFile(row->resSpineId);
     motion.m_motionName = "stand";
     motion.m_timeMs     = {};
@@ -68,32 +68,32 @@ Entity materializeRole(World& world, const SpawnRequest& request, SpawnStage sta
     motion.m_rate       = Fixed::fromInt(1);
     ecs.add(entity, motion);
 
-    Stats stats;
+    StatsComponent stats;
     stats.m_base = role::rules::loadAttributes(*row, request.m_level);
     ecs.add(entity, stats);
 
-    Health health;
+    HealthComponent health;
     health.m_maxHp  = stats.maxHp();
     health.m_hp     = health.m_maxHp;
     health.m_prevHp = health.m_hp;
     health.m_prevEp = health.m_ep;
     ecs.add(entity, health);
 
-    ecs.add(entity, StatusFlags{});
-    ecs.add(entity, Pause{});
-    ecs.add(entity, Intent{});
-    ecs.add(entity, BuffList{});
-    ecs.add(entity, AbilityList{});
-    ecs.add(entity, TauntTable{});
-    ecs.add(entity, ComboMeter{});
-    ecs.add(entity, RageState{});
+    ecs.add(entity, StatusFlagsComponent{});
+    ecs.add(entity, PauseComponent{});
+    ecs.add(entity, IntentComponent{});
+    ecs.add(entity, BuffListComponent{});
+    ecs.add(entity, AbilityListComponent{});
+    ecs.add(entity, TauntTableComponent{});
+    ecs.add(entity, ComboMeterComponent{});
+    ecs.add(entity, RageStateComponent{});
 
-    RoleState roleState;
+    RoleStateComponent roleState;
     roleState.m_state = RoleStateId::Idle;
     roleState.m_prev  = RoleStateId::Idle;
     ecs.add(entity, roleState);
 
-    HitState hitState;
+    HitStateComponent hitState;
     hitState.m_rigidity  = Fixed::fromInt(row->rigidity);
     hitState.m_weight    = row->weight;
     hitState.m_fatigue   = Fixed::fromInt(row->fatigue);
@@ -101,15 +101,15 @@ Entity materializeRole(World& world, const SpawnRequest& request, SpawnStage sta
     hitState.m_stiffTime = Fixed::fromInt(row->hitStiffTime);
     ecs.add(entity, hitState);
 
-    ecs.add(entity, Displacement{});
+    ecs.add(entity, DisplacementComponent{});
 
-    Hitboxes hitboxes;
+    HitboxesComponent hitboxes;
     hitboxes.m_radius = Fixed::fromInt(row->radius);
     ecs.add(entity, hitboxes);
 
     if (identity.m_playerSlot)
     {
-        PlayerControl control;
+        PlayerControlComponent control;
         control.m_slot = *identity.m_playerSlot;
         ecs.add(entity, control);
         ecs.singleton<PlayerSlots>().m_entities[*identity.m_playerSlot] = entity;
@@ -120,8 +120,8 @@ Entity materializeRole(World& world, const SpawnRequest& request, SpawnStage sta
         skill::rules::buildSkillBook(world, entity, occupation);
     else
     {
-        ecs.add(entity, SkillCast{});
-        ecs.add(entity, ActionTimeline{});
+        ecs.add(entity, SkillCastComponent{});
+        ecs.add(entity, ActionTimelineComponent{});
     }
     return entity;
 }
@@ -132,14 +132,14 @@ Entity materializeEffect(World& world, const SpawnRequest& request, SpawnStage s
     const auto* row = conf::Config::instance().find<conf::battle::EffectDef>(request.m_configId);
     if (!row)
     {
-        MG_LOG_E("SpawnFlush: missing effect config {}", request.m_configId);
-        MG_ASSERT(row != nullptr && "SpawnFlush: missing effect config");
+        MG_LOG_E("SpawnFlushSystem: missing effect config {}", request.m_configId);
+        MG_ASSERT(row != nullptr && "SpawnFlushSystem: missing effect config");
         return {};
     }
     auto& ecs = world.ecs();
     const Entity entity = ecs.create();
 
-    Identity identity;
+    IdentityComponent identity;
     identity.m_kind        = SpawnKind::Effect;
     identity.m_configId    = request.m_configId;
     // 与 sim_legacy EffectActor::create 一致：特效身份固定 camp=1、hostileMask=30，不继承主人。
@@ -151,7 +151,7 @@ Entity materializeEffect(World& world, const SpawnRequest& request, SpawnStage s
     identity.m_ordinal     = ecs.singleton<SpawnRegistry>().next(request.m_configId);
     ecs.add(entity, identity);
 
-    Transform transform;
+    TransformComponent transform;
     transform.m_position = request.m_position;
     transform.m_towardX  = request.m_towardX == -1 ? -1 : 1;
     transform.m_vectorX  = request.m_vectorX;
@@ -159,11 +159,11 @@ Entity materializeEffect(World& world, const SpawnRequest& request, SpawnStage s
     transform.m_scale    = spineScale(row->resSpineId);
     ecs.add(entity, transform);
 
-    MotionState motion;
+    MotionStateComponent motion;
     motion.m_motionFile = motionFile(row->resSpineId);
     ecs.add(entity, motion);
 
-    EffectInfo info;
+    EffectInfoComponent info;
     info.m_configId    = request.m_configId;
     info.m_owner       = request.m_owner;
     info.m_skillId     = request.m_source.m_skillId;
@@ -174,28 +174,28 @@ Entity materializeEffect(World& world, const SpawnRequest& request, SpawnStage s
     if (row->nextEffectId == -1)
         info.m_hitEntity = request.m_hitEntity;
     ecs.add(entity, info);
-    ecs.add(entity, Pause{});
+    ecs.add(entity, PauseComponent{});
 
-    Hitboxes hitboxes;
+    HitboxesComponent hitboxes;
     hitboxes.m_radius = Fixed::fromInt(row->radius);
     ecs.add(entity, hitboxes);
 
-    ecs.add(entity, Displacement{});
-    ecs.add(entity, HitTracker{});
+    ecs.add(entity, DisplacementComponent{});
+    ecs.add(entity, HitTrackerComponent{});
 
-    Lifetime lifetime;
+    LifetimeComponent lifetime;
     lifetime.m_autoRelease = row->autoRelease;
     ecs.add(entity, lifetime);
 
     if (row->follow != 0)
     {
-        Follow follow;
+        FollowComponent follow;
         follow.m_target = request.m_owner;
         follow.m_mode   = row->follow;
         ecs.add(entity, follow);
     }
 
-    ActionTimeline timeline;
+    ActionTimelineComponent timeline;
     timeline.m_clips    = row->clips;
     timeline.m_index    = 0;
     timeline.m_finished = row->clips.empty();
@@ -203,9 +203,9 @@ Entity materializeEffect(World& world, const SpawnRequest& request, SpawnStage s
     ecs.add(entity, std::move(timeline));
     // 出生时同步进入首片段；下一次特效遍只消费延迟标记，不在进入帧推进。
     if (firstClip != 0 && !timeline::rules::enterClip(world, entity, firstClip, true, true))
-        ecs.get<ActionTimeline>(entity).m_finished = true;
+        ecs.get<ActionTimelineComponent>(entity).m_finished = true;
 
-    ecs.add(entity, ContactMemory{});
+    ecs.add(entity, ContactMemoryComponent{});
     return entity;
 }
 }  // namespace
@@ -230,7 +230,7 @@ void spawnFlush(World& world, SpawnStage stage)
             event.m_kind     = request.m_kind;
             event.m_configId = request.m_configId;
             event.m_owner    = request.m_owner;
-            event.m_ordinal  = world.ecs().get<Identity>(entity).m_ordinal;
+            event.m_ordinal  = world.ecs().get<IdentityComponent>(entity).m_ordinal;
             world.ecs().singleton<EventQueue<SpawnEvent>>().push(event);
         }
     }

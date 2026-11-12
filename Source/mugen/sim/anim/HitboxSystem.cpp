@@ -1,6 +1,6 @@
 // [6.2] HitboxSystem
-// 读：`MotionState`、`Transform`、avatar 资源
-// 写：`Hitboxes`（攻击框、受击框）
+// 读：`MotionStateComponent`、`TransformComponent`、avatar 资源
+// 写：`HitboxesComponent`（攻击框、受击框）
 // 消费：—
 // 产生：—
 #include "mugen/sim/Systems.h"
@@ -12,7 +12,7 @@ namespace mugen::sim
 namespace
 {
 // 按朝向和缩放把局部伤害框转换为世界框（移植旧实现 RoleActor::transformBox）。
-WorldBox transformBox(const DamageBox& box, const Transform& t)
+WorldBox transformBox(const DamageBox& box, const TransformComponent& t)
 {
     WorldBox result;
     result.m_size    = {Fixed::fromInt(box.size.x) * t.m_scale, Fixed::fromInt(box.size.y) * t.m_scale,
@@ -28,11 +28,11 @@ WorldBox transformBox(const DamageBox& box, const Transform& t)
 // 系统 HitboxSystem：6.2 行，见 DESIGN.md §3.2。采样当前动作的碰撞框。
 void runHitbox(World& world)
 {
-    world.ecs().each<MotionState, Hitboxes, Transform>(
-        [&](Entity entity, const MotionState& motion, Hitboxes& hitboxes, const Transform& transform) {
-            if (world.ecs().has<Despawning>(entity) || world.ecs().has<Inactive>(entity))
+    world.ecs().each<MotionStateComponent, HitboxesComponent, TransformComponent>(
+        [&](Entity entity, const MotionStateComponent& motion, HitboxesComponent& hitboxes, const TransformComponent& transform) {
+            if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
                 return;
-            if (const Pause* pause = world.ecs().tryGet<Pause>(entity))
+            if (const PauseComponent* pause = world.ecs().tryGet<PauseComponent>(entity))
                 if (pause->m_paused)
                     return;
             hitboxes.m_attack.clear();

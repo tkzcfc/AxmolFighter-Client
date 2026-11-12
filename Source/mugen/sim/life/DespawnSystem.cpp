@@ -1,6 +1,6 @@
 // [9.3] DespawnSystem
-// 读：`Despawning`、`EffectInfo`、`Lifetime`
-// 写：`Despawning`
+// 读：`DespawningComponent`、`EffectInfoComponent`、`LifetimeComponent`
+// 写：`DespawningComponent`
 // 消费：`DespawnRequest`
 // 产生：`DespawnEvent`、`SpawnRequest`(后继特效)、`DisplacementEvent`(Ended)
 #include "mugen/sim/Systems.h"
@@ -24,23 +24,23 @@ void runDespawn(World& world)
         if (!ecs.alive(entity))
             continue;
         // 派生后继特效（autoRelease=3 触发）；主人已回收时无法取出生点，跳过。
-        if (const auto* info = ecs.tryGet<EffectInfo>(entity))
+        if (const auto* info = ecs.tryGet<EffectInfoComponent>(entity))
         {
             const auto* row = conf::Config::instance().find<conf::battle::EffectDef>(info->m_configId);
             if (row && row->nextEffectId > 0 && ecs.alive(info->m_owner))
                 effect::rules::spawnChild(world, entity, row->nextEffectId);
         }
-        if (ecs.has<BuffList>(entity))
+        if (ecs.has<BuffListComponent>(entity))
         {
             std::vector<int32_t> ids;
-            for (const auto& inst : ecs.get<BuffList>(entity).m_instances)
+            for (const auto& inst : ecs.get<BuffListComponent>(entity).m_instances)
                 if (!inst.m_removing)
                     ids.push_back(inst.m_id);
             for (const int32_t id : ids)
                 buff::rules::remove(world, entity, id);
         }
         // 曲线还没耗尽就被回收时，按当时位置结束位移。
-        if (ecs.has<Displacement>(entity))
+        if (ecs.has<DisplacementComponent>(entity))
             displacement::rules::reset(world, entity);
         DespawnEvent event;
         event.m_entity = entity;

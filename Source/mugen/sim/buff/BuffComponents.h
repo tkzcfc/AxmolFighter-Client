@@ -7,7 +7,7 @@
 
 namespace mugen::sim
 {
-// 锁血下限在 Stats.m_mods 中使用的内部属性号（不在 BuffStat 枚举里）。
+// 锁血下限在 StatsComponent.m_mods 中使用的内部属性号（不在 BuffStat 枚举里）。
 int32_t constexpr kHpLockStat = 300;
 
 // 一次准入或触发携带的上下文。施加者为空时视为接收者自身。
@@ -151,7 +151,7 @@ struct BuffInstance
 };
 
 // 角色持有的 Buff 列表。
-struct BuffList
+struct BuffListComponent
 {
     // 全部实例。
     std::vector<BuffInstance> m_instances;
@@ -161,7 +161,7 @@ struct BuffList
     std::vector<BuffCd> m_cooldowns;
     // 免疫登记。
     std::vector<BuffImmune> m_immunity;
-    MG_REFLECT(BuffList, m_instances, m_nextSerial, m_cooldowns, m_immunity)
+    MG_REFLECT(BuffListComponent, m_instances, m_nextSerial, m_cooldowns, m_immunity)
 };
 
 // 一条特殊能力实例。
@@ -183,13 +183,13 @@ struct AbilityInstance
 };
 
 // 角色持有的特殊能力。
-struct AbilityList
+struct AbilityListComponent
 {
     // 全部实例。
     std::vector<AbilityInstance> m_instances;
     // 下一个序号。
     uint32_t m_nextSerial = 1;
-    MG_REFLECT(AbilityList, m_instances, m_nextSerial)
+    MG_REFLECT(AbilityListComponent, m_instances, m_nextSerial)
 };
 
 // 嘲讽权重。
@@ -205,25 +205,25 @@ struct TauntEntry
 };
 
 // 接收者身上的嘲讽表。
-struct TauntTable
+struct TauntTableComponent
 {
     // 按首次出现顺序。
     std::vector<TauntEntry> m_entries;
-    MG_REFLECT(TauntTable, m_entries)
+    MG_REFLECT(TauntTableComponent, m_entries)
 };
 
 // 连击评价，供 ComboTable 读取。
-struct ComboMeter
+struct ComboMeterComponent
 {
     // 评价等级。
     int32_t m_grade = 0;
     // 连击数。
     int32_t m_count = 0;
-    MG_REFLECT(ComboMeter, m_grade, m_count)
+    MG_REFLECT(ComboMeterComponent, m_grade, m_count)
 };
 
 // 怒气。
-struct RageState
+struct RageStateComponent
 {
     // 当前怒气。
     Fixed m_rage;
@@ -233,6 +233,6 @@ struct RageState
     Fixed m_maxFreezeMs;
     // 是否处于变身。
     bool m_transformed = false;
-    MG_REFLECT(RageState, m_rage, m_freezeMs, m_maxFreezeMs, m_transformed)
+    MG_REFLECT(RageStateComponent, m_rage, m_freezeMs, m_maxFreezeMs, m_transformed)
 };
 }  // namespace mugen::sim

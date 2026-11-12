@@ -31,11 +31,11 @@ void runSkillRequest(World&);
 void runRoleFsm(World&);
 // [4.3a] TimelineSystem(roles)
 void runTimelineRoles(World&);
-// [4.3s] SpawnFlush(RoleTimeline)
+// [4.3s] SpawnFlushSystem(RoleTimeline)
 void runSpawnFlushRoleTimeline(World&);
 // [4.3b] TimelineSystem(effects)
 void runTimelineEffects(World&);
-// [4.3t] SpawnFlush(EffectTimeline)
+// [4.3t] SpawnFlushSystem(EffectTimeline)
 void runSpawnFlushEffectTimeline(World&);
 // [4.4] HitReactionSystem
 void runHitReaction(World&);
@@ -57,7 +57,7 @@ void runCombat(World&);
 void runObstacle(World&);
 // [8.3] InteractSystem
 void runInteract(World&);
-// [8.s] SpawnFlush(Combat)
+// [8.s] SpawnFlushSystem(Combat)
 void runSpawnFlushCombat(World&);
 // [9.1] DeathSystem
 void runDeath(World&);
@@ -65,15 +65,15 @@ void runDeath(World&);
 void runTransform(World&);
 // [9.3] DespawnSystem
 void runDespawn(World&);
-// [9.s] SpawnFlush(Lifecycle)
+// [9.s] SpawnFlushSystem(Lifecycle)
 void runSpawnFlushLifecycle(World&);
 // [10.1] RoomDirectorSystem
 void runRoomDirector(World&);
-// [10.s] SpawnFlush(Room)
+// [10.s] SpawnFlushSystem(Room)
 void runSpawnFlushRoom(World&);
 // [11.1] PresentationSystem
 void runPresentation(World&);
-// [11.2] DebugSink
+// [11.2] DebugSinkSystem
 void runDebugSink(World&);
 // [12.1] RoomTransferSystem
 void runRoomTransfer(World&);

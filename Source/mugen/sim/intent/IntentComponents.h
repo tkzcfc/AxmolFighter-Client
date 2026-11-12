@@ -8,13 +8,13 @@
 namespace mugen::sim
 {
 // 玩家控制组件：未消费命令按输入顺序保存，解冻首帧按原顺序消费（R9）。
-struct PlayerControl
+struct PlayerControlComponent
 {
     // 玩家槽位。
     uint32_t m_slot = 0;
     // 未消费的命令队列。
     std::vector<PlayerCommand> m_commands;
-    MG_REFLECT(PlayerControl, m_slot, m_commands)
+    MG_REFLECT(PlayerControlComponent, m_slot, m_commands)
 };
 // 移动意图模式。
 enum class MoveMode : uint8_t
@@ -55,7 +55,7 @@ struct ButtonIntent
     MG_REFLECT(ButtonIntent, m_event, m_pressType, m_angle)
 };
 // 意图组件：PlayerIntent/Ai 每帧重写，供 SkillRequest / RoleFsm / Locomotion 读取。
-struct Intent
+struct IntentComponent
 {
     // 移动意图。
     MoveIntent m_move;
@@ -65,6 +65,6 @@ struct Intent
     bool m_autoCast = false;
     // 目标实体。
     Entity m_target;
-    MG_REFLECT(Intent, m_move, m_buttons, m_autoCast, m_target)
+    MG_REFLECT(IntentComponent, m_move, m_buttons, m_autoCast, m_target)
 };
 }  // namespace mugen::sim

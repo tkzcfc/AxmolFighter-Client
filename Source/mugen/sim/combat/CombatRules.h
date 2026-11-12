@@ -43,7 +43,7 @@ struct HitContext
 
 // 步骤 1：门控。通过时填好上下文。
 bool gate(World& world, const ContactEvent& contact, HitContext& ctx);
-// 步骤 2：更新 HitTracker（次数、间隔、目标去重）。
+// 步骤 2：更新 HitTrackerComponent（次数、间隔、目标去重）。
 void recordHit(World& world, const HitContext& ctx);
 // 帧末提交命中间隔（本帧命中后从下一帧起进入间隔冷却）。
 void commitHitInterval(World& world, Entity effect);

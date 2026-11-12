@@ -68,7 +68,7 @@ bool loadClip(World&, Entity, int32_t clipId, bool effect, ClipCommon& out)
     return true;
 }
 // 触发当前片段到达的 SpawnEffect cue。
-void fireCues(World& world, Entity entity, const ClipCommon& row, ActionTimeline& timeline, Fixed interval)
+void fireCues(World& world, Entity entity, const ClipCommon& row, ActionTimelineComponent& timeline, Fixed interval)
 {
     auto& ecs = world.ecs();
     for (int32_t i = timeline.m_nextCue; i < static_cast<int32_t>(row.m_cues.size()); ++i)
@@ -80,9 +80,9 @@ void fireCues(World& world, Entity entity, const ClipCommon& row, ActionTimeline
         if (cue.kind == conf::battle::ClipCueKind::SpawnEffect && cue.effectId != 0)
         {
             SourceContext source;
-            if (const auto* cast = ecs.tryGet<SkillCast>(entity))
+            if (const auto* cast = ecs.tryGet<SkillCastComponent>(entity))
             {
-                const auto& book = ecs.get<SkillBook>(entity);
+                const auto& book = ecs.get<SkillBookComponent>(entity);
                 if (cast->m_skill != kNoSkill)
                     source.m_skillId = book.m_skills[static_cast<size_t>(cast->m_skill)].m_configId;
                 source.m_baseSkillId = source.m_skillId;
@@ -100,8 +100,8 @@ bool enterClip(World& world, Entity entity, int32_t clipId, bool effect, bool de
     ClipCommon row;
     if (!loadClip(world, entity, clipId, effect, row))
         return false;
-    auto& timeline = world.ecs().get<ActionTimeline>(entity);
-    auto& motion   = world.ecs().get<MotionState>(entity);
+    auto& timeline = world.ecs().get<ActionTimelineComponent>(entity);
+    auto& motion   = world.ecs().get<MotionStateComponent>(entity);
     motion.m_motionName     = clipMotionName(row.m_motion);
     motion.m_timeMs         = {};
     motion.m_completedLoops = 0;
@@ -120,10 +120,10 @@ bool enterClip(World& world, Entity entity, int32_t clipId, bool effect, bool de
     BuffContext clipCtx;
     clipCtx.m_applicator = entity;
     clipCtx.m_target     = entity;
-    if (world.ecs().has<SkillCast>(entity) && world.ecs().has<SkillBook>(entity))
+    if (world.ecs().has<SkillCastComponent>(entity) && world.ecs().has<SkillBookComponent>(entity))
     {
-        const auto& cast = world.ecs().get<SkillCast>(entity);
-        const auto& book = world.ecs().get<SkillBook>(entity);
+        const auto& cast = world.ecs().get<SkillCastComponent>(entity);
+        const auto& book = world.ecs().get<SkillBookComponent>(entity);
         if (cast.m_skill != kNoSkill)
             clipCtx.m_boundSkill = book.m_skills[static_cast<size_t>(cast.m_skill)].m_configId;
         clipCtx.m_skillId = clipCtx.m_boundSkill;
@@ -143,10 +143,10 @@ bool enterClip(World& world, Entity entity, int32_t clipId, bool effect, bool de
 // 退出当前片段并移除片段 Buff。
 void exitClip(World& world, Entity entity)
 {
-    auto& timeline = world.ecs().get<ActionTimeline>(entity);
+    auto& timeline = world.ecs().get<ActionTimelineComponent>(entity);
     if (timeline.m_clipId == 0)
         return;
-    if (!world.ecs().has<EffectInfo>(entity))
+    if (!world.ecs().has<EffectInfoComponent>(entity))
     {
         if (const auto* row = conf::Config::instance().find<conf::battle::ClipDef>(timeline.m_clipId))
         {
@@ -164,13 +164,13 @@ void exitClip(World& world, Entity entity)
 // 推进当前片段。
 bool advanceClip(World& world, Entity entity)
 {
-    auto& timeline = world.ecs().get<ActionTimeline>(entity);
-    auto& motion   = world.ecs().get<MotionState>(entity);
-    const bool effect = world.ecs().has<EffectInfo>(entity);
+    auto& timeline = world.ecs().get<ActionTimelineComponent>(entity);
+    auto& motion   = world.ecs().get<MotionStateComponent>(entity);
+    const bool effect = world.ecs().has<EffectInfoComponent>(entity);
     ClipCommon row;
     if (!loadClip(world, entity, timeline.m_clipId, effect, row))
         return true;
-    const Fixed actionScale = world.ecs().has<Stats>(entity) ? world.ecs().get<Stats>(entity).finalStat(202)
+    const Fixed actionScale = world.ecs().has<StatsComponent>(entity) ? world.ecs().get<StatsComponent>(entity).finalStat(202)
                                                                     : Fixed::fromInt(1);
     const Fixed dtMs     = world.ecs().singleton<WorldClock>().m_dtMs * actionScale;
     const Fixed interval = clipInterval(row.m_rate);

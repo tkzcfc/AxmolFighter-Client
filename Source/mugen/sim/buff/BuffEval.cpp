@@ -15,10 +15,10 @@ Entity subjectOf(const Exec& exec, Subject subject)
     if (!inst)
         return exec.m_self;
     if (subject == Subject::EventTarget && exec.m_world->ecs().alive(inst->m_eventTarget) &&
-        exec.m_world->ecs().has<Identity>(inst->m_eventTarget))
+        exec.m_world->ecs().has<IdentityComponent>(inst->m_eventTarget))
         return inst->m_eventTarget;
     if (subject == Subject::Applicator && exec.m_world->ecs().alive(inst->m_applicator) &&
-        exec.m_world->ecs().has<Identity>(inst->m_applicator))
+        exec.m_world->ecs().has<IdentityComponent>(inst->m_applicator))
         return inst->m_applicator;
     return exec.m_self;
 }
@@ -26,24 +26,24 @@ Entity subjectOf(const Exec& exec, Subject subject)
 // 上限。
 Fixed resourceMax(World& world, Entity entity, ResourceId res)
 {
-    if (!world.ecs().has<Health>(entity))
+    if (!world.ecs().has<HealthComponent>(entity))
         return {};
-    const auto& health = world.ecs().get<Health>(entity);
+    const auto& health = world.ecs().get<HealthComponent>(entity);
     if (res == ResourceId::Mp)
         return health.m_maxMp;
     if (res == ResourceId::Ep)
         return health.m_maxEp;
-    if (!world.ecs().has<Stats>(entity))
+    if (!world.ecs().has<StatsComponent>(entity))
         return health.m_maxHp;
-    return world.ecs().get<Stats>(entity).maxHp();
+    return world.ecs().get<StatsComponent>(entity).maxHp();
 }
 
 // 当前值。
 Fixed resourceCur(World& world, Entity entity, ResourceId res)
 {
-    if (!world.ecs().has<Health>(entity))
+    if (!world.ecs().has<HealthComponent>(entity))
         return {};
-    const auto& health = world.ecs().get<Health>(entity);
+    const auto& health = world.ecs().get<HealthComponent>(entity);
     if (res == ResourceId::Mp)
         return health.m_mp;
     if (res == ResourceId::Ep)
@@ -54,18 +54,18 @@ Fixed resourceCur(World& world, Entity entity, ResourceId res)
 // 不含 Buff 加成的生命上限。
 Fixed baseMaxHp(World& world, Entity entity)
 {
-    if (!world.ecs().has<Stats>(entity))
+    if (!world.ecs().has<StatsComponent>(entity))
         return {};
-    return world.ecs().get<Stats>(entity).m_base[4];
+    return world.ecs().get<StatsComponent>(entity).m_base[4];
 }
 
 // 池中属于这些 buffType 的实例数。
 int32_t countTypes(World& world, Entity entity, const std::vector<int32_t>& types)
 {
-    if (!world.ecs().has<BuffList>(entity))
+    if (!world.ecs().has<BuffListComponent>(entity))
         return 0;
     int32_t count = 0;
-    for (const auto& inst : world.ecs().get<BuffList>(entity).m_instances)
+    for (const auto& inst : world.ecs().get<BuffListComponent>(entity).m_instances)
     {
         if (inst.m_removing)
             continue;
@@ -81,10 +81,10 @@ int32_t countTypes(World& world, Entity entity, const std::vector<int32_t>& type
 // 冷却中的基础槽数。
 int32_t coolingBaseSlots(World& world, Entity entity)
 {
-    if (!world.ecs().has<SkillBook>(entity))
+    if (!world.ecs().has<SkillBookComponent>(entity))
         return 0;
     int32_t count = 0;
-    const auto& book = world.ecs().get<SkillBook>(entity);
+    const auto& book = world.ecs().get<SkillBookComponent>(entity);
     for (const auto& skill : book.m_skills)
     {
         if (!skill.m_timing || skill.m_cd <= Fixed{})
@@ -101,9 +101,9 @@ int32_t coolingBaseSlots(World& world, Entity entity)
 // 是否持有规则。
 bool hasRule(World& world, Entity entity, int32_t rule, int32_t minStacks)
 {
-    if (!world.ecs().has<BuffList>(entity))
+    if (!world.ecs().has<BuffListComponent>(entity))
         return false;
-    for (const auto& inst : world.ecs().get<BuffList>(entity).m_instances)
+    for (const auto& inst : world.ecs().get<BuffListComponent>(entity).m_instances)
     {
         if (inst.m_removing)
             continue;
@@ -119,9 +119,9 @@ bool hasRule(World& world, Entity entity, int32_t rule, int32_t minStacks)
 // 是否持有 Buff。
 bool hasBuff(World& world, Entity entity, int32_t id, int32_t minStacks)
 {
-    if (!world.ecs().has<BuffList>(entity))
+    if (!world.ecs().has<BuffListComponent>(entity))
         return false;
-    for (const auto& inst : world.ecs().get<BuffList>(entity).m_instances)
+    for (const auto& inst : world.ecs().get<BuffListComponent>(entity).m_instances)
     {
         if (inst.m_removing || inst.m_id != id)
             continue;
@@ -136,28 +136,28 @@ bool flagOn(World& world, Entity entity, BuffFlag flag)
 {
     if (flag == BuffFlag::Crazy || flag == BuffFlag::NotCrazy)
     {
-        const bool crazy = world.ecs().has<SkillCast>(entity) && world.ecs().get<SkillCast>(entity).m_crazy;
+        const bool crazy = world.ecs().has<SkillCastComponent>(entity) && world.ecs().get<SkillCastComponent>(entity).m_crazy;
         return flag == BuffFlag::Crazy ? crazy : !crazy;
     }
     if (flag == BuffFlag::NotSuperArmor)
-        return !world.ecs().has<StatusFlags>(entity) ||
-               !world.ecs().get<StatusFlags>(entity).active(mugen::ExtraState::SuperArmor);
+        return !world.ecs().has<StatusFlagsComponent>(entity) ||
+               !world.ecs().get<StatusFlagsComponent>(entity).active(mugen::ExtraState::SuperArmor);
     if (flag == BuffFlag::NoHeal)
-        return world.ecs().has<StatusFlags>(entity) && world.ecs().get<StatusFlags>(entity).m_noHeal > 0;
+        return world.ecs().has<StatusFlagsComponent>(entity) && world.ecs().get<StatusFlagsComponent>(entity).m_noHeal > 0;
     if (flag == BuffFlag::NoCrystalCost)
-        return world.ecs().has<StatusFlags>(entity) && world.ecs().get<StatusFlags>(entity).m_noCrystal > 0;
-    if (!world.ecs().has<StatusFlags>(entity))
+        return world.ecs().has<StatusFlagsComponent>(entity) && world.ecs().get<StatusFlagsComponent>(entity).m_noCrystal > 0;
+    if (!world.ecs().has<StatusFlagsComponent>(entity))
         return false;
-    return world.ecs().get<StatusFlags>(entity).active(static_cast<mugen::ExtraState>(flag));
+    return world.ecs().get<StatusFlagsComponent>(entity).active(static_cast<mugen::ExtraState>(flag));
 }
 
 // 当前施法技能。
 const SkillRuntime* casting(World& world, Entity entity)
 {
-    if (!world.ecs().has<SkillCast>(entity) || !world.ecs().has<SkillBook>(entity))
+    if (!world.ecs().has<SkillCastComponent>(entity) || !world.ecs().has<SkillBookComponent>(entity))
         return nullptr;
-    const auto index = world.ecs().get<SkillCast>(entity).m_skill;
-    const auto& book = world.ecs().get<SkillBook>(entity);
+    const auto index = world.ecs().get<SkillCastComponent>(entity).m_skill;
+    const auto& book = world.ecs().get<SkillBookComponent>(entity);
     if (index < 0 || static_cast<size_t>(index) >= book.m_skills.size())
         return nullptr;
     return &book.m_skills[static_cast<size_t>(index)];
@@ -166,9 +166,9 @@ const SkillRuntime* casting(World& world, Entity entity)
 // 槽位名。
 std::string slotName(World& world, Entity entity, int32_t slot)
 {
-    if (!world.ecs().has<SkillBook>(entity))
+    if (!world.ecs().has<SkillBookComponent>(entity))
         return {};
-    const auto& slots = world.ecs().get<SkillBook>(entity).m_slots;
+    const auto& slots = world.ecs().get<SkillBookComponent>(entity).m_slots;
     if (slot < 0 || static_cast<size_t>(slot) >= slots.size())
         return {};
     return slots[static_cast<size_t>(slot)];
@@ -181,9 +181,9 @@ bool evalSkill(World& world, Entity entity, const Predicate& pred, const BuffIns
     const auto kind   = static_cast<SkillCheck>(pred.m_subKind);
     if (kind == SkillCheck::OnCooldown)
     {
-        if (!world.ecs().has<SkillBook>(entity))
+        if (!world.ecs().has<SkillBookComponent>(entity))
             return false;
-        for (const auto& row : world.ecs().get<SkillBook>(entity).m_skills)
+        for (const auto& row : world.ecs().get<SkillBookComponent>(entity).m_skills)
             if (row.m_configId == pred.m_id && row.m_timing && row.m_cd > Fixed{})
                 return true;
         return false;
@@ -229,9 +229,9 @@ bool evalSkill(World& world, Entity entity, const Predicate& pred, const BuffIns
                std::find(pred.m_ids.begin(), pred.m_ids.end(), skill->m_configId) != pred.m_ids.end();
     case SkillCheck::ActionId:
     {
-        if (!world.ecs().has<ActionTimeline>(entity))
+        if (!world.ecs().has<ActionTimelineComponent>(entity))
             return false;
-        const int32_t clip = world.ecs().get<ActionTimeline>(entity).m_clipId;
+        const int32_t clip = world.ecs().get<ActionTimelineComponent>(entity).m_clipId;
         if (pred.m_id != 0 && clip == pred.m_id)
             return true;
         return std::find(pred.m_ids.begin(), pred.m_ids.end(), clip) != pred.m_ids.end();
@@ -245,9 +245,9 @@ bool evalSkill(World& world, Entity entity, const Predicate& pred, const BuffIns
 // 按序号查找。
 BuffInstance* findInstance(World& world, Entity entity, uint32_t serial)
 {
-    if (!world.ecs().has<BuffList>(entity))
+    if (!world.ecs().has<BuffListComponent>(entity))
         return nullptr;
-    for (auto& inst : world.ecs().get<BuffList>(entity).m_instances)
+    for (auto& inst : world.ecs().get<BuffListComponent>(entity).m_instances)
         if (inst.m_serial == serial)
             return &inst;
     return nullptr;
@@ -322,8 +322,8 @@ Fixed evalValue(Exec& exec, const ValueExpr& expr)
     case ValueKind::SpeedBonus:
     {
         Fixed bonus{};
-        if (expr.m_a != Fixed{} && world.ecs().has<Stats>(self))
-            bonus = (world.ecs().get<Stats>(self).finalStat(static_cast<int32_t>(BuffStat::MoveScaleX)) -
+        if (expr.m_a != Fixed{} && world.ecs().has<StatsComponent>(self))
+            bonus = (world.ecs().get<StatsComponent>(self).finalStat(static_cast<int32_t>(BuffStat::MoveScaleX)) -
                      Fixed::fromInt(1)) /
                     expr.m_a * expr.m_b;
         return std::clamp(bonus, Fixed{}, expr.m_c);
@@ -353,8 +353,8 @@ Fixed evalValue(Exec& exec, const ValueExpr& expr)
     case ValueKind::ComboTable:
     {
         int32_t grade = 0;
-        if (world.ecs().has<ComboMeter>(self))
-            grade = world.ecs().get<ComboMeter>(self).m_grade;
+        if (world.ecs().has<ComboMeterComponent>(self))
+            grade = world.ecs().get<ComboMeterComponent>(self).m_grade;
         if (grade < 0 || static_cast<size_t>(grade) >= expr.m_table.size())
             return expr.m_bias;
         return expr.m_table[static_cast<size_t>(grade)] + expr.m_bias;
@@ -403,9 +403,9 @@ bool evalPredicate(Exec& exec, const Predicate& pred)
         return hasBuff(world, who, pred.m_id, pred.m_minStacks);
     case PredKind::HasBuffType:
     {
-        if (!world.ecs().has<BuffList>(who))
+        if (!world.ecs().has<BuffListComponent>(who))
             return false;
-        for (const auto& row : world.ecs().get<BuffList>(who).m_instances)
+        for (const auto& row : world.ecs().get<BuffListComponent>(who).m_instances)
         {
             const auto* def = buffDef(row.m_id);
             if (row.m_removing || !def)
@@ -430,10 +430,10 @@ bool evalPredicate(Exec& exec, const Predicate& pred)
     }
     case PredKind::Motion:
     {
-        const auto scale = world.ecs().has<Stats>(who)
-                               ? world.ecs().get<Stats>(who).finalStat(static_cast<int32_t>(BuffStat::MoveScaleX))
+        const auto scale = world.ecs().has<StatsComponent>(who)
+                               ? world.ecs().get<StatsComponent>(who).finalStat(static_cast<int32_t>(BuffStat::MoveScaleX))
                                : Fixed::fromInt(1);
-        const bool air = world.ecs().has<Transform>(who) && world.ecs().get<Transform>(who).m_position.y > Fixed{};
+        const bool air = world.ecs().has<TransformComponent>(who) && world.ecs().get<TransformComponent>(who).m_position.y > Fixed{};
         switch (static_cast<MotionCheck>(pred.m_subKind))
         {
         case MotionCheck::SpeedUp:
@@ -471,9 +471,9 @@ bool evalPredicate(Exec& exec, const Predicate& pred)
     }
     case PredKind::Delta:
     {
-        if (!world.ecs().has<Health>(who))
+        if (!world.ecs().has<HealthComponent>(who))
             return false;
-        const auto& health = world.ecs().get<Health>(who);
+        const auto& health = world.ecs().get<HealthComponent>(who);
         switch (static_cast<DeltaCheck>(pred.m_subKind))
         {
         case DeltaCheck::LostHp:
@@ -497,9 +497,9 @@ bool evalPredicate(Exec& exec, const Predicate& pred)
     }
     case PredKind::RoleType:
     {
-        if (!world.ecs().has<Identity>(who))
+        if (!world.ecs().has<IdentityComponent>(who))
             return false;
-        const auto type = world.ecs().get<Identity>(who).m_roleType;
+        const auto type = world.ecs().get<IdentityComponent>(who).m_roleType;
         switch (static_cast<RoleCheck>(pred.m_subKind))
         {
         case RoleCheck::Monster:
@@ -526,8 +526,8 @@ bool evalPredicate(Exec& exec, const Predicate& pred)
         {
         case EventCheck::TargetDead:
             return inst->m_targetDead ||
-                   (world.ecs().alive(inst->m_eventTarget) && world.ecs().has<Health>(inst->m_eventTarget) &&
-                    world.ecs().get<Health>(inst->m_eventTarget).m_dead);
+                   (world.ecs().alive(inst->m_eventTarget) && world.ecs().has<HealthComponent>(inst->m_eventTarget) &&
+                    world.ecs().get<HealthComponent>(inst->m_eventTarget).m_dead);
         case EventCheck::Crit:
         case EventCheck::AbilityCrit:
             return inst->m_critical;
@@ -542,9 +542,9 @@ bool evalPredicate(Exec& exec, const Predicate& pred)
     }
     case PredKind::Timer:
     {
-        if (!world.ecs().has<RoleState>(who))
+        if (!world.ecs().has<RoleStateComponent>(who))
             return false;
-        const auto& state = world.ecs().get<RoleState>(who);
+        const auto& state = world.ecs().get<RoleStateComponent>(who);
         switch (static_cast<TimerCheck>(pred.m_subKind))
         {
         case TimerCheck::Moved:
@@ -563,17 +563,17 @@ bool evalPredicate(Exec& exec, const Predicate& pred)
         switch (static_cast<MiscCheck>(pred.m_subKind))
         {
         case MiscCheck::MpEnough:
-            return world.ecs().has<Health>(who) && world.ecs().get<Health>(who).m_mp >= pred.m_min;
+            return world.ecs().has<HealthComponent>(who) && world.ecs().get<HealthComponent>(who).m_mp >= pred.m_min;
         case MiscCheck::CrystalEnough:
             return false;
         case MiscCheck::ComboEval:
         {
             const Fixed need = pred.m_hasMin ? pred.m_min : Fixed::fromInt(pred.m_id);
-            return world.ecs().has<ComboMeter>(who) &&
-                   Fixed::fromInt(world.ecs().get<ComboMeter>(who).m_grade) >= need;
+            return world.ecs().has<ComboMeterComponent>(who) &&
+                   Fixed::fromInt(world.ecs().get<ComboMeterComponent>(who).m_grade) >= need;
         }
         case MiscCheck::RageTransform:
-            return world.ecs().has<RageState>(who) && world.ecs().get<RageState>(who).m_transformed;
+            return world.ecs().has<RageStateComponent>(who) && world.ecs().get<RageStateComponent>(who).m_transformed;
         case MiscCheck::Never:
             return false;
         default:

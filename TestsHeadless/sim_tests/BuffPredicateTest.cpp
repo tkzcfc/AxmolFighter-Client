@@ -10,13 +10,13 @@ namespace
 // 用 Enter 上带前置谓词的 Resource 探测谓词是否为真。
 bool firesWhen(Harness& h, Predicate pred)
 {
-    const Fixed before = h.world.ecs().get<Health>(h.self).m_hp;
+    const Fixed before = h.world.ecs().get<HealthComponent>(h.self).m_hp;
     BuffDef def        = makeBuff(nextBuffId());
     BuffOp op          = resourceOp(ResourceId::Hp, constVal(Fixed::fromInt(-1)));
     op.m_when          = pred;
     def.m_onEnter.push_back(op);
     h.admit(h.add(def));
-    return h.world.ecs().get<Health>(h.self).m_hp < before;
+    return h.world.ecs().get<HealthComponent>(h.self).m_hp < before;
 }
 
 void addMarker(Harness& h, int32_t& id, int32_t ruleId, int32_t buffType)
@@ -93,7 +93,7 @@ TEST_CASE("buff predicate HasBuffType")
 TEST_CASE("buff predicate HasFlag")
 {
     Harness h;
-    h.world.ecs().get<StatusFlags>(h.self).addFlag(BuffFlag::SuperArmor);
+    h.world.ecs().get<StatusFlagsComponent>(h.self).addFlag(BuffFlag::SuperArmor);
     Predicate pred;
     pred.m_kind = PredKind::HasFlag;
     pred.m_id   = static_cast<int32_t>(BuffFlag::SuperArmor);
@@ -102,7 +102,7 @@ TEST_CASE("buff predicate HasFlag")
     crazy.m_kind = PredKind::HasFlag;
     crazy.m_id   = static_cast<int32_t>(BuffFlag::Crazy);
     CHECK_FALSE(firesWhen(h, crazy));
-    h.world.ecs().get<SkillCast>(h.self).m_crazy = true;
+    h.world.ecs().get<SkillCastComponent>(h.self).m_crazy = true;
     CHECK(firesWhen(h, crazy));
     Predicate notCrazy;
     notCrazy.m_kind = PredKind::HasFlag;
@@ -114,8 +114,8 @@ TEST_CASE("buff predicate Motion")
 {
     Harness h;
     auto setScale = [&](Fixed delta) {
-        h.world.ecs().get<Stats>(h.self).m_mods.clear();
-        h.world.ecs().get<Stats>(h.self).m_mods.push_back({200, delta, 0});
+        h.world.ecs().get<StatsComponent>(h.self).m_mods.clear();
+        h.world.ecs().get<StatsComponent>(h.self).m_mods.push_back({200, delta, 0});
     };
     Predicate up;
     up.m_kind    = PredKind::Motion;
@@ -131,20 +131,20 @@ TEST_CASE("buff predicate Motion")
     air.m_kind    = PredKind::Motion;
     air.m_subKind = static_cast<int32_t>(MotionCheck::Air);
     CHECK_FALSE(firesWhen(h, air));
-    h.world.ecs().get<Transform>(h.self).m_position.y = Fixed::fromInt(10);
+    h.world.ecs().get<TransformComponent>(h.self).m_position.y = Fixed::fromInt(10);
     CHECK(firesWhen(h, air));
     Predicate grounded;
     grounded.m_kind    = PredKind::Motion;
     grounded.m_subKind = static_cast<int32_t>(MotionCheck::NotAir);
     CHECK_FALSE(firesWhen(h, grounded));
-    h.world.ecs().get<Transform>(h.self).m_position.y = {};
+    h.world.ecs().get<TransformComponent>(h.self).m_position.y = {};
     CHECK(firesWhen(h, grounded));
 }
 
 TEST_CASE("buff predicate Ratio")
 {
     Harness h;
-    h.world.ecs().get<Health>(h.self).m_hp = Fixed::fromInt(3000);
+    h.world.ecs().get<HealthComponent>(h.self).m_hp = Fixed::fromInt(3000);
     Predicate pred;
     pred.m_kind          = PredKind::Ratio;
     pred.m_subKind       = static_cast<int32_t>(RatioRes::Hp);
@@ -163,7 +163,7 @@ TEST_CASE("buff predicate Ratio")
 TEST_CASE("buff predicate Delta")
 {
     Harness h;
-    auto& health = h.world.ecs().get<Health>(h.self);
+    auto& health = h.world.ecs().get<HealthComponent>(h.self);
     health.m_hp     = Fixed::fromInt(4000);
     health.m_prevHp = Fixed::fromInt(8000);
     health.m_ep     = Fixed::fromInt(100);
@@ -210,7 +210,7 @@ TEST_CASE("buff predicate RoleType")
     monster.m_kind    = PredKind::RoleType;
     monster.m_subKind = static_cast<int32_t>(RoleCheck::Monster);
     CHECK_FALSE(firesWhen(h, monster));
-    h.world.ecs().get<Identity>(h.self).m_roleType = 4;
+    h.world.ecs().get<IdentityComponent>(h.self).m_roleType = 4;
     CHECK(firesWhen(h, monster));
     Predicate eq;
     eq.m_kind    = PredKind::RoleType;
@@ -227,7 +227,7 @@ TEST_CASE("buff predicate RoleType")
 TEST_CASE("buff predicate Skill")
 {
     Harness h;
-    auto& book = h.world.ecs().get<SkillBook>(h.self);
+    auto& book = h.world.ecs().get<SkillBookComponent>(h.self);
     book.m_slots = {"A", "F", "Y"};
     SkillRuntime a;
     a.m_slot      = 0;
@@ -240,8 +240,8 @@ TEST_CASE("buff predicate Skill")
     f.m_timing   = true;
     f.m_cd       = Fixed::fromInt(100);
     book.m_skills = {a, f};
-    h.world.ecs().get<SkillCast>(h.self).m_skill = 0;
-    h.world.ecs().get<ActionTimeline>(h.self).m_clipId = 55;
+    h.world.ecs().get<SkillCastComponent>(h.self).m_skill = 0;
+    h.world.ecs().get<ActionTimelineComponent>(h.self).m_clipId = 55;
 
     auto check = [&](SkillCheck kind, int32_t id = 0, std::vector<int32_t> ids = {}) {
         Predicate pred;
@@ -281,7 +281,7 @@ TEST_CASE("buff predicate Event")
 {
     Harness h;
     auto fireBegin = [&](Predicate pred, BuffContext ctx) {
-        const Fixed before = h.world.ecs().get<Health>(h.self).m_hp;
+        const Fixed before = h.world.ecs().get<HealthComponent>(h.self).m_hp;
         BuffDef def        = makeBuff(nextBuffId());
         def.m_lifecycle.m_executeType = 3;
         def.m_activation.m_beginOn    = TriggerPoint::AfterHit;
@@ -290,7 +290,7 @@ TEST_CASE("buff predicate Event")
         def.m_onBegin.push_back(op);
         h.admit(h.add(def));
         h.fire(TriggerPoint::AfterHit, ctx);
-        return h.world.ecs().get<Health>(h.self).m_hp < before;
+        return h.world.ecs().get<HealthComponent>(h.self).m_hp < before;
     };
 
     Predicate crit;
@@ -326,7 +326,7 @@ TEST_CASE("buff predicate Event")
 TEST_CASE("buff predicate Timer")
 {
     Harness h;
-    auto& state = h.world.ecs().get<RoleState>(h.self);
+    auto& state = h.world.ecs().get<RoleStateComponent>(h.self);
     state.m_movedSec    = Fixed::fromInt(3);
     state.m_standingSec = Fixed::fromInt(1);
     Predicate moved;
@@ -354,7 +354,7 @@ TEST_CASE("buff predicate Misc")
     mp.m_subKind = static_cast<int32_t>(MiscCheck::MpEnough);
     mp.m_min     = Fixed::fromInt(50);
     CHECK(firesWhen(h, mp));
-    h.world.ecs().get<Health>(h.self).m_mp = Fixed::fromInt(10);
+    h.world.ecs().get<HealthComponent>(h.self).m_mp = Fixed::fromInt(10);
     CHECK_FALSE(firesWhen(h, mp));
 
     Predicate crystal;
@@ -367,14 +367,14 @@ TEST_CASE("buff predicate Misc")
     combo.m_subKind = static_cast<int32_t>(MiscCheck::ComboEval);
     combo.m_id      = 2;
     CHECK_FALSE(firesWhen(h, combo));
-    h.world.ecs().get<ComboMeter>(h.self).m_grade = 3;
+    h.world.ecs().get<ComboMeterComponent>(h.self).m_grade = 3;
     CHECK(firesWhen(h, combo));
 
     Predicate rage;
     rage.m_kind    = PredKind::Misc;
     rage.m_subKind = static_cast<int32_t>(MiscCheck::RageTransform);
     CHECK_FALSE(firesWhen(h, rage));
-    h.world.ecs().get<RageState>(h.self).m_transformed = true;
+    h.world.ecs().get<RageStateComponent>(h.self).m_transformed = true;
     CHECK(firesWhen(h, rage));
 
     Predicate never;
@@ -386,7 +386,7 @@ TEST_CASE("buff predicate Misc")
 TEST_CASE("buff predicate EventTarget subject")
 {
     Harness h;
-    h.world.ecs().get<StatusFlags>(h.other).addFlag(BuffFlag::Stun);
+    h.world.ecs().get<StatusFlagsComponent>(h.other).addFlag(BuffFlag::Stun);
     Predicate pred;
     pred.m_kind    = PredKind::HasFlag;
     pred.m_subject = Subject::EventTarget;
@@ -397,10 +397,10 @@ TEST_CASE("buff predicate EventTarget subject")
     BuffOp op                     = resourceOp(ResourceId::Hp, constVal(Fixed::fromInt(-1)));
     op.m_when                     = pred;
     def.m_onBegin.push_back(op);
-    const Fixed before = h.world.ecs().get<Health>(h.self).m_hp;
+    const Fixed before = h.world.ecs().get<HealthComponent>(h.self).m_hp;
     h.admit(h.add(def));
     BuffContext ctx;
     ctx.m_target = h.other;
     h.fire(TriggerPoint::AfterHit, ctx);
-    CHECK(h.world.ecs().get<Health>(h.self).m_hp < before);
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_hp < before);
 }

@@ -7,7 +7,7 @@ namespace mugen::sim
 namespace
 {
 // 由特效配置与主人变换计算放置位姿（移植旧实现 setCustomPosition）。
-void placement(const conf::battle::EffectDef& row, const Transform& source, const MapRegion& region, Transform& target)
+void placement(const conf::battle::EffectDef& row, const TransformComponent& source, const MapRegion& region, TransformComponent& target)
 {
     target.m_towardX = row.orientationX == 0 ? -1 : row.orientationX == 1 ? 1 : source.m_towardX;
     target.m_vectorX = row.orientationX == 0 ? "-1"_fx : row.orientationX == 1 ? "1"_fx : source.m_vectorX;
@@ -45,8 +45,8 @@ void spawnFromRole(World& world, Entity owner, int32_t effectId, const SourceCon
     request.m_configId = effectId;
     request.m_owner    = owner;
     request.m_source   = source;
-    Transform target;
-    placement(*row, world.ecs().get<Transform>(owner), world.ecs().singleton<MapRegion>(), target);
+    TransformComponent target;
+    placement(*row, world.ecs().get<TransformComponent>(owner), world.ecs().singleton<MapRegion>(), target);
     request.m_position = target.m_position;
     request.m_towardX  = target.m_towardX;
     request.m_vectorX  = target.m_vectorX;
@@ -57,7 +57,7 @@ void spawnFromRole(World& world, Entity owner, int32_t effectId, const SourceCon
 // 后继特效以父特效为放置基准，归属仍是父特效的主人。
 void spawnChild(World& world, Entity parent, int32_t effectId)
 {
-    const auto& info = world.ecs().get<EffectInfo>(parent);
+    const auto& info = world.ecs().get<EffectInfoComponent>(parent);
     const auto* row  = conf::Config::instance().find<conf::battle::EffectDef>(effectId);
     if (!row)
         return;
@@ -68,8 +68,8 @@ void spawnChild(World& world, Entity parent, int32_t effectId)
     request.m_source.m_skillId     = info.m_skillId;
     request.m_source.m_baseSkillId = info.m_baseSkillId;
     request.m_source.m_slot        = info.m_slot;
-    Transform target;
-    placement(*row, world.ecs().get<Transform>(parent), world.ecs().singleton<MapRegion>(), target);
+    TransformComponent target;
+    placement(*row, world.ecs().get<TransformComponent>(parent), world.ecs().singleton<MapRegion>(), target);
     request.m_position = target.m_position;
     request.m_towardX  = target.m_towardX;
     request.m_vectorX  = target.m_vectorX;
@@ -84,27 +84,27 @@ void spawnHitEffect(World& world, Entity owner, Entity sourceEffect, int32_t eff
     const auto* row = conf::Config::instance().find<conf::battle::EffectDef>(effectId);
     if (!row)
         return;
-    const auto& targetPos = world.ecs().get<Transform>(hitEntity).m_position;
-    const auto& facing    = world.ecs().get<Transform>(sourceEffect);
+    const auto& targetPos = world.ecs().get<TransformComponent>(hitEntity).m_position;
+    const auto& facing    = world.ecs().get<TransformComponent>(sourceEffect);
     const FixedVec3 position{contact.m_point.x, contact.m_point.z - targetPos.z, targetPos.z - Fixed::fromInt(1)};
     Entity reused;
-    world.ecs().each<EffectInfo>([&](Entity entity, const EffectInfo& info) {
+    world.ecs().each<EffectInfoComponent>([&](Entity entity, const EffectInfoComponent& info) {
         if (reused.value == 0 && info.m_configId == effectId && info.m_hitEntity == hitEntity &&
-            !world.ecs().has<Despawning>(entity))
+            !world.ecs().has<DespawningComponent>(entity))
             reused = entity;
     });
     if (reused.value != 0)
     {
-        auto& transform        = world.ecs().get<Transform>(reused);
+        auto& transform        = world.ecs().get<TransformComponent>(reused);
         transform.m_position   = position;
         transform.m_towardX    = facing.m_towardX;
         transform.m_vectorX    = facing.m_vectorX;
         transform.m_vectorZ    = facing.m_vectorZ;
-        auto& info             = world.ecs().get<EffectInfo>(reused);
+        auto& info             = world.ecs().get<EffectInfoComponent>(reused);
         info.m_skillId         = source.m_skillId;
         info.m_baseSkillId     = source.m_baseSkillId;
         info.m_slot            = source.m_slot;
-        const auto& timeline   = world.ecs().get<ActionTimeline>(reused);
+        const auto& timeline   = world.ecs().get<ActionTimelineComponent>(reused);
         if (!timeline.m_clips.empty())
             timeline::rules::enterClip(world, reused, timeline.m_clips.front(), true, true);
         return;

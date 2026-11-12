@@ -1,6 +1,6 @@
 // [8.3] InteractSystem
 // 读：`ContactEvent`(物品、传送门)
-// 写：`GoodsState`、`PortalState`、`BuffList`(拾取)
+// 写：`GoodsState`、`PortalState`、`BuffListComponent`(拾取)
 // 消费：`ContactEvent`
 // 产生：`RoomRequest`(传送)
 #include "mugen/sim/Systems.h"

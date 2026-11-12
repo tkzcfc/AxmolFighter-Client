@@ -1,7 +1,7 @@
 // [3.2] PlayerIntentSystem
-// 读：`PlayerControl`、`StatusFlags`(canControl)、`Pause`
-// 写：`Intent`；未暂停时排空 `PlayerControl.m_commands`
-// 消费：`PlayerControl.m_commands`
+// 读：`PlayerControlComponent`、`StatusFlagsComponent`(canControl)、`PauseComponent`
+// 写：`IntentComponent`；未暂停时排空 `PlayerControlComponent.m_commands`
+// 消费：`PlayerControlComponent.m_commands`
 // 产生：—
 #include "mugen/sim/Systems.h"
 #include "mugen/sim/World.h"
@@ -31,8 +31,8 @@ MoveMode moveMode(ControlEvent event)
 void runPlayerIntent(World& world)
 {
     const bool paused = world.ecs().singleton<RoomState>().m_paused;
-    world.ecs().each<PlayerControl, Intent, StatusFlags, Pause>(
-        [&](Entity, PlayerControl& control, Intent& intent, const StatusFlags& flags, const Pause& pause) {
+    world.ecs().each<PlayerControlComponent, IntentComponent, StatusFlagsComponent, PauseComponent>(
+        [&](Entity, PlayerControlComponent& control, IntentComponent& intent, const StatusFlagsComponent& flags, const PauseComponent& pause) {
             // 暂停期间命令保留（R9）。无法控制时命令直接丢弃，不留到解除后。
             if (paused || pause.m_paused)
                 return;

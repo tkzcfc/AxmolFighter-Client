@@ -36,7 +36,7 @@ bool enter(World& world, const conf::RoomConfig& config, int32_t stageId, int32_
     size_t index = 0;
     for (const auto& [slot, entity] : world.ecs().singleton<PlayerSlots>().m_entities)
     {
-        auto& transform    = world.ecs().get<Transform>(entity);
+        auto& transform    = world.ecs().get<TransformComponent>(entity);
         transform.m_position = {Fixed::fromInt(at(config.actorPosX, index, 0)), {},
                                 Fixed::fromInt(at(config.actorPosZ, index, 0))};
         transform.m_towardX  = at(config.actorVectorX, index, 1) < 0 ? -1 : 1;

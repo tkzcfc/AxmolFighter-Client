@@ -63,8 +63,8 @@ public:
 
     void scanInitial()
     {
-        m_world.ecs().each<Identity, RoleState, MotionState>(
-            [&](Entity entity, const Identity& identity, const RoleState& state, const MotionState& motion) {
+        m_world.ecs().each<IdentityComponent, RoleStateComponent, MotionStateComponent>(
+            [&](Entity entity, const IdentityComponent& identity, const RoleStateComponent& state, const MotionStateComponent& motion) {
                 if (identity.m_kind != SpawnKind::Role)
                     return;
                 RoleWatch watch;
@@ -93,7 +93,7 @@ public:
     }
 
 private:
-    static std::string roleKey(const Identity& identity)
+    static std::string roleKey(const IdentityComponent& identity)
     {
         return "role:" + std::to_string(identity.m_configId) + "#" + std::to_string(identity.m_ordinal);
     }
@@ -144,15 +144,15 @@ private:
         for (auto& [value, watch] : m_roles)
         {
             const Entity entity{value};
-            if (!m_world.ecs().alive(entity) || !m_world.ecs().has<RoleState>(entity))
+            if (!m_world.ecs().alive(entity) || !m_world.ecs().has<RoleStateComponent>(entity))
                 continue;
-            const auto status = statusNames(role::statusBits(m_world.ecs().get<RoleState>(entity).m_state));
+            const auto status = statusNames(role::statusBits(m_world.ecs().get<RoleStateComponent>(entity).m_state));
             if (status != watch.status)
             {
                 emit(frame, "state", {watch.key, watch.status.empty() ? "-" : watch.status, status});
                 watch.status = status;
             }
-            if (const auto* motion = m_world.ecs().tryGet<MotionState>(entity))
+            if (const auto* motion = m_world.ecs().tryGet<MotionStateComponent>(entity))
             {
                 if (motion->m_motionName != watch.action)
                 {
@@ -163,8 +163,8 @@ private:
                     watch.action = motion->m_motionName;
                 }
             }
-            const auto& health = m_world.ecs().get<Health>(entity);
-            const auto& pos    = m_world.ecs().get<Transform>(entity).m_position;
+            const auto& health = m_world.ecs().get<HealthComponent>(entity);
+            const auto& pos    = m_world.ecs().get<TransformComponent>(entity).m_position;
             watch.hp           = health.m_hp.toInt();
             watch.x            = toMilli(pos.x);
             watch.y            = toMilli(pos.y);
@@ -183,7 +183,7 @@ void applyBuffs(World& world, uint64_t frame, const std::vector<BuffInject>& buf
 {
     Entity hero;
     std::vector<Entity> dummies;
-    world.ecs().each<Identity>([&](Entity entity, const Identity& identity) {
+    world.ecs().each<IdentityComponent>([&](Entity entity, const IdentityComponent& identity) {
         if (identity.m_kind != SpawnKind::Role)
             return;
         if (identity.m_playerSlot && *identity.m_playerSlot == 0)

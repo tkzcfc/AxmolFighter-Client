@@ -1,6 +1,6 @@
 // [5.2] FollowSystem
-// 读：`Follow`、主人/目标的 `Transform`
-// 写：`Transform`
+// 读：`FollowComponent`、主人/目标的 `TransformComponent`
+// 写：`TransformComponent`
 // 消费：—
 // 产生：—
 #include "mugen/sim/Systems.h"

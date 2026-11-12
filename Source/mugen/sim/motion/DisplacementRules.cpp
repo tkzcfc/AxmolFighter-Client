@@ -51,7 +51,7 @@ Fixed axis(const std::vector<Fixed>& values, size_t index)
 {
     return index < values.size() ? values[index] : Fixed{};
 }
-// 发出一条位移事实。终点由 DebugSink 在 P11 读取。
+// 发出一条位移事实。终点由 DebugSinkSystem 在 P11 读取。
 void emit(World& world, Entity entity, DispPhase phase, int32_t curveId)
 {
     DisplacementEvent event;
@@ -70,9 +70,9 @@ bool set(World& world, Entity entity, int32_t id)
     const auto* row = conf::Config::instance().find<conf::DisplacementConfig>(id);
     if (!row)
         return false;
-    auto& d        = world.ecs().get<Displacement>(entity);
+    auto& d        = world.ecs().get<DisplacementComponent>(entity);
     auto& velocity = d.m_velocity;
-    const auto& t  = world.ecs().get<Transform>(entity);
+    const auto& t  = world.ecs().get<TransformComponent>(entity);
     // 旧实现每次设置位移都先结束进行中的位移（同 id 也结束），再开始新位移。
     if (d.m_curveId != -1)
         emit(world, entity, DispPhase::Replaced, d.m_curveId);
@@ -94,7 +94,7 @@ bool set(World& world, Entity entity, int32_t id)
 // 重置位移状态与速度。
 void reset(World& world, Entity entity)
 {
-    auto& d = world.ecs().get<Displacement>(entity);
+    auto& d = world.ecs().get<DisplacementComponent>(entity);
     if (d.m_curveId != -1)
         emit(world, entity, DispPhase::Ended, d.m_curveId);
     d.m_elapsedMs    = {};
@@ -108,7 +108,7 @@ void reset(World& world, Entity entity)
 // 活动曲线耗尽后清掉 curveId：这是“当前没有曲线”的玩法标志，下一次 set 不会把已结束曲线再报成 Replaced。
 void settle(World& world, Entity entity)
 {
-    auto& d = world.ecs().get<Displacement>(entity);
+    auto& d = world.ecs().get<DisplacementComponent>(entity);
     if (d.m_curveId == -1)
         return;
     const bool moving = d.m_velocity.x != Fixed{} || d.m_velocity.y != Fixed{} || d.m_velocity.z != Fixed{};

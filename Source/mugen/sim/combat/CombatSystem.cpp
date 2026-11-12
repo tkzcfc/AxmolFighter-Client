@@ -1,6 +1,6 @@
 // [8.1] CombatSystem
-// 读：`ContactEvent`、`EffectInfo`、`HitTracker`、`HitDef`、`Stats`、`StatusFlags`、`RoleState`、`SkillCast`、`Health`、`Identity`、`Transform`
-// 写：`HitTracker`、`Health`（经 health::rules）、`Pause`、`HitState`(受击请求)、`SkillCast`(强制打断)、`Transform`(受击朝向)
+// 读：`ContactEvent`、`EffectInfoComponent`、`HitTrackerComponent`、`HitDef`、`StatsComponent`、`StatusFlagsComponent`、`RoleStateComponent`、`SkillCastComponent`、`HealthComponent`、`IdentityComponent`、`TransformComponent`
+// 写：`HitTrackerComponent`、`HealthComponent`（经 health::rules）、`PauseComponent`、`HitStateComponent`(受击请求)、`SkillCastComponent`(强制打断)、`TransformComponent`(受击朝向)
 // 消费：`ContactEvent`(特效→角色)
 // 产生：`HitEvent`、`HpEvent`、`DeathRequest`、`HitStopEvent`、`SpawnRequest`(受击特效)、`DespawnRequest`、`CastEvent`(Cancelled)；RNG
 #include "mugen/sim/Systems.h"
@@ -28,7 +28,7 @@ size_t creationRank(const std::vector<Entity>& created, Entity entity)
 void runCombat(World& world)
 {
     std::vector<Entity> created;
-    world.ecs().each<Identity>([&](Entity entity, const Identity&) { created.push_back(entity); });
+    world.ecs().each<IdentityComponent>([&](Entity entity, const IdentityComponent&) { created.push_back(entity); });
     auto contacts = world.ecs().singleton<EventQueue<ContactEvent>>().m_items;
     std::stable_sort(contacts.begin(), contacts.end(), [&](const ContactEvent& a, const ContactEvent& b) {
         const size_t attacker = creationRank(created, a.m_a);
@@ -54,17 +54,17 @@ void runCombat(World& world)
         hitCtx.m_skillId    = ctx.m_baseSkillId > 0 ? ctx.m_baseSkillId : ctx.m_skillId;
         hitCtx.m_boundSkill = hitCtx.m_skillId;
         hitCtx.m_effectId   = ctx.m_effectId;
-        const bool invincible = world.ecs().has<StatusFlags>(ctx.m_target) &&
-                                world.ecs().get<StatusFlags>(ctx.m_target).active(mugen::ExtraState::Invincible);
+        const bool invincible = world.ecs().has<StatusFlagsComponent>(ctx.m_target) &&
+                                world.ecs().get<StatusFlagsComponent>(ctx.m_target).active(mugen::ExtraState::Invincible);
         const bool invincibleGate = invincible && ctx.m_effectRow && !ctx.m_effectRow->hitExtraControl.empty() &&
                                     ctx.m_effectRow->hitExtraControl.front() == 0 && ctx.m_hit->hitMust != 1;
         if (invincibleGate)
         {
             bool dodging = false;
-            if (world.ecs().has<SkillCast>(ctx.m_target) && world.ecs().has<SkillBook>(ctx.m_target))
+            if (world.ecs().has<SkillCastComponent>(ctx.m_target) && world.ecs().has<SkillBookComponent>(ctx.m_target))
             {
-                const auto& cast = world.ecs().get<SkillCast>(ctx.m_target);
-                const auto& book = world.ecs().get<SkillBook>(ctx.m_target);
+                const auto& cast = world.ecs().get<SkillCastComponent>(ctx.m_target);
+                const auto& book = world.ecs().get<SkillBookComponent>(ctx.m_target);
                 if (cast.m_skill >= 0 && static_cast<size_t>(cast.m_skill) < book.m_skills.size())
                 {
                     const int32_t slot = book.m_skills[static_cast<size_t>(cast.m_skill)].m_slot;
@@ -95,23 +95,23 @@ void runCombat(World& world)
         combat::rules::applyDamage(world, ctx);
         hitCtx.m_damage   = ctx.m_damage;
         hitCtx.m_critical = ctx.m_critical;
-        const bool superArmor = world.ecs().has<StatusFlags>(ctx.m_target) &&
-                                world.ecs().get<StatusFlags>(ctx.m_target).active(mugen::ExtraState::SuperArmor);
+        const bool superArmor = world.ecs().has<StatusFlagsComponent>(ctx.m_target) &&
+                                world.ecs().get<StatusFlagsComponent>(ctx.m_target).active(mugen::ExtraState::SuperArmor);
         if (!superArmor)
         {
             combat::rules::applyHitStop(world, ctx);
             combat::rules::requestHitReaction(world, ctx);
         }
-        const bool dead = world.ecs().has<Health>(ctx.m_target) && world.ecs().get<Health>(ctx.m_target).m_dead;
+        const bool dead = world.ecs().has<HealthComponent>(ctx.m_target) && world.ecs().get<HealthComponent>(ctx.m_target).m_dead;
         hitCtx.m_targetDead = dead;
         if (!dead)
             buff::rules::fire(world, ctx.m_target, conf::battle::TriggerPoint::AfterToBeHit, hitCtx);
         buff::rules::fire(world, ctx.m_attacker, conf::battle::TriggerPoint::AfterHit, hitCtx);
         bool dodging = false;
-        if (world.ecs().has<SkillCast>(ctx.m_target) && world.ecs().has<SkillBook>(ctx.m_target))
+        if (world.ecs().has<SkillCastComponent>(ctx.m_target) && world.ecs().has<SkillBookComponent>(ctx.m_target))
         {
-            const auto& cast = world.ecs().get<SkillCast>(ctx.m_target);
-            const auto& book = world.ecs().get<SkillBook>(ctx.m_target);
+            const auto& cast = world.ecs().get<SkillCastComponent>(ctx.m_target);
+            const auto& book = world.ecs().get<SkillBookComponent>(ctx.m_target);
             if (cast.m_skill != kNoSkill && cast.m_skill >= 0 &&
                 static_cast<size_t>(cast.m_skill) < book.m_skills.size())
             {

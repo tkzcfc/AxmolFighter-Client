@@ -7,7 +7,7 @@
 namespace mugen::sim
 {
 // 角色当前资源及其上限。
-struct Health
+struct HealthComponent
 {
     // 当前生命值。
     Fixed m_hp;
@@ -35,11 +35,11 @@ struct Health
     Fixed m_prevEp;
     // 判断生命耗尽且具备有效上限。
     bool isDead() const { return m_hp <= Fixed{} && m_maxHp > Fixed{}; }
-    MG_REFLECT(Health, m_hp, m_mp, m_ep, m_maxHp, m_maxMp, m_maxEp, m_shield, m_shieldConsumeScale, m_hpLock,
+    MG_REFLECT(HealthComponent, m_hp, m_mp, m_ep, m_maxHp, m_maxMp, m_maxEp, m_shield, m_shieldConsumeScale, m_hpLock,
                m_beHitEnabled, m_dead, m_prevHp, m_prevEp)
 };
 // 顿帧 / 定身计时（暂停期间推进类系统跳过）。
-struct Pause
+struct PauseComponent
 {
     // 顿帧剩余毫秒。
     Fixed m_freezeMs;
@@ -49,13 +49,13 @@ struct Pause
     bool m_paused = false;
     // 定身复位时间（毫秒）。
     Fixed m_staticResetAtMs;
-    MG_REFLECT(Pause, m_freezeMs, m_staticMs, m_paused, m_staticResetAtMs)
+    MG_REFLECT(PauseComponent, m_freezeMs, m_staticMs, m_paused, m_staticResetAtMs)
 };
 // 上一帧的接触目标集合（碰撞推导 Began/Continue/End 使用）。
-struct ContactMemory
+struct ContactMemoryComponent
 {
     // 上一帧仍在接触的实体。
     std::vector<Entity> m_contacts;
-    MG_REFLECT(ContactMemory, m_contacts)
+    MG_REFLECT(ContactMemoryComponent, m_contacts)
 };
 }  // namespace mugen::sim

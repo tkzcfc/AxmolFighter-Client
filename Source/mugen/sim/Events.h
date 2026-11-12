@@ -9,7 +9,7 @@
 // 事件只存值与 Entity 句柄；请求由唯一所有者系统排空，事实只读，帧末由 FlushSystem 清空。
 namespace mugen::sim
 {
-// 生成请求的实体种类，与 Identity.m_kind 对应。
+// 生成请求的实体种类，与 IdentityComponent.m_kind 对应。
 enum class SpawnKind : uint8_t
 {
     // 角色。
@@ -235,7 +235,7 @@ struct SpawnRequest
                m_aiDifficulty,
                m_hitEntity)
 };
-// 请求销毁实体（同时已立即打上 Despawning）。
+// 请求销毁实体（同时已立即打上 DespawningComponent）。
 struct DespawnRequest
 {
     // 被销毁的实体。
@@ -363,7 +363,7 @@ struct CastEvent
     Entity m_entity;
     // 技能标识。
     int32_t m_skillId = 0;
-    // 技能槽位下标（SkillBook::m_slots）。摘要导出再映射成字母。
+    // 技能槽位下标（SkillBookComponent::m_slots）。摘要导出再映射成字母。
     int32_t m_slot = 0;
     // 阶段。
     CastPhase m_phase = CastPhase::Prepared;
@@ -445,7 +445,7 @@ enum class DispPhase : int32_t
     // 活动曲线被另一条曲线替换。
     Replaced = 2
 };
-// 位移事实。终点不入事件，由 DebugSink 在 P11 读 Transform。
+// 位移事实。终点不入事件，由 DebugSinkSystem 在 P11 读 TransformComponent。
 struct DisplacementEvent
 {
     // 位移所属实体。
@@ -456,7 +456,7 @@ struct DisplacementEvent
     int32_t m_curveId = 0;
     MG_REFLECT(DisplacementEvent, m_entity, m_phase, m_curveId)
 };
-// 顿帧事实。毫秒到帧的换算在 DebugSink。
+// 顿帧事实。毫秒到帧的换算在 DebugSinkSystem。
 struct HitStopEvent
 {
     // 被顿帧的实体。

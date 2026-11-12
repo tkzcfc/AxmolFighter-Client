@@ -1,6 +1,5 @@
 #include "mugen/sim/role/RoleSpawn.h"
 #include "mugen/conf/ReflectedConfig.h"
-#include "mugen/conf/TypeConversions.h"
 #include "mugen/core/MacroDefinition.h"
 
 namespace mugen::sim
@@ -140,13 +139,6 @@ void spawnRole(World& world, const RoleSpawnParams& params)
     request.m_position     = params.m_position;
     request.m_towardX      = params.m_toward;
     world.ecs().singleton<EventQueue<SpawnRequest>>().push(request);
-}
-
-// 由职业生成玩家角色。
-void spawnPlayer(World& world, CharacterClass occupation, RoleSpawnParams params)
-{
-    params.m_roleId = type_conversions::toRoleConfigId(occupation);
-    spawnRole(world, params);
 }
 }  // namespace role::rules
 }  // namespace mugen::sim

@@ -51,7 +51,7 @@ struct SkillMod
     MG_REFLECT(SkillMod, m_field, m_scope, m_slot, m_value, m_source)
 };
 // 角色持有的全部技能运行数据（槽位名 + 技能运行数据）。
-struct SkillBook
+struct SkillBookComponent
 {
     // 槽位名（A、Y、F、E、B、C、D…）。
     std::vector<std::string> m_slots;
@@ -61,10 +61,10 @@ struct SkillBook
     std::vector<SkillMod> m_mods;
     // 查找指定槽位名、步骤的技能下标；不存在返回 kNoSkill。
     int32_t find(std::string_view slot, int32_t step) const;
-    MG_REFLECT(SkillBook, m_slots, m_skills, m_mods)
+    MG_REFLECT(SkillBookComponent, m_slots, m_skills, m_mods)
 };
 // 当前施法状态（当前技能、缓存下一招、打断窗口）。
-struct SkillCast
+struct SkillCastComponent
 {
     // 当前施法技能下标，kNoSkill 表示未施法。
     int32_t m_skill = kNoSkill;
@@ -80,11 +80,11 @@ struct SkillCast
     bool m_interrupted = false;
     // 是否处于曝气。
     bool m_crazy = false;
-    MG_REFLECT(SkillCast, m_skill, m_nextSkill, m_nextRun, m_allowInterrupt, m_allowExtraInterrupt, m_interrupted,
+    MG_REFLECT(SkillCastComponent, m_skill, m_nextSkill, m_nextRun, m_allowInterrupt, m_allowExtraInterrupt, m_interrupted,
                m_crazy)
 };
 // 角色 / 特效的动作时间轴（片段列表与逐片段运行状态）。
-struct ActionTimeline
+struct ActionTimelineComponent
 {
     // 当前技能或特效的片段 id 列表。
     std::vector<int32_t> m_clips;
@@ -108,7 +108,7 @@ struct ActionTimeline
     int32_t m_clipId = 0;
     // 刚进入的片段要求下一次时间轴遍历不推进。
     bool m_deferAdvance = false;
-    MG_REFLECT(ActionTimeline, m_clips, m_index, m_clipMs, m_loops, m_tailMs, m_animationEnd, m_finished, m_nextCue,
+    MG_REFLECT(ActionTimelineComponent, m_clips, m_index, m_clipMs, m_loops, m_tailMs, m_animationEnd, m_finished, m_nextCue,
                m_spawnedEffects, m_clipId, m_deferAdvance)
 };
 }  // namespace mugen::sim

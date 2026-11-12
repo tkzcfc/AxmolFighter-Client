@@ -9,7 +9,7 @@
 namespace mugen::sim
 {
 // 控制限制状态的引用计数（沿用旧实现 ExtraState 的引用计数语义，枚举见 mugen::ExtraState）。
-struct StatusFlags
+struct StatusFlagsComponent
 {
     // 各限制状态的引用计数，下标 = ExtraState 值 - 1。
     std::array<int32_t, 8> m_refs{};
@@ -64,6 +64,6 @@ struct StatusFlags
     int32_t m_noHeal = 0;
     // 免晶体消耗引用计数。
     int32_t m_noCrystal = 0;
-    MG_REFLECT(StatusFlags, m_refs, m_noHeal, m_noCrystal)
+    MG_REFLECT(StatusFlagsComponent, m_refs, m_noHeal, m_noCrystal)
 };
 }  // namespace mugen::sim

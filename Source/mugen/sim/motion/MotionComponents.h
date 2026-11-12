@@ -5,7 +5,7 @@
 namespace mugen::sim
 {
 // 角色世界坐标、朝向和缩放。
-struct Transform
+struct TransformComponent
 {
     // 三维逻辑坐标。
     FixedVec3 m_position;
@@ -17,10 +17,10 @@ struct Transform
     Fixed m_vectorZ;
     // 逻辑碰撞框缩放倍率。
     Fixed m_scale = Fixed::fromInt(1);
-    MG_REFLECT(Transform, m_position, m_towardX, m_vectorX, m_vectorZ, m_scale)
+    MG_REFLECT(TransformComponent, m_position, m_towardX, m_vectorX, m_vectorZ, m_scale)
 };
-// 角色位移的可快照动力学状态（移植自旧实现 Displacement.h，速度字段统一放这里）。
-struct Displacement
+// 角色位移的可快照动力学状态（移植自旧实现 DisplacementComponent.h，速度字段统一放这里）。
+struct DisplacementComponent
 {
     // 当前位移已推进的毫秒数。
     Fixed m_elapsedMs;
@@ -53,7 +53,7 @@ struct Displacement
     int32_t m_floorPolicy = 0;
     int32_t m_wallPolicy = 0;
     bool m_endOnBrake = false;
-    MG_REFLECT(Displacement, m_elapsedMs, m_velocityTime, m_acceleration, m_accelerationTime, m_offset, m_velocityScale,
+    MG_REFLECT(DisplacementComponent, m_elapsedMs, m_velocityTime, m_acceleration, m_accelerationTime, m_offset, m_velocityScale,
                m_defaultVelocityScale, m_gravity, m_bounces, m_extraTimeScale, m_velocity, m_curveId,
                m_brake, m_air, m_floor, m_lie, m_wall, m_floorPolicy, m_wallPolicy, m_endOnBrake)
 };

@@ -72,9 +72,9 @@ void dropLayer(World& world, Entity entity, uint32_t serial)
     inst = findInstance(world, entity, serial);
     if (!inst || !inst->m_latched)
         return;
-    if (world.ecs().has<Stats>(entity))
+    if (world.ecs().has<StatsComponent>(entity))
     {
-        auto& mods = world.ecs().get<Stats>(entity).m_mods;
+        auto& mods = world.ecs().get<StatsComponent>(entity).m_mods;
         std::erase_if(mods, [serial](const StatMod& mod) { return mod.m_source == serial; });
     }
     for (const auto& op : def->m_persistent)
@@ -118,7 +118,7 @@ void resetInstance(World& world, Entity entity, uint32_t serial, const BuffDef& 
     inst->m_id = incoming.m_id;
     if (oldId != incoming.m_id || reset >= 4)
     {
-        const bool dead = world.ecs().has<Health>(entity) && world.ecs().get<Health>(entity).m_dead;
+        const bool dead = world.ecs().has<HealthComponent>(entity) && world.ecs().get<HealthComponent>(entity).m_dead;
         if ((incoming.m_admission.m_addType == 1 || !dead) && conditionsOk(world, entity, serial, incoming))
             onHook(world, entity, serial, kEnter);
     }
@@ -143,11 +143,11 @@ bool accepts(World& world, Entity entity, BuffInstance& inst, const BuffDef& ini
         else
         {
             int32_t campClass = 8;
-            if (context.m_target.value != 0 && context.m_target != entity && world.ecs().has<Identity>(entity) &&
-                world.ecs().has<Identity>(context.m_target))
+            if (context.m_target.value != 0 && context.m_target != entity && world.ecs().has<IdentityComponent>(entity) &&
+                world.ecs().has<IdentityComponent>(context.m_target))
             {
-                campClass = world.ecs().get<Identity>(entity).m_camp ==
-                                    world.ecs().get<Identity>(context.m_target).m_camp
+                campClass = world.ecs().get<IdentityComponent>(entity).m_camp ==
+                                    world.ecs().get<IdentityComponent>(context.m_target).m_camp
                                 ? 3
                                 : 2;
             }
@@ -221,9 +221,9 @@ void runWatches(World& world, Entity entity, uint32_t serial)
             if (!inst)
                 return;
         }
-        else if (op.m_kind == BuffOpKind::StateTimer && world.ecs().has<RoleState>(entity))
+        else if (op.m_kind == BuffOpKind::StateTimer && world.ecs().has<RoleStateComponent>(entity))
         {
-            const auto state = world.ecs().get<RoleState>(entity).m_state;
+            const auto state = world.ecs().get<RoleStateComponent>(entity).m_state;
             const bool match = (op.m_state == StateKind::GetUp && state == RoleStateId::GetUp) ||
                                (op.m_state == StateKind::HitRepel &&
                                 (state == RoleStateId::Hit || state == RoleStateId::HitDown ||
@@ -266,11 +266,11 @@ void advanceOne(World& world, Entity entity, uint32_t serial, Fixed seconds)
     const auto* def = inst ? buffDef(inst->m_id) : nullptr;
     if (!inst || !def || inst->m_removing)
         return;
-    const bool dead = world.ecs().has<Health>(entity) && world.ecs().get<Health>(entity).m_dead;
+    const bool dead = world.ecs().has<HealthComponent>(entity) && world.ecs().get<HealthComponent>(entity).m_dead;
     const Entity applicator = inst->m_applicator;
     if (def->m_admission.m_addType == 2 &&
-        (dead || (world.ecs().alive(applicator) && world.ecs().has<Health>(applicator) &&
-                  world.ecs().get<Health>(applicator).m_dead)))
+        (dead || (world.ecs().alive(applicator) && world.ecs().has<HealthComponent>(applicator) &&
+                  world.ecs().get<HealthComponent>(applicator).m_dead)))
     {
         destroySerial(world, entity, serial);
         return;
@@ -338,14 +338,14 @@ void advanceOne(World& world, Entity entity, uint32_t serial, Fixed seconds)
 // 准入一个 Buff。
 void admit(World& world, Entity entity, int32_t buffId, const BuffContext& context)
 {
-    if (!world.ecs().alive(entity) || world.ecs().has<Inactive>(entity) || world.ecs().has<Despawning>(entity))
+    if (!world.ecs().alive(entity) || world.ecs().has<InactiveComponent>(entity) || world.ecs().has<DespawningComponent>(entity))
         return;
-    if (!world.ecs().has<BuffList>(entity))
+    if (!world.ecs().has<BuffListComponent>(entity))
         return;
     const auto* def = buffDef(buffId);
     if (!def || def->m_status == LowerStatus::Unsupported)
         return;
-    auto& list = world.ecs().get<BuffList>(entity);
+    auto& list = world.ecs().get<BuffListComponent>(entity);
     for (const auto& immune : list.m_immunity)
     {
         if (immune.m_sel == static_cast<int32_t>(ImmuneSel::All))
@@ -414,7 +414,7 @@ void admit(World& world, Entity entity, int32_t buffId, const BuffContext& conte
             added->m_active = true;
             if (added->m_maxTimes > 0)
                 ++added->m_times;
-            const bool dead = world.ecs().has<Health>(entity) && world.ecs().get<Health>(entity).m_dead;
+            const bool dead = world.ecs().has<HealthComponent>(entity) && world.ecs().get<HealthComponent>(entity).m_dead;
             if ((def->m_admission.m_addType == 1 || !dead) && conditionsOk(world, entity, serial, *def))
                 onHook(world, entity, serial, kEnter);
         }
@@ -429,7 +429,7 @@ void admit(World& world, Entity entity, int32_t buffId, const BuffContext& conte
 
     const Fixed cd = world.setup().m_pvp ? def->m_admission.m_cdPvp : def->m_admission.m_cd;
     if (cd > Fixed{})
-        world.ecs().get<BuffList>(entity).m_cooldowns.push_back({buffId, cd});
+        world.ecs().get<BuffListComponent>(entity).m_cooldowns.push_back({buffId, cd});
     BuffEvent event;
     event.m_entity = entity;
     event.m_buffId = buffId;
@@ -444,10 +444,10 @@ void admit(World& world, Entity entity, int32_t buffId, const BuffContext& conte
 // 移除指定 id 的全部实例。
 void remove(World& world, Entity entity, int32_t buffId)
 {
-    if (!world.ecs().has<BuffList>(entity))
+    if (!world.ecs().has<BuffListComponent>(entity))
         return;
     std::vector<uint32_t> serials;
-    for (const auto& inst : world.ecs().get<BuffList>(entity).m_instances)
+    for (const auto& inst : world.ecs().get<BuffListComponent>(entity).m_instances)
         if (inst.m_id == buffId && !inst.m_removing)
             serials.push_back(inst.m_serial);
     for (const uint32_t serial : serials)
@@ -457,10 +457,10 @@ void remove(World& world, Entity entity, int32_t buffId)
 // 按规则移除。
 void removeRule(World& world, Entity entity, int32_t ruleId, bool all)
 {
-    if (!world.ecs().has<BuffList>(entity))
+    if (!world.ecs().has<BuffListComponent>(entity))
         return;
     std::vector<uint32_t> serials;
-    for (const auto& inst : world.ecs().get<BuffList>(entity).m_instances)
+    for (const auto& inst : world.ecs().get<BuffListComponent>(entity).m_instances)
     {
         const auto* def = buffDef(inst.m_id);
         if (!inst.m_removing && def && def->m_admission.m_ruleId == ruleId)
@@ -486,10 +486,10 @@ void fire(World& world, Entity entity, TriggerPoint point, const BuffContext& co
     }
     ++chain.m_depth;
     if (point != TriggerPoint::BehaviorStateStart && point != TriggerPoint::BehaviorStateEnd &&
-        world.ecs().has<BuffList>(entity))
+        world.ecs().has<BuffListComponent>(entity))
     {
         std::vector<uint32_t> serials;
-        for (const auto& inst : world.ecs().get<BuffList>(entity).m_instances)
+        for (const auto& inst : world.ecs().get<BuffListComponent>(entity).m_instances)
             if (!inst.m_removing)
                 serials.push_back(inst.m_serial);
         for (const uint32_t serial : serials)
@@ -507,7 +507,7 @@ void fire(World& world, Entity entity, TriggerPoint point, const BuffContext& co
             chain.m_seen.push_back(key);
             writeEvent(*inst, context);
             const bool ended = initial->m_activation.m_endOn == point;
-            const bool dead  = world.ecs().has<Health>(entity) && world.ecs().get<Health>(entity).m_dead;
+            const bool dead  = world.ecs().has<HealthComponent>(entity) && world.ecs().get<HealthComponent>(entity).m_dead;
             const bool permitted = conditionsOk(world, entity, serial, *current);
             if (!ended && (!permitted || (current->m_admission.m_addType != 1 && dead)))
                 continue;
@@ -518,14 +518,14 @@ void fire(World& world, Entity entity, TriggerPoint point, const BuffContext& co
                 destroySerial(world, entity, serial);
         }
     }
-    if (world.ecs().has<AbilityList>(entity))
+    if (world.ecs().has<AbilityListComponent>(entity))
     {
         std::vector<uint32_t> serials;
-        for (const auto& ability : world.ecs().get<AbilityList>(entity).m_instances)
+        for (const auto& ability : world.ecs().get<AbilityListComponent>(entity).m_instances)
             serials.push_back(ability.m_serial);
         for (const uint32_t serial : serials)
         {
-            auto& list = world.ecs().get<AbilityList>(entity);
+            auto& list = world.ecs().get<AbilityListComponent>(entity);
             AbilityInstance* ability = nullptr;
             for (auto& row : list.m_instances)
                 if (row.m_serial == serial)
@@ -547,11 +547,11 @@ void fire(World& world, Entity entity, TriggerPoint point, const BuffContext& co
 // 召唤物死亡时撤销主人的链接，并执行死亡脉冲。
 void notifySummonDeath(World& world, Entity owner)
 {
-    if (!world.ecs().has<BuffList>(owner))
+    if (!world.ecs().has<BuffListComponent>(owner))
         return;
     std::vector<uint32_t> linked;
     std::vector<uint32_t> pulses;
-    for (const auto& inst : world.ecs().get<BuffList>(owner).m_instances)
+    for (const auto& inst : world.ecs().get<BuffListComponent>(owner).m_instances)
     {
         const auto* def = buffDef(inst.m_id);
         if (!def || inst.m_removing)
@@ -595,13 +595,13 @@ void tick(World& world)
     // 与旧实现一致：dtMs/1000。m_dtSec 是另一个字面量，120 帧会提前跨过整秒门槛。
     const Fixed seconds = world.ecs().singleton<WorldClock>().m_dtMs / "1000"_fx;
     std::vector<Entity> holders;
-    world.ecs().each<BuffList>([&](Entity entity, const BuffList&) { holders.push_back(entity); });
+    world.ecs().each<BuffListComponent>([&](Entity entity, const BuffListComponent&) { holders.push_back(entity); });
     for (const Entity entity : holders)
     {
-        if (world.ecs().has<Despawning>(entity) || world.ecs().has<Inactive>(entity))
+        if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
             continue;
         std::vector<uint32_t> serials;
-        for (const auto& inst : world.ecs().get<BuffList>(entity).m_instances)
+        for (const auto& inst : world.ecs().get<BuffListComponent>(entity).m_instances)
             if (!inst.m_removing)
                 serials.push_back(inst.m_serial);
         for (const uint32_t serial : serials)
@@ -609,15 +609,15 @@ void tick(World& world)
             advanceOne(world, entity, serial, seconds);
             runWatches(world, entity, serial);
         }
-        if (!world.ecs().has<BuffList>(entity))
+        if (!world.ecs().has<BuffListComponent>(entity))
             continue;
-        auto& cds = world.ecs().get<BuffList>(entity).m_cooldowns;
+        auto& cds = world.ecs().get<BuffListComponent>(entity).m_cooldowns;
         for (auto& cd : cds)
             cd.m_left = std::max(Fixed{}, cd.m_left - seconds);
         std::erase_if(cds, [](const BuffCd& cd) { return cd.m_left <= Fixed{}; });
     }
-    world.ecs().each<AbilityList>([&](Entity entity, AbilityList& list) {
-        if (world.ecs().has<Despawning>(entity) || world.ecs().has<Inactive>(entity))
+    world.ecs().each<AbilityListComponent>([&](Entity entity, AbilityListComponent& list) {
+        if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
             return;
         std::vector<uint32_t> ready;
         for (auto& ability : list.m_instances)

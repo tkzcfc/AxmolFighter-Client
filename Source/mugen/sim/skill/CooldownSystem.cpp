@@ -1,6 +1,6 @@
 // [2.1] CooldownSystem
-// 读：`SkillBook`、`WorldClock`
-// 写：`SkillBook`（CD、次数）
+// 读：`SkillBookComponent`、`WorldClock`
+// 写：`SkillBookComponent`（CD、次数）
 // 消费：—
 // 产生：—
 #include "mugen/sim/Systems.h"
@@ -13,8 +13,8 @@ namespace mugen::sim
 void runCooldown(World& world)
 {
     const Fixed dt = world.ecs().singleton<WorldClock>().m_dtMs;
-    world.ecs().each<SkillBook>([&](Entity entity, SkillBook& book) {
-        if (world.ecs().has<Despawning>(entity) || world.ecs().has<Inactive>(entity))
+    world.ecs().each<SkillBookComponent>([&](Entity entity, SkillBookComponent& book) {
+        if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
             return;
         for (auto& skill : book.m_skills)
         {

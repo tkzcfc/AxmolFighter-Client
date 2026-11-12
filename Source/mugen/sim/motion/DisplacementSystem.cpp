@@ -1,6 +1,6 @@
 // [5.1] DisplacementSystem
-// 读：`Displacement`、`Transform`、`Stats`、`StatusFlags`、`MapRegion`
-// 写：`Transform`、`Displacement`（积分、事件位、内建策略反应）
+// 读：`DisplacementComponent`、`TransformComponent`、`StatsComponent`、`StatusFlagsComponent`、`MapRegion`
+// 写：`TransformComponent`、`DisplacementComponent`（积分、事件位、内建策略反应）
 // 消费：—
 // 产生：`DisplacementEvent`（曲线耗尽时经 displacement::rules::settle）
 #include "mugen/sim/Systems.h"
@@ -29,19 +29,19 @@ void runDisplacement(World& world)
 {
     const Fixed dtMs   = world.ecs().singleton<WorldClock>().m_dtMs;
     const auto& region = world.ecs().singleton<MapRegion>();
-    world.ecs().each<Transform, Displacement, Hitboxes>(
-        [&](Entity entity, Transform& transform, Displacement& d, const Hitboxes& hitboxes) {
-            if (world.ecs().has<Despawning>(entity) || world.ecs().has<Inactive>(entity))
+    world.ecs().each<TransformComponent, DisplacementComponent, HitboxesComponent>(
+        [&](Entity entity, TransformComponent& transform, DisplacementComponent& d, const HitboxesComponent& hitboxes) {
+            if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
                 return;
-            if (const Pause* pause = world.ecs().tryGet<Pause>(entity))
+            if (const PauseComponent* pause = world.ecs().tryGet<PauseComponent>(entity))
                 if (pause->m_paused)
                     return;
             const auto last   = transform.m_position;
             auto& velocity    = d.m_velocity;
-            const auto* roleState = world.ecs().tryGet<RoleState>(entity);
+            const auto* roleState = world.ecs().tryGet<RoleStateComponent>(entity);
             const bool moving = roleState && role::isMoveState(roleState->m_state) &&
                                  roleState->m_state != RoleStateId::Attack;
-            const auto* status = world.ecs().tryGet<StatusFlags>(entity);
+            const auto* status = world.ecs().tryGet<StatusFlagsComponent>(entity);
             const bool cannotMove = status && !status->canMove();
 
             auto v = velocity;

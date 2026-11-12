@@ -8,12 +8,12 @@ namespace mugen::sim::health::rules
 // 扣血或回血。delta 为负表示扣减。ignoreShield 为真时扣血不经过护盾。
 void applyDelta(World& world, Entity entity, Fixed delta, HpCause cause, Entity source, Entity effect, bool ignoreShield)
 {
-    auto& health = world.ecs().get<Health>(entity);
-    if (cause == HpCause::Heal && world.ecs().has<StatusFlags>(entity) &&
-        world.ecs().get<StatusFlags>(entity).m_noHeal > 0)
+    auto& health = world.ecs().get<HealthComponent>(entity);
+    if (cause == HpCause::Heal && world.ecs().has<StatusFlagsComponent>(entity) &&
+        world.ecs().get<StatusFlagsComponent>(entity).m_noHeal > 0)
         return;
-    if (delta > Fixed{} && cause == HpCause::Heal && world.ecs().has<Stats>(entity))
-        delta *= Fixed::fromInt(1) + world.ecs().get<Stats>(entity).finalStat(208);
+    if (delta > Fixed{} && cause == HpCause::Heal && world.ecs().has<StatsComponent>(entity))
+        delta *= Fixed::fromInt(1) + world.ecs().get<StatsComponent>(entity).finalStat(208);
     if (delta < Fixed{} && !ignoreShield && health.m_shield > Fixed{})
     {
         const Fixed absorb = std::min(health.m_shield, -delta);
@@ -36,12 +36,12 @@ void applyDelta(World& world, Entity entity, Fixed delta, HpCause cause, Entity 
             buff::rules::fire(world, entity, conf::battle::TriggerPoint::ShieldClean, ctx);
         }
     }
-    if (world.ecs().has<Stats>(entity))
-        health.m_maxHp = world.ecs().get<Stats>(entity).maxHp();
+    if (world.ecs().has<StatsComponent>(entity))
+        health.m_maxHp = world.ecs().get<StatsComponent>(entity).maxHp();
     const Fixed before = health.m_hp;
     Fixed floor{};
-    if (world.ecs().has<Stats>(entity))
-        floor = std::max(Fixed{}, world.ecs().get<Stats>(entity).finalStat(300));
+    if (world.ecs().has<StatsComponent>(entity))
+        floor = std::max(Fixed{}, world.ecs().get<StatsComponent>(entity).finalStat(300));
     Fixed hi = health.m_maxHp;
     if (hi < floor)
         hi = floor;
@@ -62,7 +62,7 @@ void applyDelta(World& world, Entity entity, Fixed delta, HpCause cause, Entity 
         ctx.m_target = entity;
         buff::rules::fire(world, entity, conf::battle::TriggerPoint::BeforeDeath, ctx);
     }
-    auto& after = world.ecs().get<Health>(entity);
+    auto& after = world.ecs().get<HealthComponent>(entity);
     if (after.m_hp <= Fixed{} && after.m_maxHp > Fixed{} && !after.m_dead)
     {
         after.m_dead = true;
@@ -81,7 +81,7 @@ void applyDelta(World& world, Entity entity, Fixed delta, HpCause cause, Entity 
 }
 
 // 已打上死亡标记，或生命耗尽且具备有效上限。
-bool isDead(const Health& health)
+bool isDead(const HealthComponent& health)
 {
     return health.m_dead || health.isDead();
 }

@@ -4,7 +4,7 @@
 #include "mugen/sim/anim/AnimComponents.h"
 #include "mugen/sim/intent/IntentComponents.h"
 #include "mugen/sim/stats/StatsComponents.h"
-#include "mugen/sim/stats/StatusFlags.h"
+#include "mugen/sim/stats/StatusFlagsComponent.h"
 #include "mugen/sim/combat/CombatComponents.h"
 #include "mugen/sim/skill/SkillComponents.h"
 #include "mugen/sim/effect/EffectComponents.h"
@@ -28,7 +28,7 @@ struct BornStamp
     MG_REFLECT(BornStamp, m_frame, m_stage)
 };
 // 实体的静态身份与阵营信息。
-struct Identity
+struct IdentityComponent
 {
     // 实体种类。
     SpawnKind m_kind = SpawnKind::Role;
@@ -52,29 +52,29 @@ struct Identity
     BornStamp m_born;
     // 同配置的生成序号（语义键 role:<configId>#<n>）。
     uint32_t m_ordinal = 0;
-    MG_REFLECT(Identity, m_kind, m_configId, m_camp, m_hostileMask, m_roleType, m_level, m_playerSlot, m_owner,
+    MG_REFLECT(IdentityComponent, m_kind, m_configId, m_camp, m_hostileMask, m_roleType, m_level, m_playerSlot, m_owner,
                m_rootOwner, m_born, m_ordinal)
 };
 // 标签组件：变身后休眠、跨房缓冲、房间挂起；所有系统遍历时跳过。
-struct Inactive
+struct InactiveComponent
 {
     uint8_t m_tag = 0;
-    MG_REFLECT(Inactive, m_tag)
+    MG_REFLECT(InactiveComponent, m_tag)
 };
 // 标签组件：本帧待回收（R4）；打上后本帧其余系统一律跳过，物理回收在 FlushSystem。
-struct Despawning
+struct DespawningComponent
 {
     uint8_t m_tag = 0;
-    MG_REFLECT(Despawning, m_tag)
+    MG_REFLECT(DespawningComponent, m_tag)
 };
 }  // namespace mugen::sim
 
 // 新 sim 组件唯一登记表，顺序固定序列化类型编号（上限 64）。
 #define MG_COMPONENT_LIST(X)                                                                                          \
-    X(Inactive) X(Despawning) X(Identity) X(PlayerControl) X(Intent) X(Transform) X(Displacement) X(MotionState)      \
-        X(Hitboxes) X(Stats) X(StatusFlags) X(Health) X(Pause) X(RoleState) X(HitState) X(SkillBook) X(SkillCast)      \
-            X(ActionTimeline) X(EffectInfo) X(HitTracker) X(Lifetime) X(Follow) X(ContactMemory) X(BuffList) \
-                X(AbilityList) X(TauntTable) X(ComboMeter) X(RageState)
+    X(InactiveComponent) X(DespawningComponent) X(IdentityComponent) X(PlayerControlComponent) X(IntentComponent) X(TransformComponent) X(DisplacementComponent) X(MotionStateComponent)      \
+        X(HitboxesComponent) X(StatsComponent) X(StatusFlagsComponent) X(HealthComponent) X(PauseComponent) X(RoleStateComponent) X(HitStateComponent) X(SkillBookComponent) X(SkillCastComponent)      \
+            X(ActionTimelineComponent) X(EffectInfoComponent) X(HitTrackerComponent) X(LifetimeComponent) X(FollowComponent) X(ContactMemoryComponent) X(BuffListComponent) \
+                X(AbilityListComponent) X(TauntTableComponent) X(ComboMeterComponent) X(RageStateComponent)
 
 namespace mugen::sim
 {

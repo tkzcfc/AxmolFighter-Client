@@ -1,5 +1,5 @@
-// [11.2] DebugSink
-// 读：全部事实队列、`Transform`（位移终点）、`WorldClock`（顿帧毫秒换帧）、`SkillBook`（槽位下标换字母）
+// [11.2] DebugSinkSystem
+// 读：全部事实队列、`TransformComponent`（位移终点）、`WorldClock`（顿帧毫秒换帧）、`SkillBookComponent`（槽位下标换字母）
 // 写：追踪行（本系统拥有生命周期，帧初清空）
 // 消费：—
 // 产生：—
@@ -15,7 +15,7 @@ std::string entityKey(World& world, Entity entity)
 {
     if (entity.value == 0)
         return "-";
-    const auto& identity = world.ecs().get<Identity>(entity);
+    const auto& identity = world.ecs().get<IdentityComponent>(entity);
     const char* stem     = identity.m_kind == SpawnKind::Effect ? "fx" : "role";
     return std::string(stem) + ':' + std::to_string(identity.m_configId) + '#' +
            std::to_string(identity.m_ordinal);
@@ -48,9 +48,9 @@ const char* hitResultName(HitResult result)
 // 槽位下标 → 槽位字母。
 std::string slotLetter(World& world, const CastEvent& event)
 {
-    if (!world.ecs().has<SkillBook>(event.m_entity))
+    if (!world.ecs().has<SkillBookComponent>(event.m_entity))
         return "?";
-    const auto& slots = world.ecs().get<SkillBook>(event.m_entity).m_slots;
+    const auto& slots = world.ecs().get<SkillBookComponent>(event.m_entity).m_slots;
     if (event.m_slot < 0 || static_cast<size_t>(event.m_slot) >= slots.size())
         return "?";
     return slots[static_cast<size_t>(event.m_slot)];
@@ -62,7 +62,7 @@ int32_t stopFrames(Fixed freezeMs, Fixed dtMs)
 }
 }  // namespace
 
-// 系统 DebugSink：11.2 行，见 DESIGN.md §3.2。把事实队列翻译成追踪行。
+// 系统 DebugSinkSystem：11.2 行，见 DESIGN.md §3.2。把事实队列翻译成追踪行。
 void runDebugSink(World& world)
 {
     world.clearTraceLines();
@@ -82,7 +82,7 @@ void runDebugSink(World& world)
     {
         const std::string owner = entityKey(world, event.m_owner);
         const std::string key   = entityKey(world, event.m_entity);
-        const auto& identity    = ecs.get<Identity>(event.m_entity);
+        const auto& identity    = ecs.get<IdentityComponent>(event.m_entity);
         if (event.m_kind == SpawnKind::Effect || event.m_kind == SpawnKind::Role)
             if (identity.m_born.m_frame != 0)
                 world.appendTrace("spawn " + owner + ' ' + key);
@@ -132,7 +132,7 @@ void runDebugSink(World& world)
             world.appendTrace("disp+ " + key + ' ' + std::to_string(event.m_curveId));
         else
         {
-            const auto& pos = ecs.get<Transform>(event.m_entity).m_position;
+            const auto& pos = ecs.get<TransformComponent>(event.m_entity).m_position;
             world.appendTrace("disp- " + key + ' ' + std::to_string(event.m_curveId) + ' ' +
                               std::to_string(toMilli(pos.x)) + ' ' + std::to_string(toMilli(pos.y)) + ' ' +
                               std::to_string(toMilli(pos.z)));

@@ -51,7 +51,7 @@ TEST_CASE("buff op Flag refcount SuperArmor Stun Frozen")
     h.admit(s);
     CHECK(hasFlag(h.world, h.self, ExtraState::SuperArmor));
     CHECK(hasFlag(h.world, h.self, ExtraState::Stun));
-    CHECK_FALSE(h.world.ecs().get<StatusFlags>(h.self).canMove());
+    CHECK_FALSE(h.world.ecs().get<StatusFlagsComponent>(h.self).canMove());
     h.remove(a);
     CHECK_FALSE(hasFlag(h.world, h.self, ExtraState::SuperArmor));
     CHECK(hasFlag(h.world, h.self, ExtraState::Stun));
@@ -62,7 +62,7 @@ TEST_CASE("buff op Flag refcount SuperArmor Stun Frozen")
 TEST_CASE("buff op SkillMod registers a scoped modifier")
 {
     Harness h;
-    auto& book = h.world.ecs().get<SkillBook>(h.self);
+    auto& book = h.world.ecs().get<SkillBookComponent>(h.self);
     book.m_slots  = {"A"};
     book.m_skills = {SkillRuntime{}};
     BuffDef def = makeBuff(nextBuffId());
@@ -138,7 +138,7 @@ TEST_CASE("buff op HpLock clamps applyDelta")
     h.admit(h.add(def));
     CHECK(statSum(h.world, h.self, kHpLockStat) == Fixed::fromInt(4000));
     health::rules::applyDelta(h.world, h.self, Fixed::fromInt(-9000), HpCause::Hit, h.self);
-    CHECK(h.world.ecs().get<Health>(h.self).m_hp == Fixed::fromInt(4000));
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_hp == Fixed::fromInt(4000));
 }
 
 TEST_CASE("buff op Shield absorbs then revokes")
@@ -151,12 +151,12 @@ TEST_CASE("buff op Shield absorbs then revokes")
     def.m_persistent.push_back(op);
     const int32_t id = h.add(def);
     h.admit(id);
-    CHECK(h.world.ecs().get<Health>(h.self).m_shield == Fixed::fromInt(30));
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_shield == Fixed::fromInt(30));
     health::rules::applyDelta(h.world, h.self, Fixed::fromInt(-10), HpCause::Hit, h.self);
-    CHECK(h.world.ecs().get<Health>(h.self).m_shield == Fixed::fromInt(20));
-    CHECK(h.world.ecs().get<Health>(h.self).m_hp == Fixed::fromInt(10000));
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_shield == Fixed::fromInt(20));
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_hp == Fixed::fromInt(10000));
     h.remove(id);
-    CHECK(h.world.ecs().get<Health>(h.self).m_shield == Fixed{});
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_shield == Fixed{});
 }
 
 TEST_CASE("buff op Taunt records applicator weight")
@@ -170,7 +170,7 @@ TEST_CASE("buff op Taunt records applicator weight")
     BuffContext ctx;
     ctx.m_applicator = h.other;
     h.admit(h.add(def), ctx);
-    const auto& table = h.world.ecs().get<TauntTable>(h.self);
+    const auto& table = h.world.ecs().get<TauntTableComponent>(h.self);
     REQUIRE(table.m_entries.size() == 1);
     CHECK(table.m_entries[0].m_applicator == h.other);
     CHECK(table.m_entries[0].m_weight == Fixed::fromInt(8));
@@ -215,53 +215,53 @@ TEST_CASE("buff op Visual emits CueEvent")
 TEST_CASE("buff op Dot applies standard hurt times coeff")
 {
     Harness h;
-    const Fixed hp = h.world.ecs().get<Health>(h.self).m_hp;
+    const Fixed hp = h.world.ecs().get<HealthComponent>(h.self).m_hp;
     BuffDef def = makeBuff(nextBuffId());
     BuffOp op;
     op.m_kind  = BuffOpKind::Dot;
     op.m_value = constVal("-1"_fx);
     def.m_onEnter.push_back(op);
     h.admit(h.add(def));
-    const Fixed after = h.world.ecs().get<Health>(h.self).m_hp;
+    const Fixed after = h.world.ecs().get<HealthComponent>(h.self).m_hp;
     CHECK(after < hp);
 }
 
 TEST_CASE("buff op Resource Hp Mp Ep Anger")
 {
     Harness h;
-    auto& health = h.world.ecs().get<Health>(h.self);
+    auto& health = h.world.ecs().get<HealthComponent>(h.self);
     health.m_hp = Fixed::fromInt(5000);
     health.m_mp = Fixed::fromInt(40);
     health.m_ep = Fixed::fromInt(100);
-    h.world.ecs().get<RageState>(h.self).m_rage = Fixed::fromInt(3);
+    h.world.ecs().get<RageStateComponent>(h.self).m_rage = Fixed::fromInt(3);
 
     SUBCASE("Hp")
     {
         BuffDef def = makeBuff(nextBuffId());
         def.m_onEnter.push_back(resourceOp(ResourceId::Hp, constVal(Fixed::fromInt(250))));
         h.admit(h.add(def));
-        CHECK(h.world.ecs().get<Health>(h.self).m_hp == Fixed::fromInt(5250));
+        CHECK(h.world.ecs().get<HealthComponent>(h.self).m_hp == Fixed::fromInt(5250));
     }
     SUBCASE("Mp")
     {
         BuffDef def = makeBuff(nextBuffId());
         def.m_onEnter.push_back(resourceOp(ResourceId::Mp, constVal(Fixed::fromInt(15))));
         h.admit(h.add(def));
-        CHECK(h.world.ecs().get<Health>(h.self).m_mp == Fixed::fromInt(55));
+        CHECK(h.world.ecs().get<HealthComponent>(h.self).m_mp == Fixed::fromInt(55));
     }
     SUBCASE("Ep")
     {
         BuffDef def = makeBuff(nextBuffId());
         def.m_onEnter.push_back(resourceOp(ResourceId::Ep, constVal(Fixed::fromInt(20))));
         h.admit(h.add(def));
-        CHECK(h.world.ecs().get<Health>(h.self).m_ep == Fixed::fromInt(120));
+        CHECK(h.world.ecs().get<HealthComponent>(h.self).m_ep == Fixed::fromInt(120));
     }
     SUBCASE("Anger")
     {
         BuffDef def = makeBuff(nextBuffId());
         def.m_onEnter.push_back(resourceOp(ResourceId::Anger, constVal(Fixed::fromInt(4))));
         h.admit(h.add(def));
-        CHECK(h.world.ecs().get<RageState>(h.self).m_rage == Fixed::fromInt(7));
+        CHECK(h.world.ecs().get<RageStateComponent>(h.self).m_rage == Fixed::fromInt(7));
     }
 }
 
@@ -301,7 +301,7 @@ TEST_CASE("buff op Apply Self Applicator EventTarget Area Sequential")
     }
     SUBCASE("Area")
     {
-        h.world.ecs().get<Transform>(h.other).m_position.x = Fixed::fromInt(80);
+        h.world.ecs().get<TransformComponent>(h.other).m_position.x = Fixed::fromInt(80);
         BuffDef def = makeBuff(nextBuffId());
         BuffOp op   = applyOp({childId}, ApplyTo::Area);
         op.m_i0     = 9;
@@ -395,7 +395,7 @@ TEST_CASE("buff op Count writes register used by Reg")
 TEST_CASE("buff op Cooldown Reset Add Reduce SetRatio")
 {
     Harness h;
-    auto& book = h.world.ecs().get<SkillBook>(h.self);
+    auto& book = h.world.ecs().get<SkillBookComponent>(h.self);
     book.m_slots = {"A"};
     SkillRuntime skill;
     skill.m_slot        = 0;
@@ -480,7 +480,7 @@ TEST_CASE("buff op Ability grants an InitAbility instance")
     op.m_i0   = abilityId;
     def.m_onEnter.push_back(op);
     h.admit(h.add(def));
-    CHECK(h.world.ecs().get<AbilityList>(h.self).m_instances.size() == 1);
+    CHECK(h.world.ecs().get<AbilityListComponent>(h.self).m_instances.size() == 1);
     bool soundCue = false;
     for (const auto& cue : h.world.ecs().singleton<EventQueue<CueEvent>>().m_items)
         if (cue.m_kind == CueKind::Sound && cue.m_id == 77)
@@ -508,7 +508,7 @@ TEST_CASE("buff op SpawnEffect queues a SpawnRequest")
     CHECK(found);
 }
 
-TEST_CASE("buff op EnterCrazy sets SkillCast flag")
+TEST_CASE("buff op EnterCrazy sets SkillCastComponent flag")
 {
     Harness h;
     BuffDef def = makeBuff(nextBuffId());
@@ -516,26 +516,26 @@ TEST_CASE("buff op EnterCrazy sets SkillCast flag")
     op.m_kind = BuffOpKind::EnterCrazy;
     def.m_onEnter.push_back(op);
     h.admit(h.add(def));
-    CHECK(h.world.ecs().get<SkillCast>(h.self).m_crazy);
+    CHECK(h.world.ecs().get<SkillCastComponent>(h.self).m_crazy);
 }
 
 TEST_CASE("buff op Interrupt force-cancels a cast")
 {
     Harness h;
-    auto& book = h.world.ecs().get<SkillBook>(h.self);
+    auto& book = h.world.ecs().get<SkillBookComponent>(h.self);
     book.m_slots = {"A"};
     SkillRuntime skill;
     skill.m_slot     = 0;
     skill.m_configId = 920000;
     book.m_skills.push_back(skill);
-    h.world.ecs().get<SkillCast>(h.self).m_skill = 0;
+    h.world.ecs().get<SkillCastComponent>(h.self).m_skill = 0;
     BuffDef def = makeBuff(nextBuffId());
     BuffOp op;
     op.m_kind = BuffOpKind::Interrupt;
     def.m_onEnter.push_back(op);
     h.admit(h.add(def));
-    CHECK(h.world.ecs().get<SkillCast>(h.self).m_skill == kNoSkill);
-    CHECK(h.world.ecs().get<SkillCast>(h.self).m_interrupted);
+    CHECK(h.world.ecs().get<SkillCastComponent>(h.self).m_skill == kNoSkill);
+    CHECK(h.world.ecs().get<SkillCastComponent>(h.self).m_interrupted);
 }
 
 TEST_CASE("buff op SetCost is a no-op but still admits")
@@ -623,18 +623,18 @@ TEST_CASE("buff op Watch Latched vs Edge")
 
     SUBCASE("Latched only acts on change")
     {
-        h.world.ecs().get<StatusFlags>(h.self).addFlag(BuffFlag::SuperArmor);
+        h.world.ecs().get<StatusFlagsComponent>(h.self).addFlag(BuffFlag::SuperArmor);
         const int32_t id = makeWatch(WatchMode::Latched);
         h.admit(id);
         h.tickBuff();
         CHECK(findBuff(h.world, h.self, childId) == nullptr);
-        h.world.ecs().get<StatusFlags>(h.self).removeFlag(BuffFlag::SuperArmor);
+        h.world.ecs().get<StatusFlagsComponent>(h.self).removeFlag(BuffFlag::SuperArmor);
         h.tickBuff();
         CHECK(findBuff(h.world, h.self, childId) != nullptr);
         CHECK(stackOf(h.world, h.self, childId) == 1);
         h.tickBuff();
         CHECK(stackOf(h.world, h.self, childId) == 1);
-        h.world.ecs().get<StatusFlags>(h.self).addFlag(BuffFlag::SuperArmor);
+        h.world.ecs().get<StatusFlagsComponent>(h.self).addFlag(BuffFlag::SuperArmor);
         h.tickBuff();
         CHECK(findBuff(h.world, h.self, childId) == nullptr);
     }
@@ -648,7 +648,7 @@ TEST_CASE("buff op Watch Latched vs Edge")
         h.tickBuff();
         auto countKids = [&]() {
             int32_t n = 0;
-            for (const auto& inst : h.world.ecs().get<BuffList>(h.self).m_instances)
+            for (const auto& inst : h.world.ecs().get<BuffListComponent>(h.self).m_instances)
                 if (inst.m_id == childId && !inst.m_removing)
                     ++n;
             return n;
@@ -675,7 +675,7 @@ TEST_CASE("buff op StateTimer admits kids after threshold")
     timer.m_ids   = {childId};
     def.m_watch.push_back(timer);
     h.admit(h.add(def));
-    h.world.ecs().get<RoleState>(h.self).m_state = RoleStateId::GetUp;
+    h.world.ecs().get<RoleStateComponent>(h.self).m_state = RoleStateId::GetUp;
     h.tickBuff();
     CHECK(findBuff(h.world, h.self, childId) == nullptr);
     h.tickBuff();
@@ -750,7 +750,7 @@ TEST_CASE("buff ValueExpr kinds")
     }
     SUBCASE("HpAmount floor")
     {
-        h.world.ecs().get<Health>(h.self).m_hp = Fixed::fromInt(9000);
+        h.world.ecs().get<HealthComponent>(h.self).m_hp = Fixed::fromInt(9000);
         ValueExpr expr;
         expr.m_kind = ValueKind::HpAmount;
         expr.m_a    = Fixed::fromInt(-50);
@@ -766,7 +766,7 @@ TEST_CASE("buff ValueExpr kinds")
     }
     SUBCASE("Lost")
     {
-        h.world.ecs().get<Health>(h.self).m_hp = Fixed::fromInt(2500);
+        h.world.ecs().get<HealthComponent>(h.self).m_hp = Fixed::fromInt(2500);
         ValueExpr expr;
         expr.m_kind = ValueKind::Lost;
         expr.m_res  = ResourceId::Hp;
@@ -775,7 +775,7 @@ TEST_CASE("buff ValueExpr kinds")
     }
     SUBCASE("Cur")
     {
-        h.world.ecs().get<Health>(h.self).m_hp = Fixed::fromInt(2500);
+        h.world.ecs().get<HealthComponent>(h.self).m_hp = Fixed::fromInt(2500);
         ValueExpr expr;
         expr.m_kind = ValueKind::Cur;
         expr.m_res  = ResourceId::Hp;
@@ -784,7 +784,7 @@ TEST_CASE("buff ValueExpr kinds")
     }
     SUBCASE("CurMul")
     {
-        h.world.ecs().get<Health>(h.self).m_hp = Fixed::fromInt(40);
+        h.world.ecs().get<HealthComponent>(h.self).m_hp = Fixed::fromInt(40);
         ValueExpr expr;
         expr.m_kind = ValueKind::CurMul;
         expr.m_res  = ResourceId::Hp;
@@ -793,7 +793,7 @@ TEST_CASE("buff ValueExpr kinds")
     }
     SUBCASE("HpMaxAdjust")
     {
-        h.world.ecs().get<Health>(h.self).m_hp = Fixed::fromInt(10000);
+        h.world.ecs().get<HealthComponent>(h.self).m_hp = Fixed::fromInt(10000);
         ValueExpr expr;
         expr.m_kind = ValueKind::HpMaxAdjust;
         expr.m_a    = Fixed::fromInt(1);
@@ -837,7 +837,7 @@ TEST_CASE("buff ValueExpr kinds")
     }
     SUBCASE("CoolingSlots")
     {
-        auto& book = h.world.ecs().get<SkillBook>(h.self);
+        auto& book = h.world.ecs().get<SkillBookComponent>(h.self);
         book.m_slots = {"A", "B"};
         SkillRuntime a;
         a.m_slot   = 0;
@@ -856,7 +856,7 @@ TEST_CASE("buff ValueExpr kinds")
     }
     SUBCASE("CoolingSlotTable")
     {
-        auto& book = h.world.ecs().get<SkillBook>(h.self);
+        auto& book = h.world.ecs().get<SkillBookComponent>(h.self);
         book.m_slots = {"A"};
         SkillRuntime a;
         a.m_slot   = 0;
@@ -870,7 +870,7 @@ TEST_CASE("buff ValueExpr kinds")
     }
     SUBCASE("ComboTable")
     {
-        h.world.ecs().get<ComboMeter>(h.self).m_grade = 2;
+        h.world.ecs().get<ComboMeterComponent>(h.self).m_grade = 2;
         ValueExpr expr;
         expr.m_kind  = ValueKind::ComboTable;
         expr.m_table = {Fixed::fromInt(1), Fixed::fromInt(2), Fixed::fromInt(9)};
@@ -922,7 +922,7 @@ TEST_CASE("buff op Stat live replaces the mod each Tick")
 {
     Harness h;
     h.setTickSeconds(1);
-    h.world.ecs().get<Health>(h.self).m_hp = Fixed::fromInt(5000);
+    h.world.ecs().get<HealthComponent>(h.self).m_hp = Fixed::fromInt(5000);
     BuffDef def = makeBuff(nextBuffId());
     def.m_lifecycle.m_times = -1;
     def.m_activation.m_latchOn =
@@ -934,7 +934,7 @@ TEST_CASE("buff op Stat live replaces the mod each Tick")
     def.m_persistent.push_back(statOp(BuffStat::Atk, expr, true));
     h.admit(h.add(def));
     CHECK(statSum(h.world, h.self, 5) == "0.5"_fx);
-    h.world.ecs().get<Health>(h.self).m_hp = Fixed::fromInt(2500);
+    h.world.ecs().get<HealthComponent>(h.self).m_hp = Fixed::fromInt(2500);
     h.tickBuff();
     CHECK(statSum(h.world, h.self, 5) == "0.25"_fx);
 }

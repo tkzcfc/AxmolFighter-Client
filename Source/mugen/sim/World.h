@@ -53,11 +53,11 @@ public:
     void setDrawPolicy(const DrawPolicy* policy) { m_drawPolicy = policy; }
     // 返回当前抽样策略，未设置时为空。
     const DrawPolicy* drawPolicy() const { return m_drawPolicy; }
-    // DebugSink 写入的追踪行（非序列化）。DebugSink 每帧开始时清空，摘要导出在 tick 之后读取。
+    // DebugSinkSystem 写入的追踪行（非序列化）。DebugSinkSystem 每帧开始时清空，摘要导出在 tick 之后读取。
     const std::vector<std::string>& traceLines() const { return m_traceLines; }
-    // 追加一条追踪行（DebugSink 调用）。
+    // 追加一条追踪行（DebugSinkSystem 调用）。
     void appendTrace(std::string line) { m_traceLines.push_back(std::move(line)); }
-    // 清空追踪行（DebugSink 调用）。
+    // 清空追踪行（DebugSinkSystem 调用）。
     void clearTraceLines() { m_traceLines.clear(); }
     // 同步触发链重入状态。不进快照。
     BuffDispatch& buffChain() { return m_buffChain; }
@@ -73,7 +73,7 @@ private:
     const FrameInput* m_input = nullptr;
     // 抽样策略，非拥有、不参与快照/哈希/克隆。
     const DrawPolicy* m_drawPolicy = nullptr;
-    // DebugSink 追踪行。不参与快照、哈希与克隆。
+    // DebugSinkSystem 追踪行。不参与快照、哈希与克隆。
     std::vector<std::string> m_traceLines;
     // 同步触发链。不进快照、哈希与克隆。
     BuffDispatch m_buffChain;

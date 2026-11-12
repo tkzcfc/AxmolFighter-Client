@@ -72,17 +72,17 @@ TEST_CASE("buff lifecycle times=-1 interval=0 ticks every frame")
 {
     Harness h;
     h.setTickSeconds(1);
-    const Fixed hp = h.world.ecs().get<Health>(h.self).m_hp;
+    const Fixed hp = h.world.ecs().get<HealthComponent>(h.self).m_hp;
     BuffDef def    = makeBuff(nextBuffId());
     def.m_lifecycle.m_times = -1;
     def.m_onTick.push_back(resourceOp(ResourceId::Hp, constVal(Fixed::fromInt(-3))));
     const int32_t id = h.add(def);
     h.admit(id);
-    CHECK(h.world.ecs().get<Health>(h.self).m_hp == hp);
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_hp == hp);
     h.tickBuff();
-    CHECK(h.world.ecs().get<Health>(h.self).m_hp == hp - Fixed::fromInt(3));
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_hp == hp - Fixed::fromInt(3));
     h.tickBuff();
-    CHECK(h.world.ecs().get<Health>(h.self).m_hp == hp - Fixed::fromInt(6));
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_hp == hp - Fixed::fromInt(6));
 }
 
 TEST_CASE("buff lifecycle times>0 interval drives Enter then drop")
@@ -111,13 +111,13 @@ TEST_CASE("buff lifecycle executeType 2 waits for interval")
     def.m_lifecycle.m_intervalSec = Fixed::fromInt(1);
     def.m_onTick.push_back(resourceOp(ResourceId::Hp, constVal(Fixed::fromInt(-8))));
     const int32_t id = h.add(def);
-    const Fixed hp   = h.world.ecs().get<Health>(h.self).m_hp;
+    const Fixed hp   = h.world.ecs().get<HealthComponent>(h.self).m_hp;
     h.admit(id);
-    CHECK(h.world.ecs().get<Health>(h.self).m_hp == hp);
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_hp == hp);
     h.tickBuff();
-    CHECK(h.world.ecs().get<Health>(h.self).m_hp == hp);
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_hp == hp);
     h.tickBuff();
-    CHECK(h.world.ecs().get<Health>(h.self).m_hp == hp - Fixed::fromInt(8));
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_hp == hp - Fixed::fromInt(8));
 }
 
 TEST_CASE("buff lifecycle executeType 3 waits for trigger")
@@ -181,7 +181,7 @@ TEST_CASE("buff latch does not reapply Flag on stacking")
     h.admit(id);
     h.admit(id);
     CHECK(findBuff(h.world, h.self, id)->m_stacks == 2);
-    CHECK(h.world.ecs().get<StatusFlags>(h.self).m_refs[static_cast<size_t>(ExtraState::SuperArmor) - 1] == 1);
+    CHECK(h.world.ecs().get<StatusFlagsComponent>(h.self).m_refs[static_cast<size_t>(ExtraState::SuperArmor) - 1] == 1);
     h.remove(id);
     CHECK_FALSE(hasFlag(h.world, h.self, ExtraState::SuperArmor));
 }
@@ -203,12 +203,12 @@ TEST_CASE("buff R7 new instance skips the in-flight AfterHit dispatch")
     apply.m_to   = ApplyTo::Self;
     parent.m_onBegin.push_back(apply);
     h.admit(h.add(parent));
-    const Fixed hp = h.world.ecs().get<Health>(h.self).m_hp;
+    const Fixed hp = h.world.ecs().get<HealthComponent>(h.self).m_hp;
     h.fire(TriggerPoint::AfterHit);
     REQUIRE(findBuff(h.world, h.self, childId) != nullptr);
-    CHECK(h.world.ecs().get<Health>(h.self).m_hp == hp);
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_hp == hp);
     h.fire(TriggerPoint::AfterHit);
-    CHECK(h.world.ecs().get<Health>(h.self).m_hp == hp - Fixed::fromInt(100));
+    CHECK(h.world.ecs().get<HealthComponent>(h.self).m_hp == hp - Fixed::fromInt(100));
 }
 
 TEST_CASE("buff R16 trigger chain depth is capped at 8")
@@ -225,7 +225,7 @@ TEST_CASE("buff R16 trigger chain depth is capped at 8")
     def.m_onBegin.push_back(apply);
     h.add(def);
     h.admit(id);
-    const auto count = static_cast<int32_t>(h.world.ecs().get<BuffList>(h.self).m_instances.size());
+    const auto count = static_cast<int32_t>(h.world.ecs().get<BuffListComponent>(h.self).m_instances.size());
     CHECK(count == 9);
     CHECK(count <= 9);
 }
@@ -241,21 +241,21 @@ TEST_CASE("buff add CD rejects a second admit")
     const uint32_t serial = findBuff(h.world, h.self, id)->m_serial;
     h.admit(id);
     CHECK(findBuff(h.world, h.self, id)->m_serial == serial);
-    CHECK(h.world.ecs().get<BuffList>(h.self).m_instances.size() == 1);
+    CHECK(h.world.ecs().get<BuffListComponent>(h.self).m_instances.size() == 1);
 }
 
-TEST_CASE("buff Inactive and Despawning reject admit")
+TEST_CASE("buff InactiveComponent and DespawningComponent reject admit")
 {
     Harness h;
     BuffDef def = makeBuff(nextBuffId());
     const int32_t id = h.add(def);
-    h.world.ecs().add(h.self, Inactive{});
+    h.world.ecs().add(h.self, InactiveComponent{});
     h.admit(id);
-    CHECK(h.world.ecs().get<BuffList>(h.self).m_instances.empty());
-    h.world.ecs().remove<Inactive>(h.self);
-    h.world.ecs().add(h.self, Despawning{});
+    CHECK(h.world.ecs().get<BuffListComponent>(h.self).m_instances.empty());
+    h.world.ecs().remove<InactiveComponent>(h.self);
+    h.world.ecs().add(h.self, DespawningComponent{});
     h.admit(id);
-    CHECK(h.world.ecs().get<BuffList>(h.self).m_instances.empty());
+    CHECK(h.world.ecs().get<BuffListComponent>(h.self).m_instances.empty());
 }
 
 TEST_CASE("buff probability uses DrawPolicy")
@@ -292,7 +292,7 @@ TEST_CASE("buff snapshot round trip keeps instances and hash")
     REQUIRE(restored.deserialize(buffer));
     CHECK(restored.hash() == h.world.hash());
     Entity restoredSelf;
-    restored.ecs().each<Identity>([&](Entity entity, const Identity& identity) {
+    restored.ecs().each<IdentityComponent>([&](Entity entity, const IdentityComponent& identity) {
         if (identity.m_roleType == 1)
             restoredSelf = entity;
     });

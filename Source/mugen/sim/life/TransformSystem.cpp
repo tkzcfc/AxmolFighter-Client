@@ -1,6 +1,6 @@
 // [9.2] TransformSystem
 // 读：`TransformRequest`
-// 写：新形态实体、旧形态加 `Inactive`、`TransformLink`
+// 写：新形态实体、旧形态加 `InactiveComponent`、`TransformLink`
 // 消费：`TransformRequest`
 // 产生：`SpawnEvent`、`CueEvent`
 #include "mugen/sim/Systems.h"

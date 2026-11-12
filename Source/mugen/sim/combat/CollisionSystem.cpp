@@ -1,6 +1,6 @@
 // [7.1] CollisionSystem
-// 读：`Hitboxes`、`Transform`、`Identity`(阵营)、`ContactMemory`
-// 写：`ContactMemory`
+// 读：`HitboxesComponent`、`TransformComponent`、`IdentityComponent`(阵营)、`ContactMemoryComponent`
+// 写：`ContactMemoryComponent`
 // 消费：—
 // 产生：`ContactEvent`
 #include "mugen/sim/Systems.h"
@@ -12,7 +12,7 @@ namespace mugen::sim
 namespace
 {
 // 双方阵营掩码是否互相允许碰撞。
-bool inHostileMasks(const Identity& first, const Identity& second)
+bool inHostileMasks(const IdentityComponent& first, const IdentityComponent& second)
 {
     return (static_cast<uint32_t>(first.m_hostileMask) & static_cast<uint32_t>(second.m_camp)) != 0 &&
            (static_cast<uint32_t>(second.m_hostileMask) & static_cast<uint32_t>(first.m_camp)) != 0;
@@ -30,7 +30,7 @@ bool intersects(const WorldBox& first, const WorldBox& second, FixedVec2& point)
     return true;
 }
 // 攻击框 × 受击框的首个接触点。
-bool isContacting(const Hitboxes& first, const Hitboxes& second, FixedVec2& point)
+bool isContacting(const HitboxesComponent& first, const HitboxesComponent& second, FixedVec2& point)
 {
     for (const auto& attack : first.m_attack)
         for (const auto& damage : second.m_damage)
@@ -45,25 +45,25 @@ void runCollision(World& world)
 {
     const uint64_t frame = world.frame();
     std::vector<Entity> colliders;
-    world.ecs().each<Identity, Hitboxes>([&](Entity entity, const Identity&, const Hitboxes&) {
+    world.ecs().each<IdentityComponent, HitboxesComponent>([&](Entity entity, const IdentityComponent&, const HitboxesComponent&) {
         colliders.push_back(entity);
     });
     for (const Entity collider : colliders)
     {
-        const auto& source      = world.ecs().get<Hitboxes>(collider);
-        const auto& sourceIdent = world.ecs().get<Identity>(collider);
-        const auto& sourceTrans = world.ecs().get<Transform>(collider);
-        if (!world.ecs().has<ContactMemory>(collider))
-            world.ecs().add(collider, ContactMemory{});
-        auto& memory = world.ecs().get<ContactMemory>(collider);
+        const auto& source      = world.ecs().get<HitboxesComponent>(collider);
+        const auto& sourceIdent = world.ecs().get<IdentityComponent>(collider);
+        const auto& sourceTrans = world.ecs().get<TransformComponent>(collider);
+        if (!world.ecs().has<ContactMemoryComponent>(collider))
+            world.ecs().add(collider, ContactMemoryComponent{});
+        auto& memory = world.ecs().get<ContactMemoryComponent>(collider);
         std::vector<Entity> active;
         for (const Entity other : colliders)
         {
             if (collider == other)
                 continue;
-            const auto& target      = world.ecs().get<Hitboxes>(other);
-            const auto& targetIdent = world.ecs().get<Identity>(other);
-            const auto& targetTrans = world.ecs().get<Transform>(other);
+            const auto& target      = world.ecs().get<HitboxesComponent>(other);
+            const auto& targetIdent = world.ecs().get<IdentityComponent>(other);
+            const auto& targetTrans = world.ecs().get<TransformComponent>(other);
             // 出生帧内实体不参与碰撞（R3）。
             if (sourceIdent.m_born.m_frame == frame || targetIdent.m_born.m_frame == frame)
                 continue;

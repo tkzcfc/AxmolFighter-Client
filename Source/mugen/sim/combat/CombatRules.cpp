@@ -15,8 +15,8 @@ namespace
 // 标准伤害：英雄用物攻 + 等级标准，其他单位用基础伤害 + 十级分段标准。
 Fixed standardHurt(World& world, Entity attacker)
 {
-    const auto& identity = world.ecs().get<Identity>(attacker);
-    const auto& stats    = world.ecs().get<Stats>(attacker);
+    const auto& identity = world.ecs().get<IdentityComponent>(attacker);
+    const auto& stats    = world.ecs().get<StatsComponent>(attacker);
     const bool hero      = identity.m_roleType == 1;
     const int32_t level  = hero ? identity.m_level : std::max(1, identity.m_level / 10);
     const auto* row      = conf::Config::instance().find<conf::SkillHurtConfig>(level);
@@ -24,7 +24,7 @@ Fixed standardHurt(World& world, Entity attacker)
         return {};
     return stats.value(hero ? 5 : 15) + Fixed::fromInt(hero ? row->hurt : row->monsterHurt);
 }
-// 发出顿帧事实。毫秒到帧的换算留给 DebugSink。
+// 发出顿帧事实。毫秒到帧的换算留给 DebugSinkSystem。
 void emitHitStop(World& world, Entity entity, Fixed freezeMs)
 {
     HitStopEvent event;
@@ -40,27 +40,27 @@ bool gate(World& world, const ContactEvent& contact, HitContext& ctx)
     const Entity effect = contact.m_a;
     const Entity target = contact.m_b;
     auto& ecs           = world.ecs();
-    if (!ecs.alive(effect) || ecs.has<Despawning>(effect) || !ecs.has<EffectInfo>(effect))
+    if (!ecs.alive(effect) || ecs.has<DespawningComponent>(effect) || !ecs.has<EffectInfoComponent>(effect))
         return false;
-    if (!ecs.alive(target) || ecs.has<Despawning>(target) || !ecs.has<Health>(target))
+    if (!ecs.alive(target) || ecs.has<DespawningComponent>(target) || !ecs.has<HealthComponent>(target))
         return false;
-    const auto& effectInfo = ecs.get<EffectInfo>(effect);
+    const auto& effectInfo = ecs.get<EffectInfoComponent>(effect);
     const auto* effectRow  = conf::Config::instance().find<conf::battle::EffectDef>(effectInfo.m_configId);
     if (!effectRow || effectRow->hitId <= 0)
         return false;
     const auto* hitRow = conf::Config::instance().find<conf::battle::HitDef>(effectRow->hitId);
     if (!hitRow)
         return false;
-    if (!ecs.alive(effectInfo.m_owner) || !ecs.has<Stats>(effectInfo.m_owner))
+    if (!ecs.alive(effectInfo.m_owner) || !ecs.has<StatsComponent>(effectInfo.m_owner))
         return false;
-    const auto& ownerIdentity  = ecs.get<Identity>(effectInfo.m_owner);
-    const auto& targetIdentity = ecs.get<Identity>(target);
+    const auto& ownerIdentity  = ecs.get<IdentityComponent>(effectInfo.m_owner);
+    const auto& targetIdentity = ecs.get<IdentityComponent>(target);
     if ((static_cast<uint32_t>(ownerIdentity.m_hostileMask) & static_cast<uint32_t>(targetIdentity.m_camp)) !=
         static_cast<uint32_t>(targetIdentity.m_camp))
         return false;
 
-    const auto& tracker      = ecs.get<HitTracker>(effect);
-    const auto& targetHealth = ecs.get<Health>(target);
+    const auto& tracker      = ecs.get<HitTrackerComponent>(effect);
+    const auto& targetHealth = ecs.get<HealthComponent>(target);
     if (tracker.m_hitInterval > Fixed{} || (hitRow->hitCounts != -1 && tracker.m_hitCount >= hitRow->hitCounts))
         return false;
     if (targetHealth.isDead() || !targetHealth.m_beHitEnabled)
@@ -90,7 +90,7 @@ bool gate(World& world, const ContactEvent& contact, HitContext& ctx)
 // 命中间隔不在本步写入：旧实现把间隔推迟到帧末（下一帧初）才设置，同帧多个目标都能命中。
 void recordHit(World& world, const HitContext& ctx)
 {
-    auto& tracker = world.ecs().get<HitTracker>(ctx.m_effect);
+    auto& tracker = world.ecs().get<HitTrackerComponent>(ctx.m_effect);
     if (ctx.m_hit->hitInterval == -1)
         tracker.m_hitTargets.push_back(ctx.m_target);
     ++tracker.m_hitCount;
@@ -99,10 +99,10 @@ void recordHit(World& world, const HitContext& ctx)
 // 帧末提交命中间隔：本帧发生过命中的特效从下一帧起进入间隔冷却。
 void commitHitInterval(World& world, Entity effect)
 {
-    auto& tracker = world.ecs().get<HitTracker>(effect);
-    if (world.ecs().has<EffectInfo>(effect))
+    auto& tracker = world.ecs().get<HitTrackerComponent>(effect);
+    if (world.ecs().has<EffectInfoComponent>(effect))
     {
-        const auto& info = world.ecs().get<EffectInfo>(effect);
+        const auto& info = world.ecs().get<EffectInfoComponent>(effect);
         const auto* effectRow = conf::Config::instance().find<conf::battle::EffectDef>(info.m_configId);
         const auto* hitRow = effectRow && effectRow->hitId > 0
                                  ? conf::Config::instance().find<conf::battle::HitDef>(effectRow->hitId)
@@ -118,8 +118,8 @@ bool resolveDodge(World& world, const HitContext& ctx)
     if (ctx.m_hit->hitMust != 0)
         return false;
     DamageInput input;
-    input.m_attacker = &world.ecs().get<Stats>(ctx.m_attacker);
-    input.m_target   = &world.ecs().get<Stats>(ctx.m_target);
+    input.m_attacker = &world.ecs().get<StatsComponent>(ctx.m_attacker);
+    input.m_target   = &world.ecs().get<StatsComponent>(ctx.m_target);
     input.m_hit      = ctx.m_hit;
     if (!attributeDodge(input, rng::draw(world, rng::DrawKind::Dodge)))
         return false;
@@ -137,8 +137,8 @@ bool resolveDodge(World& world, const HitContext& ctx)
 void computeDamage(World& world, HitContext& ctx)
 {
     DamageInput input;
-    input.m_attacker     = &world.ecs().get<Stats>(ctx.m_attacker);
-    input.m_target       = &world.ecs().get<Stats>(ctx.m_target);
+    input.m_attacker     = &world.ecs().get<StatsComponent>(ctx.m_attacker);
+    input.m_target       = &world.ecs().get<StatsComponent>(ctx.m_target);
     input.m_hit          = ctx.m_hit;
     input.m_standardHurt = standardHurt(world, ctx.m_attacker);
     const Fixed critDraw  = rng::draw(world, rng::DrawKind::Crit);
@@ -152,22 +152,22 @@ void applyDamage(World& world, const HitContext& ctx)
     health::rules::applyDelta(world, ctx.m_target, -ctx.m_damage, HpCause::Hit, ctx.m_attacker, ctx.m_effect);
 }
 
-// 步骤 10：特效与攻击者覆盖写 Pause（R18），受击者经 ScheduledActions 延迟写入（R13）。
+// 步骤 10：特效与攻击者覆盖写 PauseComponent（R18），受击者经 ScheduledActions 延迟写入（R13）。
 void applyHitStop(World& world, const HitContext& ctx)
 {
     const Fixed freeze = Fixed::fromInt(ctx.m_hit->freezeTime);
     auto& ecs          = world.ecs();
     if (ctx.m_hit->freezeTimeControlEffect == 0)
     {
-        ecs.get<Pause>(ctx.m_effect).m_freezeMs = freeze;
+        ecs.get<PauseComponent>(ctx.m_effect).m_freezeMs = freeze;
         emitHitStop(world, ctx.m_effect, freeze);
     }
     if (ctx.m_hit->freezeTimeControlRole == 0)
     {
-        ecs.get<Pause>(ctx.m_attacker).m_freezeMs = freeze;
+        ecs.get<PauseComponent>(ctx.m_attacker).m_freezeMs = freeze;
         emitHitStop(world, ctx.m_attacker, freeze);
     }
-    if (ecs.has<Pause>(ctx.m_target))
+    if (ecs.has<PauseComponent>(ctx.m_target))
     {
         auto& actions = ecs.singleton<ScheduledActions>();
         actions.cancelOwner(ctx.m_target);
@@ -179,10 +179,10 @@ void applyHitStop(World& world, const HitContext& ctx)
 void requestHitReaction(World& world, const HitContext& ctx)
 {
     auto& ecs              = world.ecs();
-    const auto& roleState  = ecs.get<RoleState>(ctx.m_target);
+    const auto& roleState  = ecs.get<RoleStateComponent>(ctx.m_target);
     const bool inHitFamily = role::isHitState(roleState.m_state);
-    const auto& targetIdentity = ecs.get<Identity>(ctx.m_target);
-    const bool dead             = health::rules::isDead(ecs.get<Health>(ctx.m_target));
+    const auto& targetIdentity = ecs.get<IdentityComponent>(ctx.m_target);
+    const bool dead             = health::rules::isDead(ecs.get<HealthComponent>(ctx.m_target));
     const auto* roleRow =
         conf::Config::instance().find<conf::battle::RoleDef>(targetIdentity.m_configId);
     // 受击族内再次被击中时，旧实现只对非英雄/非 Boss 或未死目标排队 hit_id；英雄和 Boss 已死时不排队，
@@ -190,11 +190,11 @@ void requestHitReaction(World& world, const HitContext& ctx)
     const bool heroOrBoss = targetIdentity.m_roleType == 1 || targetIdentity.m_roleType == 4;
     const bool skipHitQueue = inHitFamily && dead && heroOrBoss;
 
-    auto& hitState              = ecs.get<HitState>(ctx.m_target);
-    const auto& effectTransform = ecs.get<Transform>(ctx.m_effect);
+    auto& hitState              = ecs.get<HitStateComponent>(ctx.m_target);
+    const auto& effectTransform = ecs.get<TransformComponent>(ctx.m_effect);
     const int32_t facing        = -effectTransform.m_towardX;
-    ecs.get<Transform>(ctx.m_target).m_towardX = facing;
-    ecs.get<Transform>(ctx.m_target).m_vectorX = Fixed::fromInt(facing);
+    ecs.get<TransformComponent>(ctx.m_target).m_towardX = facing;
+    ecs.get<TransformComponent>(ctx.m_target).m_vectorX = Fixed::fromInt(facing);
     Fixed stiff                                = Fixed::fromInt(ctx.m_hit->stiffTime);
     if (roleRow && roleRow->hitStiffTime != -1)
         stiff = Fixed::fromInt(roleRow->hitStiffTime);
@@ -227,7 +227,7 @@ void spawnHitEffects(World& world, const HitContext& ctx)
 // 步骤 15：命中结果。音效 Cue 留给 S2。
 void emitHit(World& world, const HitContext& ctx)
 {
-    const auto& targetHealth = world.ecs().get<Health>(ctx.m_target);
+    const auto& targetHealth = world.ecs().get<HealthComponent>(ctx.m_target);
     HitEvent hitEvent;
     hitEvent.m_attacker = ctx.m_attacker;
     hitEvent.m_effect   = ctx.m_effect;

@@ -43,7 +43,7 @@ struct StatMod
     MG_REFLECT(StatMod, m_stat, m_value, m_source, m_live)
 };
 // 角色基础、叠加和扩展属性（与旧实现 Attributes 一致）。
-struct Stats
+struct StatsComponent
 {
     // 基础属性。
     std::array<Fixed, kBaseStatCount> m_base{};
@@ -84,6 +84,6 @@ struct Stats
     }
     // 按来源登记的修正。
     std::vector<StatMod> m_mods;
-    MG_REFLECT(Stats, m_base, m_overlay, m_extend, m_mods)
+    MG_REFLECT(StatsComponent, m_base, m_overlay, m_extend, m_mods)
 };
 }  // namespace mugen::sim

@@ -1,8 +1,8 @@
 // [4.3a] TimelineSystem(roles) / [4.3b] TimelineSystem(effects)
-// 读：`ActionTimeline`、`SkillCast`、`RoleState`、`MotionState` 完成位、`EffectInfo`、`WorldClock`
-// 写：`ActionTimeline`、`MotionState`、`Displacement`、`SkillCast`
+// 读：`ActionTimelineComponent`、`SkillCastComponent`、`RoleStateComponent`、`MotionStateComponent` 完成位、`EffectInfoComponent`、`WorldClock`
+// 写：`ActionTimelineComponent`、`MotionStateComponent`、`DisplacementComponent`、`SkillCastComponent`
 // 消费：—
-// 产生：`SpawnRequest`、`CastEvent`、`BuffEvent`、`DespawnRequest`；特效片段放完打 `Despawning`；位移事实由 displacement::rules 产生
+// 产生：`SpawnRequest`、`CastEvent`、`BuffEvent`、`DespawnRequest`；特效片段放完打 `DespawningComponent`；位移事实由 displacement::rules 产生
 #include "mugen/sim/Systems.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/skill/SkillRules.h"
@@ -14,7 +14,7 @@ namespace mugen::sim
 namespace
 {
 // 当前片段放完或取消窗口打开后，切下一片段或结束施法。
-void finishRoleClip(World& world, Entity entity, ActionTimeline& timeline, SkillCast& cast)
+void finishRoleClip(World& world, Entity entity, ActionTimelineComponent& timeline, SkillCastComponent& cast)
 {
     timeline::rules::exitClip(world, entity);
     ++timeline.m_index;
@@ -33,9 +33,9 @@ void finishRoleClip(World& world, Entity entity, ActionTimeline& timeline, Skill
 // 系统 TimelineSystem(roles)：4.3a 行。只有 Attack 推进角色时间轴。
 void runTimelineRoles(World& world)
 {
-    world.ecs().each<ActionTimeline, SkillCast, MotionState, RoleState>(
-        [&](Entity entity, ActionTimeline& timeline, SkillCast& cast, MotionState&, const RoleState& state) {
-            if (world.ecs().has<Despawning>(entity) || world.ecs().has<Inactive>(entity))
+    world.ecs().each<ActionTimelineComponent, SkillCastComponent, MotionStateComponent, RoleStateComponent>(
+        [&](Entity entity, ActionTimelineComponent& timeline, SkillCastComponent& cast, MotionStateComponent&, const RoleStateComponent& state) {
+            if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
                 return;
             if (state.m_state != RoleStateId::Attack)
                 return;
@@ -47,7 +47,7 @@ void runTimelineRoles(World& world)
                 timeline.m_deferAdvance = false;
                 return;
             }
-            if (const Pause* pause = world.ecs().tryGet<Pause>(entity))
+            if (const PauseComponent* pause = world.ecs().tryGet<PauseComponent>(entity))
                 if (pause->m_paused)
                     return;
             if (timeline.m_clips.empty() || timeline.m_clipId == 0)
@@ -71,9 +71,9 @@ void runTimelineRoles(World& world)
 // 系统 TimelineSystem(effects)：4.3b 行。片段在出生时已同步进入。
 void runTimelineEffects(World& world)
 {
-    world.ecs().each<ActionTimeline, EffectInfo, MotionState>(
-        [&](Entity entity, ActionTimeline& timeline, const EffectInfo&, MotionState&) {
-            if (world.ecs().has<Despawning>(entity) || world.ecs().has<Inactive>(entity))
+    world.ecs().each<ActionTimelineComponent, EffectInfoComponent, MotionStateComponent>(
+        [&](Entity entity, ActionTimelineComponent& timeline, const EffectInfoComponent&, MotionStateComponent&) {
+            if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
                 return;
             if (timeline.m_finished)
                 return;
@@ -82,7 +82,7 @@ void runTimelineEffects(World& world)
                 timeline.m_deferAdvance = false;
                 return;
             }
-            if (const Pause* pause = world.ecs().tryGet<Pause>(entity))
+            if (const PauseComponent* pause = world.ecs().tryGet<PauseComponent>(entity))
                 if (pause->m_paused)
                     return;
             if (timeline.m_clipId == 0)
@@ -97,7 +97,7 @@ void runTimelineEffects(World& world)
             if (timeline.m_index >= static_cast<int32_t>(timeline.m_clips.size()))
             {
                 timeline.m_finished = true;
-                world.ecs().add(entity, Despawning{});
+                world.ecs().add(entity, DespawningComponent{});
                 world.ecs().singleton<EventQueue<DespawnRequest>>().push({entity, DespawnReason::ClipEnd});
                 return;
             }

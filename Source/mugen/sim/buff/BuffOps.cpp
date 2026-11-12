@@ -18,12 +18,12 @@ using namespace conf::battle;
 // 根实体：召唤链的最外层，否则自身。
 Entity rootOf(World& world, Entity entity)
 {
-    if (!world.ecs().alive(entity) || !world.ecs().has<Identity>(entity))
+    if (!world.ecs().alive(entity) || !world.ecs().has<IdentityComponent>(entity))
         return entity;
-    const auto& identity = world.ecs().get<Identity>(entity);
-    if (world.ecs().alive(identity.m_rootOwner) && world.ecs().has<Stats>(identity.m_rootOwner))
+    const auto& identity = world.ecs().get<IdentityComponent>(entity);
+    if (world.ecs().alive(identity.m_rootOwner) && world.ecs().has<StatsComponent>(identity.m_rootOwner))
         return identity.m_rootOwner;
-    if (world.ecs().alive(identity.m_owner) && world.ecs().has<Stats>(identity.m_owner))
+    if (world.ecs().alive(identity.m_owner) && world.ecs().has<StatsComponent>(identity.m_owner))
         return identity.m_owner;
     return entity;
 }
@@ -31,9 +31,9 @@ Entity rootOf(World& world, Entity entity)
 // 登记或替换一条属性修正。
 void putStat(World& world, Entity entity, int32_t stat, Fixed value, uint32_t source, bool replace)
 {
-    if (!world.ecs().has<Stats>(entity))
+    if (!world.ecs().has<StatsComponent>(entity))
         return;
-    auto& mods = world.ecs().get<Stats>(entity).m_mods;
+    auto& mods = world.ecs().get<StatsComponent>(entity).m_mods;
     if (replace)
     {
         for (auto& mod : mods)
@@ -47,7 +47,7 @@ void putStat(World& world, Entity entity, int32_t stat, Fixed value, uint32_t so
 }
 
 // 技能修正是否作用到这一条技能。
-bool skillInScope(const SkillBook& book, const SkillRuntime& skill, const SkillMod& mod, int32_t bound)
+bool skillInScope(const SkillBookComponent& book, const SkillRuntime& skill, const SkillMod& mod, int32_t bound)
 {
     const auto name = skill.m_slot >= 0 && static_cast<size_t>(skill.m_slot) < book.m_slots.size()
                           ? book.m_slots[static_cast<size_t>(skill.m_slot)]
@@ -88,12 +88,12 @@ void visualCue(World& world, Entity entity, VisualKind kind, int32_t on)
 }
 
 // 阵营关系。
-bool hostile(const Identity& self, const Identity& other)
+bool hostile(const IdentityComponent& self, const IdentityComponent& other)
 {
     return (static_cast<uint32_t>(self.m_hostileMask) & static_cast<uint32_t>(other.m_camp)) != 0;
 }
 
-bool sameCamp(const Identity& self, const Identity& other)
+bool sameCamp(const IdentityComponent& self, const IdentityComponent& other)
 {
     return self.m_camp == other.m_camp;
 }
@@ -106,11 +106,11 @@ std::vector<Entity> selectTargets(Exec& exec, int32_t selector)
     const Entity eventTarget = inst ? inst->m_eventTarget : Entity{};
     const Entity self        = exec.m_self;
     std::vector<Entity> out;
-    if (!world.ecs().has<Identity>(self))
+    if (!world.ecs().has<IdentityComponent>(self))
         return out;
-    const auto& selfId = world.ecs().get<Identity>(self);
-    auto accept        = [&](Entity entity, const Identity& identity) {
-        if (world.ecs().has<Inactive>(entity) || world.ecs().has<Despawning>(entity))
+    const auto& selfId = world.ecs().get<IdentityComponent>(self);
+    auto accept        = [&](Entity entity, const IdentityComponent& identity) {
+        if (world.ecs().has<InactiveComponent>(entity) || world.ecs().has<DespawningComponent>(entity))
             return;
         if (identity.m_kind != SpawnKind::Role)
             return;
@@ -125,8 +125,8 @@ std::vector<Entity> selectTargets(Exec& exec, int32_t selector)
                 out.push_back(entity);
             break;
         case 3:
-            if (world.ecs().alive(eventTarget) && world.ecs().has<Identity>(eventTarget) &&
-                sameCamp(world.ecs().get<Identity>(eventTarget), identity))
+            if (world.ecs().alive(eventTarget) && world.ecs().has<IdentityComponent>(eventTarget) &&
+                sameCamp(world.ecs().get<IdentityComponent>(eventTarget), identity))
                 out.push_back(entity);
             break;
         case 4:
@@ -161,17 +161,17 @@ std::vector<Entity> selectTargets(Exec& exec, int32_t selector)
             break;
         }
     };
-    world.ecs().each<Identity>([&](Entity entity, const Identity& identity) { accept(entity, identity); });
+    world.ecs().each<IdentityComponent>([&](Entity entity, const IdentityComponent& identity) { accept(entity, identity); });
     return out;
 }
 
 // 在矩形内。
 bool inArea(World& world, Entity origin, Entity other, Fixed rx, Fixed rz)
 {
-    if (!world.ecs().has<Transform>(origin) || !world.ecs().has<Transform>(other))
+    if (!world.ecs().has<TransformComponent>(origin) || !world.ecs().has<TransformComponent>(other))
         return false;
-    const auto& a = world.ecs().get<Transform>(origin).m_position;
-    const auto& b = world.ecs().get<Transform>(other).m_position;
+    const auto& a = world.ecs().get<TransformComponent>(origin).m_position;
+    const auto& b = world.ecs().get<TransformComponent>(other).m_position;
     const Fixed dx = a.x > b.x ? a.x - b.x : b.x - a.x;
     const Fixed dz = a.z > b.z ? a.z - b.z : b.z - a.z;
     return dx <= rx && dz <= rz;
@@ -204,9 +204,9 @@ int32_t pickWeighted(World& world, const std::vector<Fixed>& weights)
 // 冷却目标技能。
 void eachCdSkill(World& world, Entity entity, const BuffOp& op, int32_t bound, const auto& fn)
 {
-    if (!world.ecs().has<SkillBook>(entity))
+    if (!world.ecs().has<SkillBookComponent>(entity))
         return;
-    auto& book = world.ecs().get<SkillBook>(entity);
+    auto& book = world.ecs().get<SkillBookComponent>(entity);
     for (auto& skill : book.m_skills)
     {
         SkillMod probe;
@@ -270,7 +270,7 @@ const char* cdSlotName(int32_t slot)
 }
 
 // 技能是否落在该配置槽上：直接比 m_slot，或按槽名映射。
-bool cdSkillInSlot(const SkillBook& book, const SkillRuntime& skill, int32_t slot)
+bool cdSkillInSlot(const SkillBookComponent& book, const SkillRuntime& skill, int32_t slot)
 {
     if (skill.m_slot == slot)
         return true;
@@ -284,9 +284,9 @@ bool cdSkillInSlot(const SkillBook& book, const SkillRuntime& skill, int32_t slo
 // 按槽改 CD：先按随机/顺序取 n 个槽，再用对应阈值/基准/增量。
 void applyPerSlotCd(World& world, Entity entity, const BuffOp& op)
 {
-    if (!world.ecs().has<SkillBook>(entity) || op.m_ids.empty())
+    if (!world.ecs().has<SkillBookComponent>(entity) || op.m_ids.empty())
         return;
-    auto& book          = world.ecs().get<SkillBook>(entity);
+    auto& book          = world.ecs().get<SkillBookComponent>(entity);
     const int32_t total = static_cast<int32_t>(op.m_ids.size());
     int32_t n           = op.m_i0;
     if (n > total)
@@ -363,10 +363,10 @@ void applyPerSlotCd(World& world, Entity entity, const BuffOp& op)
 Fixed standardHurt(World& world, Entity attacker)
 {
     attacker = rootOf(world, attacker);
-    if (!world.ecs().has<Identity>(attacker) || !world.ecs().has<Stats>(attacker))
+    if (!world.ecs().has<IdentityComponent>(attacker) || !world.ecs().has<StatsComponent>(attacker))
         return {};
-    const auto& identity = world.ecs().get<Identity>(attacker);
-    const auto& stats    = world.ecs().get<Stats>(attacker);
+    const auto& identity = world.ecs().get<IdentityComponent>(attacker);
+    const auto& stats    = world.ecs().get<StatsComponent>(attacker);
     const bool hero     = identity.m_roleType == static_cast<int32_t>(mugen::EntityRoleType::kHero);
     const int32_t level = hero ? identity.m_level : std::max(1, identity.m_level / 10);
     const auto* row      = conf::Config::instance().find<conf::SkillHurtConfig>(level);
@@ -378,19 +378,19 @@ Fixed standardHurt(World& world, Entity attacker)
 // 无法移动时位移倍率清零；可移动时按移速修正重建。
 void syncMoveScale(World& world, Entity entity)
 {
-    if (!world.ecs().has<Displacement>(entity))
+    if (!world.ecs().has<DisplacementComponent>(entity))
         return;
-    auto& scale = world.ecs().get<Displacement>(entity).m_velocityScale;
-    if (world.ecs().has<StatusFlags>(entity) && !world.ecs().get<StatusFlags>(entity).canMove())
+    auto& scale = world.ecs().get<DisplacementComponent>(entity).m_velocityScale;
+    if (world.ecs().has<StatusFlagsComponent>(entity) && !world.ecs().get<StatusFlagsComponent>(entity).canMove())
     {
         scale = {};
         return;
     }
     Fixed x = Fixed::fromInt(1);
     Fixed z = Fixed::fromInt(1);
-    if (world.ecs().has<Stats>(entity))
+    if (world.ecs().has<StatsComponent>(entity))
     {
-        const auto& stats = world.ecs().get<Stats>(entity);
+        const auto& stats = world.ecs().get<StatsComponent>(entity);
         x = stats.finalStat(static_cast<int32_t>(BuffStat::MoveScaleX));
         z = stats.finalStat(static_cast<int32_t>(BuffStat::MoveScaleZ));
     }
@@ -400,39 +400,39 @@ void syncMoveScale(World& world, Entity entity)
 // 撤销该实例登记的常驻效果。
 void revoke(World& world, Entity entity, uint32_t serial, bool removeKids)
 {
-    if (world.ecs().has<Stats>(entity))
+    if (world.ecs().has<StatsComponent>(entity))
     {
-        auto& mods = world.ecs().get<Stats>(entity).m_mods;
+        auto& mods = world.ecs().get<StatsComponent>(entity).m_mods;
         std::erase_if(mods, [serial](const StatMod& mod) { return mod.m_source == serial; });
     }
-    if (world.ecs().has<SkillBook>(entity))
+    if (world.ecs().has<SkillBookComponent>(entity))
     {
-        auto& mods = world.ecs().get<SkillBook>(entity).m_mods;
+        auto& mods = world.ecs().get<SkillBookComponent>(entity).m_mods;
         std::erase_if(mods, [serial](const SkillMod& mod) { return mod.m_source == serial; });
     }
-    if (world.ecs().has<BuffList>(entity))
+    if (world.ecs().has<BuffListComponent>(entity))
     {
-        auto& immune = world.ecs().get<BuffList>(entity).m_immunity;
+        auto& immune = world.ecs().get<BuffListComponent>(entity).m_immunity;
         std::erase_if(immune, [serial](const BuffImmune& row) { return row.m_source == serial; });
     }
-    if (world.ecs().has<TauntTable>(entity))
+    if (world.ecs().has<TauntTableComponent>(entity))
     {
-        auto& entries = world.ecs().get<TauntTable>(entity).m_entries;
+        auto& entries = world.ecs().get<TauntTableComponent>(entity).m_entries;
         std::erase_if(entries, [serial](const TauntEntry& row) { return row.m_source == serial; });
     }
     auto* inst = findInstance(world, entity, serial);
     const auto* def = inst ? buffDef(inst->m_id) : nullptr;
-    if (!def || !world.ecs().has<StatusFlags>(entity))
+    if (!def || !world.ecs().has<StatusFlagsComponent>(entity))
         return;
-    auto& flags = world.ecs().get<StatusFlags>(entity);
+    auto& flags = world.ecs().get<StatusFlagsComponent>(entity);
     for (const auto& op : def->m_persistent)
     {
         if (op.m_effect != OpEffect::Active)
             continue;
         if (op.m_kind == BuffOpKind::Flag)
             flags.removeFlag(op.m_flag);
-        else if (op.m_kind == BuffOpKind::Shield && world.ecs().has<Health>(entity))
-            world.ecs().get<Health>(entity).m_shield = {};
+        else if (op.m_kind == BuffOpKind::Shield && world.ecs().has<HealthComponent>(entity))
+            world.ecs().get<HealthComponent>(entity).m_shield = {};
         else if (op.m_kind == BuffOpKind::Visual)
             visualCue(world, entity, op.m_visual, 0);
         else if (op.m_kind == BuffOpKind::Kids && removeKids)
@@ -468,16 +468,16 @@ void execOp(Exec& exec, const BuffOp& op)
             syncMoveScale(world, self);
         break;
     case BuffOpKind::Flag:
-        if (world.ecs().has<StatusFlags>(self))
-            world.ecs().get<StatusFlags>(self).addFlag(op.m_flag);
+        if (world.ecs().has<StatusFlagsComponent>(self))
+            world.ecs().get<StatusFlagsComponent>(self).addFlag(op.m_flag);
         if (op.m_flag == BuffFlag::Durance || op.m_flag == BuffFlag::Palsy || op.m_flag == BuffFlag::Stun ||
             op.m_flag == BuffFlag::Frozen)
             syncMoveScale(world, self);
         break;
     case BuffOpKind::SkillMod:
-        if (world.ecs().has<SkillBook>(self))
+        if (world.ecs().has<SkillBookComponent>(self))
         {
-            auto& book = world.ecs().get<SkillBook>(self);
+            auto& book = world.ecs().get<SkillBookComponent>(self);
             if (op.m_scope == SkillScope::Slots || op.m_scope == SkillScope::ArtifactSlots)
             {
                 for (const int32_t slot : op.m_ids)
@@ -490,9 +490,9 @@ void execOp(Exec& exec, const BuffOp& op)
         }
         break;
     case BuffOpKind::Immune:
-        if (world.ecs().has<BuffList>(self))
+        if (world.ecs().has<BuffListComponent>(self))
         {
-            auto& list = world.ecs().get<BuffList>(self);
+            auto& list = world.ecs().get<BuffListComponent>(self);
             if (op.m_immune == ImmuneSel::All)
                 list.m_immunity.push_back({static_cast<int32_t>(ImmuneSel::All), 0, serial});
             else
@@ -504,12 +504,12 @@ void execOp(Exec& exec, const BuffOp& op)
         putStat(world, self, kHpLockStat, value, serial, true);
         break;
     case BuffOpKind::Shield:
-        if (world.ecs().has<Health>(self))
-            world.ecs().get<Health>(self).m_shield = value;
+        if (world.ecs().has<HealthComponent>(self))
+            world.ecs().get<HealthComponent>(self).m_shield = value;
         break;
     case BuffOpKind::Taunt:
-        if (world.ecs().has<TauntTable>(self))
-            world.ecs().get<TauntTable>(self).m_entries.push_back({inst->m_applicator, value, serial});
+        if (world.ecs().has<TauntTableComponent>(self))
+            world.ecs().get<TauntTableComponent>(self).m_entries.push_back({inst->m_applicator, value, serial});
         break;
     case BuffOpKind::Kids:
         for (const int32_t id : op.m_ids)
@@ -527,36 +527,36 @@ void execOp(Exec& exec, const BuffOp& op)
     {
         const Entity root = rootOf(world, inst->m_applicator.value != 0 ? inst->m_applicator : self);
         Fixed addition{};
-        if (world.ecs().has<Identity>(root))
-            addition = std::max(Fixed{}, Fixed::fromInt(world.ecs().get<Identity>(root).m_level)) *
+        if (world.ecs().has<IdentityComponent>(root))
+            addition = std::max(Fixed{}, Fixed::fromInt(world.ecs().get<IdentityComponent>(root).m_level)) *
                        conf::kBuffHurtDefaultAddition;
         const Fixed hurt = (standardHurt(world, root) * (value * (Fixed::fromInt(1) + addition))).floor() *
                            Fixed::fromInt(std::max(1, inst->m_stacks));
-        if (hurt != Fixed{} && world.ecs().has<Health>(self))
+        if (hurt != Fixed{} && world.ecs().has<HealthComponent>(self))
             health::rules::applyDelta(world, self, hurt, hurt < Fixed{} ? HpCause::Dot : HpCause::Heal,
                                       inst->m_applicator, {});
         break;
     }
     case BuffOpKind::Resource:
     {
-        if (op.m_res == ResourceId::Hp && world.ecs().has<Health>(self))
+        if (op.m_res == ResourceId::Hp && world.ecs().has<HealthComponent>(self))
         {
             const HpCause cause = value >= Fixed{} ? HpCause::Heal : HpCause::Dot;
             health::rules::applyDelta(world, self, value, cause, inst->m_applicator, {}, op.m_ignoreShield);
         }
-        else if (op.m_res == ResourceId::Mp && world.ecs().has<Health>(self))
+        else if (op.m_res == ResourceId::Mp && world.ecs().has<HealthComponent>(self))
         {
-            auto& health = world.ecs().get<Health>(self);
+            auto& health = world.ecs().get<HealthComponent>(self);
             health.m_mp  = std::clamp(health.m_mp + value, Fixed{}, health.m_maxMp);
         }
-        else if (op.m_res == ResourceId::Ep && world.ecs().has<Health>(self))
+        else if (op.m_res == ResourceId::Ep && world.ecs().has<HealthComponent>(self))
         {
-            auto& health = world.ecs().get<Health>(self);
+            auto& health = world.ecs().get<HealthComponent>(self);
             health.m_ep  = std::clamp(health.m_ep + value, Fixed{}, health.m_maxEp);
         }
-        else if (op.m_res == ResourceId::Anger && world.ecs().has<RageState>(self))
+        else if (op.m_res == ResourceId::Anger && world.ecs().has<RageStateComponent>(self))
         {
-            auto& rage = world.ecs().get<RageState>(self);
+            auto& rage = world.ecs().get<RageStateComponent>(self);
             if (op.m_transformFreeze && rage.m_transformed)
                 rage.m_freezeMs = std::clamp(rage.m_freezeMs + value, Fixed{}, rage.m_maxFreezeMs);
             else
@@ -611,7 +611,7 @@ void execOp(Exec& exec, const BuffOp& op)
                 {
                     if (op.m_to == ApplyTo::Area && !inArea(world, self, target, op.m_f0, op.m_f1))
                         continue;
-                    if (!world.ecs().alive(target) || !world.ecs().has<BuffList>(target))
+                    if (!world.ecs().alive(target) || !world.ecs().has<BuffListComponent>(target))
                         continue;
                     BuffContext ctx;
                     ctx.m_applicator = inst->m_applicator.value != 0 ? inst->m_applicator : self;
@@ -625,10 +625,10 @@ void execOp(Exec& exec, const BuffOp& op)
     case BuffOpKind::Remove:
     {
         int32_t removed = 0;
-        if (!world.ecs().has<BuffList>(self))
+        if (!world.ecs().has<BuffListComponent>(self))
             break;
         std::vector<uint32_t> serials;
-        for (const auto& row : world.ecs().get<BuffList>(self).m_instances)
+        for (const auto& row : world.ecs().get<BuffListComponent>(self).m_instances)
         {
             if (row.m_removing)
                 continue;
@@ -655,8 +655,8 @@ void execOp(Exec& exec, const BuffOp& op)
     case BuffOpKind::Count:
     {
         int32_t count = 0;
-        if (world.ecs().has<BuffList>(self))
-            for (const auto& row : world.ecs().get<BuffList>(self).m_instances)
+        if (world.ecs().has<BuffListComponent>(self))
+            for (const auto& row : world.ecs().get<BuffListComponent>(self).m_instances)
             {
                 if (row.m_removing)
                     continue;
@@ -704,8 +704,8 @@ void execOp(Exec& exec, const BuffOp& op)
         break;
     }
     case BuffOpKind::Extend:
-        if (world.ecs().has<BuffList>(self))
-            for (auto& row : world.ecs().get<BuffList>(self).m_instances)
+        if (world.ecs().has<BuffListComponent>(self))
+            for (auto& row : world.ecs().get<BuffListComponent>(self).m_instances)
             {
                 const auto* def = buffDef(row.m_id);
                 if (def && def->m_admission.m_ruleId == op.m_i0)
@@ -716,13 +716,13 @@ void execOp(Exec& exec, const BuffOp& op)
             }
         break;
     case BuffOpKind::Ability:
-        if (world.ecs().has<AbilityList>(self))
+        if (world.ecs().has<AbilityListComponent>(self))
         {
             const int32_t abilityId = op.m_i0 != 0 ? op.m_i0 : (op.m_ids.empty() ? 0 : op.m_ids.front());
             const auto* ability     = conf::Config::instance().find<AbilityDef>(abilityId);
             if (ability && ability->m_status != LowerStatus::Unsupported)
             {
-                auto& list = world.ecs().get<AbilityList>(self);
+                auto& list = world.ecs().get<AbilityListComponent>(self);
                 AbilityInstance* slot = nullptr;
                 if (ability->m_subType != -1)
                     for (auto& row : list.m_instances)
@@ -753,11 +753,11 @@ void execOp(Exec& exec, const BuffOp& op)
         }
         break;
     case BuffOpKind::EnterCrazy:
-        if (world.ecs().has<SkillCast>(self))
-            world.ecs().get<SkillCast>(self).m_crazy = true;
+        if (world.ecs().has<SkillCastComponent>(self))
+            world.ecs().get<SkillCastComponent>(self).m_crazy = true;
         break;
     case BuffOpKind::Interrupt:
-        if (world.ecs().has<SkillCast>(self))
+        if (world.ecs().has<SkillCastComponent>(self))
             skill::rules::forceInterrupt(world, self);
         break;
     case BuffOpKind::SetCost:
@@ -937,7 +937,7 @@ void onHook(World& world, Entity entity, uint32_t serial, int32_t hook)
 void destroySerial(World& world, Entity entity, uint32_t serial)
 {
     auto* inst = findInstance(world, entity, serial);
-    if (!inst || !world.ecs().has<BuffList>(entity))
+    if (!inst || !world.ecs().has<BuffListComponent>(entity))
         return;
     if (inst->m_removing)
         return;
@@ -951,7 +951,7 @@ void destroySerial(World& world, Entity entity, uint32_t serial)
         // 退出钩子没有撤销时，仍撤销属性与标记，但留下已经加上的子 Buff。
         revoke(world, entity, serial, false);
     }
-    auto& list = world.ecs().get<BuffList>(entity);
+    auto& list = world.ecs().get<BuffListComponent>(entity);
     std::erase_if(list.m_instances, [serial](const BuffInstance& row) { return row.m_serial == serial; });
     BuffEvent event;
     event.m_entity = entity;

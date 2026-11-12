@@ -1,6 +1,6 @@
 // [6.1] AnimationSystem
-// 读：`MotionState`、`WorldClock`
-// 写：`MotionState`（时间、循环、完成位）
+// 读：`MotionStateComponent`、`WorldClock`
+// 写：`MotionStateComponent`（时间、循环、完成位）
 // 消费：—
 // 产生：—
 #include "mugen/sim/Systems.h"
@@ -13,17 +13,17 @@ namespace mugen::sim
 void runAnimation(World& world)
 {
     const Fixed dtMs = world.ecs().singleton<WorldClock>().m_dtMs;
-    world.ecs().each<MotionState>([&](Entity entity, MotionState& motion) {
-        if (world.ecs().has<Despawning>(entity) || world.ecs().has<Inactive>(entity))
+    world.ecs().each<MotionStateComponent>([&](Entity entity, MotionStateComponent& motion) {
+        if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
             return;
-        if (const Pause* pause = world.ecs().tryGet<Pause>(entity))
+        if (const PauseComponent* pause = world.ecs().tryGet<PauseComponent>(entity))
             if (pause->m_paused)
                 return;
         motion.m_completedThisFrame = false;
         if (!motion.m_playing || motion.m_motionName.empty())
             return;
-        const Fixed actionScale = world.ecs().has<Stats>(entity)
-                                      ? world.ecs().get<Stats>(entity).finalStat(202)
+        const Fixed actionScale = world.ecs().has<StatsComponent>(entity)
+                                      ? world.ecs().get<StatsComponent>(entity).finalStat(202)
                                       : Fixed::fromInt(1);
         MotionPlayer player;
         if (!player.bind(motion.m_motionFile) || !player.play(motion.m_motionName, motion.m_entryId, motion.m_loop))

@@ -4,7 +4,7 @@
 #include "mugen/sim/room/RoomRules.h"
 #include "mugen/sim/life/EntityFactory.h"
 #include "mugen/conf/ReflectedConfig.h"
-#include "mugen/conf/TypeConversions.h"
+#include "mugen/conf/GameDef.h"
 #include "mugen/core/MacroDefinition.h"
 
 namespace mugen::sim
@@ -37,9 +37,6 @@ std::vector<Entity> bootstrapBattle(World& world, const WorldSetup& setup)
             MG_ASSERT(false && "Player camp must not be neutral");
             return {};
         }
-        const CharacterClass characterClass = playerSetup.m_class != CharacterClass::kUnknown
-                                                  ? playerSetup.m_class
-                                                  : type_conversions::toCharacterClass(playerSetup.m_roleId);
         RoleSpawnParams params;
         params.m_roleId       = playerSetup.m_roleId;
         params.m_level        = playerSetup.m_level;
@@ -48,10 +45,7 @@ std::vector<Entity> bootstrapBattle(World& world, const WorldSetup& setup)
         params.m_isAi         = playerSetup.m_isAi;
         if (playerSetup.m_camp != 0)
             params.m_camp = playerSetup.m_camp;
-        if (characterClass != CharacterClass::kUnknown)
-            role::rules::spawnPlayer(world, characterClass, params);
-        else
-            role::rules::spawnRole(world, params);
+        role::rules::spawnRole(world, params);
     }
     life::rules::spawnFlush(world, SpawnStage::Room);
 

@@ -6,7 +6,7 @@
 namespace mugen::sim
 {
 // 特效实体的归属、技能来源与生命周期共享数据。
-struct EffectInfo
+struct EffectInfoComponent
 {
     // 特效配置标识。
     int32_t m_configId = -1;
@@ -23,11 +23,11 @@ struct EffectInfo
     Entity m_attributeSource;
     // 是否允许结束后派生后继特效。
     bool m_next = true;
-    MG_REFLECT(EffectInfo, m_configId, m_owner, m_hitEntity, m_skillId, m_baseSkillId, m_slot, m_attributeSource,
+    MG_REFLECT(EffectInfoComponent, m_configId, m_owner, m_hitEntity, m_skillId, m_baseSkillId, m_slot, m_attributeSource,
                m_next)
 };
 // 特效命中追踪：本帧命中数、命中间隔、已命中目标去重。
-struct HitTracker
+struct HitTrackerComponent
 {
     // 本帧命中次数。
     int32_t m_hitCount = 0;
@@ -35,22 +35,22 @@ struct HitTracker
     Fixed m_hitInterval;
     // 按目标去重（hitInterval == -1 时）。
     std::vector<Entity> m_hitTargets;
-    MG_REFLECT(HitTracker, m_hitCount, m_hitInterval, m_hitTargets)
+    MG_REFLECT(HitTrackerComponent, m_hitCount, m_hitInterval, m_hitTargets)
 };
 // 特效寿命策略（autoRelease）。
-struct Lifetime
+struct LifetimeComponent
 {
     // autoRelease：0 片段退出销毁、1 片段放完销毁、2/3 命中目标数达标销毁（3 触发后继）。
     int32_t m_autoRelease = 0;
-    MG_REFLECT(Lifetime, m_autoRelease)
+    MG_REFLECT(LifetimeComponent, m_autoRelease)
 };
 // 特效跟随：0 不跟随、1 跟随主人、2 跟随目标（贴地）。
-struct Follow
+struct FollowComponent
 {
     // 跟随目标。
     Entity m_target;
     // 跟随模式。
     int32_t m_mode = 0;
-    MG_REFLECT(Follow, m_target, m_mode)
+    MG_REFLECT(FollowComponent, m_target, m_mode)
 };
 }  // namespace mugen::sim
