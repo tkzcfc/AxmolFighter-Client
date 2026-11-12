@@ -143,6 +143,26 @@ inline bool isHitState(RoleStateId state)
         return false;
     }
 }
+// 是否处于可挣脱状态（不含 GetUp / Wake）。
+inline bool isCanBreak(RoleStateId state)
+{
+    switch (state)
+    {
+    case RoleStateId::Hit:
+    case RoleStateId::HitSwitch:
+    case RoleStateId::HitUp:
+    case RoleStateId::HitDown:
+    case RoleStateId::HitFloor:
+        return true;
+    default:
+        return false;
+    }
+}
+// 是否处于受击流程（可挣脱或起身）。
+inline bool isTobeHit(RoleStateId state)
+{
+    return isCanBreak(state) || state == RoleStateId::GetUp;
+}
 // 是否属于“移动类”状态（与旧实现 RoleStatus::isMove 一致）。
 inline bool isMoveState(RoleStateId state)
 {

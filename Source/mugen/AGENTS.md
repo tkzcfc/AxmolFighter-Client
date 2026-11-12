@@ -17,7 +17,7 @@ Source/mugen/
   avatar/    MotionPlayer and avatar/data (.motion, .box, avatar.bin). No engine headers.
   render/    Client only. The whole tree is inside #ifdef RUNTIME_IN_AXMOL. Battle presenters live in render/battle/ (one class per .h/.cpp). Roles attach under the map entity layer.
   sim_legacy/ namespace mugen::sim_legacy. Current battle logic, frozen (no new features; the new ECS sim goes into a new `sim/` per DESIGN.md). No engine dependency.
-  sim/       namespace mugen::sim. New ECS battle sim (DESIGN.md, slices S0–S8; S0 + S1 + S2 done). See "New sim (sim/)" below. Never include sim_legacy.
+  sim/       namespace mugen::sim. New ECS battle sim (DESIGN.md, slices S0–S8; S0–S3 done). See "New sim (sim/)" below. Never include sim_legacy.
 ```
 
 Headless targets: `mugen_tests` and `mugen_legacy_cli` link `sim_legacy`; `mugen_sim_tests` and `mugen_sim_cli` link `sim`. No binary links both. Equivalence is checked with effect-summary goldens in `TestsHeadless/data/golden_summaries/` (`mugen_legacy_cli export-summary`, `compare-summary`, `run_summary_export.ps1`; format in DESIGN.md appendix A).
@@ -34,7 +34,7 @@ Headless targets: `mugen_tests` and `mugen_legacy_cli` link `sim_legacy`; `mugen
 - Buff engine lives in `sim/buff/` (DESIGN §5, slice S2), op-based rather than per-rule classes: `BuffComponents.h` (`BuffListComponent`/`AbilityListComponent`), `BuffRules.h/.cpp` (`admit`/`remove`/`fire`/`tick`), `BuffEval.cpp` (`ValueExpr`/`Predicate`), `BuffOps.cpp` (op interpreter), `BuffInternal.h` (exec state), `BuffTickSystem.cpp` (P2). Buff interval/times/duration, add-CD, and special-ability CD/period continue during hit-stop (DESIGN §3.4). Clip buffs are still admitted on clip enter and removed on clip exit.
 - Data flow: source tables `buff`/`buff_rule`/`special_ability` → `config_converter/lower/` (`BuffLower`/`AbilityLower`/`LowerBuffShared`) → `conf/battle::{BuffDef,AbilityDef}` → `config.bin` → runtime interpreter (op / predicate / `ValueExpr`). Lowering (`Content/mugen/config/lower_report.txt`): buff 9337 rows (9203 lowered, 128 no-op, 6 unsupported); ability 854 rows (308 lowered, 546 no-op). No-op scope is artifact, crystal, and controllable-effect ops.
 - Runtime battle tables are `conf::battle::*Def` (derived tables lowered by the converter; do not edit by hand).
-- Golden equivalence: `mugen_sim_cli compare-scenario --all` (run from `TestsHeadless`) against `data/golden_summaries/`. Never edit a golden to make a scenario pass; list differences as proposals in a report. S2 buff goldens are `data/scenarios/buff_*.script` with coverage map `data/golden_summaries/buff_coverage.txt`. Scripts may inject `frame buff <target> <buffId>` (DESIGN A.6; not written into `FrameInput`). All non-class scenarios pass; the four class/copy room scenarios still fail pending S3 skill and timeline work.
+- Golden equivalence: `mugen_sim_cli compare-scenario --all` (run from `TestsHeadless`) against `data/golden_summaries/`. Never edit a golden to make a scenario pass; list differences as proposals in a report. S2 buff goldens are `data/scenarios/buff_*.script` with coverage map `data/golden_summaries/buff_coverage.txt`. Scripts may inject `frame buff <target> <buffId>` (DESIGN A.6; not written into `FrameInput`). All 34 scenarios pass in both crit strategies (68 summary comparisons); S3 finished the four class/copy room scenarios (`class1_swordman`/`class2_ranger`/`class4_mage`/`copy_room_class1`), plus summon/transform unit tests.
 
 ## Prohibitions
 
@@ -105,7 +105,7 @@ pwsh TestsHeadless/run_headless_tests.ps1 [-Filter <doctest filter>] [-Config Re
 pwsh TestsHeadless/check_rules.ps1 [-Paths core,conf,avatar,sim_legacy]
 ```
 
-`run_headless_tests.ps1` configures, builds, runs `mugen_tests`, and returns its exit code. `check_rules.ps1` prints `file:line: rule` and returns non-zero on a violation. `mugen_legacy_cli` replays and runs rooms headless. `mugen_sim_tests` Buff unit tests: `TestsHeadless/sim_tests/BuffLifecycleTest.cpp`, `BuffOpsTest.cpp`, `BuffPredicateTest.cpp`, `BuffRulesRefTest.cpp`.
+`run_headless_tests.ps1` configures, builds, runs `mugen_tests`, and returns its exit code. `check_rules.ps1` prints `file:line: rule` and returns non-zero on a violation. `mugen_legacy_cli` replays and runs rooms headless. `mugen_sim_tests` unit tests: `TestsHeadless/sim_tests/BuffLifecycleTest.cpp`, `BuffOpsTest.cpp`, `BuffPredicateTest.cpp`, `BuffRulesRefTest.cpp` (S2 buff); S3 adds `SkillCancelTest.cpp`, `SkillLineCTest.cpp`, `ClipControlTest.cpp`, `FollowTest.cpp`, `TimelineFloorEndClipTest.cpp`, `SummonTest.cpp`, `TransformTest.cpp`.
 
 
 ## VFS mount topology (client)

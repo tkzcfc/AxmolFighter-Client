@@ -32,6 +32,9 @@ void runHitbox(World& world)
         [&](Entity entity, const MotionStateComponent& motion, HitboxesComponent& hitboxes, const TransformComponent& transform) {
             if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
                 return;
+            const auto& born = world.ecs().get<IdentityComponent>(entity).m_born;
+            if (born.m_frame == world.frame() && born.m_stage > SpawnStage::RoleTimeline)
+                return;
             if (const PauseComponent* pause = world.ecs().tryGet<PauseComponent>(entity))
                 if (pause->m_paused)
                     return;

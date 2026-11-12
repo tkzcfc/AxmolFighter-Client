@@ -7,6 +7,7 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/buff/BuffRules.h"
 #include "mugen/sim/combat/CombatRules.h"
+#include "mugen/sim/skill/SkillRules.h"
 #include "mugen/conf/battle/EffectDef.h"
 #include "mugen/conf/battle/HitDef.h"
 #include <algorithm>
@@ -60,18 +61,7 @@ void runCombat(World& world)
                                     ctx.m_effectRow->hitExtraControl.front() == 0 && ctx.m_hit->hitMust != 1;
         if (invincibleGate)
         {
-            bool dodging = false;
-            if (world.ecs().has<SkillCastComponent>(ctx.m_target) && world.ecs().has<SkillBookComponent>(ctx.m_target))
-            {
-                const auto& cast = world.ecs().get<SkillCastComponent>(ctx.m_target);
-                const auto& book = world.ecs().get<SkillBookComponent>(ctx.m_target);
-                if (cast.m_skill >= 0 && static_cast<size_t>(cast.m_skill) < book.m_skills.size())
-                {
-                    const int32_t slot = book.m_skills[static_cast<size_t>(cast.m_skill)].m_slot;
-                    dodging = slot >= 0 && static_cast<size_t>(slot) < book.m_slots.size() &&
-                              book.m_slots[static_cast<size_t>(slot)] == "F";
-                }
-            }
+            const bool dodging = skill::rules::isDodging(world, ctx.m_target);
             HitEvent event;
             event.m_effect   = ctx.m_effect;
             event.m_target   = ctx.m_target;
@@ -82,6 +72,19 @@ void runCombat(World& world)
             world.ecs().singleton<EventQueue<HitEvent>>().push(event);
             if (dodging)
                 buff::rules::fire(world, ctx.m_target, conf::battle::TriggerPoint::EvadeSuccess, hitCtx);
+            continue;
+        }
+        if (skill::rules::isDodging(world, ctx.m_target))
+        {
+            HitEvent event;
+            event.m_effect   = ctx.m_effect;
+            event.m_target   = ctx.m_target;
+            event.m_attacker = ctx.m_attacker;
+            event.m_hitDefId = ctx.m_hit->id;
+            event.m_effectId = ctx.m_effectId;
+            event.m_result   = HitResult::Evade;
+            world.ecs().singleton<EventQueue<HitEvent>>().push(event);
+            buff::rules::fire(world, ctx.m_target, conf::battle::TriggerPoint::EvadeSuccess, hitCtx);
             continue;
         }
         if (combat::rules::resolveDodge(world, ctx))
@@ -102,25 +105,13 @@ void runCombat(World& world)
             combat::rules::applyHitStop(world, ctx);
             combat::rules::requestHitReaction(world, ctx);
         }
+        skill::rules::grantPartnerRageOnHit(world, ctx.m_attacker);
         const bool dead = world.ecs().has<HealthComponent>(ctx.m_target) && world.ecs().get<HealthComponent>(ctx.m_target).m_dead;
         hitCtx.m_targetDead = dead;
         if (!dead)
             buff::rules::fire(world, ctx.m_target, conf::battle::TriggerPoint::AfterToBeHit, hitCtx);
         buff::rules::fire(world, ctx.m_attacker, conf::battle::TriggerPoint::AfterHit, hitCtx);
-        bool dodging = false;
-        if (world.ecs().has<SkillCastComponent>(ctx.m_target) && world.ecs().has<SkillBookComponent>(ctx.m_target))
-        {
-            const auto& cast = world.ecs().get<SkillCastComponent>(ctx.m_target);
-            const auto& book = world.ecs().get<SkillBookComponent>(ctx.m_target);
-            if (cast.m_skill != kNoSkill && cast.m_skill >= 0 &&
-                static_cast<size_t>(cast.m_skill) < book.m_skills.size())
-            {
-                const auto slot = book.m_skills[static_cast<size_t>(cast.m_skill)].m_slot;
-                dodging         = slot >= 0 && static_cast<size_t>(slot) < book.m_slots.size() &&
-                          book.m_slots[static_cast<size_t>(slot)] == "F";
-            }
-        }
-        if (!dodging && ctx.m_effectRow)
+        if (!skill::rules::isDodging(world, ctx.m_target) && ctx.m_effectRow)
             for (const int32_t id : ctx.m_effectRow->debuffId)
                 if (id > 0)
                     buff::rules::admit(world, ctx.m_target, id, hitCtx);

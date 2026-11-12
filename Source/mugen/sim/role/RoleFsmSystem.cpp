@@ -161,11 +161,34 @@ void updateHitSwitch(World& world, Entity entity, RoleStateComponent& state, Hit
     transition(world, entity, state, RoleStateId::Idle);
     playIdle(motion);
 }
-// 施法结束回到待机；仍在施法则累计状态时间。
-void updateAttack(World& world, Entity entity, RoleStateComponent& state, const SkillCastComponent& cast, MotionStateComponent& motion, Fixed dtMs)
+// 施法结束回到待机；Attack 内切招结束旧施法并开始新施法。
+void updateAttack(World& world, Entity entity, RoleStateComponent& state, SkillCastComponent& cast, MotionStateComponent& motion,
+                  const IntentComponent& intent, Fixed dtMs)
 {
+    if (cast.m_switch)
+    {
+        cast.m_switch = false;
+        skill::rules::endCast(world, entity, true);
+        if (cast.m_skill != kNoSkill)
+        {
+            state.m_stateMs += dtMs;
+            return;
+        }
+    }
     if (cast.m_skill == kNoSkill)
     {
+        if (cast.m_nextRun && intent.m_move.m_mode == MoveMode::Run)
+        {
+            cast.m_nextRun = false;
+            transition(world, entity, state, RoleStateId::Run);
+            motion.m_motionName     = role::motionName(RoleStateId::Run);
+            motion.m_timeMs         = {};
+            motion.m_completedLoops = 0;
+            motion.m_loop           = true;
+            motion.m_rate           = conf::kRunScaleTime;
+            motion.m_playing        = true;
+            return;
+        }
         transition(world, entity, state, RoleStateId::Idle);
         playIdle(motion);
         return;
@@ -215,7 +238,7 @@ void runRoleFsm(World& world)
     const Fixed dtMs = world.ecs().singleton<WorldClock>().m_dtMs;
     world.ecs().each<RoleStateComponent, IntentComponent, MotionStateComponent, DisplacementComponent, SkillCastComponent, HitStateComponent, IdentityComponent>(
         [&](Entity entity, RoleStateComponent& state, const IntentComponent& intent, MotionStateComponent& motion, DisplacementComponent& disp,
-            const SkillCastComponent& cast, HitStateComponent& hit, const IdentityComponent& identity) {
+            SkillCastComponent& cast, HitStateComponent& hit, const IdentityComponent& identity) {
             if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
                 return;
             state.m_prev = state.m_state;
@@ -265,6 +288,18 @@ void runRoleFsm(World& world)
                 return;
             }
 
+            // 5. 挣脱：可挣脱状态下已开始 L 槽施法 → Attack（清位移与硬直）。
+            if (role::isCanBreak(state.m_state) && skill::rules::isCastingSlot(world, entity, "L"))
+            {
+                displacement::rules::reset(world, entity);
+                hit.m_stiffTime        = {};
+                hit.m_hitTimeMs        = {};
+                hit.m_animationEnd     = false;
+                hit.m_displacementEnd  = false;
+                transition(world, entity, state, RoleStateId::Attack);
+                return;
+            }
+
             // 4. 受击族自然推进。完成位是上一帧 AnimationSystem 写入的（R10）。
             if (state.m_state == RoleStateId::Hit)
             {
@@ -280,7 +315,7 @@ void runRoleFsm(World& world)
             // 6/7. 施法进入与结束。
             if (state.m_state == RoleStateId::Attack)
             {
-                updateAttack(world, entity, state, cast, motion, dtMs);
+                updateAttack(world, entity, state, cast, motion, intent, dtMs);
                 return;
             }
             if (cast.m_skill != kNoSkill &&

@@ -16,6 +16,9 @@ void runAnimation(World& world)
     world.ecs().each<MotionStateComponent>([&](Entity entity, MotionStateComponent& motion) {
         if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
             return;
+        const auto& born = world.ecs().get<IdentityComponent>(entity).m_born;
+        if (born.m_frame == world.frame() && born.m_stage > SpawnStage::RoleTimeline)
+            return;
         if (const PauseComponent* pause = world.ecs().tryGet<PauseComponent>(entity))
             if (pause->m_paused)
                 return;

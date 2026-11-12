@@ -7,6 +7,7 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/motion/DisplacementRules.h"
 #include "mugen/conf/BattleConst.h"
+#include "mugen/conf/battle/ClipDef.h"
 
 namespace mugen::sim
 {
@@ -32,6 +33,9 @@ void runDisplacement(World& world)
     world.ecs().each<TransformComponent, DisplacementComponent, HitboxesComponent>(
         [&](Entity entity, TransformComponent& transform, DisplacementComponent& d, const HitboxesComponent& hitboxes) {
             if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
+                return;
+            const auto& born = world.ecs().get<IdentityComponent>(entity).m_born;
+            if (born.m_frame == world.frame() && born.m_stage > SpawnStage::RoleTimeline)
                 return;
             if (const PauseComponent* pause = world.ecs().tryGet<PauseComponent>(entity))
                 if (pause->m_paused)
@@ -86,8 +90,12 @@ void runDisplacement(World& world)
                 {
                     if (y.m_velocity < -conf::kBounces && d.m_bounces > Fixed{})
                     {
-                        d.m_floor   = true;
-                        velocity.y  = -y.m_velocity * d.m_bounces;
+                        d.m_floor = true;
+                        // EndClip/Stop：清速度不反弹（R11 当帧策略反应）。
+                        if (d.m_floorPolicy != 0)
+                            velocity = {};
+                        else
+                            velocity.y = -y.m_velocity * d.m_bounces;
                     }
                     else
                     {
@@ -101,6 +109,7 @@ void runDisplacement(World& world)
 
             const Fixed radius = hitboxes.m_radius;
             // 地图边界钳制（移植旧实现 DisplacementDriver::update）。
+            // obstruct=0 / Pass：墙事件被消费且不贴墙，弹道可飞出角色可走区域。
             const auto regionX = [&]() {
                 const FixedVec2 point{transform.m_position.x + signFixed(offset.x) * radius, transform.m_position.z};
                 if (offset.x < Fixed{})
@@ -143,7 +152,8 @@ void runDisplacement(World& world)
                     }
                 }
             };
-            if (!region.m_moveRanges.empty())
+            if (!region.m_moveRanges.empty() &&
+                d.m_wallPolicy != static_cast<int32_t>(conf::battle::ClipWallPolicy::Pass))
             {
                 if (absFixed(offset.z) < absFixed(offset.x))
                 {

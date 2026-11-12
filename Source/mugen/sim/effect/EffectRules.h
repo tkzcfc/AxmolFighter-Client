@@ -6,6 +6,8 @@ namespace mugen::sim
 {
 namespace effect::rules
 {
+// 按特效配置把 entity 放到 base 的相对位置；ground 为 true 时贴地（y=0）。
+void placeFrom(World& world, Entity entity, Entity base, bool ground);
 // 由主人动作生成特效：计算放置并追加 SpawnRequest。
 // source 为技能来源上下文；hitEntity 为受击特效目标（可选）。
 void spawnFromRole(World& world, Entity owner, int32_t effectId, const SourceContext& source);

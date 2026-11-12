@@ -145,7 +145,9 @@ enum class CueKind : uint8_t
     // 霸体描边。
     SuperArmorOutline = 8,
     // 墨汁屏。
-    InkScreen = 9
+    InkScreen = 9,
+    // 攻击变身切换显示。
+    TransformSwap = 10
 };
 // 房间事件种类。
 enum class RoomEventKind : uint8_t

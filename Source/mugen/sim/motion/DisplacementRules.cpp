@@ -51,7 +51,7 @@ Fixed axis(const std::vector<Fixed>& values, size_t index)
 {
     return index < values.size() ? values[index] : Fixed{};
 }
-// 发出一条位移事实。终点由 DebugSinkSystem 在 P11 读取。
+// 发出一条位移事实。终点由 DebugSinkSystem 在 P11 读 TransformComponent（与旧导出 afterTick 取帧末位置一致）。
 void emit(World& world, Entity entity, DispPhase phase, int32_t curveId)
 {
     DisplacementEvent event;
@@ -92,9 +92,19 @@ bool set(World& world, Entity entity, int32_t id)
 }
 
 // 重置位移状态与速度。
-void reset(World& world, Entity entity)
+void reset(World& world, Entity entity, bool endAirborne)
 {
     auto& d = world.ecs().get<DisplacementComponent>(entity);
+    const bool airborne = world.ecs().get<TransformComponent>(entity).m_position.y > Fixed{};
+    if (!endAirborne && airborne && d.m_curveId != -1)
+    {
+        d.m_elapsedMs    = {};
+        d.m_velocityTime = d.m_acceleration = d.m_accelerationTime = {};
+        d.m_gravity                                                = Fixed::fromInt(1);
+        d.m_bounces                                                = {};
+        d.m_velocity                                               = {};
+        return;
+    }
     if (d.m_curveId != -1)
         emit(world, entity, DispPhase::Ended, d.m_curveId);
     d.m_elapsedMs    = {};

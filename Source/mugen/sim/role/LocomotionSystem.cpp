@@ -27,7 +27,9 @@ void runLocomotion(World& world)
                 return;
             if (state.m_state == RoleStateId::Idle)
             {
-                displacement.m_velocity = {};
+                // 只清水平速度；空中 y 交给重力积分，避免每帧抹掉落地速度。
+                displacement.m_velocity.x = {};
+                displacement.m_velocity.z = {};
                 return;
             }
             if (!role::isMoveState(state.m_state))

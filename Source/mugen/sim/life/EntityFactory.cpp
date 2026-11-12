@@ -1,14 +1,21 @@
 #include "mugen/sim/life/EntityFactory.h"
 #include "mugen/sim/World.h"
+#include "mugen/sim/buff/BuffRules.h"
 #include "mugen/sim/role/RoleSpawn.h"
 #include "mugen/sim/skill/SkillRules.h"
 #include "mugen/sim/skill/TimelineRules.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/TypeConversions.h"
+#include "mugen/conf/GameDef.h"
 #include "mugen/avatar/AvatarPaths.h"
+#include <algorithm>
 
 namespace mugen::sim
 {
+namespace life::rules
+{
+void inheritBuffs(World& world, Entity from, Entity to, int32_t flag);
+}
 namespace
 {
 // 由 resSpineId 解析动作文件。
@@ -22,6 +29,18 @@ Fixed spineScale(int32_t resSpineId)
 {
     const auto* spine = conf::Config::instance().find<conf::ResSpineConfig>(resSpineId);
     return spine ? spine->scale : Fixed::fromInt(1);
+}
+// 召唤根：主人若也是召唤则取其根，否则主人自己。
+Entity summonRoot(World& world, Entity owner)
+{
+    if (owner.value == 0 || !world.ecs().alive(owner))
+        return owner;
+    if (const auto* summon = world.ecs().tryGet<SummonComponent>(owner))
+        return summon->m_root.value != 0 ? summon->m_root : owner;
+    if (const auto* identity = world.ecs().tryGet<IdentityComponent>(owner))
+        if (identity->m_rootOwner.value != 0)
+            return identity->m_rootOwner;
+    return owner;
 }
 
 // 由 SpawnRequest 装配一个角色实体（原型装配，移植旧实现 RoleSpawner::spawnRole）。
@@ -46,15 +65,16 @@ Entity materializeRole(World& world, const SpawnRequest& request, SpawnStage sta
     identity.m_level       = request.m_level;
     if (request.m_hasPlayerSlot)
         identity.m_playerSlot = request.m_playerSlot;
-    identity.m_owner   = request.m_owner;
-    identity.m_born    = {world.frame(), stage};
-    identity.m_ordinal = ecs.singleton<SpawnRegistry>().next(request.m_configId);
+    identity.m_owner     = request.m_owner;
+    identity.m_rootOwner = summonRoot(world, request.m_owner);
+    identity.m_born      = {world.frame(), stage};
+    identity.m_ordinal   = ecs.singleton<SpawnRegistry>().next(request.m_configId);
     ecs.add(entity, identity);
 
     TransformComponent transform;
     transform.m_position = request.m_position;
     transform.m_towardX  = request.m_towardX == -1 ? -1 : 1;
-    transform.m_vectorX  = Fixed::fromInt(transform.m_towardX);
+    transform.m_vectorX  = request.m_vectorX != Fixed{} ? request.m_vectorX : Fixed::fromInt(transform.m_towardX);
     transform.m_vectorZ  = request.m_vectorZ;
     transform.m_scale    = spineScale(row->resSpineId);
     ecs.add(entity, transform);
@@ -70,6 +90,14 @@ Entity materializeRole(World& world, const SpawnRequest& request, SpawnStage sta
 
     StatsComponent stats;
     stats.m_base = role::rules::loadAttributes(*row, request.m_level);
+    if (row->roleType == static_cast<int32_t>(EntityRoleType::kSummon) && request.m_owner.value != 0 &&
+        ecs.has<StatsComponent>(request.m_owner))
+    {
+        const auto& ownerStats = ecs.get<StatsComponent>(request.m_owner);
+        for (size_t i = 0; i < stats.m_base.size(); ++i)
+            stats.m_base[i] = ownerStats.value(static_cast<int32_t>(i)) *
+                              (i < row->attributeRate.size() ? row->attributeRate[i] : Fixed::fromInt(1));
+    }
     ecs.add(entity, stats);
 
     HealthComponent health;
@@ -122,6 +150,15 @@ Entity materializeRole(World& world, const SpawnRequest& request, SpawnStage sta
     {
         ecs.add(entity, SkillCastComponent{});
         ecs.add(entity, ActionTimelineComponent{});
+    }
+    if (request.m_lifetimeMs > 0 && request.m_owner.value != 0)
+    {
+        SummonComponent summon;
+        summon.m_owner        = request.m_owner;
+        summon.m_root         = identity.m_rootOwner.value != 0 ? identity.m_rootOwner : request.m_owner;
+        summon.m_remainingMs  = Fixed::fromInt(request.m_lifetimeMs);
+        ecs.add(entity, summon);
+        life::rules::inheritBuffs(world, request.m_owner, entity, 1);
     }
     return entity;
 }
@@ -201,8 +238,9 @@ Entity materializeEffect(World& world, const SpawnRequest& request, SpawnStage s
     timeline.m_finished = row->clips.empty();
     const int32_t firstClip = timeline.m_finished ? 0 : timeline.m_clips.front();
     ecs.add(entity, std::move(timeline));
-    // 出生时同步进入首片段；下一次特效遍只消费延迟标记，不在进入帧推进。
-    if (firstClip != 0 && !timeline::rules::enterClip(world, entity, firstClip, true, true))
+    // 角色时间轴出生后本帧立刻跑特效遍，与旧实现 create 后同帧 update 一致，不 defer。
+    // 后继/受击/生命周期在特效遍之后才实体化，第一次推进自然落在下一帧。
+    if (firstClip != 0 && !timeline::rules::enterClip(world, entity, firstClip, true, false))
         ecs.get<ActionTimelineComponent>(entity).m_finished = true;
 
     ecs.add(entity, ContactMemoryComponent{});
@@ -212,17 +250,51 @@ Entity materializeEffect(World& world, const SpawnRequest& request, SpawnStage s
 
 namespace life::rules
 {
+// 准入 inherit 列表是否含指定标记（1 召唤 / 2 变身）。
+bool inheritHas(const conf::battle::BuffDef& def, int32_t flag)
+{
+    return std::find(def.m_admission.m_inherit.begin(), def.m_admission.m_inherit.end(), flag) !=
+           def.m_admission.m_inherit.end();
+}
+
+// 把来源身上 inherit 含 flag 的 Buff 同步准入到目标。
+void inheritBuffs(World& world, Entity from, Entity to, int32_t flag)
+{
+    if (!world.ecs().has<BuffListComponent>(from) || !world.ecs().has<BuffListComponent>(to))
+        return;
+    std::vector<int32_t> ids;
+    for (const auto& inst : world.ecs().get<BuffListComponent>(from).m_instances)
+    {
+        if (inst.m_removing)
+            continue;
+        const auto* def = conf::Config::instance().find<conf::battle::BuffDef>(inst.m_id);
+        if (def && inheritHas(*def, flag))
+            ids.push_back(inst.m_id);
+    }
+    BuffContext ctx;
+    ctx.m_applicator = from;
+    ctx.m_target     = to;
+    for (const int32_t id : ids)
+        buff::rules::admit(world, to, id, ctx);
+}
+
+// 按请求装配一个实体。
+Entity materialize(World& world, const SpawnRequest& request, SpawnStage stage)
+{
+    if (request.m_kind == SpawnKind::Role)
+        return materializeRole(world, request, stage);
+    if (request.m_kind == SpawnKind::Effect)
+        return materializeEffect(world, request, stage);
+    return {};
+}
+
 // 排空 SpawnRequest 队列并按出生阶段实体化。
 void spawnFlush(World& world, SpawnStage stage)
 {
     auto& queue = world.ecs().singleton<EventQueue<SpawnRequest>>();
     for (const SpawnRequest& request : queue.m_items)
     {
-        Entity entity;
-        if (request.m_kind == SpawnKind::Role)
-            entity = materializeRole(world, request, stage);
-        else if (request.m_kind == SpawnKind::Effect)
-            entity = materializeEffect(world, request, stage);
+        const Entity entity = materialize(world, request, stage);
         if (entity.value != 0)
         {
             SpawnEvent event;
@@ -235,6 +307,15 @@ void spawnFlush(World& world, SpawnStage stage)
         }
     }
     queue.clear();
+}
+
+// 打上回收标签并入队。已标记的实体不重复。
+void despawn(World& world, Entity entity, DespawnReason reason)
+{
+    if (!world.ecs().alive(entity) || world.ecs().has<DespawningComponent>(entity))
+        return;
+    world.ecs().add(entity, DespawningComponent{});
+    world.ecs().singleton<EventQueue<DespawnRequest>>().push({entity, reason});
 }
 }  // namespace life::rules
 }  // namespace mugen::sim

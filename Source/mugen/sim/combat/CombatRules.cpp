@@ -4,6 +4,7 @@
 #include "mugen/sim/combat/DamageRules.h"
 #include "mugen/sim/combat/HealthRules.h"
 #include "mugen/sim/effect/EffectRules.h"
+#include "mugen/sim/life/EntityFactory.h"
 #include "mugen/sim/skill/SkillRules.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include <algorithm>
@@ -240,5 +241,27 @@ void emitHit(World& world, const HitContext& ctx)
     hitEvent.m_killed   = targetHealth.m_hp <= Fixed{};
     hitEvent.m_contact  = {ctx.m_contact.m_point.x, {}, ctx.m_contact.m_point.y};
     world.ecs().singleton<EventQueue<HitEvent>>().push(hitEvent);
+}
+
+// autoRelease 2/3：命中目标数达标则回收。2 关闭后继，3 保留后继给 DespawnSystem。
+void expireByHitCount(World& world)
+{
+    world.ecs().each<LifetimeComponent, EffectInfoComponent, HitTrackerComponent>(
+        [&](Entity entity, const LifetimeComponent& life, EffectInfoComponent& info, const HitTrackerComponent& tracker) {
+            if (world.ecs().has<DespawningComponent>(entity))
+                return;
+            if (life.m_autoRelease != 2 && life.m_autoRelease != 3)
+                return;
+            const auto* effectRow = conf::Config::instance().find<conf::battle::EffectDef>(info.m_configId);
+            const auto* hitRow    = effectRow && effectRow->hitId > 0
+                                        ? conf::Config::instance().find<conf::battle::HitDef>(effectRow->hitId)
+                                        : nullptr;
+            if (!hitRow || hitRow->hitInterval != -1 || hitRow->hitCounts == -1)
+                return;
+            if (static_cast<int32_t>(tracker.m_hitTargets.size()) < hitRow->hitCounts)
+                return;
+            info.m_next = life.m_autoRelease == 3;
+            life::rules::despawn(world, entity, DespawnReason::HitCount);
+        });
 }
 }  // namespace mugen::sim::combat::rules

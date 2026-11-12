@@ -34,6 +34,19 @@ void placement(const conf::battle::EffectDef& row, const TransformComponent& sou
 
 namespace effect::rules
 {
+// 按特效配置把 entity 放到 base 的相对位置。
+void placeFrom(World& world, Entity entity, Entity base, bool ground)
+{
+    const auto& info = world.ecs().get<EffectInfoComponent>(entity);
+    const auto* row  = conf::Config::instance().find<conf::battle::EffectDef>(info.m_configId);
+    if (!row)
+        return;
+    auto& target = world.ecs().get<TransformComponent>(entity);
+    placement(*row, world.ecs().get<TransformComponent>(base), world.ecs().singleton<MapRegion>(), target);
+    if (ground)
+        target.m_position.y = {};
+}
+
 // 由主人动作生成特效。
 void spawnFromRole(World& world, Entity owner, int32_t effectId, const SourceContext& source)
 {

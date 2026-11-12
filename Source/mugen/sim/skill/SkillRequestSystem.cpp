@@ -17,10 +17,16 @@ void runSkillRequest(World& world)
             const HitStateComponent& hit, const StatusFlagsComponent& flags) {
             if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
                 return;
-            // 死亡、木偶、受击族与待处理受击都不能开新技能（挣脱留到后续切片）。
+            // 死亡、木偶、挤开、待处理受击不能开新技能；受击中的挣脱由 isAllowCast 只放行 L。
             if (state.m_state == RoleStateId::Death || state.m_state == RoleStateId::Puppet ||
-                state.m_deathRequested || role::isHitState(state.m_state) || hit.m_pendingHitDefId != 0)
+                state.m_state == RoleStateId::Jostled || state.m_deathRequested || hit.m_pendingHitDefId != 0)
                 return;
+            if (world.ecs().has<HealthComponent>(entity))
+            {
+                const auto& health = world.ecs().get<HealthComponent>(entity);
+                if (health.m_dead || health.m_hp <= Fixed{})
+                    return;
+            }
             if (!flags.canControl())
                 return;
             for (const auto& button : intent.m_buttons)

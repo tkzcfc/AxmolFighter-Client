@@ -9,6 +9,7 @@
 #include "mugen/sim/skill/SkillComponents.h"
 #include "mugen/sim/effect/EffectComponents.h"
 #include "mugen/sim/buff/BuffComponents.h"
+#include "mugen/sim/life/LifeComponents.h"
 #include "mugen/sim/base/SpawnStage.h"
 #include "mugen/sim/Events.h"
 #include "mugen/core/ecs/Entity.h"
@@ -74,7 +75,7 @@ struct DespawningComponent
     X(InactiveComponent) X(DespawningComponent) X(IdentityComponent) X(PlayerControlComponent) X(IntentComponent) X(TransformComponent) X(DisplacementComponent) X(MotionStateComponent)      \
         X(HitboxesComponent) X(StatsComponent) X(StatusFlagsComponent) X(HealthComponent) X(PauseComponent) X(RoleStateComponent) X(HitStateComponent) X(SkillBookComponent) X(SkillCastComponent)      \
             X(ActionTimelineComponent) X(EffectInfoComponent) X(HitTrackerComponent) X(LifetimeComponent) X(FollowComponent) X(ContactMemoryComponent) X(BuffListComponent) \
-                X(AbilityListComponent) X(TauntTableComponent) X(ComboMeterComponent) X(RageStateComponent)
+                X(AbilityListComponent) X(TauntTableComponent) X(ComboMeterComponent) X(RageStateComponent) X(SummonComponent) X(TransformLinkComponent)
 
 namespace mugen::sim
 {

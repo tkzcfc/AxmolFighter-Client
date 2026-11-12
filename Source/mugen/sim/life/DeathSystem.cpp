@@ -1,5 +1,5 @@
 // [9.1] DeathSystem
-// 读：`DeathRequest`、`HealthComponent`、`IdentityComponent`、`RoleStateComponent`、`HitStateComponent`、`TransformComponent`、`StatusFlagsComponent`
+// 读：`DeathRequest`、`HealthComponent`、`IdentityComponent`、`RoleStateComponent`、`HitStateComponent`、`TransformComponent`、`StatusFlagsComponent`、`TransformLinkComponent`
 // 写：`RoleStateComponent`(死亡请求位)、`DespawningComponent`
 // 消费：`DeathRequest`
 // 产生：`DeathEvent`、`SpawnRequest`(ko/死亡特效)、`DespawnRequest`
@@ -50,6 +50,23 @@ void runDeath(World& world)
             continue;
         state.m_deathRequested = true;
         state.m_deathKiller    = request.m_killer;
+        if (world.ecs().has<TransformLinkComponent>(request.m_entity))
+        {
+            const auto members = world.ecs().get<TransformLinkComponent>(request.m_entity).m_members;
+            for (const Entity member : members)
+            {
+                if (member.value == request.m_entity.value || !world.ecs().alive(member) ||
+                    world.ecs().has<DespawningComponent>(member) || !world.ecs().has<RoleStateComponent>(member))
+                    continue;
+                auto& other = world.ecs().get<RoleStateComponent>(member);
+                if (other.m_deathRequested)
+                    continue;
+                other.m_deathRequested = true;
+                other.m_deathKiller    = request.m_killer;
+                if (world.ecs().has<HealthComponent>(member))
+                    world.ecs().get<HealthComponent>(member).m_dead = true;
+            }
+        }
         // KO 特效在生命归零当帧生成；死亡状态再等 FSM 进入 Death 后宣布（受击族延迟到硬直/倒地结束）。
         const auto* role = conf::Config::instance().find<conf::battle::RoleDef>(
             world.ecs().get<IdentityComponent>(request.m_entity).m_configId);

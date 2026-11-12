@@ -46,6 +46,8 @@ void runCollision(World& world)
     const uint64_t frame = world.frame();
     std::vector<Entity> colliders;
     world.ecs().each<IdentityComponent, HitboxesComponent>([&](Entity entity, const IdentityComponent&, const HitboxesComponent&) {
+        if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
+            return;
         colliders.push_back(entity);
     });
     for (const Entity collider : colliders)
@@ -99,5 +101,20 @@ void runCollision(World& world)
         }
         memory.m_contacts = std::move(active);
     }
+    // R5：接触按（攻击实体创建序，目标创建序）排序，与 CombatSystem 微管线一致。
+    std::vector<Entity> created;
+    world.ecs().each<IdentityComponent>([&](Entity entity, const IdentityComponent&) { created.push_back(entity); });
+    auto rank = [&](Entity entity) {
+        const auto it = std::find(created.begin(), created.end(), entity);
+        return it == created.end() ? created.size() : static_cast<size_t>(it - created.begin());
+    };
+    auto& queue = world.ecs().singleton<EventQueue<ContactEvent>>().m_items;
+    std::stable_sort(queue.begin(), queue.end(), [&](const ContactEvent& a, const ContactEvent& b) {
+        const size_t attacker = rank(a.m_a);
+        const size_t other    = rank(b.m_a);
+        if (attacker != other)
+            return attacker < other;
+        return rank(a.m_b) < rank(b.m_b);
+    });
 }
 }  // namespace mugen::sim

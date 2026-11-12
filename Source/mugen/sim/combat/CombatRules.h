@@ -61,5 +61,7 @@ void requestHitReaction(World& world, const HitContext& ctx);
 void spawnHitEffects(World& world, const HitContext& ctx);
 // 步骤 15：发出命中事实。
 void emitHit(World& world, const HitContext& ctx);
+// autoRelease 2/3：命中目标数达标则回收；3 保留后继，2 关闭后继。
+void expireByHitCount(World& world);
 }  // namespace combat::rules
 }  // namespace mugen::sim
