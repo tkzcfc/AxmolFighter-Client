@@ -59,6 +59,7 @@
 // pet -> PetConfig -> tables/PetTables.h
 // partner -> PartnerConfig -> tables/PartnerTables.h
 // create_role -> CreateRoleConfig -> tables/CreateRoleTables.h
+// avatar_class -> AvatarClassConfig -> tables/AvatarClassTables.h
 
 namespace mugen::conf
 {
@@ -106,6 +107,7 @@ struct ArmamentConfig;
 struct PetConfig;
 struct PartnerConfig;
 struct CreateRoleConfig;
+struct AvatarClassConfig;
 namespace battle
 {
 struct SkillDef;
@@ -161,6 +163,7 @@ struct KeyByOrdinal
 };
 }  // namespace mugen::conf
 
+// clang-format off
 #define MG_CONFIG_TABLES(X)                                  \
     X(skill, SkillAttackConfig, KeyById)                     \
     X(skill_hit, SkillHitConfig, KeyById)                    \
@@ -203,30 +206,34 @@ struct KeyByOrdinal
     X(fashion, FashionConfig, KeyByIdAndOccupation)          \
     X(fashion_suit, FashionSuitConfig, KeyById)              \
     X(res_fashion, ResFashionConfig, KeyById)                \
-    X(item_base, ItemBaseConfig, KeyById)                   \
-    X(armament, ArmamentConfig, KeyByIdAndOccupation) \
-    X(pet, PetConfig, KeyById) \
-    X(partner, PartnerConfig, KeyById) \
-    X(create_role, CreateRoleConfig, KeyById) \
-    X(battle_skill, battle::SkillDef, KeyById) \
-    X(battle_clip, battle::ClipDef, KeyById) \
-    X(battle_effect_clip, battle::EffectClipDef, KeyById) \
-    X(battle_effect, battle::EffectDef, KeyById) \
-    X(battle_hit, battle::HitDef, KeyById) \
-    X(battle_role, battle::RoleDef, KeyById) \
-    X(battle_buff, battle::BuffDef, KeyByMId) \
-    X(battle_ability, battle::AbilityDef, KeyByMId) \
+    X(item_base, ItemBaseConfig, KeyById)                    \
+    X(armament, ArmamentConfig, KeyByIdAndOccupation)        \
+    X(pet, PetConfig, KeyById)                               \
+    X(partner, PartnerConfig, KeyById)                       \
+    X(create_role, CreateRoleConfig, KeyById)                \
+    X(avatar_class, AvatarClassConfig, KeyById)              \
+    X(battle_skill, battle::SkillDef, KeyById)               \
+    X(battle_clip, battle::ClipDef, KeyById)                 \
+    X(battle_effect_clip, battle::EffectClipDef, KeyById)    \
+    X(battle_effect, battle::EffectDef, KeyById)             \
+    X(battle_hit, battle::HitDef, KeyById)                   \
+    X(battle_role, battle::RoleDef, KeyById)                 \
+    X(battle_buff, battle::BuffDef, KeyByMId)                \
+    X(battle_ability, battle::AbilityDef, KeyByMId)          \
     X(battle_ai, battle::AiDef, KeyByMId)
+// clang-format on
 
 // 派生表：不读取 Lua，而是由转换器在读取全部源表后降级计算得出。
 // 必须是 MG_CONFIG_TABLES 的子集。
-#define MG_DERIVED_TABLES(X) \
-    X(battle_skill, battle::SkillDef, KeyById) \
-    X(battle_clip, battle::ClipDef, KeyById) \
+// clang-format off
+#define MG_DERIVED_TABLES(X)                              \
+    X(battle_skill, battle::SkillDef, KeyById)            \
+    X(battle_clip, battle::ClipDef, KeyById)              \
     X(battle_effect_clip, battle::EffectClipDef, KeyById) \
-    X(battle_effect, battle::EffectDef, KeyById) \
-    X(battle_hit, battle::HitDef, KeyById) \
-    X(battle_role, battle::RoleDef, KeyById) \
-    X(battle_buff, battle::BuffDef, KeyByMId) \
-    X(battle_ability, battle::AbilityDef, KeyByMId) \
+    X(battle_effect, battle::EffectDef, KeyById)          \
+    X(battle_hit, battle::HitDef, KeyById)                \
+    X(battle_role, battle::RoleDef, KeyById)              \
+    X(battle_buff, battle::BuffDef, KeyByMId)             \
+    X(battle_ability, battle::AbilityDef, KeyByMId)       \
     X(battle_ai, battle::AiDef, KeyByMId)
+// clang-format on

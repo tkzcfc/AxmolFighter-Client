@@ -35,6 +35,7 @@ struct CharacterModel
     std::vector<DefaultSkinModel> defaultSkins;  // 创角默认外观
     std::vector<FashionModel> fashions;          // 拥有的全部装扮
     std::vector<EquipmentModel> equipments;      // 拥有+穿上的全部装备
+    int32_t armamentAppearanceId = 0;            // 当前武装外观 config_id（0=职业默认武器）
 };
 
 }  // namespace game::model

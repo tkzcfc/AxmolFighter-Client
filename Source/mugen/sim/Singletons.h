@@ -191,23 +191,37 @@ struct ScheduledActions
 }  // namespace mugen::sim
 
 // 新 sim 单例唯一登记表：时钟、随机数、全部事件队列、表现缓冲、地图、槽位、房间与生成登记。
-#define MG_SINGLETON_LIST(X)                                                                                   \
-    X(WorldClock)                                                                                              \
-    X(RngState)                                                                                                \
-    X(SlowMotion)                                                                                              \
-    X(PresentationEvents)                                                                                      \
-    X(PlayerSlots)                                                                                             \
-    X(MapRegion)                                                                                               \
-    X(RoomState)                                                                                               \
-    X(SpawnRegistry)                                                                                           \
-    X(ScheduledActions)                                                                                        \
-    X(EventQueue<SpawnRequest>) X(EventQueue<DespawnRequest>) X(EventQueue<TransformRequest>)                  \
-        X(EventQueue<DeathRequest>) X(EventQueue<RoomRequest>) X(EventQueue<SpawnEvent>)                       \
-            X(EventQueue<ContactEvent>) X(EventQueue<HitEvent>) X(EventQueue<HpEvent>)                         \
-                X(EventQueue<DeathEvent>) X(EventQueue<CastEvent>) X(EventQueue<ActionEvent>)                  \
-                    X(EventQueue<StateEvent>) X(EventQueue<BuffEvent>) X(EventQueue<CueEvent>)                 \
-                        X(EventQueue<RoomEvent>) X(EventQueue<DespawnEvent>) X(EventQueue<DisplacementEvent>) \
-                            X(EventQueue<HitStopEvent>)
+// clang-format off
+#define MG_SINGLETON_LIST(X)         \
+    X(WorldClock)                    \
+    X(RngState)                      \
+    X(SlowMotion)                    \
+    X(PresentationEvents)            \
+    X(PlayerSlots)                   \
+    X(MapRegion)                     \
+    X(RoomState)                     \
+    X(SpawnRegistry)                 \
+    X(ScheduledActions)              \
+    X(EventQueue<SpawnRequest>)      \
+    X(EventQueue<DespawnRequest>)    \
+    X(EventQueue<TransformRequest>)  \
+    X(EventQueue<DeathRequest>)      \
+    X(EventQueue<RoomRequest>)       \
+    X(EventQueue<SpawnEvent>)        \
+    X(EventQueue<ContactEvent>)      \
+    X(EventQueue<HitEvent>)          \
+    X(EventQueue<HpEvent>)           \
+    X(EventQueue<DeathEvent>)        \
+    X(EventQueue<CastEvent>)         \
+    X(EventQueue<ActionEvent>)       \
+    X(EventQueue<StateEvent>)        \
+    X(EventQueue<BuffEvent>)         \
+    X(EventQueue<CueEvent>)          \
+    X(EventQueue<RoomEvent>)         \
+    X(EventQueue<DespawnEvent>)      \
+    X(EventQueue<DisplacementEvent>) \
+    X(EventQueue<HitStopEvent>)
+// clang-format on
 
 namespace mugen::sim
 {

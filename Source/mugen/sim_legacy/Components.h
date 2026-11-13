@@ -12,14 +12,39 @@
 #include <tuple>
 
 // 生产世界允许挂载的组件注册表，顺序固定类型标识。
-#define MG_COMPONENT_LIST(X)                                                                                          \
-    X(EntityGroup)                                                                                                    \
-    X(ControlEventQueue)                                                                                              \
-    X(RoleIdentity) X(RoleStatus) X(ExtraState) X(Attributes) X(Vitals) X(Transform) X(MotionState)                   \
-        X(PartnerRageState) X(Puppet)                                                                                   \
-        X(ColliderState) X(CollisionState) X(RoleTimers) X(RoleHitState) X(Displacement) X(RoleBrain) X(RoleControl)  \
-            X(SkillPool) X(EffectState) X(EffectTree) X(BuffPool) X(BuffExternalConditions) X(AbilityPool) X(AiAgent) \
-                X(PortalState) X(ObstacleState) X(GoodsState) X(DropGoods)
+// clang-format off
+#define MG_COMPONENT_LIST(X)  \
+    X(EntityGroup)            \
+    X(ControlEventQueue)      \
+    X(RoleIdentity)           \
+    X(RoleStatus)             \
+    X(ExtraState)             \
+    X(Attributes)             \
+    X(Vitals)                 \
+    X(Transform)              \
+    X(MotionState)            \
+    X(PartnerRageState)       \
+    X(Puppet)                 \
+    X(ColliderState)          \
+    X(CollisionState)         \
+    X(RoleTimers)             \
+    X(RoleHitState)           \
+    X(Displacement)           \
+    X(RoleBrain)              \
+    X(RoleControl)            \
+    X(SkillPool)              \
+    X(EffectState)            \
+    X(EffectTree)             \
+    X(BuffPool)               \
+    X(BuffExternalConditions) \
+    X(AbilityPool)            \
+    X(AiAgent)                \
+    X(PortalState)            \
+    X(ObstacleState)          \
+    X(GoodsState)             \
+    X(DropGoods)
+// clang-format on
+
 namespace mugen::sim_legacy
 {
 // 角色脑与控制组件位于 role::brain，此处引入便于组件注册表展开。

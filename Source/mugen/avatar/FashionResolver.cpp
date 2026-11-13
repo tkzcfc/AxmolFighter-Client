@@ -10,40 +10,27 @@ NS_MG_BEGIN
 namespace
 {
 
-// 各职业的默认外观（部位 → ResFashion id / 武器 ResSpine id）
-std::unordered_map<FashionPosition, int32_t> getDefaultFashion(int32_t roleId)
+// 用 avatar_class 的职业默认装扮填上调用方没给的部位。id 为 0 的部位跳过。
+void mergeClassDefaultFashion(CharacterClass cls, std::unordered_map<FashionPosition, int32_t>& out)
 {
-    switch (mugen::type_conversions::toCharacterClass(roleId))
+    const auto* row = conf::Config::instance().find<conf::AvatarClassConfig>(static_cast<int32_t>(cls));
+    if (!row)
     {
-    case mugen::CharacterClass::kSwordman:
-    {
-        return {
-            {FashionPosition::kBody, 101008},  {FashionPosition::kHair, 101004}, {FashionPosition::kClothes, 101002},
-            {FashionPosition::kSkin, 101007},  {FashionPosition::kHat, 101001},  {FashionPosition::kFace, 101005},
-            {FashionPosition::kWeapon, 14001},
-        };
+        MG_LOG_E("FashionResolver: avatar_class {} missing", static_cast<int32_t>(cls));
+        return;
     }
-    case mugen::CharacterClass::kRanger:
-    {
-        return {
-            {FashionPosition::kBody, 102008},  {FashionPosition::kHair, 102004}, {FashionPosition::kClothes, 102002},
-            {FashionPosition::kSkin, 102007},  {FashionPosition::kHat, 102001},  {FashionPosition::kFace, 102005},
-            {FashionPosition::kWeapon, 14101},
-        };
-    }
-    case mugen::CharacterClass::kMage:
-    {
-        return {
-            {FashionPosition::kBody, 104008},  {FashionPosition::kHair, 104004}, {FashionPosition::kClothes, 104002},
-            {FashionPosition::kSkin, 104007},  {FashionPosition::kHat, 104001},  {FashionPosition::kFace, 104005},
-            {FashionPosition::kWeapon, 14301},
-        };
-    }
-    default:
-    {
-        return {};
-    }
-    }
+
+    const auto put = [&out](FashionPosition pos, int32_t id) {
+        if (id > 0)
+            out.emplace(pos, id);
+    };
+    put(FashionPosition::kBody, row->defaultBody);
+    put(FashionPosition::kHair, row->defaultHair);
+    put(FashionPosition::kClothes, row->defaultClothes);
+    put(FashionPosition::kSkin, row->defaultSkin);
+    put(FashionPosition::kHat, row->defaultHat);
+    put(FashionPosition::kFace, row->defaultFace);
+    put(FashionPosition::kWeapon, row->defaultWeapon);
 }
 
 // 武器、翅膀、光环是独立的 spine 资源（挂件），不参与身体 atlas 合并
@@ -128,10 +115,11 @@ bool FashionResolver::resolve(const FashionAppearance& appearance, AvatarDesc& o
         return false;
     }
 
-    // baseFashion 优先，缺省部位用角色表默认与职业默认补齐
+    // baseFashion 优先；缺省部位先补职业默认武器/身体，再补角色表 resFashion。
+    // 职业默认武器必须压过角色表第 9 项：那一格是实体烘焙神器挂件，不是入门武器。
     std::unordered_map<FashionPosition, int32_t> baseFashion = appearance.baseFashion;
+    mergeClassDefaultFashion(out.characterClass, baseFashion);
     mergeRoleFallbackFashion(*role, baseFashion);
-    baseFashion.merge(getDefaultFashion(roleId));
 
     // 已穿时装：身体部位 → ResFashion id；挂件部位 → ResSpine id
     std::unordered_map<FashionPosition, int32_t> equipBody;

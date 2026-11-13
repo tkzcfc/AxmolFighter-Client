@@ -1,20 +1,12 @@
 #include "WeaponFormPreviewDialog.h"
 
 #include "AppContext.h"
+#include "mugen/avatar/AvatarAccessoryRules.h"
 #include "mugen/conf/TypeConversions.h"
 #include "mugen/conf/GameDef.h"
 
 namespace gameui
 {
-
-namespace
-{
-// Heiyue ConstUI.EQUIPMENT_ZORDER: swordman/fighter/mage -1, ranger +1.
-int artifactLocalZOrder(mugen::CharacterClass cls)
-{
-    return cls == mugen::CharacterClass::kRanger ? 1 : -1;
-}
-}  // namespace
 
 WeaponFormPreviewDialog::WeaponFormPreviewDialog(int32_t armamentSpineId, std::string spineAnim)
     : m_armamentSpineId(armamentSpineId), m_spineAnim(std::move(spineAnim))
@@ -108,7 +100,6 @@ void WeaponFormPreviewDialog::refreshPreview()
     const float loaderW = m_avatarLoader->getWidth();
     const float loaderH = m_avatarLoader->getHeight();
     avatar->setPosition(ax::Vec2(loaderW * 0.5f, -loaderH));
-    avatar->setScale(0.85f);
     m_avatarLoader->setContent(avatar);
     m_avatar = avatar;
 
@@ -119,7 +110,7 @@ void WeaponFormPreviewDialog::refreshPreview()
     // with the same scale factor — not a far offset in UI space.
     const int32_t spineId   = m_armamentSpineId;
     const std::string anim  = m_spineAnim;
-    const int zOrder        = artifactLocalZOrder(cls);
+    const int zOrder        = mugen::AvatarAccessoryRules::rule(mugen::AvatarAccessorySlot::kWeapon, cls).zOrder;
     auto weakThis           = weak_from_this();
 
     mugen::MgSkeletonAnimation::createFromCacheAsync(
@@ -134,7 +125,6 @@ void WeaponFormPreviewDialog::refreshPreview()
 
             skel->setAnimation(0, anim, true);
             skel->setPosition(ax::Vec2::ZERO);
-            skel->setScale(1.0f);
             m_avatar->addChild(skel, zOrder);
             m_artifactSpine = skel;
             AXLOGI("WeaponFormPreviewDialog: artifact spineId={} anim={} z={} (child of Avatar @ origin)",

@@ -5,6 +5,7 @@
 #include "TownScreen.h"
 #include "mugen/avatar/render/Avatar.h"
 #include "mugen/conf/TypeConversions.h"
+#include "ui/progress/SessionFashionAppearance.h"
 #include "ui/widgets/character_lobby/CharacterCreationPanel.h"
 #include "ui/widgets/common/MessageDialog.h"
 #include "core/audio/AudioManager.h"
@@ -105,6 +106,10 @@ void CharacterLobbyScreen::updateCharacterList()
             if (f.worn && f.configID > 0)
                 appearance.equipFashion[static_cast<mugen::FashionPosition>(f.position)] = f.configID;
         }
+        // 与城镇 / 副本相同：武装外观覆盖职业默认武器挂件。
+        const int32_t weapon = armamentWeaponSpineId(c.armamentAppearanceId, cls);
+        if (weapon > 0)
+            appearance.baseFashion[mugen::FashionPosition::kWeapon] = weapon;
 
         // 外观驱动创建（骨架异步装配，就绪自动浮现）
         auto* previewAvatar = mugen::Avatar::create(appearance);

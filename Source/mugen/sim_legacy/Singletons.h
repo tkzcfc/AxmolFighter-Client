@@ -142,9 +142,18 @@ struct RoomState
 };
 }  // namespace mugen::sim_legacy
 // 生产世界允许保存的单例注册表，顺序固定类型标识。
+// clang-format off
 #define MG_SINGLETON_LIST(X) \
     X(WorldClock)            \
-    X(RngState) X(SlowMotion) X(LogicTimers) X(PresentationEvents) X(PlayerSlots) X(MapRegion) X(RoomState)
+    X(RngState)              \
+    X(SlowMotion)            \
+    X(LogicTimers)           \
+    X(PresentationEvents)    \
+    X(PlayerSlots)           \
+    X(MapRegion)             \
+    X(RoomState)
+// clang-format on
+
 namespace mugen::sim_legacy
 {
 #define MG_SIM_SINGLETON_TUPLE(T) \

@@ -75,13 +75,44 @@ struct DespawningComponent
 }  // namespace mugen::sim
 
 // 新 sim 组件唯一登记表，顺序固定序列化类型编号（上限 64）。
-#define MG_COMPONENT_LIST(X)                                                                                          \
-    X(InactiveComponent) X(DespawningComponent) X(IdentityComponent) X(PlayerControlComponent) X(IntentComponent) X(TransformComponent) X(DisplacementComponent) X(MotionStateComponent)      \
-        X(HitboxesComponent) X(StatsComponent) X(StatusFlagsComponent) X(HealthComponent) X(PauseComponent) X(RoleStateComponent) X(HitStateComponent) X(SkillBookComponent) X(SkillCastComponent)      \
-            X(ActionTimelineComponent) X(EffectInfoComponent) X(HitTrackerComponent) X(LifetimeComponent) X(FollowComponent) X(ContactMemoryComponent) X(BuffListComponent) \
-                X(AbilityListComponent) X(TauntTableComponent) X(ComboMeterComponent) X(RageStateComponent) X(SummonComponent) X(TransformLinkComponent) X(ObstacleStateComponent) \
-                    X(GoodsStateComponent) X(PortalStateComponent) X(DropTableComponent) \
-                X(AiBrainComponent)
+// clang-format off
+#define MG_COMPONENT_LIST(X)   \
+    X(InactiveComponent)       \
+    X(DespawningComponent)     \
+    X(IdentityComponent)       \
+    X(PlayerControlComponent)  \
+    X(IntentComponent)         \
+    X(TransformComponent)      \
+    X(DisplacementComponent)   \
+    X(MotionStateComponent)    \
+    X(HitboxesComponent)       \
+    X(StatsComponent)          \
+    X(StatusFlagsComponent)    \
+    X(HealthComponent)         \
+    X(PauseComponent)          \
+    X(RoleStateComponent)      \
+    X(HitStateComponent)       \
+    X(SkillBookComponent)      \
+    X(SkillCastComponent)      \
+    X(ActionTimelineComponent) \
+    X(EffectInfoComponent)     \
+    X(HitTrackerComponent)     \
+    X(LifetimeComponent)       \
+    X(FollowComponent)         \
+    X(ContactMemoryComponent)  \
+    X(BuffListComponent)       \
+    X(AbilityListComponent)    \
+    X(TauntTableComponent)     \
+    X(ComboMeterComponent)     \
+    X(RageStateComponent)      \
+    X(SummonComponent)         \
+    X(TransformLinkComponent)  \
+    X(ObstacleStateComponent)  \
+    X(GoodsStateComponent)     \
+    X(PortalStateComponent)    \
+    X(DropTableComponent)      \
+    X(AiBrainComponent)
+// clang-format on
 
 namespace mugen::sim
 {

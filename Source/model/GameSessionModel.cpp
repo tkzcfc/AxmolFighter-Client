@@ -61,6 +61,8 @@ CharacterModel characterFromProto(const PB::Types::CharacterInfo& c)
     for (int i = 0; i < c.equipments_size(); ++i)
         cm.equipments.push_back(equipmentFromProto(c.equipments(i)));
 
+    cm.armamentAppearanceId = c.armament_appearance_id();
+
     return cm;
 }
 

@@ -143,6 +143,31 @@ TEST_CASE("FashionResolver uses occupation and skips missing referenced fashion"
     }
 }
 
+TEST_CASE("FashionResolver uses occupation default weapon instead of role table artifact")
+{
+    REQUIRE(mugen::test::ensureContentVfs());
+    REQUIRE(mugen::conf::Config::instance().load("/mugen/config/config.bin"));
+
+    struct Expectation
+    {
+        int32_t roleId;
+        int32_t weaponSpineId;
+    };
+    const Expectation expects[] = {
+        {101, 14001},
+        {102, 14101},
+        {104, 14301},
+    };
+    for (const auto& it : expects)
+    {
+        mugen::FashionAppearance appearance;
+        appearance.roleId = it.roleId;
+        mugen::AvatarDesc desc;
+        REQUIRE(mugen::FashionResolver::resolve(appearance, desc));
+        CHECK(desc.accessory(mugen::AvatarAccessorySlot::kWeapon) == it.weaponSpineId);
+    }
+}
+
 TEST_CASE("FashionResolver uses baseFashion weapon ResSpine as weapon accessory")
 {
     REQUIRE(mugen::test::ensureContentVfs());

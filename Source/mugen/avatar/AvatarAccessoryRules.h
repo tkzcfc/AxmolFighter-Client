@@ -1,13 +1,15 @@
 #pragma once
 
 #include "mugen/avatar/AvatarDesc.h"
+#include "mugen/conf/ReflectedConfig.h"
 
 #include <string>
 #include <vector>
 
 NS_MG_BEGIN
 
-// 挂件规则：挂件节点在 Avatar 内的 z-order、循环动画、显示条件，以及嫁接到身体的插槽名（按职业）
+// 挂件规则：挂件节点在 Avatar 内的 z-order、循环动画、显示条件，以及嫁接到身体的插槽名。
+// 层级和嫁接槽来自 avatar_class；循环动画与是否仅待机显示按槽位固定。
 struct AvatarAccessoryRule
 {
     // 相对身体（z=0）的 z-order
@@ -16,7 +18,7 @@ struct AvatarAccessoryRule
     const char* loopAnim = "";
     // 仅在身体播放待机动作时显示（其余动作由嫁接到身体插槽的 attachment 表现）
     bool standOnly = false;
-    // 嫁接到身体的插槽/attachment 名；为空表示不嫁接
+    // 嫁接到身体的插槽/attachment 名；为空表示不嫁接。指向 avatar_class 行内的 vector。
     const std::vector<std::string>* graftSlots = nullptr;
 };
 
@@ -29,78 +31,41 @@ struct AvatarAccessoryRules
     static constexpr const char* kHaloFrontAnim = "guanghuanqian";
     static constexpr const char* kDonorSkin     = "default";
 
-    // 按挂件槽位和职业返回表现规则。
+    // 按挂件槽位和职业返回表现规则。职业行缺失时 z-order 为 0 且不嫁接。
     static AvatarAccessoryRule rule(AvatarAccessorySlot slot, CharacterClass cls)
     {
+        const auto* row =
+            conf::Config::instance().find<conf::AvatarClassConfig>(static_cast<int32_t>(cls));
+        if (!row)
+            MG_LOG_E("AvatarAccessoryRules: avatar_class {} missing", static_cast<int32_t>(cls));
+
         AvatarAccessoryRule r;
         switch (slot)
         {
         case AvatarAccessorySlot::kWeapon:
-            r.zOrder     = cls == CharacterClass::kRanger ? 1 : -1;
+            r.zOrder     = row ? row->weaponZOrder : 0;
             r.loopAnim   = kStandAnim;
             r.standOnly  = true;
-            r.graftSlots = &weaponSlots(cls);
+            r.graftSlots = row ? &row->weaponGraftSlots : nullptr;
             break;
         case AvatarAccessorySlot::kWing:
-            r.zOrder     = cls == CharacterClass::kFighter ? -2 : -1;
+            r.zOrder     = row ? row->wingZOrder : 0;
             r.loopAnim   = kStandAnim;
             r.standOnly  = true;
-            r.graftSlots = &wingSlots(cls);
+            r.graftSlots = row ? &row->wingGraftSlots : nullptr;
             break;
         case AvatarAccessorySlot::kHaloBack:
-            r.zOrder   = cls == CharacterClass::kFighter ? -3 : -4;
+            r.zOrder   = row ? row->haloBackZOrder : 0;
             r.loopAnim = kHaloBackAnim;
             break;
         case AvatarAccessorySlot::kHaloFront:
-            r.zOrder   = 1;
+            r.zOrder   = row ? row->haloFrontZOrder : 0;
             r.loopAnim = kHaloFrontAnim;
             break;
         default:
             break;
         }
         return r;
-    }
-
-    // 返回职业对应的武器嫁接槽位。
-    static const std::vector<std::string>& weaponSlots(CharacterClass cls)
-    {
-        static const std::vector<std::string> kSword   = {"body/dao", "body/dao2", "body/daobing", "body/daoshen"};
-        static const std::vector<std::string> kRanger  = {"body/youdao", "body/youdao2"};
-        static const std::vector<std::string> kFighter = {"body/zuoshouwuqi", "body/youshouwuqi"};
-        static const std::vector<std::string> kMage    = {"wuqi"};
-        static const std::vector<std::string> kEmpty;
-        switch (cls)
-        {
-        case CharacterClass::kSwordman:
-            return kSword;
-        case CharacterClass::kRanger:
-            return kRanger;
-        case CharacterClass::kFighter:
-            return kFighter;
-        case CharacterClass::kMage:
-            return kMage;
-        default:
-            return kEmpty;
-        }
-    }
-
-    // 返回职业对应的翅膀嫁接槽位。
-    static const std::vector<std::string>& wingSlots(CharacterClass cls)
-    {
-        static const std::vector<std::string> kTwo = {"body/chibang", "body/chibang2"};
-        static const std::vector<std::string> kOne = {"body/chibang"};
-        static const std::vector<std::string> kEmpty;
-        switch (cls)
-        {
-        case CharacterClass::kSwordman:
-        case CharacterClass::kRanger:
-        case CharacterClass::kMage:
-            return kTwo;
-        case CharacterClass::kFighter:
-            return kOne;
-        default:
-            return kEmpty;
-        }
     }
 };
 

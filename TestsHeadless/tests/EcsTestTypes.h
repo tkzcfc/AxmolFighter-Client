@@ -39,8 +39,16 @@ struct Queue
 };
 
 // Test-only registries. Production lists belong to sim_legacy/Components.h and sim_legacy/Singletons.h in Todo 12.
-#define MG_COMPONENT_LIST(X) X(Position) X(Velocity) X(Weight) X(Payload)
-#define MG_SINGLETON_LIST(X) X(Clock) X(Queue)
+// clang-format off
+#define MG_COMPONENT_LIST(X) \
+    X(Position)              \
+    X(Velocity)              \
+    X(Weight)                \
+    X(Payload)
+#define MG_SINGLETON_LIST(X) \
+    X(Clock)                 \
+    X(Queue)
+// clang-format on
 #define MG_ECS_TEST_TUPLE(T) \
     , std::tuple<T> {}
 using Components = decltype(std::tuple_cat(std::tuple<> {} MG_COMPONENT_LIST(MG_ECS_TEST_TUPLE)));
