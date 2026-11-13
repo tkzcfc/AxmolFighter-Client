@@ -97,7 +97,7 @@ legacy_cli::BuffInjectTarget buffTarget(std::string_view text)
         return legacy_cli::BuffInjectTarget::AllDummies;
     throw std::invalid_argument("Invalid buff target: " + std::string(text));
 }
-LoadedScript loadScript(const std::string& path, uint64_t frames, bool allowBuffInject)
+LoadedScript loadScript(const std::string& path, uint64_t frames, bool allowBuffInject, int32_t roomId = 0)
 {
     std::ifstream file(path);
     if (!file)
@@ -133,6 +133,26 @@ LoadedScript loadScript(const std::string& path, uint64_t frames, bool allowBuff
             inject.target = buffTarget(target);
             inject.buffId = static_cast<int32_t>(buffId);
             script.buffs.push_back(inject);
+            continue;
+        }
+        if (head == "cmd")
+        {
+            std::string command;
+            std::string extra;
+            if (!(row >> command) || (row >> extra) || frame == 0 || frame > frames)
+                throw std::invalid_argument("Invalid command script line " + std::to_string(lineNumber));
+            SystemCommand systemCommand;
+            if (command == "revive")
+                systemCommand = ReviveCommand{0};
+            else if (command == "return")
+                systemCommand = ReturnToTownCommand{0};
+            else if (command == "warndone")
+                systemCommand = RoomWarningDone{roomId};
+            else
+                throw std::invalid_argument("Invalid command script line " + std::to_string(lineNumber));
+            auto& input = script.inputs[frame];
+            input.frame = frame;
+            input.systemCommands.push_back(std::move(systemCommand));
             continue;
         }
         uint32_t slot = 0;
@@ -186,7 +206,7 @@ FrameInput recordedInput(World& world)
     return input;
 }
 // 构建一个按职业装配离线技能并进入房间的战斗世界，供脚本驱动。
-World combatWorld(int32_t roomId, uint64_t seed, int32_t occupation, int32_t level = 1)
+World combatWorld(int32_t roomId, uint64_t seed, int32_t occupation, int32_t level = 1, int32_t copyId = 0)
 {
     test::ScenarioHarness::loadAssets();
     World world;  // 默认 WorldHooks：Role 组走真实 role::update 战斗逻辑
@@ -200,7 +220,7 @@ World combatWorld(int32_t roomId, uint64_t seed, int32_t occupation, int32_t lev
     player.m_isAi            = false;
     setup.m_players.push_back(player);
     setup.m_stageId          = 0;
-    setup.m_copyId           = 0;
+    setup.m_copyId           = copyId;
     setup.m_useScenarioHooks = false;
     if (bootstrapBattle(world, setup).empty())
         throw std::runtime_error("Cannot enter room " + std::to_string(roomId));
@@ -234,8 +254,8 @@ World combatWorld(int32_t roomId, uint64_t seed, int32_t occupation, int32_t lev
 // 导出一份场景摘要：按清单条目装配世界、读脚本并写文件。
 void exportOne(const legacy_cli::ManifestEntry& entry, const std::string& crit, const std::string& outputPath)
 {
-    const auto script = loadScript(entry.script, entry.frames, true);
-    World world       = combatWorld(entry.room, entry.seed, entry.occupation, entry.level);
+    const auto script = loadScript(entry.script, entry.frames, true, entry.room);
+    World world       = combatWorld(entry.room, entry.seed, entry.occupation, entry.level, entry.copy);
     legacy_cli::ExportParams params;
     params.scenario = entry.name;
     params.room     = entry.room;
@@ -625,7 +645,7 @@ int main(int argc, char** argv)
                         "Expected run-room <roomId> --frames N [--class 1-7] [--seed N] [--level N] [--script file] "
                         "[--trace file] [--revision rev] [--ai on|off]");
                 if (std::string_view(argv[index]) == "--script")
-                    inputs = loadScript(argv[index + 1], frames, false).inputs;
+                    inputs = loadScript(argv[index + 1], frames, false, static_cast<int32_t>(room)).inputs;
                 else if (std::string_view(argv[index]) == "--trace")
                     tracePath = argv[index + 1];
                 else if (std::string_view(argv[index]) == "--revision")
@@ -931,6 +951,7 @@ int main(int argc, char** argv)
                "export-summary (--scenario <name> --crit min|max [--output path] | --all [--out-dir dir]) "
                "[--manifest path]\n"
                "script rows: frame slot controlEvent quadrant angleX1000 pressType\n"
+               "script rows: frame cmd <revive|return|warndone>\n"
                "export-summary also accepts: frame buff <hero|dummy1|dummy2|all-dummies> <buffId>\n";
         return 1;
     }

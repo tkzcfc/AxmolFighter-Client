@@ -27,9 +27,15 @@ enum class DrawKind : uint8_t
     // AI 重选目标。
     AiTarget,
     // AI 游走偏移。
-    AiWander
+    AiWander,
+    // AI 规则概率。
+    AiChance
 };
 // 唯一随机入口。设了 DrawPolicy 时用覆盖值且不消耗 RngState，否则从本场随机数抽 0–100。
 Fixed draw(World& world, DrawKind kind);
+// 整数均匀抽样 [min,max]；DrawPolicy 存在时固定取 min（对应摘要 choice=first）。
+int32_t drawN(World& world, DrawKind kind, int32_t min, int32_t max);
+// 定点均匀抽样 [min,max]；DrawPolicy 存在时固定取 min。
+Fixed drawF(World& world, DrawKind kind, Fixed min, Fixed max);
 }  // namespace rng
 }  // namespace mugen::sim

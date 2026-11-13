@@ -217,6 +217,8 @@ P0 FrameBegin → P1 Input → P2 Tick → P3 Intent → P4 Action → P5 Moveme
 
 “同步触发”指在该系统内直接调用 `buff::rules::fire(...)`（P-1）。
 
+S4 状态：表中 AiSystem（3.1）、ObstacleSystem（8.2）、InteractSystem（8.3）、RoomDirectorSystem（10.1）、RoomTransferSystem（12.1）已按本表在 S4 落地（以代码为准）；其余系统在 S0–S3 落地。P2 Tick 的 Cooldown/BuffTick/VitalsTick/PauseTick、P4 的 SkillRequest/RoleFsm/Timeline/HitReaction/Locomotion、P8 的 Combat/Obstacle/Interact、P9 的 Death/Transform/Despawn 全部已实现。
+
 ### 3.3 同帧规则
 
 | 编号 | 规则 | 来源 / 理由 |
@@ -254,7 +256,8 @@ P0 FrameBegin → P1 Input → P2 Tick → P3 Intent → P4 Action → P5 Moveme
 | 输入命令消费 | **暂停**，命令保留（R9） | |
 | AI 决策 | **暂停**（新规则；旧实现照常决策，但意图要等解冻才生效，无可观察差异） | AI 不在比对范围 |
 | 时间轴片段时间、cue、取消窗口 | 暂停 | |
-| FSM 转移、受击硬直/倒地计时 | 暂停 | 受击反应在顿帧结束后才开始 |
+| FSM 转移（写 `m_state`） | **仍发生** | 先设顿帧再同帧进受击/死亡态（对齐参考语义：`_hitReaction` 先冻结后受击） |
+| 受击硬直/倒地计时、enter 动作（动画/位移） | 暂停 | 状态已转移但 enter 被推迟：`HitStateComponent::m_enterPending` 标记，解冻后补做 |
 | 位移积分、跟随 | 暂停 | |
 | 动画时间、受击框采样 | 暂停；受击框保留上一次采样，**仍参与碰撞** | 旧实现同 |
 | 特效命中间隔 `hit_interval` | 特效暂停时暂停 | |
@@ -277,15 +280,15 @@ P0 FrameBegin → P1 Input → P2 Tick → P3 Intent → P4 Action → P5 Moveme
 
 | # | 组件 | 字段要点 | 写入方（所有者） | 主要读取方 |
 |---|---|---|---|---|
-| 1 | `IdentityComponent` | `m_kind`(Role/Effect/Obstacle/Goods/Portal)、`m_configId`、`m_camp`、`m_hostileMask`、`m_roleType`、`m_level`、`m_playerSlot`(可选)、`m_owner`、`m_rootOwner`、`m_born{frame, stage}`、`m_ordinal`（同配置第几个，用于语义键） | EntityFactory（只在生成时写） | 全部 |
+| 1 | `IdentityComponent` | `m_kind`(Role/Effect/Obstacle/Goods/Portal)、`m_configId`、`m_camp`、`m_hostileMask`、`m_roleType`、`m_level`、`m_aiDifficulty`(AI 难度，1-based，玩家/无 AI 为 1)、`m_playerSlot`(可选)、`m_owner`、`m_rootOwner`、`m_born{frame, stage}`、`m_ordinal`（同配置第几个，用于语义键） | EntityFactory（只在生成时写） | 全部 |
 | 2 | `InactiveComponent` | 标签：变身后休眠、跨房缓冲、房间挂起 | TransformSystem / Room 系统 | 全部（跳过） |
 | 3 | `DespawningComponent` | 标签：本帧待回收（R4） | `life::rules::despawn` | 全部（跳过） |
 | 4 | `Puppet` | `m_playerId` | InputSystem | Locomotion、view |
 | 5 | `PlayerControlComponent` | `m_slot`、`m_commands`（未消费命令，保序） | Input / PlayerIntent | — |
 | 6 | `IntentComponent` | `m_move{mode: None/Stop/Walk/Run/MoveTo, quadrant, angle, targetPos, moveKind: Patrol/Chase/Alert/Wander/Finding}`、`m_buttons[]{event, pressType, angle}`、`m_autoCast`、`m_target` | PlayerIntent / Ai（每帧重写） | SkillRequest、RoleFsm、Locomotion |
-| 7 | `AiBrain` | 警戒、上次动作、规则冷却[8]、技能间隔[]、仇恨计时、目标、正在执行的移动规则 | AiSystem | AiSystem |
+| 7 | `AiBrainComponent`（S4 已实现） | 警戒、上次动作、规则冷却[8]、技能间隔[]、仇恨计时、目标、正在执行的移动规则 | AiSystem | AiSystem |
 | 8 | `TransformComponent` | `m_position`、`m_towardX`、`m_vectorX`、`m_vectorZ`、`m_scale` | DisplacementSystem、FollowSystem；FSM/时间轴（瞬移、转向）；Combat（受击转向） | 全部 |
-| 9 | `DisplacementComponent` | 曲线 id、各轴已用时/速度/加速度、重力、反弹、策略{wall, floor, endOnBrake}、事件位{brake, air, floor, lie, wall}、追踪目标、控制速度 | DisplacementSystem（积分）；FSM/时间轴/Locomotion（启动、设置控制速度） | 状态体、FSM |
+| 9 | `DisplacementComponent` | 曲线 id、各轴已用时/速度/加速度、重力、反弹、策略{wall, floor, endOnBrake}、事件位{brake, air, floor, lie, wall}、追踪目标、控制速度、`m_noFloorBounce`(浮空耗尽落地不反弹) | DisplacementSystem（积分）；FSM/时间轴/Locomotion（启动、设置控制速度） | 状态体、FSM |
 | 10 | `FollowComponent` | `m_target`、`m_mode`(0/1/2)、`m_offset` | EntityFactory | FollowSystem |
 | 11 | `MotionStateComponent` | 动作文件、名称、entry、`m_timeMs`、`m_rate`、`m_loop`、`m_completedLoops`、`m_completedThisFrame` | Animation（推进）；FSM/时间轴（播放新动作） | 时间轴、FSM、Hitbox、view |
 | 12 | `HitboxesComponent` | 攻击框[]、受击框[]、`m_radius`、`m_sampledFrame` | HitboxSystem | Collision |
@@ -294,7 +297,7 @@ P0 FrameBegin → P1 Input → P2 Tick → P3 Intent → P4 Action → P5 Moveme
 | 15 | `HealthComponent` | `m_hp`、`m_mp`、`m_ep`、`m_maxMp`、`m_maxEp`、`m_shield{amount, layers}`、`m_dead`、`m_beHitEnabled`、采样 `m_prevHp`/`m_prevEp` | `health::rules`（Combat、Buff、Vitals、Room 调用） | 多数 |
 | 16 | `StatusFlagsComponent` | 引用计数：SuperArmor、Invincible、Stun、Durance、Palsy、Frozen、Silence、Stealth、NoHeal、NoCrystalCost；派生 `canMove()`、`canControl()` | `buff::rules` | 多数 |
 | 17 | `PauseComponent` | `m_freezeMs`、`m_staticMs`、`m_paused`、`m_staticResetAtMs` | Combat/时间轴写入，PauseTick 递减 | 推进类系统 |
-| 18 | `HitStateComponent` | 浮空值/重量/疲劳/受击计数、硬直 ms、待处理受击请求 `{hitDefId, towardX, kind}`、受击保护、最近攻击者与伤害记录（供 AI 仇恨）、接触点 | Combat（请求与记录）、HitReaction（计时）、FSM（消费请求） | FSM、AI、条件 |
+| 18 | `HitStateComponent` | 浮空值/重量/疲劳/受击计数、硬直 ms、待处理受击请求 `{hitDefId, towardX, kind}`、受击保护、最近攻击者与伤害记录（供 AI 仇恨）、接触点、`m_hitType`(0 击退/1 击倒/2 击飞/−1 无受击)、`m_enterPending`(顿帧推迟 enter) | Combat（请求与记录）、HitReaction（计时）、FSM（消费请求） | FSM、AI、条件 |
 | 19 | `ComboMeterComponent` | 连击数、评价等级/经验、超时、已结算击杀目标 | Combat（命中/击杀）、Vitals（超时衰减） | Buff 条件、view |
 | 20 | `TauntTableComponent` | `{applicator, weight}[]`（首次出现顺序） | `buff::rules` | AI |
 | 21 | `RageStateComponent` | `m_rage`、`m_freezeMs`/`m_maxFreezeMs`（变身冻结）、`m_transformed`（变身态，伙伴 107） | Combat（命中 grant）、Skill（施法收束进变身）、Vitals（冻结递减、Idle/移动回退） | Skill、view |
@@ -309,10 +312,10 @@ P0 FrameBegin → P1 Input → P2 Tick → P3 Intent → P4 Action → P5 Moveme
 | 30 | `LifetimeComponent` | autoRelease 策略、是否随主人销毁、是否允许后继 | EntityFactory、Combat | Despawn |
 | 31 | `BuffListComponent` | 实例[]{serial, id, initialId, lifecycle, context, latched, 规则小状态}、免疫登记、添加 CD、`m_nextSerial` | `buff::rules`、BuffTick | Combat（条件）、view |
 | 32 | `AbilityListComponent` | 能力实例[]（CD、周期、结束倒计时、上下文） | `buff::rules`、BuffTick | — |
-| 33 | `ObstacleState` | 剩余受击次数、动作计时 | ObstacleSystem | view |
-| 34 | `GoodsState` | 拾取状态、抛射 | InteractSystem | view |
-| 35 | `PortalState` | Close/Active/Transfer 三阶段 | Room、Interact | view |
-| 36 | `DropTable` | 死亡掉落配置 | EntityFactory | Death |
+| 33 | `ObstacleStateComponent`（S4 已实现） | 剩余受击次数、动作计时 | ObstacleSystem | view |
+| 34 | `GoodsStateComponent`（S4 已实现） | 拾取状态、抛射 | InteractSystem | view |
+| 35 | `PortalStateComponent`（S4 已实现） | Close/Active/Transfer 三阶段 | Room、Interact | view |
+| 36 | `DropTableComponent`（S4 已实现） | 死亡掉落配置 | EntityFactory | Death |
 | 37 | `MoveClock` | 连续移动/站立秒数（条件 171/172 使用） | Vitals | 条件 |
 
 ### 4.3 单例
@@ -871,12 +874,12 @@ ClipDef
 | 优先级 | 来源 | 转移 |
 |---|---|---|
 | 1 | `HealthComponent.m_dead` 或死亡请求 | 非受击族 → Death；受击族在自然出口转入（§6.5） |
-| 2 | 复活请求（房间） | Death → Revive → Idle |
+| 2 | 复活请求（导演置 `m_reviveRequested`） | Death → Revive → Idle |
 | 3 | `HitStateComponent` 待处理受击请求 | 非受击族 → Hit（已在 Combat 打断施法）；受击族 → 追击规则（§6.5） |
 | 4 | 受击族自然推进 | §6.5 |
 | 5 | 挣脱：可挣脱状态下开始了 L 槽施法 | → Attack（清位移与硬直） |
 | 6 | `SkillCastComponent` 有当前施法 | Idle/移动 → Attack；Attack 内切招 → 退出旧施法、进入新施法 |
-| 7 | 施法结束 | Attack → Idle（有移动意图且 `nextRun` → Run） |
+| 7 | 施法结束（TimelineSystem 同帧经 `role::rules::exitAttack`，见 `sim/role/RoleFsmRules.*`） | Attack → Idle（有移动意图且 `nextRun` → Run） |
 | 8 | 传送门推开 | → Jostled |
 | 9 | 移动意图（仅从 Idle/移动状态） | → Run / Walk / Patrol / Chase / Alert / Finding；停止意图 → Idle |
 
@@ -888,7 +891,7 @@ ClipDef
 | Hit 族 | 播放动作；启动受击位移；触发 BehaviorStateStart | 触发 BehaviorStateEnd |
 | GetUp | 英雄：挂 Buff 156（PVP 起身保护）、154 | — |
 | Wake | 英雄：挂 Buff 201（无敌）；恢复浮空值；重置受击保护 | — |
-| Death | 死亡位移、清技能、通知变身组；死亡动作结束后 Despawn | — |
+| Death | 死亡位移、清技能、通知变身组；死亡动作结束后 Despawn。位移按进入路径决定：HitSwitch/HitFloor 进死亡不套 `deathDisplacementId` | — |
 | Idle / 移动 | 播放 stand / walk / run | — |
 
 实现约定（S1 后补充）：
@@ -896,9 +899,16 @@ ClipDef
 - 进入/退出动作本身是同步规则链（§4.6），受同样约束。
 - Combat 在 P8 写受击请求，FSM 在下一帧 P4 才转移，比旧实现晚一帧；在 ±1 帧容差内，接受为设计差异，不列入 `known_deviations`。动画完成位同理：FSM 读上一帧 P6 的完成位（R10），HitSwitch 等“动画结束即转移”的状态因此也可能晚一帧。
 
+S4 补充（以代码为准）：
+
+- 受击族 `Hit/HitSwitch/HitUp/HitDown/HitFloor/GetUp/Wake` 已实现（转移表见 §6.5）。
+- 英雄死亡不销毁实体：英雄停在 `Death`，交 RoomDirectorSystem 判复活（`m_reviveRequested` → Death→Revive→Idle）或失败；只有召唤物/怪物死亡动作结束后才 Despawn。
+- 施法结束回 Idle/Run 由 TimelineSystem 在同帧检测片段放完并调用 `role::rules::exitAttack`（`sim/role/RoleFsmRules.*`），不是 FSM 自己读完成位。
+- `hitType == −1`（无受击）：只计命中、播受击特效，不结算伤害/受击/顿帧/怒气（§6.6 第 6 步门控）。
+
 ### 6.5 受击状态机
 
-输入均为上一帧的结果：动画完成位、位移事件位（brake/air/lie/floor）、硬直计时、浮空值是否耗尽、新的受击请求、死亡标志。`hitType`：0 击退、1 击倒、2 击飞、−1 无受击。
+输入均为上一帧的结果：动画完成位、位移事件位（brake/air/lie/floor）、硬直计时、浮空值是否耗尽、新的受击请求、死亡标志。`hitType`：0 击退、1 击倒、2 击飞、−1 无受击（只计命中/播受击特效，不结算伤害/受击/顿帧/怒气）。
 
 | 当前 | 条件 | 下一状态 / 动作 |
 |---|---|---|
@@ -920,7 +930,7 @@ ClipDef
 | Wake | 立即 | Idle |
 | 任一受击态或 Attack | 英雄受击保护已触发 | HitDown |
 
-数值规则（移植自旧实现 `HitStates`）：硬直 = `stiff_time × (1 + AddFloorTime)`，角色 `hit_stiff_time ≠ −1` 时覆盖；浮空值耗尽后每次读取硬直递减 `fatigue × 受击计数`；扣浮空值后每次受击 `vy −= weight × 受击计数`。浮空值耗尽时落地策略改为“停止不反弹”（HitReactionSystem 在 P4 写入，P5 当帧生效）。
+数值规则（移植自旧实现 `HitStates`）：硬直 = `stiff_time × (1 + AddFloorTime)`，角色 `hit_stiff_time ≠ −1` 时覆盖；浮空值耗尽后每次读取硬直递减 `fatigue × 受击计数`；扣浮空值后每次受击 `vy −= weight × 受击计数`。浮空值耗尽时落地策略改为“停止不反弹”：HitReactionSystem 在 P4 写 `DisplacementComponent::m_noFloorBounce`，DisplacementSystem 在 P5 当帧读取生效。
 
 ### 6.6 命中微管线
 
@@ -1021,6 +1031,12 @@ CombatSystem 对每个 `ContactEvent`（Began/Continue，特效 → 角色）依
 
 PVP 机器人、自动战斗、走向传送门不在范围内。
 
+实现偏差（S4，以代码为准）：
+
+- **施法间隔初始化**：`ensureBrain` 在首次决策时就用 `skill_priority_level_cd`（缺省 `skill_interval`）初始化各槽施放间隔并逐帧递减；旧实现 `m_skillIntervalMs` 为空时从空表找不到就绪槽，`skill_priority_level_cd > 0` 时实际永不施法。
+- **AI 跳过玩家实体**：AiSystem 遍历时跳过带 `m_playerSlot` 的角色（与旧实现 `isAi=false` 一致），玩家由输入驱动，不参与怪物 AI。
+- **掉落概率用原始随机流**：房间死亡掉落概率与抛射速度直接读 `RngState.m_random`（`randomF`），不经过 `rng::draw`，因此不参与 `DrawPolicy`（对齐旧实现 `RoomDirector::drop`）。
+
 ---
 
 ## 8. 回滚、快照、哈希、多实例、表现接口与服务器
@@ -1029,12 +1045,12 @@ PVP 机器人、自动战斗、走向传送门不在范围内。
 
 | 项 | 规则 |
 |---|---|
-| 快照内容 | `World::serialize` v3：版本号 + `WorldSetup` + 初始化标志 + `ECSManager::serialize()`（实体、按登记顺序的组件池、单例） |
+| 快照内容 | `World::serialize` v4：版本号 + `WorldSetup` + 初始化标志 + `ECSManager::serialize()`（实体、按登记顺序的组件池、单例） |
 | 不入快照 | `DrawPolicy`、外部追踪输出、进程级只读缓存（Config、avatar 资源）、规则库的临时寄存器 |
 | 队列 | 进入快照但帧边界为空（§4.5）；`PresentationEvents` 含上一帧事件，与旧实现一致 |
 | 哈希 | xxh64（快照字节），客户端与战斗服每 30 帧对账（沿用） |
 | 克隆 | `World` 可拷贝；`RollbackSession` 环形保存每帧快照（沿用旧接口） |
-| 版本 | 新 sim 快照版本从 2 开始（增至 3：新增 `SummonComponent`/`TransformLinkComponent` 与技能链/模式字段）；`.mgrp` 升到 v5（头部仍是 `WorldSetup`，帧输入格式不变） |
+| 版本 | 新 sim 快照版本 `kWorldSnapshotVersion`：2 → 3（新增 `SummonComponent`/`TransformLinkComponent` 与技能链/模式字段）→ 4（新增 `AiBrainComponent`/`ObstacleStateComponent`/`GoodsStateComponent`/`PortalStateComponent`/`DropTableComponent` 与 `IdentityComponent::m_aiDifficulty`、`HitStateComponent::m_hitType/m_enterPending`、`DisplacementComponent::m_noFloorBounce`）；`.mgrp` 升到 v5（头部仍是 `WorldSetup`，帧输入格式不变） |
 
 ### 8.2 确定性检查表（在 `mugen/AGENTS.md` 禁令之上）
 
@@ -1130,7 +1146,7 @@ PVP 机器人、自动战斗、走向传送门不在范围内。
 | S1 垂直切片 1 | 一个 PVP 英雄（建议职业 1 / role 101）对木桩：出生、走跑、朝向、地图边界；A 普攻连段（技能 → 时间轴 → 特效 → 碰撞 → 伤害）；受击状态机（至少 Hit/HitSwitch；A 段若有击飞则含 HitUp→Wake）；顿帧；一个 Buff（建议动作片段霸体 BuffSuperArmor，或命中挂 BuffBurn） | 场景“职业 1 A 连段打木桩”在暴击 0%/100% 两种 DrawPolicy 下：cast/action/hit/stop/state 帧 ±1；每次伤害相等；Buff 加/移 ±1；位移终点在容差内。另：同输入两次运行哈希一致、快照往返一致、`check_rules` 通过 |
 | S2 Buff 引擎 | 准入、生命周期、触发点、谓词、op 解释器、修正栈、特殊能力；转换器 `BuffDef`/`AbilityDef` 降级 | 9335 行全部降级或在报告中显式列出；每种 op 与谓词有单测；旧实现已移植的 79 类：每类至少一个 golden 场景比对通过；64 类新实现规则：按参照语义的单测（无 golden） |
 | S3 技能与时间轴完整 ✅ | 首批英雄全部槽位（B/C/D、冲刺、闪避 F、挣脱 L、曝气、搓招、奥义、伙伴怒气）；取消窗口（普通/至尊）、sorder、次数/链/模式、消耗；特效全部寿命语义；召唤；攻击变身 | **已完成**：`class1_swordman`/`class2_ranger`/`class4_mage`/`copy_room_class1` 及全部 buff 场景 min/max 比对通过（34 场景 ×2 = 68 摘要全 PASS）；召唤/变身有专门单测（`SummonTest`/`TransformTest`，另有 `SkillCancelTest`/`SkillLineCTest`/`ClipControlTest`/`FollowTest`/`TimelineFloorEndClipTest`）。有意未做：技能组/变化、摇杆方向列、变身 motionFile 外观；首批 no-op：晶体、神器、可控特效 |
-| S4 AI 与 PVE 关卡 | AiSystem；怪物；一个 PVE 关卡完整流程（房间状态、波次、障碍、物品、传送门、死亡、掉落、KO 慢放、复活） | 关 AI：关卡场景 golden 比对通过；开 AI：跑完关卡无断言、无卡死、胜负事件正确 |
+| S4 AI 与 PVE 关卡 ✅ | AiSystem；怪物；一个 PVE 关卡完整流程（房间状态、波次、障碍、物品、传送门、死亡、掉落、KO 慢放、复活） | **已完成**：`mugen_sim_tests` 236 通过、`mugen_tests` 375 通过；`compare-scenario --all` 72 个中 70 PASS（`copy_room_class1` min/max 两项为已知设计差异，见 `known_deviations.txt`）；`mugen_sim_cli run-ai-room 2010101 --frames 3000` 判 victory；`check_rules.ps1` 退出 0。遗留：角色挂起未实现（开场/警告/等复活；RoomDirectorSystem 在 Enter 态把玩家切回 stand 的临时处理待挂起实现后移除）；障碍死亡未走 deathDisplacement；defense_wave 只验收第 1 波；死亡/复活/失败由新 sim 单测覆盖（legacy 无法导出）；2071601 开 AI 因 1 级英雄打不过高级怪判负属预期 |
 | S5 渲染接入 | `sim/view`；`WorldPresenter`、HUD、调试面板改用 view；`LocalBattleMode` 与城镇 Town 模式切到新 sim（编译开关 `MG_NEW_SIM`） | 离线战斗可玩；城镇移动与远端木偶正常；视觉冒烟检查清单（命中特效、飘字、Buff 特效、震屏、慢放、胜负界面）通过 |
 | S6 网络与回滚 | `RollbackSession`、`LockstepAuthority`、`NetCodec`、`NetBattleSync` 迁入新 sim | `LockstepLoopbackTest`、`NetBattleSyncTest`、`RollbackTest` 用新 sim 通过；回滚重推结果与直跑逐帧哈希一致 |
 | S7 战斗服切换 | 战斗服链接新 sim；客户端联网模式同时切换 | `net_duel_sync_test` 通过；真实联网对局 30 帧哈希对账无不一致 |
@@ -1223,6 +1239,15 @@ PVP 机器人、自动战斗、走向传送门不在范围内。
 | `disp+` / `disp-` | 帧 实体 位移 id [终点 x y z] | 帧 ±1，终点在容差内 |
 | `death` | 帧 实体 | 帧 ±1 |
 | `final` | 实体 hp x y z 状态 | hp 相同，位置在容差内 |
+| `roomstate` | 帧 房间状态（状态机编号） | 帧 ±1，编号相同 |
+| `victory` / `failure` | 帧 房间 id | 帧 ±1，id 相同 |
+| `warning` | 帧 载荷 | 帧 ±1，载荷相同 |
+| `wave` | 帧 波次序号 | 帧 ±1，序号相同 |
+| `revive` | 帧 英雄实体键 | 帧 ±1，键相同 |
+| `ko` | 帧 房间 id | 帧 ±1，id 相同 |
+| `obstacle` | 帧 障碍键 break | 帧 ±1，键/事件相同 |
+| `goods` | 帧 物品键 drop \| pickup | 帧 ±1，键/事件相同 |
+| `portal` | 帧 门键 open \| transfer | 帧 ±1，键/事件相同 |
 
 ### A.5 比对算法
 
@@ -1255,6 +1280,19 @@ PVP 机器人、自动战斗、走向传送门不在范围内。
    - `context.m_applicator` 始终是 hero（槽位 0），包括目标就是 hero 的自我施加。
    - 不设置 `m_target`、不绑定技能，其余上下文保持默认。与动作给自己挂 buff、以及命中把施加者记成攻击者的路径一致。
    - 准入失败（配置缺失、区域、免疫、冷却、概率）不报错，该帧没有对应 `buff+`。概率仍走 `DrawPolicy`（golden 为 `prob=pass`，抽样 0，概率大于 0 即通过）。
+
+### A.7 场景脚本系统命令与清单 copy 列
+
+效果摘要脚本还接受系统命令行（S4 房间流程需要；两条通道语义一致，写入本帧 `FrameInput.systemCommands`，与 `frame buff` 互不影响）：
+
+```text
+<frame> cmd <revive|return|warndone>
+```
+
+- `frame`：逻辑帧，从 1 起且不超过场景帧数。
+- `revive` → `ReviveCommand`（复活请求，由 RoomDirectorSystem 判 `m_reviving` 且 `usedRevives < maxRevives` 时执行）；`return` → `ReturnToTownCommand`（回城）；`warndone` → `RoomWarningDone`（警告确认，推进 ReadySpine → Tip）。
+
+场景清单 `scenarios.txt` 支持可选第 8 列 `copy`（副本配置 id）：`name script room class level seed frames [copy]`。`copy` 决定复活次数上限（`CopyConfig.maxRevive`）与怪物等级加成（`CopyConfig.addLevel`），缺省为 0。
 
 ---
 

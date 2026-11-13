@@ -28,6 +28,8 @@ std::vector<ManifestEntry> loadManifest(const std::string& path)
             continue;
         if (!(row >> script >> entry.room >> entry.occupation >> entry.level >> entry.seed >> entry.frames))
             throw std::runtime_error("Invalid manifest line " + std::to_string(lineNo));
+        // 可选的副本列：决定复活次数上限；缺省为 0。
+        row >> entry.copy;
         entry.script = (!script.empty() && script[0] == '/') ? script : dir + script;
         entries.push_back(std::move(entry));
     }

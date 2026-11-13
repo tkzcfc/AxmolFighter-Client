@@ -3,6 +3,7 @@
 #include "mugen/sim_legacy/DrawPolicy.h"
 #include "mugen/sim_legacy/buff/BuffHolder.h"
 #include "mugen/sim_legacy/role/RoleComponents.h"
+#include "mugen/sim_legacy/room/RoomEntities.h"
 #include "mugen/sim_legacy/trace/TraceSink.h"
 #include <algorithm>
 #include <sstream>
@@ -89,6 +90,14 @@ struct DispWatch
     int64_t x = 0, y = 0, z = 0;
 };
 
+// 观察到的房间实体（障碍 / 物品 / 传送门）：键、种类与当前阶段。
+struct RoomEntityWatch
+{
+    std::string key;
+    GroupKind kind = GroupKind::Obstacle;
+    int32_t phase  = 0;
+};
+
 // 逐帧观察器：把追踪事件行与组件状态差分翻译成摘要行。
 class Exporter
 {
@@ -96,7 +105,16 @@ public:
     Exporter(World& world, summary::Summary& out) : m_world(world), m_out(out) {}
 
     // 记录推进前已存在的实体，不产生 spawn 行。
-    void scanInitial() { scanRoles(0, false); }
+    void scanInitial()
+    {
+        scanRoles(0, false);
+        // 记录房间流程与房间实体初始基线。
+        const auto& room = m_world.ecs().singleton<sim_legacy::RoomState>();
+        m_wave            = room.m_wave;
+        m_usedRevives     = room.m_usedRevives;
+        m_ko              = room.m_ko;
+        m_roomEntities    = scanRoomEntities();
+    }
     // 处理一帧结束后的追踪文本与组件状态。
     void afterTick(int64_t frame, const std::string& traceText)
     {
@@ -107,6 +125,8 @@ public:
             handleEvent(frame, line);
         observeRoles(frame);
         observeDisplacements(frame);
+        observeRoom(frame);
+        observeRoomEntities(frame);
     }
     // 追加 final 行。
     void finish()
@@ -193,6 +213,19 @@ private:
             w.push_back(word);
         if (w.empty())
             return;
+        if (w[0] == "ev" && w.size() >= 5)
+        {
+            // 表现事件行：ev <帧> <序号> <载荷>...，还原房间流程摘要行。
+            if (w[3] == "roomstate")
+                emit(frame, "roomstate", {w[4]});
+            else if (w[3] == "victory" && w.size() >= 6)
+                emit(frame, "victory", {w[5]});
+            else if (w[3] == "failure" && w.size() >= 6)
+                emit(frame, "failure", {w[5]});
+            else if (w[3] == "warn" && w.size() >= 6)
+                emit(frame, "warning", {w[5]});
+            return;
+        }
         if (w[0] == "cast" && w.size() >= 4)
             emit(frame, "cast", {key(w[1]), w[2], w[3]});
         else if (w[0] == "castend" && w.size() >= 3)
@@ -340,6 +373,136 @@ private:
     std::map<uint32_t, RoleWatch> m_roles;
     // 进行中的位移。
     std::map<uint32_t, DispWatch> m_disps;
+    // 上一帧波次、复活与 KO 基线。
+    int32_t m_wave = 0;
+    int32_t m_usedRevives = 0;
+    bool m_ko = false;
+    // 房间实体按配置的生成序号。
+    std::map<std::string, int> m_roomCounts;
+    // 房间实体句柄值 → 已分配的语义键（避免逐帧重复计数）。
+    std::map<uint32_t, std::string> m_roomEntityKeys;
+    // 上一帧存活房间实体。
+    std::map<uint32_t, RoomEntityWatch> m_roomEntities;
+
+    // 主控玩家语义键（复活行使用）。
+    std::string heroKey()
+    {
+        const auto& slots = m_world.ecs().singleton<PlayerSlots>().entities;
+        if (slots.empty())
+            return "-";
+        const Entity own  = slots.begin()->second;
+        const int32_t id  = m_world.ecs().get<RoleIdentity>(own).roleId;
+        return "role:" + std::to_string(id) + "#1";
+    }
+    // 房间实体语义键：obstacle/goods/portal:<id>#<n>；按实体句柄缓存，首次出现才分配序号。
+    std::string roomEntityKey(Entity entity, GroupKind kind)
+    {
+        const auto found = m_roomEntityKeys.find(entity.value);
+        if (found != m_roomEntityKeys.end())
+            return found->second;
+        auto& ecs   = m_world.ecs();
+        int32_t id  = 0;
+        if (kind == GroupKind::Obstacle)
+            id = ecs.get<ObstacleState>(entity).m_id;
+        else if (kind == GroupKind::Goods)
+            id = ecs.get<GoodsState>(entity).m_id;
+        else if (kind == GroupKind::Portal)
+            id = ecs.get<PortalState>(entity).m_id;
+        const char* stem =
+            kind == GroupKind::Obstacle ? "obstacle" : kind == GroupKind::Goods ? "goods" : "portal";
+        const std::string key = std::string(stem) + ':' + std::to_string(id) + '#' +
+                                std::to_string(++m_roomCounts[std::string(stem) + ':' + std::to_string(id)]);
+        m_roomEntityKeys[entity.value] = key;
+        return key;
+    }
+    // 收集当前存活的房间实体。
+    std::map<uint32_t, RoomEntityWatch> scanRoomEntities()
+    {
+        std::map<uint32_t, RoomEntityWatch> result;
+        m_world.ecs().each<EntityGroup>([&](Entity entity, const EntityGroup& group) {
+            RoomEntityWatch watch;
+            watch.kind = group.kind;
+            switch (group.kind)
+            {
+            case GroupKind::Obstacle:
+                watch.key   = roomEntityKey(entity, group.kind);
+                watch.phase = 0;
+                result[entity.value] = watch;
+                break;
+            case GroupKind::Goods:
+                watch.key   = roomEntityKey(entity, group.kind);
+                watch.phase = static_cast<int32_t>(m_world.ecs().get<GoodsState>(entity).m_phase);
+                result[entity.value] = watch;
+                break;
+            case GroupKind::Portal:
+                watch.key   = roomEntityKey(entity, group.kind);
+                watch.phase = static_cast<int32_t>(m_world.ecs().get<PortalState>(entity).m_phase);
+                result[entity.value] = watch;
+                break;
+            default:
+                break;
+            }
+        });
+        return result;
+    }
+    // 房间单例差分：波次、复活、KO。
+    void observeRoom(int64_t frame)
+    {
+        const auto& room = m_world.ecs().singleton<sim_legacy::RoomState>();
+        for (int32_t wave = m_wave + 1; wave <= room.m_wave; ++wave)
+            emit(frame, "wave", {std::to_string(wave)});
+        m_wave = room.m_wave;
+        if (room.m_usedRevives > m_usedRevives)
+            emit(frame, "revive", {heroKey()});
+        m_usedRevives = room.m_usedRevives;
+        if (room.m_ko && !m_ko)
+            emit(frame, "ko", {std::to_string(room.roomId)});
+        m_ko = room.m_ko;
+    }
+    // 房间实体差分：物品掉落 / 拾取、传送门开启 / 传送、障碍击破。
+    void observeRoomEntities(int64_t frame)
+    {
+        const auto current = scanRoomEntities();
+        for (const auto& [value, watch] : current)
+        {
+            const auto found = m_roomEntities.find(value);
+            if (found == m_roomEntities.end())
+            {
+                if (watch.kind == GroupKind::Goods)
+                    emit(frame, "goods", {watch.key, "drop"});
+                m_roomEntities[value] = watch;
+                continue;
+            }
+            auto& prev = found->second;
+            if (watch.kind == GroupKind::Goods)
+            {
+                if (watch.phase != prev.phase && watch.phase == static_cast<int32_t>(GoodsPhase::Collect))
+                    emit(frame, "goods", {watch.key, "pickup"});
+            }
+            else if (watch.kind == GroupKind::Portal)
+            {
+                if (watch.phase != prev.phase)
+                {
+                    if (watch.phase == static_cast<int32_t>(PortalPhase::Active))
+                        emit(frame, "portal", {watch.key, "open"});
+                    else if (watch.phase == static_cast<int32_t>(PortalPhase::Transfer))
+                        emit(frame, "portal", {watch.key, "transfer"});
+                }
+            }
+            prev.phase = watch.phase;
+        }
+        for (auto it = m_roomEntities.begin(); it != m_roomEntities.end();)
+        {
+            if (current.find(it->first) != current.end())
+            {
+                ++it;
+                continue;
+            }
+            if (it->second.kind == GroupKind::Obstacle)
+                emit(frame, "obstacle", {it->second.key, "break"});
+            it = m_roomEntities.erase(it);
+        }
+    }
 };
 
 // 施加当下解析目标。hero 固定为槽位 0；木桩不含玩家槽位和召唤物。

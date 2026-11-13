@@ -140,5 +140,26 @@ void runDebugSink(World& world)
     }
     for (const DeathEvent& event : ecs.singleton<EventQueue<DeathEvent>>().m_items)
         world.appendTrace("death " + entityKey(world, event.m_entity));
+    // 房间流程事实：状态切换、胜负、警告。摘要导出按这些追踪行还原成 roomstate/victory/failure/warning 行。
+    for (const RoomEvent& event : ecs.singleton<EventQueue<RoomEvent>>().m_items)
+    {
+        switch (event.m_kind)
+        {
+        case RoomEventKind::StateChanged:
+            world.appendTrace("roomstate " + std::to_string(event.m_payload));
+            break;
+        case RoomEventKind::Victory:
+            world.appendTrace("victory " + std::to_string(event.m_payload));
+            break;
+        case RoomEventKind::Failure:
+            world.appendTrace("failure " + std::to_string(event.m_payload));
+            break;
+        case RoomEventKind::Warning:
+            world.appendTrace("warning " + std::to_string(event.m_payload));
+            break;
+        case RoomEventKind::PvpEnded:
+            break;
+        }
+    }
 }
 }  // namespace mugen::sim

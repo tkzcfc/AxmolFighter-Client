@@ -91,8 +91,8 @@ void runDisplacement(World& world)
                     if (y.m_velocity < -conf::kBounces && d.m_bounces > Fixed{})
                     {
                         d.m_floor = true;
-                        // EndClip/Stop：清速度不反弹（R11 当帧策略反应）。
-                        if (d.m_floorPolicy != 0)
+                        // EndClip/Stop 或浮空值耗尽：清速度不反弹（R11 当帧策略反应）。
+                        if (d.m_floorPolicy != 0 || d.m_noFloorBounce)
                             velocity = {};
                         else
                             velocity.y = -y.m_velocity * d.m_bounces;

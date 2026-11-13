@@ -5,6 +5,7 @@
 #include "battle/EffectDef.h"
 #include "battle/HitDef.h"
 #include "battle/AbilityDef.h"
+#include "battle/AiDef.h"
 #include "battle/BuffDef.h"
 #include "battle/RoleDef.h"
 #include "battle/SkillDef.h"
@@ -115,6 +116,7 @@ struct HitDef;
 struct RoleDef;
 struct BuffDef;
 struct AbilityDef;
+struct AiDef;
 }  // namespace battle
 
 // 按单一 id 建立索引的表键策略。
@@ -213,7 +215,8 @@ struct KeyByOrdinal
     X(battle_hit, battle::HitDef, KeyById) \
     X(battle_role, battle::RoleDef, KeyById) \
     X(battle_buff, battle::BuffDef, KeyByMId) \
-    X(battle_ability, battle::AbilityDef, KeyByMId)
+    X(battle_ability, battle::AbilityDef, KeyByMId) \
+    X(battle_ai, battle::AiDef, KeyByMId)
 
 // 派生表：不读取 Lua，而是由转换器在读取全部源表后降级计算得出。
 // 必须是 MG_CONFIG_TABLES 的子集。
@@ -225,4 +228,5 @@ struct KeyByOrdinal
     X(battle_hit, battle::HitDef, KeyById) \
     X(battle_role, battle::RoleDef, KeyById) \
     X(battle_buff, battle::BuffDef, KeyByMId) \
-    X(battle_ability, battle::AbilityDef, KeyByMId)
+    X(battle_ability, battle::AbilityDef, KeyByMId) \
+    X(battle_ai, battle::AiDef, KeyByMId)

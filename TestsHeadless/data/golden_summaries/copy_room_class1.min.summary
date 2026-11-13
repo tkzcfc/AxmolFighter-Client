@@ -1,9 +1,15 @@
 # mugen effect summary v1
 # scenario copy_room_class1 room 2010101 seed 31 ai off
 # draw crit=min float=mid dodge=never prob=pass choice=first
+1 roomstate 1
+2 roomstate 2
+3 roomstate 3
+4 roomstate 4
+5 roomstate 5
 5 state role:101#1 Idle Run,Idle
 5 actionend role:101#1 stand
 5 action role:101#1 walk
+6 roomstate 6
 45 cast role:101#1 920090 Y
 45 disp+ role:101#1 922400
 45 state role:101#1 Run,Idle Attack,Idle
@@ -337,37 +343,51 @@
 412 action role:101#1 10134
 414 spawn role:101#1 fx:920030#1
 415 hit fx:920030#1 role:21881#1 920030 hit
-415 dmg role:101#1 role:21881#1 920030 1558668 0
-415 death role:21881#1
+415 dmg role:101#1 role:21881#1 920030 11838 0
 415 stop fx:920030#1 1
 415 stop role:101#1 1
 415 spawn role:101#1 fx:882475#1
 415 hit fx:920030#1 role:21881#3 920030 hit
-415 dmg role:101#1 role:21881#3 920030 1558668 0
-415 death role:21881#3
+415 dmg role:101#1 role:21881#3 920030 11838 0
 415 stop fx:920030#1 1
 415 stop role:101#1 1
 415 spawn role:101#1 fx:882475#2
-415 state role:21881#1 Idle Death
-415 state role:21881#3 Idle Death
+415 state role:21881#1 Idle Hit,Idle
+415 state role:21881#3 Idle Hit,Idle
 416 stop role:21881#1 1
 416 stop role:21881#3 1
-416 disp+ role:21881#1 133
-416 disp+ role:21881#3 133
+416 disp+ role:21881#1 920090
+416 disp+ role:21881#3 920090
 416 actionend role:21881#1 stand
-416 action role:21881#1 death
+416 action role:21881#1 hit
 416 actionend role:21881#3 stand
-416 action role:21881#3 death
+416 action role:21881#3 hit
 419 disp- role:101#1 922080 480.066 0.000 130.000
 419 disp+ role:101#1 922090
 419 actionend role:101#1 10134
 419 action role:101#1 10136
+419 state role:21881#1 Hit,Idle HitUp,Hit,Idle
+419 state role:21881#3 Hit,Idle HitUp,Hit,Idle
 419 disp- role:101#1 922090 480.066 0.000 130.000
 420 castend role:101#1 920020 done
 420 cast role:101#1 920030 A
 420 disp+ role:101#1 922100
 420 actionend role:101#1 10136
 420 action role:101#1 10138
+420 state role:21881#1 HitUp,Hit,Idle HitUp,Idle
+420 actionend role:21881#1 hit
+420 action role:21881#1 flyup
+420 state role:21881#3 HitUp,Hit,Idle HitUp,Idle
+420 actionend role:21881#3 hit
+420 action role:21881#3 flyup
+424 state role:21881#1 HitUp,Idle HitDown,HitUp,Idle
+424 state role:21881#3 HitUp,Idle HitDown,HitUp,Idle
+425 state role:21881#1 HitDown,HitUp,Idle HitDown,Idle
+425 actionend role:21881#1 flyup
+425 action role:21881#1 flydown
+425 state role:21881#3 HitDown,HitUp,Idle HitDown,Idle
+425 actionend role:21881#3 flyup
+425 action role:21881#3 flydown
 428 disp- role:101#1 922100 381.878 0.000 130.000
 428 disp+ role:101#1 922110
 428 actionend role:101#1 10138
@@ -385,10 +405,16 @@
 438 action role:101#1 10144
 438 disp- role:101#1 922130 317.511 0.000 130.000
 439 spawn role:101#1 fx:920050#1
-443 disp- role:21881#1 133 429.999 0.000 107.000
-443 disp- role:21881#3 133 429.999 0.000 83.000
-444 spawn role:21881#1 fx:8#1
-444 spawn role:21881#3 fx:8#2
+441 state role:21881#1 HitDown,Idle HitFloor,HitDown,Idle
+441 state role:21881#3 HitDown,Idle HitFloor,HitDown,Idle
+441 disp- role:21881#1 920090 753.333 0.000 107.000
+441 disp- role:21881#3 920090 753.333 0.000 83.000
+442 state role:21881#1 HitFloor,HitDown,Idle HitFloor,Idle
+442 actionend role:21881#1 flydown
+442 action role:21881#1 toground
+442 state role:21881#3 HitFloor,HitDown,Idle HitFloor,Idle
+442 actionend role:21881#3 flydown
+442 action role:21881#3 toground
 450 disp+ role:101#1 922140
 450 actionend role:101#1 10144
 450 action role:101#1 10146
@@ -402,6 +428,12 @@
 473 state role:101#1 Attack,Idle Idle
 473 actionend role:101#1 10148
 473 action role:101#1 stand
+473 state role:21881#1 HitFloor,Idle GetUp,Idle
+473 actionend role:21881#1 toground
+473 action role:21881#1 getup
+473 state role:21881#3 HitFloor,Idle GetUp,Idle
+473 actionend role:21881#3 toground
+473 action role:21881#3 getup
 476 cast role:101#1 920000 A
 476 disp+ role:101#1 922000
 476 state role:101#1 Idle Attack,Idle
@@ -411,11 +443,21 @@
 481 disp+ role:101#1 922010
 481 actionend role:101#1 10118
 481 action role:101#1 10120
+482 state role:21881#1 GetUp,Idle Wake,GetUp,Idle
+482 state role:21881#3 GetUp,Idle Wake,GetUp,Idle
 483 spawn role:101#1 fx:920000#3
+483 state role:21881#1 Wake,GetUp,Idle Wake,Idle
+483 actionend role:21881#1 getup
+483 action role:21881#1 stand
+483 state role:21881#3 Wake,GetUp,Idle Wake,Idle
+483 actionend role:21881#3 getup
+483 action role:21881#3 stand
 484 disp- role:101#1 922010 68.000 0.000 130.000
 484 disp+ role:101#1 922020
 484 actionend role:101#1 10120
 484 action role:101#1 10122
+484 state role:21881#1 Wake,Idle Idle
+484 state role:21881#3 Wake,Idle Idle
 484 disp- role:101#1 922020 68.000 0.000 130.000
 485 castend role:101#1 920000 done
 485 cast role:101#1 920010 A
@@ -612,8 +654,8 @@
 695 actionend role:101#1 10130
 695 action role:101#1 10132
 696 spawn role:101#1 fx:920020#4
-final role:101#1 413387979 68.000 0.000 130.000 Attack,Idle
-final role:21881#1 0 429.999 0.000 107.000 Death
+final role:101#1 382560 68.000 0.000 130.000 Attack,Idle
+final role:21881#1 6702 753.333 0.000 107.000 Idle
 final role:21881#2 18540 898.000 0.000 107.000 Idle
-final role:21881#3 0 429.999 0.000 83.000 Death
+final role:21881#3 6702 753.333 0.000 83.000 Idle
 final role:21881#4 18540 898.000 0.000 83.000 Idle

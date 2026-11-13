@@ -38,6 +38,7 @@ struct ManifestEntry
     int32_t level = 1;
     uint64_t seed = 31;
     uint64_t frames = 700;
+    int32_t copy = 0;
 };
 
 // 打印用法。
@@ -50,7 +51,11 @@ void usage()
                  "  mugen_sim_cli run-summary --scenario <name> --crit min|max [--manifest path] [--output path]\n"
                  "  mugen_sim_cli compare-scenario --scenario <name> --crit min|max [--manifest path]\n"
                  "  mugen_sim_cli compare-scenario --all [--manifest path]\n"
-                 "  mugen_sim_cli compare-summary <golden> <actual> [--deviations file]\n");
+                 "  mugen_sim_cli run-ai-room <roomId> --frames N [--class 1-7] [--seed N] [--level N] [--stall N]\n"
+                 "  mugen_sim_cli compare-summary <golden> <actual> [--deviations file]\n"
+                 "script rows: frame slot controlEvent quadrant angleX1000 pressType\n"
+                 "script rows: frame cmd <revive|return|warndone>\n"
+                 "export-summary also accepts: frame buff <hero|dummy1|dummy2|all-dummies> <buffId>\n");
 }
 
 // 解析非负整数。
@@ -86,7 +91,29 @@ WorldSetup roomSetup(int32_t roomId, uint64_t seed)
 }
 
 // 按职业装配离线技能并进入房间的战斗世界，供脚本驱动。
-World combatWorld(int32_t roomId, uint64_t seed, int32_t occupation, int32_t level = 1)
+World combatWorld(int32_t roomId, uint64_t seed, int32_t occupation, int32_t level = 1, int32_t copyId = 0)
+{
+    loadAssets();
+    World world;
+    auto setup = roomSetup(roomId, seed);
+    PlayerSetup player;
+    player.m_roleId = type_conversions::toRoleConfigId(static_cast<CharacterClass>(occupation));
+    player.m_level  = level;
+    player.m_camp   = 2;
+    player.m_slot   = 0;
+    player.m_isAi   = false;
+    setup.m_players.push_back(player);
+    setup.m_stageId          = 0;
+    setup.m_copyId           = copyId;
+    setup.m_aiEnabled        = false;
+    setup.m_useScenarioHooks = false;
+    if (bootstrapBattle(world, setup).empty())
+        throw std::runtime_error("Cannot enter room " + std::to_string(roomId));
+    return world;
+}
+
+// 与 combatWorld 相同但开启怪物 AI，供 AI 冒烟测试。
+World combatWorldAi(int32_t roomId, uint64_t seed, int32_t occupation, int32_t level = 1)
 {
     loadAssets();
     World world;
@@ -100,11 +127,127 @@ World combatWorld(int32_t roomId, uint64_t seed, int32_t occupation, int32_t lev
     setup.m_players.push_back(player);
     setup.m_stageId          = 0;
     setup.m_copyId           = 0;
-    setup.m_aiEnabled        = false;
+    setup.m_aiEnabled        = true;
     setup.m_useScenarioHooks = false;
     if (bootstrapBattle(world, setup).empty())
         throw std::runtime_error("Cannot enter room " + std::to_string(roomId));
     return world;
+}
+
+// 统计存活的敌对角色数量（角色类型 2-4、7-9）。
+size_t countEnemies(World& world)
+{
+    size_t count = 0;
+    world.ecs().each<IdentityComponent, HealthComponent>(
+        [&](Entity entity, const IdentityComponent& identity, const HealthComponent& health) {
+            if (world.ecs().has<DespawningComponent>(entity))
+                return;
+            const int32_t type = identity.m_roleType;
+            if (((type >= 2 && type <= 4) || (type >= 7 && type <= 9)) && health.m_hp > Fixed{})
+                ++count;
+        });
+    return count;
+}
+
+// run-ai-room：开启 AI 跑完整关卡，输出胜负、是否卡死；进程断言/崩溃即失败。
+int runAiRoom(int argc, char** argv)
+{
+    const char* usageText =
+        "Expected run-ai-room <roomId> --frames N [--class 1-7] [--seed N] [--level N] [--stall N]";
+    int32_t roomId = 2010101;
+    uint64_t frames = 3000;
+    int32_t occupation = 1;
+    uint64_t seed = 31;
+    int32_t level = 1;
+    uint64_t stallFrames = 600;
+    if (argc < 5)
+        throw std::invalid_argument(usageText);
+    {
+        uint64_t value = 0;
+        if (!parseNumber(argv[2], value) || value > INT32_MAX)
+            throw std::invalid_argument(usageText);
+        roomId = static_cast<int32_t>(value);
+    }
+    for (int index = 3; index < argc; ++index)
+    {
+        const std::string_view arg(argv[index]);
+        if (index + 1 >= argc)
+            throw std::invalid_argument(usageText);
+        const std::string value = argv[++index];
+        uint64_t number         = 0;
+        if (!parseNumber(value, number))
+            throw std::invalid_argument(usageText);
+        if (arg == "--frames")
+            frames = number;
+        else if (arg == "--class")
+            occupation = static_cast<int32_t>(number);
+        else if (arg == "--seed")
+            seed = number;
+        else if (arg == "--level")
+            level = static_cast<int32_t>(number);
+        else if (arg == "--stall")
+            stallFrames = number;
+        else
+            throw std::invalid_argument(usageText);
+    }
+
+    World world = combatWorldAi(roomId, seed, occupation, level);
+
+    int32_t lastState        = -1;
+    size_t lastEnemies       = 0;
+    int64_t lastHeroHp       = -1;
+    uint64_t lastProgress    = 0;
+    const Entity hero        = world.ecs().singleton<PlayerSlots>().m_entities.empty()
+                                   ? Entity{}
+                                   : world.ecs().singleton<PlayerSlots>().m_entities.begin()->second;
+    for (uint64_t frame = 1; frame <= frames; ++frame)
+    {
+        FrameInput input;
+        input.frame = frame;
+        PlayerCommand command;
+        command.controlEvent = frame % 24 == 0 ? ControlEvent::CTR_ATKA : ControlEvent::CTR_WALK;
+        command.quadrant     = ControlQuadrant::UpRight;
+        command.angle        = 0;
+        command.pressType    = 1;
+        input.players.push_back({0, {command}});
+        world.tick(input);
+
+        const auto& room = world.ecs().singleton<sim::RoomState>();
+        if (room.m_victory || room.m_failure)
+        {
+            std::printf("run-ai-room room=%d result=%s frame=%llu enemies=%zu heroHp=%lld\n", roomId,
+                        room.m_victory ? "victory" : "failure",
+                        static_cast<unsigned long long>(frame), countEnemies(world),
+                        static_cast<long long>(hero.value != 0 && world.ecs().has<HealthComponent>(hero)
+                                                   ? world.ecs().get<HealthComponent>(hero).m_hp.toInt()
+                                                   : 0));
+            return 0;
+        }
+        const size_t enemies = countEnemies(world);
+        const int64_t heroHp = hero.value == 0 || !world.ecs().alive(hero) || !world.ecs().has<HealthComponent>(hero)
+                                   ? 0
+                                   : world.ecs().get<HealthComponent>(hero).m_hp.toInt();
+        const int32_t state = static_cast<int32_t>(room.m_state);
+        if (state != lastState || enemies != lastEnemies || heroHp != lastHeroHp)
+        {
+            lastState     = state;
+            lastEnemies   = enemies;
+            lastHeroHp    = heroHp;
+            lastProgress  = frame;
+        }
+        if (frame - lastProgress > stallFrames)
+        {
+            std::printf("run-ai-room room=%d stalled at frame=%llu (no progress for %llu frames, state=%d enemies=%zu heroHp=%lld)\n",
+                        roomId, static_cast<unsigned long long>(frame),
+                        static_cast<unsigned long long>(stallFrames), state, enemies,
+                        static_cast<long long>(heroHp));
+            return 1;
+        }
+    }
+    std::printf("run-ai-room room=%d reached frame cap=%llu without outcome (state=%d enemies=%zu heroHp=%lld)\n", roomId,
+                static_cast<unsigned long long>(frames), lastState, lastEnemies,
+                static_cast<long long>(lastHeroHp));
+    return 1;
 }
 
 // 读取脚本：控制行 frame slot event quadrant angle pressType，以及 frame buff target buffId。
@@ -113,7 +256,7 @@ struct LoadedScript
     std::map<uint64_t, FrameInput> inputs;
     std::vector<sim_cli::BuffInject> buffs;
 };
-LoadedScript loadScript(const std::string& path, uint64_t frames)
+LoadedScript loadScript(const std::string& path, uint64_t frames, int32_t roomId = 0)
 {
     std::ifstream file(path);
     if (!file)
@@ -143,6 +286,26 @@ LoadedScript loadScript(const std::string& path, uint64_t frames)
                 (target != "hero" && target != "dummy1" && target != "dummy2" && target != "all-dummies"))
                 throw std::invalid_argument("Invalid command script line " + std::to_string(lineNumber));
             script.buffs.push_back({frame, target, static_cast<int32_t>(buffId)});
+            continue;
+        }
+        if (head == "cmd")
+        {
+            std::string command;
+            std::string extra;
+            if (!(row >> command) || (row >> extra) || frame == 0 || frame > frames)
+                throw std::invalid_argument("Invalid command script line " + std::to_string(lineNumber));
+            SystemCommand systemCommand;
+            if (command == "revive")
+                systemCommand = ReviveCommand{0};
+            else if (command == "return")
+                systemCommand = ReturnToTownCommand{0};
+            else if (command == "warndone")
+                systemCommand = RoomWarningDone{roomId};
+            else
+                throw std::invalid_argument("Invalid command script line " + std::to_string(lineNumber));
+            auto& input = script.inputs[frame];
+            input.frame = frame;
+            input.systemCommands.push_back(std::move(systemCommand));
             continue;
         }
         uint32_t slot = 0;
@@ -187,6 +350,7 @@ std::vector<ManifestEntry> loadManifest(const std::string& path)
             continue;
         if (!(row >> script >> entry.room >> entry.occupation >> entry.level >> entry.seed >> entry.frames))
             throw std::runtime_error("Invalid manifest line " + std::to_string(lineNo));
+        row >> entry.copy;
         entry.script = (!script.empty() && script[0] == '/') ? script : dir + script;
         entries.push_back(std::move(entry));
     }
@@ -222,8 +386,8 @@ int runEmpty(int argc, char** argv)
 // 按清单条目运行一次并写出摘要；outputPath 为空时打印到 stdout。
 void runOne(const ManifestEntry& entry, const std::string& crit, const std::string& outputPath)
 {
-    const auto script = loadScript(entry.script, entry.frames);
-    World world       = combatWorld(entry.room, entry.seed, entry.occupation, entry.level);
+    const auto script = loadScript(entry.script, entry.frames, entry.room);
+    World world       = combatWorld(entry.room, entry.seed, entry.occupation, entry.level, entry.copy);
     sim_cli::ExportParams params;
     params.scenario = entry.name;
     params.room     = entry.room;
@@ -296,8 +460,8 @@ int compareOne(const ManifestEntry& entry, const std::string& crit, const std::s
     if (!summary::parseSummary(readText(goldenPath), golden, parseError))
         throw std::runtime_error("Cannot parse golden: " + parseError);
 
-    const auto script = loadScript(entry.script, entry.frames);
-    World world       = combatWorld(entry.room, entry.seed, entry.occupation, entry.level);
+    const auto script = loadScript(entry.script, entry.frames, entry.room);
+    World world       = combatWorld(entry.room, entry.seed, entry.occupation, entry.level, entry.copy);
     sim_cli::ExportParams params;
     params.scenario = entry.name;
     params.room     = entry.room;
@@ -399,6 +563,8 @@ int main(int argc, char** argv)
             return runSummaryCommand(argc, argv);
         if (command == "compare-scenario")
             return compareScenarioCommand(argc, argv);
+        if (command == "run-ai-room")
+            return runAiRoom(argc, argv);
         if (command == "compare-summary")
         {
             std::string deviations;

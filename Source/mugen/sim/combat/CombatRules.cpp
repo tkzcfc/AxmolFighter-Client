@@ -74,16 +74,36 @@ bool gate(World& world, const ContactEvent& contact, HitContext& ctx)
             return false;
     }
 
-    ctx.m_contact      = contact;
-    ctx.m_effect       = effect;
-    ctx.m_target       = target;
-    ctx.m_attacker     = effectInfo.m_owner;
-    ctx.m_effectId     = effectInfo.m_configId;
-    ctx.m_skillId      = effectInfo.m_skillId;
-    ctx.m_baseSkillId  = effectInfo.m_baseSkillId;
-    ctx.m_slot         = effectInfo.m_slot;
-    ctx.m_hit          = hitRow;
-    ctx.m_effectRow    = effectRow;
+    // 填充上下文（hitType == -1 也要填好，后续按 hitType 走无伤害路径）。
+    ctx.m_contact     = contact;
+    ctx.m_effect      = effect;
+    ctx.m_target      = target;
+    ctx.m_attacker    = effectInfo.m_owner;
+    ctx.m_effectId    = effectInfo.m_configId;
+    ctx.m_skillId     = effectInfo.m_skillId;
+    ctx.m_baseSkillId = effectInfo.m_baseSkillId;
+    ctx.m_slot        = effectInfo.m_slot;
+    ctx.m_hit         = hitRow;
+    ctx.m_effectRow   = effectRow;
+
+    // 受击规则（原版 dealWithBeHitBefore）：起身保护 / 死亡起身醒来无敌 / 不打倒地浮空。
+    const auto& roleState = ecs.get<RoleStateComponent>(target);
+    if (effectRow->hitExtraControl.size() > 1 && effectRow->hitExtraControl[1] == 0 &&
+        roleState.m_state == RoleStateId::GetUp && hitRow->hitMust != 1)
+        return false;
+    // hitType == -1（无伤害也无硬直）：仍算命中，且不受死亡/起身/醒来无敌拦截（原版 dealWithBeHitBefore 先于状态拦截返回）。
+    if (hitRow->hitType == -1)
+        return true;
+    if (roleState.m_state == RoleStateId::Death || roleState.m_state == RoleStateId::GetUp ||
+        roleState.m_state == RoleStateId::Wake)
+        return false;
+    const bool floor = roleState.m_state == RoleStateId::HitFloor &&
+                       ecs.get<TransformComponent>(target).m_position.y == Fixed{};
+    const bool air = roleState.m_state == RoleStateId::HitUp || roleState.m_state == RoleStateId::HitDown;
+    if ((hitRow->hitCondition == 0 || hitRow->hitCondition == 2) && floor)
+        return false;
+    if ((hitRow->hitCondition == 1 || hitRow->hitCondition == 2) && air)
+        return false;
     return true;
 }
 
@@ -196,10 +216,12 @@ void requestHitReaction(World& world, const HitContext& ctx)
     const int32_t facing        = -effectTransform.m_towardX;
     ecs.get<TransformComponent>(ctx.m_target).m_towardX = facing;
     ecs.get<TransformComponent>(ctx.m_target).m_vectorX = Fixed::fromInt(facing);
-    Fixed stiff                                = Fixed::fromInt(ctx.m_hit->stiffTime);
+    // 硬直 = stiff_time × (1 + AddFloorTime)；倒地中不重置硬直，角色覆盖 hitStiffTime 时用它。
+    const Fixed floorScale = Fixed::fromInt(1) + ecs.get<StatsComponent>(ctx.m_target).finalStat(115);
+    if (hitState.m_stiffTime == Fixed{} || roleState.m_state != RoleStateId::HitFloor)
+        hitState.m_stiffTime = Fixed::fromInt(ctx.m_hit->stiffTime) * floorScale;
     if (roleRow && roleRow->hitStiffTime != -1)
-        stiff = Fixed::fromInt(roleRow->hitStiffTime);
-    hitState.m_stiffTime = stiff;
+        hitState.m_stiffTime = Fixed::fromInt(roleRow->hitStiffTime) * floorScale;
     int32_t displacementId = -1;
     if (roleRow && roleRow->hitDisplacementId != 0)
         displacementId = (roleRow->hitDisplacementId == -1 || ctx.m_hit->hitType == 0) ? ctx.m_hit->displacementId
@@ -210,6 +232,9 @@ void requestHitReaction(World& world, const HitContext& ctx)
         hitState.m_pendingHitType        = ctx.m_hit->hitType;
         hitState.m_pendingDisplacementId = displacementId;
         hitState.m_pendingTowardX        = facing;
+        // 浮空值已耗尽时，每次受击受击计数 +1（追击连段越长硬直越短、下落越快）。
+        if (inHitFamily && hitState.m_rigidity <= Fixed{} && roleRow && roleRow->rigidity > 0)
+            ++hitState.m_hitCounts;
     }
     if (!inHitFamily && !dead && ctx.m_hit->hitType != -1)
         skill::rules::forceInterrupt(world, ctx.m_target);

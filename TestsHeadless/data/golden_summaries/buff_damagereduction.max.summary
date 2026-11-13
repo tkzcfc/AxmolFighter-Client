@@ -1,9 +1,16 @@
 # mugen effect summary v1
 # scenario buff_damagereduction room 2071501 seed 31 ai off
 # draw crit=max float=mid dodge=never prob=pass choice=first
+1 roomstate 1
+2 roomstate 2
+3 roomstate 3
+4 roomstate 4
+4 warning 1
+5 roomstate 5
 5 state role:101#1 Idle Run,Idle
 5 actionend role:101#1 stand
 5 action role:101#1 walk
+6 roomstate 6
 46 state role:101#1 Run,Idle Idle
 46 actionend role:101#1 walk
 46 action role:101#1 stand
@@ -21,12 +28,12 @@
 58 disp- role:101#1 922010 1281.168 0.000 254.000
 58 disp+ role:101#1 922020
 58 hit fx:920000#1 role:61300#1 920000 hit
-58 dmg role:101#1 role:61300#1 920000 1870402 1
+58 dmg role:101#1 role:61300#1 920000 14205 1
 58 stop fx:920000#1 1
 58 stop role:101#1 1
 58 spawn role:101#1 fx:882477#1
 58 hit fx:920000#1 role:61320#1 920000 hit
-58 dmg role:101#1 role:61320#1 920000 2338002 1
+58 dmg role:101#1 role:61320#1 920000 17757 1
 58 stop fx:920000#1 1
 58 stop role:101#1 1
 58 spawn role:101#1 fx:882477#2
@@ -56,12 +63,12 @@
 67 disp- role:101#1 922040 1258.945 0.000 254.000
 67 disp+ role:101#1 922050
 67 hit fx:920010#1 role:61300#1 920010 hit
-67 dmg role:101#1 role:61300#1 920010 1870402 1
+67 dmg role:101#1 role:61300#1 920010 14205 1
 67 stop fx:920010#1 1
 67 stop role:101#1 1
 67 spawn role:101#1 fx:882470#1
 67 hit fx:920010#1 role:61320#1 920010 hit
-67 dmg role:101#1 role:61320#1 920010 2338002 1
+67 dmg role:101#1 role:61320#1 920010 17757 1
 67 stop fx:920010#1 1
 67 stop role:101#1 1
 67 spawn role:101#1 fx:882470#2
@@ -92,6 +99,6 @@
 82 action role:61300#1 stand
 82 actionend role:61320#1 hitswitch
 82 action role:61320#1 stand
-final role:101#1 413387979 1258.945 0.000 254.000 Idle
-final role:61300#1 8360276 889.218 0.000 250.000 Idle
-final role:61320#1 7425076 1069.218 0.000 250.000 Idle
+final role:101#1 382560 1258.945 0.000 254.000 Idle
+final role:61300#1 12072670 889.218 0.000 250.000 Idle
+final role:61320#1 12065566 1069.218 0.000 250.000 Idle

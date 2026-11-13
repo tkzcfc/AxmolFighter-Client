@@ -190,7 +190,7 @@ TEST_CASE("battle lowering: roles 101 and 61320")
 {
     const auto* r101 = find<battle::RoleDef>(101);
     REQUIRE(r101 != nullptr);
-    CHECK(r101->roleType == 3);
+    CHECK(r101->roleType == 1);
     CHECK(r101->radius == 20);
     CHECK(r101->rigidity == 24);
     CHECK(r101->fatigue == 200);

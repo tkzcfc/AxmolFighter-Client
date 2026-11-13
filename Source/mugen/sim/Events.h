@@ -424,9 +424,13 @@ struct RoomEvent
 {
     // 事件种类。
     RoomEventKind m_kind = RoomEventKind::StateChanged;
-    // 载荷（状态编号、胜利阵营等）。
+    // 载荷：状态变化时为房间状态编号；胜利/失败时为房间标识；警告时为警告编号。
     int32_t m_payload = 0;
-    MG_REFLECT(RoomEvent, m_kind, m_payload)
+    // 附加参数：警告事件时为是否暂停推进（1 暂停）。
+    int32_t m_param = 0;
+    // 相关实体（英雄死亡进入复活/失败时指向该英雄）。
+    Entity m_entity;
+    MG_REFLECT(RoomEvent, m_kind, m_payload, m_param, m_entity)
 };
 // 实体已销毁。
 struct DespawnEvent

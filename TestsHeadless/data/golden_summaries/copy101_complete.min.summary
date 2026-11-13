@@ -1,0 +1,249 @@
+# mugen effect summary v1
+# scenario copy101_complete room 2010101 seed 31 ai off
+# draw crit=min float=mid dodge=never prob=pass choice=first
+1 roomstate 1
+2 roomstate 2
+3 roomstate 3
+4 roomstate 4
+5 roomstate 5
+5 state role:101#1 Idle Run,Idle
+5 actionend role:101#1 stand
+5 action role:101#1 walk
+6 roomstate 6
+20 cast role:101#1 920090 Y
+20 disp+ role:101#1 922400
+20 state role:101#1 Run,Idle Attack,Idle
+20 actionend role:101#1 walk
+20 action role:101#1 10300
+22 disp- role:101#1 922400 430.667 0.000 130.000
+22 disp+ role:101#1 922410
+22 actionend role:101#1 10300
+22 action role:101#1 10302
+24 spawn role:101#1 fx:920210#1
+25 hit fx:920210#1 role:21881#1 920110 hit
+25 dmg role:101#1 role:21881#1 920210 13811 0
+25 stop fx:920210#1 1
+25 stop role:101#1 1
+25 spawn role:101#1 fx:882498#1
+25 hit fx:920210#1 role:21881#3 920110 hit
+25 dmg role:101#1 role:21881#3 920210 13811 0
+25 stop fx:920210#1 1
+25 stop role:101#1 1
+25 spawn role:101#1 fx:882498#2
+25 state role:21881#1 Idle Hit,Idle
+25 state role:21881#3 Idle Hit,Idle
+26 stop role:21881#1 1
+26 stop role:21881#3 1
+26 disp+ role:21881#1 920330
+26 disp+ role:21881#3 920330
+26 actionend role:21881#1 stand
+26 action role:21881#1 hit
+26 actionend role:21881#3 stand
+26 action role:21881#3 hit
+31 disp- role:101#1 922410 577.901 0.000 130.000
+31 disp+ role:101#1 922420
+31 actionend role:101#1 10302
+31 action role:101#1 10304
+31 disp- role:101#1 922420 577.901 0.000 130.000
+31 disp- role:21881#1 920330 784.997 0.000 107.000
+31 disp- role:21881#3 920330 784.997 0.000 83.000
+32 castend role:101#1 920090 done
+32 cast role:101#1 920000 A
+32 disp+ role:101#1 922000
+32 actionend role:101#1 10304
+32 action role:101#1 10118
+32 disp- role:101#1 922000 577.901 0.000 130.000
+37 disp+ role:101#1 922010
+37 actionend role:101#1 10118
+37 action role:101#1 10120
+39 spawn role:101#1 fx:920000#1
+40 disp- role:101#1 922010 600.401 0.000 130.000
+40 disp+ role:101#1 922020
+40 hit fx:920000#1 role:21881#1 920000 hit
+40 dmg role:101#1 role:21881#1 920000 11838 0
+40 stop fx:920000#1 1
+40 stop role:101#1 1
+40 spawn role:101#1 fx:882477#1
+40 hit fx:920000#1 role:21881#3 920000 hit
+40 dmg role:101#1 role:21881#3 920000 11838 0
+40 stop fx:920000#1 1
+40 stop role:101#1 1
+40 spawn role:101#1 fx:882477#2
+40 actionend role:101#1 10120
+40 action role:101#1 10122
+40 disp- role:101#1 922020 600.401 0.000 130.000
+41 stop role:21881#1 1
+41 stop role:21881#3 1
+41 castend role:101#1 920000 done
+41 cast role:101#1 920010 A
+41 disp+ role:101#1 922030
+41 death role:21881#1
+41 disp+ role:21881#1 133
+41 death role:21881#3
+41 disp+ role:21881#3 133
+41 actionend role:101#1 10122
+41 action role:101#1 10124
+41 state role:21881#1 Hit,Idle Death
+41 actionend role:21881#1 hit
+41 action role:21881#1 death
+41 state role:21881#3 Hit,Idle Death
+41 actionend role:21881#3 hit
+41 action role:21881#3 death
+41 disp- role:101#1 922030 600.401 0.000 130.000
+47 disp+ role:101#1 922040
+47 actionend role:101#1 10124
+47 action role:101#1 10126
+48 spawn role:101#1 fx:920010#1
+49 disp- role:101#1 922040 622.623 0.000 130.000
+49 disp+ role:101#1 922050
+49 hit fx:920010#1 role:21881#2 920010 hit
+49 dmg role:101#1 role:21881#2 920010 11838 0
+49 stop fx:920010#1 1
+49 stop role:101#1 1
+49 spawn role:101#1 fx:882470#1
+49 hit fx:920010#1 role:21881#4 920010 hit
+49 dmg role:101#1 role:21881#4 920010 11838 0
+49 stop fx:920010#1 1
+49 stop role:101#1 1
+49 spawn role:101#1 fx:882470#2
+49 actionend role:101#1 10126
+49 action role:101#1 10128
+49 state role:21881#2 Idle Hit,Idle
+49 state role:21881#4 Idle Hit,Idle
+49 disp- role:101#1 922050 622.623 0.000 130.000
+50 stop role:21881#2 1
+50 stop role:21881#4 1
+50 castend role:101#1 920010 done
+50 cast role:101#1 920020 A
+50 disp+ role:101#1 922060
+50 disp+ role:21881#2 920030
+50 disp+ role:21881#4 920030
+50 actionend role:101#1 10128
+50 action role:101#1 10130
+50 actionend role:21881#2 stand
+50 action role:21881#2 hit
+50 actionend role:21881#4 stand
+50 action role:21881#4 hit
+50 disp- role:101#1 922060 622.623 0.000 130.000
+59 disp+ role:101#1 922070
+59 actionend role:101#1 10130
+59 action role:101#1 10132
+60 spawn role:101#1 fx:920020#1
+60 disp- role:21881#2 920030 962.137 0.000 107.000
+60 disp- role:21881#4 920030 962.137 0.000 83.000
+61 hit fx:920020#1 role:21881#2 920020 hit
+61 dmg role:101#1 role:21881#2 920020 11838 0
+61 stop fx:920020#1 1
+61 stop role:101#1 1
+61 spawn role:101#1 fx:882471#1
+61 hit fx:920020#1 role:21881#4 920020 hit
+61 dmg role:101#1 role:21881#4 920020 11838 0
+61 stop fx:920020#1 1
+61 stop role:101#1 1
+61 spawn role:101#1 fx:882471#2
+62 stop role:21881#2 1
+62 stop role:21881#4 1
+62 disp+ role:21881#2 920060
+62 disp+ role:21881#4 920060
+65 disp- role:101#1 922070 873.690 0.000 130.000
+65 disp+ role:101#1 922080
+65 actionend role:101#1 10132
+65 action role:101#1 10134
+67 spawn role:101#1 fx:920030#1
+68 disp- role:21881#1 133 1064.997 0.000 107.000
+68 disp- role:21881#3 133 1064.997 0.000 83.000
+69 spawn role:21881#1 fx:8#1
+69 spawn role:21881#3 fx:8#2
+72 disp- role:101#1 922080 609.956 0.000 130.000
+72 disp+ role:101#1 922090
+72 actionend role:101#1 10134
+72 action role:101#1 10136
+72 disp- role:101#1 922090 609.956 0.000 130.000
+72 disp- role:21881#2 920060 1052.144 0.000 107.000
+72 disp- role:21881#4 920060 1052.144 0.000 83.000
+73 castend role:101#1 920020 done
+73 cast role:101#1 920030 A
+73 disp+ role:101#1 922100
+73 actionend role:101#1 10136
+73 action role:101#1 10138
+80 death role:21881#2
+80 disp+ role:21881#2 133
+80 death role:21881#4
+80 disp+ role:21881#4 133
+80 state role:21881#2 Hit,Idle Death
+80 actionend role:21881#2 hit
+80 action role:21881#2 death
+80 state role:21881#4 Hit,Idle Death
+80 actionend role:21881#4 hit
+80 action role:21881#4 death
+81 disp- role:101#1 922100 708.143 0.000 130.000
+81 disp+ role:101#1 922110
+81 actionend role:101#1 10138
+81 action role:101#1 10140
+82 spawn role:101#1 fx:920040#1
+90 disp- role:101#1 922110 772.509 0.000 130.000
+90 disp+ role:101#1 922120
+90 actionend role:101#1 10140
+90 action role:101#1 10142
+90 disp- role:101#1 922120 772.509 0.000 130.000
+91 castend role:101#1 920030 done
+91 cast role:101#1 920040 A
+91 disp+ role:101#1 922130
+91 actionend role:101#1 10142
+91 action role:101#1 10144
+91 disp- role:101#1 922130 772.509 0.000 130.000
+92 spawn role:101#1 fx:920050#1
+103 disp+ role:101#1 922140
+103 actionend role:101#1 10144
+103 action role:101#1 10146
+104 spawn role:101#1 fx:920060#1
+107 disp- role:21881#2 133 1332.144 0.000 107.000
+107 disp- role:21881#4 133 1332.144 0.000 83.000
+108 spawn role:21881#2 fx:8#3
+108 spawn role:21881#4 fx:8#4
+109 roomstate 10
+109 victory 2010101
+110 roomstate 14
+110 portal portal:113#1 open
+111 disp- role:101#1 922140 1015.839 0.000 130.000
+111 disp+ role:101#1 922150
+111 roomstate 15
+111 actionend role:101#1 10146
+111 action role:101#1 10148
+111 disp- role:101#1 922150 1015.839 0.000 130.000
+126 castend role:101#1 920040 done
+126 state role:101#1 Attack,Idle Idle
+126 actionend role:101#1 10148
+126 action role:101#1 stand
+127 state role:101#1 Idle Run,Idle
+127 actionend role:101#1 stand
+127 action role:101#1 walk
+154 portal portal:113#1 transfer
+155 spawn - role:62280#1
+155 spawn - role:21880#1
+155 spawn - role:21880#2
+155 state role:101#1 Run,Idle Idle
+155 state role:21880#1 - Idle
+155 action role:21880#1 stand
+155 state role:21880#2 - Idle
+155 action role:21880#2 stand
+155 state role:62280#1 - Idle
+155 action role:62280#1 stand
+155 goods goods:14#1 drop
+156 roomstate 1
+157 roomstate 2
+158 roomstate 3
+158 actionend role:101#1 walk
+158 action role:101#1 stand
+159 roomstate 4
+159 warning 1
+160 roomstate 5
+161 roomstate 6
+final role:101#1 382560 147.000 0.000 127.000 Idle
+final role:21880#1 8557 890.000 0.000 73.000 Idle
+final role:21880#2 8557 890.000 0.000 173.000 Idle
+final role:21881#1 0 1064.997 0.000 107.000 Death
+final role:21881#2 0 1332.144 0.000 107.000 Death
+final role:21881#3 0 1064.997 0.000 83.000 Death
+final role:21881#4 0 1332.144 0.000 83.000 Death
+final role:62280#1 28526 870.000 0.000 123.000 Idle

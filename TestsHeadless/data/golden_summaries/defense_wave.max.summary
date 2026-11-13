@@ -1,0 +1,41 @@
+# mugen effect summary v1
+# scenario defense_wave room 2071601 seed 31 ai off
+# draw crit=max float=mid dodge=never prob=pass choice=first
+1 roomstate 1
+2 roomstate 2
+3 roomstate 3
+4 roomstate 4
+4 warning 1
+5 roomstate 5
+6 roomstate 6
+67 spawn - role:21100#1
+67 spawn - role:21100#2
+67 spawn - role:21120#1
+67 spawn - role:21120#2
+67 spawn - role:21110#1
+67 spawn - role:21100#3
+67 spawn - role:21110#2
+67 state role:21100#1 - Idle
+67 action role:21100#1 stand
+67 state role:21100#2 - Idle
+67 action role:21100#2 stand
+67 state role:21120#1 - Idle
+67 action role:21120#1 stand
+67 state role:21120#2 - Idle
+67 action role:21120#2 stand
+67 state role:21110#1 - Idle
+67 action role:21110#1 stand
+67 state role:21100#3 - Idle
+67 action role:21100#3 stand
+67 state role:21110#2 - Idle
+67 action role:21110#2 stand
+67 wave 1
+final role:101#1 382560 1000.000 0.000 254.000 Idle
+final role:21100#1 2348142 1756.000 0.000 250.000 Idle
+final role:21100#2 2348142 1936.000 0.000 250.000 Idle
+final role:21100#3 2348142 2656.000 0.000 250.000 Idle
+final role:21110#1 2348142 2476.000 0.000 250.000 Idle
+final role:21110#2 2348142 2836.000 0.000 250.000 Idle
+final role:21120#1 1174071 2116.000 0.000 250.000 Idle
+final role:21120#2 1174071 2296.000 0.000 250.000 Idle
+final role:5005#1 2348142 1096.000 0.000 200.000 Idle

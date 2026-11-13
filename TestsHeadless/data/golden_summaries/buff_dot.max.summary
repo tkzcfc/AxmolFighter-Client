@@ -1,69 +1,76 @@
 # mugen effect summary v1
 # scenario buff_dot room 2071501 seed 31 ai off
 # draw crit=max float=mid dodge=never prob=pass choice=first
-8 hp role:61300#1 -5198 dot
+1 roomstate 1
+2 roomstate 2
+3 roomstate 3
+4 roomstate 4
+4 warning 1
+5 roomstate 5
+6 roomstate 6
+8 hp role:61300#1 -40 dot
 8 buff+ role:61300#1 7
-8 hp role:61320#1 -51957 dot
+8 hp role:61320#1 -395 dot
 8 buff+ role:61320#1 11012043
-39 hp role:61300#1 -5198 dot
-39 hp role:61320#1 -51957 dot
-70 hp role:61300#1 -5198 dot
-70 hp role:61320#1 -51957 dot
-78 hp role:61300#1 -519558 dot
+39 hp role:61300#1 -40 dot
+39 hp role:61320#1 -395 dot
+70 hp role:61300#1 -40 dot
+70 hp role:61320#1 -395 dot
+78 hp role:61300#1 -3947 dot
 78 buff+ role:61300#1 70670
-78 hp role:61320#1 -519558 dot
+78 hp role:61320#1 -3947 dot
 78 buff+ role:61320#1 11005210
-101 hp role:61300#1 -5198 dot
-101 hp role:61320#1 -51957 dot
-109 hp role:61300#1 -519558 dot
-109 hp role:61320#1 -519558 dot
-132 hp role:61300#1 -5198 dot
-132 hp role:61320#1 -51957 dot
-140 hp role:61300#1 -519558 dot
-140 hp role:61320#1 -519558 dot
-148 hp role:61300#1 -1039111 dot
+101 hp role:61300#1 -40 dot
+101 hp role:61320#1 -395 dot
+109 hp role:61300#1 -3947 dot
+109 hp role:61320#1 -3947 dot
+132 hp role:61300#1 -40 dot
+132 hp role:61320#1 -395 dot
+140 hp role:61300#1 -3947 dot
+140 hp role:61320#1 -3947 dot
+148 hp role:61300#1 -7892 dot
 148 buff+ role:61300#1 10019701
-148 hp role:61320#1 -519558 dot
+148 hp role:61320#1 -3947 dot
 148 buff+ role:61320#1 77
-163 hp role:61300#1 -5198 dot
-163 hp role:61320#1 -51957 dot
-171 hp role:61300#1 -519558 dot
-171 hp role:61320#1 -519558 dot
-179 hp role:61300#1 -1039111 dot
-179 hp role:61320#1 -519558 dot
-194 hp role:61300#1 -5198 dot
-194 hp role:61320#1 -51957 dot
-202 hp role:61300#1 -519558 dot
-202 hp role:61320#1 -519558 dot
-210 hp role:61300#1 -1039111 dot
-210 hp role:61320#1 -519558 dot
-218 hp role:61300#1 -25979 dot
+163 hp role:61300#1 -40 dot
+163 hp role:61320#1 -395 dot
+171 hp role:61300#1 -3947 dot
+171 hp role:61320#1 -3947 dot
+179 hp role:61300#1 -7892 dot
+179 hp role:61320#1 -3947 dot
+194 hp role:61300#1 -40 dot
+194 hp role:61320#1 -395 dot
+202 hp role:61300#1 -3947 dot
+202 hp role:61320#1 -3947 dot
+210 hp role:61300#1 -7892 dot
+210 hp role:61320#1 -3947 dot
+218 hp role:61300#1 -198 dot
 218 buff+ role:61300#1 71
-225 hp role:61300#1 -5198 dot
-225 hp role:61320#1 -51957 dot
-233 hp role:61300#1 -519558 dot
-233 hp role:61320#1 -519558 dot
-241 hp role:61300#1 -1039111 dot
-241 hp role:61320#1 -519558 dot
-249 hp role:61300#1 -25979 dot
-256 hp role:61300#1 -5198 dot
-256 hp role:61320#1 -51957 dot
-264 hp role:61300#1 -519558 dot
-264 hp role:61320#1 -519558 dot
-272 hp role:61300#1 -1039111 dot
-272 hp role:61320#1 -519558 dot
-280 hp role:61300#1 -25979 dot
-287 hp role:61300#1 -5198 dot
+225 hp role:61300#1 -40 dot
+225 hp role:61320#1 -395 dot
+233 hp role:61300#1 -3947 dot
+233 hp role:61320#1 -3947 dot
+241 hp role:61300#1 -7892 dot
+241 hp role:61320#1 -3947 dot
+249 hp role:61300#1 -198 dot
+256 hp role:61300#1 -40 dot
+256 hp role:61320#1 -395 dot
+264 hp role:61300#1 -3947 dot
+264 hp role:61320#1 -3947 dot
+272 hp role:61300#1 -7892 dot
+272 hp role:61320#1 -3947 dot
+280 hp role:61300#1 -198 dot
+287 hp role:61300#1 -40 dot
 287 buff- role:61300#1 7
-287 hp role:61320#1 -51957 dot
+287 hp role:61320#1 -395 dot
 287 buff- role:61320#1 11012043
-295 hp role:61300#1 -519558 dot
-295 hp role:61320#1 -519558 dot
-303 hp role:61300#1 -1039111 dot
-303 hp role:61320#1 -519558 dot
-311 hp role:61300#1 -25979 dot
-326 hp role:61300#1 -519558 dot
-326 hp role:61320#1 -519558 dot
-final role:101#1 413387979 2037.000 0.000 254.000 Idle
-final role:61300#1 1034496 1006.000 0.000 250.000 Idle
-final role:61320#1 3788140 1186.000 0.000 250.000 Idle
+295 hp role:61300#1 -3947 dot
+295 hp role:61320#1 -3947 dot
+303 hp role:61300#1 -7892 dot
+303 hp role:61320#1 -3947 dot
+311 hp role:61300#1 -198 dot
+326 hp role:61300#1 -3947 dot
+326 hp role:61320#1 -3947 dot
+final role:101#1 382560 2037.000 0.000 254.000 Idle
+final role:61300#1 12017013 1006.000 0.000 250.000 Idle
+final role:61320#1 12037925 1186.000 0.000 250.000 Idle

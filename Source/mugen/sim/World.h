@@ -22,7 +22,7 @@ struct BuffDispatch
 // 世界使用的组件与单例 ECS 存储类型。
 using WorldECS = ECSManager<Components, Singletons>;
 // 新 sim 快照格式版本。
-inline constexpr uint32_t kWorldSnapshotVersion = 3;
+inline constexpr uint32_t kWorldSnapshotVersion = 4;
 // 持有单场战斗全部可变状态，并按 kSchedule 固定顺序推进一帧。
 class World
 {

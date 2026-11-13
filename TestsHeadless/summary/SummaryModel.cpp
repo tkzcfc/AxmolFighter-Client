@@ -20,6 +20,9 @@ constexpr TypeArity kArity[] = {
     {"hit", 4, 4},     {"dmg", 5, 5},     {"hp", 3, 3},     {"stop", 2, 2},      {"state", 3, 3},
     {"buff+", 2, 2},   {"buff-", 2, 2},   {"disp+", 2, 5},  {"disp-", 2, 5},     {"death", 1, 1},
     {"final", 6, 6},
+    // S4 房间流程：状态切换、胜负、警告、波次、复活、KO、障碍/物品/传送门。
+    {"roomstate", 1, 1}, {"victory", 1, 1}, {"failure", 1, 1}, {"warning", 1, 1}, {"wave", 1, 1},
+    {"revive", 1, 1},    {"ko", 1, 1},      {"obstacle", 2, 2}, {"goods", 2, 2},  {"portal", 2, 2},
 };
 
 std::vector<std::string> splitWords(const std::string& text)

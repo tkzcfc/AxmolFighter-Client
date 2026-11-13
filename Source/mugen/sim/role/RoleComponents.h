@@ -54,14 +54,18 @@ struct HitStateComponent
     int32_t m_pendingTowardX = 1;
     // 受击状态机运行数据。
     int32_t m_hitDefId = 0;
+    // 当前受击的击飞类型（0 击退 / 1 击倒 / 2 击飞 / -1 无受击）。
+    int32_t m_hitType = -1;
     int32_t m_displacementId = -1;
     bool m_animationEnd = false;
     bool m_displacementEnd = false;
     Fixed m_hitTimeMs;
     // 受击来源朝向。
     int32_t m_towardX = 1;
+    // 受击/死亡状态已转移但 enter 动作（动作/位移）被顿帧推迟，待解冻后补做。
+    bool m_enterPending = false;
     MG_REFLECT(HitStateComponent, m_rigidity, m_weight, m_fatigue, m_hitCounts, m_stiffTime, m_pendingHitDefId,
-               m_pendingHitType, m_pendingDisplacementId, m_pendingTowardX, m_hitDefId, m_displacementId,
-               m_animationEnd, m_displacementEnd, m_hitTimeMs, m_towardX)
+               m_pendingHitType, m_pendingDisplacementId, m_pendingTowardX, m_hitDefId, m_hitType, m_displacementId,
+               m_animationEnd, m_displacementEnd, m_hitTimeMs, m_towardX, m_enterPending)
 };
 }  // namespace mugen::sim

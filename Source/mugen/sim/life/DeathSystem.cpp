@@ -7,6 +7,7 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/buff/BuffRules.h"
 #include "mugen/sim/effect/EffectRules.h"
+#include "mugen/sim/room/RoomRules.h"
 #include "mugen/conf/ReflectedConfig.h"
 
 namespace mugen::sim
@@ -85,14 +86,20 @@ void runDeath(World& world)
                 announceDeath(world, entity, state);
             if (state.m_state != RoleStateId::Death)
                 return;
+            // 玩家槽位实体（英雄）死亡后不回收：留在 Death 状态交给房间导演做复活/失败判定
+            // （对齐旧实现 roleType != 1 时不结束死亡体；旧实现先销毁英雄再判定会误判 victory，此处不照抄）。
+            if (identity.m_playerSlot.has_value())
+                return;
             const auto* role = conf::Config::instance().find<conf::battle::RoleDef>(identity.m_configId);
-            const int32_t deathDisplacement = role ? role->deathDisplacementId : -1;
+            // 实际套用的死亡位移由 FSM 按死亡路径写入（倒地/受击切换死亡为 -1，不套死亡位移）。
+            const int32_t deathDisplacement = hit.m_displacementId;
             const bool noDisplacement       = deathDisplacement == -1 || deathDisplacement == 0;
             const bool deathBody            = motion.m_motionName == role::motionName(RoleStateId::Death);
             if (noDisplacement || (deathBody && hit.m_animationEnd && hit.m_displacementEnd))
             {
                 if (role && role->deathEffectId > 0)
                     effect::rules::spawnFromRole(world, entity, role->deathEffectId, {});
+                room::rules::drop(world, entity);
                 world.ecs().add(entity, DespawningComponent{});
                 world.ecs().singleton<EventQueue<DespawnRequest>>().push({entity, DespawnReason::DeathEnd});
             }

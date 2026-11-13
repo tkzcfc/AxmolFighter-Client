@@ -31,7 +31,7 @@ void loadAssets()
         REQUIRE(avatar.load("/mugen/config/avatar.bin"));
 }
 
-// 构建 class1_move 场景世界：职业 1 / 角色 101，等级 1000，房间 2071501。
+// 构建 class1_move 场景世界：职业 1 / 角色 101，等级 1，房间 2071501。
 World makeWorld()
 {
     loadAssets();
@@ -45,7 +45,7 @@ World makeWorld()
     setup.mapKey = room->mapKey;
     PlayerSetup player;
     player.m_roleId = type_conversions::toRoleConfigId(CharacterClass::kSwordman);
-    player.m_level  = 1000;
+    player.m_level  = 1;
     player.m_camp   = 2;
     player.m_slot   = 0;
     player.m_isAi   = false;
@@ -133,14 +133,14 @@ TEST_CASE("sim spawn positions and stats match golden for room 2071501")
     REQUIRE(m0.value != 0);
     REQUIRE(m1.value != 0);
 
-    // 角色 101：等级 1000，出生点 (2037,0,254)（地图 actor_pos），面向左，生命 413387979。
+    // 角色 101：等级 1，出生点 (2037,0,254)（地图 actor_pos），面向左，生命 382560。
     const auto& heroPos = world.ecs().get<TransformComponent>(hero).m_position;
-    CHECK(world.ecs().get<IdentityComponent>(hero).m_level == 1000);
+    CHECK(world.ecs().get<IdentityComponent>(hero).m_level == 1);
     CHECK(heroPos.x == Fixed::fromInt(2037));
     CHECK(heroPos.z == Fixed::fromInt(254));
     CHECK(world.ecs().get<TransformComponent>(hero).m_towardX == -1);
-    CHECK(world.ecs().get<HealthComponent>(hero).m_hp.toInt() == 413387979);
-    CHECK(world.ecs().get<HealthComponent>(hero).m_maxHp.toInt() == 413387979);
+    CHECK(world.ecs().get<HealthComponent>(hero).m_hp.toInt() == 382560);
+    CHECK(world.ecs().get<HealthComponent>(hero).m_maxHp.toInt() == 382560);
 
     // 怪物 61300 / 61320：位置 (1006/1186, 0, 250)，生命 12101080。
     const auto& p0 = world.ecs().get<TransformComponent>(m0).m_position;
@@ -239,8 +239,8 @@ TEST_CASE("sim combat damage equality at crit min and max")
         driveCombo(world, 58);
         dmgMax = baseHp - world.ecs().get<HealthComponent>(dummy).m_hp.toInt();
     }
-    CHECK(dmgMin == 1558668);
-    CHECK(dmgMax == 2338002);
+    CHECK(dmgMin == 11838);
+    CHECK(dmgMax == 17757);
     // 暴击倍率 1.5：max = min * 1.5（整数精确）。
     CHECK(dmgMax == dmgMin * 3 / 2);
 }

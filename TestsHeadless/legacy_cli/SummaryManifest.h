@@ -24,9 +24,11 @@ struct ManifestEntry
     uint64_t seed = 31;
     // 导出帧数。
     uint64_t frames = 700;
+    // 副本配置 id（决定复活次数上限与怪物等级加成）；0 表示不指定。
+    int32_t copy = 0;
 };
 
-// 解析清单：每行 `name script room class level seed frames`，`#` 为注释，脚本路径相对清单目录。
-// 失败时抛出带英文原因的 std::runtime_error。
+// 解析清单：每行 `name script room class level seed frames [copy]`，`#` 为注释，脚本路径相对清单目录。
+// `copy` 列可省略，缺省为 0。失败时抛出带英文原因的 std::runtime_error。
 std::vector<ManifestEntry> loadManifest(const std::string& path);
 }  // namespace mugen::legacy_cli

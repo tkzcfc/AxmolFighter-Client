@@ -23,6 +23,7 @@ Fixed policyValue(const DrawPolicy& policy, DrawKind kind)
     case DrawKind::Choice:
     case DrawKind::AiTarget:
     case DrawKind::AiWander:
+    case DrawKind::AiChance:
         return {};
     }
     return {};
@@ -35,5 +36,21 @@ Fixed draw(World& world, DrawKind kind)
     if (const DrawPolicy* policy = world.drawPolicy())
         return policyValue(*policy, kind);
     return Fixed::fromInt(world.ecs().singleton<RngState>().m_random.randomN(0, 100));
+}
+
+// 整数均匀抽样：策略存在时返回 min（首选），否则消耗一次本场随机数。
+int32_t drawN(World& world, DrawKind kind, int32_t min, int32_t max)
+{
+    if (world.drawPolicy())
+        return min;
+    return world.ecs().singleton<RngState>().m_random.randomN(min, max);
+}
+
+// 定点均匀抽样：策略存在时返回 min，否则消耗一次本场随机数。
+Fixed drawF(World& world, DrawKind kind, Fixed min, Fixed max)
+{
+    if (world.drawPolicy())
+        return min;
+    return world.ecs().singleton<RngState>().m_random.randomF(min, max);
 }
 }  // namespace mugen::sim::rng

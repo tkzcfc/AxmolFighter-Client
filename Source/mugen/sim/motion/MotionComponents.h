@@ -53,8 +53,10 @@ struct DisplacementComponent
     int32_t m_floorPolicy = 0;
     int32_t m_wallPolicy = 0;
     bool m_endOnBrake = false;
+    // 落地不反弹（浮空值耗尽时由 HitReactionSystem 写入，DisplacementSystem 当帧读取）。
+    bool m_noFloorBounce = false;
     MG_REFLECT(DisplacementComponent, m_elapsedMs, m_velocityTime, m_acceleration, m_accelerationTime, m_offset, m_velocityScale,
                m_defaultVelocityScale, m_gravity, m_bounces, m_extraTimeScale, m_velocity, m_curveId,
-               m_brake, m_air, m_floor, m_lie, m_wall, m_floorPolicy, m_wallPolicy, m_endOnBrake)
+               m_brake, m_air, m_floor, m_lie, m_wall, m_floorPolicy, m_wallPolicy, m_endOnBrake, m_noFloorBounce)
 };
 }  // namespace mugen::sim

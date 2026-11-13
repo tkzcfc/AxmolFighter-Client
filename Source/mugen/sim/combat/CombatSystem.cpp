@@ -93,6 +93,18 @@ void runCombat(World& world)
             continue;
         }
         buff::rules::fire(world, ctx.m_target, conf::battle::TriggerPoint::BeforeToBeHit, hitCtx);
+        // hitType == -1：无伤害也无硬直。原版 dealWithHitX 已记命中次数并触发 BEFORE_TOBEHIT，
+        // 但跳过 BeforeHit / 伤害 / 顿帧 / 受击状态 / 怒气 / AfterToBeHit / AfterHit，也不发 HitEvent。
+        // 仍施加 debuff 并播受击特效（hitEffectIds 为空时无特效生成）。
+        if (ctx.m_hit->hitType == -1)
+        {
+            if (ctx.m_effectRow)
+                for (const int32_t id : ctx.m_effectRow->debuffId)
+                    if (id > 0)
+                        buff::rules::admit(world, ctx.m_target, id, hitCtx);
+            combat::rules::spawnHitEffects(world, ctx);
+            continue;
+        }
         buff::rules::fire(world, ctx.m_attacker, conf::battle::TriggerPoint::BeforeHit, hitCtx);
         combat::rules::computeDamage(world, ctx);
         combat::rules::applyDamage(world, ctx);

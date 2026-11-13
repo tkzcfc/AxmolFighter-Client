@@ -9,7 +9,9 @@
 #include "mugen/sim/skill/SkillComponents.h"
 #include "mugen/sim/effect/EffectComponents.h"
 #include "mugen/sim/buff/BuffComponents.h"
+#include "mugen/sim/ai/AiComponents.h"
 #include "mugen/sim/life/LifeComponents.h"
+#include "mugen/sim/room/RoomComponents.h"
 #include "mugen/sim/base/SpawnStage.h"
 #include "mugen/sim/Events.h"
 #include "mugen/core/ecs/Entity.h"
@@ -43,6 +45,8 @@ struct IdentityComponent
     int32_t m_roleType = 1;
     // 角色等级。
     int32_t m_level = 1;
+    // AI 难度等级（1-based；玩家与无 AI 实体为 1）。
+    int32_t m_aiDifficulty = 1;
     // 可选的控制玩家槽位。
     std::optional<uint32_t> m_playerSlot;
     // 召唤归属句柄。
@@ -53,8 +57,8 @@ struct IdentityComponent
     BornStamp m_born;
     // 同配置的生成序号（语义键 role:<configId>#<n>）。
     uint32_t m_ordinal = 0;
-    MG_REFLECT(IdentityComponent, m_kind, m_configId, m_camp, m_hostileMask, m_roleType, m_level, m_playerSlot, m_owner,
-               m_rootOwner, m_born, m_ordinal)
+    MG_REFLECT(IdentityComponent, m_kind, m_configId, m_camp, m_hostileMask, m_roleType, m_level, m_aiDifficulty,
+               m_playerSlot, m_owner, m_rootOwner, m_born, m_ordinal)
 };
 // 标签组件：变身后休眠、跨房缓冲、房间挂起；所有系统遍历时跳过。
 struct InactiveComponent
@@ -75,7 +79,9 @@ struct DespawningComponent
     X(InactiveComponent) X(DespawningComponent) X(IdentityComponent) X(PlayerControlComponent) X(IntentComponent) X(TransformComponent) X(DisplacementComponent) X(MotionStateComponent)      \
         X(HitboxesComponent) X(StatsComponent) X(StatusFlagsComponent) X(HealthComponent) X(PauseComponent) X(RoleStateComponent) X(HitStateComponent) X(SkillBookComponent) X(SkillCastComponent)      \
             X(ActionTimelineComponent) X(EffectInfoComponent) X(HitTrackerComponent) X(LifetimeComponent) X(FollowComponent) X(ContactMemoryComponent) X(BuffListComponent) \
-                X(AbilityListComponent) X(TauntTableComponent) X(ComboMeterComponent) X(RageStateComponent) X(SummonComponent) X(TransformLinkComponent)
+                X(AbilityListComponent) X(TauntTableComponent) X(ComboMeterComponent) X(RageStateComponent) X(SummonComponent) X(TransformLinkComponent) X(ObstacleStateComponent) \
+                    X(GoodsStateComponent) X(PortalStateComponent) X(DropTableComponent) \
+                X(AiBrainComponent)
 
 namespace mugen::sim
 {

@@ -2,6 +2,7 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/buff/BuffRules.h"
 #include "mugen/sim/role/RoleSpawn.h"
+#include "mugen/sim/room/RoomRules.h"
 #include "mugen/sim/skill/SkillRules.h"
 #include "mugen/sim/skill/TimelineRules.h"
 #include "mugen/conf/ReflectedConfig.h"
@@ -63,6 +64,7 @@ Entity materializeRole(World& world, const SpawnRequest& request, SpawnStage sta
     identity.m_hostileMask = role::rules::hostileMask(identity.m_camp);
     identity.m_roleType    = row->roleType;
     identity.m_level       = request.m_level;
+    identity.m_aiDifficulty = request.m_aiDifficulty;
     if (request.m_hasPlayerSlot)
         identity.m_playerSlot = request.m_playerSlot;
     identity.m_owner     = request.m_owner;
@@ -285,6 +287,8 @@ Entity materialize(World& world, const SpawnRequest& request, SpawnStage stage)
         return materializeRole(world, request, stage);
     if (request.m_kind == SpawnKind::Effect)
         return materializeEffect(world, request, stage);
+    if (request.m_kind == SpawnKind::Obstacle || request.m_kind == SpawnKind::Goods || request.m_kind == SpawnKind::Portal)
+        return room::rules::materialize(world, request, stage);
     return {};
 }
 

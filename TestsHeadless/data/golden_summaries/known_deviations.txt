@@ -5,4 +5,13 @@
 #   - 原因为自由文本（可引用规则 id，例如 R18）。
 # `#` 开头为注释，空行忽略。
 #
-# 当前没有条目。
+# 英雄死亡：legacy 在死亡动画结束后先销毁英雄再跑导演判定，_hero() 为空致误判 victory，与参考语义不符；
+# 新 sim 英雄留在 Death 交导演判复活/失败（死亡/复活/失败由 sim_tests/HeroDeathTest.cpp 覆盖）。
+# roomstate * legacy hero death: legacy destroys the hero after the death body before the director check, leaving _hero() empty and misjudging victory; the new sim keeps the hero in Death and the director decides revive/failure (covered by sim_tests/HeroDeathTest.cpp)
+# buff 100830（BuffLoopCheck2，innerCd=1e16）：legacy export-summary 在注入时 Fixed operator+ 溢出断言（Fixed.h:104），
+# 无法产出 legacy 金样，已从 buff_spawn 拆出，仅由新 sim 单测覆盖（sim_tests/BuffRulesRefTest.cpp）。
+# copy_room_class1 的 state 行：legacy 用位掩码表示角色状态，受击族切换时出现一帧双位瞬时态（例如
+# Hit,Idle→HitUp,Hit,Idle→HitUp,Idle；HitUp/HitDown/HitFloor/Wake 共 8 组 × 实体 role:21881#1/#3）。
+# 新 sim 用单值枚举（sim/role/RoleState.h），按 DESIGN §6.4 的 P-3 设计决策不表示瞬时双位。
+# 属设计差异，非 bug：比较规则不放宽，该场景 FAIL 保留为已知。
+# state copy_room_class1 key=role:21881#* legacy role status is a bitmask and emits a one-frame dual-bit transient during hit-family transitions (e.g. Hit,Idle→HitUp,Hit,Idle→HitUp,Idle; 8 groups × role:21881#1/#3); the new sim uses a single-value enum (sim/role/RoleState.h) and per DESIGN §6.4 P-3 does not represent the transient dual-bit state — a design difference, not a bug; the comparison rule is not relaxed and the scenario FAIL is kept as known

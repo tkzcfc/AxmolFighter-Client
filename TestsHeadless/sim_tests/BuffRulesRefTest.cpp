@@ -980,3 +980,20 @@ TEST_CASE("buff rule BuffDummyDeathRattle OnSummonDeath Apply")
     if (!pulse->m_ids.empty())
         CHECK(findBuff(h.world, h.self, pulse->m_ids.front()) != nullptr);
 }
+
+TEST_CASE("buff 100830 BuffLoopCheck2 saturates innerCd without Fixed overflow")
+{
+    // 100830 的 innerCd=1e16 在定点里饱和到最大值；旧实现 tick 时做 m_innerElapsed += dt 触发
+    // Fixed operator+ 溢出断言（Fixed.h:104）。新 sim 已在该加法前比较，饱和值不会再溢出。
+    // 拆出 buff_spawn 后，此处单测覆盖其准入与"无子 Buff"的循环检查语义。
+    Harness h;
+    h.admit(100830);
+    REQUIRE(findBuff(h.world, h.self, 100830) != nullptr);
+    // BuffLoopCheck2 的 Watch 边沿模式在条件通过时移除子 Buff（而非追加），故无子 Buff 出现。
+    CHECK(findBuff(h.world, h.self, 100831) == nullptr);
+    CHECK(findBuff(h.world, h.self, 100832) == nullptr);
+    h.tickWorld(3);
+    REQUIRE(findBuff(h.world, h.self, 100830) != nullptr);
+    CHECK(findBuff(h.world, h.self, 100831) == nullptr);
+    CHECK(findBuff(h.world, h.self, 100832) == nullptr);
+}

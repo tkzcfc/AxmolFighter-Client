@@ -7,6 +7,7 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/combat/CombatRules.h"
 #include "mugen/sim/life/EntityFactory.h"
+#include "mugen/sim/role/RoleFsmRules.h"
 #include "mugen/sim/skill/SkillRules.h"
 #include "mugen/sim/skill/TimelineRules.h"
 #include "mugen/conf/ReflectedConfig.h"
@@ -36,12 +37,16 @@ void finishRoleClip(World& world, Entity entity, ActionTimelineComponent& timeli
     if (timeline.m_index >= static_cast<int32_t>(timeline.m_clips.size()))
     {
         skill::rules::endCast(world, entity);
+        // 施法结束且无缓存下一招：同帧回到待机/跑动（旧实现攻击分支结束即清 Attack 位）。
+        if (cast.m_skill == kNoSkill)
+            role::rules::exitAttack(world, entity, world.ecs().get<RoleStateComponent>(entity), cast,
+                                    world.ecs().get<MotionStateComponent>(entity),
+                                    world.ecs().get<IntentComponent>(entity));
         return;
     }
     const int32_t nextId = timeline.m_clips[static_cast<size_t>(timeline.m_index)];
     if (!timeline::rules::enterClip(world, entity, nextId, false, false))
         skill::rules::endCast(world, entity);
-    (void)cast;
 }
 }  // namespace
 

@@ -5,6 +5,9 @@
 #include "mugen/sim/room/KoSlowMotion.h"
 #include "mugen/core/ecs/EventQueue.h"
 #include "mugen/core/math/Random.h"
+#include "mugen/core/math/FixedVec3.h"
+#include "mugen/conf/tables/MapTables.h"
+#include "mugen/conf/GameDef.h"
 #include <map>
 #include <tuple>
 
@@ -66,7 +69,7 @@ struct PlayerSlots
     std::map<uint32_t, Entity> m_entities;
     MG_REFLECT(PlayerSlots, m_entities)
 };
-// 房间级状态（B1 最小字段：房间标识、启用标志、暂停标志与等级增幅）。
+// 房间级状态（移植旧实现 sim_legacy/Singletons.h 的 RoomState，含状态机、波次、复活与结算）。
 struct RoomState
 {
     // 当前房间标识。
@@ -87,8 +90,49 @@ struct RoomState
     int32_t m_roomType = 0;
     // 战斗规则类型（< 2 时才触发 KO 慢放）。
     int32_t m_battleRuleType = 0;
+    // 本场房间配置（波次、限时、掉落率等运行时读取）。
+    conf::RoomConfig m_config;
+    // 当前状态与去重的待切换队列。
+    mugen::RoomState m_state = mugen::RoomState::None;
+    std::vector<mugen::RoomState> m_pending;
+    std::vector<mugen::RoomState> m_recorded;
+    // 状态等待毫秒、战斗经过秒数与限时。
+    Fixed m_waitMs;
+    Fixed m_gameSeconds;
+    Fixed m_limitSeconds;
+    // 当前波次下标、波次倒计时毫秒与到期标记。
+    int32_t m_wave = 0;
+    Fixed m_waveTimerMs;
+    bool m_waveReady = false;
+    // 复活预算。
+    int32_t m_maxRevives = 0;
+    int32_t m_usedRevives = 0;
+    // 等待复活标记。
+    bool m_reviving = false;
+    // 最终结果与返回城镇请求。
+    bool m_victory = false;
+    bool m_failure = false;
+    bool m_returnToTown = false;
+    // 已清理房间不重复生成敌人。
+    std::vector<int32_t> m_clearedRooms;
+    // 供场景逻辑消费的角色死亡事件，保留发生顺序。
+    std::vector<Entity> m_roleDeaths;
+    // 房间切换请求延迟到帧末，避免使遍历句柄失效。
+    int32_t m_transferRoom = 0;
+    int32_t m_transferToward = 1;
+    FixedVec3 m_transferPosition;
+    // 进入房间时使用的关卡与副本标识。
+    int32_t m_stageId = 0;
+    int32_t m_copyId = 0;
+    // 是否为 PVP 决斗（进入房间时由 WorldSetup 写入；本切片仅保留字段）。
+    bool m_pvp = false;
+    Fixed m_pvpTimeLimit;
+    int32_t m_winnerCamp = 0;
     MG_REFLECT(RoomState, m_roomId, m_enabled, m_paused, m_levelBonus, m_ko, m_pendingKo, m_haveBoss, m_roomType,
-               m_battleRuleType)
+               m_battleRuleType, m_config, m_state, m_pending, m_recorded, m_waitMs, m_gameSeconds, m_limitSeconds,
+               m_wave, m_waveTimerMs, m_waveReady, m_maxRevives, m_usedRevives, m_reviving, m_victory, m_failure,
+               m_returnToTown, m_clearedRooms, m_roleDeaths, m_transferRoom, m_transferToward, m_transferPosition,
+               m_stageId, m_copyId, m_pvp, m_pvpTimeLimit, m_winnerCamp)
 };
 // 生成登记表：各配置的 ordinal 计数（语义键 role:<configId>#<n>）。
 struct SpawnRegistry

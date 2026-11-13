@@ -1,12 +1,19 @@
 # mugen effect summary v1
 # scenario buff_damagehploss room 2071501 seed 31 ai off
 # draw crit=max float=mid dodge=never prob=pass choice=first
+1 roomstate 1
+2 roomstate 2
+3 roomstate 3
+4 roomstate 4
+4 warning 1
+5 roomstate 5
 5 state role:101#1 Idle Run,Idle
 5 actionend role:101#1 stand
 5 action role:101#1 walk
-8 hp role:101#1 -5198 dot
+6 roomstate 6
+8 hp role:101#1 -40 dot
 8 buff+ role:101#1 7
-39 hp role:101#1 -5198 dot
+39 hp role:101#1 -40 dot
 46 state role:101#1 Run,Idle Idle
 46 actionend role:101#1 walk
 46 action role:101#1 stand
@@ -24,12 +31,12 @@
 58 disp- role:101#1 922010 1281.168 0.000 254.000
 58 disp+ role:101#1 922020
 58 hit fx:920000#1 role:61300#1 920000 hit
-58 dmg role:101#1 role:61300#1 920000 2338013 1
+58 dmg role:101#1 role:61300#1 920000 17757 1
 58 stop fx:920000#1 1
 58 stop role:101#1 1
 58 spawn role:101#1 fx:882477#1
 58 hit fx:920000#1 role:61320#1 920000 hit
-58 dmg role:101#1 role:61320#1 920000 2338013 1
+58 dmg role:101#1 role:61320#1 920000 17757 1
 58 stop fx:920000#1 1
 58 stop role:101#1 1
 58 spawn role:101#1 fx:882477#2
@@ -59,12 +66,12 @@
 67 disp- role:101#1 922040 1258.945 0.000 254.000
 67 disp+ role:101#1 922050
 67 hit fx:920010#1 role:61300#1 920010 hit
-67 dmg role:101#1 role:61300#1 920010 2338013 1
+67 dmg role:101#1 role:61300#1 920010 17757 1
 67 stop fx:920010#1 1
 67 stop role:101#1 1
 67 spawn role:101#1 fx:882470#1
 67 hit fx:920010#1 role:61320#1 920010 hit
-67 dmg role:101#1 role:61320#1 920010 2338013 1
+67 dmg role:101#1 role:61320#1 920010 17757 1
 67 stop fx:920010#1 1
 67 stop role:101#1 1
 67 spawn role:101#1 fx:882470#2
@@ -77,7 +84,7 @@
 68 disp+ role:61300#1 920030
 68 disp- role:61320#1 920000 1115.024 0.000 250.000
 68 disp+ role:61320#1 920030
-70 hp role:101#1 -5198 dot
+70 hp role:101#1 -40 dot
 78 disp- role:61300#1 920030 889.218 0.000 250.000
 78 disp- role:61320#1 920030 1069.218 0.000 250.000
 79 state role:61300#1 Hit,Idle HitSwitch,Idle
@@ -96,8 +103,8 @@
 82 action role:61300#1 stand
 82 actionend role:61320#1 hitswitch
 82 action role:61320#1 stand
-101 hp role:101#1 -5198 dot
-132 hp role:101#1 -5198 dot
-final role:101#1 413361989 1258.945 0.000 254.000 Idle
-final role:61300#1 7425054 889.218 0.000 250.000 Idle
-final role:61320#1 7425054 1069.218 0.000 250.000 Idle
+101 hp role:101#1 -40 dot
+132 hp role:101#1 -40 dot
+final role:101#1 382360 1258.945 0.000 254.000 Idle
+final role:61300#1 12065566 889.218 0.000 250.000 Idle
+final role:61320#1 12065566 1069.218 0.000 250.000 Idle

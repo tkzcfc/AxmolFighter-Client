@@ -2,9 +2,10 @@
 // 读：`FrameInput`、`PlayerSlots`
 // 写：`PlayerControlComponent.m_commands`；木偶的 `TransformComponent`/`MotionStateComponent`/`RoleStateComponent` 请求位
 // 消费：—
-// 产生：—
+// 产生：`RoomRequest`（把系统命令转成房间请求入队）
 #include "mugen/sim/Systems.h"
 #include "mugen/sim/World.h"
+#include <variant>
 
 namespace mugen::sim
 {
@@ -54,6 +55,17 @@ void runInput(World& world)
             for (const auto& command : player.commands)
                 if (command.controlEvent != ControlEvent::CTR_NONE)
                     control->m_commands.push_back(command);
+    }
+    // 房间级系统命令转成 RoomRequest，由 RoomDirectorSystem 统一消费（移植旧实现 World::tick 的分发）。
+    auto& requests = world.ecs().singleton<EventQueue<RoomRequest>>();
+    for (const auto& command : input.systemCommands)
+    {
+        if (const auto* revive = std::get_if<ReviveCommand>(&command))
+            requests.push({RoomRequestKind::Revive, static_cast<int32_t>(revive->slot)});
+        else if (const auto* back = std::get_if<ReturnToTownCommand>(&command))
+            requests.push({RoomRequestKind::ReturnToTown, static_cast<int32_t>(back->m_slot)});
+        else if (const auto* done = std::get_if<RoomWarningDone>(&command))
+            requests.push({RoomRequestKind::WarningDone, done->m_roomId});
     }
 }
 }  // namespace mugen::sim
