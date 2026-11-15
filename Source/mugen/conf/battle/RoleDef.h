@@ -32,8 +32,10 @@ struct RoleDef
     int32_t koEffectId = 0;
     // 怪物阵营（monsterCamps）。
     int32_t monsterCamps = 0;
-    // 碰撞半径。
+    // 行走、贴墙和推挤使用的半径，不参与命中。
     int32_t radius = 0;
+    // 命中深度全长（世界单位）。0 使用动作框深度，大于 0 则盖过动作框并绕纵深居中。
+    int32_t depth = 0;
     // 出生相对位置。
     std::vector<int32_t> relativePosition;
     // Spine 资源与扩展资源（动作文件/spine）。
@@ -74,6 +76,7 @@ struct RoleDef
                koEffectId,
                monsterCamps,
                radius,
+               depth,
                relativePosition,
                resSpineId,
                resSpineIdExt,

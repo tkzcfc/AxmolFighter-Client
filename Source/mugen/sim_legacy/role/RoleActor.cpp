@@ -170,9 +170,9 @@ void motionUpdate(World& world, Entity entity)
     collider.attack.clear();
     collider.damage.clear();
     for (const auto* box : attack)
-        collider.attack.push_back(RoleActor::transformBox(*box, transform));
+        collider.attack.push_back(RoleActor::transformBox(*box, transform, collider.depth));
     for (const auto* box : damage)
-        collider.damage.push_back(RoleActor::transformBox(*box, transform));
+        collider.damage.push_back(RoleActor::transformBox(*box, transform, collider.depth));
 }
 }  // namespace
 // 构造角色视图，只保存世界与实体句柄。
@@ -191,16 +191,27 @@ void RoleActor::updateMotion()
 {
     motionUpdate(m_world, m_entity);
 }
-// 按朝向和缩放把局部伤害框转换为世界框。
-WorldBox RoleActor::transformBox(const DamageBox& box, const Transform& t)
+// 按朝向和缩放把局部框放到世界坐标。高度只加 position.y，纵深绕 position.z。
+// depthFull > 0 时盖过文件深度：全长、不乘缩放、绕纵深居中。
+WorldBox RoleActor::transformBox(const DamageBox& box, const Transform& t, Fixed depthFull)
 {
     WorldBox result;
-    result.size        = {Fixed::fromInt(box.size.x) * t.scale, Fixed::fromInt(box.size.y) * t.scale,
-                          Fixed::fromInt(box.size.z) * t.scale};
+    const Fixed sizeX  = Fixed::fromInt(box.size.x) * t.scale;
     const Fixed localX = Fixed::fromInt(box.pos.x) * t.scale;
-    result.pos         = {t.position.x + (t.towardX == -1 ? -localX - result.size.x : localX),
-                          Fixed::fromInt(box.pos.y) * t.scale,
-                          t.position.y + t.position.z + Fixed::fromInt(box.pos.z) * t.scale};
+    result.size.x      = sizeX;
+    result.pos.x       = t.position.x + (t.towardX == -1 ? -localX - sizeX : localX);
+    result.size.z      = Fixed::fromInt(box.size.z) * t.scale;
+    result.pos.z       = t.position.y + Fixed::fromInt(box.pos.z) * t.scale;
+    if (depthFull > Fixed{})
+    {
+        result.size.y = depthFull;
+        result.pos.y  = t.position.z - depthFull * Fixed::ratio(1, 2);
+    }
+    else
+    {
+        result.size.y = Fixed::fromInt(box.size.y) * t.scale;
+        result.pos.y  = t.position.z + Fixed::fromInt(box.pos.y) * t.scale;
+    }
     return result;
 }
 // 依固定顺序推进角色资源、状态、控制、行为、位移和动作。

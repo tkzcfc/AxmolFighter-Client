@@ -152,6 +152,17 @@ public:
                 m_previous.z + (m_current.z - m_previous.z) * alpha + m_offset.z};
     }
 
+    // 显示位置相对最新逻辑位置的偏移。碰撞框按逻辑坐标采样，绘制时加上它才与角色重合。
+    VisualPos displayOffset(float alpha) const
+    {
+        if (!m_has)
+            return {};
+        const float remain = 1.0f - alpha;
+        return {(m_previous.x - m_current.x) * remain + m_offset.x,
+                (m_previous.y - m_current.y) * remain + m_offset.y,
+                (m_previous.z - m_current.z) * remain + m_offset.z};
+    }
+
     // 是否已有采样。
     bool hasSample() const { return m_has; }
     // 当前未衰减完的纠正偏移长度。

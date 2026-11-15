@@ -38,42 +38,49 @@ struct CollisionFixture
     }
 };
 
-WorldBox box(int64_t x, int64_t depth, int64_t screenY, int64_t width = 2, int64_t depthSize = 0, int64_t height = 2)
+// depthCenter 是纵深中心，height 是高度最小角。尺寸为零的轴不会相交。
+WorldBox box(int64_t x, int64_t depthCenter, int64_t height, int64_t width = 2, int64_t depth = 2, int64_t heightSize = 2)
 {
-    return {{Fixed::fromInt(x), Fixed::fromInt(depth), Fixed::fromInt(screenY)},
-            {Fixed::fromInt(width), Fixed::fromInt(depthSize), Fixed::fromInt(height)}};
+    const Fixed depthStart = Fixed::fromInt(depthCenter) - Fixed::fromInt(depth) * Fixed::ratio(1, 2);
+    return {{Fixed::fromInt(x), depthStart, Fixed::fromInt(height)},
+            {Fixed::fromInt(width), Fixed::fromInt(depth), Fixed::fromInt(heightSize)}};
 }
 }
 
-TEST_CASE("Collision ignores box depth and observes screen-plane overlap")
+TEST_CASE("Collision hits a short box across a deep gap and misses a screen-aligned jumper")
 {
-    CollisionFixture flat;
-    const auto flatSource = flat.makeCollider({}, "1"_fx, box(0, 0, 0), {});
-    flat.makeCollider({}, "1"_fx, {}, box(1, 0, 1));
-    flat.tick();
-    REQUIRE(flat.world.ecs().get<CollisionState>(flatSource).contacts.size() == 1);
-
     CollisionFixture deep;
-    const auto deepSource = deep.makeCollider({}, "1"_fx, box(0, 100000, 0, 2, 100000, 2), {});
-    deep.makeCollider({}, "1"_fx, {}, box(1, -100000, 1, 2, 100000, 2));
+    const auto slash = deep.makeCollider({}, "1"_fx, box(0, 0, 0, 100, 2000, 100), {});
+    deep.makeCollider({{}, {}, "500"_fx}, "1"_fx, {}, box(0, 500, 0, 100, 2000, 100));
     deep.tick();
-    CHECK(deep.world.ecs().get<CollisionState>(deepSource).contacts.size() == 1);
+    REQUIRE(deep.world.ecs().get<CollisionState>(slash).contacts.size() == 1);
+    const auto hit = deep.world.ecs().get<CollisionState>(slash).contacts.front();
+    CHECK(hit.point.x == "50"_fx);
+    CHECK(hit.point.y == "50"_fx);
+    CHECK(hit.point.z == "250"_fx);
+
+    CollisionFixture jumped;
+    const auto air = jumped.makeCollider({}, "1"_fx, box(0, 0, 200, 100, 40, 100), {});
+    jumped.makeCollider({{}, {}, "200"_fx}, "1"_fx, {}, box(0, 200, 0, 100, 40, 100));
+    jumped.tick();
+    CHECK(jumped.world.ecs().get<CollisionState>(air).contacts.empty());
 }
 
-TEST_CASE("Collision rejects depth radius separation and transitions contact state")
+TEST_CASE("Collision separates on depth and transitions contact state")
 {
     CollisionFixture fixture;
     const auto source = fixture.makeCollider({}, "1"_fx, box(0, 0, 0), {});
-    const auto target = fixture.makeCollider({{}, {}, "3"_fx}, "1"_fx, {}, box(1, 0, 1));
+    const auto target = fixture.makeCollider({}, "1"_fx, {}, box(1, 20, 1));
     fixture.tick();
     CHECK(fixture.world.ecs().get<CollisionState>(source).contacts.empty());
 
-    fixture.world.ecs().get<Transform>(target).position.z = {};
+    fixture.world.ecs().get<ColliderState>(target).damage.front() = box(1, 0, 1);
     fixture.tick();
     REQUIRE(fixture.world.ecs().get<CollisionState>(source).contacts.size() == 1);
     const auto contact = fixture.world.ecs().get<CollisionState>(source).contacts.front();
     CHECK(contact.point.x == "1.5"_fx);
     CHECK(contact.point.y == "1.5"_fx);
+    CHECK(contact.point.z == Fixed{});
     fixture.tick();
     CHECK(fixture.world.ecs().get<CollisionState>(source).contacts.size() == 1);
 
@@ -106,9 +113,16 @@ TEST_CASE("Collision uses motion mirroring world boxes")
     facing.position.x = "10"_fx;
     facing.towardX = -1;
     DamageBox local;
-    local.pos = {3, 999999, 2};
-    local.size = {2, 999999, 2};
+    local.pos = {3, 0, 2};
+    local.size = {2, 10, 2};
     const auto mirrored = role::RoleActor::transformBox(local, facing);
     CHECK(mirrored.pos.x == "5"_fx);
+    CHECK(mirrored.pos.y == Fixed{});
     CHECK(mirrored.pos.z == "2"_fx);
+    CHECK(mirrored.size.y == "10"_fx);
+
+    const auto overridden = role::RoleActor::transformBox(local, facing, "40"_fx);
+    CHECK(overridden.pos.y == "-20"_fx);
+    CHECK(overridden.size.y == "40"_fx);
+    CHECK(overridden.pos.z == "2"_fx);
 }

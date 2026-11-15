@@ -192,6 +192,7 @@ TEST_CASE("battle lowering: roles 101 and 61320")
     REQUIRE(r101 != nullptr);
     CHECK(r101->roleType == 1);
     CHECK(r101->radius == 20);
+    CHECK(r101->depth == 40);
     CHECK(r101->rigidity == 24);
     CHECK(r101->fatigue == 200);
     CHECK(r101->hitCount == -1);
@@ -214,6 +215,7 @@ TEST_CASE("battle lowering: roles 101 and 61320")
     REQUIRE(r61320 != nullptr);
     CHECK(r61320->roleType == 4);
     CHECK(r61320->radius == 30);
+    CHECK(r61320->depth == 60);
     CHECK(r61320->rigidity == 24);
     CHECK(r61320->hitStiffTime == 0);
     CHECK(r61320->hitDisplacementId == 114320);

@@ -28,7 +28,7 @@ void box(World& world, Entity entity, Fixed x)
     auto& collider = world.ecs().get<ColliderState>(entity);
     collider.radius = "20"_fx;
     collider.registrationFrame = 0;
-    collider.damage = {{{x, {}, {}}, {"20"_fx, {}, "20"_fx}}};
+    collider.damage = {{{x, "-10"_fx, {}}, {"20"_fx, "20"_fx, "20"_fx}}};
     collider.attack = collider.damage;
 }
 // 场景脚本将攻击输入转换为确定性致死伤害，隔离房间推进而不测试技能平衡。
@@ -56,7 +56,7 @@ void scriptedRole(World& world, Entity entity)
     auto& collider = ecs.get<ColliderState>(entity);
     const auto p = ecs.get<Transform>(entity).position;
     collider.radius = "20"_fx;
-    collider.damage = {{{p.x - "10"_fx, {}, p.z - "10"_fx}, {"20"_fx, {}, "20"_fx}}};
+    collider.damage = {{{p.x - "10"_fx, p.z - "10"_fx, p.y}, {"20"_fx, "20"_fx, "20"_fx}}};
 }
 }
 TEST_CASE("Portal hook-driven room-flow integration copy101 stage40101 visits both rooms")

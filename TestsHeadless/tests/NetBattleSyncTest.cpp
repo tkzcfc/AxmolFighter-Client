@@ -687,6 +687,10 @@ TEST_CASE("PoseTrack turns a rollback position rewrite into a decaying offset in
     track.sample(11, {110.0f, 0.0f, 50.0f});
     const float before = track.display(1.0f).x;
     CHECK(before == doctest::Approx(110.0f));
+    // alpha 0 时调试框要退回上一逻辑帧，半程时偏移是步长的一半。
+    CHECK(track.displayOffset(0.0f).x == doctest::Approx(-10.0f));
+    CHECK(track.displayOffset(0.5f).x == doctest::Approx(-5.0f));
+    CHECK(track.displayOffset(1.0f).x == doctest::Approx(0.0f));
 
     // 回滚把当前帧位置往回改写 40 单位：显示位置在应用纠正的那一刻不变。
     track.applyCorrection({-40.0f, 0.0f, 0.0f});

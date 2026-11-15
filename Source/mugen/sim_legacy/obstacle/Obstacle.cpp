@@ -6,7 +6,7 @@ namespace mugen::sim_legacy::obstacle
 ObstacleActor::ObstacleActor(World& world, Entity entity) : m_world(world), m_entity(entity) {}
 
 // 根据上一帧位置决定从横边还是纵深边推出，避免穿越障碍中心。
-void ObstacleActor::onCollision(Entity character, CollisionEvent event, FixedVec2)
+void ObstacleActor::onCollision(Entity character, CollisionEvent event, FixedVec3)
 {
     auto& ecs = m_world.ecs();
     if (event == CollisionEvent::End || ecs.get<RoleIdentity>(m_entity).camp != 1)

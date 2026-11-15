@@ -16,8 +16,8 @@ public:
     static void update(World& world, Entity entity);
     // 为角色及特效共用动画推进与碰撞框采样。
     static void updateMotion(World& world, Entity entity);
-    // 将局部伤害框按角色变换转换为世界碰撞框。
-    static WorldBox transformBox(const DamageBox& box, const Transform& transform);
+    // 将局部伤害框按角色变换转换为世界碰撞框。depthFull > 0 时盖过文件深度。
+    static WorldBox transformBox(const DamageBox& box, const Transform& transform, Fixed depthFull = {});
     // 构造指向指定世界实例中某个实体的视图。
     RoleActor(World& world, Entity entity);
     // 以固定顺序推进一个非受控角色的逻辑。

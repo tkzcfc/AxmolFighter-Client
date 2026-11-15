@@ -5,6 +5,7 @@
 #include "mugen/avatar/AvatarPaths.h"
 #include "mugen/avatar/MotionPlayer.h"
 #include "mugen/conf/ReflectedConfig.h"
+#include "mugen/conf/battle/EffectDef.h"
 #include "mugen/core/math/FixedMath.h"
 #include "mugen/sim_legacy/spawn/RoleSpawn.h"
 #include "mugen/sim_legacy/trace/TraceSink.h"
@@ -325,7 +326,11 @@ Entity EffectActor::create(World& world, Entity owner, int32_t id)
     identity.camp        = 1;
     identity.hostileCamp = 30;
     ecs.add(entity, identity);
-    ecs.add(entity, ColliderState{{}, {}, ecs.singleton<WorldClock>().frame, Fixed::fromInt(row->radius)});
+    int32_t depth = row->radius > 0 ? row->radius * 2 : 0;
+    if (const auto* def = conf::Config::instance().find<conf::battle::EffectDef>(id))
+        depth = def->depth;
+    ecs.add(entity, ColliderState{{}, {}, ecs.singleton<WorldClock>().frame, Fixed::fromInt(row->radius),
+                                  Fixed::fromInt(depth)});
     ecs.add(entity, CollisionState{});
     trace::TraceRecorder(world).noteSpawn(owner, id, entity);
     return entity;

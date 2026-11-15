@@ -22,9 +22,8 @@ struct DamageBox
         if (drawNode == nullptr)
             return;
 
-        // 斜二测只表达盒子自身的深度厚度（size.y），不能再用世界 pos.y 做偏移：
-        // 世界变换里屏幕纵坐标已是 position.y+position.z（与 Avatar 一致），
-        // 若再对绝对 pos.y 做 oblique，角色往深处走时框会整块往右上飘。
+        // 斜二测与编辑器一致：深度轴 pos.y 投影到右上 45° 并乘 0.5。
+        // 坐标是动画局部坐标。世界框要先减去实体纵深，绝对纵深会把框推离角色。
         const float oblique = 0.5f;
 
         float fx = static_cast<float>(pos.x);
@@ -33,10 +32,12 @@ struct DamageBox
         float sy = static_cast<float>(size.y);
         float sz = static_cast<float>(size.z);
 
-        float dox0 = 0.0f;
-        float doz0 = 0.0f;
-        float dox1 = sy * oblique;
-        float doz1 = sy * oblique;
+        const float y0 = static_cast<float>(pos.y);
+        const float y1 = y0 + sy;
+        float dox0 = y0 * oblique;
+        float doz0 = y0 * oblique;
+        float dox1 = y1 * oblique;
+        float doz1 = y1 * oblique;
 
         // 顶面和侧面的填充色略暗（乘以0.8亮度）
         ax::Color4F fillSide(fillColor.r * 0.8f, fillColor.g * 0.8f, fillColor.b * 0.8f, fillColor.a);

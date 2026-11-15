@@ -23,21 +23,31 @@ bool CollisionSystem::_inHostileMasks(const RoleIdentity& first, const RoleIdent
            (static_cast<uint32_t>(second.hostileCamp) & firstCamp) != 0;
 }
 
-// 在屏幕平面计算两个轴对齐框的交叠中心。
-bool CollisionSystem::_intersects(const WorldBox& first, const WorldBox& second, FixedVec2& point)
+namespace
 {
-    const Fixed left   = std::max(first.pos.x, second.pos.x);
-    const Fixed right  = std::min(first.pos.x + first.size.x, second.pos.x + second.size.x);
-    const Fixed bottom = std::max(first.pos.z, second.pos.z);
-    const Fixed top    = std::min(first.pos.z + first.size.z, second.pos.z + second.size.z);
-    if (left >= right || bottom >= top)
+// 三轴半开区间的重叠起点。无重叠时返回 false。
+bool overlapStart(Fixed pos, Fixed size, Fixed otherPos, Fixed otherSize, Fixed& start, Fixed& end)
+{
+    start = std::max(pos, otherPos);
+    end   = std::min(pos + size, otherPos + otherSize);
+    return start < end;
+}
+}  // namespace
+
+// 世界盒在横向、纵深、高度上是否都有正长度交集。point 的 y 是高度中心，z 是纵深中心。
+bool CollisionSystem::_intersects(const WorldBox& first, const WorldBox& second, FixedVec3& point)
+{
+    Fixed x0, x1, y0, y1, z0, z1;
+    if (!overlapStart(first.pos.x, first.size.x, second.pos.x, second.size.x, x0, x1) ||
+        !overlapStart(first.pos.y, first.size.y, second.pos.y, second.size.y, y0, y1) ||
+        !overlapStart(first.pos.z, first.size.z, second.pos.z, second.size.z, z0, z1))
         return false;
-    point = {(left + right) * Fixed::ratio(1, 2), (bottom + top) * Fixed::ratio(1, 2)};
+    point = {(x0 + x1) * Fixed::ratio(1, 2), (z0 + z1) * Fixed::ratio(1, 2), (y0 + y1) * Fixed::ratio(1, 2)};
     return true;
 }
 
-// 查找攻击框与受击框之间的首个平面接触点。
-bool CollisionSystem::_isContacting(const ColliderState& first, const ColliderState& second, FixedVec2& point)
+// 查找攻击框与受击框之间的首个三维接触点。
+bool CollisionSystem::_isContacting(const ColliderState& first, const ColliderState& second, FixedVec3& point)
 {
     for (const auto& attack : first.attack)
         for (const auto& damage : second.damage)
@@ -47,7 +57,7 @@ bool CollisionSystem::_isContacting(const ColliderState& first, const ColliderSt
 }
 
 // 按实体组将接触状态变化分派给对应处理器。
-void CollisionSystem::_dispatch(Entity collider, Entity other, CollisionEvent event, FixedVec2 point)
+void CollisionSystem::_dispatch(Entity collider, Entity other, CollisionEvent event, FixedVec3 point)
 {
     const auto colliderGroup = m_world.ecs().get<EntityGroup>(collider).kind;
     const auto otherGroup    = m_world.ecs().get<EntityGroup>(other).kind;
@@ -74,7 +84,7 @@ void CollisionSystem::_endMissing(Entity collider, CollisionState& state, const 
     }
 }
 
-// 以平面框和深度半径检测接触，并维护接触状态机。
+// 以三维盒子检测接触，并维护接触状态机。半径不参与命中。
 void CollisionSystem::update()
 {
     auto& ecs            = m_world.ecs();
@@ -103,14 +113,7 @@ void CollisionSystem::update()
                 if (target.registrationFrame == frame ||
                     (!interaction && !_inHostileMasks(ecs.get<RoleIdentity>(collider), ecs.get<RoleIdentity>(other))))
                     continue;
-                const auto& sourceTransform = ecs.get<Transform>(collider);
-                const auto& targetTransform = ecs.get<Transform>(other);
-                const Fixed deltaZ          = sourceTransform.position.z >= targetTransform.position.z
-                                                  ? sourceTransform.position.z - targetTransform.position.z
-                                                  : targetTransform.position.z - sourceTransform.position.z;
-                if (deltaZ >= source.radius + target.radius)
-                    continue;
-                FixedVec2 point;
+                FixedVec3 point;
                 bool touching = _isContacting(source, target, point);
                 if (!touching && (interaction || (sourceKind == GroupKind::Role && targetKind == GroupKind::Obstacle)))
                     for (const auto& a : source.damage)

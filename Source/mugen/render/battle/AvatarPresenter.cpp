@@ -300,6 +300,15 @@ AvatarPresenter::RenderPose AvatarPresenter::interpolatePose(const AvatarState& 
     return pose;
 }
 
+bool AvatarPresenter::renderOffset(uint32_t entityValue, float alpha, VisualPos* out) const
+{
+    const auto it = m_avatars.find(entityValue);
+    if (it == m_avatars.end() || !it->second.track.hasSample() || !out)
+        return false;
+    *out = it->second.track.displayOffset(alpha);
+    return true;
+}
+
 bool AvatarPresenter::samplePose(uint32_t entityValue, float alpha, RenderPose* out) const
 {
     const auto it = m_avatars.find(entityValue);

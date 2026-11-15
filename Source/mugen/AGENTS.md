@@ -94,6 +94,20 @@ No compatibility shim. Interfaces can change. Do not null-check a value the type
 - `sim_legacy::World::tick(const FrameInput&)` is the only frame step. Order: clock, logic timers, control events, camera and slow motion, entity groups (Role, Effect, Obstacle, Goods, Portal), scene, collision, `flushDestroyed`.
 - Position is `(x, y, z)`: horizontal, height, depth. Facing is `towardX` in `{-1, 1}`.
 - Status bits are the only character state. Components may have non-virtual member functions over their own data; temporary view classes are allowed; no owning pointers, no virtuals.
+
+## Hit volumes
+
+Combat overlap is a 3-axis world box. It is not a screen rectangle plus a separate radius test. The same rules are implemented in `sim_legacy` (`RoleActor::transformBox`, `Collision`) and `sim` (`sim/anim/HitboxRules.h`).
+
+- World-box axes: X horizontal, Y depth (along transform Z), Z height (along transform Y). Height is `position.y + localZ * scale`. Do not fold `position.y + position.z` onto one vertical axis.
+- Width and height come from the current `.box` rectangle, multiplied by spine scale, and mirrored on X when `towardX == -1`.
+- `RoleDef.depth` / `EffectDef.depth` are derived while lowering config: `radius > 0 ? radius * 2 : 0`. There is no depth column in the lua tables, and export does not bake this length into `.box`.
+- `depth > 0`: the depth interval is `[position.z - depth/2, position.z + depth/2)`, full length, unscaled, shared by every frame of that entity. `depth == 0`: use that frame's `.box` `size.y * scale`, origin `position.z + pos.y * scale`.
+- A hit requires a positive-length overlap on all three axes (half-open: `start < end`). A zero-length interval never overlaps. Radius does not gate hits.
+- Radius stays on the entity for movement, wall probes, obstacle depth push, and AI spacing.
+- Contact is in Transform coordinates: x is the horizontal center of the overlap, y is the height center (box Z), z is the depth center (box Y). The hit spark is spawned at `{contact.x, contact.y, contact.z - 1}`. Hurt numbers stay on the screen: `{contact.x, contact.y + contact.z}` plus `hurtNumPos`.
+- Obstacles, portals, and goods have no depth field. Their volume is a radius on X and depth, and a diameter of height starting at `position.y`.
+- Debug boxes use the editor's oblique projection, sheared around the entity's own depth, and are drawn at the interpolated display offset (`PoseTrack::displayOffset`). Logic collision still uses the uninterpolated pose.
 - Cross-entity references are `Entity` handles.
 - The sim writes presentation events. It never calls rendering or audio. The presentation layer never writes sim state.
 - One `Random` lives in the `RngState` singleton. Logic code does not construct another one.

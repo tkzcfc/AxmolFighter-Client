@@ -14,7 +14,7 @@ public:
     // 构造指向指定世界实例中某个障碍物实体的视图。
     ObstacleActor(World& world, Entity entity);
     // 处理角色与障碍物的碰撞状态变化。
-    void onCollision(Entity character, CollisionEvent event, FixedVec2 contact);
+    void onCollision(Entity character, CollisionEvent event, FixedVec3 contact);
 
 private:
     // 本场战斗世界。

@@ -114,7 +114,7 @@ void WorldPresenter::present(sim_legacy::World& world, float interpolationAlpha,
     m_hurtNumbers.update(renderDelta);
     m_camera.follow(world, m_followEntity);
     m_camera.update(renderDelta);
-    m_debugDraw.present(world);
+    m_debugDraw.present(world, &m_avatars, std::clamp(interpolationAlpha, 0.0f, 1.0f));
 }
 
 void WorldPresenter::presentEvents(const std::vector<sim_legacy::PresentationEvent>& events,
@@ -127,7 +127,7 @@ void WorldPresenter::presentEvents(const std::vector<sim_legacy::PresentationEve
     m_hurtNumbers.update(renderDelta);
     m_camera.follow(world, m_followEntity);
     m_camera.update(renderDelta);
-    m_debugDraw.present(world);
+    m_debugDraw.present(world, &m_avatars, std::clamp(interpolationAlpha, 0.0f, 1.0f));
 }
 
 void WorldPresenter::consumeEvents(const std::vector<sim_legacy::PresentationEvent>& events,

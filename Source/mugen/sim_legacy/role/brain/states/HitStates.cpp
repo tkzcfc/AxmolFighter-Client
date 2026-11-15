@@ -271,7 +271,10 @@ void HitState::enter(RoleContext& ctx, Param type, State& leaf)
             skill::SkillCaster(ctx.world(), ctx.entity()).updateCrazy();
         }
     }
-    displacement::DisplacementDriver(ctx.world(), ctx.entity()).set(leaf.m_displacementId, ctx.node());
+    // 死亡位移查不到时按无位移处理，避免一直等待不会到来的落地事件。
+    if (!displacement::DisplacementDriver(ctx.world(), ctx.entity()).set(leaf.m_displacementId, ctx.node()) &&
+        type == A::Death)
+        leaf.m_displacementId = -1;
 }
 
 BTStatus HitState::update(RoleContext& ctx, Param type, State& leaf)
@@ -292,6 +295,13 @@ BTStatus HitState::update(RoleContext& ctx, Param type, State& leaf)
     }
     if (type == A::Death)
     {
+        // 落地事件若没送到当前死亡动作，贴地且不再向上时仍视为位移结束。
+        if (!leaf.m_displacementEnd && leaf.m_displacementId != -1)
+        {
+            const auto& transform = ctx.get<Transform>();
+            if (transform.position.y <= Fixed{} && ctx.get<RoleHitState>().forceVelocity.y <= Fixed{})
+                leaf.m_displacementEnd = true;
+        }
         if (leaf.m_animationEnd && (leaf.m_displacementEnd || leaf.m_displacementId == -1) &&
             leaf.m_time > Fixed::fromInt(conf::kRoleDeathTime))
         {

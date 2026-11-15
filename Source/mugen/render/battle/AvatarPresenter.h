@@ -40,6 +40,8 @@ public:
     void clearPool();
     // 应用受击亮度到实体显示节点；返回是否命中已有实体。
     bool setEntityIntensity(uint32_t entityValue, float intensity);
+    // 显示位置相对最新逻辑位置的偏移。调试框加上它后与插值后的角色一起移动。
+    bool renderOffset(uint32_t entityValue, float alpha, VisualPos* out) const;
 
 private:
     // 实体外观身份：回滚后同一句柄可能指向另一个实体，靠它判断是否需要重建显示节点。

@@ -95,7 +95,10 @@ TEST_CASE("Collider mirrors scaled box about role position")
     CHECK(right.pos.x == Fixed::fromInt(106));
     CHECK(left.pos.x == Fixed::fromInt(80));
     CHECK(left.size.x == right.size.x);
-    CHECK(left.pos.z == Fixed::fromInt(40));
+    CHECK(left.pos.z == Fixed::fromInt(20));
+    CHECK(left.pos.y == Fixed::fromInt(28));
+    CHECK(left.size.y == Fixed::fromInt(16));
+    CHECK(left.size.z == Fixed::fromInt(18));
 }
 
 TEST_CASE("Collider real motion advances after freeze expires and restores identically")

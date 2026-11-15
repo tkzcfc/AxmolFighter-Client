@@ -1,10 +1,11 @@
 // [7.1] CollisionSystem
-// 读：`HitboxesComponent`、`TransformComponent`、`IdentityComponent`(阵营)、`ContactMemoryComponent`
+// 读：`HitboxesComponent`、`IdentityComponent`(阵营)、`ContactMemoryComponent`
 // 写：`ContactMemoryComponent`
 // 消费：—
 // 产生：`ContactEvent`
 #include "mugen/sim/Systems.h"
 #include "mugen/sim/World.h"
+#include "mugen/sim/anim/HitboxRules.h"
 #include <algorithm>
 
 namespace mugen::sim
@@ -17,24 +18,12 @@ bool inHostileMasks(const IdentityComponent& first, const IdentityComponent& sec
     return (static_cast<uint32_t>(first.m_hostileMask) & static_cast<uint32_t>(second.m_camp)) != 0 &&
            (static_cast<uint32_t>(second.m_hostileMask) & static_cast<uint32_t>(first.m_camp)) != 0;
 }
-// 屏幕平面两轴对齐框交叠中心。
-bool intersects(const WorldBox& first, const WorldBox& second, FixedVec2& point)
-{
-    const Fixed left   = std::max(first.m_pos.x, second.m_pos.x);
-    const Fixed right  = std::min(first.m_pos.x + first.m_size.x, second.m_pos.x + second.m_size.x);
-    const Fixed bottom = std::max(first.m_pos.z, second.m_pos.z);
-    const Fixed top    = std::min(first.m_pos.z + first.m_size.z, second.m_pos.z + second.m_size.z);
-    if (left >= right || bottom >= top)
-        return false;
-    point = {(left + right) * Fixed::ratio(1, 2), (bottom + top) * Fixed::ratio(1, 2)};
-    return true;
-}
-// 攻击框 × 受击框的首个接触点。
-bool isContacting(const HitboxesComponent& first, const HitboxesComponent& second, FixedVec2& point)
+// 攻击框 × 受击框的首个三维接触点（x 横向、y 高度、z 纵深）。
+bool isContacting(const HitboxesComponent& first, const HitboxesComponent& second, FixedVec3& point)
 {
     for (const auto& attack : first.m_attack)
         for (const auto& damage : second.m_damage)
-            if (intersects(attack, damage, point))
+            if (worldBoxesOverlap(attack, damage, &point))
                 return true;
     return false;
 }
@@ -54,7 +43,6 @@ void runCollision(World& world)
     {
         const auto& source      = world.ecs().get<HitboxesComponent>(collider);
         const auto& sourceIdent = world.ecs().get<IdentityComponent>(collider);
-        const auto& sourceTrans = world.ecs().get<TransformComponent>(collider);
         if (!world.ecs().has<ContactMemoryComponent>(collider))
             world.ecs().add(collider, ContactMemoryComponent{});
         auto& memory = world.ecs().get<ContactMemoryComponent>(collider);
@@ -65,18 +53,12 @@ void runCollision(World& world)
                 continue;
             const auto& target      = world.ecs().get<HitboxesComponent>(other);
             const auto& targetIdent = world.ecs().get<IdentityComponent>(other);
-            const auto& targetTrans = world.ecs().get<TransformComponent>(other);
             // 出生帧内实体不参与碰撞（R3）。
             if (sourceIdent.m_born.m_frame == frame || targetIdent.m_born.m_frame == frame)
                 continue;
             if (!inHostileMasks(sourceIdent, targetIdent))
                 continue;
-            const Fixed deltaZ = sourceTrans.m_position.z >= targetTrans.m_position.z
-                                     ? sourceTrans.m_position.z - targetTrans.m_position.z
-                                     : targetTrans.m_position.z - sourceTrans.m_position.z;
-            if (deltaZ >= source.m_radius + target.m_radius)
-                continue;
-            FixedVec2 point;
+            FixedVec3 point;
             if (!isContacting(source, target, point))
                 continue;
             active.push_back(other);
@@ -86,7 +68,7 @@ void runCollision(World& world)
             event.m_a     = collider;
             event.m_b     = other;
             event.m_phase = began ? ContactPhase::Began : ContactPhase::Continue;
-            event.m_point = {point.x, {}, point.y};
+            event.m_point = point;
             world.ecs().singleton<EventQueue<ContactEvent>>().push(event);
         }
         for (const Entity old : memory.m_contacts)

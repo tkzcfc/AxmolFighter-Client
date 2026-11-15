@@ -1,6 +1,7 @@
 #include "RoleSpawn.h"
 #include "mugen/avatar/AvatarPaths.h"
 #include "mugen/conf/TypeConversions.h"
+#include "mugen/conf/battle/RoleDef.h"
 #include "mugen/sim_legacy/role/brain/RoleBrainDriver.h"
 #include "mugen/sim_legacy/skill/SkillCaster.h"
 #include "mugen/sim_legacy/buff/BuffHolder.h"
@@ -209,7 +210,11 @@ Entity RoleSpawner::spawnRole(const RoleSpawnParams& params)
         rage.m_maxFreezeMs = Fixed::fromInt(std::max(0, partner->typeValue));
         ecs.add(entity, rage);
     }
-    ecs.add(entity, ColliderState{{}, {}, ecs.singleton<WorldClock>().frame, Fixed::fromInt(row->radius)});
+    int32_t depth = row->radius > 0 ? row->radius * 2 : 0;
+    if (const auto* def = config.find<conf::battle::RoleDef>(params.roleId))
+        depth = def->depth;
+    ecs.add(entity, ColliderState{{}, {}, ecs.singleton<WorldClock>().frame, Fixed::fromInt(row->radius),
+                                  Fixed::fromInt(depth)});
     ecs.add(entity, attributes);
     Vitals vitals;
     vitals.hp = vitals.maxHp = attributes.maxHp();

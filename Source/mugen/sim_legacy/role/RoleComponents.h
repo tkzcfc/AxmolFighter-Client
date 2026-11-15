@@ -311,12 +311,12 @@ struct Puppet
     // 参与组件快照的受控角色字段。
     MG_REFLECT(Puppet, playerId)
 };
-// 位于世界坐标的轴对齐碰撞框。
+// 位于世界坐标的轴对齐碰撞框。X 为横向，Y 为纵深，Z 为高度。
 struct WorldBox
 {
-    // 框体起点。
+    // 三轴最小角。
     FixedVec3 pos;
-    // 框体尺寸。
+    // 三轴尺寸。
     FixedVec3 size;
     // 参与碰撞快照的框体字段。
     MG_REFLECT(WorldBox, pos, size)
@@ -330,10 +330,12 @@ struct ColliderState
     std::vector<WorldBox> damage;
     // 本次注册发生的逻辑帧。
     uint64_t registrationFrame = 0;
-    // 深度碰撞半径。
+    // 行走、贴墙和推挤半径，不参与命中。
     Fixed radius;
+    // 命中深度全长。0 表示采用动作框自身的深度。
+    Fixed depth;
     // 参与组件快照的碰撞体字段。
-    MG_REFLECT(ColliderState, attack, damage, registrationFrame, radius)
+    MG_REFLECT(ColliderState, attack, damage, registrationFrame, radius, depth)
 };
 // 两个碰撞体接触状态的变化类型。
 enum class CollisionEvent : uint8_t
@@ -350,8 +352,8 @@ struct CollisionContact
 {
     // 接触的另一实体。
     Entity other;
-    // 屏幕平面中的接触点。
-    FixedVec2 point;
+    // 重叠中心。x 横向，y 高度，z 纵深。
+    FixedVec3 point;
     // 参与碰撞状态快照的接触字段。
     MG_REFLECT(CollisionContact, other, point)
 };

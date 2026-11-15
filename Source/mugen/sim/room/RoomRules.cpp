@@ -39,9 +39,10 @@ void writeRadiusDamage(World& world, Entity entity)
 {
     auto& hitboxes        = world.ecs().get<HitboxesComponent>(entity);
     const auto& position  = world.ecs().get<TransformComponent>(entity).m_position;
-    const Fixed radius    = hitboxes.m_radius;
-    hitboxes.m_damage     = {WorldBox{{position.x - radius, {}, position.z - radius}, {radius * Fixed::fromInt(2), {},
-                             radius * Fixed::fromInt(2)}}};
+    const Fixed radius = hitboxes.m_radius;
+    const Fixed span   = radius * Fixed::fromInt(2);
+    // 没有动作框时用半径铺横向和纵深，高度同样取直径，避免某一轴尺寸为 0。
+    hitboxes.m_damage  = {WorldBox{{position.x - radius, position.z - radius, position.y}, {span, span, span}}};
 }
 // 房间实体的公共基础装配。
 Entity base(World& world, SpawnKind kind, int32_t configId, const TransformComponent& transform, int32_t radius,

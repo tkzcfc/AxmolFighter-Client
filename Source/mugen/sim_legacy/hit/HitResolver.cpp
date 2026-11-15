@@ -25,7 +25,7 @@ void grantPartnerRageOnAcceptedHit(World& world, Entity entity)
 }
 
 // 碰撞分派按目标类型与攻击者阵营过滤，End 事件不产生打击。
-void HitResolver::onCollision(Entity other, CollisionEvent event, FixedVec2 contact)
+void HitResolver::onCollision(Entity other, CollisionEvent event, FixedVec3 contact)
 {
     if (event == CollisionEvent::End)
         return;
@@ -109,7 +109,7 @@ void HitResolver::_dodge(Entity target, const HitTrigger& data, bool passive)
     m_world.emit(target, Tips{passive ? "MISS" : "DODGE"});
 }
 
-void HitResolver::_hitEffects(Entity sourceEntity, Entity target, FixedVec2 contact)
+void HitResolver::_hitEffects(Entity sourceEntity, Entity target, FixedVec3 contact)
 {
     auto& ecs         = m_world.ecs();
     const auto source = ecs.get<EffectState>(sourceEntity);
@@ -117,7 +117,6 @@ void HitResolver::_hitEffects(Entity sourceEntity, Entity target, FixedVec2 cont
     if (!row)
         return;
     const auto transform = ecs.get<Transform>(sourceEntity);
-    const auto z         = ecs.get<Transform>(target).position.z;
     for (const auto id : row->hitEffectIds)
     {
         if (id == -1)
@@ -150,7 +149,7 @@ void HitResolver::_hitEffects(Entity sourceEntity, Entity target, FixedVec2 cont
         position.vectorX          = transform.vectorX;
         position.vectorZ          = transform.vectorZ;
         position.towardX          = transform.towardX;
-        position.position         = {contact.x, contact.y - z, z - "1"_fx};
+        position.position         = {contact.x, contact.y, contact.z - "1"_fx};
         effect::EffectActor(m_world, child).enter();
     }
 }
@@ -159,16 +158,17 @@ bool HitResolver::_beforeHit(Entity target,
                              const HitTrigger& data,
                              const conf::EffectConfig& effectRow,
                              const conf::SkillHitConfig& hitRow,
-                             FixedVec2 contact)
+                             FixedVec3 contact)
 {
     auto& ecs       = m_world.ecs();
+    FixedVec2 screen{contact.x, contact.y + contact.z};
     const auto* row = conf::Config::instance().find<conf::RoleConfig>(ecs.get<RoleIdentity>(target).roleId);
     if (row && row->hurtNumPos.size() >= 2)
     {
-        contact.x -= ecs.get<Transform>(data.m_effect).vectorX * Fixed::fromInt(row->hurtNumPos[0]);
-        contact.y += Fixed::fromInt(row->hurtNumPos[1]);
+        screen.x -= ecs.get<Transform>(data.m_effect).vectorX * Fixed::fromInt(row->hurtNumPos[0]);
+        screen.y += Fixed::fromInt(row->hurtNumPos[1]);
     }
-    ecs.get<RoleHitState>(target).m_contact = contact;
+    ecs.get<RoleHitState>(target).m_contact = screen;
     if (effectRow.hitExtraControl.size() > 1 && effectRow.hitExtraControl[1] == 0 &&
         ecs.get<RoleStatus>(target).isGetUp() && hitRow.hitMust != 1)
         return false;

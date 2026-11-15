@@ -59,7 +59,7 @@ Entity base(World& world, GroupKind group, Transform transform, int32_t spineId,
     ecs.add(entity, RoleHitState{});
     ecs.add(entity, ExtraState{});
     ecs.add(entity, Displacement{});
-    ecs.add(entity, ColliderState{{}, {}, ecs.singleton<WorldClock>().frame, Fixed::fromInt(radius)});
+    ecs.add(entity, ColliderState{{}, {}, ecs.singleton<WorldClock>().frame, Fixed::fromInt(radius), {}});
     ecs.add(entity, CollisionState{});
     play(world, entity, "stand", true);
     return entity;
@@ -411,9 +411,9 @@ bool RoomEntity::_animate()
     collider.damage.clear();
     const auto transform = ecs.get<Transform>(m_entity);
     for (const auto* box : attack)
-        collider.attack.push_back(role::RoleActor::transformBox(*box, transform));
+        collider.attack.push_back(role::RoleActor::transformBox(*box, transform, collider.depth));
     for (const auto* box : damage)
-        collider.damage.push_back(role::RoleActor::transformBox(*box, transform));
+        collider.damage.push_back(role::RoleActor::transformBox(*box, transform, collider.depth));
     return complete;
 }
 
@@ -423,9 +423,10 @@ void RoomEntity::_writeRadiusDamage()
     auto& ecs           = m_world.ecs();
     auto& collider      = ecs.get<ColliderState>(m_entity);
     const auto position = ecs.get<Transform>(m_entity).position;
-    const auto radius   = collider.radius;
-    collider.damage     = {
-        {{position.x - radius, {}, position.y + position.z - radius}, {radius * "2"_fx, {}, radius * "2"_fx}}};
+    const auto radius = collider.radius;
+    const auto span   = radius * "2"_fx;
+    // 没有动作框时用半径铺横向和纵深，高度同样取直径。不读命中深度。
+    collider.damage   = {{{position.x - radius, position.z - radius, position.y}, {span, span, span}}};
 }
 }  // namespace room_entities
 }  // namespace mugen::sim_legacy

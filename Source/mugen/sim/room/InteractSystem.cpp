@@ -8,6 +8,7 @@
 #include "mugen/sim/role/RoleSpawn.h"
 #include "mugen/sim/buff/BuffRules.h"
 #include "mugen/sim/motion/DisplacementRules.h"
+#include "mugen/sim/anim/HitboxRules.h"
 #include "mugen/sim/room/RoomComponents.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/BattleConst.h"
@@ -38,14 +39,10 @@ void updateSpurt(World& world, Entity entity, GoodsStateComponent& state)
         }
     }
 }
-// 屏幕平面两轴对齐框是否交叠（与 CollisionSystem::intersects 一致）。
+// 横向、纵深、高度三轴都有正长度交集。
 bool boxIntersects(const WorldBox& first, const WorldBox& second)
 {
-    const Fixed left   = std::max(first.m_pos.x, second.m_pos.x);
-    const Fixed right  = std::min(first.m_pos.x + first.m_size.x, second.m_pos.x + second.m_size.x);
-    const Fixed bottom = std::max(first.m_pos.z, second.m_pos.z);
-    const Fixed top    = std::min(first.m_pos.z + first.m_size.z, second.m_pos.z + second.m_size.z);
-    return left < right && bottom < top;
+    return worldBoxesOverlap(first, second, nullptr);
 }
 }  // namespace
 
@@ -114,25 +111,21 @@ void runInteract(World& world)
                 return;
             if (state.m_phase != PortalPhase::Active)
                 return;
-            // 传送门受击盒：以当前位置为中心、半径为 m_radius 的平面盒（对齐旧实现 _writeRadiusDamage）。
-            const Fixed radius     = portalHitboxes.m_radius;
-            const WorldBox portalBox{{portalTransform.m_position.x - radius, {},
-                                      portalTransform.m_position.z - radius},
-                                     {radius * Fixed::fromInt(2), {}, radius * Fixed::fromInt(2)}};
+            // 传送门体积：半径铺横向和纵深，高度取直径。不读命中深度字段。
+            const Fixed radius = portalHitboxes.m_radius;
+            const Fixed span   = radius * Fixed::fromInt(2);
+            const WorldBox portalBox{{portalTransform.m_position.x - radius, portalTransform.m_position.z - radius,
+                                      portalTransform.m_position.y},
+                                     {span, span, span}};
             // 仅英雄或受控玩家接触传送门，且需存活。
             world.ecs().each<IdentityComponent, RoleStateComponent, TransformComponent, HitboxesComponent>(
                 [&](Entity role, const IdentityComponent& identity, const RoleStateComponent& roleState,
-                    const TransformComponent& roleTransform, const HitboxesComponent& roleHitboxes) {
+                    const TransformComponent&, const HitboxesComponent& roleHitboxes) {
                     if (world.ecs().has<DespawningComponent>(role) || world.ecs().has<InactiveComponent>(role))
                         return;
                     if (identity.m_roleType != 1 && !identity.m_playerSlot.has_value())
                         return;
                     if (roleState.m_state == RoleStateId::Death)
-                        return;
-                    const Fixed deltaZ = roleTransform.m_position.z >= portalTransform.m_position.z
-                                             ? roleTransform.m_position.z - portalTransform.m_position.z
-                                             : portalTransform.m_position.z - roleTransform.m_position.z;
-                    if (deltaZ >= portalHitboxes.m_radius + roleHitboxes.m_radius)
                         return;
                     for (const WorldBox& body : roleHitboxes.m_damage)
                         if (boxIntersects(portalBox, body))

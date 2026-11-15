@@ -43,7 +43,10 @@ struct EffectDef
     int32_t control = 0;
     // 碰撞、半径、速度、类型与 Spine 资源。
     int32_t collision = 0;
+    // 行走和贴墙使用的半径，不参与命中。
     int32_t radius = 0;
+    // 命中深度全长（世界单位）。0 使用动作框深度，大于 0 则盖过动作框并绕纵深居中。
+    int32_t depth = 0;
     int32_t velocity = 0;
     int32_t effectType = 0;
     int32_t resSpineId = 0;
@@ -72,6 +75,7 @@ struct EffectDef
                control,
                collision,
                radius,
+               depth,
                velocity,
                effectType,
                resSpineId)

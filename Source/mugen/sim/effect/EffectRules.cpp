@@ -97,9 +97,9 @@ void spawnHitEffect(World& world, Entity owner, Entity sourceEffect, int32_t eff
     const auto* row = conf::Config::instance().find<conf::battle::EffectDef>(effectId);
     if (!row)
         return;
-    const auto& targetPos = world.ecs().get<TransformComponent>(hitEntity).m_position;
-    const auto& facing    = world.ecs().get<TransformComponent>(sourceEffect);
-    const FixedVec3 position{contact.m_point.x, contact.m_point.z - targetPos.z, targetPos.z - Fixed::fromInt(1)};
+    const auto& facing = world.ecs().get<TransformComponent>(sourceEffect);
+    // 接触点是世界坐标：x 横向，y 高度，z 纵深。纵深减 1，让火花画在重叠中心前方。
+    const FixedVec3 position{contact.m_point.x, contact.m_point.y, contact.m_point.z - Fixed::fromInt(1)};
     Entity reused;
     world.ecs().each<EffectInfoComponent>([&](Entity entity, const EffectInfoComponent& info) {
         if (reused.value == 0 && info.m_configId == effectId && info.m_hitEntity == hitEntity &&

@@ -264,7 +264,7 @@ void emitHit(World& world, const HitContext& ctx)
     hitEvent.m_damage   = ctx.m_damage;
     hitEvent.m_critical = ctx.m_critical;
     hitEvent.m_killed   = targetHealth.m_hp <= Fixed{};
-    hitEvent.m_contact  = {ctx.m_contact.m_point.x, {}, ctx.m_contact.m_point.y};
+    hitEvent.m_contact  = ctx.m_contact.m_point;
     world.ecs().singleton<EventQueue<HitEvent>>().push(hitEvent);
 }
 

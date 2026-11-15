@@ -30,12 +30,12 @@ struct MotionStateComponent
     MG_REFLECT(MotionStateComponent, m_motionFile, m_motionName, m_entryId, m_timeMs, m_rate, m_loop, m_playing, m_completedLoops,
                m_completedThisFrame)
 };
-// 位于世界坐标的轴对齐碰撞框。
+// 位于世界坐标的轴对齐碰撞框。X 为横向，Y 为纵深，Z 为高度。
 struct WorldBox
 {
-    // 框体起点。
+    // 三轴最小角。
     FixedVec3 m_pos;
-    // 框体尺寸。
+    // 三轴尺寸。
     FixedVec3 m_size;
     MG_REFLECT(WorldBox, m_pos, m_size)
 };
@@ -46,10 +46,12 @@ struct HitboxesComponent
     std::vector<WorldBox> m_attack;
     // 受击碰撞框列表。
     std::vector<WorldBox> m_damage;
-    // 深度碰撞半径。
+    // 行走、贴墙和推挤半径，不参与命中。
     Fixed m_radius;
+    // 命中深度全长。0 表示采用动作框自身的深度。
+    Fixed m_depth;
     // 本次采样发生的逻辑帧。
     uint64_t m_sampledFrame = 0;
-    MG_REFLECT(HitboxesComponent, m_attack, m_damage, m_radius, m_sampledFrame)
+    MG_REFLECT(HitboxesComponent, m_attack, m_damage, m_radius, m_depth, m_sampledFrame)
 };
 }  // namespace mugen::sim

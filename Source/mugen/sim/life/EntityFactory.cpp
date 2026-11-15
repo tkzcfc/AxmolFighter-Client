@@ -135,6 +135,7 @@ Entity materializeRole(World& world, const SpawnRequest& request, SpawnStage sta
 
     HitboxesComponent hitboxes;
     hitboxes.m_radius = Fixed::fromInt(row->radius);
+    hitboxes.m_depth  = Fixed::fromInt(row->depth);
     ecs.add(entity, hitboxes);
 
     if (identity.m_playerSlot)
@@ -217,6 +218,7 @@ Entity materializeEffect(World& world, const SpawnRequest& request, SpawnStage s
 
     HitboxesComponent hitboxes;
     hitboxes.m_radius = Fixed::fromInt(row->radius);
+    hitboxes.m_depth  = Fixed::fromInt(row->depth);
     ecs.add(entity, hitboxes);
 
     ecs.add(entity, DisplacementComponent{});

@@ -26,7 +26,7 @@ public:
     // 构造指向指定世界实例中某个实体的视图；命中时该实体为特效。
     HitResolver(World& world, Entity effect);
     // 处理特效碰撞状态变化，结束接触不产生打击。
-    void onCollision(Entity other, CollisionEvent event, FixedVec2 contact);
+    void onCollision(Entity other, CollisionEvent event, FixedVec3 contact);
     // 按配置目标选择接收池并记录保护请求。
     void addEntityBuff(int32_t id, std::optional<int32_t> boundSkill = {}, std::optional<int32_t> origin = {});
     // 同步派发命中事件。
@@ -44,13 +44,13 @@ private:
     // 属性闪避与主动闪避分别触发事件和文本。
     void _dodge(Entity target, const HitTrigger& data, bool passive);
     // 生成或复用同配置同目标的命中特效，位置取碰撞接触点。
-    void _hitEffects(Entity sourceEntity, Entity target, FixedVec2 contact);
+    void _hitEffects(Entity sourceEntity, Entity target, FixedVec3 contact);
     // 受击预处理保持事件触发与状态过滤的先后顺序。
     bool _beforeHit(Entity target,
                     const HitTrigger& data,
                     const conf::EffectConfig& effectRow,
                     const conf::SkillHitConfig& hitRow,
-                    FixedVec2 contact);
+                    FixedVec3 contact);
     // 非霸体受击设置冻结、朝向与追击数据；状态叶子由独立模块执行。
     void _hitReaction(Entity target, const HitTrigger& data, const conf::SkillHitConfig& hitRow);
     // 非爆发状态按命中或受击回复能量。
@@ -72,8 +72,8 @@ private:
     Entity m_effect{};
     // 本次碰撞的对方实体。
     Entity m_target{};
-    // 本次碰撞的平面接触点。
-    FixedVec2 m_contact{};
+    // 本次碰撞的接触点。x 横向，y 高度，z 纵深。
+    FixedVec3 m_contact{};
 };
 }  // namespace hit
 }  // namespace mugen::sim_legacy

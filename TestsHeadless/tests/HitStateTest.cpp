@@ -4,6 +4,7 @@
 #include "SkillTestSupport.h"
 #include "mugen/sim_legacy/role/brain/RoleBrainDriver.h"
 #include "mugen/sim_legacy/role/brain/states/HitStates.h"
+#include "mugen/sim_legacy/motion/Displacement.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
 #include <iostream>
 
@@ -172,6 +173,76 @@ TEST_CASE("Hit recovery to Idle clears residual displacement and holds position"
         f.tick();
     CHECK(ecs.get<Transform>(f.m_entity).position.x == pos.x);
     CHECK(ecs.get<Transform>(f.m_entity).position.z == pos.z);
+}
+
+// 地面小怪的死亡位移会把尸体弹起再落地。落地事件到达后必须销毁，不能停在 Death。
+TEST_CASE("Monster death with configured displacement despawns the corpse")
+{
+    HitStateWorld f;
+    auto& ecs = f.m_world.ecs();
+    ecs.get<RoleIdentity>(f.m_entity).roleId   = 21881;
+    ecs.get<RoleIdentity>(f.m_entity).roleType = 2;
+    ecs.get<MotionState>(f.m_entity).motionFile =
+        "/mugen/motion/monster/gw_xiaoguai_goutoubang_new.motion";
+    ecs.get<RoleStatus>(f.m_entity).eEntityStatus = EntityRoleStatus::Idle;
+    ecs.get<Vitals>(f.m_entity).hp                = "1"_fx;
+    Role(f.m_world, f.m_entity).modifyHp("-10"_fx);
+    REQUIRE(ecs.get<RoleStatus>(f.m_entity).isDeath());
+    REQUIRE(ecs.get<RoleStatus>(f.m_entity).entityParams.death_displacement_id == 133);
+    for (int i = 0; i < 300 && ecs.alive(f.m_entity); ++i)
+        f.tick();
+    if (ecs.alive(f.m_entity))
+    {
+        const auto& brain = ecs.get<RoleBrain>(f.m_entity);
+        const auto& motion = ecs.get<MotionState>(f.m_entity);
+        const auto& hit    = ecs.get<RoleHitState>(f.m_entity);
+        std::cout << "still alive branch=" << static_cast<int>(brain.m_branch)
+                  << " stage=" << brain.m_destroyStage << " phase=" << static_cast<int>(brain.m_phase)
+                  << " motion=" << motion.motionName << " loops=" << motion.m_completedLoops
+                  << " playing=" << motion.playing << " y=" << ecs.get<Transform>(f.m_entity).position.y.raw
+                  << " vy=" << hit.forceVelocity.y.raw << " listener=" << ecs.get<Displacement>(f.m_entity).listenerNode
+                  << "\n";
+        if (const auto* leaf = std::get_if<behavior::HitActionState>(&brain.m_data))
+            std::cout << "animEnd=" << leaf->m_animationEnd << " dispEnd=" << leaf->m_displacementEnd
+                      << " dispId=" << leaf->m_displacementId << " time=" << leaf->m_time.raw << "\n";
+    }
+    CHECK_FALSE(ecs.alive(f.m_entity));
+}
+
+// 未给出死亡位移时不能停在死亡态。
+TEST_CASE("Monster death without a displacement row still despawns")
+{
+    HitStateWorld f;
+    auto& ecs = f.m_world.ecs();
+    ecs.get<RoleIdentity>(f.m_entity).roleId   = 21881;
+    ecs.get<RoleIdentity>(f.m_entity).roleType = 2;
+    ecs.get<MotionState>(f.m_entity).motionFile =
+        "/mugen/motion/monster/gw_xiaoguai_goutoubang_new.motion";
+    ecs.get<RoleStatus>(f.m_entity).eEntityStatus = EntityRoleStatus::Idle;
+    Role(f.m_world, f.m_entity).changeStatus(EntityRoleStatus::Death);
+    for (int i = 0; i < 300 && ecs.alive(f.m_entity); ++i)
+        f.tick();
+    CHECK_FALSE(ecs.alive(f.m_entity));
+}
+
+// 落地事件送不到死亡动作时，贴地后仍要销毁，不能一直躺在场上。
+TEST_CASE("Monster death despawns after landing when the displacement listener is gone")
+{
+    HitStateWorld f;
+    auto& ecs = f.m_world.ecs();
+    ecs.get<RoleIdentity>(f.m_entity).roleId   = 21881;
+    ecs.get<RoleIdentity>(f.m_entity).roleType = 2;
+    ecs.get<MotionState>(f.m_entity).motionFile =
+        "/mugen/motion/monster/gw_xiaoguai_goutoubang_new.motion";
+    ecs.get<RoleStatus>(f.m_entity).eEntityStatus = EntityRoleStatus::Idle;
+    ecs.get<Vitals>(f.m_entity).hp                = "1"_fx;
+    Role(f.m_world, f.m_entity).modifyHp("-10"_fx);
+    f.tick();
+    REQUIRE(ecs.alive(f.m_entity));
+    ecs.get<Displacement>(f.m_entity).listenerNode = -1;
+    for (int i = 0; i < 300 && ecs.alive(f.m_entity); ++i)
+        f.tick();
+    CHECK_FALSE(ecs.alive(f.m_entity));
 }
 
 // 死亡必须经过倒地完成、死亡动画和销毁叶子。

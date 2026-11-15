@@ -84,8 +84,8 @@ struct HitFixture
     }
     // 恢复全局只读配置，防止污染相邻测试。
     ~HitFixture() { (mugen::test::ensureContentVfs() && conf::Config::instance().load("/mugen/config/config.bin")); }
-    // 标准碰撞框，位于地面。
-    static WorldBox box() { return {{}, {"20"_fx, {}, "20"_fx}}; }
+    // 标准碰撞框。三轴都有正长度，原点处的攻击框和受击框才能相交。
+    static WorldBox box() { return {{}, {"20"_fx, "20"_fx, "20"_fx}}; }
     // 获取将被覆写的效果配置。
     conf::EffectConfig& effectRow()
     {
