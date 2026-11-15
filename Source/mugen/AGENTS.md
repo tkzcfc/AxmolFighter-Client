@@ -101,7 +101,8 @@ Combat overlap is a 3-axis world box. It is not a screen rectangle plus a separa
 
 - World-box axes: X horizontal, Y depth (along transform Z), Z height (along transform Y). Height is `position.y + localZ * scale`. Do not fold `position.y + position.z` onto one vertical axis.
 - Width and height come from the current `.box` rectangle, multiplied by spine scale, and mirrored on X when `towardX == -1`.
-- `RoleDef.depth` / `EffectDef.depth` are derived while lowering config: `radius > 0 ? radius * 2 : 0`. There is no depth column in the lua tables, and export does not bake this length into `.box`.
+- `RoleDef.depth` / `EffectDef.depth` are derived while lowering config: `radius > 0 ? radius * 2 : 0`. There is no depth column in the lua tables. Runtime still uses this value and ignores the file depth.
+- `.box` export writes a preview of that override so the editor matches the game shape. Local `size.y = round(2 * radius / spineScale)` and `pos.y = -size.y / 2`, because the editor draws the skeleton unscaled while the game scales width and height but not the overridden depth. The depth comes from a role that uses the skeleton, or from an effect when no role does. Several radii pick the most common depth, then the smallest id. A skeleton with no positive radius keeps `size.y = 10` and `pos.y = 0`.
 - `depth > 0`: the depth interval is `[position.z - depth/2, position.z + depth/2)`, full length, unscaled, shared by every frame of that entity. `depth == 0`: use that frame's `.box` `size.y * scale`, origin `position.z + pos.y * scale`.
 - A hit requires a positive-length overlap on all three axes (half-open: `start < end`). A zero-length interval never overlaps. Radius does not gate hits.
 - Radius stays on the entity for movement, wall probes, obstacle depth push, and AI spacing.
