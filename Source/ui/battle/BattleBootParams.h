@@ -16,12 +16,23 @@ struct LocalBattleParams
     std::int32_t autotestFrames = 0;
 };
 
+// 本地副本结算快照。只记录战斗里已经算好的结果，不包含奖励。
+struct DungeonBattleResult
+{
+    bool win                 = false;
+    std::int32_t copyId      = 0;
+    std::int32_t roomId      = 0;
+    std::int32_t timeSec     = 0;
+    std::int32_t maxCombo    = 0;
+    std::int32_t maxEvaluate = 0;
+};
+
 // 联网 1v1 决斗启动参数（来自 game 服 DuelStartPush）。
 struct NetBattleParams
 {
-    std::uint32_t battleId         = 0;
-    std::int32_t roomId            = 0;
-    std::int64_t opponentPlayerId  = 0;
+    std::uint32_t battleId        = 0;
+    std::int32_t roomId           = 0;
+    std::int64_t opponentPlayerId = 0;
     std::string opponentName;
     // 全部参战者的角色配置 id（按槽位），用于预加载技能特效。
     std::vector<std::int32_t> roleIds;

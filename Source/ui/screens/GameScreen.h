@@ -10,6 +10,8 @@
 namespace gameui
 {
 
+class LocalBattleMode;
+
 class GameScreen : public Screen
 {
 public:
@@ -36,6 +38,8 @@ private:
     void setInputFromKey(ax::EventKeyboard::KeyCode code, bool pressed);
     // 进入战斗（本地副本）时通知 game 服离开城镇场景。
     void leaveTownScene();
+    // 终点房胜利或失败后暂停，并打开结算界面。
+    void openDungeonResult(LocalBattleMode& local);
 
 private:
     std::optional<LocalBattleParams> m_local;
@@ -43,7 +47,8 @@ private:
     std::unique_ptr<IBattleMode> m_battleMode;
     std::map<ax::EventKeyboard::KeyCode, uint32_t> m_slotMap;
     ax::EventListenerKeyboard* m_keyboardListener = nullptr;
-    bool m_hudOpened = false;
+    bool m_hudOpened                              = false;
+    bool m_resultShown                            = false;
 };
 
 }  // namespace gameui

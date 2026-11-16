@@ -5,6 +5,7 @@
 #include "resource/builtin/MapResource.h"
 #include "resource/builtin/RoleEffectHelper.h"
 #include "ui/battle/BattleHudPanel.h"
+#include "ui/battle/BattleResultPanel.h"
 #include "ui/battle/LocalBattleMode.h"
 #include "ui/battle/NetBattleMode.h"
 #include "ui/battle/LocalRoleUtils.h"
@@ -103,8 +104,7 @@ void GameScreen::onEnter()
     m_slotMap[Key::KEY_Y]           = static_cast<uint32_t>(ControlKey::AttackO);
     m_slotMap[Key::KEY_U]           = static_cast<uint32_t>(ControlKey::AttackQ);
     m_slotMap[Key::KEY_P]           = static_cast<uint32_t>(ControlKey::AttackQ);
-    AXLOGI("GameScreen: entered (localRoom={}, netBattle={})",
-           m_local.has_value() ? m_local->roomId : 0,
+    AXLOGI("GameScreen: entered (localRoom={}, netBattle={})", m_local.has_value() ? m_local->roomId : 0,
            m_net.has_value() ? m_net->battleId : 0);
 }
 
@@ -129,8 +129,13 @@ void GameScreen::onUpdate(float delta)
 {
     if (m_battleMode)
         m_battleMode->onUpdate(delta);
-    if (auto* local = dynamic_cast<LocalBattleMode*>(m_battleMode.get()); local && local->returnToTownRequested())
-        getScreenManager()->switchScreen<TownScreen>();
+    if (auto* local = dynamic_cast<LocalBattleMode*>(m_battleMode.get()))
+    {
+        if (!m_resultShown && local->result())
+            openDungeonResult(*local);
+        if (local->returnToTownRequested())
+            getScreenManager()->switchScreen<TownScreen>();
+    }
     if (auto* net = dynamic_cast<NetBattleMode*>(m_battleMode.get()))
     {
         // 世界引导完成后才打开 HUD（HUD 需要读取已初始化的世界）。
@@ -196,6 +201,19 @@ std::unique_ptr<IBattleMode> GameScreen::createBattleMode()
     if (m_net)
         return std::make_unique<NetBattleMode>(*m_net, *this);
     return std::make_unique<LocalBattleMode>();
+}
+
+void GameScreen::openDungeonResult(LocalBattleMode& local)
+{
+    m_resultShown = true;
+    local.setPaused(true);
+    getScreenManager()->getUIManager()->open<BattleResultPanel>(*local.result(), [&local]() {
+        local.setPaused(false);
+        local.requestReturnToTown();
+    }, [this]() {
+        if (m_local)
+            getScreenManager()->switchScreen<GameScreen>(*m_local);
+    });
 }
 
 void GameScreen::leaveTownScene()

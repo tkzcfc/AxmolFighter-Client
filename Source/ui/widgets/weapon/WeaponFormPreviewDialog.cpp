@@ -4,6 +4,7 @@
 #include "mugen/avatar/AvatarAccessoryRules.h"
 #include "mugen/conf/TypeConversions.h"
 #include "mugen/conf/GameDef.h"
+#include "ui/utils/FGUIUtils.h"
 
 namespace gameui
 {
@@ -31,7 +32,8 @@ GComponent* WeaponFormPreviewDialog::onCreateContent()
 
 void WeaponFormPreviewDialog::onCreate()
 {
-    addClickListener(getChild<GButton>("btnClose"), AX_CALLBACK_1(WeaponFormPreviewDialog::onClickClose, this));
+    addClickListener(FGUIUtils::findChild<GButton>(m_content, "btnClose"),
+                     AX_CALLBACK_1(WeaponFormPreviewDialog::onClickClose, this));
     m_avatarLoader = getChild<GLoader3D>("loaderAvatar");
 }
 

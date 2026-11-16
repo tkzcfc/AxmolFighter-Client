@@ -8,6 +8,7 @@
 #include "ui/battle/BattleDebugPanel.h"
 
 #include <cstdint>
+#include <optional>
 
 namespace gameui
 {
@@ -40,7 +41,12 @@ public:
     void setPaused(bool paused) override { m_debugPaused = paused; }
     // 最近一次受到伤害数字事件的非英雄角色，供 HUD 目标血条使用。
     mugen::Entity lastHurtTarget() const override { return m_lastHurtTarget; }
-    bool returnToTownRequested() const { return m_world.ecs().singleton<mugen::sim_legacy::RoomState>().m_returnToTown; }
+    bool returnToTownRequested() const
+    {
+        return m_world.ecs().singleton<mugen::sim_legacy::RoomState>().m_returnToTown;
+    }
+    // 失败，或终点房胜利后才有值。普通房清完只开门，不产生结算。
+    const DungeonBattleResult* result() const { return m_result ? &*m_result : nullptr; }
 
 private:
     int32_t m_roomId         = 0;
@@ -59,8 +65,12 @@ private:
     // 待提交输入及最近的房间表现消息。
     std::vector<mugen::sim_legacy::SystemCommand> m_systemCommands;
     std::string m_roomMessage;
+    // 本场结算，只写入一次。
+    std::optional<DungeonBattleResult> m_result;
     mugen::Entity m_lastHurtTarget;
     void subscribeAppearanceEvents();
+    // 记录一次结算。重复的胜负事件不再覆盖。
+    void latchResult(bool win);
     void refreshLocalAppearance();
     int32_t resolveFollowPetId() const;
     void refreshFollowPet();

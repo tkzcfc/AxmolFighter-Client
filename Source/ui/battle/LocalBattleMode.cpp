@@ -8,6 +8,7 @@
 #include "core/event/EventDispatcher.h"
 #include "core/event/GameEvents.h"
 #include "mugen/sim_legacy/BattleBootstrap.h"
+#include "mugen/sim_legacy/role/RoleComponents.h"
 #include "ui/battle/LocalRoleUtils.h"
 #include "ui/widgets/pet/PetLocalState.h"
 #include "imgui.h"
@@ -22,10 +23,25 @@ namespace gameui
 {
 namespace
 {
+// 房间还有可进入的下一间时，清场只开门，不结算。
+bool roomHasNextRoom(const mugen::conf::RoomConfig& room)
+{
+    const size_t count = room.portalIds.size();
+    for (size_t i = 0; i < count; ++i)
+    {
+        if (room.portalIds[i] <= 0 || i >= room.portalDestRoomIds.size())
+            continue;
+        for (const int32_t dest : room.portalDestRoomIds[i])
+            if (dest > 0)
+                return true;
+    }
+    return false;
+}
+
 // 按房间查询默认关卡与副本，保持离线入口与无头回放使用同一初始化参数。
 std::pair<int32_t, int32_t> resolveStageAndCopy(int32_t roomId)
 {
-    auto& config = mugen::conf::Config::instance();
+    auto& config    = mugen::conf::Config::instance();
     int32_t stageId = 0;
     int32_t copyId  = 0;
     for (const auto& stage : config.table<mugen::conf::StageConfig>())
@@ -69,10 +85,7 @@ LocalBattleMode::LocalBattleMode() = default;
 LocalBattleMode::LocalBattleMode(int32_t roomId) : m_roomId(roomId) {}
 
 LocalBattleMode::LocalBattleMode(LocalBattleParams params)
-    : m_roomId(params.roomId)
-    , m_roleId(params.roleId)
-    , m_petId(params.petId)
-    , m_autotestFrames(params.autotestFrames)
+    : m_roomId(params.roomId), m_roleId(params.roleId), m_petId(params.petId), m_autotestFrames(params.autotestFrames)
 {}
 
 LocalBattleMode::~LocalBattleMode() = default;
@@ -88,29 +101,29 @@ bool LocalBattleMode::init()
         std::exit(1);
         return false;
     }
-    const int32_t roleId      = m_roleId > 0 ? m_roleId : resolveLocalPlayerRoleId();
-    const auto characterClass = mugen::type_conversions::toCharacterClass(roleId);
+    const int32_t roleId         = m_roleId > 0 ? m_roleId : resolveLocalPlayerRoleId();
+    const auto characterClass    = mugen::type_conversions::toCharacterClass(roleId);
     const auto [stageId, copyId] = resolveStageAndCopy(m_roomId);
     mugen::sim_legacy::WorldSetup setup;
-    setup.seed           = 1;
-    setup.mode           = mugen::sim_legacy::WorldMode::Battle;
-    setup.roomId         = m_roomId;
-    setup.mapKey         = room->mapKey;
-    setup.m_aiEnabled    = true;
+    setup.seed        = 1;
+    setup.mode        = mugen::sim_legacy::WorldMode::Battle;
+    setup.roomId      = m_roomId;
+    setup.mapKey      = room->mapKey;
+    setup.m_aiEnabled = true;
     mugen::sim_legacy::PlayerSetup playerSetup;
     playerSetup.m_slot   = 0;
     playerSetup.m_roleId = roleId;
     playerSetup.m_class  = characterClass;
     playerSetup.m_level  = 1;
     setup.m_players.push_back(playerSetup);
-    setup.m_stageId      = stageId;
-    setup.m_copyId       = copyId;
+    setup.m_stageId    = stageId;
+    setup.m_copyId     = copyId;
     const auto players = mugen::sim_legacy::bootstrapBattle(m_world, setup);
     if (players.empty())
         return false;
     const mugen::Entity player = players.front();
-    auto* scene = ax::Director::getInstance()->getRunningScene();
-    auto* root  = ax::Node::create();
+    auto* scene                = ax::Director::getInstance()->getRunningScene();
+    auto* root                 = ax::Node::create();
     scene->addChild(root, 10);
     m_presenter = std::make_unique<WorldPresenterHolder>(*root);
     m_presenter->presenter->loadMap(room->mapKey);
@@ -153,9 +166,17 @@ void LocalBattleMode::onUpdate(float delta)
                     m_lastHurtTarget = event.entity;
             }
             else if (std::holds_alternative<Victory>(event.payload))
-                m_roomMessage = "Victory";
+            {
+                m_roomMessage    = "Victory";
+                const auto& room = m_world.ecs().singleton<RoomState>();
+                if (!roomHasNextRoom(room.m_config))
+                    latchResult(true);
+            }
             else if (std::holds_alternative<Failure>(event.payload))
+            {
                 m_roomMessage = "Defeat";
+                latchResult(false);
+            }
             else if (const auto* warning = std::get_if<RoomWarning>(&event.payload))
             {
                 m_roomMessage = warning->m_boss ? "Boss incoming" : "Warning";
@@ -196,6 +217,27 @@ void LocalBattleMode::onExit()
         ed->unsubscribeAll(this);
     m_presenter.reset();
     m_initialized = false;
+}
+
+void LocalBattleMode::latchResult(bool win)
+{
+    if (m_result)
+        return;
+    const auto& room = m_world.ecs().singleton<mugen::sim_legacy::RoomState>();
+    DungeonBattleResult result;
+    result.win            = win;
+    result.copyId         = room.m_copyId;
+    result.roomId         = room.roomId;
+    const int64_t seconds = room.m_gameSeconds.toInt();
+    result.timeSec        = seconds > 0 ? static_cast<int32_t>(seconds) : 0;
+    if (const auto* hit = m_world.ecs().tryGet<mugen::sim_legacy::RoleHitState>(m_localPlayer))
+    {
+        result.maxCombo    = hit->m_maxCombo;
+        result.maxEvaluate = hit->m_maxEvaluate;
+    }
+    m_result = result;
+    // 同一帧不再继续推进，结算界面打开前战斗停住。
+    m_debugPaused = true;
 }
 
 void LocalBattleMode::subscribeAppearanceEvents()

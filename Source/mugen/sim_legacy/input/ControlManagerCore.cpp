@@ -155,8 +155,9 @@ void ControlManagerCore::updateDirection(std::vector<PlayerCommand>& commands)
         m_comboWait = kJoystickWaitFrames;
         for (size_t index = 0; index < kCombos.size(); ++index)
         {
+            // 进度等于序列长度时连招已经完成，这个值不再是合法的下一步下标。
             const uint8_t progress = m_comboProgress[index];
-            if (kCombos[index][progress] == aim.quadrant)
+            if (progress < kCombos[index].size() && kCombos[index][progress] == aim.quadrant)
                 ++m_comboProgress[index];
             else
                 m_comboProgress[index] = kCombos[index][0] == aim.quadrant ? 1 : 0;

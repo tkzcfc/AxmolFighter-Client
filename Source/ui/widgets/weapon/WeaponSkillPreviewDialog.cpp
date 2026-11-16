@@ -1,6 +1,7 @@
 #include "WeaponSkillPreviewDialog.h"
 
 #include "ui/widgets/common/MessageDialog.h"
+#include "ui/utils/FGUIUtils.h"
 
 namespace gameui
 {
@@ -32,7 +33,8 @@ GComponent* WeaponSkillPreviewDialog::onCreateContent()
 
 void WeaponSkillPreviewDialog::onCreate()
 {
-    addClickListener(getChild<GButton>("btnClose"), AX_CALLBACK_1(WeaponSkillPreviewDialog::onClickClose, this));
+    addClickListener(FGUIUtils::findChild<GButton>(m_content, "btnClose"),
+                     AX_CALLBACK_1(WeaponSkillPreviewDialog::onClickClose, this));
     m_loaderVideo = getChild<GLoader3D>("loaderVideo");
 }
 

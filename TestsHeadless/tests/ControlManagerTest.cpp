@@ -21,6 +21,24 @@ TEST_CASE("ControlManager combo emits joystick event")
     CHECK(commands.back().controlEvent == mugen::ControlEvent::CTR_JOY1);
 }
 
+TEST_CASE("ControlManager direction after a finished 5-step combo stays in range")
+{
+    ControlManagerCore control;
+    std::vector<PlayerCommand> commands;
+    for (ControlKey key : {ControlKey::Down, ControlKey::Left, ControlKey::Up, ControlKey::Right, ControlKey::Down})
+    {
+        control.setKey(key, true);
+        control.advance(commands);
+        control.setKey(key, false);
+        control.advance(commands);
+    }
+    commands.clear();
+    control.setKey(ControlKey::Left, true);
+    control.advance(commands);
+    REQUIRE(!commands.empty());
+    CHECK(commands.back().controlEvent == mugen::ControlEvent::CTR_RUN);
+}
+
 TEST_CASE("ControlManager repeats held basic attack on fixed interval")
 {
     ControlManagerCore control;
