@@ -169,6 +169,11 @@ void relinkAttachment(spAttachment* attachment, spAtlas* newAtlas)
         spRegionAttachment_updateOffset(regionAtt);
 
         delete SUB_CAST(spine34::AttachmentVertices, regionAtt->rendererObject);
+        if (!region->page || !region->page->rendererObject)
+        {
+            regionAtt->rendererObject = nullptr;
+            break;
+        }
         auto* attachmentVertices =
             new spine34::AttachmentVertices((ax::Texture2D*)region->page->rendererObject, 4, quadTriangles, 6);
         for (int i = 0, ii = 0; i < 4; ++i, ii += 2)
@@ -205,6 +210,11 @@ void relinkAttachment(spAttachment* attachment, spAtlas* newAtlas)
         spMeshAttachment_updateUVs(mesh);
 
         delete SUB_CAST(spine34::AttachmentVertices, mesh->rendererObject);
+        if (!region->page || !region->page->rendererObject)
+        {
+            mesh->rendererObject = nullptr;
+            break;
+        }
         auto* attachmentVertices = new spine34::AttachmentVertices((ax::Texture2D*)region->page->rendererObject,
                                                                    mesh->super.worldVerticesLength >> 1,
                                                                    mesh->triangles, mesh->trianglesCount);

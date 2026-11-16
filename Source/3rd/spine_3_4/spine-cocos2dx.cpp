@@ -78,7 +78,11 @@ void spAtlas_bindTextures(spAtlas* self)
 
 void _spAtlasPage_createTexture (spAtlasPage* self, const char* path) {
 	Texture2D* texture = Director::getInstance()->getTextureCache()->addImage(path);
-	AXASSERT(texture != nullptr, "Invalid image");
+	// 页贴图缺失时留空。该页上的区域不生成顶点，绘制时跳过。
+	if (!texture) {
+		AXLOGE("Spine atlas page texture missing: {}", path ? path : "");
+		return;
+	}
 	texture->retain();
 
     Texture2D::TexParams textureParams(filter(self->minFilter), filter(self->magFilter), wrap(self->uWrap),

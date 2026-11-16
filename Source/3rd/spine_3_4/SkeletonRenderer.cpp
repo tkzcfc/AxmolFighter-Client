@@ -215,6 +215,9 @@ void SkeletonRenderer::draw (Renderer* renderer, const Mat4& transform, uint32_t
 			continue;
 		}
 
+		if (!attachmentVertices || !attachmentVertices->_texture)
+			continue;
+
 		color.a *= _skeleton->a * slot->a * 255;
 		float multiplier = _premultipliedAlpha ? color.a : 255;
 		color.r *= _skeleton->r * slot->r * multiplier;

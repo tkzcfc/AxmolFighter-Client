@@ -51,7 +51,12 @@ void _Cocos2dAttachmentLoader_configureAttachment (spAttachmentLoader* loader, s
 	case SP_ATTACHMENT_REGION: {
 		spRegionAttachment* regionAttachment = SUB_CAST(spRegionAttachment, attachment);
 		spAtlasRegion* region = (spAtlasRegion*)regionAttachment->rendererObject;
-		AttachmentVertices* attachmentVertices = new AttachmentVertices((Texture2D*)region->page->rendererObject, 4, quadTriangles, 6);
+		Texture2D* texture = region && region->page ? (Texture2D*)region->page->rendererObject : nullptr;
+		if (!texture) {
+			regionAttachment->rendererObject = nullptr;
+			break;
+		}
+		AttachmentVertices* attachmentVertices = new AttachmentVertices(texture, 4, quadTriangles, 6);
 		V3F_C4B_T2F* vertices = attachmentVertices->_triangles->verts;
 		for (int i = 0, ii = 0; i < 4; ++i, ii += 2) {
 			vertices[i].texCoords.u = regionAttachment->uvs[ii];
@@ -63,7 +68,12 @@ void _Cocos2dAttachmentLoader_configureAttachment (spAttachmentLoader* loader, s
 	case SP_ATTACHMENT_MESH: {
 		spMeshAttachment* meshAttachment = SUB_CAST(spMeshAttachment, attachment);
 		spAtlasRegion* region = (spAtlasRegion*)meshAttachment->rendererObject;
-		AttachmentVertices* attachmentVertices = new AttachmentVertices((Texture2D*)region->page->rendererObject,
+		Texture2D* texture = region && region->page ? (Texture2D*)region->page->rendererObject : nullptr;
+		if (!texture) {
+			meshAttachment->rendererObject = nullptr;
+			break;
+		}
+		AttachmentVertices* attachmentVertices = new AttachmentVertices(texture,
 			meshAttachment->super.worldVerticesLength >> 1, meshAttachment->triangles, meshAttachment->trianglesCount);
 		V3F_C4B_T2F* vertices = attachmentVertices->_triangles->verts;
 		for (int i = 0, ii = 0, nn = meshAttachment->super.worldVerticesLength; ii < nn; ++i, ii += 2) {
