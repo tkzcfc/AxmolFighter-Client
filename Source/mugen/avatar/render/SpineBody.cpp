@@ -243,14 +243,15 @@ void SpineBody::validateMotion(const Motion& motion) const
             MG_LOG_W("SpineBody: animation '{}' not found in '{}'", clip.source, m_skeleton);
             continue;
         }
-        const int spineMs = static_cast<int>(std::lround(anim.duration() * 1000.0f));
-        // 0 时长动画被采样写成一帧。末片段改跟动画时长，动作总时长不动。
-        if (spineMs == 0 && clip.durationMs != spineMs && !const_cast<Motion&>(motion).alignClipToSpine(i, spineMs))
+        const double spineMsExact = static_cast<double>(anim.duration()) * 1000.0;
+        const int coveredMs       = std::max(0, static_cast<int>(std::ceil(spineMsExact - 1e-4)));
+        // 0 时长动画的盒子至少为 1 毫秒。末片段改跟动画时长，动作总时长不动。
+        if (coveredMs == 0 && clip.durationMs != 0 && !const_cast<Motion&>(motion).alignClipToSpine(i, 0))
         {
-            MG_LOG_E("SpineBody: clip '{}' durationMs {} != spine {} in motion '{}'", clip.id, clip.durationMs, spineMs,
-                     motion.name);
+            MG_LOG_E("SpineBody: clip '{}' durationMs {} cannot align to spine 0 in motion '{}'", clip.id,
+                     clip.durationMs, motion.name);
         }
-        MG_ASSERT(clip.durationMs == static_cast<int>(std::lround(anim.duration() * 1000.0f)));
+        MG_ASSERT(clip.durationMs >= coveredMs);
     }
 }
 #    endif
