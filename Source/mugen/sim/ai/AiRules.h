@@ -24,16 +24,16 @@ enum class AiCondition : uint8_t
     TargetInSight,      // 当前目标或候选者落在索敌范围。
     TargetOutsideChase, // 当前目标落在追击范围外。
     SkillReady,         // 自动施放间隔已经结束，或连段技能仍在等待续接。
-    LastActionIs,       // 上次动作等于 m_value 中的 AiAction。
-    HpBelowPercent,     // 生命百分比严格低于 m_value。
-    ChancePercent,      // 闭区间 [1, 100] 的随机数不超过 m_value。
+    LastActionIs,       // 上次动作等于 value 中的 AiAction。
+    HpBelowPercent,     // 生命百分比严格低于 value。
+    ChancePercent,      // 闭区间 [1, 100] 的随机数不超过 value。
 };
 // 一条规则中的单个判断。
 struct AiTest
 {
-    AiCondition m_kind = AiCondition::Always; // 判断种类。
-    bool m_negate = false;                    // 为真时取反本项结果。
-    int32_t m_value = 0;                      // 阈值、概率或动作编号，含义由 m_kind 决定。
+    AiCondition kind = AiCondition::Always; // 判断种类。
+    bool negate = false;                    // 为真时取反本项结果。
+    int32_t value = 0;                      // 阈值、概率或动作编号，含义由 kind 决定。
 };
 // 规则命中后要执行的动作。
 enum class AiAction : uint8_t
@@ -49,21 +49,21 @@ enum class AiAction : uint8_t
 // 按顺序匹配的一行条件、动作和冷却配置。
 struct AiRule
 {
-    std::array<AiTest, 3> m_tests{}; // 最多三项判断，有效个数由 m_testCount 给出。
-    uint8_t m_testCount = 0;         // 本行实际参与判断的项数。
-    AiAction m_action = AiAction::Idle; // 命中后执行的动作。
-    bool m_setsAlert = false;           // 命中后是否把警戒置为已警戒。
-    int32_t m_cooldownMs = 0;           // 命中后写入的冷却毫秒；0 表示无冷却。
+    std::array<AiTest, 3> tests{}; // 最多三项判断，有效个数由 testCount 给出。
+    uint8_t testCount = 0;         // 本行实际参与判断的项数。
+    AiAction action = AiAction::Idle; // 命中后执行的动作。
+    bool setsAlert = false;           // 命中后是否把警戒置为已警戒。
+    int32_t cooldownMs = 0;           // 命中后写入的冷却毫秒；0 表示无冷却。
 };
-// 组装一行规则；未计入 m_testCount 的项不参与判断。
+// 组装一行规则；未计入 testCount 的项不参与判断。
 constexpr AiRule makeRule(AiTest first, AiTest second, AiTest third, uint8_t count, AiAction action,
                           bool setsAlert = false)
 {
     AiRule rule;
-    rule.m_tests     = std::array<AiTest, 3>{first, second, third};
-    rule.m_testCount = count;
-    rule.m_action    = action;
-    rule.m_setsAlert = setsAlert;
+    rule.tests     = std::array<AiTest, 3>{first, second, third};
+    rule.testCount = count;
+    rule.action    = action;
+    rule.setsAlert = setsAlert;
     return rule;
 }
 // 怪物默认条件表，按优先级从高到低排列。
@@ -84,16 +84,16 @@ inline constexpr std::array<AiRule, 8> kMonsterRules = {
 // 条件判断使用的只读快照。
 struct AiFacts
 {
-    bool m_alerted = false;            // 决策警戒已打开。
-    bool m_provoked = false;           // 受击、仇恨或嘲讽仍然有效。
-    bool m_hasTarget = false;          // 技能池的目标不是自身哨兵。
-    bool m_targetInSight = false;      // 索敌范围内能看到目标或候选者。
-    bool m_targetOutsideChase = false; // 当前目标不在追击范围内。
-    bool m_skillReady = false;         // 至少一个自动施放间隔已经到点，或连段技能仍在等待续接。
-    AiAction m_lastAction = AiAction::Idle; // 上一次已经结束的动作；正在跑的移动不算。
-    int32_t m_hpPercent = 0;                // 当前生命占上限的百分比，向零截断。
-    int8_t m_movingRule = -1;               // 正在执行的移动规则下标；-1 表示没有移动在跑。
-    bool m_inAttack = false;                // 角色正处于攻击状态。
+    bool alerted = false;            // 决策警戒已打开。
+    bool provoked = false;           // 受击、仇恨或嘲讽仍然有效。
+    bool hasTarget = false;          // 技能池的目标不是自身哨兵。
+    bool targetInSight = false;      // 索敌范围内能看到目标或候选者。
+    bool targetOutsideChase = false; // 当前目标不在追击范围内。
+    bool skillReady = false;         // 至少一个自动施放间隔已经到点，或连段技能仍在等待续接。
+    AiAction lastAction = AiAction::Idle; // 上一次已经结束的动作；正在跑的移动不算。
+    int32_t hpPercent = 0;                // 当前生命占上限的百分比，向零截断。
+    int8_t movingRule = -1;               // 正在执行的移动规则下标；-1 表示没有移动在跑。
+    bool inAttack = false;                // 角色正处于攻击状态。
 };
 
 namespace rules

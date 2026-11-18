@@ -12,40 +12,45 @@ namespace combat::rules
 struct DamageInput
 {
     // 攻击方属性。
-    const StatsComponent* m_attacker;
+    const StatsComponent* attacker;
     // 受击方属性。
-    const StatsComponent* m_target;
+    const StatsComponent* target;
     // 命中配置。
-    const conf::battle::HitDef* m_hit;
+    const conf::battle::HitDef* hit;
     // 已解析的标准伤害。
-    Fixed m_standardHurt;
+    Fixed standardHurt;
     // 已解析的非负等级加成（B2 无技能属性系统，恒为 0）。
-    Fixed m_addition;
-    // 是否 PVP（B2 恒 false）。
-    bool m_pvp = false;
+    Fixed addition;
+    // 是否 PVP。
+    bool pvp = false;
 };
 // 属性闪避判定（必中跳过；抽样 draw 返回 0-100）。
 inline bool attributeDodge(const DamageInput& input, Fixed draw)
 {
-    if (input.m_hit->hitMust != 0)
+    if (input.hit->hitMust != 0)
         return false;
-    const Fixed dodge    = input.m_target->value(13) + input.m_target->extended(109);
-    const Fixed accuracy = input.m_attacker->value(14) + input.m_attacker->extended(111);
+    const Fixed dodge    = input.target->value(13) + input.target->extended(109);
+    const Fixed accuracy = input.attacker->value(14) + input.attacker->extended(111);
     const Fixed rate     = std::clamp((dodge - accuracy) / "100"_fx, "0"_fx, "0.5"_fx);
     return rate * "100"_fx >= draw;
 }
 // 按攻防、倍率、暴击、增减伤、浮动的顺序计算伤害（crit 与 float 各抽样一次）。
 inline Fixed calculateDamage(const DamageInput& input, Fixed critDraw, Fixed floatDraw, bool& critical)
 {
-    const StatsComponent& attack = *input.m_attacker;
-    const StatsComponent& target = *input.m_target;
-    const auto& hit     = *input.m_hit;
+    const StatsComponent& attack = *input.attacker;
+    const StatsComponent& target = *input.target;
+    const auto& hit     = *input.hit;
     const bool physical = hit.hurtType == 0 || (hit.hurtType == 2 && attack.value(5) >= attack.value(7));
     Fixed atk           = attack.value(physical ? 5 : 7);
     Fixed def           = target.value(physical ? 6 : 8);
+    if (input.pvp && hit.hurtType != 3)
+    {
+        atk = atk.floor();
+        def = def.floor();
+    }
     const Fixed rate    = hit.hurtType == 3 ? "1"_fx : (atk + def == "0"_fx ? "0"_fx : atk / (atk + def));
-    Fixed hurt          = input.m_standardHurt * rate;
-    hurt *= hit.hurtRate * ("1"_fx + input.m_addition);
+    Fixed hurt          = input.standardHurt * rate;
+    hurt *= (input.pvp ? hit.pvpHurtRate : hit.hurtRate) * ("1"_fx + input.addition);
     const Fixed critRate =
         std::clamp((attack.value(9) + attack.extended(102) - target.value(10) - target.extended(103)) / "100"_fx,
                    "0.01"_fx, "1"_fx) *

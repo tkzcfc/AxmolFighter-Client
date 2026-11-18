@@ -1,7 +1,8 @@
 #pragma once
 
 #include "mugen/core/StdC.h"
-#include "mugen/sim_legacy/World.h"
+#include "mugen/sim/World.h"
+#include "mugen/sim/view/DebugView.h"
 
 #ifdef RUNTIME_IN_AXMOL
 
@@ -14,7 +15,7 @@ class DebugDraw
 public:
     explicit DebugDraw(ax::Node& root);
     // avatars 提供与角色相同的插值偏移；为空时画在逻辑坐标上。
-    void present(sim_legacy::World& world, const AvatarPresenter* avatars, float alpha);
+    void present(sim::World& world, const AvatarPresenter* avatars, float alpha);
     void setEnabled(bool enabled) { m_enabled = enabled; }
     bool enabled() const { return m_enabled; }
 

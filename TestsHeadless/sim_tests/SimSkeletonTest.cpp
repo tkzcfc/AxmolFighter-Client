@@ -55,7 +55,7 @@ TEST_CASE("sim clock advances frame and milliseconds")
     for (int i = 0; i < 30; ++i)
         tickEmpty(world);
     CHECK(world.frame() == 30);
-    CHECK(world.ecs().singleton<WorldClock>().m_elapsedMs == kLogicDtMs * Fixed::fromInt(30));
+    CHECK(world.ecs().singleton<WorldClock>().elapsedMs == kLogicDtMs * Fixed::fromInt(30));
 }
 
 TEST_CASE("sim snapshot round trip and clone stay equal")
@@ -104,10 +104,10 @@ TEST_CASE("sim schedule table is ordered unique and complete")
     uint8_t phase = 0;
     for (const sim::SystemEntry& entry : kSchedule)
     {
-        CHECK(entry.m_phase >= phase);
-        phase = entry.m_phase;
-        CHECK(entry.m_run != nullptr);
-        CHECK(names.insert(entry.m_name).second);
+        CHECK(entry.phase >= phase);
+        phase = entry.phase;
+        CHECK(entry.run != nullptr);
+        CHECK(names.insert(entry.name).second);
     }
     const std::vector<std::string> expected = {
         "ClockSystem",           "ScheduledActionSystem",  "InputSystem",           "CooldownSystem",
@@ -121,9 +121,9 @@ TEST_CASE("sim schedule table is ordered unique and complete")
         "PresentationSystem",    "DebugSinkSystem",              "RoomTransferSystem",    "FlushSystem"};
     REQUIRE(kSchedule.size() == expected.size());
     for (std::size_t i = 0; i < expected.size(); ++i)
-        CHECK(expected[i] == kSchedule[i].m_name);
-    CHECK(kSchedule.front().m_phase == static_cast<uint8_t>(Phase::FrameBegin));
-    CHECK(kSchedule.back().m_phase == static_cast<uint8_t>(Phase::FrameEnd));
+        CHECK(expected[i] == kSchedule[i].name);
+    CHECK(kSchedule.front().phase == static_cast<uint8_t>(Phase::FrameBegin));
+    CHECK(kSchedule.back().phase == static_cast<uint8_t>(Phase::FrameEnd));
 }
 
 TEST_CASE("sim event queue push clear and snapshot round trip")
@@ -141,7 +141,7 @@ TEST_CASE("sim event queue push clear and snapshot round trip")
     World world;
     world.init(emptySetup());
     SpawnRequest request;
-    request.m_configId = 9;
+    request.configId = 9;
     world.ecs().singleton<EventQueue<SpawnRequest>>().push(request);
     world.ecs().singleton<EventQueue<HitEvent>>().push(HitEvent{});
     const uint64_t withEvents = world.hash();
@@ -151,7 +151,7 @@ TEST_CASE("sim event queue push clear and snapshot round trip")
     World restored;
     REQUIRE(restored.deserialize(buffer));
     CHECK(restored.hash() == withEvents);
-    CHECK(restored.ecs().singleton<EventQueue<SpawnRequest>>().m_items.at(0).m_configId == 9);
+    CHECK(restored.ecs().singleton<EventQueue<SpawnRequest>>().items.at(0).configId == 9);
 }
 
 TEST_CASE("sim frame end flushes destroyed entities and clears fact queues")

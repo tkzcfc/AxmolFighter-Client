@@ -10,72 +10,72 @@ void applyDelta(World& world, Entity entity, Fixed delta, HpCause cause, Entity 
 {
     auto& health = world.ecs().get<HealthComponent>(entity);
     if (cause == HpCause::Heal && world.ecs().has<StatusFlagsComponent>(entity) &&
-        world.ecs().get<StatusFlagsComponent>(entity).m_noHeal > 0)
+        world.ecs().get<StatusFlagsComponent>(entity).noHeal > 0)
         return;
     if (delta > Fixed{} && cause == HpCause::Heal && world.ecs().has<StatsComponent>(entity))
         delta *= Fixed::fromInt(1) + world.ecs().get<StatsComponent>(entity).finalStat(208);
-    if (delta < Fixed{} && !ignoreShield && health.m_shield > Fixed{})
+    if (delta < Fixed{} && !ignoreShield && health.shield > Fixed{})
     {
-        const Fixed absorb = std::min(health.m_shield, -delta);
-        health.m_shield -= absorb;
+        const Fixed absorb = std::min(health.shield, -delta);
+        health.shield -= absorb;
         delta += absorb;
         if (absorb > Fixed{})
         {
             HpEvent shieldEvent;
-            shieldEvent.m_entity = entity;
-            shieldEvent.m_delta  = absorb;
-            shieldEvent.m_cause  = HpCause::Shield;
-            shieldEvent.m_source = source;
+            shieldEvent.entity = entity;
+            shieldEvent.delta  = absorb;
+            shieldEvent.cause  = HpCause::Shield;
+            shieldEvent.source = source;
             world.ecs().singleton<EventQueue<HpEvent>>().push(shieldEvent);
         }
-        if (health.m_shield <= Fixed{})
+        if (health.shield <= Fixed{})
         {
-            health.m_shield = {};
+            health.shield = {};
             BuffContext ctx;
-            ctx.m_target = entity;
+            ctx.target = entity;
             buff::rules::fire(world, entity, conf::battle::TriggerPoint::ShieldClean, ctx);
         }
     }
     if (world.ecs().has<StatsComponent>(entity))
-        health.m_maxHp = world.ecs().get<StatsComponent>(entity).maxHp();
-    const Fixed before = health.m_hp;
+        health.maxHp = world.ecs().get<StatsComponent>(entity).maxHp();
+    const Fixed before = health.hp;
     Fixed floor{};
     if (world.ecs().has<StatsComponent>(entity))
         floor = std::max(Fixed{}, world.ecs().get<StatsComponent>(entity).finalStat(300));
-    Fixed hi = health.m_maxHp;
+    Fixed hi = health.maxHp;
     if (hi < floor)
         hi = floor;
-    health.m_hp = std::clamp(before + delta, floor, hi);
-    const Fixed applied = health.m_hp - before;
+    health.hp = std::clamp(before + delta, floor, hi);
+    const Fixed applied = health.hp - before;
     if (applied != Fixed{})
     {
         HpEvent hpEvent;
-        hpEvent.m_entity = entity;
-        hpEvent.m_delta  = applied;
-        hpEvent.m_cause  = cause;
-        hpEvent.m_source = source;
+        hpEvent.entity = entity;
+        hpEvent.delta  = applied;
+        hpEvent.cause  = cause;
+        hpEvent.source = source;
         world.ecs().singleton<EventQueue<HpEvent>>().push(hpEvent);
     }
-    if (health.m_hp <= Fixed{} && !health.m_dead)
+    if (health.hp <= Fixed{} && !health.dead)
     {
         BuffContext ctx;
-        ctx.m_target = entity;
+        ctx.target = entity;
         buff::rules::fire(world, entity, conf::battle::TriggerPoint::BeforeDeath, ctx);
     }
     auto& after = world.ecs().get<HealthComponent>(entity);
-    if (after.m_hp <= Fixed{} && after.m_maxHp > Fixed{} && !after.m_dead)
+    if (after.hp <= Fixed{} && after.maxHp > Fixed{} && !after.dead)
     {
-        after.m_dead = true;
+        after.dead = true;
         DeathRequest request;
-        request.m_entity = entity;
-        request.m_killer = source;
-        request.m_effect = effect;
+        request.entity = entity;
+        request.killer = source;
+        request.effect = effect;
         world.ecs().singleton<EventQueue<DeathRequest>>().push(request);
     }
-    else if (!after.m_dead && after.m_hp != before)
+    else if (!after.dead && after.hp != before)
     {
         BuffContext ctx;
-        ctx.m_target = entity;
+        ctx.target = entity;
         buff::rules::fire(world, entity, conf::battle::TriggerPoint::HpChange, ctx);
     }
 }
@@ -83,6 +83,6 @@ void applyDelta(World& world, Entity entity, Fixed delta, HpCause cause, Entity 
 // 已打上死亡标记，或生命耗尽且具备有效上限。
 bool isDead(const HealthComponent& health)
 {
-    return health.m_dead || health.isDead();
+    return health.dead || health.isDead();
 }
 }  // namespace mugen::sim::health::rules

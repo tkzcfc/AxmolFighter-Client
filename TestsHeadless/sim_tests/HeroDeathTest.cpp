@@ -41,13 +41,13 @@ World makeWorld(int32_t roomId)
     REQUIRE(room != nullptr);
     setup.mapKey = room->mapKey;
     PlayerSetup player;
-    player.m_roleId = type_conversions::toRoleConfigId(CharacterClass::kSwordman);
-    player.m_level  = 1000;
-    player.m_camp   = 2;
-    player.m_slot   = 0;
-    player.m_isAi   = false;
-    setup.m_players.push_back(player);
-    setup.m_aiEnabled = false;
+    player.roleId = type_conversions::toRoleConfigId(CharacterClass::kSwordman);
+    player.level  = 1000;
+    player.camp   = 2;
+    player.slot   = 0;
+    player.isAi   = false;
+    setup.players.push_back(player);
+    setup.aiEnabled = false;
     REQUIRE_FALSE(bootstrapBattle(world, setup).empty());
     return world;
 }
@@ -55,7 +55,7 @@ World makeWorld(int32_t roomId)
 // 取得主控玩家实体（首个玩家槽位）。
 Entity hero(World& world)
 {
-    const auto& slots = world.ecs().singleton<PlayerSlots>().m_entities;
+    const auto& slots = world.ecs().singleton<PlayerSlots>().entities;
     return slots.empty() ? Entity{} : slots.begin()->second;
 }
 
@@ -73,18 +73,18 @@ TEST_CASE("hero death: survives death body, room waits in FightRevive")
 {
     World world = makeWorld(2010101);
     auto& room  = world.ecs().singleton<Room>();
-    room.m_maxRevives = 1;
+    room.maxRevives = 1;
     const Entity h = hero(world);
     REQUIRE(h.value != 0);
-    const Fixed hp = world.ecs().get<HealthComponent>(h).m_hp;
+    const Fixed hp = world.ecs().get<HealthComponent>(h).hp;
     health::rules::applyDelta(world, h, -hp, HpCause::Hit, h, {});
     // 推进到死亡位移/死亡动画结束之后（远超过死亡体时长），英雄仍应存活并停留在 Death。
     tickN(world, 300);
     CHECK(world.ecs().alive(h));
     CHECK_FALSE(world.ecs().has<DespawningComponent>(h));
-    CHECK(room.m_reviving);
-    CHECK_FALSE(room.m_failure);
-    CHECK(world.ecs().get<RoleStateComponent>(h).m_state == RoleStateId::Death);
+    CHECK(room.reviving);
+    CHECK_FALSE(room.failure);
+    CHECK(world.ecs().get<RoleStateComponent>(h).state == RoleStateId::Death);
 }
 
 // 有复活次数时，英雄死亡经 ReviveCommand 复活回到 Idle，全程不崩。
@@ -92,27 +92,27 @@ TEST_CASE("hero death: revive command returns hero to Idle after death body")
 {
     World world = makeWorld(2010101);
     auto& room  = world.ecs().singleton<Room>();
-    room.m_maxRevives = 1;
+    room.maxRevives = 1;
     const Entity h = hero(world);
     REQUIRE(h.value != 0);
-    const Fixed hp = world.ecs().get<HealthComponent>(h).m_hp;
+    const Fixed hp = world.ecs().get<HealthComponent>(h).hp;
     health::rules::applyDelta(world, h, -hp, HpCause::Hit, h, {});
     tickN(world, 300);
     REQUIRE(world.ecs().alive(h));
-    REQUIRE(room.m_reviving);
+    REQUIRE(room.reviving);
 
     FrameInput input;
     input.frame = world.frame() + 1;
     input.systemCommands.push_back(ReviveCommand{0});
     world.tick(input);
-    CHECK_FALSE(room.m_reviving);
-    CHECK(room.m_usedRevives == 1);
-    CHECK(world.ecs().get<RoleStateComponent>(h).m_reviveRequested);
+    CHECK_FALSE(room.reviving);
+    CHECK(room.usedRevives == 1);
+    CHECK(world.ecs().get<RoleStateComponent>(h).reviveRequested);
     tickN(world, 1);
     const auto& health = world.ecs().get<HealthComponent>(h);
-    CHECK(health.m_hp == health.m_maxHp);
-    CHECK_FALSE(health.m_dead);
-    CHECK(world.ecs().get<RoleStateComponent>(h).m_state == RoleStateId::Idle);
+    CHECK(health.hp == health.maxHp);
+    CHECK_FALSE(health.dead);
+    CHECK(world.ecs().get<RoleStateComponent>(h).state == RoleStateId::Idle);
 }
 
 // 无复活次数时，英雄死亡进入 Failure，英雄实体保留（不被回收）。
@@ -122,11 +122,11 @@ TEST_CASE("hero death: no revives enters failure, hero stays alive")
     auto& room  = world.ecs().singleton<Room>();
     const Entity h = hero(world);
     REQUIRE(h.value != 0);
-    const Fixed hp = world.ecs().get<HealthComponent>(h).m_hp;
+    const Fixed hp = world.ecs().get<HealthComponent>(h).hp;
     health::rules::applyDelta(world, h, -hp, HpCause::Hit, h, {});
     tickN(world, 300);
-    CHECK(room.m_failure);
-    CHECK_FALSE(room.m_victory);
+    CHECK(room.failure);
+    CHECK_FALSE(room.victory);
     CHECK(world.ecs().alive(h));
     CHECK_FALSE(world.ecs().has<DespawningComponent>(h));
 }

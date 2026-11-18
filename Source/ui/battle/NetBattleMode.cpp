@@ -2,8 +2,10 @@
 
 #include "axmol.h"
 #include "mugen/render/battle/WorldPresenter.h"
-#include "mugen/sim_legacy/BattleBootstrap.h"
-#include "mugen/sim_legacy/net/NetCodec.h"
+#include "mugen/sim/BattleBootstrap.h"
+#include "mugen/sim/net/NetCodec.h"
+#include "mugen/sim/present/PresentationEvent.h"
+#include "mugen/sim/view/WorldView.h"
 #include "mugen/core/serialize/ByteBuffer.h"
 #include "AppContext.h"
 #include "core/event/EventDispatcher.h"
@@ -19,6 +21,8 @@
 #include <chrono>
 #include <cmath>
 #include <utility>
+
+namespace battle_sim = mugen::sim;
 
 namespace gameui
 {
@@ -111,8 +115,8 @@ void NetBattleMode::onBattleStart(const PB::Battle::BattleStartPush& push)
     if (m_started)
         return;
 
-    mugen::sim_legacy::WorldSetup setup;
-    if (!mugen::sim_legacy::net::decodeWorldSetup(push.setup(), setup))
+    battle_sim::WorldSetup setup;
+    if (!battle_sim::net::decodeWorldSetup(push.setup(), setup))
     {
         AXLOGE("NetBattleMode: failed to decode WorldSetup (battle={})", m_params.battleId);
         MessageDialog::showGlobal("初始化失败", []() { ax::Director::getInstance()->end(); });
@@ -122,8 +126,8 @@ void NetBattleMode::onBattleStart(const PB::Battle::BattleStartPush& push)
     m_localSlot = push.local_slot();
     m_frameMs   = push.frame_ms() > 0 ? push.frame_ms() : 33;
 
-    mugen::sim_legacy::World world;
-    const auto heroes = mugen::sim_legacy::bootstrapBattle(world, setup);
+    battle_sim::World world;
+    const auto heroes = battle_sim::bootstrapBattle(world, setup);
     if (heroes.empty())
     {
         AXLOGE("NetBattleMode: bootstrap battle failed (battle={})", m_params.battleId);
@@ -131,14 +135,12 @@ void NetBattleMode::onBattleStart(const PB::Battle::BattleStartPush& push)
         return;
     }
 
-    const auto& slots = world.ecs().singleton<mugen::sim_legacy::PlayerSlots>().entities;
-    if (const auto it = slots.find(m_localSlot); it != slots.end())
-        m_localPlayer = it->second;
+    m_localPlayer = mugen::sim::view::playerEntity(world, m_localSlot);
 
-    mugen::sim_legacy::net::NetBattleSyncConfig config;
-    config.m_inputDelayFrames = push.input_delay_frames();
-    config.m_frameMs          = m_frameMs;
-    m_sync = std::make_unique<mugen::sim_legacy::net::NetBattleSync>(m_localSlot, push.slot_count(), config);
+    battle_sim::net::NetBattleSyncConfig config;
+    config.inputDelayFrames = push.input_delay_frames();
+    config.frameMs          = m_frameMs;
+    m_sync = std::make_unique<battle_sim::net::NetBattleSync>(m_localSlot, push.slot_count(), config);
     m_sync->start(std::move(world), push.start_server_time_ms(), static_cast<uint64_t>(monotonicNowMs()));
 
     auto* scene = ax::Director::getInstance()->getRunningScene();
@@ -168,17 +170,17 @@ void NetBattleMode::onBattleStart(const PB::Battle::BattleStartPush& push)
 
 void NetBattleMode::applyRemoteAppearances(const PB::Battle::BattleStartPush& push)
 {
-    const auto& slots = m_sync->session().world().ecs().singleton<mugen::sim_legacy::PlayerSlots>().entities;
+    const auto& world = m_sync->session().world();
     // 外观只影响表现层：按槽位找到对端实体，用服务端下发的外观覆盖职业默认外观。
     for (const auto& player : push.players())
     {
         if (player.slot() == m_localSlot || !player.has_appearance())
             continue;
-        const auto it = slots.find(player.slot());
-        if (it == slots.end())
+        const mugen::Entity entity = mugen::sim::view::playerEntity(world, player.slot());
+        if (entity.value == 0)
             continue;
-        m_presenter->presenter->setEntityAppearance(it->second, fashionAppearanceFromTown(player.appearance()));
-        m_presenter->presenter->setEntityPet(it->second, player.appearance().pet_id());
+        m_presenter->presenter->setEntityAppearance(entity, fashionAppearanceFromTown(player.appearance()));
+        m_presenter->presenter->setEntityPet(entity, player.appearance().pet_id());
     }
 }
 
@@ -197,8 +199,8 @@ void NetBattleMode::onFrames(const PB::Battle::BattleFramesPush& push)
     // 先应用确认输入，再做哈希对账：确认输入触发的回滚会把预测重推到一致状态。
     for (const auto& frame : push.frames())
     {
-        mugen::sim_legacy::FrameInput input;
-        if (!mugen::sim_legacy::net::decodeFrameInput(frame.input(), input))
+        battle_sim::FrameInput input;
+        if (!battle_sim::net::decodeFrameInput(frame.input(), input))
         {
             AXLOGW("NetBattleMode: decode confirmed frame {} failed", frame.frame());
             continue;
@@ -211,12 +213,12 @@ void NetBattleMode::onFrames(const PB::Battle::BattleFramesPush& push)
 
     const auto localNowMs = static_cast<uint64_t>(monotonicNowMs());
     m_sync->onServerClock(push.server_frame(), push.server_time_ms(), localNowMs);
-    mugen::sim_legacy::net::ServerInputFeedback feedback;
-    feedback.m_echoClientTimeMs = push.echo_client_time_ms();
-    feedback.m_slackMin         = push.input_slack_min();
-    feedback.m_slackFrame       = push.input_slack_frame();
-    feedback.m_slackSamples     = push.input_slack_samples();
-    feedback.m_lateInputs       = push.late_inputs();
+    battle_sim::net::ServerInputFeedback feedback;
+    feedback.echoClientTimeMs = push.echo_client_time_ms();
+    feedback.slackMin         = push.input_slack_min();
+    feedback.slackFrame       = push.input_slack_frame();
+    feedback.slackSamples     = push.input_slack_samples();
+    feedback.lateInputs       = push.late_inputs();
     const uint32_t leadBefore   = m_sync->inputLeadFrames();
     const uint32_t delayBefore  = m_sync->localInputDelayFrames();
     m_sync->onServerFeedback(feedback, localNowMs);
@@ -247,11 +249,7 @@ void NetBattleMode::onFrames(const PB::Battle::BattleFramesPush& push)
 
 void NetBattleMode::collectRolePositions(std::vector<std::pair<mugen::Entity, mugen::FixedVec3>>& out)
 {
-    m_sync->session().world().ecs().each<mugen::sim_legacy::EntityGroup, mugen::sim_legacy::Transform>(
-        [&out](mugen::Entity entity, const mugen::sim_legacy::EntityGroup& group, const mugen::sim_legacy::Transform& transform) {
-            if (group.kind == mugen::sim_legacy::GroupKind::Role)
-                out.emplace_back(entity, transform.position);
-        });
+    mugen::sim::view::collectRolePositions(m_sync->session().world(), out);
 }
 
 void NetBattleMode::applyRollbackCorrections(const std::vector<std::pair<mugen::Entity, mugen::FixedVec3>>& before)
@@ -290,57 +288,57 @@ void NetBattleMode::applyRollbackCorrections(const std::vector<std::pair<mugen::
 int64_t NetBattleMode::simulatedDelayMs(int32_t baseMs)
 {
     m_simRng = m_simRng * 1664525u + 1013904223u;
-    const int64_t jitter = m_sim.m_jitterMs > 0 ? static_cast<int64_t>((m_simRng >> 8) % static_cast<uint32_t>(m_sim.m_jitterMs + 1)) : 0;
+    const int64_t jitter = m_sim.jitterMs > 0 ? static_cast<int64_t>((m_simRng >> 8) % static_cast<uint32_t>(m_sim.jitterMs + 1)) : 0;
     return static_cast<int64_t>(baseMs) + jitter;
 }
 
 void NetBattleMode::deliverFrames(const PB::Battle::BattleFramesPush& push)
 {
-    if (m_sim.m_downMs <= 0 && m_sim.m_jitterMs <= 0 && m_inbound.empty())
+    if (m_sim.downMs <= 0 && m_sim.jitterMs <= 0 && m_inbound.empty())
     {
         onFrames(push);
         return;
     }
-    m_lastInboundDueMs = std::max(m_lastInboundDueMs, monotonicNowMs() + simulatedDelayMs(m_sim.m_downMs));
+    m_lastInboundDueMs = std::max(m_lastInboundDueMs, monotonicNowMs() + simulatedDelayMs(m_sim.downMs));
     m_inbound.push_back({m_lastInboundDueMs, push});
 }
 
 void NetBattleMode::deliverSnapshot(const PB::Battle::BattleSnapshotPush& push)
 {
-    if (m_sim.m_downMs <= 0 && m_sim.m_jitterMs <= 0 && m_inbound.empty())
+    if (m_sim.downMs <= 0 && m_sim.jitterMs <= 0 && m_inbound.empty())
     {
         onSnapshot(push);
         return;
     }
-    m_lastInboundDueMs = std::max(m_lastInboundDueMs, monotonicNowMs() + simulatedDelayMs(m_sim.m_downMs));
+    m_lastInboundDueMs = std::max(m_lastInboundDueMs, monotonicNowMs() + simulatedDelayMs(m_sim.downMs));
     m_inbound.push_back({m_lastInboundDueMs, push});
 }
 
 void NetBattleMode::dispatchInputPush(PB::Battle::BattleInputPush push)
 {
-    if (m_sim.m_upMs <= 0 && m_sim.m_jitterMs <= 0 && m_outbound.empty())
+    if (m_sim.upMs <= 0 && m_sim.jitterMs <= 0 && m_outbound.empty())
     {
         m_agent.notify(push);
         return;
     }
-    m_lastOutboundDueMs = std::max(m_lastOutboundDueMs, monotonicNowMs() + simulatedDelayMs(m_sim.m_upMs));
+    m_lastOutboundDueMs = std::max(m_lastOutboundDueMs, monotonicNowMs() + simulatedDelayMs(m_sim.upMs));
     m_outbound.push_back({m_lastOutboundDueMs, std::move(push)});
 }
 
 void NetBattleMode::flushSimulatedMessages(int64_t nowMs)
 {
-    while (!m_inbound.empty() && m_inbound.front().m_dueMs <= nowMs)
+    while (!m_inbound.empty() && m_inbound.front().dueMs <= nowMs)
     {
         auto delayed = std::move(m_inbound.front());
         m_inbound.pop_front();
-        if (const auto* frames = std::get_if<PB::Battle::BattleFramesPush>(&delayed.m_push))
+        if (const auto* frames = std::get_if<PB::Battle::BattleFramesPush>(&delayed.push))
             onFrames(*frames);
         else
-            onSnapshot(std::get<PB::Battle::BattleSnapshotPush>(delayed.m_push));
+            onSnapshot(std::get<PB::Battle::BattleSnapshotPush>(delayed.push));
     }
-    while (!m_outbound.empty() && m_outbound.front().m_dueMs <= nowMs)
+    while (!m_outbound.empty() && m_outbound.front().dueMs <= nowMs)
     {
-        m_agent.notify(m_outbound.front().m_push);
+        m_agent.notify(m_outbound.front().push);
         m_outbound.pop_front();
     }
 }
@@ -356,13 +354,13 @@ bool NetBattleMode::netInfo(BattleNetInfo& out) const
     out.m_localDelayFrames = m_sync->localInputDelayFrames();
     switch (m_sync->localDelayMode())
     {
-    case mugen::sim_legacy::net::LocalDelayMode::Auto:
+    case battle_sim::net::LocalDelayMode::Auto:
         out.m_localDelayMode = "auto";
         break;
-    case mugen::sim_legacy::net::LocalDelayMode::Forced:
+    case battle_sim::net::LocalDelayMode::Forced:
         out.m_localDelayMode = "forced";
         break;
-    case mugen::sim_legacy::net::LocalDelayMode::Off:
+    case battle_sim::net::LocalDelayMode::Off:
         out.m_localDelayMode = "off";
         break;
     }
@@ -429,13 +427,13 @@ void NetBattleMode::sendInputPush()
     push.set_ack_frame(static_cast<uint32_t>(m_sync->session().confirmedFrame()));
     push.set_client_time_ms(static_cast<uint64_t>(monotonicNowMs()));
 
-    std::vector<std::pair<uint64_t, mugen::sim_legacy::PlayerInput>> inputs;
+    std::vector<std::pair<uint64_t, battle_sim::PlayerInput>> inputs;
     m_sync->collectPendingInputs(inputs);
     for (auto& [frame, input] : inputs)
     {
         auto* entry = push.add_inputs();
         entry->set_frame(static_cast<uint32_t>(frame));
-        entry->set_input(mugen::sim_legacy::net::encodePlayerInput(input));
+        entry->set_input(battle_sim::net::encodePlayerInput(input));
     }
 
     std::vector<std::pair<uint64_t, uint64_t>> hashes;
@@ -488,13 +486,13 @@ void NetBattleMode::onUpdate(float delta)
     while (m_sync->session().currentFrame() < target && catchUp < kMaxCatchUpFrames && m_sync->session().canAdvance())
     {
         const uint64_t frame = m_sync->session().currentFrame() + 1;
-        std::vector<mugen::sim_legacy::PlayerCommand> commands;
+        std::vector<battle_sim::PlayerCommand> commands;
         // 开局校准与领先量增大后的追帧期间，这些帧的输入送到服务器时早已过期；此时不采样控制，
         // 按键状态保留，追上之后的第一帧照常发出，避免角色起步即被服务器改写、回滚拉回。
         // D 刚减小时本帧的生效帧已被占用，同样跳过一次采样（按键状态保留到下一帧）。
         if (m_sync->inputReady(nowMs, frame))
             m_control.advance(commands);
-        mugen::sim_legacy::PlayerInput input;
+        battle_sim::PlayerInput input;
         input.slot      = m_localSlot;
         input.commands  = std::move(commands);
         m_sync->submitLocalInput(frame, std::move(input));
@@ -521,10 +519,10 @@ void NetBattleMode::onUpdate(float delta)
 
     auto& session = m_sync->session();
     for (const auto& event : session.eventsToPresent())
-        if (std::holds_alternative<mugen::sim_legacy::HurtNumber>(event.payload))
+        if (std::holds_alternative<battle_sim::HurtNumber>(event.payload))
         {
-            const auto* identity = session.world().ecs().tryGet<mugen::sim_legacy::RoleIdentity>(event.entity);
-            if (identity && identity->roleType != static_cast<int32_t>(mugen::EntityRoleType::kHero))
+            const auto info = mugen::sim::view::readEntityRoleInfo(session.world(), event.entity);
+            if (info.valid && info.roleType != static_cast<int32_t>(mugen::EntityRoleType::kHero))
                 m_lastHurtTarget = event.entity;
         }
     const double presentBegin = preciseNowMs();
@@ -577,8 +575,8 @@ void NetBattleMode::finishRenderFrame(float delta)
 
 void NetBattleMode::setInput(uint32_t slot, bool pressed)
 {
-    if (slot < static_cast<uint32_t>(mugen::sim_legacy::ControlKey::Count))
-        m_control.setKey(static_cast<mugen::sim_legacy::ControlKey>(slot), pressed);
+    if (slot < static_cast<uint32_t>(battle_sim::ControlKey::Count))
+        m_control.setKey(static_cast<battle_sim::ControlKey>(slot), pressed);
 }
 
 void NetBattleMode::onExit()
@@ -616,7 +614,7 @@ int32_t NetBattleMode::resolveFollowPetId() const
     return activeId > 0 ? activeId : 17102;
 }
 
-const mugen::sim_legacy::World& NetBattleMode::world() const
+const battle_sim::World& NetBattleMode::world() const
 {
     return m_sync->session().world();
 }
@@ -704,17 +702,17 @@ void NetBattleMode::renderDebugPanel()
     delayChanged |= ImGui::SliderInt("固定帧数", &m_delayForcedUi, 0, 10);
     if (delayChanged)
     {
-        constexpr mugen::sim_legacy::net::LocalDelayMode kModes[] = {mugen::sim_legacy::net::LocalDelayMode::Auto,
-                                                              mugen::sim_legacy::net::LocalDelayMode::Forced,
-                                                              mugen::sim_legacy::net::LocalDelayMode::Off};
+        constexpr battle_sim::net::LocalDelayMode kModes[] = {battle_sim::net::LocalDelayMode::Auto,
+                                                              battle_sim::net::LocalDelayMode::Forced,
+                                                              battle_sim::net::LocalDelayMode::Off};
         m_sync->setLocalDelayMode(kModes[m_delayModeUi], static_cast<uint32_t>(m_delayForcedUi));
     }
     ImGui::Separator();
     // 调试：本机复现高延迟。额外延迟只作用于本客户端收发的战斗消息，面板上的 RTT 会包含它。
     ImGui::TextUnformatted("模拟延迟(调试，0=关闭)");
-    ImGui::SliderInt("上行额外延迟 ms", &m_sim.m_upMs, 0, 500);
-    ImGui::SliderInt("下行额外延迟 ms", &m_sim.m_downMs, 0, 500);
-    ImGui::SliderInt("抖动 ms", &m_sim.m_jitterMs, 0, 200);
+    ImGui::SliderInt("上行额外延迟 ms", &m_sim.upMs, 0, 500);
+    ImGui::SliderInt("下行额外延迟 ms", &m_sim.downMs, 0, 500);
+    ImGui::SliderInt("抖动 ms", &m_sim.jitterMs, 0, 200);
     ImGui::Separator();
     if (ImGui::Button("投降", ImVec2(-1, 0)))
         requestLeave();

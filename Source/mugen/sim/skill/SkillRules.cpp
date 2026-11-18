@@ -13,9 +13,9 @@ namespace mugen::sim
 // SkillBookComponent::find 实现：按槽位名 + 步骤 + 链 + 模式查找技能下标。
 int32_t SkillBookComponent::find(std::string_view slot, int32_t step, int32_t link, int32_t mode) const
 {
-    for (size_t i = 0; i < m_skills.size(); ++i)
-        if (m_slots[static_cast<size_t>(m_skills[i].m_slot)] == slot && m_skills[i].m_step == step &&
-            m_skills[i].m_link == link && m_skills[i].m_mode == mode)
+    for (size_t i = 0; i < skills.size(); ++i)
+        if (slots[static_cast<size_t>(skills[i].slot)] == slot && skills[i].step == step &&
+            skills[i].link == link && skills[i].mode == mode)
             return static_cast<int32_t>(i);
     return kNoSkill;
 }
@@ -138,13 +138,13 @@ bool hasSorderControl(const conf::battle::SkillDef* def, int32_t value)
 // 技能所属槽位名。
 std::string_view slotOf(const SkillBookComponent& book, const SkillRuntime& skill)
 {
-    return book.m_slots[static_cast<size_t>(skill.m_slot)];
+    return book.slots[static_cast<size_t>(skill.slot)];
 }
 
 // 技能簿是否含指定槽位名。
 bool hasNamedSlot(const SkillBookComponent& book, std::string_view name)
 {
-    for (const auto& slot : book.m_slots)
+    for (const auto& slot : book.slots)
         if (slot == name)
             return true;
     return false;
@@ -153,42 +153,42 @@ bool hasNamedSlot(const SkillBookComponent& book, std::string_view name)
 // 开始冷却：PVP 取 pvpCd，次数制且已在冷却时只续计时。
 void startCooldown(World& world, SkillRuntime& skill, const SkillBookComponent& book)
 {
-    const auto* def = conf::Config::instance().find<conf::battle::SkillDef>(skill.m_configId);
+    const auto* def = conf::Config::instance().find<conf::battle::SkillDef>(skill.configId);
     Fixed cdScale   = Fixed::fromInt(1);
-    for (const auto& mod : book.m_mods)
-        if (mod.m_field == static_cast<int32_t>(conf::battle::SkillModField::CdScale))
-            cdScale += mod.m_value;
-    const int64_t cdMs = def ? (world.setup().m_pvp ? def->pvpCdMs : def->cdMs) : 0;
-    skill.m_coldMaxTime = Fixed::fromInt(cdMs) * cdScale;
-    skill.m_timing      = true;
-    if (!(skill.m_cd > Fixed{} && skill.m_releaseMax > 1))
-        skill.m_cd = skill.m_coldMaxTime;
-    if (!(skill.m_coldMaxTime > Fixed{} || skill.m_cd > Fixed{}))
-        skill.m_timing = false;
+    for (const auto& mod : book.mods)
+        if (mod.field == static_cast<int32_t>(conf::battle::SkillModField::CdScale))
+            cdScale += mod.value;
+    const int64_t cdMs = def ? (world.setup().pvp ? def->pvpCdMs : def->cdMs) : 0;
+    skill.coldMaxTime = Fixed::fromInt(cdMs) * cdScale;
+    skill.timing      = true;
+    if (!(skill.cd > Fixed{} && skill.releaseMax > 1))
+        skill.cd = skill.coldMaxTime;
+    if (!(skill.coldMaxTime > Fixed{} || skill.cd > Fixed{}))
+        skill.timing = false;
 }
 
 // 给同槽技能追加冷却。
 void addColdTime(SkillRuntime& skill, Fixed time)
 {
     time *= conf::kColdTimeSale;
-    skill.m_timing = true;
-    skill.m_cd += time;
-    skill.m_coldMaxTime += time;
+    skill.timing = true;
+    skill.cd += time;
+    skill.coldMaxTime += time;
 }
 
 // 施法开始时记录首段技能的伙伴怒气增量。
 void beginPartnerRageCast(World& world, Entity entity, const SkillBookComponent& book, int32_t firstIndex)
 {
     auto& cast                      = world.ecs().get<SkillCastComponent>(entity);
-    cast.m_partnerRagePendingGain   = {};
-    cast.m_partnerRagePendingGainActive = false;
-    if (firstIndex < 0 || static_cast<size_t>(firstIndex) >= book.m_skills.size())
+    cast.partnerRagePendingGain   = {};
+    cast.partnerRagePendingGainActive = false;
+    if (firstIndex < 0 || static_cast<size_t>(firstIndex) >= book.skills.size())
         return;
-    const int32_t firstId = book.m_skills[static_cast<size_t>(firstIndex)].m_configId;
+    const int32_t firstId = book.skills[static_cast<size_t>(firstIndex)].configId;
     if (const auto* skill = conf::Config::instance().find<conf::battle::SkillDef>(firstId))
     {
-        cast.m_partnerRagePendingGain       = Fixed::fromInt(std::max(0, skill->costRage));
-        cast.m_partnerRagePendingGainActive = cast.m_partnerRagePendingGain > Fixed{};
+        cast.partnerRagePendingGain       = Fixed::fromInt(std::max(0, skill->costRage));
+        cast.partnerRagePendingGainActive = cast.partnerRagePendingGain > Fixed{};
     }
 }
 
@@ -196,17 +196,22 @@ void beginPartnerRageCast(World& world, Entity entity, const SkillBookComponent&
 void finishPartnerRageCast(World& world, Entity entity, const SkillBookComponent& book, const SkillRuntime& skill)
 {
     auto& cast                      = world.ecs().get<SkillCastComponent>(entity);
-    cast.m_partnerRagePendingGain   = {};
-    cast.m_partnerRagePendingGainActive = false;
+    cast.partnerRagePendingGain   = {};
+    cast.partnerRagePendingGainActive = false;
     if (slotOf(book, skill) != "P" || !world.ecs().has<RageStateComponent>(entity))
         return;
     auto& rage = world.ecs().get<RageStateComponent>(entity);
-    if (rage.m_transformed || cast.m_partnerRageRecoverPending || rage.m_rage < conf::kPartnerRageMaxAnger)
+    if (rage.transformed || cast.partnerRageRecoverPending || rage.rage < conf::kPartnerRageMaxAnger)
         return;
-    rage.m_rage        = {};
-    rage.m_freezeMs    = rage.m_maxFreezeMs;
-    rage.m_transformed = true;
-    cast.m_partnerRageRecoverPending = rage.m_freezeMs <= Fixed{};
+    rage.rage        = {};
+    rage.freezeMs    = rage.maxFreezeMs;
+    rage.transformed = true;
+    cast.partnerRageRecoverPending = rage.freezeMs <= Fixed{};
+    CueEvent cue;
+    cue.entity = entity;
+    cue.kind   = CueKind::PartnerRage;
+    cue.param  = 1;
+    world.ecs().singleton<EventQueue<CueEvent>>().push(cue);
 }
 }  // namespace
 
@@ -319,50 +324,50 @@ void buildSkillBook(World& world, Entity entity, CharacterClass occupation)
     {
         int32_t slotIndex = kNoSkill;
         int32_t link      = 1;
-        for (size_t i = 0; i < book.m_slots.size(); ++i)
+        for (size_t i = 0; i < book.slots.size(); ++i)
         {
-            if (book.m_slots[i] != slot)
+            if (book.slots[i] != slot)
                 continue;
             slotIndex = static_cast<int32_t>(i);
-            for (const auto& skill : book.m_skills)
-                if (skill.m_slot == slotIndex)
-                    link = std::max(link, skill.m_link + 1);
+            for (const auto& skill : book.skills)
+                if (skill.slot == slotIndex)
+                    link = std::max(link, skill.link + 1);
             break;
         }
         if (slotIndex == kNoSkill)
         {
-            slotIndex = static_cast<int32_t>(book.m_slots.size());
-            book.m_slots.push_back(slot);
+            slotIndex = static_cast<int32_t>(book.slots.size());
+            book.slots.push_back(slot);
         }
         int32_t id    = firstId;
         int32_t step  = 1;
-        int32_t start = static_cast<int32_t>(book.m_skills.size());
+        int32_t start = static_cast<int32_t>(book.skills.size());
         while (id != -1)
         {
             const auto* def = conf::Config::instance().find<conf::battle::SkillDef>(id);
             if (!def)
                 break;
             SkillRuntime rt;
-            rt.m_slot         = slotIndex;
-            rt.m_configId     = id;
-            rt.m_step         = step;
-            rt.m_link         = link;
-            rt.m_mode         = 1;
-            rt.m_releaseMax   = def->charges == -1 ? 1 : std::max(1, def->charges);
-            rt.m_releaseCount = rt.m_releaseMax;
-            rt.m_coldMaxTime  = Fixed::fromInt(def->cdMs);
-            rt.m_cd           = {};
-            book.m_skills.push_back(rt);
+            rt.slot         = slotIndex;
+            rt.configId     = id;
+            rt.step         = step;
+            rt.link         = link;
+            rt.mode         = 1;
+            rt.releaseMax   = def->charges == -1 ? 1 : std::max(1, def->charges);
+            rt.releaseCount = rt.releaseMax;
+            rt.coldMaxTime  = Fixed::fromInt(def->cdMs);
+            rt.cd           = {};
+            book.skills.push_back(rt);
             ++step;
             id = def->next;
         }
-        for (size_t i = static_cast<size_t>(start); i < book.m_skills.size(); ++i)
-            book.m_skills[i].m_stepCount = step - 1;
-        for (auto& skill : book.m_skills)
-            if (skill.m_slot == slotIndex)
-                skill.m_finally = false;
-        if (start < static_cast<int32_t>(book.m_skills.size()))
-            book.m_skills.back().m_finally = true;
+        for (size_t i = static_cast<size_t>(start); i < book.skills.size(); ++i)
+            book.skills[i].stepCount = step - 1;
+        for (auto& skill : book.skills)
+            if (skill.slot == slotIndex)
+                skill.finally = false;
+        if (start < static_cast<int32_t>(book.skills.size()))
+            book.skills.back().finally = true;
     }
     world.ecs().add(entity, std::move(book));
     world.ecs().add(entity, SkillCastComponent{});
@@ -378,17 +383,17 @@ int32_t getFightSkill(World& world, Entity entity, std::string_view input)
     const std::string_view slot = input.substr(0, split);
     const int32_t inputMode     = split == std::string_view::npos ? 1 : 2;
     int32_t link = 1, mode = inputMode, step = 1;
-    if (cast.m_skill != kNoSkill)
+    if (cast.skill != kNoSkill)
     {
-        const auto& current = book.m_skills[static_cast<size_t>(cast.m_skill)];
-        if (slot == book.m_slots[static_cast<size_t>(current.m_slot)])
+        const auto& current = book.skills[static_cast<size_t>(cast.skill)];
+        if (slot == book.slots[static_cast<size_t>(current.slot)])
         {
-            link = current.m_link;
-            mode = current.m_mode;
-            step = current.m_step;
-            if (current.m_releaseMax <= 1 || current.m_releaseCount == 0)
+            link = current.link;
+            mode = current.mode;
+            step = current.step;
+            if (current.releaseMax <= 1 || current.releaseCount == 0)
             {
-                if (step < current.m_stepCount)
+                if (step < current.stepCount)
                     ++step;
                 else
                 {
@@ -409,12 +414,12 @@ int32_t getFightSkill(World& world, Entity entity, std::string_view input)
 bool isAllowCast(World& world, Entity entity, int32_t index)
 {
     auto& book  = world.ecs().get<SkillBookComponent>(entity);
-    auto& skill = book.m_skills[static_cast<size_t>(index)];
-    const auto* def   = conf::Config::instance().find<conf::battle::SkillDef>(skill.m_configId);
+    auto& skill = book.skills[static_cast<size_t>(index)];
+    const auto* def   = conf::Config::instance().find<conf::battle::SkillDef>(skill.configId);
     const auto slot   = slotOf(book, skill);
     const auto& state = world.ecs().get<RoleStateComponent>(entity);
     if (def && def->type == -1 &&
-        ((role::isTobeHit(state.m_state) && slot != "L") || (slot == "L" && !role::isCanBreak(state.m_state))))
+        ((role::isTobeHit(state.state) && slot != "L") || (slot == "L" && !role::isCanBreak(state.state))))
         return false;
     if (world.ecs().has<StatusFlagsComponent>(entity))
     {
@@ -422,21 +427,21 @@ bool isAllowCast(World& world, Entity entity, int32_t index)
         if (!flags.canControl() || flags.active(mugen::ExtraState::Silence))
             return false;
     }
-    if (skill.m_releaseCount == 0 && skill.m_cd > Fixed{})
+    if (skill.releaseCount == 0 && skill.cd > Fixed{})
         return false;
-    for (const auto& mod : book.m_mods)
-        if (mod.m_field == static_cast<int32_t>(conf::battle::SkillModField::DisableSlot) && mod.m_value > Fixed{} &&
-            (mod.m_slot < 0 || mod.m_slot == skill.m_slot))
+    for (const auto& mod : book.mods)
+        if (mod.field == static_cast<int32_t>(conf::battle::SkillModField::DisableSlot) && mod.value > Fixed{} &&
+            (mod.slot < 0 || mod.slot == skill.slot))
             return false;
     const auto& health = world.ecs().get<HealthComponent>(entity);
-    if (def && (Fixed::fromInt(def->costMp) > health.m_mp || Fixed::fromInt(def->costEp) > health.m_ep))
+    if (def && (Fixed::fromInt(def->costMp) > health.mp || Fixed::fromInt(def->costEp) > health.ep))
         return false;
     const auto& cast = world.ecs().get<SkillCastComponent>(entity);
-    if (slot == "E" && cast.m_crazy)
+    if (slot == "E" && cast.crazy)
         return false;
     if (slot == "P")
         if (const auto* rage = world.ecs().tryGet<RageStateComponent>(entity);
-            rage && (rage->m_transformed || cast.m_partnerRageRecoverPending || rage->m_rage < conf::kPartnerRageMaxAnger))
+            rage && (rage->transformed || cast.partnerRageRecoverPending || rage->rage < conf::kPartnerRageMaxAnger))
             return false;
     return true;
 }
@@ -448,9 +453,9 @@ bool isCastingSlot(World& world, Entity entity, std::string_view slot)
         return false;
     const auto& cast = world.ecs().get<SkillCastComponent>(entity);
     const auto& book = world.ecs().get<SkillBookComponent>(entity);
-    if (cast.m_skill == kNoSkill || cast.m_skill < 0 || static_cast<size_t>(cast.m_skill) >= book.m_skills.size())
+    if (cast.skill == kNoSkill || cast.skill < 0 || static_cast<size_t>(cast.skill) >= book.skills.size())
         return false;
-    return slotOf(book, book.m_skills[static_cast<size_t>(cast.m_skill)]) == slot;
+    return slotOf(book, book.skills[static_cast<size_t>(cast.skill)]) == slot;
 }
 
 // 目标是否正在放闪避（F 槽）。
@@ -465,21 +470,21 @@ void grantPartnerRageOnHit(World& world, Entity entity)
     if (!world.ecs().has<SkillCastComponent>(entity) || !world.ecs().has<RageStateComponent>(entity))
         return;
     auto& cast = world.ecs().get<SkillCastComponent>(entity);
-    if (!cast.m_partnerRagePendingGainActive)
+    if (!cast.partnerRagePendingGainActive)
         return;
     auto& rage = world.ecs().get<RageStateComponent>(entity);
-    rage.m_rage = std::clamp(rage.m_rage + cast.m_partnerRagePendingGain, Fixed{}, conf::kPartnerRageMaxAnger);
-    cast.m_partnerRagePendingGain       = {};
-    cast.m_partnerRagePendingGainActive = false;
+    rage.rage = std::clamp(rage.rage + cast.partnerRagePendingGain, Fixed{}, conf::kPartnerRageMaxAnger);
+    cast.partnerRagePendingGain       = {};
+    cast.partnerRagePendingGainActive = false;
 }
 
 // sorder 优先级：任一方为 −1，或 next ≥ current。
 bool isPriority(World& world, Entity entity, int32_t next, int32_t current)
 {
     const auto& book = world.ecs().get<SkillBookComponent>(entity);
-    const auto* a = conf::Config::instance().find<conf::battle::SkillDef>(book.m_skills[static_cast<size_t>(next)].m_configId);
+    const auto* a = conf::Config::instance().find<conf::battle::SkillDef>(book.skills[static_cast<size_t>(next)].configId);
     const auto* b =
-        conf::Config::instance().find<conf::battle::SkillDef>(book.m_skills[static_cast<size_t>(current)].m_configId);
+        conf::Config::instance().find<conf::battle::SkillDef>(book.skills[static_cast<size_t>(current)].configId);
     const int32_t sa = a ? a->sorder : 0;
     const int32_t sb = b ? b->sorder : 0;
     return sa == -1 || sb == -1 || sa >= sb;
@@ -491,23 +496,23 @@ bool isSuperPriority(World& world, Entity entity, int32_t next, int32_t current)
     const auto& book = world.ecs().get<SkillBookComponent>(entity);
     const auto& cast = world.ecs().get<SkillCastComponent>(entity);
     const auto* nextDef =
-        conf::Config::instance().find<conf::battle::SkillDef>(book.m_skills[static_cast<size_t>(next)].m_configId);
+        conf::Config::instance().find<conf::battle::SkillDef>(book.skills[static_cast<size_t>(next)].configId);
     const auto* curDef =
-        conf::Config::instance().find<conf::battle::SkillDef>(book.m_skills[static_cast<size_t>(current)].m_configId);
-    return (cast.m_allowInterrupt && hasSorderControl(curDef, 1)) ||
-           (cast.m_allowExtraInterrupt && hasSorderControl(nextDef, 2));
+        conf::Config::instance().find<conf::battle::SkillDef>(book.skills[static_cast<size_t>(current)].configId);
+    return (cast.allowInterrupt && hasSorderControl(curDef, 1)) ||
+           (cast.allowExtraInterrupt && hasSorderControl(nextDef, 2));
 }
 
 // 取消判定：普通窗同槽或 isPriority；至尊窗走 isSuperPriority（同槽需控制 2）。
 bool canCancel(World& world, Entity entity, int32_t next, int32_t current, bool extra)
 {
     const auto& book = world.ecs().get<SkillBookComponent>(entity);
-    const auto& src  = book.m_skills[static_cast<size_t>(current)];
-    const auto& dst  = book.m_skills[static_cast<size_t>(next)];
-    const bool sameSlot = src.m_slot == dst.m_slot;
+    const auto& src  = book.skills[static_cast<size_t>(current)];
+    const auto& dst  = book.skills[static_cast<size_t>(next)];
+    const bool sameSlot = src.slot == dst.slot;
     if (!extra)
         return sameSlot || isPriority(world, entity, next, current);
-    const auto* def = conf::Config::instance().find<conf::battle::SkillDef>(dst.m_configId);
+    const auto* def = conf::Config::instance().find<conf::battle::SkillDef>(dst.configId);
     if (sameSlot)
         return next != current && hasSorderControl(def, 2);
     return isSuperPriority(world, entity, next, current);
@@ -524,61 +529,61 @@ bool dealButton(World& world, Entity entity, ControlEvent event)
     const auto& state = world.ecs().get<RoleStateComponent>(entity);
     if (slot == "A")
     {
-        const bool sprint = cast.m_skill != kNoSkill &&
-                            book.m_slots[static_cast<size_t>(book.m_skills[static_cast<size_t>(cast.m_skill)].m_slot)] ==
+        const bool sprint = cast.skill != kNoSkill &&
+                            book.slots[static_cast<size_t>(book.skills[static_cast<size_t>(cast.skill)].slot)] ==
                                 "Y" &&
-                            !book.m_skills[static_cast<size_t>(cast.m_skill)].m_finally;
-        if (sprint || state.m_state == RoleStateId::Run)
+                            !book.skills[static_cast<size_t>(cast.skill)].finally;
+        if (sprint || state.state == RoleStateId::Run)
             slot = "Y";
     }
     if (event >= ControlEvent::CTR_JOY1 && event <= ControlEvent::CTR_JOY12)
     {
-        const std::string joySlot = cast.m_crazy ? slot + '+' : slot;
+        const std::string joySlot = cast.crazy ? slot + '+' : slot;
         const int32_t joy         = getFightSkill(world, entity, joySlot);
         if (joy == kNoSkill)
             slot = "A";
         else
         {
             BuffContext prepare;
-            prepare.m_target  = entity;
-            prepare.m_skillId = book.m_skills[static_cast<size_t>(joy)].m_configId;
+            prepare.target  = entity;
+            prepare.skillId = book.skills[static_cast<size_t>(joy)].configId;
             buff::rules::fire(world, entity, conf::battle::TriggerPoint::BeforePrepareSkill, prepare);
             if (!isAllowCast(world, entity, joy))
                 slot = "A";
         }
     }
     if (slot == "E" &&
-        (cast.m_crazy || (cast.m_skill != kNoSkill && slotOf(book, book.m_skills[static_cast<size_t>(cast.m_skill)]) == "E")))
+        (cast.crazy || (cast.skill != kNoSkill && slotOf(book, book.skills[static_cast<size_t>(cast.skill)]) == "E")))
         return false;
-    if (cast.m_crazy && hasNamedSlot(book, slot + '+'))
+    if (cast.crazy && hasNamedSlot(book, slot + '+'))
         slot += '+';
     const int32_t next = getFightSkill(world, entity, slot);
     if (next == kNoSkill)
         return false;
     BuffContext prepare;
-    prepare.m_target  = entity;
-    prepare.m_skillId = book.m_skills[static_cast<size_t>(next)].m_configId;
+    prepare.target  = entity;
+    prepare.skillId = book.skills[static_cast<size_t>(next)].configId;
     buff::rules::fire(world, entity, conf::battle::TriggerPoint::BeforePrepareSkill, prepare);
     if (!isAllowCast(world, entity, next))
         return false;
-    if (cast.m_skill == kNoSkill)
+    if (cast.skill == kNoSkill)
     {
         beginCast(world, entity, next);
         return true;
     }
-    const int32_t current = cast.m_skill;
-    const auto& curSkill  = book.m_skills[static_cast<size_t>(current)];
-    const bool same       = slot == book.m_slots[static_cast<size_t>(curSkill.m_slot)];
-    if (cast.m_allowInterrupt && isPriority(world, entity, next, current))
+    const int32_t current = cast.skill;
+    const auto& curSkill  = book.skills[static_cast<size_t>(current)];
+    const bool same       = slot == book.slots[static_cast<size_t>(curSkill.slot)];
+    if (cast.allowInterrupt && isPriority(world, entity, next, current))
     {
-        cast.m_nextSkill = next;
-        cast.m_switch    = true;
+        cast.nextSkill = next;
+        cast.switched    = true;
     }
     else
     {
         if (same && slot == "F")
             return false;
-        cast.m_nextSkill = next;
+        cast.nextSkill = next;
     }
     return true;
 }
@@ -588,46 +593,46 @@ void beginCast(World& world, Entity entity, int32_t index, bool deferFirstClip)
 {
     auto& book = world.ecs().get<SkillBookComponent>(entity);
     auto& cast = world.ecs().get<SkillCastComponent>(entity);
-    auto& skill = book.m_skills[static_cast<size_t>(index)];
-    const auto* def = conf::Config::instance().find<conf::battle::SkillDef>(skill.m_configId);
+    auto& skill = book.skills[static_cast<size_t>(index)];
+    const auto* def = conf::Config::instance().find<conf::battle::SkillDef>(skill.configId);
     timeline::rules::exitClip(world, entity);
     BuffContext castCtx;
-    castCtx.m_target  = entity;
-    castCtx.m_skillId = skill.m_configId;
-    if (skill.m_step == 1)
+    castCtx.target  = entity;
+    castCtx.skillId = skill.configId;
+    if (skill.step == 1)
         buff::rules::fire(world, entity, conf::battle::TriggerPoint::BeforeNextSkill, castCtx);
     startCooldown(world, skill, book);
-    skill.m_releaseCount = std::max(0, skill.m_releaseCount - 1);
-    if (skill.m_step == 1)
-        for (auto& other : book.m_skills)
-            if (other.m_slot == skill.m_slot && other.m_link == skill.m_link && other.m_mode != skill.m_mode)
+    skill.releaseCount = std::max(0, skill.releaseCount - 1);
+    if (skill.step == 1)
+        for (auto& other : book.skills)
+            if (other.slot == skill.slot && other.link == skill.link && other.mode != skill.mode)
             {
-                other.m_releaseCount = std::max(0, other.m_releaseCount - 1);
+                other.releaseCount = std::max(0, other.releaseCount - 1);
                 startCooldown(world, other, book);
             }
-    if (skill.m_link > 1 || skill.m_step > 1)
-        for (size_t i = 0; i < book.m_skills.size(); ++i)
+    if (skill.link > 1 || skill.step > 1)
+        for (size_t i = 0; i < book.skills.size(); ++i)
         {
             if (static_cast<int32_t>(i) == index)
                 continue;
-            auto& other = book.m_skills[i];
-            if (other.m_slot == skill.m_slot && other.m_link == 1)
-                addColdTime(other, skill.m_cd);
+            auto& other = book.skills[i];
+            if (other.slot == skill.slot && other.link == 1)
+                addColdTime(other, skill.cd);
         }
-    cast.m_skill            = index;
-    cast.m_nextSkill        = kNoSkill;
-    cast.m_nextRun          = false;
-    cast.m_allowInterrupt   = false;
-    cast.m_allowExtraInterrupt = false;
-    cast.m_switch           = false;
-    cast.m_interrupted      = false;
-    if (def && !cast.m_crazy && world.ecs().has<HealthComponent>(entity))
+    cast.skill            = index;
+    cast.nextSkill        = kNoSkill;
+    cast.nextRun          = false;
+    cast.allowInterrupt   = false;
+    cast.allowExtraInterrupt = false;
+    cast.switched           = false;
+    cast.interrupted      = false;
+    if (def && !cast.crazy && world.ecs().has<HealthComponent>(entity))
     {
         auto& health = world.ecs().get<HealthComponent>(entity);
         Fixed mpFactor = Fixed::fromInt(1);
-        for (const auto& mod : book.m_mods)
-            if (mod.m_field == static_cast<int32_t>(conf::battle::SkillModField::MpCostScale))
-                mpFactor += mod.m_value;
+        for (const auto& mod : book.mods)
+            if (mod.field == static_cast<int32_t>(conf::battle::SkillModField::MpCostScale))
+                mpFactor += mod.value;
         if (world.ecs().has<StatsComponent>(entity))
             mpFactor *= world.ecs().get<StatsComponent>(entity).finalStat(205);
         const Fixed mpCost = Fixed::fromInt(def->costMp) * mpFactor;
@@ -636,18 +641,18 @@ void beginCast(World& world, Entity entity, int32_t index, bool deferFirstClip)
                                                             : Fixed::fromInt(1));
         if (def->costMp > 0)
         {
-            health.m_mp = std::max(Fixed{}, health.m_mp - mpCost);
-            castCtx.m_tpSpent = mpCost;
+            health.mp = std::max(Fixed{}, health.mp - mpCost);
+            castCtx.tpSpent = mpCost;
             buff::rules::fire(world, entity, conf::battle::TriggerPoint::UseTp, castCtx);
         }
         if (def->costEp > 0)
         {
-            health.m_ep = std::max(Fixed{}, health.m_ep - epCost);
+            health.ep = std::max(Fixed{}, health.ep - epCost);
             buff::rules::fire(world, entity, conf::battle::TriggerPoint::UseEp, castCtx);
         }
     }
     const std::string slotName(slotOf(book, skill));
-    int32_t first = book.find(slotName, 1, skill.m_link, skill.m_mode);
+    int32_t first = book.find(slotName, 1, skill.link, skill.mode);
     if (first == kNoSkill)
         first = index;
     beginPartnerRageCast(world, entity, book, first);
@@ -656,17 +661,17 @@ void beginCast(World& world, Entity entity, int32_t index, bool deferFirstClip)
     // 建立动作时间轴（B2 无摇杆，取第 0 方向列）并同步进入首片段。
     ActionTimelineComponent timeline;
     if (def && !def->sequences.empty())
-        timeline.m_clips = def->sequences[0];
-    timeline.m_index    = 0;
-    timeline.m_finished = false;
+        timeline.clips = def->sequences[0];
+    timeline.index    = 0;
+    timeline.finished = false;
     world.ecs().get<ActionTimelineComponent>(entity) = std::move(timeline);
     CastEvent event;
-    event.m_entity  = entity;
-    event.m_skillId = skill.m_configId;
-    event.m_slot    = skill.m_slot;
-    event.m_phase   = CastPhase::Began;
+    event.entity  = entity;
+    event.skillId = skill.configId;
+    event.slot    = skill.slot;
+    event.phase   = CastPhase::Began;
     world.ecs().singleton<EventQueue<CastEvent>>().push(event);
-    auto& clips = world.ecs().get<ActionTimelineComponent>(entity).m_clips;
+    auto& clips = world.ecs().get<ActionTimelineComponent>(entity).clips;
     if (clips.empty() || !timeline::rules::enterClip(world, entity, clips.front(), false, deferFirstClip))
         endCast(world, entity);
 }
@@ -676,37 +681,37 @@ void endCast(World& world, Entity entity, bool deferNext)
 {
     auto& book = world.ecs().get<SkillBookComponent>(entity);
     auto& cast = world.ecs().get<SkillCastComponent>(entity);
-    if (cast.m_skill == kNoSkill)
+    if (cast.skill == kNoSkill)
         return;
     timeline::rules::exitClip(world, entity);
-    const auto& skill = book.m_skills[static_cast<size_t>(cast.m_skill)];
+    const auto& skill = book.skills[static_cast<size_t>(cast.skill)];
     BuffContext castCtx;
-    castCtx.m_target  = entity;
-    castCtx.m_skillId = skill.m_configId;
+    castCtx.target  = entity;
+    castCtx.skillId = skill.configId;
     finishPartnerRageCast(world, entity, book, skill);
     buff::rules::fire(world, entity, conf::battle::TriggerPoint::AfterCastSkill, castCtx);
-    if (skill.m_finally || skill.m_step >= skill.m_stepCount)
+    if (skill.finally || skill.step >= skill.stepCount)
         buff::rules::fire(world, entity, conf::battle::TriggerPoint::AfterNextSkill, castCtx);
     CastEvent event;
-    event.m_entity  = entity;
-    event.m_skillId = skill.m_configId;
-    event.m_slot    = skill.m_slot;
-    event.m_phase   = CastPhase::Ended;
+    event.entity  = entity;
+    event.skillId = skill.configId;
+    event.slot    = skill.slot;
+    event.phase   = CastPhase::Ended;
     world.ecs().singleton<EventQueue<CastEvent>>().push(event);
-    const int32_t next = cast.m_nextSkill;
+    const int32_t next = cast.nextSkill;
     if (next != kNoSkill)
     {
-        cast.m_nextSkill = kNoSkill;
+        cast.nextSkill = kNoSkill;
         // RoleFsm 在 Timeline 之前切招须 deferNext=true，否则本帧 Timeline 会推进新技首片段。
         beginCast(world, entity, next, deferNext);
     }
     else
     {
-        cast.m_skill  = kNoSkill;
-        cast.m_switch = false;
+        cast.skill  = kNoSkill;
+        cast.switched = false;
         auto& timeline = world.ecs().get<ActionTimelineComponent>(entity);
-        timeline.m_finished     = true;
-        timeline.m_deferAdvance = false;
+        timeline.finished     = true;
+        timeline.deferAdvance = false;
     }
 }
 
@@ -717,27 +722,27 @@ void forceInterrupt(World& world, Entity entity)
         return;
     auto& book = world.ecs().get<SkillBookComponent>(entity);
     auto& cast = world.ecs().get<SkillCastComponent>(entity);
-    if (cast.m_skill == kNoSkill)
+    if (cast.skill == kNoSkill)
         return;
     timeline::rules::exitClip(world, entity);
     displacement::rules::reset(world, entity);
-    const auto& skill = book.m_skills[static_cast<size_t>(cast.m_skill)];
-    const int32_t skillId = skill.m_configId;
+    const auto& skill = book.skills[static_cast<size_t>(cast.skill)];
+    const int32_t skillId = skill.configId;
     CastEvent event;
-    event.m_entity  = entity;
-    event.m_skillId = skillId;
-    event.m_slot    = skill.m_slot;
-    event.m_phase   = CastPhase::Cancelled;
+    event.entity  = entity;
+    event.skillId = skillId;
+    event.slot    = skill.slot;
+    event.phase   = CastPhase::Cancelled;
     world.ecs().singleton<EventQueue<CastEvent>>().push(event);
-    cast.m_skill       = kNoSkill;
-    cast.m_nextSkill   = kNoSkill;
-    cast.m_switch      = false;
-    cast.m_interrupted = true;
+    cast.skill       = kNoSkill;
+    cast.nextSkill   = kNoSkill;
+    cast.switched      = false;
+    cast.interrupted = true;
     auto& timeline = world.ecs().get<ActionTimelineComponent>(entity);
-    timeline.m_finished     = true;
-    timeline.m_deferAdvance = false;
+    timeline.finished     = true;
+    timeline.deferAdvance = false;
     world.ecs().each<EffectInfoComponent, LifetimeComponent>([&](Entity effect, const EffectInfoComponent& info, const LifetimeComponent& life) {
-        if (info.m_owner == entity && info.m_baseSkillId == skillId && life.m_autoRelease == 0 &&
+        if (info.owner == entity && info.baseSkillId == skillId && life.autoRelease == 0 &&
             !world.ecs().has<DespawningComponent>(effect))
         {
             world.ecs().add(effect, DespawningComponent{});

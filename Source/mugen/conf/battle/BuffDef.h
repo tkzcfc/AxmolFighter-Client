@@ -369,7 +369,7 @@ enum class StackSel : int32_t
 {
     All = 0,
     Listed = 1,  // 与 id 并列的层数表
-    Expr = 2,    // 层数由 m_value 求值
+    Expr = 2,    // 层数由 value 求值
 };
 
 // 冷却目标。
@@ -479,395 +479,395 @@ enum class BuffOpKind : int32_t
 struct ValueExpr
 {
     // 表达式种类。
-    ValueKind m_kind = ValueKind::None;
+    ValueKind kind = ValueKind::None;
     // MaxRatio / Lost / Cur / CurMul / RegOfMax / MaxTimes / HpAmount 的资源。
-    ResourceId m_res = ResourceId::None;
+    ResourceId res = ResourceId::None;
     // TypeCount 的池：1 自身，2 事件目标（源表 p1）。
-    int32_t m_pool = 0;
+    int32_t pool = 0;
     // 主系数 p，或 SpeedBonus 的 a。
-    Fixed m_a;
+    Fixed a;
     // 次系数：下限 floor、上限 cap，或 SpeedBonus 的 b。
-    Fixed m_b;
+    Fixed b;
     // SpeedBonus 的上限 cap。
-    Fixed m_c;
+    Fixed c;
     // ComboTable 查表后再加的偏置（规则 5110 为 −1）。
-    Fixed m_bias;
+    Fixed bias;
     // TypeCount / MaxTimes 的 buffType 列表。
-    std::vector<int32_t> m_types;
+    std::vector<int32_t> types;
     // CoolingSlotTable / ComboTable 的表。
-    std::vector<Fixed> m_table;
+    std::vector<Fixed> table;
 
-    MG_REFLECT(ValueExpr, m_kind, m_res, m_pool, m_a, m_b, m_c, m_bias, m_types, m_table)
+    MG_REFLECT(ValueExpr, kind, res, pool, a, b, c, bias, types, table)
 };
 
 // 触发条件谓词。
 struct Predicate
 {
     // 谓词种类。
-    PredKind m_kind = PredKind::None;
+    PredKind kind = PredKind::None;
     // 求值主体。
-    Subject m_subject = Subject::Self;
+    Subject subject = Subject::Self;
     // 子类（MotionCheck / DeltaCheck / RoleCheck / SkillCheck / ArtifactCheck / EventCheck / TimerCheck / MiscCheck）。
-    int32_t m_subKind = 0;
+    int32_t subKind = 0;
     // 规则 id、Buff id 或标记。
-    int32_t m_id = 0;
+    int32_t id = 0;
     // 最少层数；−1 表示只要求存在。
-    int32_t m_minStacks = 0;
-    // HasRule 要求 m_ids 全部存在。
-    bool m_allOf = false;
+    int32_t minStacks = 0;
+    // HasRule 要求 ids 全部存在。
+    bool allOf = false;
     // 是否比较下界。
-    bool m_hasMin = false;
+    bool hasMin = false;
     // 是否比较上界。
-    bool m_hasMax = false;
+    bool hasMax = false;
     // 下界是否闭区间。
-    bool m_minInclusive = true;
+    bool minInclusive = true;
     // 上界是否闭区间。
-    bool m_maxInclusive = true;
+    bool maxInclusive = true;
     // 下界或阈值。
-    Fixed m_min;
+    Fixed min;
     // 上界。
-    Fixed m_max;
+    Fixed max;
     // 多 id：规则、类型、槽位、技能、标记。
-    std::vector<int32_t> m_ids;
+    std::vector<int32_t> ids;
     // 空作用标记（神器谓词、晶体谓词）。
-    OpEffect m_effect = OpEffect::Active;
+    OpEffect effect = OpEffect::Active;
     // 源条件编号，0 表示不是源表条件。
-    int32_t m_sourceId = 0;
+    int32_t sourceId = 0;
 
     MG_REFLECT(Predicate,
-               m_kind,
-               m_subject,
-               m_subKind,
-               m_id,
-               m_minStacks,
-               m_allOf,
-               m_hasMin,
-               m_hasMax,
-               m_minInclusive,
-               m_maxInclusive,
-               m_min,
-               m_max,
-               m_ids,
-               m_effect,
-               m_sourceId)
+               kind,
+               subject,
+               subKind,
+               id,
+               minStacks,
+               allOf,
+               hasMin,
+               hasMax,
+               minInclusive,
+               maxInclusive,
+               min,
+               max,
+               ids,
+               effect,
+               sourceId)
 };
 
-// 一条 op。按 m_kind 读取字段，其余保持默认。
-// Choice 的分支放在 BuffDef::m_choicePool，不嵌套本结构。
+// 一条 op。按 kind 读取字段，其余保持默认。
+// Choice 的分支放在 BuffDef::choicePool，不嵌套本结构。
 struct BuffOp
 {
     // op 种类。
-    BuffOpKind m_kind = BuffOpKind::None;
+    BuffOpKind kind = BuffOpKind::None;
     // 生效范围。
-    OpEffect m_effect = OpEffect::Active;
+    OpEffect effect = OpEffect::Active;
     // 前置谓词；种类为 None 表示没有。
-    Predicate m_when;
+    Predicate when;
     // 主取值。
-    ValueExpr m_value;
+    ValueExpr value;
     // Stat 的属性。
-    BuffStat m_stat = BuffStat::None;
+    BuffStat stat = BuffStat::None;
     // Flag 的标记。
-    BuffFlag m_flag = BuffFlag::None;
+    BuffFlag flag = BuffFlag::None;
     // Stat 在每次 T 重算。
-    bool m_live = false;
+    bool live = false;
     // 门闩钩子上每次都重施（护盾）。
-    bool m_reapply = false;
+    bool reapply = false;
     // 只在门闩合上的那一次执行。
-    bool m_onLatch = false;
+    bool onLatch = false;
     // 随机挑选一个槽或候选。
-    bool m_random = false;
+    bool random = false;
     // 扣血忽视护盾。
-    bool m_ignoreShield = false;
+    bool ignoreShield = false;
     // 怒气：变身中改加冻结时间。
-    bool m_transformFreeze = false;
+    bool transformFreeze = false;
     // 技能修正字段。
-    SkillModField m_field = SkillModField::None;
+    SkillModField field = SkillModField::None;
     // 技能修正范围。
-    SkillScope m_scope = SkillScope::None;
+    SkillScope scope = SkillScope::None;
     // 免疫选择器。
-    ImmuneSel m_immune = ImmuneSel::None;
+    ImmuneSel immune = ImmuneSel::None;
     // 施加目标。
-    ApplyTo m_to = ApplyTo::None;
+    ApplyTo to = ApplyTo::None;
     // 候选选择。
-    PickMode m_pick = PickMode::All;
+    PickMode pick = PickMode::All;
     // 移除键种类。
-    RemoveBy m_by = RemoveBy::None;
+    RemoveBy by = RemoveBy::None;
     // 移除层数方式。
-    StackSel m_stacks = StackSel::All;
+    StackSel stacks = StackSel::All;
     // 冷却目标。
-    CdTarget m_cdTarget = CdTarget::None;
+    CdTarget cdTarget = CdTarget::None;
     // 冷却模式。
-    CdMode m_cdMode = CdMode::None;
+    CdMode cdMode = CdMode::None;
     // 监视方式。
-    WatchMode m_watch = WatchMode::None;
+    WatchMode watch = WatchMode::None;
     // 状态计时种类。
-    StateKind m_state = StateKind::None;
+    StateKind state = StateKind::None;
     // 表现种类。
-    VisualKind m_visual = VisualKind::None;
+    VisualKind visual = VisualKind::None;
     // 计数键种类。
-    CountBy m_countBy = CountBy::None;
+    CountBy countBy = CountBy::None;
     // 层数比较。
-    StackCmp m_stackCmp = StackCmp::None;
+    StackCmp stackCmp = StackCmp::None;
     // 资源种类（Resource / SetCost）。
-    ResourceId m_res = ResourceId::None;
+    ResourceId res = ResourceId::None;
     // 整数参数：层数、规则、能力 id、音效、次数、区域选择器、上限、原始状态参数。
-    int32_t m_i0 = 0;
+    int32_t i0 = 0;
     // 第二整数参数。
-    int32_t m_i1 = 0;
+    int32_t i1 = 0;
     // 第三整数参数。
-    int32_t m_i2 = 0;
-    // Choice 分支在 m_choicePool 中的起点；−1 表示没有。
-    int32_t m_choiceBegin = -1;
+    int32_t i2 = 0;
+    // Choice 分支在 choicePool 中的起点；−1 表示没有。
+    int32_t choiceBegin = -1;
     // 定点参数（区域 rx、冷却阈值）。
-    Fixed m_f0;
+    Fixed f0;
     // 定点参数（区域 rz）。
-    Fixed m_f1;
+    Fixed f1;
     // id 列表：子 Buff、槽位、规则、类型、特效。
-    std::vector<int32_t> m_ids;
+    std::vector<int32_t> ids;
     // 并列整数：逐槽基准、逐 id 层数、Choice 每支长度。
-    std::vector<int32_t> m_ids2;
+    std::vector<int32_t> ids2;
     // 权重、逐槽阈值或 Choice 权重。
-    std::vector<Fixed> m_table;
+    std::vector<Fixed> table;
     // 逐槽数值（冷却秒数或比例）。
-    std::vector<Fixed> m_extra;
+    std::vector<Fixed> extra;
     // Watch 的条件。
-    std::vector<Predicate> m_predicates;
+    std::vector<Predicate> predicates;
 
     MG_REFLECT(BuffOp,
-               m_kind,
-               m_effect,
-               m_when,
-               m_value,
-               m_stat,
-               m_flag,
-               m_live,
-               m_reapply,
-               m_onLatch,
-               m_random,
-               m_ignoreShield,
-               m_transformFreeze,
-               m_field,
-               m_scope,
-               m_immune,
-               m_to,
-               m_pick,
-               m_by,
-               m_stacks,
-               m_cdTarget,
-               m_cdMode,
-               m_watch,
-               m_state,
-               m_visual,
-               m_countBy,
-               m_stackCmp,
-               m_res,
-               m_i0,
-               m_i1,
-               m_i2,
-               m_choiceBegin,
-               m_f0,
-               m_f1,
-               m_ids,
-               m_ids2,
-               m_table,
-               m_extra,
-               m_predicates)
+               kind,
+               effect,
+               when,
+               value,
+               stat,
+               flag,
+               live,
+               reapply,
+               onLatch,
+               random,
+               ignoreShield,
+               transformFreeze,
+               field,
+               scope,
+               immune,
+               to,
+               pick,
+               by,
+               stacks,
+               cdTarget,
+               cdMode,
+               watch,
+               state,
+               visual,
+               countBy,
+               stackCmp,
+               res,
+               i0,
+               i1,
+               i2,
+               choiceBegin,
+               f0,
+               f1,
+               ids,
+               ids2,
+               table,
+               extra,
+               predicates)
 };
 
 // 准入参数。
 struct BuffAdmission
 {
     // 源表规则 id。
-    int32_t m_ruleId = 0;
+    int32_t ruleId = 0;
     // 行上的 buffType（免疫类别）。
-    int32_t m_buffType = 0;
+    int32_t buffType = 0;
     // 规则表上的 buffType（DOT 重置判断）。
-    int32_t m_ruleBuffType = 0;
+    int32_t ruleBuffType = 0;
     // 子类型；−1 不查重。
-    int32_t m_subType = 0;
+    int32_t subType = 0;
     // 优先级。
-    int32_t m_priority = 0;
+    int32_t priority = 0;
     // 最大层数（repeatMax）。
-    int32_t m_maxStacks = 0;
+    int32_t maxStacks = 0;
     // 一次去掉全部层。
-    bool m_removeAllStacks = false;
+    bool removeAllStacks = false;
     // 重复添加方式 0..7。
-    int32_t m_resetType = 0;
+    int32_t resetType = 0;
     // 添加冷却（秒）。
-    Fixed m_cd;
+    Fixed cd;
     // PVP 添加冷却（秒）。
-    Fixed m_cdPvp;
+    Fixed cdPvp;
     // 概率原值。
-    Fixed m_probability;
+    Fixed probability;
     // 为 1 时概率乘已有层数。
-    int32_t m_probabilityRepeat = 0;
+    int32_t probabilityRepeat = 0;
     // 区域过滤。
-    std::vector<int32_t> m_areaMask;
+    std::vector<int32_t> areaMask;
     // 目标选择器 1..10。
-    int32_t m_target = 0;
+    int32_t target = 0;
     // 绑定：1 表示事件技能必须等于绑定技能。
-    int32_t m_binding = 0;
+    int32_t binding = 0;
     // 继承掩码。
-    std::vector<int32_t> m_inherit;
+    std::vector<int32_t> inherit;
     // 添加类型。
-    int32_t m_addType = 0;
+    int32_t addType = 0;
     // 销毁类型。
-    int32_t m_destroyType = 0;
+    int32_t destroyType = 0;
     // 方向。
-    int32_t m_direction = 0;
+    int32_t direction = 0;
     // 伤害类型。
-    int32_t m_hurtType = 0;
+    int32_t hurtType = 0;
 
     MG_REFLECT(BuffAdmission,
-               m_ruleId,
-               m_buffType,
-               m_ruleBuffType,
-               m_subType,
-               m_priority,
-               m_maxStacks,
-               m_removeAllStacks,
-               m_resetType,
-               m_cd,
-               m_cdPvp,
-               m_probability,
-               m_probabilityRepeat,
-               m_areaMask,
-               m_target,
-               m_binding,
-               m_inherit,
-               m_addType,
-               m_destroyType,
-               m_direction,
-               m_hurtType)
+               ruleId,
+               buffType,
+               ruleBuffType,
+               subType,
+               priority,
+               maxStacks,
+               removeAllStacks,
+               resetType,
+               cd,
+               cdPvp,
+               probability,
+               probabilityRepeat,
+               areaMask,
+               target,
+               binding,
+               inherit,
+               addType,
+               destroyType,
+               direction,
+               hurtType)
 };
 
 // 生命周期。语义按源表 times / interval / innerCd 原样保留。
 struct BuffLifecycle
 {
     // 执行类型 1 立即 / 2 等周期 / 3 等事件。
-    int32_t m_executeType = 0;
+    int32_t executeType = 0;
     // 次数；−1 表示按间隔持续。
-    int32_t m_times = 0;
+    int32_t times = 0;
     // 间隔（秒）。
-    Fixed m_intervalSec;
+    Fixed intervalSec;
     // 内部冷却（秒）。
-    Fixed m_innerCdSec;
+    Fixed innerCdSec;
 
-    MG_REFLECT(BuffLifecycle, m_executeType, m_times, m_intervalSec, m_innerCdSec)
+    MG_REFLECT(BuffLifecycle, executeType, times, intervalSec, innerCdSec)
 };
 
 // 激活方式：触发点、过滤、条件与门闩掩码。
 struct BuffActivation
 {
     // 开始触发点；None 表示没有 began。
-    TriggerPoint m_beginOn = TriggerPoint::None;
+    TriggerPoint beginOn = TriggerPoint::None;
     // 结束触发点；None 表示没有 ended。
-    TriggerPoint m_endOn = TriggerPoint::None;
+    TriggerPoint endOn = TriggerPoint::None;
     // 事件目标过滤（eventParam 第一项，0 不过滤）。
-    int32_t m_eventFilter = 0;
+    int32_t eventFilter = 0;
     // 触发一次后退出（eventParam 第二项为 1）。
-    bool m_oneShot = false;
+    bool oneShot = false;
     // 触发时求值的条件。监视类规则把条件放在 Watch 上，这里为空。
-    std::vector<Predicate> m_conditions;
+    std::vector<Predicate> conditions;
     // 常驻 op 激活钩子掩码（BuffHook 按位或）。
-    int32_t m_latchOn = 0;
+    int32_t latchOn = 0;
     // 常驻 op 撤销钩子掩码。
-    int32_t m_releaseOn = 0;
+    int32_t releaseOn = 0;
 
     MG_REFLECT(BuffActivation,
-               m_beginOn,
-               m_endOn,
-               m_eventFilter,
-               m_oneShot,
-               m_conditions,
-               m_latchOn,
-               m_releaseOn)
+               beginOn,
+               endOn,
+               eventFilter,
+               oneShot,
+               conditions,
+               latchOn,
+               releaseOn)
 };
 
 // 表现层透传。逻辑不读这些字段。
 struct BuffPresentation
 {
     // Spine 资源。
-    int32_t m_spineId = 0;
+    int32_t spineId = 0;
     // Spine 层级。
-    int32_t m_spineLayer = 0;
+    int32_t spineLayer = 0;
     // Spine 偏移。
-    std::vector<int32_t> m_spineOffsets;
+    std::vector<int32_t> spineOffsets;
     // Spine 步骤（霸体描边看第一项是否为 1）。
-    std::vector<int32_t> m_spineStep;
+    std::vector<int32_t> spineStep;
     // 音效 id。
-    int32_t m_audioId = 0;
+    int32_t audioId = 0;
     // 图标：整数或资源路径。
-    std::variant<int32_t, std::string> m_icon;
+    std::variant<int32_t, std::string> icon;
     // 图标文本 id。
-    int32_t m_iconDescId = 0;
+    int32_t iconDescId = 0;
     // 名称文本 id。
-    int32_t m_nameId = 0;
+    int32_t nameId = 0;
     // 描述文本 id。
-    int32_t m_descId = 0;
+    int32_t descId = 0;
     // 是否弹提示。
-    int32_t m_showTips = 0;
+    int32_t showTips = 0;
 
     MG_REFLECT(BuffPresentation,
-               m_spineId,
-               m_spineLayer,
-               m_spineOffsets,
-               m_spineStep,
-               m_audioId,
-               m_icon,
-               m_iconDescId,
-               m_nameId,
-               m_descId,
-               m_showTips)
+               spineId,
+               spineLayer,
+               spineOffsets,
+               spineStep,
+               audioId,
+               icon,
+               iconDescId,
+               nameId,
+               descId,
+               showTips)
 };
 
 // 一行 buff 的运行时定义。由 buff.lua 与 buff_rule.lua 降级。
 struct BuffDef
 {
-    // 配置行 id。查找键为 KeyByMId。
-    int32_t m_id = 0;
+    // 配置行 id。查找键为 KeyById。
+    int32_t id = 0;
     // 降级状态。
-    LowerStatus m_status = LowerStatus::Lowered;
+    LowerStatus status = LowerStatus::Lowered;
     // 准入。
-    BuffAdmission m_admission;
+    BuffAdmission admission;
     // 生命周期。
-    BuffLifecycle m_lifecycle;
+    BuffLifecycle lifecycle;
     // 激活。
-    BuffActivation m_activation;
+    BuffActivation activation;
     // 常驻 op：激活时施加，失活时按来源撤销。
-    std::vector<BuffOp> m_persistent;
+    std::vector<BuffOp> persistent;
     // 进入钩子的瞬时 op。
-    std::vector<BuffOp> m_onEnter;
+    std::vector<BuffOp> onEnter;
     // 周期钩子的瞬时 op。
-    std::vector<BuffOp> m_onTick;
+    std::vector<BuffOp> onTick;
     // 事件开始钩子的瞬时 op。
-    std::vector<BuffOp> m_onBegin;
+    std::vector<BuffOp> onBegin;
     // 事件结束钩子的瞬时 op。
-    std::vector<BuffOp> m_onEnd;
+    std::vector<BuffOp> onEnd;
     // 退出钩子的瞬时 op。
-    std::vector<BuffOp> m_onExit;
+    std::vector<BuffOp> onExit;
     // 监视器（Watch / StateTimer）。
-    std::vector<BuffOp> m_watch;
+    std::vector<BuffOp> watch;
     // Choice 分支的扁平 op 池。
-    std::vector<BuffOp> m_choicePool;
+    std::vector<BuffOp> choicePool;
     // 表现透传。
-    BuffPresentation m_presentation;
+    BuffPresentation presentation;
 
     MG_REFLECT(BuffDef,
-               m_id,
-               m_status,
-               m_admission,
-               m_lifecycle,
-               m_activation,
-               m_persistent,
-               m_onEnter,
-               m_onTick,
-               m_onBegin,
-               m_onEnd,
-               m_onExit,
-               m_watch,
-               m_choicePool,
-               m_presentation)
+               id,
+               status,
+               admission,
+               lifecycle,
+               activation,
+               persistent,
+               onEnter,
+               onTick,
+               onBegin,
+               onEnd,
+               onExit,
+               watch,
+               choicePool,
+               presentation)
 };
 
 static_assert(static_cast<int32_t>(TriggerPoint::BeforePrepareSkill) ==

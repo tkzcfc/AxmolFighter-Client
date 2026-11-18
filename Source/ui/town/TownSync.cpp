@@ -1,7 +1,7 @@
 #include "ui/town/TownSync.h"
 
 #include "mugen/conf/TypeConversions.h"
-#include "mugen/sim_legacy/spawn/RoleSpawn.h"
+#include "mugen/sim/view/WorldView.h"
 #include "ui/progress/SessionFashionAppearance.h"
 #include "ui/town/TownFixed.h"
 
@@ -42,7 +42,7 @@ mugen::FixedVec3 movementPos(const PB::Types::TownMovement& movement)
 }
 }  // namespace
 
-TownSync::TownSync(mugen::sim_legacy::World& world, mugen::WorldPresenter& presenter, net::NetAgent& agent)
+TownSync::TownSync(mugen::sim::World& world, mugen::WorldPresenter& presenter, net::NetAgent& agent)
     : m_world(world)
     , m_presenter(presenter)
     , m_agent(agent)
@@ -97,18 +97,19 @@ void TownSync::tick(float /*logicDt*/)
         Snapshot out;
         if (!sampleRemote(entry.second, renderTime, &out))
             continue;
-        m_pendingPuppetUpdates.push_back(
-            {entry.second.entity,
-             toFixedVec3(out.x, out.y, out.z),
-             out.towardX,
-             out.moving ? mugen::EntityRoleStatus::Walk : mugen::EntityRoleStatus::Idle,
-             out.motionName});
+        mugen::sim::PuppetUpdate update;
+        update.entity     = entry.second.entity;
+        update.position   = toFixedVec3(out.x, out.y, out.z);
+        update.towardX    = out.towardX;
+        update.status     = out.moving ? mugen::EntityRoleStatus::Walk : mugen::EntityRoleStatus::Idle;
+        update.motionName = out.motionName;
+        m_pendingPuppetUpdates.push_back(update);
     }
 }
 
-std::vector<mugen::sim_legacy::PuppetUpdate> TownSync::takePuppetUpdates()
+std::vector<mugen::sim::PuppetUpdate> TownSync::takePuppetUpdates()
 {
-    std::vector<mugen::sim_legacy::PuppetUpdate> result;
+    std::vector<mugen::sim::PuppetUpdate> result;
     result.swap(m_pendingPuppetUpdates);
     return result;
 }
@@ -118,7 +119,7 @@ void TownSync::clear()
     for (auto& entry : m_players)
     {
         m_presenter.clearEntityPet(entry.second.entity);
-        m_world.destroy(entry.second.entity);
+        mugen::sim::view::destroyTownEntity(m_world, entry.second.entity);
     }
     m_players.clear();
     m_pendingPuppetUpdates.clear();
@@ -164,7 +165,7 @@ void TownSync::addRemotePlayer(const PB::Types::TownPlayerInfo& info)
     const int32_t toward = info.movement().facing() == 0 ? -1 : 1;
 
     const mugen::Entity entity =
-        mugen::sim_legacy::RoleSpawner(m_world).spawnPuppet(info.player_id(), roleId, movementPos(info.movement()), toward);
+        mugen::sim::view::spawnTownPuppet(m_world, info.player_id(), roleId, movementPos(info.movement()), toward);
     if (entity.value == 0)
         return;
 
@@ -184,7 +185,7 @@ void TownSync::removeRemotePlayer(int64_t playerId)
     if (it == m_players.end())
         return;
     m_presenter.clearEntityPet(it->second.entity);
-    m_world.destroy(it->second.entity);
+    mugen::sim::view::destroyTownEntity(m_world, it->second.entity);
     m_players.erase(it);
 }
 

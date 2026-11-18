@@ -10,23 +10,23 @@ namespace mugen::sim
 struct RoleSpawnParams
 {
     // 角色配置标识。
-    int32_t m_roleId = 0;
+    int32_t roleId = 0;
     // 可选覆盖配置默认阵营。
-    std::optional<int32_t> m_camp;
+    std::optional<int32_t> camp;
     // 角色等级。
-    int32_t m_level = 1;
+    int32_t level = 1;
     // AI 难度等级。
-    int32_t m_aiDifficulty = 1;
+    int32_t aiDifficulty = 1;
     // 出生坐标。
-    FixedVec3 m_position;
+    FixedVec3 position;
     // 初始朝向，仅取 -1 或 1。
-    int32_t m_toward = 1;
+    int32_t toward = 1;
     // 可选绑定到本场世界的玩家槽位。
-    std::optional<uint32_t> m_playerSlot;
+    std::optional<uint32_t> playerSlot;
     // 是否由 AI 驱动。
-    bool m_isAi = false;
+    bool isAi = false;
     // 召唤归属。
-    Entity m_owner;
+    Entity owner;
 };
 namespace role::rules
 {

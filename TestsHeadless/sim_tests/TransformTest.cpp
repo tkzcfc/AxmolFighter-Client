@@ -38,15 +38,15 @@ World makeWorld()
     REQUIRE(room != nullptr);
     setup.mapKey = room->mapKey;
     PlayerSetup player;
-    player.m_roleId = type_conversions::toRoleConfigId(CharacterClass::kSwordman);
-    player.m_level  = 1000;
-    player.m_camp   = 2;
-    player.m_slot   = 0;
-    player.m_isAi   = false;
-    setup.m_players.push_back(player);
-    setup.m_stageId   = 0;
-    setup.m_copyId    = 0;
-    setup.m_aiEnabled = false;
+    player.roleId = type_conversions::toRoleConfigId(CharacterClass::kSwordman);
+    player.level  = 1000;
+    player.camp   = 2;
+    player.slot   = 0;
+    player.isAi   = false;
+    setup.players.push_back(player);
+    setup.stageId   = 0;
+    setup.copyId    = 0;
+    setup.aiEnabled = false;
     REQUIRE_FALSE(bootstrapBattle(world, setup).empty());
     return world;
 }
@@ -55,7 +55,7 @@ Entity roleByConfig(World& world, int32_t configId)
 {
     Entity found;
     world.ecs().each<IdentityComponent>([&](Entity entity, const IdentityComponent& identity) {
-        if (identity.m_configId == configId && identity.m_kind == SpawnKind::Role &&
+        if (identity.configId == configId && identity.kind == SpawnKind::Role &&
             !world.ecs().has<InactiveComponent>(entity))
             found = entity;
     });
@@ -69,13 +69,13 @@ TEST_CASE("transform system inactivates old form and links the new role")
     const Entity hero = roleByConfig(world, 101);
     REQUIRE(hero.value != 0);
     REQUIRE(conf::Config::instance().find<conf::battle::RoleDef>(102) != nullptr);
-    const Fixed hp = world.ecs().get<HealthComponent>(hero).m_hp;
-    const auto pos = world.ecs().get<TransformComponent>(hero).m_position;
+    const Fixed hp = world.ecs().get<HealthComponent>(hero).hp;
+    const auto pos = world.ecs().get<TransformComponent>(hero).position;
 
     TransformRequest request;
-    request.m_entity       = hero;
-    request.m_targetRoleId = 102;
-    request.m_type         = 0;
+    request.entity       = hero;
+    request.targetRoleId = 102;
+    request.type         = 0;
     world.ecs().singleton<EventQueue<TransformRequest>>().push(request);
     runTransform(world);
 
@@ -89,14 +89,14 @@ TEST_CASE("transform system inactivates old form and links the new role")
     CHECK(world.ecs().has<TransformLinkComponent>(neu));
     const auto& oldLink = world.ecs().get<TransformLinkComponent>(hero);
     const auto& newLink = world.ecs().get<TransformLinkComponent>(neu);
-    REQUIRE(oldLink.m_members.size() == 2);
-    CHECK(oldLink.m_members == newLink.m_members);
-    CHECK(world.ecs().get<HealthComponent>(neu).m_hp == hp);
-    CHECK(world.ecs().get<TransformComponent>(neu).m_position.x == pos.x);
-    CHECK(world.ecs().get<IdentityComponent>(neu).m_camp == 2);
+    REQUIRE(oldLink.members.size() == 2);
+    CHECK(oldLink.members == newLink.members);
+    CHECK(world.ecs().get<HealthComponent>(neu).hp == hp);
+    CHECK(world.ecs().get<TransformComponent>(neu).position.x == pos.x);
+    CHECK(world.ecs().get<IdentityComponent>(neu).camp == 2);
     bool sawSwap = false;
-    for (const auto& cue : world.ecs().singleton<EventQueue<CueEvent>>().m_items)
-        if (cue.m_kind == CueKind::TransformSwap && cue.m_entity == neu)
+    for (const auto& cue : world.ecs().singleton<EventQueue<CueEvent>>().items)
+        if (cue.kind == CueKind::TransformSwap && cue.entity == neu)
             sawSwap = true;
     CHECK(sawSwap);
 }
@@ -127,19 +127,19 @@ TEST_CASE("transform cue on role clip emits TransformRequest once")
     REQUIRE(clipId != 0);
 
     auto& book = world.ecs().get<SkillBookComponent>(hero);
-    REQUIRE_FALSE(book.m_skills.empty());
-    world.ecs().get<SkillCastComponent>(hero).m_skill = 0;
-    world.ecs().get<RoleStateComponent>(hero).m_state = RoleStateId::Attack;
+    REQUIRE_FALSE(book.skills.empty());
+    world.ecs().get<SkillCastComponent>(hero).skill = 0;
+    world.ecs().get<RoleStateComponent>(hero).state = RoleStateId::Attack;
     auto& timeline   = world.ecs().get<ActionTimelineComponent>(hero);
-    timeline.m_clips = {clipId};
+    timeline.clips = {clipId};
     REQUIRE(timeline::rules::enterClip(world, hero, clipId, false, false));
 
     int32_t count = 0;
     for (int i = 0; i < 180; ++i)
     {
         timeline::rules::advanceClip(world, hero);
-        for (const auto& request : world.ecs().singleton<EventQueue<TransformRequest>>().m_items)
-            if (request.m_entity == hero && request.m_targetRoleId == transformId)
+        for (const auto& request : world.ecs().singleton<EventQueue<TransformRequest>>().items)
+            if (request.entity == hero && request.targetRoleId == transformId)
                 ++count;
         if (count > 0)
             break;
@@ -147,8 +147,8 @@ TEST_CASE("transform cue on role clip emits TransformRequest once")
     CHECK(count == 1);
     timeline::rules::advanceClip(world, hero);
     int32_t again = 0;
-    for (const auto& request : world.ecs().singleton<EventQueue<TransformRequest>>().m_items)
-        if (request.m_entity == hero && request.m_targetRoleId == transformId)
+    for (const auto& request : world.ecs().singleton<EventQueue<TransformRequest>>().items)
+        if (request.entity == hero && request.targetRoleId == transformId)
             ++again;
     CHECK(again == 1);
 }

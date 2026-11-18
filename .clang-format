@@ -4,8 +4,8 @@
 # See Clang docs: http://clang.llvm.org/docs/ClangFormatStyleOptions.html
 BasedOnStyle: Chromium
 
-# Allow double brackets such as std::vector<std::vector<int>>.
-Standard: Cpp11
+# Parse as C++20 (nested templates such as std::vector<std::vector<int>> need no spaces).
+Standard: Cpp20
 
 # Indent 4 spaces at a time.
 IndentWidth: 4

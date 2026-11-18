@@ -15,3 +15,8 @@
 # 新 sim 用单值枚举（sim/role/RoleState.h），按 DESIGN §6.4 的 P-3 设计决策不表示瞬时双位。
 # 属设计差异，非 bug：比较规则不放宽，该场景 FAIL 保留为已知。
 # state copy_room_class1 key=role:21881#* legacy role status is a bitmask and emits a one-frame dual-bit transient during hit-family transitions (e.g. Hit,Idle→HitUp,Hit,Idle→HitUp,Idle; 8 groups × role:21881#1/#3); the new sim uses a single-value enum (sim/role/RoleState.h) and per DESIGN §6.4 P-3 does not represent the transient dual-bit state — a design difference, not a bug; the comparison rule is not relaxed and the scenario FAIL is kept as known
+#
+# class1_swordman（帧 127 fx:920310#1）与 class2_ranger（帧 41 fx:930120#1）：1fd778a 毫秒采样与补齐片段时长后，
+# legacy 在 Effect.cpp 先采样碰撞框（motionUpdate）再执行 actor.follow()，导致 follow=1 特效攻击框滞后主人位移一帧；
+# 新 sim 按 R12 在 P5.2 FollowSystem 更新贴合位置后再由 P6.2 HitboxSystem 采样碰撞框，当帧即使用主人突进后的真实位置。
+# 属已知旧实现一帧滞后差异，非新 sim bug。

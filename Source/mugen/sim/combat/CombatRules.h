@@ -17,28 +17,28 @@ namespace combat::rules
 struct HitContext
 {
     // 触发本次管线的接触。
-    ContactEvent m_contact;
+    ContactEvent contact;
     // 攻击特效。
-    Entity m_effect;
+    Entity effect;
     // 受击目标。
-    Entity m_target;
+    Entity target;
     // 属性来源（特效主人）。
-    Entity m_attacker;
+    Entity attacker;
     // 特效配置标识。
-    int32_t m_effectId = 0;
+    int32_t effectId = 0;
     // 来源技能与槽首技能。
-    int32_t m_skillId = -1;
-    int32_t m_baseSkillId = -1;
+    int32_t skillId = -1;
+    int32_t baseSkillId = -1;
     // 技能槽位下标。
-    int32_t m_slot = 0;
+    int32_t slot = 0;
     // 命中配置（进程级只读）。
-    const conf::battle::HitDef* m_hit = nullptr;
+    const conf::battle::HitDef* hit = nullptr;
     // 特效配置（进程级只读）。
-    const conf::battle::EffectDef* m_effectRow = nullptr;
+    const conf::battle::EffectDef* effectRow = nullptr;
     // 本次伤害（取整后）。
-    Fixed m_damage;
+    Fixed damage;
     // 是否暴击。
-    bool m_critical = false;
+    bool critical = false;
 };
 
 // 步骤 1：门控。通过时填好上下文。
@@ -61,6 +61,10 @@ void requestHitReaction(World& world, const HitContext& ctx);
 void spawnHitEffects(World& world, const HitContext& ctx);
 // 步骤 15：发出命中事实。
 void emitHit(World& world, const HitContext& ctx);
+// 命中后按倍率回复 EP；曝气状态下不回复。
+void recoverEp(World& world, Entity entity, Fixed value);
+// 命中结算：仇恨、连击评价与受击回 EP（在 AfterToBeHit 之前）。
+void settleHitFeedback(World& world, const HitContext& ctx);
 // autoRelease 2/3：命中目标数达标则回收；3 保留后继，2 关闭后继。
 void expireByHitCount(World& world);
 }  // namespace combat::rules

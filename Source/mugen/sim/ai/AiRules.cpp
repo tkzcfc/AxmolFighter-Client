@@ -69,8 +69,8 @@ bool skillReady(const std::vector<Fixed>& intervals, const conf::battle::AiDef* 
     }
     if (!row)
         return false;
-    for (const auto& values : row->m_skillPriorityLevelCd)
-        if ((values.empty() ? row->m_skillInterval : values.front()) <= 0)
+    for (const auto& values : row->skillPriorityLevelCd)
+        if ((values.empty() ? row->skillInterval : values.front()) <= 0)
             return true;
     return false;
 }
@@ -78,7 +78,7 @@ bool skillReady(const std::vector<Fixed>& intervals, const conf::battle::AiDef* 
 int8_t ruleIndex(AiAction action)
 {
     for (size_t index = 0; index < kMonsterRules.size(); ++index)
-        if (kMonsterRules[index].m_action == action)
+        if (kMonsterRules[index].action == action)
             return static_cast<int8_t>(index);
     return -1;
 }
@@ -90,9 +90,9 @@ bool isMoveAction(AiAction action)
 // 生命上限不为正时百分比为零。
 int32_t hpPercent(const HealthComponent& health)
 {
-    if (health.m_maxHp <= Fixed{})
+    if (health.maxHp <= Fixed{})
         return 0;
-    return static_cast<int32_t>((health.m_hp * Fixed::fromInt(100) / health.m_maxHp).toInt());
+    return static_cast<int32_t>((health.hp * Fixed::fromInt(100) / health.maxHp).toInt());
 }
 // 按角色配置与 1-based 难度下标解析 aiId；难度越界回退最后一项（与旧实现 RoleSpawner 一致）。
 int32_t resolveAiId(const conf::battle::RoleDef& role, int32_t aiDifficulty)
@@ -109,16 +109,16 @@ bool alive(World& world, Entity entity)
 {
     if (!world.ecs().has<RoleStateComponent>(entity))
         return false;
-    if (world.ecs().get<RoleStateComponent>(entity).m_state == RoleStateId::Death)
+    if (world.ecs().get<RoleStateComponent>(entity).state == RoleStateId::Death)
         return false;
-    return !(world.ecs().has<HealthComponent>(entity) && world.ecs().get<HealthComponent>(entity).m_dead);
+    return !(world.ecs().has<HealthComponent>(entity) && world.ecs().get<HealthComponent>(entity).dead);
 }
 // 不可命中状态不参与普通 AI 目标选择。
 bool hittable(World& world, Entity entity)
 {
     if (!alive(world, entity))
         return false;
-    if (world.ecs().has<HealthComponent>(entity) && !world.ecs().get<HealthComponent>(entity).m_beHitEnabled)
+    if (world.ecs().has<HealthComponent>(entity) && !world.ecs().get<HealthComponent>(entity).beHitEnabled)
         return false;
     return !(world.ecs().has<StatusFlagsComponent>(entity) &&
              world.ecs().get<StatusFlagsComponent>(entity).active(mugen::ExtraState::Stealth));
@@ -130,20 +130,20 @@ Entity sneerTarget(World& world, Entity self)
         return {};
     Entity best;
     Fixed bestWeight;
-    for (const auto& entry : world.ecs().get<TauntTableComponent>(self).m_entries)
-        if (entry.m_weight > bestWeight)
+    for (const auto& entry : world.ecs().get<TauntTableComponent>(self).entries)
+        if (entry.weight > bestWeight)
         {
-            bestWeight = entry.m_weight;
-            best       = entry.m_applicator;
+            bestWeight = entry.weight;
+            best       = entry.applicator;
         }
     return best;
 }
 // 受击、仇恨记录或有效嘲讽都算激怒。
 bool provoked(World& world, Entity self, const AiBrainComponent& brain)
 {
-    if (role::isTobeHit(world.ecs().get<RoleStateComponent>(self).m_state))
+    if (role::isTobeHit(world.ecs().get<RoleStateComponent>(self).state))
         return true;
-    if (!brain.m_threat.empty())
+    if (!brain.threat.empty())
         return true;
     return alive(world, sneerTarget(world, self));
 }
@@ -151,7 +151,7 @@ bool provoked(World& world, Entity self, const AiBrainComponent& brain)
 bool canAct(World& world, Entity self)
 {
     const auto& state = world.ecs().get<RoleStateComponent>(self);
-    if (state.m_state == RoleStateId::Death || role::isTobeHit(state.m_state))
+    if (state.state == RoleStateId::Death || role::isTobeHit(state.state))
         return false;
     return !world.ecs().has<StatusFlagsComponent>(self) ||
            world.ecs().get<StatusFlagsComponent>(self).canControl();
@@ -160,14 +160,14 @@ bool canAct(World& world, Entity self)
 std::vector<Entity> candidates(World& world, Entity self)
 {
     std::vector<Entity> result;
-    const int camp = world.ecs().get<IdentityComponent>(self).m_camp;
+    const int camp = world.ecs().get<IdentityComponent>(self).camp;
     world.ecs().each<IdentityComponent, HealthComponent>(
         [&](Entity other, const IdentityComponent& identity, const HealthComponent&) {
         if (world.ecs().has<InactiveComponent>(other) || world.ecs().has<DespawningComponent>(other))
             return;
-        if (identity.m_kind != SpawnKind::Role)
+        if (identity.kind != SpawnKind::Role)
             return;
-        if (camp == identity.m_camp || campGroup(camp) == 0 || campGroup(camp) == campGroup(identity.m_camp))
+        if (camp == identity.camp || campGroup(camp) == 0 || campGroup(camp) == campGroup(identity.camp))
             return;
         if (hittable(world, other))
             result.push_back(other);
@@ -177,16 +177,16 @@ std::vector<Entity> candidates(World& world, Entity self)
 // 先看已锁定目标再按创建顺序看候选者，用带符号的索敌区间；没有目标时返回自身哨兵。
 Entity sightTarget(World& world, Entity self, const AiBrainComponent& brain, const conf::battle::AiDef& row)
 {
-    const FixedVec3 origin = world.ecs().get<TransformComponent>(self).m_position;
-    const Entity locked    = brain.m_target;
+    const FixedVec3 origin = world.ecs().get<TransformComponent>(self).position;
+    const Entity locked    = brain.target;
     if (const auto* other = world.ecs().tryGet<TransformComponent>(locked))
-        if (locked != self && contains(row.m_targetScopeX, origin.x - other->m_position.x) &&
-            contains(row.m_targetScopeZ, origin.z - other->m_position.z))
+        if (locked != self && contains(row.targetScopeX, origin.x - other->position.x) &&
+            contains(row.targetScopeZ, origin.z - other->position.z))
             return locked;
     for (const Entity other : candidates(world, self))
     {
-        const auto pos = world.ecs().get<TransformComponent>(other).m_position;
-        if (contains(row.m_targetScopeX, origin.x - pos.x) && contains(row.m_targetScopeZ, origin.z - pos.z))
+        const auto pos = world.ecs().get<TransformComponent>(other).position;
+        if (contains(row.targetScopeX, origin.x - pos.x) && contains(row.targetScopeZ, origin.z - pos.z))
             return other;
     }
     return self;
@@ -197,16 +197,16 @@ bool outsideChase(World& world, Entity self, Entity target, const conf::battle::
     const auto* other = world.ecs().tryGet<TransformComponent>(target);
     if (!other)
         return false;
-    if (bound(row.m_chaseScopeX, 0) == Fixed{} && bound(row.m_chaseScopeX, 1) == Fixed{} &&
-        bound(row.m_chaseScopeZ, 0) == Fixed{} && bound(row.m_chaseScopeZ, 1) == Fixed{})
+    if (bound(row.chaseScopeX, 0) == Fixed{} && bound(row.chaseScopeX, 1) == Fixed{} &&
+        bound(row.chaseScopeZ, 0) == Fixed{} && bound(row.chaseScopeZ, 1) == Fixed{})
         return false;
-    const auto selfPos = world.ecs().get<TransformComponent>(self).m_position;
-    const Fixed x      = selfPos.x - other->m_position.x;
-    const Fixed z      = selfPos.z - other->m_position.z;
+    const auto selfPos = world.ecs().get<TransformComponent>(self).position;
+    const Fixed x      = selfPos.x - other->position.x;
+    const Fixed z      = selfPos.z - other->position.z;
     if (x == Fixed{} && z == Fixed{})
         return false;
-    if (x != Fixed{} && z != Fixed{} && contains(row.m_chaseScopeX, absValue(x)) &&
-        contains(row.m_chaseScopeZ, absValue(z)))
+    if (x != Fixed{} && z != Fixed{} && contains(row.chaseScopeX, absValue(x)) &&
+        contains(row.chaseScopeZ, absValue(z)))
         return false;
     return true;
 }
@@ -214,7 +214,7 @@ bool outsideChase(World& world, Entity self, Entity target, const conf::battle::
 FixedVec3 calcPos(World& world, Entity self, FixedVec3 point)
 {
     const auto& map    = world.ecs().singleton<MapRegion>();
-    const Fixed radius = world.ecs().has<HitboxesComponent>(self) ? world.ecs().get<HitboxesComponent>(self).m_radius
+    const Fixed radius = world.ecs().has<HitboxesComponent>(self) ? world.ecs().get<HitboxesComponent>(self).radius
                                                                   : Fixed{};
     auto edge = map.getLeftRegion({point.x - radius, point.z});
     if (point.x != edge)
@@ -238,18 +238,18 @@ AiFacts gather(World& world, Entity self, const AiBrainComponent& brain, const c
     const auto& state  = world.ecs().get<RoleStateComponent>(self);
     const auto& health = world.ecs().get<HealthComponent>(self);
     const int32_t current =
-        world.ecs().has<SkillCastComponent>(self) ? world.ecs().get<SkillCastComponent>(self).m_skill : kNoSkill;
-    facts.m_alerted            = brain.m_alerted;
-    facts.m_provoked           = provoked(world, self, brain);
-    facts.m_hasTarget          = brain.m_target != self && world.ecs().tryGet<TransformComponent>(brain.m_target) != nullptr;
-    facts.m_targetInSight      = sightTarget(world, self, brain, row) != self;
-    facts.m_targetOutsideChase = facts.m_hasTarget && outsideChase(world, self, brain.m_target, row);
-    facts.m_skillReady         = current != kNoSkill || skillReady(brain.m_skillIntervalMs, &row);
+        world.ecs().has<SkillCastComponent>(self) ? world.ecs().get<SkillCastComponent>(self).skill : kNoSkill;
+    facts.alerted            = brain.alerted;
+    facts.provoked           = provoked(world, self, brain);
+    facts.hasTarget          = brain.target != self && world.ecs().tryGet<TransformComponent>(brain.target) != nullptr;
+    facts.targetInSight      = sightTarget(world, self, brain, row) != self;
+    facts.targetOutsideChase = facts.hasTarget && outsideChase(world, self, brain.target, row);
+    facts.skillReady         = current != kNoSkill || skillReady(brain.skillIntervalMs, &row);
     // 只有角色仍在移动状态时，移动规则才继续占据决策；施法/待机时恢复完整规则匹配。
-    facts.m_movingRule         = role::isMoveState(state.m_state) ? brain.m_movingRule : -1;
-    facts.m_lastAction         = facts.m_movingRule >= 0 ? AiAction::Idle : brain.m_lastAction;
-    facts.m_hpPercent          = hpPercent(health);
-    facts.m_inAttack           = state.m_state == RoleStateId::Attack;
+    facts.movingRule         = role::isMoveState(state.state) ? brain.movingRule : -1;
+    facts.lastAction         = facts.movingRule >= 0 ? AiAction::Idle : brain.lastAction;
+    facts.hpPercent          = hpPercent(health);
+    facts.inAttack           = state.state == RoleStateId::Attack;
     return facts;
 }
 // 写入一条朝向 targetPos 的移动意图，怪物沿既有位移推进（与玩家共用路径）。
@@ -258,30 +258,30 @@ AiFacts gather(World& world, Entity self, const AiBrainComponent& brain, const c
 void writeMoveIntent(World& world, Entity self, FixedVec3 to)
 {
     auto& intent        = world.ecs().get<IntentComponent>(self);
-    const FixedVec3 from = world.ecs().get<TransformComponent>(self).m_position;
+    const FixedVec3 from = world.ecs().get<TransformComponent>(self).position;
     const Fixed dx = to.x - from.x, dz = to.z - from.z;
     if (dx == Fixed{} && dz == Fixed{})
     {
-        intent.m_move.m_mode     = MoveMode::Stop;
-        intent.m_move.m_quadrant = ControlQuadrant::None;
-        intent.m_move.m_angle    = 0;
-        intent.m_move.m_targetPos = to;
+        intent.move.mode     = MoveMode::Stop;
+        intent.move.quadrant = ControlQuadrant::None;
+        intent.move.angle    = 0;
+        intent.move.targetPos = to;
         return;
     }
-    intent.m_move.m_mode = MoveMode::Walk;
-    intent.m_move.m_targetPos = to;
+    intent.move.mode = MoveMode::Walk;
+    intent.move.targetPos = to;
     // 方向由象限承载，斜率角只给 0–90°（0 轴对齐、90000 纯垂直）。
-    intent.m_move.m_quadrant = dx >= Fixed{} ? (dz >= Fixed{} ? ControlQuadrant::UpRight : ControlQuadrant::DownRight)
+    intent.move.quadrant = dx >= Fixed{} ? (dz >= Fixed{} ? ControlQuadrant::UpRight : ControlQuadrant::DownRight)
                                              : (dz >= Fixed{} ? ControlQuadrant::UpLeft : ControlQuadrant::DownLeft);
     const Fixed deg = FixedMath::atan2Deg(absValue(dz), absValue(dx));
-    intent.m_move.m_angle = (deg * Fixed::fromInt(1000)).toInt();
+    intent.move.angle = (deg * Fixed::fromInt(1000)).toInt();
 }
 // 写入一条施法按键意图（按下类型 1），并标记为自动施法。
 void writeCastIntent(World& world, Entity self, ControlEvent event)
 {
     auto& intent = world.ecs().get<IntentComponent>(self);
-    intent.m_buttons.push_back({event, 1, 0});
-    intent.m_autoCast = true;
+    intent.buttons.push_back({event, 1, 0});
+    intent.autoCast = true;
 }
 // 通过按键通道请求醒/待机技能（otherSkillIds 分别落槽 H/I/J）。first 为醒技能，否则待机技能。
 bool castSpecial(World& world, Entity self, bool first, const conf::battle::AiDef& row)
@@ -291,9 +291,9 @@ bool castSpecial(World& world, Entity self, bool first, const conf::battle::AiDe
     if (!first && candidates(world, self).empty())
         return false;
     const size_t otherIndex = first ? 0 : 2;
-    if (otherIndex >= row.m_otherSkillIds.size())
+    if (otherIndex >= row.otherSkillIds.size())
         return false;
-    if (firstValue(row.m_otherSkillIds, otherIndex, -1) == -1)
+    if (firstValue(row.otherSkillIds, otherIndex, -1) == -1)
         return false;
     const auto event = static_cast<ControlEvent>(static_cast<int32_t>(ControlEvent::CTR_ATKH) + otherIndex);
     writeCastIntent(world, self, event);
@@ -304,31 +304,31 @@ bool castBest(World& world, Entity self, AiBrainComponent& brain, const conf::ba
 {
     if (candidates(world, self).empty() || !canAct(world, self))
         return false;
-    auto& intervals = brain.m_skillIntervalMs;
+    auto& intervals = brain.skillIntervalMs;
     if (intervals.empty())
-        for (const auto& values : row.m_skillPriorityLevelCd)
-            intervals.push_back(Fixed::fromInt(values.empty() ? row.m_skillInterval : values[0]));
+        for (const auto& values : row.skillPriorityLevelCd)
+            intervals.push_back(Fixed::fromInt(values.empty() ? row.skillInterval : values[0]));
     std::vector<size_t> ready;
     for (size_t i = 0; i < intervals.size(); ++i)
         if (intervals[i] <= Fixed{})
             ready.push_back(i);
     std::sort(ready.begin(), ready.end(), [&](size_t a, size_t b) {
-        const auto pa = firstValue(row.m_skillPriorityLevel, a, 1), pb = firstValue(row.m_skillPriorityLevel, b, 1);
+        const auto pa = firstValue(row.skillPriorityLevel, a, 1), pb = firstValue(row.skillPriorityLevel, b, 1);
         return pa == pb ? a < b : pa > pb;
     });
     for (const size_t index : ready)
     {
-        if (index >= row.m_skillIds.size() || firstValue(row.m_skillIds, index, -1) == -1)
+        if (index >= row.skillIds.size() || firstValue(row.skillIds, index, -1) == -1)
             continue;
         const auto event = static_cast<ControlEvent>(static_cast<int32_t>(ControlEvent::CTR_ATKA) + index);
         writeCastIntent(world, self, event);
-        const auto priority = firstValue(row.m_skillPriorityLevel, index, 1);
-        for (size_t i = 0; i < row.m_skillPriorityLevel.size(); ++i)
-            if (firstValue(row.m_skillPriorityLevel, i, 1) == priority)
+        const auto priority = firstValue(row.skillPriorityLevel, index, 1);
+        for (size_t i = 0; i < row.skillPriorityLevel.size(); ++i)
+            if (firstValue(row.skillPriorityLevel, i, 1) == priority)
             {
                 if (intervals.size() <= i)
                     intervals.resize(i + 1);
-                intervals[i] = Fixed::fromInt(firstValue(row.m_skillPriorityLevelCd, i, row.m_skillInterval));
+                intervals[i] = Fixed::fromInt(firstValue(row.skillPriorityLevelCd, i, row.skillInterval));
             }
         return true;
     }
@@ -338,52 +338,52 @@ bool castBest(World& world, Entity self, AiBrainComponent& brain, const conf::ba
 bool move(World& world, Entity self, AiBrainComponent& brain, AiAction action, const conf::battle::AiDef& row)
 {
     const bool patrol = action == AiAction::Patrol, chase = action == AiAction::Chase;
-    if (!chase && role::isMoveState(world.ecs().get<RoleStateComponent>(self).m_state))
+    if (!chase && role::isMoveState(world.ecs().get<RoleStateComponent>(self).state))
         return patrol;
     if (!canAct(world, self))
         return false;
-    const FixedVec3 selfPos = world.ecs().get<TransformComponent>(self).m_position;
+    const FixedVec3 selfPos = world.ecs().get<TransformComponent>(self).position;
     FixedVec3 center        = selfPos;
     if (!patrol)
     {
-        const auto* target = world.ecs().tryGet<TransformComponent>(brain.m_target);
+        const auto* target = world.ecs().tryGet<TransformComponent>(brain.target);
         if (!target)
             return false;
-        center = target->m_position;
+        center = target->position;
     }
-    const auto& xs    = patrol ? row.m_patrolScopeX : row.m_chaseScopeX;
-    const auto& zs    = patrol ? row.m_patrolScopeZ : row.m_chaseScopeZ;
+    const auto& xs    = patrol ? row.patrolScopeX : row.chaseScopeX;
+    const auto& zs    = patrol ? row.patrolScopeZ : row.chaseScopeZ;
     const Fixed x     = chase ? bound(xs, 1) : rng::drawF(world, rng::DrawKind::AiWander, bound(xs, 0), bound(xs, 1));
     const Fixed z     = chase ? bound(zs, 1) : rng::drawF(world, rng::DrawKind::AiWander, bound(zs, 0), bound(zs, 1));
-    const Fixed radius = world.ecs().has<HitboxesComponent>(self) ? world.ecs().get<HitboxesComponent>(self).m_radius
+    const Fixed radius = world.ecs().has<HitboxesComponent>(self) ? world.ecs().get<HitboxesComponent>(self).radius
                                                                   : Fixed{};
     if (!chase && absValue(x) < radius && absValue(z) < radius)
         return false;
     center.x += !patrol && center.x > selfPos.x ? -x : x;
     center.z += !patrol && center.z > selfPos.z ? -z : z;
     const FixedVec3 goal = calcPos(world, self, center);
-    brain.m_moveTarget   = goal;
+    brain.moveTarget   = goal;
     writeMoveIntent(world, self, goal);
-    brain.m_movingRule = ruleIndex(action);
+    brain.movingRule = ruleIndex(action);
     return true;
 }
-// 延续既有移动：朝 m_moveTarget 续写移动意图；到达（近于一帧步长）则停下并返回 false。
+// 延续既有移动：朝 moveTarget 续写移动意图；到达（近于一帧步长）则停下并返回 false。
 bool continueMove(World& world, Entity self, AiBrainComponent& brain)
 {
     auto& ecs            = world.ecs();
-    const FixedVec3 pos  = ecs.get<TransformComponent>(self).m_position;
-    const FixedVec3 goal = brain.m_moveTarget;
+    const FixedVec3 pos  = ecs.get<TransformComponent>(self).position;
+    const FixedVec3 goal = brain.moveTarget;
     const Fixed dx       = goal.x - pos.x, dz = goal.z - pos.z;
-    Fixed step           = ecs.singleton<WorldClock>().m_dtMs;
+    Fixed step           = ecs.singleton<WorldClock>().dtMs;
     const auto& identity = ecs.get<IdentityComponent>(self);
-    if (const auto* role = conf::Config::instance().find<conf::battle::RoleDef>(identity.m_configId))
-        step = role->velocity * conf::kWalkRate * ecs.singleton<WorldClock>().m_dtMs;
+    if (const auto* role = conf::Config::instance().find<conf::battle::RoleDef>(identity.configId))
+        step = role->velocity * conf::kWalkRate * ecs.singleton<WorldClock>().dtMs;
     if (absValue(dx) <= step && absValue(dz) <= step)
     {
         auto& intent        = ecs.get<IntentComponent>(self);
-        intent.m_move.m_mode     = MoveMode::Stop;
-        intent.m_move.m_quadrant = ControlQuadrant::None;
-        intent.m_move.m_angle    = 0;
+        intent.move.mode     = MoveMode::Stop;
+        intent.move.quadrant = ControlQuadrant::None;
+        intent.move.angle    = 0;
         return false;
     }
     writeMoveIntent(world, self, goal);
@@ -416,93 +416,93 @@ void selectTarget(World& world, Entity self, AiBrainComponent& brain, const conf
     const Entity taunt = sneerTarget(world, self);
     if (alive(world, taunt))
     {
-        brain.m_target = taunt;
+        brain.target = taunt;
         return;
     }
-    if (!brain.m_alerted && !provoked(world, self, brain))
+    if (!brain.alerted && !provoked(world, self, brain))
     {
-        brain.m_target = sightTarget(world, self, brain, row);
+        brain.target = sightTarget(world, self, brain, row);
         return;
     }
-    if (hittable(world, brain.m_target))
+    if (hittable(world, brain.target))
         return;
     const auto enemies = candidates(world, self);
     if (enemies.empty())
     {
-        brain.m_target = self;
+        brain.target = self;
         return;
     }
-    brain.m_target = enemies[static_cast<size_t>(rng::drawN(world, rng::DrawKind::AiTarget, 0,
+    brain.target = enemies[static_cast<size_t>(rng::drawN(world, rng::DrawKind::AiTarget, 0,
                                                             static_cast<int32_t>(enemies.size() - 1)))];
 }
 // 选择严格高于当前目标权重的有效攻击者，然后清空本周期记录。
 void changeTarget(World& world, AiBrainComponent& brain)
 {
     Fixed best;
-    for (const auto& value : brain.m_threat)
-        if (value.m_source == brain.m_target)
-            best = value.m_damage;
-    for (const auto& value : brain.m_threat)
-        if (value.m_damage > best && hittable(world, value.m_source))
+    for (const auto& value : brain.threat)
+        if (value.source == brain.target)
+            best = value.damage;
+    for (const auto& value : brain.threat)
+        if (value.damage > best && hittable(world, value.source))
         {
-            best            = value.m_damage;
-            brain.m_target  = value.m_source;
+            best            = value.damage;
+            brain.target  = value.source;
         }
-    brain.m_threat.clear();
+    brain.threat.clear();
 }
 // ChancePercent 只能出现在本行最后，避免前面的判断失败前就消耗随机数。
 void assertChanceLast(const AiRule& rule)
 {
-    MG_ASSERT(rule.m_testCount <= rule.m_tests.size() && "AI rule has too many tests");
-    for (uint8_t index = 0; index < rule.m_testCount; ++index)
-        if (rule.m_tests[index].m_kind == AiCondition::ChancePercent)
-            MG_ASSERT(index + 1 == rule.m_testCount && "ChancePercent must be the last test");
+    MG_ASSERT(rule.testCount <= rule.tests.size() && "AI rule has too many tests");
+    for (uint8_t index = 0; index < rule.testCount; ++index)
+        if (rule.tests[index].kind == AiCondition::ChancePercent)
+            MG_ASSERT(index + 1 == rule.testCount && "ChancePercent must be the last test");
 }
 // 计算单项判断；只有 ChancePercent 会推进本场随机数。
 bool passes(const AiTest& test, const AiFacts& facts, World& world)
 {
     bool pass = false;
-    switch (test.m_kind)
+    switch (test.kind)
     {
     case AiCondition::Always:
         pass = true;
         break;
     case AiCondition::Alerted:
-        pass = facts.m_alerted;
+        pass = facts.alerted;
         break;
     case AiCondition::Provoked:
-        pass = facts.m_provoked;
+        pass = facts.provoked;
         break;
     case AiCondition::HasTarget:
-        pass = facts.m_hasTarget;
+        pass = facts.hasTarget;
         break;
     case AiCondition::TargetInSight:
-        pass = facts.m_targetInSight;
+        pass = facts.targetInSight;
         break;
     case AiCondition::TargetOutsideChase:
-        pass = facts.m_targetOutsideChase;
+        pass = facts.targetOutsideChase;
         break;
     case AiCondition::SkillReady:
-        pass = facts.m_skillReady;
+        pass = facts.skillReady;
         break;
     case AiCondition::LastActionIs:
-        pass = static_cast<int32_t>(facts.m_lastAction) == test.m_value;
+        pass = static_cast<int32_t>(facts.lastAction) == test.value;
         break;
     case AiCondition::HpBelowPercent:
-        pass = facts.m_hpPercent < test.m_value;
+        pass = facts.hpPercent < test.value;
         break;
     case AiCondition::ChancePercent:
-        pass = rng::draw(world, rng::DrawKind::AiChance) <= Fixed::fromInt(test.m_value);
+        pass = rng::draw(world, rng::DrawKind::AiChance) <= Fixed::fromInt(test.value);
         break;
     }
-    return test.m_negate ? !pass : pass;
+    return test.negate ? !pass : pass;
 }
 // 本行全部有效判断都成立才命中。
 bool matches(const AiRule& rule, const AiFacts& facts, World& world)
 {
     assertChanceLast(rule);
-    for (uint8_t index = 0; index < rule.m_testCount; ++index)
-        if (!passes(rule.m_tests[index], facts, world))
+    for (uint8_t index = 0; index < rule.testCount; ++index)
+        if (!passes(rule.tests[index], facts, world))
             return false;
     return true;
 }
@@ -514,12 +514,12 @@ void buildMonsterSkillBook(World& world, Entity entity, const conf::battle::AiDe
     const auto addSlot = [&](int32_t firstId, const char* name) {
         if (firstId == -1)
             return;
-        const int32_t slotIndex = static_cast<int32_t>(book.m_slots.size());
-        book.m_slots.emplace_back(name);
+        const int32_t slotIndex = static_cast<int32_t>(book.slots.size());
+        book.slots.emplace_back(name);
         std::vector<int32_t> visited;
         int32_t id   = firstId;
         int32_t step = 1;
-        const size_t start = book.m_skills.size();
+        const size_t start = book.skills.size();
         while (id != -1)
         {
             const auto* def = conf::Config::instance().find<conf::battle::SkillDef>(id);
@@ -532,35 +532,35 @@ void buildMonsterSkillBook(World& world, Entity entity, const conf::battle::AiDe
             }
             visited.push_back(id);
             SkillRuntime rt;
-            rt.m_slot         = slotIndex;
-            rt.m_configId     = id;
-            rt.m_step         = step;
-            rt.m_stepCount    = 1;
-            rt.m_link         = 1;
-            rt.m_mode         = 1;
-            rt.m_releaseMax   = def->charges == -1 ? 1 : std::max(1, def->charges);
-            rt.m_releaseCount = rt.m_releaseMax;
-            rt.m_coldMaxTime  = Fixed::fromInt(def->cdMs);
-            rt.m_cd           = {};
-            book.m_skills.push_back(std::move(rt));
+            rt.slot         = slotIndex;
+            rt.configId     = id;
+            rt.step         = step;
+            rt.stepCount    = 1;
+            rt.link         = 1;
+            rt.mode         = 1;
+            rt.releaseMax   = def->charges == -1 ? 1 : std::max(1, def->charges);
+            rt.releaseCount = rt.releaseMax;
+            rt.coldMaxTime  = Fixed::fromInt(def->cdMs);
+            rt.cd           = {};
+            book.skills.push_back(std::move(rt));
             ++step;
             id = def->next;
         }
-        for (size_t i = start; i < book.m_skills.size(); ++i)
-            book.m_skills[i].m_stepCount = step - 1;
-        if (start < book.m_skills.size())
+        for (size_t i = start; i < book.skills.size(); ++i)
+            book.skills[i].stepCount = step - 1;
+        if (start < book.skills.size())
         {
-            for (size_t i = start; i < book.m_skills.size(); ++i)
-                book.m_skills[i].m_finally = false;
-            book.m_skills.back().m_finally = true;
+            for (size_t i = start; i < book.skills.size(); ++i)
+                book.skills[i].finally = false;
+            book.skills.back().finally = true;
         }
     };
 
-    const size_t normalCount = std::min(ai.m_skillIds.size(), static_cast<size_t>('O' - 'A' + 1));
+    const size_t normalCount = std::min(ai.skillIds.size(), static_cast<size_t>('O' - 'A' + 1));
     for (size_t i = 0; i < normalCount; ++i)
-        addSlot(firstValue(ai.m_skillIds, i, -1), std::string(1, static_cast<char>('A' + i)).c_str());
-    for (size_t j = 0; j < ai.m_otherSkillIds.size() && j < 3; ++j)
-        addSlot(firstValue(ai.m_otherSkillIds, j, -1), std::string(1, static_cast<char>('H' + j)).c_str());
+        addSlot(firstValue(ai.skillIds, i, -1), std::string(1, static_cast<char>('A' + i)).c_str());
+    for (size_t j = 0; j < ai.otherSkillIds.size() && j < 3; ++j)
+        addSlot(firstValue(ai.otherSkillIds, j, -1), std::string(1, static_cast<char>('H' + j)).c_str());
 
     world.ecs().add(entity, std::move(book));
 }
@@ -571,11 +571,11 @@ namespace rules
 int8_t pickRule(World& world, const AiFacts& facts, std::span<const AiRule> rules,
                 std::span<const Fixed> ruleCooldownMs)
 {
-    if (facts.m_inAttack)
+    if (facts.inAttack)
         return -1;
     for (size_t index = 0; index < rules.size(); ++index)
     {
-        if (facts.m_movingRule >= 0 && static_cast<int8_t>(index) >= facts.m_movingRule)
+        if (facts.movingRule >= 0 && static_cast<int8_t>(index) >= facts.movingRule)
             return -1;
         if (index < ruleCooldownMs.size() && ruleCooldownMs[index] > Fixed{})
             continue;
@@ -596,66 +596,66 @@ void updateAgent(World& world, Entity entity)
 {
     auto& ecs      = world.ecs();
     auto* brain    = ecs.tryGet<AiBrainComponent>(entity);
-    if (!brain || !brain->m_enabled)
+    if (!brain || !brain->enabled)
         return;
-    const auto* row = conf::Config::instance().find<conf::battle::AiDef>(brain->m_aiId);
+    const auto* row = conf::Config::instance().find<conf::battle::AiDef>(brain->aiId);
     if (!row)
         return;
     if (ecs.has<StatusFlagsComponent>(entity) && !ecs.get<StatusFlagsComponent>(entity).canControl())
         return;
 
-    const Fixed dt = ecs.singleton<WorldClock>().m_dtMs;
-    for (Fixed& interval : brain->m_skillIntervalMs)
+    const Fixed dt = ecs.singleton<WorldClock>().dtMs;
+    for (Fixed& interval : brain->skillIntervalMs)
         interval = std::max(Fixed{}, interval - dt);
-    tickRuleCooldowns(brain->m_ruleCooldownMs, dt);
+    tickRuleCooldowns(brain->ruleCooldownMs, dt);
 
     // 每帧重写意图：清空上一帧的施法按键与自动施法标记，默认停止移动。
     auto& intent        = ecs.get<IntentComponent>(entity);
-    intent.m_buttons.clear();
-    intent.m_autoCast   = false;
-    intent.m_move.m_mode     = MoveMode::Stop;
-    intent.m_move.m_quadrant = ControlQuadrant::None;
-    intent.m_move.m_angle    = 0;
+    intent.buttons.clear();
+    intent.autoCast   = false;
+    intent.move.mode     = MoveMode::Stop;
+    intent.move.quadrant = ControlQuadrant::None;
+    intent.move.angle    = 0;
 
     selectTarget(world, entity, *brain, *row);
-    intent.m_target = brain->m_target;
+    intent.target = brain->target;
     if (canAct(world, entity))
     {
         const AiFacts facts = gather(world, entity, *brain, *row);
-        const int8_t idx    = pickRule(world, facts, kMonsterRules, brain->m_ruleCooldownMs);
+        const int8_t idx    = pickRule(world, facts, kMonsterRules, brain->ruleCooldownMs);
         if (idx >= 0)
         {
             const auto& rule = kMonsterRules[static_cast<size_t>(idx)];
-            const bool started = run(world, entity, *brain, rule.m_action, *row);
-            if (rule.m_setsAlert)
-                brain->m_alerted = true;
-            brain->m_lastAction = started ? rule.m_action : AiAction::Idle;
+            const bool started = run(world, entity, *brain, rule.action, *row);
+            if (rule.setsAlert)
+                brain->alerted = true;
+            brain->lastAction = started ? rule.action : AiAction::Idle;
             // 施法类动作打断移动：清掉移动规则，避免攻击期间仍续写移动意图。
-            if (started && !isMoveAction(rule.m_action))
-                brain->m_movingRule = -1;
-            if (rule.m_cooldownMs > 0)
-                brain->m_ruleCooldownMs[static_cast<size_t>(idx)] = Fixed::fromInt(rule.m_cooldownMs);
+            if (started && !isMoveAction(rule.action))
+                brain->movingRule = -1;
+            if (rule.cooldownMs > 0)
+                brain->ruleCooldownMs[static_cast<size_t>(idx)] = Fixed::fromInt(rule.cooldownMs);
         }
-        else if (brain->m_movingRule >= 0)
+        else if (brain->movingRule >= 0)
         {
             // 没有更高优先级规则抢占：延续移动，到达目标后停止。
             if (!continueMove(world, entity, *brain))
-                brain->m_movingRule = -1;
+                brain->movingRule = -1;
         }
     }
     else
     {
         // 死亡/受击/失控时不能决策，终止在跑的移动。
-        brain->m_movingRule = -1;
+        brain->movingRule = -1;
     }
 
     const Entity taunt = sneerTarget(world, entity);
     if (alive(world, taunt))
     {
-        brain->m_target = taunt;
+        brain->target = taunt;
         return;
     }
-    Fixed& elapsed = brain->m_changeTargetMs;
+    Fixed& elapsed = brain->changeTargetMs;
     elapsed += dt;
     if (elapsed >= Fixed::fromInt(10000))
     {
@@ -669,13 +669,13 @@ void addThreat(World& world, Entity entity, Entity source, Fixed damage)
     auto* brain = world.ecs().tryGet<AiBrainComponent>(entity);
     if (!brain)
         return;
-    for (auto& record : brain->m_threat)
-        if (record.m_source == source)
+    for (auto& record : brain->threat)
+        if (record.source == source)
         {
-            record.m_damage = std::max(Fixed{}, record.m_damage + damage);
+            record.damage = std::max(Fixed{}, record.damage + damage);
             return;
         }
-    brain->m_threat.push_back({source, std::max(Fixed{}, damage)});
+    brain->threat.push_back({source, std::max(Fixed{}, damage)});
 }
 
 void ensureBrain(World& world, Entity entity, int32_t aiDifficulty)
@@ -683,7 +683,7 @@ void ensureBrain(World& world, Entity entity, int32_t aiDifficulty)
     if (world.ecs().has<AiBrainComponent>(entity))
         return;
     const auto& identity = world.ecs().get<IdentityComponent>(entity);
-    const auto* role = conf::Config::instance().find<conf::battle::RoleDef>(identity.m_configId);
+    const auto* role = conf::Config::instance().find<conf::battle::RoleDef>(identity.configId);
     if (!role || role->aiId.empty())
         return;
     const int32_t aiId = resolveAiId(*role, aiDifficulty);
@@ -698,11 +698,11 @@ void ensureBrain(World& world, Entity entity, int32_t aiDifficulty)
         world.ecs().add(entity, ActionTimelineComponent{});
 
     AiBrainComponent brain;
-    brain.m_aiId   = aiId;
-    brain.m_target = entity;
+    brain.aiId   = aiId;
+    brain.target = entity;
     // 参考语义：首次决策即用 skill_priority_level_cd 初始化各槽施放间隔，随后逐帧递减。
-    for (const auto& values : ai->m_skillPriorityLevelCd)
-        brain.m_skillIntervalMs.push_back(Fixed::fromInt(values.empty() ? ai->m_skillInterval : values.front()));
+    for (const auto& values : ai->skillPriorityLevelCd)
+        brain.skillIntervalMs.push_back(Fixed::fromInt(values.empty() ? ai->skillInterval : values.front()));
     world.ecs().add(entity, std::move(brain));
 }
 }  // namespace rules

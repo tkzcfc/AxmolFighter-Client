@@ -2,7 +2,7 @@
 
 #ifdef RUNTIME_IN_AXMOL
 
-#    include "mugen/sim_legacy/role/RoleComponents.h"
+#    include "mugen/conf/GameDef.h"
 
 #    include <algorithm>
 
@@ -42,48 +42,51 @@ constexpr size_t kHurtMaxActive = 64;
 constexpr int kHurtRandomRange = 30;
 }  // namespace
 
-void HurtNumber::consume(const sim_legacy::PresentationEvent& event, sim_legacy::World& world)
+void HurtNumber::consume(const sim::PresentationEvent& event, sim::World& world)
 {
-    auto& ecs = world.ecs();
-    if (const auto* tips = std::get_if<sim_legacy::Tips>(&event.payload))
+    if (const auto* tips = std::get_if<sim::Tips>(&event.payload))
     {
         // 闪避/未命中由逻辑侧以固定文本提示，数字以外的飘字走文字字体。
         const char* glyph = tips->text == "MISS" ? kMissGlyph : tips->text == "DODGE" ? kDodgeGlyph : nullptr;
-        const auto* transform = ecs.tryGet<sim_legacy::Transform>(event.entity);
-        if (!glyph || !transform)
+        FixedVec3 pos;
+        if (!glyph || !sim::view::readEntityPosition(world, event.entity, pos))
             return;
-        spawn(Face::kWord, glyph, renderValue(transform->position.x),
-              renderValue(transform->position.y + transform->position.z) + kHurtHeadHeight);
+        spawn(Face::kWord, glyph, renderValue(pos.x),
+              renderValue(pos.y + pos.z) + kHurtHeadHeight);
         return;
     }
-    const auto* hurt = std::get_if<sim_legacy::HurtNumber>(&event.payload);
+    const auto* hurt = std::get_if<sim::HurtNumber>(&event.payload);
     if (!hurt)
         return;
     float x = 0.0f;
     float y = 0.0f;
-    if (hurt->m_hasContact)
+    if (hurt->hasContact)
     {
-        x = renderValue(hurt->m_contact.x);
-        y = renderValue(hurt->m_contact.y);
+        x = renderValue(hurt->contact.x);
+        y = renderValue(hurt->contact.y);
     }
     else
     {
-        const auto* transform = ecs.tryGet<sim_legacy::Transform>(event.entity);
-        if (!transform)
+        FixedVec3 pos;
+        if (!sim::view::readEntityPosition(world, event.entity, pos))
             return;
-        x = renderValue(transform->position.x);
-        y = renderValue(transform->position.y + transform->position.z) + kHurtHeadHeight;
+        x = renderValue(pos.x);
+        y = renderValue(pos.y + pos.z) + kHurtHeadHeight;
     }
     // 暴击优先；否则敌方打到玩家方用受击字体，其余用普通字体。
     Face face = Face::kNormal;
-    if (hurt->m_critical)
+    if (hurt->critical)
         face = Face::kCrit;
-    else if (const auto* identity = ecs.tryGet<sim_legacy::RoleIdentity>(event.entity))
+    else
     {
-        const bool enemyCamp = identity->camp == static_cast<int32_t>(EntityCamp::Enemy) ||
-                               identity->camp == static_cast<int32_t>(EntityCamp::EnemyFriend);
-        if (identity->roleType == static_cast<int32_t>(EntityRoleType::kHero) && !enemyCamp)
-            face = Face::kHero;
+        const auto info = sim::view::readEntityRoleInfo(world, event.entity);
+        if (info.valid)
+        {
+            const bool enemyCamp = info.camp == static_cast<int32_t>(EntityCamp::Enemy) ||
+                                   info.camp == static_cast<int32_t>(EntityCamp::EnemyFriend);
+            if (info.roleType == static_cast<int32_t>(EntityRoleType::kHero) && !enemyCamp)
+                face = Face::kHero;
+        }
     }
     // 位图字体没有负号，持续回复按数值绝对值显示。
     spawn(face, std::to_string(hurt->value < 0 ? -hurt->value : hurt->value), x, y);

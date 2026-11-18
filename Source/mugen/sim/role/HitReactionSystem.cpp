@@ -19,11 +19,11 @@ void runHitReaction(World& world)
             const IdentityComponent& identity) {
             if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
                 return;
-            const bool airborneHit = state.m_state == RoleStateId::HitUp || state.m_state == RoleStateId::HitDown ||
-                                     state.m_state == RoleStateId::HitFloor;
-            const auto* role = conf::Config::instance().find<conf::battle::RoleDef>(identity.m_configId);
-            disp.m_noFloorBounce =
-                airborneHit && role && hit.m_rigidity <= Fixed{} && role->rigidity > 0;
+            const bool airborneHit = state.state == RoleStateId::HitUp || state.state == RoleStateId::HitDown ||
+                                     state.state == RoleStateId::HitFloor;
+            const auto* role = conf::Config::instance().find<conf::battle::RoleDef>(identity.configId);
+            disp.noFloorBounce =
+                airborneHit && role && hit.rigidity <= Fixed{} && role->rigidity > 0;
         });
 }
 }  // namespace mugen::sim

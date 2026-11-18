@@ -26,9 +26,9 @@ using namespace mugen;
 using namespace mugen::sim;
 
 // 工具版本号。
-constexpr const char* kVersion = "mugen_sim_cli 0.1 (snapshot v2)";
+constexpr const char* kVersion = "mugen_sim_cli 1.0 (snapshot v8)";
 
-// 场景清单条目（与 legacy_cli 的 ManifestEntry 一致）。
+// 场景清单条目。
 struct ManifestEntry
 {
     std::string name;
@@ -97,16 +97,16 @@ World combatWorld(int32_t roomId, uint64_t seed, int32_t occupation, int32_t lev
     World world;
     auto setup = roomSetup(roomId, seed);
     PlayerSetup player;
-    player.m_roleId = type_conversions::toRoleConfigId(static_cast<CharacterClass>(occupation));
-    player.m_level  = level;
-    player.m_camp   = 2;
-    player.m_slot   = 0;
-    player.m_isAi   = false;
-    setup.m_players.push_back(player);
-    setup.m_stageId          = 0;
-    setup.m_copyId           = copyId;
-    setup.m_aiEnabled        = false;
-    setup.m_useScenarioHooks = false;
+    player.roleId = type_conversions::toRoleConfigId(static_cast<CharacterClass>(occupation));
+    player.level  = level;
+    player.camp   = 2;
+    player.slot   = 0;
+    player.isAi   = false;
+    setup.players.push_back(player);
+    setup.stageId          = 0;
+    setup.copyId           = copyId;
+    setup.aiEnabled        = false;
+    setup.useScenarioHooks = false;
     if (bootstrapBattle(world, setup).empty())
         throw std::runtime_error("Cannot enter room " + std::to_string(roomId));
     return world;
@@ -119,16 +119,16 @@ World combatWorldAi(int32_t roomId, uint64_t seed, int32_t occupation, int32_t l
     World world;
     auto setup = roomSetup(roomId, seed);
     PlayerSetup player;
-    player.m_roleId = type_conversions::toRoleConfigId(static_cast<CharacterClass>(occupation));
-    player.m_level  = level;
-    player.m_camp   = 2;
-    player.m_slot   = 0;
-    player.m_isAi   = false;
-    setup.m_players.push_back(player);
-    setup.m_stageId          = 0;
-    setup.m_copyId           = 0;
-    setup.m_aiEnabled        = true;
-    setup.m_useScenarioHooks = false;
+    player.roleId = type_conversions::toRoleConfigId(static_cast<CharacterClass>(occupation));
+    player.level  = level;
+    player.camp   = 2;
+    player.slot   = 0;
+    player.isAi   = false;
+    setup.players.push_back(player);
+    setup.stageId          = 0;
+    setup.copyId           = 0;
+    setup.aiEnabled        = true;
+    setup.useScenarioHooks = false;
     if (bootstrapBattle(world, setup).empty())
         throw std::runtime_error("Cannot enter room " + std::to_string(roomId));
     return world;
@@ -142,8 +142,8 @@ size_t countEnemies(World& world)
         [&](Entity entity, const IdentityComponent& identity, const HealthComponent& health) {
             if (world.ecs().has<DespawningComponent>(entity))
                 return;
-            const int32_t type = identity.m_roleType;
-            if (((type >= 2 && type <= 4) || (type >= 7 && type <= 9)) && health.m_hp > Fixed{})
+            const int32_t type = identity.roleType;
+            if (((type >= 2 && type <= 4) || (type >= 7 && type <= 9)) && health.hp > Fixed{})
                 ++count;
         });
     return count;
@@ -197,9 +197,9 @@ int runAiRoom(int argc, char** argv)
     size_t lastEnemies       = 0;
     int64_t lastHeroHp       = -1;
     uint64_t lastProgress    = 0;
-    const Entity hero        = world.ecs().singleton<PlayerSlots>().m_entities.empty()
+    const Entity hero        = world.ecs().singleton<PlayerSlots>().entities.empty()
                                    ? Entity{}
-                                   : world.ecs().singleton<PlayerSlots>().m_entities.begin()->second;
+                                   : world.ecs().singleton<PlayerSlots>().entities.begin()->second;
     for (uint64_t frame = 1; frame <= frames; ++frame)
     {
         FrameInput input;
@@ -213,21 +213,21 @@ int runAiRoom(int argc, char** argv)
         world.tick(input);
 
         const auto& room = world.ecs().singleton<sim::RoomState>();
-        if (room.m_victory || room.m_failure)
+        if (room.victory || room.failure)
         {
             std::printf("run-ai-room room=%d result=%s frame=%llu enemies=%zu heroHp=%lld\n", roomId,
-                        room.m_victory ? "victory" : "failure",
+                        room.victory ? "victory" : "failure",
                         static_cast<unsigned long long>(frame), countEnemies(world),
                         static_cast<long long>(hero.value != 0 && world.ecs().has<HealthComponent>(hero)
-                                                   ? world.ecs().get<HealthComponent>(hero).m_hp.toInt()
+                                                   ? world.ecs().get<HealthComponent>(hero).hp.toInt()
                                                    : 0));
             return 0;
         }
         const size_t enemies = countEnemies(world);
         const int64_t heroHp = hero.value == 0 || !world.ecs().alive(hero) || !world.ecs().has<HealthComponent>(hero)
                                    ? 0
-                                   : world.ecs().get<HealthComponent>(hero).m_hp.toInt();
-        const int32_t state = static_cast<int32_t>(room.m_state);
+                                   : world.ecs().get<HealthComponent>(hero).hp.toInt();
+        const int32_t state = static_cast<int32_t>(room.state);
         if (state != lastState || enemies != lastEnemies || heroHp != lastHeroHp)
         {
             lastState     = state;

@@ -55,9 +55,9 @@ Fixed axis(const std::vector<Fixed>& values, size_t index)
 void emit(World& world, Entity entity, DispPhase phase, int32_t curveId)
 {
     DisplacementEvent event;
-    event.m_entity  = entity;
-    event.m_phase   = phase;
-    event.m_curveId = curveId;
+    event.entity  = entity;
+    event.phase   = phase;
+    event.curveId = curveId;
     world.ecs().singleton<EventQueue<DisplacementEvent>>().push(event);
 }
 }  // namespace
@@ -71,22 +71,22 @@ bool set(World& world, Entity entity, int32_t id)
     if (!row)
         return false;
     auto& d        = world.ecs().get<DisplacementComponent>(entity);
-    auto& velocity = d.m_velocity;
+    auto& velocity = d.velocity;
     const auto& t  = world.ecs().get<TransformComponent>(entity);
     // 旧实现每次设置位移都先结束进行中的位移（同 id 也结束），再开始新位移。
-    if (d.m_curveId != -1)
-        emit(world, entity, DispPhase::Replaced, d.m_curveId);
+    if (d.curveId != -1)
+        emit(world, entity, DispPhase::Replaced, d.curveId);
     // B2 不实现追踪位移（isTrace），按普通三轴配置。
-    velocity            = {t.m_vectorX * axis(row->velocity, 0), axis(row->velocity, 1),
-                           t.m_vectorZ * axis(row->velocity, 2)};
-    d.m_velocityTime    = {axis(row->velocityTime, 0), axis(row->velocityTime, 1), axis(row->velocityTime, 2)};
-    d.m_acceleration    = {axis(row->acceleration, 0), axis(row->acceleration, 1), axis(row->acceleration, 2)};
-    d.m_accelerationTime = {axis(row->accelerationTime, 0), axis(row->accelerationTime, 1),
+    velocity            = {t.vectorX * axis(row->velocity, 0), axis(row->velocity, 1),
+                           t.vectorZ * axis(row->velocity, 2)};
+    d.velocityTime    = {axis(row->velocityTime, 0), axis(row->velocityTime, 1), axis(row->velocityTime, 2)};
+    d.acceleration    = {axis(row->acceleration, 0), axis(row->acceleration, 1), axis(row->acceleration, 2)};
+    d.accelerationTime = {axis(row->accelerationTime, 0), axis(row->accelerationTime, 1),
                             axis(row->accelerationTime, 2)};
-    d.m_gravity         = row->gravity;
-    d.m_bounces         = row->bounces;
-    d.m_elapsedMs       = {};
-    d.m_curveId         = id;
+    d.gravity         = row->gravity;
+    d.bounces         = row->bounces;
+    d.elapsedMs       = {};
+    d.curveId         = id;
     emit(world, entity, DispPhase::Began, id);
     return true;
 }
@@ -95,40 +95,40 @@ bool set(World& world, Entity entity, int32_t id)
 void reset(World& world, Entity entity, bool endAirborne)
 {
     auto& d = world.ecs().get<DisplacementComponent>(entity);
-    const bool airborne = world.ecs().get<TransformComponent>(entity).m_position.y > Fixed{};
-    if (!endAirborne && airborne && d.m_curveId != -1)
+    const bool airborne = world.ecs().get<TransformComponent>(entity).position.y > Fixed{};
+    if (!endAirborne && airborne && d.curveId != -1)
     {
-        d.m_elapsedMs    = {};
-        d.m_velocityTime = d.m_acceleration = d.m_accelerationTime = {};
-        d.m_gravity                                                = Fixed::fromInt(1);
-        d.m_bounces                                                = {};
-        d.m_velocity                                               = {};
+        d.elapsedMs    = {};
+        d.velocityTime = d.acceleration = d.accelerationTime = {};
+        d.gravity                                                = Fixed::fromInt(1);
+        d.bounces                                                = {};
+        d.velocity                                               = {};
         return;
     }
-    if (d.m_curveId != -1)
-        emit(world, entity, DispPhase::Ended, d.m_curveId);
-    d.m_elapsedMs    = {};
-    d.m_velocityTime = d.m_acceleration = d.m_accelerationTime = {};
-    d.m_gravity                                                = Fixed::fromInt(1);
-    d.m_bounces                                                = {};
-    d.m_velocity                                               = {};
-    d.m_curveId                                                = -1;
+    if (d.curveId != -1)
+        emit(world, entity, DispPhase::Ended, d.curveId);
+    d.elapsedMs    = {};
+    d.velocityTime = d.acceleration = d.accelerationTime = {};
+    d.gravity                                                = Fixed::fromInt(1);
+    d.bounces                                                = {};
+    d.velocity                                               = {};
+    d.curveId                                                = -1;
 }
 
 // 活动曲线耗尽后清掉 curveId：这是“当前没有曲线”的玩法标志，下一次 set 不会把已结束曲线再报成 Replaced。
 void settle(World& world, Entity entity)
 {
     auto& d = world.ecs().get<DisplacementComponent>(entity);
-    if (d.m_curveId == -1)
+    if (d.curveId == -1)
         return;
-    const bool moving = d.m_velocity.x != Fixed{} || d.m_velocity.y != Fixed{} || d.m_velocity.z != Fixed{};
-    const bool accelerating = (d.m_acceleration.x != Fixed{} && d.m_elapsedMs < d.m_accelerationTime.x) ||
-                              (d.m_acceleration.y != Fixed{} && d.m_elapsedMs < d.m_accelerationTime.y) ||
-                              (d.m_acceleration.z != Fixed{} && d.m_elapsedMs < d.m_accelerationTime.z);
+    const bool moving = d.velocity.x != Fixed{} || d.velocity.y != Fixed{} || d.velocity.z != Fixed{};
+    const bool accelerating = (d.acceleration.x != Fixed{} && d.elapsedMs < d.accelerationTime.x) ||
+                              (d.acceleration.y != Fixed{} && d.elapsedMs < d.accelerationTime.y) ||
+                              (d.acceleration.z != Fixed{} && d.elapsedMs < d.accelerationTime.z);
     if (moving || accelerating)
         return;
-    const int32_t curveId = d.m_curveId;
-    d.m_curveId           = -1;
+    const int32_t curveId = d.curveId;
+    d.curveId           = -1;
     emit(world, entity, DispPhase::Ended, curveId);
 }
 }  // namespace rules

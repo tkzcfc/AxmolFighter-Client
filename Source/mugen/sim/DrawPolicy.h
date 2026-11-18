@@ -8,12 +8,12 @@ namespace mugen::sim
 struct DrawPolicy
 {
     // 暴击抽样：101 永不暴击，0 必暴击。
-    Fixed m_crit = Fixed::fromInt(101);
+    Fixed crit = Fixed::fromInt(101);
     // 伤害浮动抽样：50 对应浮动系数 1.00。
-    Fixed m_float = Fixed::fromInt(50);
+    Fixed damageFloat = Fixed::fromInt(50);
     // 属性闪避抽样：100 永不属性闪避。
-    Fixed m_dodge = Fixed::fromInt(100);
+    Fixed dodge = Fixed::fromInt(100);
     // Buff、技能 AI、能力等概率类抽样：0 总是通过。
-    Fixed m_probability = Fixed::fromInt(0);
+    Fixed probability = Fixed::fromInt(0);
 };
 }  // namespace mugen::sim

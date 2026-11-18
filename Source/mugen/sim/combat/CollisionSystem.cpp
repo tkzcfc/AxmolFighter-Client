@@ -15,14 +15,14 @@ namespace
 // 双方阵营掩码是否互相允许碰撞。
 bool inHostileMasks(const IdentityComponent& first, const IdentityComponent& second)
 {
-    return (static_cast<uint32_t>(first.m_hostileMask) & static_cast<uint32_t>(second.m_camp)) != 0 &&
-           (static_cast<uint32_t>(second.m_hostileMask) & static_cast<uint32_t>(first.m_camp)) != 0;
+    return (static_cast<uint32_t>(first.hostileMask) & static_cast<uint32_t>(second.camp)) != 0 &&
+           (static_cast<uint32_t>(second.hostileMask) & static_cast<uint32_t>(first.camp)) != 0;
 }
 // 攻击框 × 受击框的首个三维接触点（x 横向、y 高度、z 纵深）。
 bool isContacting(const HitboxesComponent& first, const HitboxesComponent& second, FixedVec3& point)
 {
-    for (const auto& attack : first.m_attack)
-        for (const auto& damage : second.m_damage)
+    for (const auto& attack : first.attack)
+        for (const auto& damage : second.damage)
             if (worldBoxesOverlap(attack, damage, &point))
                 return true;
     return false;
@@ -54,7 +54,7 @@ void runCollision(World& world)
             const auto& target      = world.ecs().get<HitboxesComponent>(other);
             const auto& targetIdent = world.ecs().get<IdentityComponent>(other);
             // 出生帧内实体不参与碰撞（R3）。
-            if (sourceIdent.m_born.m_frame == frame || targetIdent.m_born.m_frame == frame)
+            if (sourceIdent.born.frame == frame || targetIdent.born.frame == frame)
                 continue;
             if (!inHostileMasks(sourceIdent, targetIdent))
                 continue;
@@ -62,26 +62,26 @@ void runCollision(World& world)
             if (!isContacting(source, target, point))
                 continue;
             active.push_back(other);
-            const bool began = std::find(memory.m_contacts.begin(), memory.m_contacts.end(), other) ==
-                               memory.m_contacts.end();
+            const bool began = std::find(memory.contacts.begin(), memory.contacts.end(), other) ==
+                               memory.contacts.end();
             ContactEvent event;
-            event.m_a     = collider;
-            event.m_b     = other;
-            event.m_phase = began ? ContactPhase::Began : ContactPhase::Continue;
-            event.m_point = point;
+            event.a     = collider;
+            event.b     = other;
+            event.phase = began ? ContactPhase::Began : ContactPhase::Continue;
+            event.point = point;
             world.ecs().singleton<EventQueue<ContactEvent>>().push(event);
         }
-        for (const Entity old : memory.m_contacts)
+        for (const Entity old : memory.contacts)
         {
             if (std::find(active.begin(), active.end(), old) != active.end())
                 continue;
             ContactEvent event;
-            event.m_a     = collider;
-            event.m_b     = old;
-            event.m_phase = ContactPhase::End;
+            event.a     = collider;
+            event.b     = old;
+            event.phase = ContactPhase::End;
             world.ecs().singleton<EventQueue<ContactEvent>>().push(event);
         }
-        memory.m_contacts = std::move(active);
+        memory.contacts = std::move(active);
     }
     // R5：接触按（攻击实体创建序，目标创建序）排序，与 CombatSystem 微管线一致。
     std::vector<Entity> created;
@@ -90,13 +90,13 @@ void runCollision(World& world)
         const auto it = std::find(created.begin(), created.end(), entity);
         return it == created.end() ? created.size() : static_cast<size_t>(it - created.begin());
     };
-    auto& queue = world.ecs().singleton<EventQueue<ContactEvent>>().m_items;
+    auto& queue = world.ecs().singleton<EventQueue<ContactEvent>>().items;
     std::stable_sort(queue.begin(), queue.end(), [&](const ContactEvent& a, const ContactEvent& b) {
-        const size_t attacker = rank(a.m_a);
-        const size_t other    = rank(b.m_a);
+        const size_t attacker = rank(a.a);
+        const size_t other    = rank(b.a);
         if (attacker != other)
             return attacker < other;
-        return rank(a.m_b) < rank(b.m_b);
+        return rank(a.b) < rank(b.b);
     });
 }
 }  // namespace mugen::sim

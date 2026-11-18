@@ -20,7 +20,7 @@ int32_t resolveLocalPlayerRoleId()
     {
         const int32_t roleId = mugen::type_conversions::toRoleConfigId(
             static_cast<mugen::CharacterClass>(session->selectedCharacter.classID));
-        if (mugen::conf::Config::instance().find<mugen::conf::RoleConfig>(roleId))
+        if (mugen::conf::Config::instance().find<mugen::conf::battle::RoleDef>(roleId))
             return roleId;
 
         AXLOGW("resolveLocalPlayerRoleId: role {} missing config, fallback to pilot role {}", roleId, kPilotRoleId);

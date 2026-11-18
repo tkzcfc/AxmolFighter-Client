@@ -50,6 +50,10 @@ struct EffectDef
     int32_t velocity = 0;
     int32_t effectType = 0;
     int32_t resSpineId = 0;
+    // 渲染层级。
+    int32_t tier = 0;
+    // Spine 相对位置（表现）。
+    std::vector<int32_t> spineRelativePosition;
 
     MG_REFLECT(EffectDef,
                id,
@@ -78,6 +82,8 @@ struct EffectDef
                depth,
                velocity,
                effectType,
-               resSpineId)
+               resSpineId,
+               tier,
+               spineRelativePosition)
 };
 }  // namespace mugen::conf::battle

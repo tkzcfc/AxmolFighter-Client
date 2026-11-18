@@ -33,59 +33,59 @@ Fixed clipInterval(Fixed rate)
 struct ClipCommon
 {
     // 动作名或动作索引。
-    std::variant<int32_t, std::string> m_motion;
+    std::variant<int32_t, std::string> motion;
     // 播放倍率。
-    Fixed m_rate;
+    Fixed rate;
     // 循环次数，-1 表示无限。
-    Fixed m_loops;
+    Fixed loops;
     // 尾延时（毫秒）。
-    int32_t m_tailDelayMs = 0;
+    int32_t tailDelayMs = 0;
     // 位移配置标识，-1 表示不覆盖。
-    int32_t m_displacementId = -1;
+    int32_t displacementId = -1;
     // 进入时准入、退出时移除的片段 Buff。
-    std::vector<int32_t> m_clipBuffs;
+    std::vector<int32_t> clipBuffs;
     // 按帧升序的 cue。
-    std::vector<conf::battle::ClipCue> m_cues;
+    std::vector<conf::battle::ClipCue> cues;
     // 落地 / 撞墙 / 刹停结束片段策略。
-    conf::battle::ClipFloorPolicy m_floorPolicy = conf::battle::ClipFloorPolicy::Default;
-    conf::battle::ClipWallPolicy m_wallPolicy   = conf::battle::ClipWallPolicy::Default;
-    bool m_endOnBrake                           = false;
+    conf::battle::ClipFloorPolicy floorPolicy = conf::battle::ClipFloorPolicy::Default;
+    conf::battle::ClipWallPolicy wallPolicy   = conf::battle::ClipWallPolicy::Default;
+    bool endOnBrake                           = false;
     // 片段控制：FreeMove / SteerAtEnter / TurnOnly / MoveNoTurn。
-    conf::battle::ClipControlMode m_control = conf::battle::ClipControlMode::None;
+    conf::battle::ClipControlMode control = conf::battle::ClipControlMode::None;
     // FreeMove / MoveNoTurn 的控制速度。
-    Fixed m_controlVelocity;
+    Fixed controlVelocity;
 };
 ClipCommon common(const conf::battle::ClipDef& row)
 {
     ClipCommon out;
-    out.m_motion          = row.motion;
-    out.m_rate            = row.rate;
-    out.m_loops           = row.loops;
-    out.m_tailDelayMs     = row.tailDelayMs;
-    out.m_displacementId  = row.displacementId;
-    out.m_clipBuffs       = row.clipBuffs;
-    out.m_cues            = row.cues;
-    out.m_floorPolicy     = row.displacementPolicy.floor;
-    out.m_wallPolicy      = row.displacementPolicy.wall;
-    out.m_endOnBrake      = row.displacementPolicy.endOnBrake != 0;
-    out.m_control         = row.control.mode;
-    out.m_controlVelocity = row.control.velocity;
+    out.motion          = row.motion;
+    out.rate            = row.rate;
+    out.loops           = row.loops;
+    out.tailDelayMs     = row.tailDelayMs;
+    out.displacementId  = row.displacementId;
+    out.clipBuffs       = row.clipBuffs;
+    out.cues            = row.cues;
+    out.floorPolicy     = row.displacementPolicy.floor;
+    out.wallPolicy      = row.displacementPolicy.wall;
+    out.endOnBrake      = row.displacementPolicy.endOnBrake != 0;
+    out.control         = row.control.mode;
+    out.controlVelocity = row.control.velocity;
     return out;
 }
 ClipCommon common(const conf::battle::EffectClipDef& row)
 {
     ClipCommon out;
-    out.m_motion          = row.motion;
-    out.m_rate            = row.rate;
-    out.m_loops           = row.loops;
-    out.m_tailDelayMs     = row.tailDelayMs;
-    out.m_displacementId  = row.displacementId;
-    out.m_cues            = row.cues;
-    out.m_floorPolicy     = row.displacementPolicy.floor;
-    out.m_wallPolicy      = row.displacementPolicy.wall;
-    out.m_endOnBrake      = row.displacementPolicy.endOnBrake != 0;
-    out.m_control         = row.control.mode;
-    out.m_controlVelocity = row.control.velocity;
+    out.motion          = row.motion;
+    out.rate            = row.rate;
+    out.loops           = row.loops;
+    out.tailDelayMs     = row.tailDelayMs;
+    out.displacementId  = row.displacementId;
+    out.cues            = row.cues;
+    out.floorPolicy     = row.displacementPolicy.floor;
+    out.wallPolicy      = row.displacementPolicy.wall;
+    out.endOnBrake      = row.displacementPolicy.endOnBrake != 0;
+    out.control         = row.control.mode;
+    out.controlVelocity = row.control.velocity;
     return out;
 }
 // 按实体种类读取当前片段。配置缺失返回 false。
@@ -110,10 +110,10 @@ bool roleAlive(World& world, Entity entity)
 {
     if (!world.ecs().alive(entity))
         return false;
-    if (world.ecs().has<HealthComponent>(entity) && world.ecs().get<HealthComponent>(entity).m_dead)
+    if (world.ecs().has<HealthComponent>(entity) && world.ecs().get<HealthComponent>(entity).dead)
         return false;
     if (world.ecs().has<RoleStateComponent>(entity) &&
-        world.ecs().get<RoleStateComponent>(entity).m_state == RoleStateId::Death)
+        world.ecs().get<RoleStateComponent>(entity).state == RoleStateId::Death)
         return false;
     return true;
 }
@@ -124,59 +124,59 @@ SourceContext sourceFromCast(World& world, Entity entity)
     if (const auto* cast = world.ecs().tryGet<SkillCastComponent>(entity))
     {
         const auto& book = world.ecs().get<SkillBookComponent>(entity);
-        if (cast->m_skill != kNoSkill)
-            source.m_skillId = book.m_skills[static_cast<size_t>(cast->m_skill)].m_configId;
-        source.m_baseSkillId = source.m_skillId;
-        source.m_slot        = 0;
+        if (cast->skill != kNoSkill)
+            source.skillId = book.skills[static_cast<size_t>(cast->skill)].configId;
+        source.baseSkillId = source.skillId;
+        source.slot        = 0;
     }
     return source;
 }
 // 特效片段召唤：主人阵营/等级，位置取特效。
 void fireSummon(World& world, Entity entity, const conf::battle::ClipCue& cue, ActionTimelineComponent& timeline)
 {
-    if (timeline.m_summoned || cue.summonId <= 0)
+    if (timeline.summoned || cue.summonId <= 0)
         return;
-    timeline.m_summoned = true;
+    timeline.summoned = true;
     if (!world.ecs().has<EffectInfoComponent>(entity))
         return;
-    const Entity owner = world.ecs().get<EffectInfoComponent>(entity).m_owner;
+    const Entity owner = world.ecs().get<EffectInfoComponent>(entity).owner;
     if (!roleAlive(world, owner))
         return;
     const auto& ownerId   = world.ecs().get<IdentityComponent>(owner);
     const auto& transform = world.ecs().get<TransformComponent>(entity);
     SpawnRequest request;
-    request.m_kind        = SpawnKind::Role;
-    request.m_configId    = cue.summonId;
-    request.m_owner       = owner;
-    request.m_position    = transform.m_position;
-    request.m_towardX     = transform.m_towardX;
-    request.m_vectorX     = transform.m_vectorX;
-    request.m_vectorZ     = transform.m_vectorZ;
-    request.m_lifetimeMs  = cue.summonTime > 0 ? static_cast<int32_t>(cue.summonTime) : 0;
-    request.m_level       = ownerId.m_level;
-    request.m_camp        = ownerId.m_camp;
-    request.m_isAi        = true;
+    request.kind        = SpawnKind::Role;
+    request.configId    = cue.summonId;
+    request.owner       = owner;
+    request.position    = transform.position;
+    request.towardX     = transform.towardX;
+    request.vectorX     = transform.vectorX;
+    request.vectorZ     = transform.vectorZ;
+    request.lifetimeMs  = cue.summonTime > 0 ? static_cast<int32_t>(cue.summonTime) : 0;
+    request.level       = ownerId.level;
+    request.camp        = ownerId.camp;
+    request.isAi        = true;
     world.ecs().singleton<EventQueue<SpawnRequest>>().push(request);
 }
 // 角色片段变身：未死且本片段未触发过。
 void fireTransform(World& world, Entity entity, const conf::battle::ClipCue& cue, ActionTimelineComponent& timeline)
 {
-    if (timeline.m_transformFired || cue.transformId <= 0)
+    if (timeline.transformFired || cue.transformId <= 0)
         return;
-    timeline.m_transformFired = true;
+    timeline.transformFired = true;
     if (world.ecs().has<EffectInfoComponent>(entity) || !roleAlive(world, entity))
         return;
     TransformRequest request;
-    request.m_entity       = entity;
-    request.m_targetRoleId = cue.transformId;
-    request.m_type         = cue.transformType;
-    request.m_actionId     = timeline.m_clipId;
+    request.entity       = entity;
+    request.targetRoleId = cue.transformId;
+    request.type         = cue.transformType;
+    request.actionId     = timeline.clipId;
     world.ecs().singleton<EventQueue<TransformRequest>>().push(request);
 }
 // 定身：敌方必中；staticTarget≠0 时自己也中。时长 target=2 时用演出帧数。
 void fireTimeStop(World& world, Entity entity, const conf::battle::ClipCue& cue, ActionTimelineComponent& timeline)
 {
-    if (timeline.m_timeStopOn)
+    if (timeline.timeStopOn)
         return;
     const Fixed duration = cue.staticTarget == 2
                                ? Fixed::fromInt(cue.displaySpineFrameCount) * kLogicDtSec * "1000"_fx
@@ -185,43 +185,43 @@ void fireTimeStop(World& world, Entity entity, const conf::battle::ClipCue& cue,
         [&](Entity target, const IdentityComponent& identity, PauseComponent& pause) {
             if (world.ecs().has<DespawningComponent>(target) || world.ecs().has<InactiveComponent>(target))
                 return;
-            if (identity.m_kind != SpawnKind::Role)
+            if (identity.kind != SpawnKind::Role)
                 return;
             const bool self = target == entity && cue.staticTarget != 0;
-            const bool enemy = identity.m_camp == static_cast<int32_t>(EntityCamp::Enemy) ||
-                               identity.m_camp == static_cast<int32_t>(EntityCamp::EnemyFriend);
+            const bool enemy = identity.camp == static_cast<int32_t>(EntityCamp::Enemy) ||
+                               identity.camp == static_cast<int32_t>(EntityCamp::EnemyFriend);
             if (!self && !enemy)
                 return;
-            if (duration > pause.m_staticMs)
-                pause.m_staticMs = duration;
+            if (duration > pause.staticMs)
+                pause.staticMs = duration;
         });
-    timeline.m_timeStopOn        = true;
-    timeline.m_timeStopResetAtMs = world.ecs().singleton<WorldClock>().m_elapsedMs + Fixed::fromInt(cue.staticResetTime);
+    timeline.timeStopOn        = true;
+    timeline.timeStopResetAtMs = world.ecs().singleton<WorldClock>().elapsedMs + Fixed::fromInt(cue.staticResetTime);
 }
 // 触发到期 cue。SpawnEffect 同帧按 effectId 升序。TimeStop 可在复位后再次触发。
 void fireCues(World& world, Entity entity, const ClipCommon& row, ActionTimelineComponent& timeline, Fixed interval)
 {
     auto& ecs = world.ecs();
     std::vector<int32_t> due;
-    int32_t i = timeline.m_nextCue;
-    for (; i < static_cast<int32_t>(row.m_cues.size()); ++i)
+    int32_t i = timeline.nextCue;
+    for (; i < static_cast<int32_t>(row.cues.size()); ++i)
     {
-        const auto& cue = row.m_cues[static_cast<size_t>(i)];
-        if (timeline.m_clipMs < interval * Fixed::fromInt(cue.frame))
+        const auto& cue = row.cues[static_cast<size_t>(i)];
+        if (timeline.clipMs < interval * Fixed::fromInt(cue.frame))
             break;
         due.push_back(i);
     }
-    timeline.m_nextCue = i;
+    timeline.nextCue = i;
     if (due.size() > 1)
     {
         bool mixed = false;
         for (size_t n = 1; n < due.size(); ++n)
-            if (row.m_cues[static_cast<size_t>(due[n])].frame != row.m_cues[static_cast<size_t>(due[0])].frame)
+            if (row.cues[static_cast<size_t>(due[n])].frame != row.cues[static_cast<size_t>(due[0])].frame)
                 mixed = true;
         if (mixed)
             std::stable_sort(due.begin(), due.end(), [&](int32_t a, int32_t b) {
-                const auto& ca = row.m_cues[static_cast<size_t>(a)];
-                const auto& cb = row.m_cues[static_cast<size_t>(b)];
+                const auto& ca = row.cues[static_cast<size_t>(a)];
+                const auto& cb = row.cues[static_cast<size_t>(b)];
                 const bool spawnA = ca.kind == conf::battle::ClipCueKind::SpawnEffect;
                 const bool spawnB = cb.kind == conf::battle::ClipCueKind::SpawnEffect;
                 if (spawnA != spawnB)
@@ -233,7 +233,7 @@ void fireCues(World& world, Entity entity, const ClipCommon& row, ActionTimeline
     }
     for (const int32_t index : due)
     {
-        const auto& cue = row.m_cues[static_cast<size_t>(index)];
+        const auto& cue = row.cues[static_cast<size_t>(index)];
         if (cue.kind == conf::battle::ClipCueKind::SpawnEffect && cue.effectId != 0)
         {
             // 特效片段子特效挂在主人键上（spawnChild）；角色片段挂在自己身上。
@@ -246,17 +246,66 @@ void fireCues(World& world, Entity entity, const ClipCommon& row, ActionTimeline
             fireSummon(world, entity, cue, timeline);
         else if (cue.kind == conf::battle::ClipCueKind::Transform)
             fireTransform(world, entity, cue, timeline);
+        else if (cue.kind == conf::battle::ClipCueKind::Sound && !cue.soundIds.empty())
+        {
+            CueEvent event;
+            event.entity     = entity;
+            event.kind       = CueKind::Sound;
+            event.param      = timeline.clipId;
+            event.candidates = cue.soundIds;
+            ecs.singleton<EventQueue<CueEvent>>().push(event);
+        }
+        else if (cue.kind == conf::battle::ClipCueKind::CameraShake && cue.cameraId > 0)
+        {
+            CueEvent event;
+            event.entity = entity;
+            event.kind   = CueKind::ShakeScreen;
+            event.id     = cue.cameraId;
+            ecs.singleton<EventQueue<CueEvent>>().push(event);
+        }
+        else if (cue.kind == conf::battle::ClipCueKind::Ghost && cue.value != 0)
+        {
+            CueEvent event;
+            event.entity = entity;
+            event.kind   = CueKind::AfterImage;
+            event.param  = 1;
+            ecs.singleton<EventQueue<CueEvent>>().push(event);
+        }
+        else if (cue.kind == conf::battle::ClipCueKind::Tips && cue.value > 0)
+        {
+            CueEvent event;
+            event.entity = entity;
+            event.kind   = CueKind::Tip;
+            event.id     = cue.value;
+            ecs.singleton<EventQueue<CueEvent>>().push(event);
+        }
+        else if (cue.kind == conf::battle::ClipCueKind::Dialog && cue.value > 0)
+        {
+            CueEvent event;
+            event.entity = entity;
+            event.kind   = CueKind::Dialogue;
+            event.id     = cue.value;
+            ecs.singleton<EventQueue<CueEvent>>().push(event);
+        }
+        else if (cue.kind == conf::battle::ClipCueKind::DisplaySpine && !cue.displaySpineGroups.empty())
+        {
+            CueEvent event;
+            event.entity = entity;
+            event.kind   = CueKind::FullScreen;
+            event.groups = cue.displaySpineGroups;
+            ecs.singleton<EventQueue<CueEvent>>().push(event);
+        }
     }
-    const Fixed now = ecs.singleton<WorldClock>().m_elapsedMs;
-    if (timeline.m_timeStopOn && now >= timeline.m_timeStopResetAtMs)
-        timeline.m_timeStopOn = false;
-    if (!timeline.m_timeStopOn)
+    const Fixed now = ecs.singleton<WorldClock>().elapsedMs;
+    if (timeline.timeStopOn && now >= timeline.timeStopResetAtMs)
+        timeline.timeStopOn = false;
+    if (!timeline.timeStopOn)
     {
-        for (const auto& cue : row.m_cues)
+        for (const auto& cue : row.cues)
         {
             if (cue.kind != conf::battle::ClipCueKind::TimeStop)
                 continue;
-            if (timeline.m_clipMs < interval * Fixed::fromInt(cue.frame))
+            if (timeline.clipMs < interval * Fixed::fromInt(cue.frame))
                 break;
             fireTimeStop(world, entity, cue, timeline);
             break;
@@ -268,18 +317,18 @@ void applyStickFacing(World& world, Entity stick, Entity target, bool facing)
 {
     if (!world.ecs().has<IntentComponent>(stick))
         return;
-    const auto& move = world.ecs().get<IntentComponent>(stick).m_move;
-    if (move.m_quadrant == ControlQuadrant::None)
+    const auto& move = world.ecs().get<IntentComponent>(stick).move;
+    if (move.quadrant == ControlQuadrant::None)
         return;
     auto& transform = world.ecs().get<TransformComponent>(target);
-    if (hasHorizontal(move.m_angle))
+    if (hasHorizontal(move.angle))
     {
-        transform.m_vectorX = Fixed::fromInt(vectorX(move.m_quadrant));
+        transform.vectorX = Fixed::fromInt(vectorX(move.quadrant));
         if (facing)
-            transform.m_towardX = static_cast<int32_t>(transform.m_vectorX.toInt());
+            transform.towardX = static_cast<int32_t>(transform.vectorX.toInt());
     }
-    if (hasVertical(move.m_angle))
-        transform.m_vectorZ = Fixed::fromInt(vectorZ(move.m_quadrant));
+    if (hasVertical(move.angle))
+        transform.vectorZ = Fixed::fromInt(vectorZ(move.quadrant));
 }
 }  // namespace
 
@@ -291,53 +340,58 @@ bool enterClip(World& world, Entity entity, int32_t clipId, bool effect, bool de
         return false;
     auto& timeline = world.ecs().get<ActionTimelineComponent>(entity);
     auto& motion   = world.ecs().get<MotionStateComponent>(entity);
-    motion.m_motionName     = clipMotionName(row.m_motion);
-    motion.m_timeMs         = {};
-    motion.m_completedLoops = 0;
-    motion.m_loop           = row.m_loops == "-1"_fx || row.m_loops > "1"_fx;
-    motion.m_rate           = row.m_rate;
-    motion.m_playing        = true;
-    timeline.m_clipId       = clipId;
-    timeline.m_loops        = row.m_loops;
-    timeline.m_tailMs       = row.m_tailDelayMs;
-    timeline.m_clipMs       = {};
-    timeline.m_animationEnd = false;
-    timeline.m_nextCue      = 0;
-    timeline.m_spawnedEffects.clear();
-    timeline.m_deferAdvance     = deferAdvance;
-    timeline.m_finished         = false;
-    timeline.m_transformFired   = false;
-    timeline.m_summoned         = false;
-    timeline.m_timeStopOn       = false;
-    timeline.m_timeStopResetAtMs = {};
+    motion.motionName     = clipMotionName(row.motion);
+    motion.timeMs         = {};
+    motion.completedLoops = 0;
+    motion.loop           = row.loops == "-1"_fx || row.loops > "1"_fx;
+    motion.rate           = row.rate;
+    motion.playing        = true;
+    timeline.clipId       = clipId;
+    timeline.loops        = row.loops;
+    timeline.tailMs       = row.tailDelayMs;
+    timeline.clipMs       = {};
+    timeline.animationEnd = false;
+    timeline.nextCue      = 0;
+    timeline.spawnedEffects.clear();
+    timeline.deferAdvance     = deferAdvance;
+    timeline.finished         = false;
+    timeline.transformFired   = false;
+    timeline.summoned         = false;
+    timeline.timeStopOn       = false;
+    timeline.timeStopResetAtMs = {};
     BuffContext clipCtx;
-    clipCtx.m_applicator = entity;
-    clipCtx.m_target     = entity;
+    clipCtx.applicator = entity;
+    clipCtx.target     = entity;
     if (world.ecs().has<SkillCastComponent>(entity) && world.ecs().has<SkillBookComponent>(entity))
     {
         const auto& cast = world.ecs().get<SkillCastComponent>(entity);
         const auto& book = world.ecs().get<SkillBookComponent>(entity);
-        if (cast.m_skill != kNoSkill)
-            clipCtx.m_boundSkill = book.m_skills[static_cast<size_t>(cast.m_skill)].m_configId;
-        clipCtx.m_skillId = clipCtx.m_boundSkill;
+        if (cast.skill != kNoSkill)
+            clipCtx.boundSkill = book.skills[static_cast<size_t>(cast.skill)].configId;
+        clipCtx.skillId = clipCtx.boundSkill;
     }
-    for (const int32_t id : row.m_clipBuffs)
+    for (const int32_t id : row.clipBuffs)
         if (id != -1)
             buff::rules::admit(world, entity, id, clipCtx);
     if (!effect)
         buff::rules::fire(world, entity, conf::battle::TriggerPoint::BeforeRoleSkillAction, clipCtx);
     // SteerAtEnter 在设位移前转向，后续曲线按新朝向积分。
-    if (!effect && row.m_control == conf::battle::ClipControlMode::SteerAtEnter)
+    if (!effect && row.control == conf::battle::ClipControlMode::SteerAtEnter)
         applyStickFacing(world, entity, entity, true);
-    if (row.m_displacementId != -1)
-        displacement::rules::set(world, entity, row.m_displacementId);
+    if (row.displacementId != -1)
+        displacement::rules::set(world, entity, row.displacementId);
     else
         displacement::rules::reset(world, entity);
     auto& disp          = world.ecs().get<DisplacementComponent>(entity);
-    disp.m_floorPolicy  = static_cast<int32_t>(row.m_floorPolicy);
-    disp.m_wallPolicy   = static_cast<int32_t>(row.m_wallPolicy);
-    disp.m_endOnBrake   = row.m_endOnBrake;
-    disp.m_brake = disp.m_air = disp.m_floor = disp.m_lie = disp.m_wall = false;
+    disp.floorPolicy  = static_cast<int32_t>(row.floorPolicy);
+    disp.wallPolicy   = static_cast<int32_t>(row.wallPolicy);
+    disp.endOnBrake   = row.endOnBrake;
+    disp.brake = disp.air = disp.floor = disp.lie = disp.wall = false;
+    ActionEvent began;
+    began.entity   = entity;
+    began.actionId = clipId;
+    began.phase    = ActionPhase::Begin;
+    world.ecs().singleton<EventQueue<ActionEvent>>().push(began);
     return true;
 }
 
@@ -345,14 +399,50 @@ bool enterClip(World& world, Entity entity, int32_t clipId, bool effect, bool de
 void exitClip(World& world, Entity entity)
 {
     auto& timeline = world.ecs().get<ActionTimelineComponent>(entity);
-    if (timeline.m_clipId == 0)
+    if (timeline.clipId == 0)
         return;
-    if (!world.ecs().has<EffectInfoComponent>(entity))
+    ActionEvent ended;
+    ended.entity   = entity;
+    ended.actionId = timeline.clipId;
+    ended.phase    = ActionPhase::End;
+    world.ecs().singleton<EventQueue<ActionEvent>>().push(ended);
+    const bool effect = world.ecs().has<EffectInfoComponent>(entity);
+    ClipCommon row;
+    if (loadClip(world, entity, timeline.clipId, effect, row))
     {
-        if (const auto* row = conf::Config::instance().find<conf::battle::ClipDef>(timeline.m_clipId))
+        bool stopGhost = false;
+        bool stopSound = false;
+        for (const auto& cue : row.cues)
+        {
+            if (cue.kind == conf::battle::ClipCueKind::Ghost && cue.value != 0)
+                stopGhost = true;
+            if (cue.kind == conf::battle::ClipCueKind::Sound)
+                stopSound = true;
+        }
+        if (stopGhost)
+        {
+            CueEvent event;
+            event.entity = entity;
+            event.kind   = CueKind::AfterImage;
+            event.param  = 0;
+            world.ecs().singleton<EventQueue<CueEvent>>().push(event);
+        }
+        if (stopSound)
+        {
+            CueEvent event;
+            event.entity   = entity;
+            event.kind     = CueKind::Sound;
+            event.param    = timeline.clipId;
+            event.stopLoop = true;
+            world.ecs().singleton<EventQueue<CueEvent>>().push(event);
+        }
+    }
+    if (!effect)
+    {
+        if (const auto* row = conf::Config::instance().find<conf::battle::ClipDef>(timeline.clipId))
         {
             BuffContext clipCtx;
-            clipCtx.m_target = entity;
+            clipCtx.target = entity;
             buff::rules::fire(world, entity, conf::battle::TriggerPoint::AfterRoleSkillAction, clipCtx);
             for (const int32_t id : row->clipBuffs)
                 if (id != -1)
@@ -362,20 +452,20 @@ void exitClip(World& world, Entity entity)
         std::vector<Entity> clipFx;
         world.ecs().each<EffectInfoComponent, LifetimeComponent>(
             [&](Entity effect, const EffectInfoComponent& info, const LifetimeComponent& life) {
-                if (info.m_owner == entity && life.m_autoRelease == 0 &&
+                if (info.owner == entity && life.autoRelease == 0 &&
                     !world.ecs().has<DespawningComponent>(effect))
                     clipFx.push_back(effect);
             });
         for (const Entity effect : clipFx)
             life::rules::despawn(world, effect, DespawnReason::ClipEnd);
     }
-    timeline.m_clipId = 0;
+    timeline.clipId = 0;
     // 片段退出清速度；空中保留曲线等落地，避免 y>0 时提前 disp-。
     displacement::rules::reset(world, entity, false);
     auto& disp         = world.ecs().get<DisplacementComponent>(entity);
-    disp.m_floorPolicy = 0;
-    disp.m_wallPolicy  = 0;
-    disp.m_endOnBrake  = false;
+    disp.floorPolicy = 0;
+    disp.wallPolicy  = 0;
+    disp.endOnBrake  = false;
 }
 
 // 推进当前片段。
@@ -385,61 +475,61 @@ bool advanceClip(World& world, Entity entity)
     auto& motion   = world.ecs().get<MotionStateComponent>(entity);
     const bool effect = world.ecs().has<EffectInfoComponent>(entity);
     ClipCommon row;
-    if (!loadClip(world, entity, timeline.m_clipId, effect, row))
+    if (!loadClip(world, entity, timeline.clipId, effect, row))
         return true;
     const Fixed actionScale = world.ecs().has<StatsComponent>(entity) ? world.ecs().get<StatsComponent>(entity).finalStat(202)
                                                                     : Fixed::fromInt(1);
-    const Fixed dtMs     = world.ecs().singleton<WorldClock>().m_dtMs * actionScale;
-    const Fixed interval = clipInterval(row.m_rate);
-    if (!timeline.m_animationEnd && row.m_loops != "-1"_fx && Fixed::fromInt(motion.m_completedLoops) >= row.m_loops)
+    const Fixed dtMs     = world.ecs().singleton<WorldClock>().dtMs * actionScale;
+    const Fixed interval = clipInterval(row.rate);
+    if (!timeline.animationEnd && row.loops != "-1"_fx && Fixed::fromInt(motion.completedLoops) >= row.loops)
     {
-        timeline.m_animationEnd = true;
-        timeline.m_clipMs       = {};
+        timeline.animationEnd = true;
+        timeline.clipMs       = {};
     }
-    timeline.m_clipMs += dtMs;
+    timeline.clipMs += dtMs;
     fireCues(world, entity, row, timeline, interval);
-    return timeline.m_animationEnd && timeline.m_clipMs >= Fixed::fromInt(timeline.m_tailMs);
+    return timeline.animationEnd && timeline.clipMs >= Fixed::fromInt(timeline.tailMs);
 }
 
 // 按当前片段 control 写朝向与控制速度。SteerAtEnter 只在 enterClip。
 void applyClipControl(World& world, Entity entity)
 {
     auto& timeline = world.ecs().get<ActionTimelineComponent>(entity);
-    if (timeline.m_clipId == 0)
+    if (timeline.clipId == 0)
         return;
     const bool effect = world.ecs().has<EffectInfoComponent>(entity);
     ClipCommon row;
-    if (!loadClip(world, entity, timeline.m_clipId, effect, row))
+    if (!loadClip(world, entity, timeline.clipId, effect, row))
         return;
-    const Entity stick = effect ? world.ecs().get<EffectInfoComponent>(entity).m_owner : entity;
-    if (row.m_control == conf::battle::ClipControlMode::TurnOnly)
+    const Entity stick = effect ? world.ecs().get<EffectInfoComponent>(entity).owner : entity;
+    if (row.control == conf::battle::ClipControlMode::TurnOnly)
     {
-        if (row.m_displacementId != -1)
+        if (row.displacementId != -1)
             applyStickFacing(world, stick, entity, true);
         return;
     }
-    if ((row.m_control == conf::battle::ClipControlMode::FreeMove ||
-         row.m_control == conf::battle::ClipControlMode::MoveNoTurn) &&
-        row.m_displacementId == -1)
+    if ((row.control == conf::battle::ClipControlMode::FreeMove ||
+         row.control == conf::battle::ClipControlMode::MoveNoTurn) &&
+        row.displacementId == -1)
     {
         // 旧实现 AttackAction::update 第一次就写控制速度；进入帧不更新由 deferAdvance / Sequence 下一帧再 update 保证。
-        applyStickFacing(world, stick, entity, row.m_control == conf::battle::ClipControlMode::FreeMove);
-        auto& velocity = world.ecs().get<DisplacementComponent>(entity).m_velocity;
+        applyStickFacing(world, stick, entity, row.control == conf::battle::ClipControlMode::FreeMove);
+        auto& velocity = world.ecs().get<DisplacementComponent>(entity).velocity;
         if (!world.ecs().has<IntentComponent>(stick))
         {
             velocity.x = {};
             velocity.z = {};
             return;
         }
-        const auto& move  = world.ecs().get<IntentComponent>(stick).m_move;
+        const auto& move  = world.ecs().get<IntentComponent>(stick).move;
         const auto& t     = world.ecs().get<TransformComponent>(entity);
-        const Fixed angle = Fixed::ratio(move.m_angle, 1000);
-        velocity.x        = move.m_quadrant == ControlQuadrant::None
+        const Fixed angle = Fixed::ratio(move.angle, 1000);
+        velocity.x        = move.quadrant == ControlQuadrant::None
                                 ? Fixed{}
-                                : FixedMath::cosDeg(angle) * row.m_controlVelocity * t.m_vectorX;
-        velocity.z        = move.m_quadrant == ControlQuadrant::None
+                                : FixedMath::cosDeg(angle) * row.controlVelocity * t.vectorX;
+        velocity.z        = move.quadrant == ControlQuadrant::None
                                 ? Fixed{}
-                                : FixedMath::sinDeg(angle) * row.m_controlVelocity * t.m_vectorZ;
+                                : FixedMath::sinDeg(angle) * row.controlVelocity * t.vectorZ;
     }
 }
 }  // namespace mugen::sim::timeline::rules

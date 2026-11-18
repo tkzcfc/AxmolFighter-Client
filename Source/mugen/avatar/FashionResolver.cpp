@@ -65,7 +65,7 @@ std::string pickResFashionAtlas(const conf::ResFashionConfig& cfg, bool transfor
 }
 
 // 角色表的 resFashion 使用固定槽位：第 8 项是身体图集，第 9 项是武器挂件。
-void mergeRoleFallbackFashion(const conf::RoleConfig& role, std::unordered_map<FashionPosition, int32_t>& out)
+void mergeRoleFallbackFashion(const conf::battle::RoleDef& role, std::unordered_map<FashionPosition, int32_t>& out)
 {
     if (role.resFashion.size() >= 8)
     {
@@ -95,10 +95,10 @@ bool FashionResolver::resolve(const FashionAppearance& appearance, AvatarDesc& o
         return false;
     }
 
-    const auto* role = conf::Config::instance().find<conf::RoleConfig>(roleId);
+    const auto* role = conf::Config::instance().find<conf::battle::RoleDef>(roleId);
     if (!role)
     {
-        MG_LOG_E("FashionResolver: RoleConfig {} missing", roleId);
+        MG_LOG_E("FashionResolver: RoleDef {} missing", roleId);
         return false;
     }
 

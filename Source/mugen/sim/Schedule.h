@@ -5,7 +5,7 @@
 namespace mugen::sim
 {
 class World;
-// 帧阶段，数值即 SystemEntry::m_phase；与 DESIGN.md §3.1 的 P0..P12 对应。
+// 帧阶段，数值即 SystemEntry::phase；与 DESIGN.md §3.1 的 P0..P12 对应。
 enum class Phase : uint8_t
 {
     // P0 帧开始：时钟与延迟动作。

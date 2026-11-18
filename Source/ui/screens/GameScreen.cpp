@@ -8,6 +8,7 @@
 #include "ui/battle/BattleResultPanel.h"
 #include "ui/battle/LocalBattleMode.h"
 #include "ui/battle/NetBattleMode.h"
+#include "mugen/sim/input/ControlManagerCore.h"
 #include "ui/battle/LocalRoleUtils.h"
 #include "ui/core/ScreenManager.h"
 #include "ui/widgets/common/MessageDialog.h"
@@ -81,8 +82,8 @@ void GameScreen::onEnter()
     if (auto* local = dynamic_cast<LocalBattleMode*>(m_battleMode.get()))
         getScreenManager()->getUIManager()->open<BattleHudPanel>(*local);
     m_slotMap.clear();
-    using Key                       = ax::EventKeyboard::KeyCode;
-    using ControlKey                = mugen::sim_legacy::ControlKey;
+    using Key = ax::EventKeyboard::KeyCode;
+    using ControlKey = mugen::sim::ControlKey;
     m_slotMap[Key::KEY_LEFT_ARROW]  = static_cast<uint32_t>(ControlKey::Left);
     m_slotMap[Key::KEY_RIGHT_ARROW] = static_cast<uint32_t>(ControlKey::Right);
     m_slotMap[Key::KEY_UP_ARROW]    = static_cast<uint32_t>(ControlKey::Up);

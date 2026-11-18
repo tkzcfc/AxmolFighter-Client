@@ -32,13 +32,13 @@ World makeWorld()
     REQUIRE(room != nullptr);
     setup.mapKey = room->mapKey;
     PlayerSetup player;
-    player.m_roleId = type_conversions::toRoleConfigId(CharacterClass::kSwordman);
-    player.m_level  = 1000;
-    player.m_camp   = 2;
-    player.m_slot   = 0;
-    player.m_isAi   = false;
-    setup.m_players.push_back(player);
-    setup.m_aiEnabled = false;
+    player.roleId = type_conversions::toRoleConfigId(CharacterClass::kSwordman);
+    player.level  = 1000;
+    player.camp   = 2;
+    player.slot   = 0;
+    player.isAi   = false;
+    setup.players.push_back(player);
+    setup.aiEnabled = false;
     REQUIRE_FALSE(bootstrapBattle(world, setup).empty());
     return world;
 }
@@ -46,7 +46,7 @@ World makeWorld()
 // 取主控玩家实体。
 Entity hero(World& world)
 {
-    const auto& slots = world.ecs().singleton<PlayerSlots>().m_entities;
+    const auto& slots = world.ecs().singleton<PlayerSlots>().entities;
     return slots.empty() ? Entity{} : slots.begin()->second;
 }
 }  // namespace
@@ -71,39 +71,39 @@ TEST_CASE("combat hitType -1 records hit count but deals no damage or hit reacti
 
     const Entity effect = world.ecs().create();
     IdentityComponent effectIdn;
-    effectIdn.m_kind     = SpawnKind::Effect;
-    effectIdn.m_configId = kEffectId;
-    effectIdn.m_camp     = 8;
+    effectIdn.kind     = SpawnKind::Effect;
+    effectIdn.configId = kEffectId;
+    effectIdn.camp     = 8;
     world.ecs().add(effect, effectIdn);
     EffectInfoComponent info;
-    info.m_configId = kEffectId;
-    info.m_owner    = attacker;
+    info.configId = kEffectId;
+    info.owner    = attacker;
     world.ecs().add(effect, info);
     world.ecs().add(effect, HitTrackerComponent{});
 
     // 固定属性闪避策略：dodge 抽样 100 保证永不属性闪避，命中走完微管线。
     DrawPolicy policy;
-    policy.m_dodge = Fixed::fromInt(100);
+    policy.dodge = Fixed::fromInt(100);
     world.setDrawPolicy(&policy);
 
-    const Fixed hpBefore = world.ecs().get<HealthComponent>(target).m_hp;
+    const Fixed hpBefore = world.ecs().get<HealthComponent>(target).hp;
 
     ContactEvent contact;
-    contact.m_a     = effect;
-    contact.m_b     = target;
-    contact.m_phase = ContactPhase::Began;
+    contact.a     = effect;
+    contact.b     = target;
+    contact.phase = ContactPhase::Began;
     world.ecs().singleton<EventQueue<ContactEvent>>().push(contact);
     runCombat(world);
 
     // 命中次数已记，且按目标去重（hitInterval == -1）。
     const auto& tracker = world.ecs().get<HitTrackerComponent>(effect);
-    CHECK(tracker.m_hitCount == 1);
-    CHECK(tracker.m_hitTargets.size() == 1);
+    CHECK(tracker.hitCount == 1);
+    CHECK(tracker.hitTargets.size() == 1);
     // 无伤害。
-    CHECK(world.ecs().get<HealthComponent>(target).m_hp == hpBefore);
+    CHECK(world.ecs().get<HealthComponent>(target).hp == hpBefore);
     // 不排队受击请求（不进 Hit）。
-    CHECK(world.ecs().get<HitStateComponent>(target).m_pendingHitDefId == 0);
+    CHECK(world.ecs().get<HitStateComponent>(target).pendingHitDefId == 0);
     // 不发命中 / 顿帧事实（摘要无 hit/dmg/stop 行）。
-    CHECK(world.ecs().singleton<EventQueue<HitEvent>>().m_items.empty());
-    CHECK(world.ecs().singleton<EventQueue<HitStopEvent>>().m_items.empty());
+    CHECK(world.ecs().singleton<EventQueue<HitEvent>>().items.empty());
+    CHECK(world.ecs().singleton<EventQueue<HitStopEvent>>().items.empty());
 }

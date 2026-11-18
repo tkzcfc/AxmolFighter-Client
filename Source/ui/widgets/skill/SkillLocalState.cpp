@@ -56,7 +56,7 @@ void SkillLocalState::seedSlotsFromOfflineKit(int32_t occupation)
 {
     m_slotToLeaf.clear();
     const auto cls  = static_cast<mugen::CharacterClass>(occupation);
-    const auto rows = mugen::sim_legacy::skill::SkillAssembly::offlineKitRows(cls);
+    const auto rows = mugen::sim::view::offlineKitRows(cls);
     for (const auto& row : rows)
     {
         if (row.slot == mugen::EnumSkillSlot::None || row.leafId <= 0)
@@ -161,18 +161,18 @@ void SkillLocalState::resetSlotsToDefault()
     persistToServer();
 }
 
-std::vector<mugen::sim_legacy::skill::PlayerSkill> SkillLocalState::playerSkills() const
+std::vector<mugen::sim::view::PlayerSkill> SkillLocalState::playerSkills() const
 {
-    std::vector<mugen::sim_legacy::skill::PlayerSkill> out;
+    std::vector<mugen::sim::view::PlayerSkill> out;
     for (const auto& b : slotBindings())
     {
         if (b.leafId <= 0 || b.skillId <= 0)
             continue;
-        mugen::sim_legacy::skill::PlayerSkill ps;
-        ps.m_slot   = b.slot;
-        ps.m_baseId = b.skillId;
-        ps.m_rockId = -1;
-        ps.m_crazy  = b.slot == mugen::EnumSkillSlot::Crazy;
+        mugen::sim::view::PlayerSkill ps;
+        ps.slot   = b.slot;
+        ps.baseId = b.skillId;
+        ps.rockId = -1;
+        ps.crazy  = b.slot == mugen::EnumSkillSlot::Crazy;
         out.push_back(ps);
     }
     return out;

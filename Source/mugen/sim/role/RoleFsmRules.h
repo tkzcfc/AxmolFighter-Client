@@ -6,7 +6,7 @@ namespace mugen::sim
 {
 namespace role::rules
 {
-// 唯一状态写入：更新状态、清零计时并发出带正确 m_from 的 StateEvent（含 BehaviorState 触发）。
+// 唯一状态写入：更新状态、清零计时并发出带正确 from 的 StateEvent（含 BehaviorState 触发）。
 void transition(World& world, Entity entity, RoleStateComponent& state, RoleStateId to);
 // 播放待机动作。
 void playIdle(MotionStateComponent& motion);

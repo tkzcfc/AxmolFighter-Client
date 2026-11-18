@@ -7,11 +7,19 @@
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/GameDef.h"
 #include "mugen/avatar/AvatarPaths.h"
+#include <array>
 
 namespace mugen::sim
 {
 namespace
 {
+// PVP 决斗的右侧队伍阵营位；其余阵营归入左侧队伍。
+constexpr int32_t kPvpRightCamp = 2;
+// PVP 决斗左右两队的出生横坐标；左队朝右，右队朝左。
+constexpr int32_t kPvpLeftX  = 300;
+constexpr int32_t kPvpRightX = 1900;
+// PVP 同队成员按出生顺序占用的纵深坐标。
+constexpr std::array<int32_t, 3> kPvpSpawnZ = {200, 150, 50};
 // 读取配置数组中可省略的尾项。
 int32_t at(const std::vector<int32_t>& values, size_t index, int32_t fallback = 0)
 {
@@ -38,11 +46,11 @@ Fixed spineScale(int32_t resSpineId)
 void writeRadiusDamage(World& world, Entity entity)
 {
     auto& hitboxes        = world.ecs().get<HitboxesComponent>(entity);
-    const auto& position  = world.ecs().get<TransformComponent>(entity).m_position;
-    const Fixed radius = hitboxes.m_radius;
+    const auto& position  = world.ecs().get<TransformComponent>(entity).position;
+    const Fixed radius = hitboxes.radius;
     const Fixed span   = radius * Fixed::fromInt(2);
     // 没有动作框时用半径铺横向和纵深，高度同样取直径，避免某一轴尺寸为 0。
-    hitboxes.m_damage  = {WorldBox{{position.x - radius, position.z - radius, position.y}, {span, span, span}}};
+    hitboxes.damage  = {WorldBox{{position.x - radius, position.z - radius, position.y}, {span, span, span}}};
 }
 // 房间实体的公共基础装配。
 Entity base(World& world, SpawnKind kind, int32_t configId, const TransformComponent& transform, int32_t radius,
@@ -51,31 +59,31 @@ Entity base(World& world, SpawnKind kind, int32_t configId, const TransformCompo
     const Entity entity = world.ecs().create();
     auto& ecs           = world.ecs();
     IdentityComponent identity;
-    identity.m_kind       = kind;
-    identity.m_configId   = configId;
-    identity.m_camp       = 1;
-    identity.m_hostileMask = 30;
-    identity.m_roleType   = 0;
-    identity.m_level      = 1;
-    identity.m_born       = {world.frame(), SpawnStage::Room};
+    identity.kind       = kind;
+    identity.configId   = configId;
+    identity.camp       = 1;
+    identity.hostileMask = 30;
+    identity.roleType   = 0;
+    identity.level      = 1;
+    identity.born       = {world.frame(), SpawnStage::Room};
     ecs.add(entity, identity);
 
     TransformComponent t = transform;
-    t.m_scale            = spineScale(resSpineId);
+    t.scale            = spineScale(resSpineId);
     ecs.add(entity, t);
 
     MotionStateComponent motion;
     if (withMotion)
     {
-        motion.m_motionFile = motionFile(resSpineId);
-        motion.m_motionName = "stand";
-        motion.m_loop       = true;
-        motion.m_playing    = true;
+        motion.motionFile = motionFile(resSpineId);
+        motion.motionName = "stand";
+        motion.loop       = true;
+        motion.playing    = true;
     }
     ecs.add(entity, motion);
 
     HitboxesComponent hitboxes;
-    hitboxes.m_radius = Fixed::fromInt(radius);
+    hitboxes.radius = Fixed::fromInt(radius);
     ecs.add(entity, hitboxes);
     ecs.add(entity, ContactMemoryComponent{});
     return entity;
@@ -88,57 +96,71 @@ namespace room::rules
 bool enter(World& world, const conf::RoomConfig& config, int32_t stageId, int32_t copyId)
 {
     auto& room = world.ecs().singleton<RoomState>();
-    if (room.m_enabled)
+    if (room.enabled)
         return false;
-    room.m_enabled    = true;
-    room.m_roomId     = config.id;
-    room.m_config     = config;
-    room.m_stageId    = stageId;
-    room.m_copyId     = copyId;
-    room.m_levelBonus = 0;
-    room.m_roomType       = config.roomType;
-    room.m_battleRuleType = config.battleRuleType;
-    room.m_ko             = false;
-    room.m_pendingKo      = false;
-    room.m_haveBoss       = false;
-    room.m_victory        = false;
-    room.m_failure        = false;
-    room.m_returnToTown   = false;
-    room.m_reviving       = false;
-    room.m_wave           = 0;
-    room.m_waveReady      = false;
-    room.m_waveTimerMs    = {};
-    room.m_gameSeconds    = {};
-    room.m_limitSeconds   = {};
-    room.m_maxRevives     = 0;
-    room.m_usedRevives    = 0;
-    room.m_pvp            = world.setup().m_pvp;
-    room.m_pvpTimeLimit   = world.setup().m_pvpTimeLimit;
-    room.m_winnerCamp     = 0;
-    room.m_transferRoom   = 0;
-    room.m_transferToward = 1;
+    room.enabled    = true;
+    room.roomId     = config.id;
+    room.config     = config;
+    room.stageId    = stageId;
+    room.copyId     = copyId;
+    room.levelBonus = 0;
+    room.roomType       = config.roomType;
+    room.battleRuleType = config.battleRuleType;
+    room.ko             = false;
+    room.pendingKo      = false;
+    room.haveBoss       = false;
+    room.victory        = false;
+    room.failure        = false;
+    room.returnToTown   = false;
+    room.reviving       = false;
+    room.wave           = 0;
+    room.waveReady      = false;
+    room.waveTimerMs    = {};
+    room.gameSeconds    = {};
+    room.limitSeconds   = {};
+    room.maxRevives     = 0;
+    room.usedRevives    = 0;
+    room.pvp            = world.setup().pvp;
+    room.pvpTimeLimit   = world.setup().pvpTimeLimit;
+    room.winnerCamp     = 0;
+    room.transferRoom   = 0;
+    room.transferToward = 1;
     if (const auto* copy = conf::Config::instance().find<conf::CopyConfig>(copyId))
     {
-        room.m_maxRevives = copy->maxRevive;
-        room.m_levelBonus = copy->addLevel;
+        room.maxRevives = copy->maxRevive;
+        room.levelBonus = copy->addLevel;
     }
-    if (room.m_pvp)
-        room.m_maxRevives = 0;
+    if (room.pvp)
+        room.maxRevives = 0;
     if (const auto* stage = conf::Config::instance().find<conf::StageConfig>(stageId))
         if (config.battleRuleType == 1)
-            room.m_limitSeconds = Fixed::fromInt(stage->openTime);
+            room.limitSeconds = Fixed::fromInt(stage->openTime);
     if (config.battleRuleType == 3)
-        room.m_limitSeconds = Fixed::fromInt(at(config.battleRuleParam, 0, 0));
+        room.limitSeconds = Fixed::fromInt(at(config.battleRuleParam, 0, 0));
 
-    // 定位已出生的玩家（非 PVP 按 actorPosX/Z，朝向 actorVectorX），并应用出生 Buff。
+    // 定位已出生的玩家（PVP 按阵营分左右两队，非 PVP 按 actorPosX/Z，朝向 actorVectorX），并应用出生 Buff。
     size_t index = 0;
-    for (const auto& [slot, entity] : world.ecs().singleton<PlayerSlots>().m_entities)
+    std::array<size_t, 2> teamCounts{};
+    for (const auto& [slot, entity] : world.ecs().singleton<PlayerSlots>().entities)
     {
-        auto& transform     = world.ecs().get<TransformComponent>(entity);
-        transform.m_position = {Fixed::fromInt(at(config.actorPosX, index, 0)), {},
-                                Fixed::fromInt(at(config.actorPosZ, index, 0))};
-        transform.m_towardX  = at(config.actorVectorX, index, 1) < 0 ? -1 : 1;
-        transform.m_vectorX  = Fixed::fromInt(transform.m_towardX);
+        auto& transform = world.ecs().get<TransformComponent>(entity);
+        if (room.pvp)
+        {
+            const bool rightTeam = world.ecs().get<IdentityComponent>(entity).camp == kPvpRightCamp;
+            const size_t team    = rightTeam ? 1 : 0;
+            const size_t lane    = std::min(teamCounts[team]++, kPvpSpawnZ.size() - 1);
+            transform.position   = {Fixed::fromInt(rightTeam ? kPvpRightX : kPvpLeftX), {},
+                                    Fixed::fromInt(kPvpSpawnZ[lane])};
+            transform.towardX    = rightTeam ? -1 : 1;
+            transform.vectorX    = Fixed::fromInt(transform.towardX);
+        }
+        else
+        {
+            transform.position = {Fixed::fromInt(at(config.actorPosX, index, 0)), {},
+                                  Fixed::fromInt(at(config.actorPosZ, index, 0))};
+            transform.towardX  = at(config.actorVectorX, index, 1) < 0 ? -1 : 1;
+            transform.vectorX  = Fixed::fromInt(transform.towardX);
+        }
         for (const int32_t id : config.actorBuffIds)
             if (id != -1)
                 buff::rules::admit(world, entity, id);
@@ -147,7 +169,7 @@ bool enter(World& world, const conf::RoomConfig& config, int32_t stageId, int32_
 
     // 已清理房间不重复生成敌人（移植旧实现 enter 的清房判断）。
     const bool cleared =
-        std::find(room.m_clearedRooms.begin(), room.m_clearedRooms.end(), config.id) != room.m_clearedRooms.end();
+        std::find(room.clearedRooms.begin(), room.clearedRooms.end(), config.id) != room.clearedRooms.end();
     if (!cleared)
     {
         for (size_t i = 0; i < config.monsterIds.size(); ++i)
@@ -156,17 +178,17 @@ bool enter(World& world, const conf::RoomConfig& config, int32_t stageId, int32_
             if (!row || config.monsterIds[i] <= 0)
                 continue;
             RoleSpawnParams params;
-            params.m_roleId       = row->id;
-            params.m_isAi         = true;
-            params.m_aiDifficulty = config.monsterAiDifficulty;
+            params.roleId       = row->id;
+            params.isAi         = true;
+            params.aiDifficulty = config.monsterAiDifficulty;
             const int32_t type    = row->roleType;
             const size_t levelIndex = type == 6 || type == 10 || type == 12 ? 0 : static_cast<size_t>(type - 2);
-            params.m_level        = at(config.monsterLevels, levelIndex, 0) + room.m_levelBonus;
-            params.m_position     = {Fixed::fromInt(at(config.monsterPosX, i, 0)), {},
+            params.level        = at(config.monsterLevels, levelIndex, 0) + room.levelBonus;
+            params.position     = {Fixed::fromInt(at(config.monsterPosX, i, 0)), {},
                                      Fixed::fromInt(at(config.monsterPosZ, i, 0))};
-            params.m_toward       = at(config.monsterVectorX, i, 1);
+            params.toward       = at(config.monsterVectorX, i, 1);
             role::rules::spawnRole(world, params);
-            room.m_haveBoss |= type == 4;
+            room.haveBoss |= type == 4;
         }
     }
 
@@ -174,21 +196,21 @@ bool enter(World& world, const conf::RoomConfig& config, int32_t stageId, int32_
     // 立即实体化怪物，随后按角色类型挂上死亡掉落表。
     life::rules::spawnFlush(world, SpawnStage::Room);
     world.ecs().each<IdentityComponent>([&](Entity entity, const IdentityComponent& identity) {
-        if (identity.m_kind != SpawnKind::Role || identity.m_playerSlot)
+        if (identity.kind != SpawnKind::Role || identity.playerSlot)
             return;
-        const size_t dropIndex = identity.m_roleType >= 2 ? static_cast<size_t>(identity.m_roleType - 2) : 0;
+        const size_t dropIndex = identity.roleType >= 2 ? static_cast<size_t>(identity.roleType - 2) : 0;
         DropTableComponent drops;
         if (!config.monsterDropGoods.empty())
-            drops.m_hpRate = Fixed::fromInt(at(config.monsterDropGoods[0], dropIndex, 0));
+            drops.hpRate = Fixed::fromInt(at(config.monsterDropGoods[0], dropIndex, 0));
         if (config.monsterDropGoods.size() > 1)
-            drops.m_epRate = Fixed::fromInt(at(config.monsterDropGoods[1], dropIndex, 0));
+            drops.epRate = Fixed::fromInt(at(config.monsterDropGoods[1], dropIndex, 0));
         world.ecs().add(entity, drops);
     });
     // 初始化状态机：下一帧开始按 30ms 间隔依次推进 Init → Ready → Enter → ReadySpine → Tip → Process。
-    room.m_state = mugen::RoomState::Check;
-    room.m_pending.assign({mugen::RoomState::Init});
-    room.m_recorded.assign({mugen::RoomState::Init});
-    room.m_waitMs = Fixed::fromInt(30);
+    room.state = mugen::RoomState::Check;
+    room.pending.assign({mugen::RoomState::Init});
+    room.recorded.assign({mugen::RoomState::Init});
+    room.waitMs = Fixed::fromInt(30);
     return true;
 }
 
@@ -202,10 +224,10 @@ void load(World& world, const conf::RoomConfig& room)
             continue;
         TransformComponent transform;
         if (i < room.obstaclePos.size())
-            transform.m_position = {Fixed::fromInt(at(room.obstaclePos[i], 0)), {},
+            transform.position = {Fixed::fromInt(at(room.obstaclePos[i], 0)), {},
                                     Fixed::fromInt(at(room.obstaclePos[i], 1))};
-        transform.m_towardX = at(room.obstacleVectorX, i, 1);
-        transform.m_vectorX = Fixed::fromInt(transform.m_towardX);
+        transform.towardX = at(room.obstacleVectorX, i, 1);
+        transform.vectorX = Fixed::fromInt(transform.towardX);
         spawnObstacle(world, row->id, transform,
                       at(room.obstacleLevel, static_cast<size_t>(std::max(1, row->obstacleType) - 1), 1));
     }
@@ -215,9 +237,9 @@ void load(World& world, const conf::RoomConfig& room)
             continue;
         TransformComponent transform;
         if (i < room.goodPos.size())
-            transform.m_position = {Fixed::fromInt(at(room.goodPos[i], 0)), {}, Fixed::fromInt(at(room.goodPos[i], 1))};
-        transform.m_towardX = at(room.goodVectorX, i, 1);
-        transform.m_vectorX = Fixed::fromInt(transform.m_towardX);
+            transform.position = {Fixed::fromInt(at(room.goodPos[i], 0)), {}, Fixed::fromInt(at(room.goodPos[i], 1))};
+        transform.towardX = at(room.goodVectorX, i, 1);
+        transform.vectorX = Fixed::fromInt(transform.towardX);
         spawnGoods(world, room.goodIds[i], transform, false);
     }
     for (size_t i = 0; i < room.portalIds.size(); ++i)
@@ -226,7 +248,7 @@ void load(World& world, const conf::RoomConfig& room)
         if (!row || row->id <= 0 || at(room.portalDestType, i) != 2)
             continue;
         TransformComponent transform;
-        transform.m_position = {Fixed::fromInt(at(room.portalPosX, i)), {}, Fixed::fromInt(at(room.portalPosZ, i))};
+        transform.position = {Fixed::fromInt(at(room.portalPosX, i)), {}, Fixed::fromInt(at(room.portalPosZ, i))};
         spawnPortal(world, row->id, transform, first(room.portalDestRoomIds, i), first(room.portalDestVectorX, i, 1),
                     at(room.portalLimitType, i),
                     {Fixed::fromInt(first(room.portalDestPosX, i)), {}, Fixed::fromInt(first(room.portalDestPosZ, i))});
@@ -241,9 +263,9 @@ Entity spawnObstacle(World& world, int32_t id, const TransformComponent& transfo
         return {};
     const Entity entity = base(world, SpawnKind::Obstacle, id, transform, row->radius, row->resSpineId, true);
     ObstacleStateComponent state;
-    state.m_configId = id;
-    state.m_hits     = row->hitCounts;
-    state.m_level    = level;
+    state.configId = id;
+    state.hits     = row->hitCounts;
+    state.level    = level;
     world.ecs().add(entity, state);
     world.ecs().add(entity, DropTableComponent{});
     writeRadiusDamage(world, entity);
@@ -257,17 +279,17 @@ Entity spawnGoods(World& world, int32_t id, const TransformComponent& transform,
     if (!row || id <= 0)
         return {};
     TransformComponent placed = transform;
-    placed.m_position.y       = {};
-    placed.m_position.x += Fixed::fromInt(at(row->relativePosition, 0)) * Fixed::fromInt(transform.m_towardX);
-    placed.m_position.z += Fixed::fromInt(at(row->relativePosition, 2));
+    placed.position.y       = {};
+    placed.position.x += Fixed::fromInt(at(row->relativePosition, 0)) * Fixed::fromInt(transform.towardX);
+    placed.position.z += Fixed::fromInt(at(row->relativePosition, 2));
     const Entity entity = base(world, SpawnKind::Goods, id, placed, row->radius, row->resSpineId, true);
     GoodsStateComponent state;
-    state.m_configId = id;
-    state.m_phase    = spurt ? GoodsPhase::Spurt : GoodsPhase::Idle;
+    state.configId = id;
+    state.phase    = spurt ? GoodsPhase::Spurt : GoodsPhase::Idle;
     if (spurt)
     {
-        auto& random     = world.ecs().singleton<RngState>().m_random;
-        state.m_velocity = {random.randomF("-0.3"_fx, "0.3"_fx), "0.8"_fx, random.randomF("-0.16"_fx, "0.16"_fx)};
+        auto& random     = world.ecs().singleton<RngState>().random;
+        state.velocity = {random.randomF("-0.3"_fx, "0.3"_fx), "0.8"_fx, random.randomF("-0.16"_fx, "0.16"_fx)};
     }
     world.ecs().add(entity, state);
     writeRadiusDamage(world, entity);
@@ -283,11 +305,11 @@ Entity spawnPortal(World& world, int32_t id, const TransformComponent& transform
         return {};
     const Entity entity = base(world, SpawnKind::Portal, id, transform, row->radius, row->resSpineId, false);
     PortalStateComponent state;
-    state.m_configId    = id;
-    state.m_roomId      = destRoom;
-    state.m_toward      = toward < 0 ? -1 : 1;
-    state.m_limit       = limit;
-    state.m_destination = destination;
+    state.configId    = id;
+    state.roomId      = destRoom;
+    state.toward      = toward < 0 ? -1 : 1;
+    state.limit       = limit;
+    state.destination = destination;
     world.ecs().add(entity, state);
     writeRadiusDamage(world, entity);
     return entity;
@@ -297,10 +319,10 @@ Entity spawnPortal(World& world, int32_t id, const TransformComponent& transform
 void pushGoods(World& world, int32_t id, const TransformComponent& transform)
 {
     SpawnRequest request;
-    request.m_kind     = SpawnKind::Goods;
-    request.m_configId = id;
-    request.m_position = transform.m_position;
-    request.m_towardX  = transform.m_towardX;
+    request.kind     = SpawnKind::Goods;
+    request.configId = id;
+    request.position = transform.position;
+    request.towardX  = transform.towardX;
     world.ecs().singleton<EventQueue<SpawnRequest>>().push(request);
 }
 
@@ -310,26 +332,26 @@ void drop(World& world, Entity entity)
     auto& ecs           = world.ecs();
     const auto& transform = ecs.get<TransformComponent>(entity);
     const auto* identity = ecs.tryGet<IdentityComponent>(entity);
-    const int32_t roleType = identity ? identity->m_roleType : 0;
+    const int32_t roleType = identity ? identity->roleType : 0;
     if (roleType == 1)
         return;
     const auto* table = ecs.tryGet<DropTableComponent>(entity);
     const DropTableComponent data = table ? *table : DropTableComponent{};
-    for (const int32_t id : data.m_goods)
+    for (const int32_t id : data.goods)
         pushGoods(world, id, transform);
     if (ecs.has<ObstacleStateComponent>(entity))
         return;
     // 掉落概率与抛射速度使用原始随机流（对齐旧实现 RoomDirector::drop，不参与 DrawPolicy）。
-    auto& random = ecs.singleton<RngState>().m_random;
+    auto& random = ecs.singleton<RngState>().random;
     // 属性掉落（扩展属性 108，移植旧实现 drop 的 bonus 药品）。
     if (const auto* stats = ecs.tryGet<StatsComponent>(entity))
-        if (stats->m_extend[8] > Fixed{} && random.randomF(Fixed{}, Fixed::fromInt(100)) < stats->m_extend[8])
+        if (stats->extend[8] > Fixed{} && random.randomF(Fixed{}, Fixed::fromInt(100)) < stats->extend[8])
             pushGoods(world, 6, transform);
     if (roleType >= 2 && roleType <= 4)
     {
-        if (data.m_hpRate > Fixed{} && random.randomF(Fixed{}, Fixed::fromInt(100)) < data.m_hpRate)
+        if (data.hpRate > Fixed{} && random.randomF(Fixed{}, Fixed::fromInt(100)) < data.hpRate)
             pushGoods(world, 6, transform);
-        if (data.m_epRate > Fixed{} && random.randomF(Fixed{}, Fixed::fromInt(100)) < data.m_epRate)
+        if (data.epRate > Fixed{} && random.randomF(Fixed{}, Fixed::fromInt(100)) < data.epRate)
             pushGoods(world, 7, transform);
     }
 }
@@ -338,8 +360,8 @@ void drop(World& world, Entity entity)
 void openPortals(World& world)
 {
     world.ecs().each<PortalStateComponent>([&](Entity, PortalStateComponent& state) {
-        if (state.m_phase == PortalPhase::Close)
-            state.m_phase = PortalPhase::Active;
+        if (state.phase == PortalPhase::Close)
+            state.phase = PortalPhase::Active;
     });
 }
 
@@ -347,13 +369,13 @@ void openPortals(World& world)
 Entity materialize(World& world, const SpawnRequest& request, SpawnStage stage)
 {
     TransformComponent transform;
-    transform.m_position = request.m_position;
-    transform.m_towardX  = request.m_towardX == -1 ? -1 : 1;
-    transform.m_vectorX  = Fixed::fromInt(transform.m_towardX);
-    if (request.m_kind == SpawnKind::Obstacle)
-        return spawnObstacle(world, request.m_configId, transform, request.m_level);
-    if (request.m_kind == SpawnKind::Goods)
-        return spawnGoods(world, request.m_configId, transform, true);
+    transform.position = request.position;
+    transform.towardX  = request.towardX == -1 ? -1 : 1;
+    transform.vectorX  = Fixed::fromInt(transform.towardX);
+    if (request.kind == SpawnKind::Obstacle)
+        return spawnObstacle(world, request.configId, transform, request.level);
+    if (request.kind == SpawnKind::Goods)
+        return spawnGoods(world, request.configId, transform, true);
     static_cast<void>(stage);
     return {};
 }

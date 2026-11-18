@@ -18,27 +18,38 @@ void runHitbox(World& world)
         [&](Entity entity, const MotionStateComponent& motion, HitboxesComponent& hitboxes, const TransformComponent& transform) {
             if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
                 return;
-            const auto& born = world.ecs().get<IdentityComponent>(entity).m_born;
-            if (born.m_frame == world.frame() && born.m_stage > SpawnStage::RoleTimeline)
+            const auto& identity = world.ecs().get<IdentityComponent>(entity);
+            if (identity.born.frame == world.frame() && identity.born.stage > SpawnStage::RoleTimeline)
                 return;
             if (const PauseComponent* pause = world.ecs().tryGet<PauseComponent>(entity))
-                if (pause->m_paused)
+                if (pause->paused)
                     return;
-            hitboxes.m_attack.clear();
-            hitboxes.m_damage.clear();
-            hitboxes.m_sampledFrame = world.frame();
-            if (motion.m_motionFile.empty() || motion.m_motionName.empty())
-                return;
+            hitboxes.attack.clear();
+            hitboxes.damage.clear();
+            hitboxes.sampledFrame = world.frame();
             MotionPlayer player;
-            if (!player.bind(motion.m_motionFile) || !player.play(motion.m_motionName, motion.m_entryId, motion.m_loop))
-                return;
-            player.seek(static_cast<int32_t>(motion.m_timeMs.toInt()));
-            std::vector<const DamageBox*> attack, damage;
-            player.boxesAt(attack, damage);
-            for (const auto* box : attack)
-                hitboxes.m_attack.push_back(placeCombatBox(*box, transform, hitboxes.m_depth));
-            for (const auto* box : damage)
-                hitboxes.m_damage.push_back(placeCombatBox(*box, transform, hitboxes.m_depth));
+            if (!motion.motionFile.empty() && !motion.motionName.empty() && player.bind(motion.motionFile) &&
+                player.play(motion.motionName, motion.entryId, motion.loop))
+            {
+                player.seek(static_cast<int32_t>(motion.timeMs.toInt()));
+                std::vector<const DamageBox*> attack, damage;
+                player.boxesAt(attack, damage);
+                for (const auto* box : attack)
+                    hitboxes.attack.push_back(placeCombatBox(*box, transform, hitboxes.depth));
+                for (const auto* box : damage)
+                    hitboxes.damage.push_back(placeCombatBox(*box, transform, hitboxes.depth));
+            }
+            // 房间实体（传送门/物品/障碍）在无动作文件或动作无受击框时退回配置半径盒。
+            if (hitboxes.damage.empty() && hitboxes.radius > Fixed{} &&
+                (identity.kind == SpawnKind::Portal || identity.kind == SpawnKind::Goods ||
+                 identity.kind == SpawnKind::Obstacle))
+            {
+                const Fixed radius = hitboxes.radius;
+                const Fixed span   = radius * Fixed::fromInt(2);
+                hitboxes.damage.push_back(
+                    WorldBox{{transform.position.x - radius, transform.position.z - radius, transform.position.y},
+                             {span, span, span}});
+            }
         });
 }
 }  // namespace mugen::sim

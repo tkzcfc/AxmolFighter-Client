@@ -1,7 +1,8 @@
 #pragma once
 
 #include "mugen/core/StdC.h"
-#include "mugen/sim_legacy/World.h"
+#include "mugen/sim/World.h"
+#include "mugen/sim/present/PresentationEvent.h"
 
 #ifdef RUNTIME_IN_AXMOL
 
@@ -15,7 +16,7 @@ class SoundPlayer
 public:
     explicit SoundPlayer(uint32_t seed = 0x51A7u) : m_random(seed) {}
 
-    void consume(const sim_legacy::PresentationEvent& event);
+    void consume(const sim::PresentationEvent& event);
     void clear();
 
 private:

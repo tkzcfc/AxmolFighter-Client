@@ -163,6 +163,21 @@ public:
         }
     }
 
+    // 只读遍历：回调形如 fn(Entity, const Ts&...)。
+    template <class... Ts, class Fn>
+    void each(Fn&& fn) const
+    {
+        const std::size_t end = m_entities.order().size();
+        std::bitset<64> required;
+        (required.set(componentId<Ts>), ...);
+        for (std::size_t index = 0; index < end; ++index)
+        {
+            const Entity entity = m_entities.order()[index];
+            if ((m_entities.signature(entity) & required) == required)
+                fn(entity, *std::get<componentId<Ts>>(m_pools).tryGet(entity)...);
+        }
+    }
+
     // 写入实体、组件池和单例的确定性快照。
     void serialize(ByteBuffer& buffer) const
     {

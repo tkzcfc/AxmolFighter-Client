@@ -1,39 +1,33 @@
 #include "ui/battle/BattleDebugPanel.h"
 
 #include "mugen/conf/TypeConversions.h"
-#include "mugen/sim_legacy/skill/SkillCaster.h"
 #include "imgui.h"
 
 namespace gameui
 {
-void BattleDebugPanel::render(mugen::sim_legacy::World& world, bool& paused, bool& singleStep, bool& collisionDebug)
+void BattleDebugPanel::render(mugen::sim::World& world, bool& paused, bool& singleStep, bool& collisionDebug)
 {
     ImGui::Begin("Battle Debug");
-    const auto& clock = world.ecs().singleton<mugen::sim_legacy::WorldClock>();
-    ImGui::Text("world hash %llu %016llx", static_cast<unsigned long long>(clock.frame),
-                static_cast<unsigned long long>(world.hash()));
-    ImGui::Text("Frame %llu  %.2fs", static_cast<unsigned long long>(clock.frame),
-                static_cast<double>(clock.frame) / 30.0);
+    const auto frame = mugen::sim::view::debugFrame(world);
+    ImGui::Text("world hash %llu %016llx", static_cast<unsigned long long>(frame),
+                static_cast<unsigned long long>(mugen::sim::view::debugHash(world)));
+    ImGui::Text("Frame %llu  %.2fs", static_cast<unsigned long long>(frame),
+                static_cast<double>(frame) / 30.0);
     ImGui::Checkbox("Pause", &paused);
     if (ImGui::Button("Single step"))
         singleStep = true;
     ImGui::Checkbox("Collision boxes (F8)", &collisionDebug);
     ImGui::Separator();
-    mugen::Entity player{};
-    const auto& slots = world.ecs().singleton<mugen::sim_legacy::PlayerSlots>().entities;
-    if (const auto it = slots.find(0); it != slots.end())
-        player = it->second;
-    else if (!slots.empty())
-        player = slots.begin()->second;
+    const mugen::Entity player = mugen::sim::view::playerEntity(world, 0);
     if (player.value == 0)
-        ImGui::TextUnformatted(mugen::sim_legacy::skill::kNoProfessionTree.data());
+        ImGui::TextUnformatted(mugen::sim::view::kNoProfessionTree.data());
     else
     {
-        const auto& identity  = world.ecs().get<mugen::sim_legacy::RoleIdentity>(player);
-        const auto occupation = mugen::type_conversions::toCharacterClass(identity.roleId);
-        const auto rows       = mugen::sim_legacy::skill::SkillAssembly::offlineKitRows(occupation);
+        const auto info       = mugen::sim::view::readEntityRoleInfo(world, player);
+        const auto occupation = mugen::type_conversions::toCharacterClass(info.roleId);
+        const auto rows       = mugen::sim::view::offlineKitRows(occupation);
         if (rows.empty())
-            ImGui::TextUnformatted(mugen::sim_legacy::skill::kNoProfessionTree.data());
+            ImGui::TextUnformatted(mugen::sim::view::kNoProfessionTree.data());
         else
         {
             ImGui::TextUnformatted("key  slot  leaf  skill  pool");
@@ -47,7 +41,7 @@ void BattleDebugPanel::render(mugen::sim_legacy::World& world, bool& paused, boo
                     ImGui::SameLine();
                     ImGui::PushID(index);
                     if (ImGui::Button("Cast"))
-                        mugen::sim_legacy::skill::SkillCaster(world, player).presetSkill(row.poolSlot);
+                        mugen::sim::view::debugCastSlot(world, player, row.poolSlot);
                     ImGui::PopID();
                 }
                 ++index;
@@ -55,13 +49,35 @@ void BattleDebugPanel::render(mugen::sim_legacy::World& world, bool& paused, boo
         }
     }
     ImGui::Separator();
-    world.ecs().each<mugen::sim_legacy::RoleIdentity, mugen::sim_legacy::RoleStatus, mugen::sim_legacy::Transform>(
-        [](mugen::Entity entity, const mugen::sim_legacy::RoleIdentity& identity, const mugen::sim_legacy::RoleStatus& status,
-           const mugen::sim_legacy::Transform& transform) {
-        ImGui::Text("entity=%u role=%d level=%d status=%d pos=(%.2f, %.2f, %.2f)", entity.value, identity.roleId,
-                    identity.level, static_cast<int>(status.eEntityStatus), transform.position.x.toFloatForRender(),
-                    transform.position.y.toFloatForRender(), transform.position.z.toFloatForRender());
-    });
+    std::vector<mugen::sim::view::RoleDebugView> roles;
+    mugen::sim::view::collectRoleDebug(world, roles);
+    for (const auto& role : roles)
+    {
+        ImGui::Text("entity=%u role=%d level=%d status=%d pos=(%.2f, %.2f, %.2f)", role.entity.value, role.roleId,
+                    role.level, role.state, role.position.x.toFloatForRender(), role.position.y.toFloatForRender(),
+                    role.position.z.toFloatForRender());
+    }
+    ImGui::End();
+}
+
+void BattleDebugPanel::renderNet(mugen::sim::World& world, const BattleNetInfo& net)
+{
+    ImGui::Begin("Battle Debug");
+    const auto frame = mugen::sim::view::debugFrame(world);
+    ImGui::Text("world hash %llu %016llx", static_cast<unsigned long long>(frame),
+                static_cast<unsigned long long>(mugen::sim::view::debugHash(world)));
+    ImGui::Text("Frame %llu  %.2fs", static_cast<unsigned long long>(frame),
+                static_cast<double>(frame) / 30.0);
+    renderNetLatency(net);
+    ImGui::Separator();
+    std::vector<mugen::sim::view::RoleDebugView> roles;
+    mugen::sim::view::collectRoleDebug(world, roles);
+    for (const auto& role : roles)
+    {
+        ImGui::Text("entity=%u role=%d level=%d status=%d pos=(%.2f, %.2f, %.2f)", role.entity.value, role.roleId,
+                    role.level, role.state, role.position.x.toFloatForRender(), role.position.y.toFloatForRender(),
+                    role.position.z.toFloatForRender());
+    }
     ImGui::End();
 }
 
@@ -78,25 +94,5 @@ void BattleDebugPanel::renderNetLatency(const BattleNetInfo& net)
     ImGui::Text("输入领先: %u 帧 (~%u ms)", net.m_leadFrames, net.m_leadFrames * net.m_frameMs);
     ImGui::Text("本地输入延迟: %u 帧 (~%u ms) [%s]", net.m_localDelayFrames, net.m_localDelayFrames * net.m_frameMs,
                 net.m_localDelayMode);
-}
-
-void BattleDebugPanel::renderNet(mugen::sim_legacy::World& world, const BattleNetInfo& net)
-{
-    ImGui::Begin("Battle Debug");
-    const auto& clock = world.ecs().singleton<mugen::sim_legacy::WorldClock>();
-    ImGui::Text("world hash %llu %016llx", static_cast<unsigned long long>(clock.frame),
-                static_cast<unsigned long long>(world.hash()));
-    ImGui::Text("Frame %llu  %.2fs", static_cast<unsigned long long>(clock.frame),
-                static_cast<double>(clock.frame) / 30.0);
-    renderNetLatency(net);
-    ImGui::Separator();
-    world.ecs().each<mugen::sim_legacy::RoleIdentity, mugen::sim_legacy::RoleStatus, mugen::sim_legacy::Transform>(
-        [](mugen::Entity entity, const mugen::sim_legacy::RoleIdentity& identity, const mugen::sim_legacy::RoleStatus& status,
-           const mugen::sim_legacy::Transform& transform) {
-        ImGui::Text("entity=%u role=%d level=%d status=%d pos=(%.2f, %.2f, %.2f)", entity.value, identity.roleId,
-                    identity.level, static_cast<int>(status.eEntityStatus), transform.position.x.toFloatForRender(),
-                    transform.position.y.toFloatForRender(), transform.position.z.toFloatForRender());
-    });
-    ImGui::End();
 }
 }  // namespace gameui

@@ -29,27 +29,42 @@ std::vector<Entity> bootstrapBattle(World& world, const WorldSetup& setup)
     world.init(setup);
 
     // 出生玩家：按配置写入 SpawnRequest，随后立即在出生阶段实体化。
-    for (const auto& playerSetup : setup.m_players)
+    for (const auto& playerSetup : setup.players)
     {
-        if (playerSetup.m_camp == static_cast<int32_t>(EntityCamp::Neutral))
+        if (playerSetup.camp == static_cast<int32_t>(EntityCamp::Neutral))
         {
-            MG_LOG_E("Player slot {} cannot use the neutral camp", playerSetup.m_slot);
+            MG_LOG_E("Player slot {} cannot use the neutral camp", playerSetup.slot);
             MG_ASSERT(false && "Player camp must not be neutral");
             return {};
         }
         RoleSpawnParams params;
-        params.m_roleId       = playerSetup.m_roleId;
-        params.m_level        = playerSetup.m_level;
-        params.m_aiDifficulty = playerSetup.m_aiDifficulty;
-        params.m_playerSlot   = playerSetup.m_slot;
-        params.m_isAi         = playerSetup.m_isAi;
-        if (playerSetup.m_camp != 0)
-            params.m_camp = playerSetup.m_camp;
+        params.roleId       = playerSetup.roleId;
+        params.level        = playerSetup.level;
+        params.aiDifficulty = playerSetup.aiDifficulty;
+        params.playerSlot   = playerSetup.slot;
+        params.isAi         = playerSetup.isAi;
+        if (playerSetup.camp != 0)
+            params.camp = playerSetup.camp;
         role::rules::spawnRole(world, params);
     }
     life::rules::spawnFlush(world, SpawnStage::Room);
 
-    if (!room::rules::enter(world, *room, setup.m_stageId, setup.m_copyId))
+    // PVP 决斗按出生生命倍率统一缩放玩家生命与上限。
+    if (setup.pvp)
+    {
+        for (const auto& [slot, hero] : world.ecs().singleton<PlayerSlots>().entities)
+        {
+            (void)slot;
+            auto& stats    = world.ecs().get<StatsComponent>(hero);
+            stats.base[4] *= setup.pvpHpScale;
+            auto& health   = world.ecs().get<HealthComponent>(hero);
+            health.maxHp   = stats.maxHp();
+            health.hp      = health.maxHp;
+            health.prevHp  = health.maxHp;
+        }
+    }
+
+    if (!room::rules::enter(world, *room, setup.stageId, setup.copyId))
     {
         MG_LOG_E("Battle bootstrap failed to enter room {}", setup.roomId);
         return {};
@@ -58,9 +73,8 @@ std::vector<Entity> bootstrapBattle(World& world, const WorldSetup& setup)
 
     // 按出生顺序收集玩家实体。
     std::vector<Entity> heroes;
-    for (const auto& [slot, entity] : world.ecs().singleton<PlayerSlots>().m_entities)
+    for (const auto& [slot, entity] : world.ecs().singleton<PlayerSlots>().entities)
         heroes.push_back(entity);
-    static_cast<void>(setup);
     return heroes;
 }
 }  // namespace mugen::sim

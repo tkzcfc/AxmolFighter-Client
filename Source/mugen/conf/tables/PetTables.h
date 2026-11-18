@@ -21,7 +21,7 @@ struct PetConfig
     int32_t petId   = 0;
     int32_t quality = 0;
     int32_t rare    = 0;
-    // entity_pet.res_spine_id + heiyue UiPet preview anim (stand1).
+    // entity_pet.res_spine_id + pet preview anim (stand1).
     std::string spineAnim;
     int32_t spineId = 0;
     int32_t starMax = 25;

@@ -42,15 +42,15 @@ World makeWorld()
     REQUIRE(room != nullptr);
     setup.mapKey = room->mapKey;
     PlayerSetup player;
-    player.m_roleId = type_conversions::toRoleConfigId(CharacterClass::kSwordman);
-    player.m_level  = 1000;
-    player.m_camp   = 2;
-    player.m_slot   = 0;
-    player.m_isAi   = false;
-    setup.m_players.push_back(player);
-    setup.m_stageId   = 0;
-    setup.m_copyId    = 0;
-    setup.m_aiEnabled = false;
+    player.roleId = type_conversions::toRoleConfigId(CharacterClass::kSwordman);
+    player.level  = 1000;
+    player.camp   = 2;
+    player.slot   = 0;
+    player.isAi   = false;
+    setup.players.push_back(player);
+    setup.stageId   = 0;
+    setup.copyId    = 0;
+    setup.aiEnabled = false;
     REQUIRE_FALSE(bootstrapBattle(world, setup).empty());
     return world;
 }
@@ -59,7 +59,7 @@ Entity roleByConfig(World& world, int32_t configId)
 {
     Entity found;
     world.ecs().each<IdentityComponent>([&](Entity entity, const IdentityComponent& identity) {
-        if (identity.m_configId == configId && identity.m_kind == SpawnKind::Role)
+        if (identity.configId == configId && identity.kind == SpawnKind::Role)
             found = entity;
     });
     return found;
@@ -89,36 +89,36 @@ TEST_CASE("summon spawn inherits owner camp and expires by lifetime")
     const auto& heroTf = world.ecs().get<TransformComponent>(hero);
 
     SpawnRequest request;
-    request.m_kind       = SpawnKind::Role;
-    request.m_configId   = roleId;
-    request.m_owner      = hero;
-    request.m_position   = heroTf.m_position;
-    request.m_towardX    = heroTf.m_towardX;
-    request.m_lifetimeMs = 100;
-    request.m_level      = heroId.m_level;
-    request.m_camp       = heroId.m_camp;
-    request.m_isAi       = true;
+    request.kind       = SpawnKind::Role;
+    request.configId   = roleId;
+    request.owner      = hero;
+    request.position   = heroTf.position;
+    request.towardX    = heroTf.towardX;
+    request.lifetimeMs = 100;
+    request.level      = heroId.level;
+    request.camp       = heroId.camp;
+    request.isAi       = true;
     world.ecs().singleton<EventQueue<SpawnRequest>>().push(request);
     life::rules::spawnFlush(world, SpawnStage::Lifecycle);
 
     Entity summoned;
     world.ecs().each<SummonComponent, IdentityComponent>([&](Entity entity, const SummonComponent& summon,
                                                              const IdentityComponent& identity) {
-        if (summon.m_owner == hero && identity.m_configId == roleId)
+        if (summon.owner == hero && identity.configId == roleId)
             summoned = entity;
     });
     REQUIRE(summoned.value != 0);
-    CHECK(world.ecs().get<IdentityComponent>(summoned).m_camp == heroId.m_camp);
-    CHECK(world.ecs().get<SummonComponent>(summoned).m_root == hero);
-    CHECK(world.ecs().get<SummonComponent>(summoned).m_remainingMs == Fixed::fromInt(100));
+    CHECK(world.ecs().get<IdentityComponent>(summoned).camp == heroId.camp);
+    CHECK(world.ecs().get<SummonComponent>(summoned).root == hero);
+    CHECK(world.ecs().get<SummonComponent>(summoned).remainingMs == Fixed::fromInt(100));
 
     bool expired = false;
     const uint64_t start = world.frame();
     for (uint64_t frame = start + 1; frame <= start + 20; ++frame)
     {
         world.tick(FrameInput{frame, {}, {}, {}});
-        if (!world.ecs().alive(summoned) || world.ecs().get<HealthComponent>(summoned).m_dead ||
-            world.ecs().get<RoleStateComponent>(summoned).m_deathRequested)
+        if (!world.ecs().alive(summoned) || world.ecs().get<HealthComponent>(summoned).dead ||
+            world.ecs().get<RoleStateComponent>(summoned).deathRequested)
         {
             expired = true;
             break;
@@ -167,21 +167,21 @@ TEST_CASE("summon cue on effect clip queues a role SpawnRequest")
 
     Entity effect;
     world.ecs().each<EffectInfoComponent>([&](Entity entity, const EffectInfoComponent& info) {
-        if (info.m_configId == effectId && info.m_owner == hero)
+        if (info.configId == effectId && info.owner == hero)
             effect = entity;
     });
     REQUIRE(effect.value != 0);
     auto& timeline    = world.ecs().get<ActionTimelineComponent>(effect);
-    timeline.m_clips  = {clipId};
-    timeline.m_index  = 0;
+    timeline.clips  = {clipId};
+    timeline.index  = 0;
     REQUIRE(timeline::rules::enterClip(world, effect, clipId, true, false));
 
     bool spawned = false;
     for (int i = 0; i < 120 && !spawned; ++i)
     {
         const bool done = timeline::rules::advanceClip(world, effect);
-        for (const auto& request : world.ecs().singleton<EventQueue<SpawnRequest>>().m_items)
-            if (request.m_kind == SpawnKind::Role && request.m_configId == summonId && request.m_owner == hero)
+        for (const auto& request : world.ecs().singleton<EventQueue<SpawnRequest>>().items)
+            if (request.kind == SpawnKind::Role && request.configId == summonId && request.owner == hero)
                 spawned = true;
         if (done)
             break;

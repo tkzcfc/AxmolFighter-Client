@@ -38,15 +38,15 @@ World makeWorld()
     REQUIRE(room != nullptr);
     setup.mapKey = room->mapKey;
     PlayerSetup player;
-    player.m_roleId = type_conversions::toRoleConfigId(CharacterClass::kSwordman);
-    player.m_level  = 1000;
-    player.m_camp   = 2;
-    player.m_slot   = 0;
-    player.m_isAi   = false;
-    setup.m_players.push_back(player);
-    setup.m_stageId   = 0;
-    setup.m_copyId    = 0;
-    setup.m_aiEnabled = false;
+    player.roleId = type_conversions::toRoleConfigId(CharacterClass::kSwordman);
+    player.level  = 1000;
+    player.camp   = 2;
+    player.slot   = 0;
+    player.isAi   = false;
+    setup.players.push_back(player);
+    setup.stageId   = 0;
+    setup.copyId    = 0;
+    setup.aiEnabled = false;
     REQUIRE_FALSE(bootstrapBattle(world, setup).empty());
     return world;
 }
@@ -55,7 +55,7 @@ Entity roleByConfig(World& world, int32_t configId)
 {
     Entity found;
     world.ecs().each<IdentityComponent>([&](Entity entity, const IdentityComponent& identity) {
-        if (identity.m_configId == configId && identity.m_kind == SpawnKind::Role)
+        if (identity.configId == configId && identity.kind == SpawnKind::Role)
             found = entity;
     });
     return found;
@@ -64,13 +64,13 @@ Entity roleByConfig(World& world, int32_t configId)
 Entity spawnFollowEffect(World& world, Entity owner, int32_t effectId)
 {
     SourceContext source;
-    source.m_skillId     = 920090;
-    source.m_baseSkillId = 920090;
+    source.skillId     = 920090;
+    source.baseSkillId = 920090;
     effect::rules::spawnFromRole(world, owner, effectId, source);
     life::rules::spawnFlush(world, SpawnStage::RoleTimeline);
     Entity found;
     world.ecs().each<EffectInfoComponent>([&](Entity entity, const EffectInfoComponent& info) {
-        if (info.m_configId == effectId && info.m_owner == owner)
+        if (info.configId == effectId && info.owner == owner)
             found = entity;
     });
     return found;
@@ -89,20 +89,20 @@ TEST_CASE("follow system snaps effect to owner after the owner moves")
     const Entity effect = spawnFollowEffect(world, hero, 920210);
     REQUIRE(effect.value != 0);
     REQUIRE(world.ecs().has<FollowComponent>(effect));
-    CHECK(world.ecs().get<FollowComponent>(effect).m_mode == 1);
+    CHECK(world.ecs().get<FollowComponent>(effect).mode == 1);
 
     auto& owner = world.ecs().get<TransformComponent>(hero);
-    owner.m_position.x += Fixed::fromInt(80);
-    owner.m_position.y += Fixed::fromInt(12);
+    owner.position.x += Fixed::fromInt(80);
+    owner.position.y += Fixed::fromInt(12);
     const auto expected = owner;
     runFollow(world);
     TransformComponent placed = world.ecs().get<TransformComponent>(effect);
     effect::rules::placeFrom(world, effect, hero, false);
     const auto& after = world.ecs().get<TransformComponent>(effect);
-    CHECK(placed.m_position.x == after.m_position.x);
-    CHECK(placed.m_position.y == after.m_position.y);
-    CHECK(placed.m_position.z == after.m_position.z);
-    CHECK(placed.m_towardX == expected.m_towardX);
+    CHECK(placed.position.x == after.position.x);
+    CHECK(placed.position.y == after.position.y);
+    CHECK(placed.position.z == after.position.z);
+    CHECK(placed.towardX == expected.towardX);
 }
 
 TEST_CASE("follow mode 2 grounds y and pause skips follow")
@@ -113,16 +113,16 @@ TEST_CASE("follow mode 2 grounds y and pause skips follow")
     const Entity effect = spawnFollowEffect(world, hero, 920210);
     REQUIRE(effect.value != 0);
 
-    world.ecs().get<FollowComponent>(effect).m_mode = 2;
-    world.ecs().get<TransformComponent>(hero).m_position.y = Fixed::fromInt(40);
+    world.ecs().get<FollowComponent>(effect).mode = 2;
+    world.ecs().get<TransformComponent>(hero).position.y = Fixed::fromInt(40);
     runFollow(world);
-    CHECK(world.ecs().get<TransformComponent>(effect).m_position.y == Fixed{});
+    CHECK(world.ecs().get<TransformComponent>(effect).position.y == Fixed{});
 
-    const Fixed stuckX = world.ecs().get<TransformComponent>(effect).m_position.x;
-    world.ecs().get<PauseComponent>(effect).m_paused = true;
-    world.ecs().get<TransformComponent>(hero).m_position.x += Fixed::fromInt(50);
+    const Fixed stuckX = world.ecs().get<TransformComponent>(effect).position.x;
+    world.ecs().get<PauseComponent>(effect).paused = true;
+    world.ecs().get<TransformComponent>(hero).position.x += Fixed::fromInt(50);
     runFollow(world);
-    CHECK(world.ecs().get<TransformComponent>(effect).m_position.x == stuckX);
+    CHECK(world.ecs().get<TransformComponent>(effect).position.x == stuckX);
 }
 
 TEST_CASE("follow skips effect-timeline born entities on the spawn frame")
@@ -131,19 +131,19 @@ TEST_CASE("follow skips effect-timeline born entities on the spawn frame")
     const Entity hero = roleByConfig(world, 101);
     REQUIRE(hero.value != 0);
     SourceContext source;
-    source.m_skillId     = 920090;
-    source.m_baseSkillId = 920090;
+    source.skillId     = 920090;
+    source.baseSkillId = 920090;
     effect::rules::spawnFromRole(world, hero, 920210, source);
     life::rules::spawnFlush(world, SpawnStage::EffectTimeline);
     Entity effect;
     world.ecs().each<EffectInfoComponent>([&](Entity entity, const EffectInfoComponent& info) {
-        if (info.m_configId == 920210 && info.m_owner == hero)
+        if (info.configId == 920210 && info.owner == hero)
             effect = entity;
     });
     REQUIRE(effect.value != 0);
-    const Fixed stuckX = world.ecs().get<TransformComponent>(effect).m_position.x;
-    world.ecs().get<TransformComponent>(hero).m_position.x += Fixed::fromInt(80);
+    const Fixed stuckX = world.ecs().get<TransformComponent>(effect).position.x;
+    world.ecs().get<TransformComponent>(hero).position.x += Fixed::fromInt(80);
     runFollow(world);
-    CHECK(world.ecs().get<TransformComponent>(effect).m_position.x == stuckX);
-    CHECK(world.ecs().get<IdentityComponent>(effect).m_born.m_stage == SpawnStage::EffectTimeline);
+    CHECK(world.ecs().get<TransformComponent>(effect).position.x == stuckX);
+    CHECK(world.ecs().get<IdentityComponent>(effect).born.stage == SpawnStage::EffectTimeline);
 }

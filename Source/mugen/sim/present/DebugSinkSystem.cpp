@@ -16,9 +16,9 @@ std::string entityKey(World& world, Entity entity)
     if (entity.value == 0)
         return "-";
     const auto& identity = world.ecs().get<IdentityComponent>(entity);
-    const char* stem     = identity.m_kind == SpawnKind::Effect ? "fx" : "role";
-    return std::string(stem) + ':' + std::to_string(identity.m_configId) + '#' +
-           std::to_string(identity.m_ordinal);
+    const char* stem     = identity.kind == SpawnKind::Effect ? "fx" : "role";
+    return std::string(stem) + ':' + std::to_string(identity.configId) + '#' +
+           std::to_string(identity.ordinal);
 }
 // 定点转毫单位整数。
 int64_t toMilli(Fixed value)
@@ -48,12 +48,12 @@ const char* hitResultName(HitResult result)
 // 槽位下标 → 槽位字母。
 std::string slotLetter(World& world, const CastEvent& event)
 {
-    if (!world.ecs().has<SkillBookComponent>(event.m_entity))
+    if (!world.ecs().has<SkillBookComponent>(event.entity))
         return "?";
-    const auto& slots = world.ecs().get<SkillBookComponent>(event.m_entity).m_slots;
-    if (event.m_slot < 0 || static_cast<size_t>(event.m_slot) >= slots.size())
+    const auto& slots = world.ecs().get<SkillBookComponent>(event.entity).slots;
+    if (event.slot < 0 || static_cast<size_t>(event.slot) >= slots.size())
         return "?";
-    return slots[static_cast<size_t>(event.m_slot)];
+    return slots[static_cast<size_t>(event.slot)];
 }
 // 顿帧帧数 = ceil(freezeMs / dtMs)。
 int32_t stopFrames(Fixed freezeMs, Fixed dtMs)
@@ -67,95 +67,95 @@ void runDebugSink(World& world)
 {
     world.clearTraceLines();
     auto& ecs        = world.ecs();
-    const Fixed dtMs = ecs.singleton<WorldClock>().m_dtMs;
-    for (const CastEvent& event : ecs.singleton<EventQueue<CastEvent>>().m_items)
+    const Fixed dtMs = ecs.singleton<WorldClock>().dtMs;
+    for (const CastEvent& event : ecs.singleton<EventQueue<CastEvent>>().items)
     {
-        const std::string key = entityKey(world, event.m_entity);
-        if (event.m_phase == CastPhase::Began)
-            world.appendTrace("cast " + key + ' ' + std::to_string(event.m_skillId) + ' ' + slotLetter(world, event));
-        else if (event.m_phase == CastPhase::Ended)
-            world.appendTrace("castend " + key + ' ' + std::to_string(event.m_skillId));
-        else if (event.m_phase == CastPhase::Cancelled)
-            world.appendTrace("castend " + key + ' ' + std::to_string(event.m_skillId));
+        const std::string key = entityKey(world, event.entity);
+        if (event.phase == CastPhase::Began)
+            world.appendTrace("cast " + key + ' ' + std::to_string(event.skillId) + ' ' + slotLetter(world, event));
+        else if (event.phase == CastPhase::Ended)
+            world.appendTrace("castend " + key + ' ' + std::to_string(event.skillId));
+        else if (event.phase == CastPhase::Cancelled)
+            world.appendTrace("castend " + key + ' ' + std::to_string(event.skillId));
     }
-    for (const SpawnEvent& event : ecs.singleton<EventQueue<SpawnEvent>>().m_items)
+    for (const SpawnEvent& event : ecs.singleton<EventQueue<SpawnEvent>>().items)
     {
-        const std::string owner = entityKey(world, event.m_owner);
-        const std::string key   = entityKey(world, event.m_entity);
-        const auto& identity    = ecs.get<IdentityComponent>(event.m_entity);
-        if (event.m_kind == SpawnKind::Effect || event.m_kind == SpawnKind::Role)
-            if (identity.m_born.m_frame != 0)
+        const std::string owner = entityKey(world, event.owner);
+        const std::string key   = entityKey(world, event.entity);
+        const auto& identity    = ecs.get<IdentityComponent>(event.entity);
+        if (event.kind == SpawnKind::Effect || event.kind == SpawnKind::Role)
+            if (identity.born.frame != 0)
                 world.appendTrace("spawn " + owner + ' ' + key);
     }
-    for (const HitEvent& event : ecs.singleton<EventQueue<HitEvent>>().m_items)
+    for (const HitEvent& event : ecs.singleton<EventQueue<HitEvent>>().items)
     {
-        const std::string effect   = entityKey(world, event.m_effect);
-        const std::string target   = entityKey(world, event.m_target);
-        const std::string attacker = entityKey(world, event.m_attacker);
-        world.appendTrace("hit " + effect + ' ' + target + ' ' + std::to_string(event.m_hitDefId) + ' ' +
-                          hitResultName(event.m_result));
-        if (event.m_result == HitResult::Hit)
-            world.appendTrace("dmg " + attacker + ' ' + target + ' ' + std::to_string(event.m_effectId) + ' ' +
-                              std::to_string(event.m_damage.toInt()) + ' ' + (event.m_critical ? '1' : '0'));
+        const std::string effect   = entityKey(world, event.effect);
+        const std::string target   = entityKey(world, event.target);
+        const std::string attacker = entityKey(world, event.attacker);
+        world.appendTrace("hit " + effect + ' ' + target + ' ' + std::to_string(event.hitDefId) + ' ' +
+                          hitResultName(event.result));
+        if (event.result == HitResult::Hit)
+            world.appendTrace("dmg " + attacker + ' ' + target + ' ' + std::to_string(event.effectId) + ' ' +
+                              std::to_string(event.damage.toInt()) + ' ' + (event.critical ? '1' : '0'));
     }
-    for (const HpEvent& event : ecs.singleton<EventQueue<HpEvent>>().m_items)
+    for (const HpEvent& event : ecs.singleton<EventQueue<HpEvent>>().items)
     {
-        if (event.m_cause == HpCause::Hit)
+        if (event.cause == HpCause::Hit)
             continue;
-        const std::string key = entityKey(world, event.m_entity);
+        const std::string key = entityKey(world, event.entity);
         const char* reason = "other";
-        if (event.m_cause == HpCause::Dot)
+        if (event.cause == HpCause::Dot)
             reason = "dot";
-        else if (event.m_cause == HpCause::Heal)
+        else if (event.cause == HpCause::Heal)
             reason = "heal";
-        else if (event.m_cause == HpCause::Shield)
+        else if (event.cause == HpCause::Shield)
             reason = "shield";
-        world.appendTrace("hp " + key + ' ' + std::to_string(event.m_delta.toInt()) + ' ' + reason);
+        world.appendTrace("hp " + key + ' ' + std::to_string(event.delta.toInt()) + ' ' + reason);
     }
-    for (const HitStopEvent& event : ecs.singleton<EventQueue<HitStopEvent>>().m_items)
-        world.appendTrace("stop " + entityKey(world, event.m_entity) + ' ' +
-                          std::to_string(stopFrames(event.m_freezeMs, dtMs)));
-    for (const BuffEvent& event : ecs.singleton<EventQueue<BuffEvent>>().m_items)
+    for (const HitStopEvent& event : ecs.singleton<EventQueue<HitStopEvent>>().items)
+        world.appendTrace("stop " + entityKey(world, event.entity) + ' ' +
+                          std::to_string(stopFrames(event.freezeMs, dtMs)));
+    for (const BuffEvent& event : ecs.singleton<EventQueue<BuffEvent>>().items)
     {
-        const std::string key = entityKey(world, event.m_entity);
-        if (event.m_phase == BuffPhase::Added)
-            world.appendTrace("buff + " + key + ' ' + std::to_string(event.m_buffId));
-        else if (event.m_phase == BuffPhase::Removed)
-            world.appendTrace("buff - " + key + ' ' + std::to_string(event.m_buffId));
+        const std::string key = entityKey(world, event.entity);
+        if (event.phase == BuffPhase::Added)
+            world.appendTrace("buff + " + key + ' ' + std::to_string(event.buffId));
+        else if (event.phase == BuffPhase::Removed)
+            world.appendTrace("buff - " + key + ' ' + std::to_string(event.buffId));
     }
-    for (const DisplacementEvent& event : ecs.singleton<EventQueue<DisplacementEvent>>().m_items)
+    for (const DisplacementEvent& event : ecs.singleton<EventQueue<DisplacementEvent>>().items)
     {
-        if (!ecs.alive(event.m_entity))
+        if (!ecs.alive(event.entity))
             continue;
-        const std::string key = entityKey(world, event.m_entity);
-        if (event.m_phase == DispPhase::Began)
-            world.appendTrace("disp+ " + key + ' ' + std::to_string(event.m_curveId));
+        const std::string key = entityKey(world, event.entity);
+        if (event.phase == DispPhase::Began)
+            world.appendTrace("disp+ " + key + ' ' + std::to_string(event.curveId));
         else
         {
-            const auto& pos = ecs.get<TransformComponent>(event.m_entity).m_position;
-            world.appendTrace("disp- " + key + ' ' + std::to_string(event.m_curveId) + ' ' +
+            const auto& pos = ecs.get<TransformComponent>(event.entity).position;
+            world.appendTrace("disp- " + key + ' ' + std::to_string(event.curveId) + ' ' +
                               std::to_string(toMilli(pos.x)) + ' ' + std::to_string(toMilli(pos.y)) + ' ' +
                               std::to_string(toMilli(pos.z)));
         }
     }
-    for (const DeathEvent& event : ecs.singleton<EventQueue<DeathEvent>>().m_items)
-        world.appendTrace("death " + entityKey(world, event.m_entity));
+    for (const DeathEvent& event : ecs.singleton<EventQueue<DeathEvent>>().items)
+        world.appendTrace("death " + entityKey(world, event.entity));
     // 房间流程事实：状态切换、胜负、警告。摘要导出按这些追踪行还原成 roomstate/victory/failure/warning 行。
-    for (const RoomEvent& event : ecs.singleton<EventQueue<RoomEvent>>().m_items)
+    for (const RoomEvent& event : ecs.singleton<EventQueue<RoomEvent>>().items)
     {
-        switch (event.m_kind)
+        switch (event.kind)
         {
         case RoomEventKind::StateChanged:
-            world.appendTrace("roomstate " + std::to_string(event.m_payload));
+            world.appendTrace("roomstate " + std::to_string(event.payload));
             break;
         case RoomEventKind::Victory:
-            world.appendTrace("victory " + std::to_string(event.m_payload));
+            world.appendTrace("victory " + std::to_string(event.payload));
             break;
         case RoomEventKind::Failure:
-            world.appendTrace("failure " + std::to_string(event.m_payload));
+            world.appendTrace("failure " + std::to_string(event.payload));
             break;
         case RoomEventKind::Warning:
-            world.appendTrace("warning " + std::to_string(event.m_payload));
+            world.appendTrace("warning " + std::to_string(event.payload));
             break;
         case RoomEventKind::PvpEnded:
             break;

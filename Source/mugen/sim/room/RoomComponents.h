@@ -32,56 +32,56 @@ enum class GoodsPhase : uint8_t
 struct ObstacleStateComponent
 {
     // 障碍配置标识。
-    int32_t m_configId = 0;
+    int32_t configId = 0;
     // 剩余受击次数；负一表示不可破坏。
-    int32_t m_hits = -1;
+    int32_t hits = -1;
     // 状态动作已运行毫秒。
-    Fixed m_timeMs;
+    Fixed timeMs;
     // 死亡位移只初始化一次，等待制动或落地。
-    bool m_deathStarted = false;
-    bool m_displacementEnd = false;
+    bool deathStarted = false;
+    bool displacementEnd = false;
     // 障碍等级（计算属性用）。
-    int32_t m_level = 1;
-    MG_REFLECT(ObstacleStateComponent, m_configId, m_hits, m_timeMs, m_deathStarted, m_displacementEnd, m_level)
+    int32_t level = 1;
+    MG_REFLECT(ObstacleStateComponent, configId, hits, timeMs, deathStarted, displacementEnd, level)
 };
 
 // 掉落物状态：携带抛射速度与拾取者。
 struct GoodsStateComponent
 {
     // 物品配置标识。
-    int32_t m_configId = 0;
+    int32_t configId = 0;
     // 当前阶段。
-    GoodsPhase m_phase = GoodsPhase::Idle;
+    GoodsPhase phase = GoodsPhase::Idle;
     // 抛射速度（仅 Spurt 阶段）。
-    FixedVec3 m_velocity;
+    FixedVec3 velocity;
     // 拾取者句柄。
-    Entity m_collector;
-    MG_REFLECT(GoodsStateComponent, m_configId, m_phase, m_velocity, m_collector)
+    Entity collector;
+    MG_REFLECT(GoodsStateComponent, configId, phase, velocity, collector)
 };
 
 // 传送门状态：目标房间与三阶段。
 struct PortalStateComponent
 {
     // 门配置标识。
-    int32_t m_configId = 0;
+    int32_t configId = 0;
     // 目标房间、目标朝向与限制类型。
-    int32_t m_roomId = 0;
-    int32_t m_toward = 1;
-    int32_t m_limit = 0;
+    int32_t roomId = 0;
+    int32_t toward = 1;
+    int32_t limit = 0;
     // 到达位置与当前阶段。
-    FixedVec3 m_destination;
-    PortalPhase m_phase = PortalPhase::Close;
-    MG_REFLECT(PortalStateComponent, m_configId, m_roomId, m_toward, m_limit, m_destination, m_phase)
+    FixedVec3 destination;
+    PortalPhase phase = PortalPhase::Close;
+    MG_REFLECT(PortalStateComponent, configId, roomId, toward, limit, destination, phase)
 };
 
 // 死亡掉落配置：怪物与障碍死亡时结算。
 struct DropTableComponent
 {
     // 已解析的掉落实体配置，允许相同配置重复出现。
-    std::vector<int32_t> m_goods;
+    std::vector<int32_t> goods;
     // 生命与能量药品掉落百分比（千分比语义沿用旧实现：与 0–100 随机数比较）。
-    Fixed m_hpRate;
-    Fixed m_epRate;
-    MG_REFLECT(DropTableComponent, m_goods, m_hpRate, m_epRate)
+    Fixed hpRate;
+    Fixed epRate;
+    MG_REFLECT(DropTableComponent, goods, hpRate, epRate)
 };
 }  // namespace mugen::sim

@@ -17,19 +17,19 @@ enum class WorldMode : uint8_t
 struct PlayerSetup
 {
     // 玩家槽位，须在世界内唯一。
-    uint32_t m_slot = 0;
+    uint32_t slot = 0;
     // 玩家角色配置标识；职业一律由 roleId 推出。
-    int32_t m_roleId = 0;
+    int32_t roleId = 0;
     // 玩家等级。
-    int32_t m_level = 1;
+    int32_t level = 1;
     // 可选覆盖角色默认阵营；0 表示使用角色配置默认值。不得为中立阵营 1（特效无法命中）。
-    int32_t m_camp = 0;
+    int32_t camp = 0;
     // 玩家 AI 难度。
-    int32_t m_aiDifficulty = 1;
+    int32_t aiDifficulty = 1;
     // 玩家是否由 AI 驱动。
-    bool m_isAi = false;
+    bool isAi = false;
     // 参与世界配置归档的字段。
-    MG_REFLECT(PlayerSetup, m_slot, m_roleId, m_level, m_camp, m_aiDifficulty, m_isAi)
+    MG_REFLECT(PlayerSetup, slot, roleId, level, camp, aiDifficulty, isAi)
 };
 // 创建世界时写入回放和快照的固定参数。
 struct WorldSetup
@@ -43,38 +43,38 @@ struct WorldSetup
     // 地图配置键。
     std::string mapKey;
     // 驱动明确指定竞技战斗，避免根据房间标识猜测规则。
-    bool m_pvp = false;
+    bool pvp = false;
     // 场景驱动提供的战斗类型编号，供效果区域过滤使用，不从房间主键猜测。
-    int32_t m_fightType = 0;
+    int32_t fightType = 0;
     // PVP 决斗限时（秒），超时按剩余生命比例判定胜负。
-    Fixed m_pvpTimeLimit = Fixed::fromInt(100);
+    Fixed pvpTimeLimit = Fixed::fromInt(100);
     // PVP 玩家出生生命倍率，作用于基础生命与生命上限。
-    Fixed m_pvpHpScale = Fixed::fromInt(1);
+    Fixed pvpHpScale = Fixed::fromInt(1);
     // 为假时角色更新跳过怪物 AI。写入回放与快照，保证重放一致。
-    bool m_aiEnabled = true;
+    bool aiEnabled = true;
     // 参与本场战斗的玩家槽位，按出生顺序保存。
-    std::vector<PlayerSetup> m_players;
+    std::vector<PlayerSetup> players;
     // 进入房间时使用的关卡标识。
-    int32_t m_stageId = 0;
+    int32_t stageId = 0;
     // 进入房间时使用的副本标识。
-    int32_t m_copyId = 0;
+    int32_t copyId = 0;
     // 为真时，调用方应使用 ScenarioHarness 的房间钩子驱动。
-    bool m_useScenarioHooks = false;
+    bool useScenarioHooks = false;
     // 参与世界配置归档的字段。
     MG_REFLECT(WorldSetup,
                seed,
                mode,
                roomId,
                mapKey,
-               m_pvp,
-               m_fightType,
-               m_pvpTimeLimit,
-               m_pvpHpScale,
-               m_aiEnabled,
-               m_players,
-               m_stageId,
-               m_copyId,
-               m_useScenarioHooks)
+               pvp,
+               fightType,
+               pvpTimeLimit,
+               pvpHpScale,
+               aiEnabled,
+               players,
+               stageId,
+               copyId,
+               useScenarioHooks)
 };
 // 固定逻辑帧的秒数。
 inline constexpr Fixed kLogicDtSec = "0.03333332"_fx;

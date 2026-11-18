@@ -14,19 +14,19 @@ float renderValue(Fixed value)
 }
 }  // namespace
 
-void CameraDirector::follow(sim_legacy::World& world, Entity entity)
+void CameraDirector::follow(sim::World& world, Entity entity)
 {
-    const auto* transform = world.ecs().tryGet<sim_legacy::Transform>(entity);
-    if (!transform || !m_map.camera())
+    FixedVec3 pos;
+    if (!sim::view::readEntityPosition(world, entity, pos) || !m_map.camera())
         return;
-    m_map.camera()->setFocusPosition({renderValue(transform->position.x), renderValue(transform->position.z)});
+    m_map.camera()->setFocusPosition({renderValue(pos.x), renderValue(pos.z)});
 }
 
-void CameraDirector::consume(const sim_legacy::PresentationEvent& event)
+void CameraDirector::consume(const sim::PresentationEvent& event)
 {
-    if (const auto* shake = std::get_if<sim_legacy::CameraShake>(&event.payload); shake && m_map.camera())
+    if (const auto* shake = std::get_if<sim::CameraShake>(&event.payload); shake && m_map.camera())
         m_map.camera()->shake(renderValue(shake->strength), renderValue(shake->durationMs));
-    if (std::holds_alternative<sim_legacy::DisplaySpine>(event.payload))
+    if (std::holds_alternative<sim::DisplaySpine>(event.payload))
         m_displaySlowScale = 0.35f;
 }
 

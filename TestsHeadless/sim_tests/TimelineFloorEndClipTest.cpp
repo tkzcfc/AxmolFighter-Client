@@ -36,15 +36,15 @@ World makeWorld()
     REQUIRE(room != nullptr);
     setup.mapKey = room->mapKey;
     PlayerSetup player;
-    player.m_roleId = type_conversions::toRoleConfigId(CharacterClass::kSwordman);
-    player.m_level  = 1000;
-    player.m_camp   = 2;
-    player.m_slot   = 0;
-    player.m_isAi   = false;
-    setup.m_players.push_back(player);
-    setup.m_stageId   = 0;
-    setup.m_copyId    = 0;
-    setup.m_aiEnabled = false;
+    player.roleId = type_conversions::toRoleConfigId(CharacterClass::kSwordman);
+    player.level  = 1000;
+    player.camp   = 2;
+    player.slot   = 0;
+    player.isAi   = false;
+    setup.players.push_back(player);
+    setup.stageId   = 0;
+    setup.copyId    = 0;
+    setup.aiEnabled = false;
     REQUIRE_FALSE(bootstrapBattle(world, setup).empty());
     return world;
 }
@@ -53,7 +53,7 @@ Entity roleByConfig(World& world, int32_t configId)
 {
     Entity found;
     world.ecs().each<IdentityComponent>([&](Entity entity, const IdentityComponent& identity) {
-        if (identity.m_configId == configId)
+        if (identity.configId == configId)
             found = entity;
     });
     return found;
@@ -66,8 +66,8 @@ TEST_CASE("clip floor=0 EndClip finishes 920800 on landing before tail delay")
     const Entity hero = roleByConfig(world, 101);
     auto& book        = world.ecs().get<SkillBookComponent>(hero);
     int32_t index     = kNoSkill;
-    for (int32_t i = 0; i < static_cast<int32_t>(book.m_skills.size()); ++i)
-        if (book.m_skills[static_cast<size_t>(i)].m_configId == 920150)
+    for (int32_t i = 0; i < static_cast<int32_t>(book.skills.size()); ++i)
+        if (book.skills[static_cast<size_t>(i)].configId == 920150)
             index = i;
     REQUIRE(index != kNoSkill);
     skill::rules::beginCast(world, hero, index);
@@ -81,12 +81,12 @@ TEST_CASE("clip floor=0 EndClip finishes 920800 on landing before tail delay")
         world.tick(FrameInput{frame, {}, {}, {}});
         const auto& timeline = world.ecs().get<ActionTimelineComponent>(hero);
         const auto& disp     = world.ecs().get<DisplacementComponent>(hero);
-        const auto y         = world.ecs().get<TransformComponent>(hero).m_position.y;
-        if (timeline.m_clipId == 920800)
+        const auto y         = world.ecs().get<TransformComponent>(hero).position.y;
+        if (timeline.clipId == 920800)
         {
             if (entered == 0)
                 entered = static_cast<int32_t>(world.frame());
-            if (disp.m_floorPolicy == static_cast<int32_t>(conf::battle::ClipFloorPolicy::EndClip))
+            if (disp.floorPolicy == static_cast<int32_t>(conf::battle::ClipFloorPolicy::EndClip))
                 sawPolicy = true;
             if (y > Fixed{})
                 sawAir = true;

@@ -12,26 +12,26 @@ namespace mugen::sim
 void runScheduledAction(World& world)
 {
     auto& actions = world.ecs().singleton<ScheduledActions>();
-    const Fixed dt = world.ecs().singleton<WorldClock>().m_dtMs;
-    for (size_t i = 0; i < actions.m_actions.size();)
+    const Fixed dt = world.ecs().singleton<WorldClock>().dtMs;
+    for (size_t i = 0; i < actions.actions.size();)
     {
-        auto& action = actions.m_actions[i];
-        action.m_dueMs -= dt;
-        if (action.m_dueMs > Fixed{})
+        auto& action = actions.actions[i];
+        action.dueMs -= dt;
+        if (action.dueMs > Fixed{})
         {
             ++i;
             continue;
         }
         // 到期：写受击者顿帧并发出 stop 行。
-        if (world.ecs().alive(action.m_owner) && world.ecs().has<PauseComponent>(action.m_owner))
+        if (world.ecs().alive(action.owner) && world.ecs().has<PauseComponent>(action.owner))
         {
-            world.ecs().get<PauseComponent>(action.m_owner).m_freezeMs = action.m_freezeMs;
+            world.ecs().get<PauseComponent>(action.owner).freezeMs = action.freezeMs;
             HitStopEvent event;
-            event.m_entity   = action.m_owner;
-            event.m_freezeMs = action.m_freezeMs;
+            event.entity   = action.owner;
+            event.freezeMs = action.freezeMs;
             world.ecs().singleton<EventQueue<HitStopEvent>>().push(event);
         }
-        actions.m_actions.erase(actions.m_actions.begin() + static_cast<std::ptrdiff_t>(i));
+        actions.actions.erase(actions.actions.begin() + static_cast<std::ptrdiff_t>(i));
     }
 }
 }  // namespace mugen::sim

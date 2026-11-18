@@ -7,9 +7,15 @@ $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $clientRoot = Split-Path -Parent $scriptRoot
 $sourceRoot = Join-Path $clientRoot 'Source'
 $mugenRoot = Join-Path $sourceRoot 'mugen'
+$simRoot = Join-Path $mugenRoot 'sim'
+$renderRoot = Join-Path $mugenRoot 'render'
+$uiRoot = Join-Path $sourceRoot 'ui'
+$systemsHeader = Join-Path $simRoot 'Systems.h'
 
 # English product name is held here and never printed. A hit is reported as the generic rule name.
 $script:ProductNamePattern = 'heiyue|黑月|BlackMoon'
+$script:DrivePathPattern = '(?<![A-Za-z0-9_])[A-Za-z]:[\\/][^\s''"`]*'
+$script:PlanDocPattern = '(?i)(Reference[/\\]|mugen-rewrite|\.omo\b)'
 
 $script:Violations = [System.Collections.Generic.List[string]]::new()
 
@@ -34,16 +40,27 @@ function Add-Violation {
     $script:Violations.Add("${relative}:${Line}: ${Rule}")
 }
 
-function Get-ScopeRoots {
+function Get-ScopeParts {
     if (-not $Paths) {
+        return @()
+    }
+    $names = @()
+    foreach ($part in ($Paths -split ',')) {
+        $name = $part.Trim()
+        if ($name) {
+            $names += $name
+        }
+    }
+    return ,$names
+}
+
+function Get-ScopeRoots {
+    $parts = Get-ScopeParts
+    if ($parts.Count -eq 0) {
         return @($sourceRoot)
     }
     $roots = @()
-    foreach ($part in ($Paths -split ',')) {
-        $name = $part.Trim()
-        if (-not $name) {
-            continue
-        }
+    foreach ($name in $parts) {
         $candidate = Join-Path $mugenRoot $name
         if (-not (Test-Path -LiteralPath $candidate)) {
             $candidate = Join-Path $sourceRoot $name
@@ -65,9 +82,35 @@ function Get-SourceFiles {
             $files += Get-Item -LiteralPath $root
             continue
         }
-        $files += Get-ChildItem -LiteralPath $root -Recurse -File -Include *.h, *.hpp, *.cpp, *.c, *.cc
+        $files += Get-ChildItem -LiteralPath $root -Recurse -File -Include *.h, *.hpp, *.cpp, *.c, *.cc |
+            Where-Object { $_.FullName -notmatch '[\\/]3rd[\\/]' }
     }
     return $files
+}
+
+function Add-UniqueFiles {
+    param(
+        [System.Collections.Generic.List[System.IO.FileInfo]]$Files,
+        [System.IO.FileInfo[]]$Extra
+    )
+    $seen = @{}
+    foreach ($file in $Files) {
+        $seen[$file.FullName] = $true
+    }
+    foreach ($file in $Extra) {
+        if (-not $seen.ContainsKey($file.FullName)) {
+            $Files.Add($file)
+            $seen[$file.FullName] = $true
+        }
+    }
+}
+
+function Test-SimInScope {
+    $parts = Get-ScopeParts
+    if ($parts.Count -eq 0) {
+        return $true
+    }
+    return ($parts -contains 'sim') -or ($parts -contains 'render') -or ($parts -contains 'ui')
 }
 
 function Strip-Comments {
@@ -178,13 +221,50 @@ function Test-MacroDefined {
     return $false
 }
 
+function Get-SimEntrypoints {
+    $names = [System.Collections.Generic.List[string]]::new()
+    if (-not (Test-Path -LiteralPath $systemsHeader)) {
+        return ,$names
+    }
+    foreach ($line in [System.IO.File]::ReadAllLines($systemsHeader)) {
+        if ($line -match '\bvoid\s+(run[A-Za-z0-9_]+)\s*\(\s*World') {
+            $names.Add($Matches[1])
+        }
+    }
+    return ,$names
+}
+
+function Test-CommentCitations {
+    param(
+        [System.IO.FileInfo]$File,
+        [string[]]$RawLines
+    )
+    $full = $File.FullName.Replace('\', '/')
+    if ($full -notmatch '/mugen/') {
+        return
+    }
+    for ($i = 0; $i -lt $RawLines.Count; $i++) {
+        $line = $RawLines[$i]
+        $lineNo = $i + 1
+        if ($line -match $script:ProductNamePattern) {
+            Add-Violation $File.FullName $lineNo 'product name'
+        }
+        if ($line -match $script:DrivePathPattern) {
+            Add-Violation $File.FullName $lineNo 'drive-letter path'
+        }
+        if ($line -match $script:PlanDocPattern) {
+            Add-Violation $File.FullName $lineNo 'plan-document path'
+        }
+    }
+}
+
 function Test-ForbiddenTokens {
     param(
         [System.IO.FileInfo]$File,
         [string[]]$Lines
     )
     $full = $File.FullName.Replace('\', '/')
-    $inCoreOrSim = $full -match '/mugen/(core|sim_legacy|sim)/'
+    $inCoreOrSim = $full -match '/mugen/(core|sim)/'
     $checkDeterminismTokens = $inCoreOrSim
     for ($i = 0; $i -lt $Lines.Count; $i++) {
         $line = $Lines[$i]
@@ -204,25 +284,107 @@ function Test-ForbiddenTokens {
                 Add-Violation $File.FullName $lineNo 'core/sim unordered_map|unordered_set'
             }
         }
-        if ($line -match $script:ProductNamePattern) {
-            Add-Violation $File.FullName $lineNo 'product name'
-        }
         if ($line -match 'MG_LOG_[DIWE]\(' -and $line -match '[\u4e00-\u9fff]') {
             Add-Violation $File.FullName $lineNo 'log macro argument contains Chinese'
         }
     }
 }
 
+function Test-SimSystemIsolation {
+    param(
+        [System.IO.FileInfo]$File,
+        [string[]]$Lines,
+        [string[]]$Entrypoints
+    )
+    $full = $File.FullName.Replace('\', '/')
+    if ($full -notmatch '/mugen/sim/.+System\.cpp$') {
+        return
+    }
+    $definedHere = @{}
+    for ($i = 0; $i -lt $Lines.Count; $i++) {
+        if ($Lines[$i] -match '\bvoid\s+(run[A-Za-z0-9_]+)\s*\(\s*World') {
+            $definedHere[$Matches[1]] = $true
+        }
+    }
+    for ($i = 0; $i -lt $Lines.Count; $i++) {
+        $line = $Lines[$i]
+        $lineNo = $i + 1
+        if ($line -match '^\s*#\s*include\s*[<"]([^>"]+)[>"]') {
+            $inc = $Matches[1].Replace('\', '/')
+            $leaf = Split-Path $inc -Leaf
+            if ($leaf -match '^[A-Za-z0-9_]*System\.(h|hpp|cpp)$' -and $leaf -ne 'Systems.h') {
+                Add-Violation $File.FullName $lineNo 'sim system include of *System.h/*System.cpp'
+            }
+        }
+        foreach ($name in $Entrypoints) {
+            if ($definedHere.ContainsKey($name)) {
+                continue
+            }
+            if ($line -match "(?:^|[^A-Za-z0-9_])(?:mugen::sim::)?${name}\s*\(") {
+                Add-Violation $File.FullName $lineNo "sim system calls other entrypoint $name"
+            }
+        }
+    }
+}
+
+function Test-PresentationBoundary {
+    param(
+        [System.IO.FileInfo]$File,
+        [string[]]$Lines
+    )
+    $full = $File.FullName.Replace('\', '/')
+    if ($full -notmatch '/mugen/render/|/Source/ui/') {
+        return
+    }
+    for ($i = 0; $i -lt $Lines.Count; $i++) {
+        $line = $Lines[$i]
+        $lineNo = $i + 1
+        if ($line -notmatch '^\s*#\s*include\s*"mugen/sim/([^"\\]+(?:/[^"\\]+)*)"') {
+            continue
+        }
+        $inc = $Matches[1].Replace('\', '/')
+        $allowed = ($inc -eq 'World.h') -or
+                   ($inc -eq 'WorldSetup.h') -or
+                   ($inc -eq 'BattleBootstrap.h') -or
+                   ($inc -like 'view/*') -or
+                   ($inc -eq 'present/PresentationEvent.h') -or
+                   ($inc -like 'input/*') -or
+                   ($inc -like 'net/*') -or
+                   ($inc -like 'rollback/*') -or
+                   ($inc -like 'replay/*')
+        if (-not $allowed) {
+            Add-Violation $File.FullName $lineNo 'P-7 render/ui include of sim internals'
+        }
+    }
+}
+
 $roots = Get-ScopeRoots
-    $files = Get-SourceFiles $roots
-foreach ($file in $files) {
+$fileList = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
+foreach ($item in (Get-SourceFiles $roots)) {
+    $fileList.Add($item)
+}
+if (Test-SimInScope) {
+    if (Test-Path -LiteralPath $renderRoot) {
+        Add-UniqueFiles $fileList (Get-SourceFiles @($renderRoot))
+    }
+    if (Test-Path -LiteralPath $uiRoot) {
+        Add-UniqueFiles $fileList (Get-SourceFiles @($uiRoot))
+    }
+}
+
+$entrypoints = Get-SimEntrypoints
+foreach ($file in $fileList) {
     $text = [System.IO.File]::ReadAllText($file.FullName)
+    $rawLines = $text.Replace("`r`n", "`n").Replace("`r", "`n").Split([char]10)
+    Test-CommentCitations $file $rawLines
     $lines = Strip-Comments $text
     $active = Get-ActiveLines $lines
     $checked = for ($i = 0; $i -lt $lines.Count; $i++) {
         if ($active[$i]) { $lines[$i] } else { '' }
     }
     Test-ForbiddenTokens $file $checked
+    Test-SimSystemIsolation $file $checked $entrypoints
+    Test-PresentationBoundary $file $lines
 }
 
 if ($script:Violations.Count -gt 0) {

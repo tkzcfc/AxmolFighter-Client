@@ -29,13 +29,13 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
-$buildArgs = @('--build', $buildDir, '--config', $Config, '--target', 'mugen_tests', '--parallel')
+$buildArgs = @('--build', $buildDir, '--config', $Config, '--target', 'mugen_sim_tests', '--parallel')
 & cmake @buildArgs
 if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
-$testName = if ($IsWindows) { 'mugen_tests.exe' } else { 'mugen_tests' }
+$testName = if ($IsWindows) { 'mugen_sim_tests.exe' } else { 'mugen_sim_tests' }
 $testExe = $null
 foreach ($candidate in @(
     (Join-Path $buildDir "$Config\$testName"),
@@ -47,7 +47,7 @@ foreach ($candidate in @(
     }
 }
 if (-not $testExe) {
-    Write-Error "mugen_tests executable not found under $buildDir"
+    Write-Error "mugen_sim_tests executable not found under $buildDir"
     exit 1
 }
 

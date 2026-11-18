@@ -1,7 +1,9 @@
 #pragma once
 
 #include "mugen/core/StdC.h"
-#include "mugen/sim_legacy/World.h"
+#include "mugen/sim/World.h"
+#include "mugen/sim/present/PresentationEvent.h"
+#include "mugen/sim/view/WorldView.h"
 
 #ifdef RUNTIME_IN_AXMOL
 
@@ -14,13 +16,14 @@
 #    include <memory>
 #    include <optional>
 #    include <string>
+#    include <vector>
 
 NS_MG_BEGIN
 
 class AvatarPresenter
 {
 public:
-    void present(sim_legacy::World& world, float alpha, float renderDelta);
+    void present(sim::World& world, float alpha, float renderDelta);
     void setFollowEntity(Entity entity) { m_followEntity = entity; }
     void setPet(int32_t petId, int32_t spineId);
     void clearPet();
@@ -35,7 +38,7 @@ public:
     // Re-apply fashion on an already-created exclusive Avatar (town/battle local player).
     bool setEntityAppearance(uint32_t entityValue, const FashionAppearance& appearance);
     // 根据怒气变身事件刷新实体外观。
-    void onPartnerRageChanged(sim_legacy::World& world, Entity entity, bool active);
+    void onPartnerRageChanged(sim::World& world, Entity entity, bool active);
     // 清空节点复用池（换图时调用，池内骨架按外观分组，跨图基本不会再命中）。
     void clearPool();
     // 应用受击亮度到实体显示节点；返回是否命中已有实体。
@@ -47,8 +50,8 @@ private:
     // 实体外观身份：回滚后同一句柄可能指向另一个实体，靠它判断是否需要重建显示节点。
     struct LookIdentity
     {
-        // 所属实体组。
-        sim_legacy::GroupKind kind = sim_legacy::GroupKind::Count;
+        // 可视实体种类。
+        sim::VisualEntityKind kind = static_cast<sim::VisualEntityKind>(255);
         // 该组配置表中的行 id（角色 id、特效 id 等）。
         int32_t configId = 0;
         // 逻辑侧是否绑定了动作文件（决定走 Avatar 还是直接播放 Spine 动画）。
@@ -91,6 +94,8 @@ private:
         bool partnerRageStateKnown = false;
         std::string motionName;
         std::string entryId;
+        // 当前动作是否循环。
+        bool loop = true;
         // 上一逻辑帧采样到的 sim 动作时间（毫秒）。
         int lastSimTimeMs = 0;
         // 上一采样对应的逻辑帧号。
@@ -114,8 +119,6 @@ private:
 
     // 返回实体当前的显示节点；未创建时为空。
     static ax::Node* displayNode(const AvatarState& state);
-    // 读取实体在其配置表中的行 id，用于身份比对。
-    static int32_t lookConfigId(sim_legacy::World& world, Entity entity, sim_legacy::GroupKind kind);
     // 从复用池取出同外观键的节点并复位，池空返回 false。
     bool acquirePooled(AvatarState& state);
     // 摘下实体的显示节点：可复用的入池，否则直接销毁。
@@ -138,18 +141,18 @@ private:
     // 按缓存角色信息构造当前应应用的外观。
     static FashionAppearance buildRoleAppearance(const AvatarState& state, bool transformed);
     // 刷新角色怒气变身外观并重放当前动作时间。
-    bool syncPartnerRageAppearance(uint32_t entityValue,
-                                   const sim_legacy::MotionState& motion,
-                                   bool transformed,
+    bool syncPartnerRageAppearance(uint32_t entityValue, const sim::VisualEntityView& view, bool transformed,
                                    bool force);
     // 驱动 Avatar 时间：平时按渲染帧推进，跳转时 seek。
-    void driveAvatarTime(AvatarState& state, const sim_legacy::MotionState& motion, float renderDelta,
-                         const sim_legacy::WorldClock& clock, bool motionChanged);
+    void driveAvatarTime(AvatarState& state, const sim::VisualEntityView& view, float renderDelta, uint64_t frame,
+                         Fixed worldDtMs, Fixed logicDt, bool motionChanged);
     // 返回配置层级对应的绘制层，首次使用时按层级值作为 z 序创建。
     ax::Node& tierLayer(int32_t tier);
 
     ax::Node* m_entityLayer = nullptr;
     std::map<uint32_t, AvatarState> m_avatars;
+    // 本帧可视实体快照，避免每帧重新分配。
+    std::vector<sim::VisualEntityView> m_visuals;
     // 外观键 → 已摘下待复用的节点（池内节点由本类持有一份引用）。
     std::map<std::string, std::vector<PooledNode>> m_pool;
     size_t m_poolCount = 0;

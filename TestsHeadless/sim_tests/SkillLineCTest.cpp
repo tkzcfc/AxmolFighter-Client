@@ -36,20 +36,20 @@ World makeWorld(bool pvp = false)
     setup.seed   = 31;
     setup.mode   = WorldMode::Battle;
     setup.roomId = 2071501;
-    setup.m_pvp  = pvp;
+    setup.pvp  = pvp;
     const auto* room = conf::Config::instance().find<conf::RoomConfig>(2071501);
     REQUIRE(room != nullptr);
     setup.mapKey = room->mapKey;
     PlayerSetup player;
-    player.m_roleId = type_conversions::toRoleConfigId(CharacterClass::kSwordman);
-    player.m_level  = 1000;
-    player.m_camp   = 2;
-    player.m_slot   = 0;
-    player.m_isAi   = false;
-    setup.m_players.push_back(player);
-    setup.m_stageId   = 0;
-    setup.m_copyId    = 0;
-    setup.m_aiEnabled = false;
+    player.roleId = type_conversions::toRoleConfigId(CharacterClass::kSwordman);
+    player.level  = 1000;
+    player.camp   = 2;
+    player.slot   = 0;
+    player.isAi   = false;
+    setup.players.push_back(player);
+    setup.stageId   = 0;
+    setup.copyId    = 0;
+    setup.aiEnabled = false;
     REQUIRE_FALSE(bootstrapBattle(world, setup).empty());
     return world;
 }
@@ -58,7 +58,7 @@ Entity roleByConfig(World& world, int32_t configId)
 {
     Entity found;
     world.ecs().each<IdentityComponent>([&](Entity entity, const IdentityComponent& identity) {
-        if (identity.m_configId == configId)
+        if (identity.configId == configId)
             found = entity;
     });
     return found;
@@ -78,10 +78,10 @@ FrameInput cmdInput(uint64_t frame, ControlEvent event, uint32_t pressType)
 
 int32_t findSlotIndex(const SkillBookComponent& book, std::string_view slot)
 {
-    for (int32_t i = 0; i < static_cast<int32_t>(book.m_skills.size()); ++i)
+    for (int32_t i = 0; i < static_cast<int32_t>(book.skills.size()); ++i)
     {
-        const auto& skill = book.m_skills[static_cast<size_t>(i)];
-        if (book.m_slots[static_cast<size_t>(skill.m_slot)] == slot && skill.m_step == 1 && skill.m_link == 1)
+        const auto& skill = book.skills[static_cast<size_t>(i)];
+        if (book.slots[static_cast<size_t>(skill.slot)] == slot && skill.step == 1 && skill.link == 1)
             return i;
     }
     return kNoSkill;
@@ -89,8 +89,8 @@ int32_t findSlotIndex(const SkillBookComponent& book, std::string_view slot)
 
 std::string_view slotName(const SkillBookComponent& book, int32_t index)
 {
-    const auto& skill = book.m_skills[static_cast<size_t>(index)];
-    return book.m_slots[static_cast<size_t>(skill.m_slot)];
+    const auto& skill = book.skills[static_cast<size_t>(index)];
+    return book.slots[static_cast<size_t>(skill.slot)];
 }
 
 int32_t ensureSlot(SkillBookComponent& book, std::string_view name, int32_t configId)
@@ -98,20 +98,20 @@ int32_t ensureSlot(SkillBookComponent& book, std::string_view name, int32_t conf
     int32_t found = findSlotIndex(book, name);
     if (found != kNoSkill)
         return found;
-    const int32_t slotIndex = static_cast<int32_t>(book.m_slots.size());
-    book.m_slots.emplace_back(name);
+    const int32_t slotIndex = static_cast<int32_t>(book.slots.size());
+    book.slots.emplace_back(name);
     SkillRuntime rt;
-    rt.m_slot         = slotIndex;
-    rt.m_configId     = configId;
-    rt.m_step         = 1;
-    rt.m_stepCount    = 1;
-    rt.m_link         = 1;
-    rt.m_mode         = 1;
-    rt.m_releaseMax   = 1;
-    rt.m_releaseCount = 1;
-    rt.m_finally      = true;
-    book.m_skills.push_back(rt);
-    return static_cast<int32_t>(book.m_skills.size() - 1);
+    rt.slot         = slotIndex;
+    rt.configId     = configId;
+    rt.step         = 1;
+    rt.stepCount    = 1;
+    rt.link         = 1;
+    rt.mode         = 1;
+    rt.releaseMax   = 1;
+    rt.releaseCount = 1;
+    rt.finally      = true;
+    book.skills.push_back(rt);
+    return static_cast<int32_t>(book.skills.size() - 1);
 }
 }  // namespace
 
@@ -123,12 +123,12 @@ TEST_CASE("skill crazy rejects E and remaps to slot+")
     auto& cast        = world.ecs().get<SkillCastComponent>(hero);
     const int32_t a   = findSlotIndex(book, "A");
     REQUIRE(a != kNoSkill);
-    const int32_t plus = ensureSlot(book, "A+", book.m_skills[static_cast<size_t>(a)].m_configId);
+    const int32_t plus = ensureSlot(book, "A+", book.skills[static_cast<size_t>(a)].configId);
 
-    cast.m_crazy = true;
+    cast.crazy = true;
     CHECK_FALSE(skill::rules::dealButton(world, hero, ControlEvent::CTR_ATKE));
     CHECK(skill::rules::dealButton(world, hero, ControlEvent::CTR_ATKA));
-    CHECK(world.ecs().get<SkillCastComponent>(hero).m_skill == plus);
+    CHECK(world.ecs().get<SkillCastComponent>(hero).skill == plus);
 }
 
 TEST_CASE("skill crazy does not spend MP or EP")
@@ -138,9 +138,9 @@ TEST_CASE("skill crazy does not spend MP or EP")
     auto& book        = world.ecs().get<SkillBookComponent>(hero);
     int32_t index     = kNoSkill;
     const conf::battle::SkillDef* def = nullptr;
-    for (int32_t i = 0; i < static_cast<int32_t>(book.m_skills.size()); ++i)
+    for (int32_t i = 0; i < static_cast<int32_t>(book.skills.size()); ++i)
     {
-        const auto* row = conf::Config::instance().find<conf::battle::SkillDef>(book.m_skills[static_cast<size_t>(i)].m_configId);
+        const auto* row = conf::Config::instance().find<conf::battle::SkillDef>(book.skills[static_cast<size_t>(i)].configId);
         if (row && (row->costMp > 0 || row->costEp > 0))
         {
             index = i;
@@ -151,12 +151,12 @@ TEST_CASE("skill crazy does not spend MP or EP")
     REQUIRE(index != kNoSkill);
     REQUIRE(def != nullptr);
     auto& health = world.ecs().get<HealthComponent>(hero);
-    health.m_mp  = Fixed::fromInt(100);
-    health.m_ep  = Fixed::fromInt(1000);
-    world.ecs().get<SkillCastComponent>(hero).m_crazy = true;
+    health.mp  = Fixed::fromInt(100);
+    health.ep  = Fixed::fromInt(1000);
+    world.ecs().get<SkillCastComponent>(hero).crazy = true;
     skill::rules::beginCast(world, hero, index);
-    CHECK(health.m_mp == Fixed::fromInt(100));
-    CHECK(health.m_ep == Fixed::fromInt(1000));
+    CHECK(health.mp == Fixed::fromInt(100));
+    CHECK(health.ep == Fixed::fromInt(1000));
 }
 
 TEST_CASE("skill beginCast uses pvpCd and syncs other-mode cooldown")
@@ -166,21 +166,21 @@ TEST_CASE("skill beginCast uses pvpCd and syncs other-mode cooldown")
     auto& book        = world.ecs().get<SkillBookComponent>(hero);
     const int32_t a   = findSlotIndex(book, "A");
     REQUIRE(a != kNoSkill);
-    auto extra          = book.m_skills[static_cast<size_t>(a)];
-    extra.m_mode        = 2;
-    extra.m_releaseMax  = 2;
-    extra.m_releaseCount = 2;
-    extra.m_cd          = {};
-    extra.m_timing      = false;
-    book.m_skills.push_back(extra);
-    const int32_t other = static_cast<int32_t>(book.m_skills.size() - 1);
+    auto extra          = book.skills[static_cast<size_t>(a)];
+    extra.mode        = 2;
+    extra.releaseMax  = 2;
+    extra.releaseCount = 2;
+    extra.cd          = {};
+    extra.timing      = false;
+    book.skills.push_back(extra);
+    const int32_t other = static_cast<int32_t>(book.skills.size() - 1);
 
-    const auto* def = conf::Config::instance().find<conf::battle::SkillDef>(book.m_skills[static_cast<size_t>(a)].m_configId);
+    const auto* def = conf::Config::instance().find<conf::battle::SkillDef>(book.skills[static_cast<size_t>(a)].configId);
     REQUIRE(def != nullptr);
     skill::rules::beginCast(world, hero, a);
-    CHECK(book.m_skills[static_cast<size_t>(a)].m_coldMaxTime == Fixed::fromInt(def->pvpCdMs));
-    CHECK(book.m_skills[static_cast<size_t>(other)].m_releaseCount == 1);
-    CHECK(book.m_skills[static_cast<size_t>(other)].m_coldMaxTime == book.m_skills[static_cast<size_t>(a)].m_coldMaxTime);
+    CHECK(book.skills[static_cast<size_t>(a)].coldMaxTime == Fixed::fromInt(def->pvpCdMs));
+    CHECK(book.skills[static_cast<size_t>(other)].releaseCount == 1);
+    CHECK(book.skills[static_cast<size_t>(other)].coldMaxTime == book.skills[static_cast<size_t>(a)].coldMaxTime);
 }
 
 TEST_CASE("skill isAllowCast gates hit L silence disable crazy and P")
@@ -190,7 +190,7 @@ TEST_CASE("skill isAllowCast gates hit L silence disable crazy and P")
     auto& book        = world.ecs().get<SkillBookComponent>(hero);
     const int32_t a   = findSlotIndex(book, "A");
     REQUIRE(a != kNoSkill);
-    const int32_t sampleId = book.m_skills[static_cast<size_t>(a)].m_configId;
+    const int32_t sampleId = book.skills[static_cast<size_t>(a)].configId;
     const int32_t l        = ensureSlot(book, "L", sampleId);
     const int32_t e        = ensureSlot(book, "E", sampleId);
     const int32_t p        = ensureSlot(book, "P", sampleId);
@@ -199,12 +199,12 @@ TEST_CASE("skill isAllowCast gates hit L silence disable crazy and P")
     auto& cast             = world.ecs().get<SkillCastComponent>(hero);
     auto& rage             = world.ecs().get<RageStateComponent>(hero);
 
-    state.m_state = RoleStateId::Hit;
+    state.state = RoleStateId::Hit;
     CHECK_FALSE(skill::rules::isAllowCast(world, hero, a));
     CHECK(skill::rules::isAllowCast(world, hero, l));
-    state.m_state = RoleStateId::GetUp;
+    state.state = RoleStateId::GetUp;
     CHECK_FALSE(skill::rules::isAllowCast(world, hero, l));
-    state.m_state = RoleStateId::Idle;
+    state.state = RoleStateId::Idle;
     CHECK(skill::rules::isAllowCast(world, hero, a));
 
     flags.add(mugen::ExtraState::Silence);
@@ -212,23 +212,23 @@ TEST_CASE("skill isAllowCast gates hit L silence disable crazy and P")
     flags.remove(mugen::ExtraState::Silence);
 
     SkillMod disable;
-    disable.m_field = static_cast<int32_t>(conf::battle::SkillModField::DisableSlot);
-    disable.m_slot  = book.m_skills[static_cast<size_t>(a)].m_slot;
-    disable.m_value = Fixed::fromInt(1);
-    book.m_mods.push_back(disable);
+    disable.field = static_cast<int32_t>(conf::battle::SkillModField::DisableSlot);
+    disable.slot  = book.skills[static_cast<size_t>(a)].slot;
+    disable.value = Fixed::fromInt(1);
+    book.mods.push_back(disable);
     CHECK_FALSE(skill::rules::isAllowCast(world, hero, a));
-    book.m_mods.clear();
+    book.mods.clear();
     CHECK(skill::rules::isAllowCast(world, hero, a));
 
-    cast.m_crazy = true;
+    cast.crazy = true;
     CHECK_FALSE(skill::rules::isAllowCast(world, hero, e));
-    cast.m_crazy = false;
+    cast.crazy = false;
 
-    rage.m_rage = {};
+    rage.rage = {};
     CHECK_FALSE(skill::rules::isAllowCast(world, hero, p));
-    rage.m_rage = conf::kPartnerRageMaxAnger;
+    rage.rage = conf::kPartnerRageMaxAnger;
     CHECK(skill::rules::isAllowCast(world, hero, p));
-    rage.m_transformed = true;
+    rage.transformed = true;
     CHECK_FALSE(skill::rules::isAllowCast(world, hero, p));
 }
 
@@ -239,18 +239,18 @@ TEST_CASE("skill L break leaves Hit into Attack")
     auto& book        = world.ecs().get<SkillBookComponent>(hero);
     const int32_t a   = findSlotIndex(book, "A");
     REQUIRE(a != kNoSkill);
-    const int32_t l   = ensureSlot(book, "L", book.m_skills[static_cast<size_t>(a)].m_configId);
+    const int32_t l   = ensureSlot(book, "L", book.skills[static_cast<size_t>(a)].configId);
     (void)l;
     auto& state                 = world.ecs().get<RoleStateComponent>(hero);
     auto& hit                   = world.ecs().get<HitStateComponent>(hero);
-    state.m_state               = RoleStateId::Hit;
-    hit.m_pendingHitDefId       = 0;
-    hit.m_animationEnd          = false;
+    state.state               = RoleStateId::Hit;
+    hit.pendingHitDefId       = 0;
+    hit.animationEnd          = false;
     world.tick(cmdInput(1, ControlEvent::CTR_ATKL, 1));
-    CHECK(world.ecs().get<RoleStateComponent>(hero).m_state == RoleStateId::Attack);
+    CHECK(world.ecs().get<RoleStateComponent>(hero).state == RoleStateId::Attack);
     const auto& cast = world.ecs().get<SkillCastComponent>(hero);
-    REQUIRE(cast.m_skill != kNoSkill);
-    CHECK(slotName(world.ecs().get<SkillBookComponent>(hero), cast.m_skill) == "L");
+    REQUIRE(cast.skill != kNoSkill);
+    CHECK(slotName(world.ecs().get<SkillBookComponent>(hero), cast.skill) == "L");
 }
 
 TEST_CASE("skill F dodge evades without invincible gate")
@@ -260,8 +260,8 @@ TEST_CASE("skill F dodge evades without invincible gate")
     auto& book        = world.ecs().get<SkillBookComponent>(hero);
     const int32_t a   = findSlotIndex(book, "A");
     REQUIRE(a != kNoSkill);
-    const int32_t f   = ensureSlot(book, "F", book.m_skills[static_cast<size_t>(a)].m_configId);
-    world.ecs().get<SkillCastComponent>(hero).m_skill = f;
+    const int32_t f   = ensureSlot(book, "F", book.skills[static_cast<size_t>(a)].configId);
+    world.ecs().get<SkillCastComponent>(hero).skill = f;
     CHECK(skill::rules::isDodging(world, hero));
 
     int32_t effectId = 0;
@@ -280,26 +280,26 @@ TEST_CASE("skill F dodge evades without invincible gate")
     const Entity attacker = buff_test::spawnActor(world, 1, 8, 2);
     const Entity effect   = world.ecs().create();
     IdentityComponent effectIdn;
-    effectIdn.m_kind     = SpawnKind::Effect;
-    effectIdn.m_configId = effectId;
-    effectIdn.m_camp     = 8;
+    effectIdn.kind     = SpawnKind::Effect;
+    effectIdn.configId = effectId;
+    effectIdn.camp     = 8;
     world.ecs().add(effect, effectIdn);
     EffectInfoComponent info;
-    info.m_configId = effectId;
-    info.m_owner    = attacker;
+    info.configId = effectId;
+    info.owner    = attacker;
     world.ecs().add(effect, info);
     world.ecs().add(effect, HitTrackerComponent{});
 
     ContactEvent contact;
-    contact.m_a     = effect;
-    contact.m_b     = hero;
-    contact.m_phase = ContactPhase::Began;
+    contact.a     = effect;
+    contact.b     = hero;
+    contact.phase = ContactPhase::Began;
     world.ecs().singleton<EventQueue<ContactEvent>>().push(contact);
     runCombat(world);
 
     bool evaded = false;
-    for (const auto& event : world.ecs().singleton<EventQueue<HitEvent>>().m_items)
-        if (event.m_target == hero && event.m_result == HitResult::Evade)
+    for (const auto& event : world.ecs().singleton<EventQueue<HitEvent>>().items)
+        if (event.target == hero && event.result == HitResult::Evade)
             evaded = true;
     CHECK(evaded);
 }
@@ -312,10 +312,10 @@ TEST_CASE("skill partner rage pending grant and P transform")
     const int32_t a   = findSlotIndex(book, "A");
     REQUIRE(a != kNoSkill);
     int32_t rageSkill = kNoSkill;
-    for (int32_t i = 0; i < static_cast<int32_t>(book.m_skills.size()); ++i)
+    for (int32_t i = 0; i < static_cast<int32_t>(book.skills.size()); ++i)
     {
         const auto* def =
-            conf::Config::instance().find<conf::battle::SkillDef>(book.m_skills[static_cast<size_t>(i)].m_configId);
+            conf::Config::instance().find<conf::battle::SkillDef>(book.skills[static_cast<size_t>(i)].configId);
         if (def && def->costRage > 0)
         {
             rageSkill = i;
@@ -324,31 +324,31 @@ TEST_CASE("skill partner rage pending grant and P transform")
     }
     if (rageSkill == kNoSkill)
     {
-        auto extra     = book.m_skills[static_cast<size_t>(a)];
-        extra.m_configId = book.m_skills[static_cast<size_t>(a)].m_configId;
-        book.m_skills.push_back(extra);
-        rageSkill = static_cast<int32_t>(book.m_skills.size() - 1);
+        auto extra     = book.skills[static_cast<size_t>(a)];
+        extra.configId = book.skills[static_cast<size_t>(a)].configId;
+        book.skills.push_back(extra);
+        rageSkill = static_cast<int32_t>(book.skills.size() - 1);
     }
     skill::rules::beginCast(world, hero, rageSkill);
     auto& cast = world.ecs().get<SkillCastComponent>(hero);
     const auto* def =
-        conf::Config::instance().find<conf::battle::SkillDef>(book.m_skills[static_cast<size_t>(rageSkill)].m_configId);
+        conf::Config::instance().find<conf::battle::SkillDef>(book.skills[static_cast<size_t>(rageSkill)].configId);
     REQUIRE(def != nullptr);
     if (def->costRage > 0)
     {
-        CHECK(cast.m_partnerRagePendingGainActive);
-        CHECK(cast.m_partnerRagePendingGain == Fixed::fromInt(def->costRage));
+        CHECK(cast.partnerRagePendingGainActive);
+        CHECK(cast.partnerRagePendingGain == Fixed::fromInt(def->costRage));
         skill::rules::grantPartnerRageOnHit(world, hero);
-        CHECK(world.ecs().get<RageStateComponent>(hero).m_rage == Fixed::fromInt(def->costRage));
-        CHECK_FALSE(cast.m_partnerRagePendingGainActive);
+        CHECK(world.ecs().get<RageStateComponent>(hero).rage == Fixed::fromInt(def->costRage));
+        CHECK_FALSE(cast.partnerRagePendingGainActive);
     }
 
-    const int32_t p = ensureSlot(book, "P", book.m_skills[static_cast<size_t>(a)].m_configId);
+    const int32_t p = ensureSlot(book, "P", book.skills[static_cast<size_t>(a)].configId);
     auto& rage      = world.ecs().get<RageStateComponent>(hero);
-    rage.m_rage     = conf::kPartnerRageMaxAnger;
-    rage.m_maxFreezeMs = Fixed::fromInt(1000);
+    rage.rage     = conf::kPartnerRageMaxAnger;
+    rage.maxFreezeMs = Fixed::fromInt(1000);
     skill::rules::beginCast(world, hero, p);
     skill::rules::endCast(world, hero);
-    CHECK(world.ecs().get<RageStateComponent>(hero).m_transformed);
-    CHECK(world.ecs().get<RageStateComponent>(hero).m_freezeMs == Fixed::fromInt(1000));
+    CHECK(world.ecs().get<RageStateComponent>(hero).transformed);
+    CHECK(world.ecs().get<RageStateComponent>(hero).freezeMs == Fixed::fromInt(1000));
 }

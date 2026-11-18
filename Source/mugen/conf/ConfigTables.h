@@ -13,30 +13,18 @@
 #include <cstdint>
 #include <utility>
 
-// skill -> SkillAttackConfig -> tables/SkillTables.h
-// skill_hit -> SkillHitConfig -> tables/SkillTables.h
 // skill_hurt -> SkillHurtConfig -> tables/SkillTables.h
-// skill_ai -> SkillAiConfig -> tables/SkillTables.h
 // skill_rock -> SkillRockConfig -> tables/SkillTables.h
 // skill_tree -> SkillTreeConfig -> tables/SkillTables.h
 // skill_leaf -> SkillLeafConfig -> tables/SkillTables.h
-// skill_change_system -> SkillChangeSystemConfig -> tables/SkillTables.h
-// action -> ActionConfig -> tables/ActionTables.h
-// action_effect -> ActionEffectConfig -> tables/ActionTables.h
 // camera -> CameraConfig -> tables/ActionTables.h
 // displacement -> DisplacementConfig -> tables/ActionTables.h
-// role -> RoleConfig -> tables/EntityTables.h
-// effect -> EffectConfig -> tables/EntityTables.h
-// ai -> AiConfig -> tables/AiTables.h
 // attribute -> AttributeConfig -> tables/EntityTables.h
 // obstacle -> ObstacleConfig -> tables/EntityTables.h
 // goods -> GoodsConfig -> tables/EntityTables.h
 // npc -> NpcConfig -> tables/EntityTables.h
 // portal -> PortalConfig -> tables/EntityTables.h
 // res_spine -> ResSpineConfig -> tables/EntityTables.h
-// buff -> BuffConfig -> tables/BuffTables.h
-// buff_rule -> BuffRuleConfig -> tables/BuffTables.h
-// special_ability -> SpecialAbilityConfig -> tables/BuffTables.h
 // room -> RoomConfig -> tables/MapTables.h
 // stage -> StageConfig -> tables/MapTables.h
 // copy -> CopyConfig -> tables/MapTables.h
@@ -64,27 +52,17 @@
 namespace mugen::conf
 {
 struct SkillHurtConfig;
-struct SkillAiConfig;
 struct SkillRockConfig;
 struct SkillTreeConfig;
 struct SkillLeafConfig;
-struct SkillChangeSystemConfig;
-struct ActionConfig;
-struct ActionEffectConfig;
 struct CameraConfig;
 struct DisplacementConfig;
-struct RoleConfig;
-struct EffectConfig;
-struct AiConfig;
 struct AttributeConfig;
 struct ObstacleConfig;
 struct GoodsConfig;
 struct NpcConfig;
 struct PortalConfig;
 struct ResSpineConfig;
-struct BuffConfig;
-struct BuffRuleConfig;
-struct SpecialAbilityConfig;
 struct RoomConfig;
 struct StageConfig;
 struct CopyConfig;
@@ -141,16 +119,6 @@ struct KeyByIdAndOccupation
         return {row.id, row.occupation};
     }
 };
-// 按 m_id 建立索引的表键策略（新派生表成员使用 m_ 前缀）。
-struct KeyByMId
-{
-    // 从行数据提取 m_id 键。
-    template <class T>
-    static int32_t get(const T& row)
-    {
-        return row.m_id;
-    }
-};
 // 保留源表顺序的一基序号键策略。
 struct KeyByOrdinal
 {
@@ -165,30 +133,18 @@ struct KeyByOrdinal
 
 // clang-format off
 #define MG_CONFIG_TABLES(X)                                  \
-    X(skill, SkillAttackConfig, KeyById)                     \
-    X(skill_hit, SkillHitConfig, KeyById)                    \
     X(skill_hurt, SkillHurtConfig, KeyById)                  \
-    X(skill_ai, SkillAiConfig, KeyById)                      \
     X(skill_rock, SkillRockConfig, KeyById)                  \
     X(skill_tree, SkillTreeConfig, KeyById)                  \
     X(skill_leaf, SkillLeafConfig, KeyById)                  \
-    X(skill_change_system, SkillChangeSystemConfig, KeyById) \
-    X(action, ActionConfig, KeyById)                         \
-    X(action_effect, ActionEffectConfig, KeyById)            \
     X(camera, CameraConfig, KeyById)                         \
     X(displacement, DisplacementConfig, KeyById)             \
-    X(role, RoleConfig, KeyById)                             \
-    X(effect, EffectConfig, KeyById)                         \
-    X(ai, AiConfig, KeyById)                                 \
     X(attribute, AttributeConfig, KeyById)                   \
     X(obstacle, ObstacleConfig, KeyById)                     \
     X(goods, GoodsConfig, KeyById)                           \
     X(npc, NpcConfig, KeyById)                               \
     X(portal, PortalConfig, KeyById)                         \
     X(res_spine, ResSpineConfig, KeyById)                    \
-    X(buff, BuffConfig, KeyById)                             \
-    X(buff_rule, BuffRuleConfig, KeyById)                    \
-    X(special_ability, SpecialAbilityConfig, KeyById)        \
     X(room, RoomConfig, KeyById)                             \
     X(stage, StageConfig, KeyById)                           \
     X(copy, CopyConfig, KeyById)                             \
@@ -218,9 +174,9 @@ struct KeyByOrdinal
     X(battle_effect, battle::EffectDef, KeyById)             \
     X(battle_hit, battle::HitDef, KeyById)                   \
     X(battle_role, battle::RoleDef, KeyById)                 \
-    X(battle_buff, battle::BuffDef, KeyByMId)                \
-    X(battle_ability, battle::AbilityDef, KeyByMId)          \
-    X(battle_ai, battle::AiDef, KeyByMId)
+    X(battle_buff, battle::BuffDef, KeyById)                 \
+    X(battle_ability, battle::AbilityDef, KeyById)           \
+    X(battle_ai, battle::AiDef, KeyById)
 // clang-format on
 
 // 派生表：不读取 Lua，而是由转换器在读取全部源表后降级计算得出。
@@ -233,7 +189,7 @@ struct KeyByOrdinal
     X(battle_effect, battle::EffectDef, KeyById)          \
     X(battle_hit, battle::HitDef, KeyById)                \
     X(battle_role, battle::RoleDef, KeyById)              \
-    X(battle_buff, battle::BuffDef, KeyByMId)             \
-    X(battle_ability, battle::AbilityDef, KeyByMId)       \
-    X(battle_ai, battle::AiDef, KeyByMId)
+    X(battle_buff, battle::BuffDef, KeyById)              \
+    X(battle_ability, battle::AbilityDef, KeyById)        \
+    X(battle_ai, battle::AiDef, KeyById)
 // clang-format on

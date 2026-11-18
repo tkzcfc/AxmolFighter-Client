@@ -8,9 +8,9 @@ Game client written in C++ on Axmol (custom fork). It uses CMake, FairyGUI, prot
 - Run: `pwsh run.ps1 [-Config Debug|Release]`. The binary is in `build*/bin/AxmolFighter-Client/<cfg>/` (`.exe` on Windows, `.app` on macOS), and the working directory is `Content`.
 - Offline mode: add `--offline-room=<roomId>`, `--offline-role=<roleId|class>`, `--autotest-frames=N` to the command line (Windows/Linux/macOS; parsed by `Source/LaunchOptions`). `run.ps1` forwards extra arguments, e.g. `pwsh run.ps1 -Config Debug --offline-room=<roomId>`.
 - Tests: `axmol build -p win32 -xc -D_AX_TESTS=ON` (doctest, in `Tests/`).
-- Headless tests: `pwsh TestsHeadless/run_headless_tests.ps1 [-Filter <doctest-filter>] [-Config Release|Debug]`.
-- Check rules: `pwsh TestsHeadless/check_rules.ps1 [-Paths core,conf,avatar,sim_legacy]`.
-- Sim CLI: `mugen_legacy_cli replay <file.mgrp> [--compare <hash-file>]`, `mugen_legacy_cli run-room <roomId> [--frames N]`, `mugen_legacy_cli record-room <roomId> --frames N --output <file.mgrp>`.
+- Headless tests: `pwsh TestsHeadless/run_headless_tests.ps1 [-Filter <doctest-filter>] [-Config Release|Debug]` builds and runs `mugen_sim_tests`.
+- Check rules: `pwsh TestsHeadless/check_rules.ps1 [-Paths core,conf,avatar,sim]`.
+- Sim CLI: `mugen_sim_cli run-summary --scenario <name> --crit min|max`, `mugen_sim_cli compare-summary <golden> <actual>`, `mugen_sim_cli compare-scenario (--scenario <name> --crit min|max | --all)`, `mugen_sim_cli run-ai-room <roomId> --frames N`.
 - Format: `format_code.ps1` (clang-format). It skips `Source/3rd` and the generated `*.pb.*` files.
 - Sources are collected with GLOB `CONFIGURE_DEPENDS`, so **re-run configure after adding files**.
 
@@ -20,7 +20,7 @@ Game client written in C++ on Axmol (custom fork). It uses CMake, FairyGUI, prot
 | `Source/AppDelegate.cpp`, `MainScene.cpp`, `AppContext.cpp` | Entry points |
 | `Source/net/` | yasio networking and **generated** `.pb.*` files (don't hand-edit; regenerate with Tools/protoc) |
 | `Source/ui/` | FairyGUI code, `gameui` namespace (avoids clashing with `ax::ui`) |
-| `Source/mugen/` | Battle core shared with the server |
+| `Source/mugen/` | Shared battle core (`core`, `conf`, `avatar`, `sim`, `render`); client unconditionally compiles `Source/mugen/sim/` (`mugen::sim`). See `Source/mugen/AGENTS.md` |
 | `Source/resource/` | Generic async resource loader, `gameres` namespace; see the "资源加载器" section in the root README.md |
 | `Source/3rd/` | protobuf、spine 3.4、vfs（vendored 运行时，编进客户端/战斗服/TestsHeadless；客户端 `VFS_WITH_AXMOL=1`）。不要改 3rd 源码 |
 | `Content/` | Runtime assets. `Content/mugen/config/config.bin` is generated. 启动时把 `Content` 挂到 VFS 虚根 `/`，`VfsFileUtils` 接管引擎 FileUtils；配置与业务 IO 写 `/mugen/...`。axslc 仍走原生搜索路径。  `Content/native/` stays outside `.vfs` (e.g. video). |

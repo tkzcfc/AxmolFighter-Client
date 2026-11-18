@@ -23,14 +23,14 @@ void writeLink(World& world, const std::vector<Entity>& members)
         if (world.ecs().has<TransformLinkComponent>(member))
         {
             auto& link     = world.ecs().get<TransformLinkComponent>(member);
-            link.m_members = members;
-            link.m_index   = i;
+            link.members = members;
+            link.index   = i;
         }
         else
         {
             TransformLinkComponent link;
-            link.m_members = members;
-            link.m_index   = i;
+            link.members = members;
+            link.index   = i;
             world.ecs().add(member, link);
         }
     }
@@ -40,48 +40,48 @@ void writeLink(World& world, const std::vector<Entity>& members)
 // 系统 TransformSystem：9.2 行，见 DESIGN.md §3.2。按请求生成新形态并休眠旧形态。
 void runTransform(World& world)
 {
-    auto& requests = world.ecs().singleton<EventQueue<TransformRequest>>().m_items;
+    auto& requests = world.ecs().singleton<EventQueue<TransformRequest>>().items;
     auto& ecs      = world.ecs();
     for (const TransformRequest& request : requests)
     {
-        const Entity old = request.m_entity;
+        const Entity old = request.entity;
         if (!ecs.alive(old) || ecs.has<InactiveComponent>(old) || ecs.has<DespawningComponent>(old))
             continue;
-        if (ecs.has<HealthComponent>(old) && ecs.get<HealthComponent>(old).m_dead)
+        if (ecs.has<HealthComponent>(old) && ecs.get<HealthComponent>(old).dead)
             continue;
-        if (ecs.has<RoleStateComponent>(old) && ecs.get<RoleStateComponent>(old).m_state == RoleStateId::Death)
+        if (ecs.has<RoleStateComponent>(old) && ecs.get<RoleStateComponent>(old).state == RoleStateId::Death)
             continue;
-        const auto* row = conf::Config::instance().find<conf::battle::RoleDef>(request.m_targetRoleId);
+        const auto* row = conf::Config::instance().find<conf::battle::RoleDef>(request.targetRoleId);
         if (!row)
             continue;
         const auto& oldId        = ecs.get<IdentityComponent>(old);
         const auto& oldTransform = ecs.get<TransformComponent>(old);
         SpawnRequest spawn;
-        spawn.m_kind         = SpawnKind::Role;
-        spawn.m_configId     = request.m_targetRoleId;
-        spawn.m_owner        = oldId.m_owner;
-        spawn.m_position     = oldTransform.m_position;
-        spawn.m_towardX      = oldTransform.m_towardX;
-        spawn.m_vectorX      = oldTransform.m_vectorX;
-        spawn.m_vectorZ      = oldTransform.m_vectorZ;
-        spawn.m_level        = oldId.m_level;
-        spawn.m_camp         = oldId.m_camp;
-        spawn.m_isAi         = !oldId.m_playerSlot.has_value();
-        if (oldId.m_playerSlot)
+        spawn.kind         = SpawnKind::Role;
+        spawn.configId     = request.targetRoleId;
+        spawn.owner        = oldId.owner;
+        spawn.position     = oldTransform.position;
+        spawn.towardX      = oldTransform.towardX;
+        spawn.vectorX      = oldTransform.vectorX;
+        spawn.vectorZ      = oldTransform.vectorZ;
+        spawn.level        = oldId.level;
+        spawn.camp         = oldId.camp;
+        spawn.isAi         = !oldId.playerSlot.has_value();
+        if (oldId.playerSlot)
         {
-            spawn.m_hasPlayerSlot = true;
-            spawn.m_playerSlot    = *oldId.m_playerSlot;
+            spawn.hasPlayerSlot = true;
+            spawn.playerSlot    = *oldId.playerSlot;
         }
         const Entity neu = life::rules::materialize(world, spawn, SpawnStage::Lifecycle);
         if (neu.value == 0)
             continue;
-        if (request.m_type == 0 && ecs.has<HealthComponent>(old) && ecs.has<HealthComponent>(neu))
+        if (request.type == 0 && ecs.has<HealthComponent>(old) && ecs.has<HealthComponent>(neu))
         {
             const auto& src = ecs.get<HealthComponent>(old);
             auto& dst       = ecs.get<HealthComponent>(neu);
-            dst.m_maxHp     = src.m_maxHp;
-            dst.m_hp        = src.m_hp;
-            dst.m_prevHp    = src.m_hp;
+            dst.maxHp     = src.maxHp;
+            dst.hp        = src.hp;
+            dst.prevHp    = src.hp;
         }
         life::rules::inheritBuffs(world, old, neu, 2);
         if (ecs.has<PlayerControlComponent>(old))
@@ -89,22 +89,22 @@ void runTransform(World& world)
         ecs.add(old, InactiveComponent{});
         std::vector<Entity> members;
         if (ecs.has<TransformLinkComponent>(old))
-            members = ecs.get<TransformLinkComponent>(old).m_members;
+            members = ecs.get<TransformLinkComponent>(old).members;
         else
             members.push_back(old);
         members.push_back(neu);
         writeLink(world, members);
         SpawnEvent spawned;
-        spawned.m_entity   = neu;
-        spawned.m_kind     = SpawnKind::Role;
-        spawned.m_configId = request.m_targetRoleId;
-        spawned.m_owner    = oldId.m_owner;
-        spawned.m_ordinal  = ecs.get<IdentityComponent>(neu).m_ordinal;
+        spawned.entity   = neu;
+        spawned.kind     = SpawnKind::Role;
+        spawned.configId = request.targetRoleId;
+        spawned.owner    = oldId.owner;
+        spawned.ordinal  = ecs.get<IdentityComponent>(neu).ordinal;
         ecs.singleton<EventQueue<SpawnEvent>>().push(spawned);
         CueEvent cue;
-        cue.m_entity = neu;
-        cue.m_kind   = CueKind::TransformSwap;
-        cue.m_id     = request.m_targetRoleId;
+        cue.entity = neu;
+        cue.kind   = CueKind::TransformSwap;
+        cue.id     = request.targetRoleId;
         ecs.singleton<EventQueue<CueEvent>>().push(cue);
     }
     requests.clear();

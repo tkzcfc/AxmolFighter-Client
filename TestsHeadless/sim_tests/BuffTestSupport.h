@@ -52,7 +52,7 @@ inline std::vector<AbilityDef>& abilityTable()
 // 把自定义行插入已排序的配置表，析构时撤掉，避免污染其它用例。
 struct BuffDefGuard
 {
-    std::vector<int32_t> m_ids;
+    std::vector<int32_t> ids;
     ~BuffDefGuard() { clear(); }
     BuffDefGuard() = default;
     BuffDefGuard(const BuffDefGuard&) = delete;
@@ -60,30 +60,30 @@ struct BuffDefGuard
 
     int32_t add(BuffDef def)
     {
-        const int32_t id = def.m_id;
+        const int32_t id = def.id;
         auto& rows       = buffTable();
         const auto it    = std::lower_bound(rows.begin(), rows.end(), id,
-                                            [](const BuffDef& row, int32_t key) { return row.m_id < key; });
-        if (it != rows.end() && it->m_id == id)
+                                            [](const BuffDef& row, int32_t key) { return row.id < key; });
+        if (it != rows.end() && it->id == id)
             *it = std::move(def);
         else
             rows.insert(it, std::move(def));
-        m_ids.push_back(id);
+        ids.push_back(id);
         return id;
     }
 
     void clear()
     {
         auto& rows = buffTable();
-        for (const int32_t id : m_ids)
-            std::erase_if(rows, [id](const BuffDef& row) { return row.m_id == id; });
-        m_ids.clear();
+        for (const int32_t id : ids)
+            std::erase_if(rows, [id](const BuffDef& row) { return row.id == id; });
+        ids.clear();
     }
 };
 
 struct AbilityDefGuard
 {
-    std::vector<int32_t> m_ids;
+    std::vector<int32_t> ids;
     ~AbilityDefGuard() { clear(); }
     AbilityDefGuard() = default;
     AbilityDefGuard(const AbilityDefGuard&) = delete;
@@ -91,24 +91,24 @@ struct AbilityDefGuard
 
     int32_t add(AbilityDef def)
     {
-        const int32_t id = def.m_id;
+        const int32_t id = def.id;
         auto& rows       = abilityTable();
         const auto it    = std::lower_bound(rows.begin(), rows.end(), id,
-                                            [](const AbilityDef& row, int32_t key) { return row.m_id < key; });
-        if (it != rows.end() && it->m_id == id)
+                                            [](const AbilityDef& row, int32_t key) { return row.id < key; });
+        if (it != rows.end() && it->id == id)
             *it = std::move(def);
         else
             rows.insert(it, std::move(def));
-        m_ids.push_back(id);
+        ids.push_back(id);
         return id;
     }
 
     void clear()
     {
         auto& rows = abilityTable();
-        for (const int32_t id : m_ids)
-            std::erase_if(rows, [id](const AbilityDef& row) { return row.m_id == id; });
-        m_ids.clear();
+        for (const int32_t id : ids)
+            std::erase_if(rows, [id](const AbilityDef& row) { return row.id == id; });
+        ids.clear();
     }
 };
 
@@ -116,50 +116,50 @@ struct AbilityDefGuard
 inline BuffDef makeBuff(int32_t id)
 {
     BuffDef def;
-    def.m_id                             = id;
-    def.m_status                         = LowerStatus::Lowered;
-    def.m_admission.m_ruleId             = id;
-    def.m_admission.m_subType            = 0;
-    def.m_admission.m_maxStacks          = 99;
-    def.m_admission.m_probability        = Fixed::fromInt(100);
-    def.m_lifecycle.m_executeType        = 1;
-    def.m_activation.m_latchOn           = static_cast<int32_t>(BuffHook::Enter);
-    def.m_activation.m_releaseOn         = static_cast<int32_t>(BuffHook::Exit);
+    def.id                             = id;
+    def.status                         = LowerStatus::Lowered;
+    def.admission.ruleId             = id;
+    def.admission.subType            = 0;
+    def.admission.maxStacks          = 99;
+    def.admission.probability        = Fixed::fromInt(100);
+    def.lifecycle.executeType        = 1;
+    def.activation.latchOn           = static_cast<int32_t>(BuffHook::Enter);
+    def.activation.releaseOn         = static_cast<int32_t>(BuffHook::Exit);
     return def;
 }
 
 inline ValueExpr constVal(Fixed a)
 {
     ValueExpr expr;
-    expr.m_kind = ValueKind::Const;
-    expr.m_a    = a;
+    expr.kind = ValueKind::Const;
+    expr.a    = a;
     return expr;
 }
 
 inline BuffOp flagOp(BuffFlag flag)
 {
     BuffOp op;
-    op.m_kind = BuffOpKind::Flag;
-    op.m_flag = flag;
+    op.kind = BuffOpKind::Flag;
+    op.flag = flag;
     return op;
 }
 
 inline BuffOp statOp(BuffStat stat, ValueExpr expr, bool live = false)
 {
     BuffOp op;
-    op.m_kind  = BuffOpKind::Stat;
-    op.m_stat  = stat;
-    op.m_value = expr;
-    op.m_live  = live;
+    op.kind  = BuffOpKind::Stat;
+    op.stat  = stat;
+    op.value = expr;
+    op.live  = live;
     return op;
 }
 
 inline BuffOp resourceOp(ResourceId res, ValueExpr expr)
 {
     BuffOp op;
-    op.m_kind  = BuffOpKind::Resource;
-    op.m_res   = res;
-    op.m_value = expr;
+    op.kind  = BuffOpKind::Resource;
+    op.res   = res;
+    op.value = expr;
     return op;
 }
 
@@ -168,28 +168,28 @@ inline Entity spawnActor(World& world, int32_t roleType, int32_t camp, int32_t h
 {
     const Entity entity = world.ecs().create();
     IdentityComponent identity;
-    identity.m_kind        = SpawnKind::Role;
-    identity.m_roleType    = roleType;
-    identity.m_camp        = camp;
-    identity.m_hostileMask = hostileMask;
-    identity.m_level       = level;
+    identity.kind        = SpawnKind::Role;
+    identity.roleType    = roleType;
+    identity.camp        = camp;
+    identity.hostileMask = hostileMask;
+    identity.level       = level;
     world.ecs().add(entity, identity);
 
     StatsComponent stats;
-    stats.m_base[4]  = Fixed::fromInt(10000);
-    stats.m_base[5]  = Fixed::fromInt(200);
-    stats.m_base[15] = Fixed::fromInt(50);
+    stats.base[4]  = Fixed::fromInt(10000);
+    stats.base[5]  = Fixed::fromInt(200);
+    stats.base[15] = Fixed::fromInt(50);
     world.ecs().add(entity, stats);
 
     HealthComponent health;
-    health.m_maxHp  = stats.maxHp();
-    health.m_hp     = health.m_maxHp;
-    health.m_prevHp = health.m_hp;
-    health.m_maxMp  = Fixed::fromInt(100);
-    health.m_mp     = health.m_maxMp;
-    health.m_maxEp  = Fixed::fromInt(1000);
-    health.m_ep     = health.m_maxEp;
-    health.m_prevEp = health.m_ep;
+    health.maxHp  = stats.maxHp();
+    health.hp     = health.maxHp;
+    health.prevHp = health.hp;
+    health.maxMp  = Fixed::fromInt(100);
+    health.mp     = health.maxMp;
+    health.maxEp  = Fixed::fromInt(1000);
+    health.ep     = health.maxEp;
+    health.prevEp = health.ep;
     world.ecs().add(entity, health);
 
     world.ecs().add(entity, StatusFlagsComponent{});
@@ -213,8 +213,8 @@ inline BuffInstance* findBuff(World& world, Entity entity, int32_t id)
 {
     if (!world.ecs().has<BuffListComponent>(entity))
         return nullptr;
-    for (auto& inst : world.ecs().get<BuffListComponent>(entity).m_instances)
-        if (inst.m_id == id && !inst.m_removing)
+    for (auto& inst : world.ecs().get<BuffListComponent>(entity).instances)
+        if (inst.id == id && !inst.removing)
             return &inst;
     return nullptr;
 }
@@ -222,7 +222,7 @@ inline BuffInstance* findBuff(World& world, Entity entity, int32_t id)
 inline int32_t stackOf(World& world, Entity entity, int32_t id)
 {
     const auto* inst = findBuff(world, entity, id);
-    return inst ? inst->m_stacks : 0;
+    return inst ? inst->stacks : 0;
 }
 
 inline Fixed statSum(World& world, Entity entity, int32_t stat)
@@ -238,8 +238,8 @@ inline bool hasFlag(World& world, Entity entity, ExtraState state)
 inline int32_t eventCount(World& world, BuffPhase phase, int32_t buffId = 0)
 {
     int32_t count = 0;
-    for (const auto& event : world.ecs().singleton<EventQueue<BuffEvent>>().m_items)
-        if (event.m_phase == phase && (buffId == 0 || event.m_buffId == buffId))
+    for (const auto& event : world.ecs().singleton<EventQueue<BuffEvent>>().items)
+        if (event.phase == phase && (buffId == 0 || event.buffId == buffId))
             ++count;
     return count;
 }
@@ -256,11 +256,11 @@ struct Harness
     Harness()
     {
         loadAssets();
-        policy.m_probability = Fixed::fromInt(0);
+        policy.probability = Fixed::fromInt(0);
         WorldSetup setup;
         setup.seed        = 31;
         setup.mode        = WorldMode::Battle;
-        setup.m_aiEnabled = false;
+        setup.aiEnabled = false;
         world.init(setup);
         world.setDrawPolicy(&policy);
         self  = spawnActor(world, 1, 2, 4);
@@ -302,8 +302,8 @@ struct Harness
     void setTickSeconds(int32_t seconds)
     {
         auto& clock   = world.ecs().singleton<WorldClock>();
-        clock.m_dtMs  = Fixed::fromInt(seconds) * Fixed::fromInt(1000);
-        clock.m_dtSec = Fixed::fromInt(seconds);
+        clock.dtMs  = Fixed::fromInt(seconds) * Fixed::fromInt(1000);
+        clock.dtSec = Fixed::fromInt(seconds);
     }
 };
 }  // namespace buff_test

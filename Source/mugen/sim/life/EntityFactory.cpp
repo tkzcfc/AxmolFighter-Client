@@ -25,7 +25,7 @@ std::string motionFile(int32_t resSpineId)
     const auto* spine = conf::Config::instance().find<conf::ResSpineConfig>(resSpineId);
     return spine ? AvatarPaths::motionFileFromSpine(spine->fileName) : std::string{};
 }
-// 骨骼缩放。碰撞框按 TransformComponent.m_scale 换到世界坐标。
+// 骨骼缩放。碰撞框按 TransformComponent.scale 换到世界坐标。
 Fixed spineScale(int32_t resSpineId)
 {
     const auto* spine = conf::Config::instance().find<conf::ResSpineConfig>(resSpineId);
@@ -37,20 +37,20 @@ Entity summonRoot(World& world, Entity owner)
     if (owner.value == 0 || !world.ecs().alive(owner))
         return owner;
     if (const auto* summon = world.ecs().tryGet<SummonComponent>(owner))
-        return summon->m_root.value != 0 ? summon->m_root : owner;
+        return summon->root.value != 0 ? summon->root : owner;
     if (const auto* identity = world.ecs().tryGet<IdentityComponent>(owner))
-        if (identity->m_rootOwner.value != 0)
-            return identity->m_rootOwner;
+        if (identity->rootOwner.value != 0)
+            return identity->rootOwner;
     return owner;
 }
 
 // 由 SpawnRequest 装配一个角色实体（原型装配，移植旧实现 RoleSpawner::spawnRole）。
 Entity materializeRole(World& world, const SpawnRequest& request, SpawnStage stage)
 {
-    const auto* row = conf::Config::instance().find<conf::battle::RoleDef>(request.m_configId);
+    const auto* row = conf::Config::instance().find<conf::battle::RoleDef>(request.configId);
     if (!row)
     {
-        MG_LOG_E("SpawnFlushSystem: missing role config {}", request.m_configId);
+        MG_LOG_E("SpawnFlushSystem: missing role config {}", request.configId);
         MG_ASSERT(row != nullptr && "SpawnFlushSystem: missing role config");
         return {};
     }
@@ -58,55 +58,55 @@ Entity materializeRole(World& world, const SpawnRequest& request, SpawnStage sta
     const Entity entity = ecs.create();
 
     IdentityComponent identity;
-    identity.m_kind        = SpawnKind::Role;
-    identity.m_configId    = request.m_configId;
-    identity.m_camp        = request.m_camp != 0 ? request.m_camp : row->monsterCamps;
-    identity.m_hostileMask = role::rules::hostileMask(identity.m_camp);
-    identity.m_roleType    = row->roleType;
-    identity.m_level       = request.m_level;
-    identity.m_aiDifficulty = request.m_aiDifficulty;
-    if (request.m_hasPlayerSlot)
-        identity.m_playerSlot = request.m_playerSlot;
-    identity.m_owner     = request.m_owner;
-    identity.m_rootOwner = summonRoot(world, request.m_owner);
-    identity.m_born      = {world.frame(), stage};
-    identity.m_ordinal   = ecs.singleton<SpawnRegistry>().next(request.m_configId);
+    identity.kind        = SpawnKind::Role;
+    identity.configId    = request.configId;
+    identity.camp        = request.camp != 0 ? request.camp : row->monsterCamps;
+    identity.hostileMask = role::rules::hostileMask(identity.camp);
+    identity.roleType    = row->roleType;
+    identity.level       = request.level;
+    identity.aiDifficulty = request.aiDifficulty;
+    if (request.hasPlayerSlot)
+        identity.playerSlot = request.playerSlot;
+    identity.owner     = request.owner;
+    identity.rootOwner = summonRoot(world, request.owner);
+    identity.born      = {world.frame(), stage};
+    identity.ordinal   = ecs.singleton<SpawnRegistry>().next(request.configId);
     ecs.add(entity, identity);
 
     TransformComponent transform;
-    transform.m_position = request.m_position;
-    transform.m_towardX  = request.m_towardX == -1 ? -1 : 1;
-    transform.m_vectorX  = request.m_vectorX != Fixed{} ? request.m_vectorX : Fixed::fromInt(transform.m_towardX);
-    transform.m_vectorZ  = request.m_vectorZ;
-    transform.m_scale    = spineScale(row->resSpineId);
+    transform.position = request.position;
+    transform.towardX  = request.towardX == -1 ? -1 : 1;
+    transform.vectorX  = request.vectorX != Fixed{} ? request.vectorX : Fixed::fromInt(transform.towardX);
+    transform.vectorZ  = request.vectorZ;
+    transform.scale    = spineScale(row->resSpineId);
     ecs.add(entity, transform);
 
     MotionStateComponent motion;
-    motion.m_motionFile = motionFile(row->resSpineId);
-    motion.m_motionName = "stand";
-    motion.m_timeMs     = {};
-    motion.m_loop       = true;
-    motion.m_playing    = true;
-    motion.m_rate       = Fixed::fromInt(1);
+    motion.motionFile = motionFile(row->resSpineId);
+    motion.motionName = "stand";
+    motion.timeMs     = {};
+    motion.loop       = true;
+    motion.playing    = true;
+    motion.rate       = Fixed::fromInt(1);
     ecs.add(entity, motion);
 
     StatsComponent stats;
-    stats.m_base = role::rules::loadAttributes(*row, request.m_level);
-    if (row->roleType == static_cast<int32_t>(EntityRoleType::kSummon) && request.m_owner.value != 0 &&
-        ecs.has<StatsComponent>(request.m_owner))
+    stats.base = role::rules::loadAttributes(*row, request.level);
+    if (row->roleType == static_cast<int32_t>(EntityRoleType::kSummon) && request.owner.value != 0 &&
+        ecs.has<StatsComponent>(request.owner))
     {
-        const auto& ownerStats = ecs.get<StatsComponent>(request.m_owner);
-        for (size_t i = 0; i < stats.m_base.size(); ++i)
-            stats.m_base[i] = ownerStats.value(static_cast<int32_t>(i)) *
+        const auto& ownerStats = ecs.get<StatsComponent>(request.owner);
+        for (size_t i = 0; i < stats.base.size(); ++i)
+            stats.base[i] = ownerStats.value(static_cast<int32_t>(i)) *
                               (i < row->attributeRate.size() ? row->attributeRate[i] : Fixed::fromInt(1));
     }
     ecs.add(entity, stats);
 
     HealthComponent health;
-    health.m_maxHp  = stats.maxHp();
-    health.m_hp     = health.m_maxHp;
-    health.m_prevHp = health.m_hp;
-    health.m_prevEp = health.m_ep;
+    health.maxHp  = stats.maxHp();
+    health.hp     = health.maxHp;
+    health.prevHp = health.hp;
+    health.prevEp = health.ep;
     ecs.add(entity, health);
 
     ecs.add(entity, StatusFlagsComponent{});
@@ -119,34 +119,34 @@ Entity materializeRole(World& world, const SpawnRequest& request, SpawnStage sta
     ecs.add(entity, RageStateComponent{});
 
     RoleStateComponent roleState;
-    roleState.m_state = RoleStateId::Idle;
-    roleState.m_prev  = RoleStateId::Idle;
+    roleState.state = RoleStateId::Idle;
+    roleState.prev  = RoleStateId::Idle;
     ecs.add(entity, roleState);
 
     HitStateComponent hitState;
-    hitState.m_rigidity  = Fixed::fromInt(row->rigidity);
-    hitState.m_weight    = row->weight;
-    hitState.m_fatigue   = Fixed::fromInt(row->fatigue);
-    hitState.m_hitCounts = row->hitCount;
-    hitState.m_stiffTime = Fixed::fromInt(row->hitStiffTime);
+    hitState.rigidity  = Fixed::fromInt(row->rigidity);
+    hitState.weight    = row->weight;
+    hitState.fatigue   = Fixed::fromInt(row->fatigue);
+    hitState.hitCounts = row->hitCount;
+    hitState.stiffTime = Fixed::fromInt(row->hitStiffTime);
     ecs.add(entity, hitState);
 
     ecs.add(entity, DisplacementComponent{});
 
     HitboxesComponent hitboxes;
-    hitboxes.m_radius = Fixed::fromInt(row->radius);
-    hitboxes.m_depth  = Fixed::fromInt(row->depth);
+    hitboxes.radius = Fixed::fromInt(row->radius);
+    hitboxes.depth  = Fixed::fromInt(row->depth);
     ecs.add(entity, hitboxes);
 
-    if (identity.m_playerSlot)
+    if (identity.playerSlot)
     {
         PlayerControlComponent control;
-        control.m_slot = *identity.m_playerSlot;
+        control.slot = *identity.playerSlot;
         ecs.add(entity, control);
-        ecs.singleton<PlayerSlots>().m_entities[*identity.m_playerSlot] = entity;
+        ecs.singleton<PlayerSlots>().entities[*identity.playerSlot] = entity;
     }
     // 玩家装配离线技能簿（职业 → skill_tree/skill_leaf）；怪物无技能簿，仅挂施法状态。
-    const CharacterClass occupation = type_conversions::toCharacterClass(request.m_configId);
+    const CharacterClass occupation = type_conversions::toCharacterClass(request.configId);
     if (occupation != CharacterClass::kUnknown)
         skill::rules::buildSkillBook(world, entity, occupation);
     else
@@ -154,14 +154,14 @@ Entity materializeRole(World& world, const SpawnRequest& request, SpawnStage sta
         ecs.add(entity, SkillCastComponent{});
         ecs.add(entity, ActionTimelineComponent{});
     }
-    if (request.m_lifetimeMs > 0 && request.m_owner.value != 0)
+    if (request.lifetimeMs > 0 && request.owner.value != 0)
     {
         SummonComponent summon;
-        summon.m_owner        = request.m_owner;
-        summon.m_root         = identity.m_rootOwner.value != 0 ? identity.m_rootOwner : request.m_owner;
-        summon.m_remainingMs  = Fixed::fromInt(request.m_lifetimeMs);
+        summon.owner        = request.owner;
+        summon.root         = identity.rootOwner.value != 0 ? identity.rootOwner : request.owner;
+        summon.remainingMs  = Fixed::fromInt(request.lifetimeMs);
         ecs.add(entity, summon);
-        life::rules::inheritBuffs(world, request.m_owner, entity, 1);
+        life::rules::inheritBuffs(world, request.owner, entity, 1);
     }
     return entity;
 }
@@ -169,10 +169,10 @@ Entity materializeRole(World& world, const SpawnRequest& request, SpawnStage sta
 // 由 SpawnRequest 装配一个特效实体（移植旧实现 EffectActor::create）。
 Entity materializeEffect(World& world, const SpawnRequest& request, SpawnStage stage)
 {
-    const auto* row = conf::Config::instance().find<conf::battle::EffectDef>(request.m_configId);
+    const auto* row = conf::Config::instance().find<conf::battle::EffectDef>(request.configId);
     if (!row)
     {
-        MG_LOG_E("SpawnFlushSystem: missing effect config {}", request.m_configId);
+        MG_LOG_E("SpawnFlushSystem: missing effect config {}", request.configId);
         MG_ASSERT(row != nullptr && "SpawnFlushSystem: missing effect config");
         return {};
     }
@@ -180,72 +180,72 @@ Entity materializeEffect(World& world, const SpawnRequest& request, SpawnStage s
     const Entity entity = ecs.create();
 
     IdentityComponent identity;
-    identity.m_kind        = SpawnKind::Effect;
-    identity.m_configId    = request.m_configId;
-    // 与 sim_legacy EffectActor::create 一致：特效身份固定 camp=1、hostileMask=30，不继承主人。
-    identity.m_camp        = 1;
-    identity.m_hostileMask = 30;
-    identity.m_roleType    = 0;
-    identity.m_owner       = request.m_owner;
-    identity.m_born        = {world.frame(), stage};
-    identity.m_ordinal     = ecs.singleton<SpawnRegistry>().next(request.m_configId);
+    identity.kind        = SpawnKind::Effect;
+    identity.configId    = request.configId;
+    // 特效自身身份固定为中立阵营（camp=1、hostileMask=30），敌对过滤在碰撞阶段解析至最终主人。
+    identity.camp        = 1;
+    identity.hostileMask = 30;
+    identity.roleType    = 0;
+    identity.owner       = request.owner;
+    identity.born        = {world.frame(), stage};
+    identity.ordinal     = ecs.singleton<SpawnRegistry>().next(request.configId);
     ecs.add(entity, identity);
 
     TransformComponent transform;
-    transform.m_position = request.m_position;
-    transform.m_towardX  = request.m_towardX == -1 ? -1 : 1;
-    transform.m_vectorX  = request.m_vectorX;
-    transform.m_vectorZ  = request.m_vectorZ;
-    transform.m_scale    = spineScale(row->resSpineId);
+    transform.position = request.position;
+    transform.towardX  = request.towardX == -1 ? -1 : 1;
+    transform.vectorX  = request.vectorX;
+    transform.vectorZ  = request.vectorZ;
+    transform.scale    = spineScale(row->resSpineId);
     ecs.add(entity, transform);
 
     MotionStateComponent motion;
-    motion.m_motionFile = motionFile(row->resSpineId);
+    motion.motionFile = motionFile(row->resSpineId);
     ecs.add(entity, motion);
 
     EffectInfoComponent info;
-    info.m_configId    = request.m_configId;
-    info.m_owner       = request.m_owner;
-    info.m_skillId     = request.m_source.m_skillId;
-    info.m_baseSkillId = request.m_source.m_baseSkillId;
-    info.m_slot            = request.m_source.m_slot;
-    info.m_attributeSource = request.m_owner;
+    info.configId    = request.configId;
+    info.owner       = request.owner;
+    info.skillId     = request.source.skillId;
+    info.baseSkillId = request.source.baseSkillId;
+    info.slot            = request.source.slot;
+    info.attributeSource = request.owner;
     // 没有后继的受击特效记住目标，后续命中复用同一实例。
     if (row->nextEffectId == -1)
-        info.m_hitEntity = request.m_hitEntity;
+        info.hitEntity = request.hitEntity;
     ecs.add(entity, info);
     ecs.add(entity, PauseComponent{});
 
     HitboxesComponent hitboxes;
-    hitboxes.m_radius = Fixed::fromInt(row->radius);
-    hitboxes.m_depth  = Fixed::fromInt(row->depth);
+    hitboxes.radius = Fixed::fromInt(row->radius);
+    hitboxes.depth  = Fixed::fromInt(row->depth);
     ecs.add(entity, hitboxes);
 
     ecs.add(entity, DisplacementComponent{});
     ecs.add(entity, HitTrackerComponent{});
 
     LifetimeComponent lifetime;
-    lifetime.m_autoRelease = row->autoRelease;
+    lifetime.autoRelease = row->autoRelease;
     ecs.add(entity, lifetime);
 
     if (row->follow != 0)
     {
         FollowComponent follow;
-        follow.m_target = request.m_owner;
-        follow.m_mode   = row->follow;
+        follow.target = request.owner;
+        follow.mode   = row->follow;
         ecs.add(entity, follow);
     }
 
     ActionTimelineComponent timeline;
-    timeline.m_clips    = row->clips;
-    timeline.m_index    = 0;
-    timeline.m_finished = row->clips.empty();
-    const int32_t firstClip = timeline.m_finished ? 0 : timeline.m_clips.front();
+    timeline.clips    = row->clips;
+    timeline.index    = 0;
+    timeline.finished = row->clips.empty();
+    const int32_t firstClip = timeline.finished ? 0 : timeline.clips.front();
     ecs.add(entity, std::move(timeline));
     // 角色时间轴出生后本帧立刻跑特效遍，与旧实现 create 后同帧 update 一致，不 defer。
     // 后继/受击/生命周期在特效遍之后才实体化，第一次推进自然落在下一帧。
     if (firstClip != 0 && !timeline::rules::enterClip(world, entity, firstClip, true, false))
-        ecs.get<ActionTimelineComponent>(entity).m_finished = true;
+        ecs.get<ActionTimelineComponent>(entity).finished = true;
 
     ecs.add(entity, ContactMemoryComponent{});
     return entity;
@@ -257,8 +257,8 @@ namespace life::rules
 // 准入 inherit 列表是否含指定标记（1 召唤 / 2 变身）。
 bool inheritHas(const conf::battle::BuffDef& def, int32_t flag)
 {
-    return std::find(def.m_admission.m_inherit.begin(), def.m_admission.m_inherit.end(), flag) !=
-           def.m_admission.m_inherit.end();
+    return std::find(def.admission.inherit.begin(), def.admission.inherit.end(), flag) !=
+           def.admission.inherit.end();
 }
 
 // 把来源身上 inherit 含 flag 的 Buff 同步准入到目标。
@@ -267,17 +267,17 @@ void inheritBuffs(World& world, Entity from, Entity to, int32_t flag)
     if (!world.ecs().has<BuffListComponent>(from) || !world.ecs().has<BuffListComponent>(to))
         return;
     std::vector<int32_t> ids;
-    for (const auto& inst : world.ecs().get<BuffListComponent>(from).m_instances)
+    for (const auto& inst : world.ecs().get<BuffListComponent>(from).instances)
     {
-        if (inst.m_removing)
+        if (inst.removing)
             continue;
-        const auto* def = conf::Config::instance().find<conf::battle::BuffDef>(inst.m_id);
+        const auto* def = conf::Config::instance().find<conf::battle::BuffDef>(inst.id);
         if (def && inheritHas(*def, flag))
-            ids.push_back(inst.m_id);
+            ids.push_back(inst.id);
     }
     BuffContext ctx;
-    ctx.m_applicator = from;
-    ctx.m_target     = to;
+    ctx.applicator = from;
+    ctx.target     = to;
     for (const int32_t id : ids)
         buff::rules::admit(world, to, id, ctx);
 }
@@ -285,11 +285,11 @@ void inheritBuffs(World& world, Entity from, Entity to, int32_t flag)
 // 按请求装配一个实体。
 Entity materialize(World& world, const SpawnRequest& request, SpawnStage stage)
 {
-    if (request.m_kind == SpawnKind::Role)
+    if (request.kind == SpawnKind::Role)
         return materializeRole(world, request, stage);
-    if (request.m_kind == SpawnKind::Effect)
+    if (request.kind == SpawnKind::Effect)
         return materializeEffect(world, request, stage);
-    if (request.m_kind == SpawnKind::Obstacle || request.m_kind == SpawnKind::Goods || request.m_kind == SpawnKind::Portal)
+    if (request.kind == SpawnKind::Obstacle || request.kind == SpawnKind::Goods || request.kind == SpawnKind::Portal)
         return room::rules::materialize(world, request, stage);
     return {};
 }
@@ -298,17 +298,17 @@ Entity materialize(World& world, const SpawnRequest& request, SpawnStage stage)
 void spawnFlush(World& world, SpawnStage stage)
 {
     auto& queue = world.ecs().singleton<EventQueue<SpawnRequest>>();
-    for (const SpawnRequest& request : queue.m_items)
+    for (const SpawnRequest& request : queue.items)
     {
         const Entity entity = materialize(world, request, stage);
         if (entity.value != 0)
         {
             SpawnEvent event;
-            event.m_entity   = entity;
-            event.m_kind     = request.m_kind;
-            event.m_configId = request.m_configId;
-            event.m_owner    = request.m_owner;
-            event.m_ordinal  = world.ecs().get<IdentityComponent>(entity).m_ordinal;
+            event.entity   = entity;
+            event.kind     = request.kind;
+            event.configId = request.configId;
+            event.owner    = request.owner;
+            event.ordinal  = world.ecs().get<IdentityComponent>(entity).ordinal;
             world.ecs().singleton<EventQueue<SpawnEvent>>().push(event);
         }
     }

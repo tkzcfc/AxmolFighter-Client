@@ -2,7 +2,7 @@
 // 读：`ContactEvent`(物品)、`PortalStateComponent`、`HitboxesComponent`、`TransformComponent`、`RoomState`
 // 写：`GoodsStateComponent`、`PortalStateComponent`、`BuffListComponent`(拾取)、`RoomState`(传送)
 // 消费：`ContactEvent`(物品)
-// 产生：`SpawnRequest`(召唤)、`RoomEvent`
+// 产生：`SpawnRequest`(召唤)、`RoomEvent`、`CueEvent`
 #include "mugen/sim/Systems.h"
 #include "mugen/sim/World.h"
 #include "mugen/sim/role/RoleSpawn.h"
@@ -20,22 +20,22 @@ namespace
 // 推进掉落物抛射：重力积分并在落地时转入待机。
 void updateSpurt(World& world, Entity entity, GoodsStateComponent& state)
 {
-    auto& position          = world.ecs().get<TransformComponent>(entity).m_position;
-    const Fixed dt          = world.ecs().singleton<WorldClock>().m_dtMs;
-    const auto step         = displacement::integrate({}, state.m_velocity.y, {}, {}, {}, dt, conf::kGravity);
-    position.x += state.m_velocity.x * dt;
-    position.z += state.m_velocity.z * dt * conf::kZRate;
-    position.y += step.m_offset;
-    state.m_velocity.y = step.m_velocity;
-    if (position.y <= Fixed{} && step.m_velocity < Fixed{})
+    auto& position          = world.ecs().get<TransformComponent>(entity).position;
+    const Fixed dt          = world.ecs().singleton<WorldClock>().dtMs;
+    const auto step         = displacement::integrate({}, state.velocity.y, {}, {}, {}, dt, conf::kGravity);
+    position.x += state.velocity.x * dt;
+    position.z += state.velocity.z * dt * conf::kZRate;
+    position.y += step.offset;
+    state.velocity.y = step.velocity;
+    if (position.y <= Fixed{} && step.velocity < Fixed{})
     {
         position.y = {};
-        if (step.m_velocity < -conf::kBounces)
-            state.m_velocity.y = -step.m_velocity * "0.2"_fx;
+        if (step.velocity < -conf::kBounces)
+            state.velocity.y = -step.velocity * "0.2"_fx;
         else
         {
-            state.m_phase    = GoodsPhase::Idle;
-            state.m_velocity = {};
+            state.phase    = GoodsPhase::Idle;
+            state.velocity = {};
         }
     }
 }
@@ -54,43 +54,51 @@ void runInteract(World& world)
         [&](Entity entity, GoodsStateComponent& state, const TransformComponent&) {
             if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
                 return;
-            if (state.m_phase == GoodsPhase::Spurt)
+            if (state.phase == GoodsPhase::Spurt)
                 updateSpurt(world, entity, state);
         });
 
     // 物品拾取走 ContactEvent。
-    auto& contacts = world.ecs().singleton<EventQueue<ContactEvent>>().m_items;
+    auto& contacts = world.ecs().singleton<EventQueue<ContactEvent>>().items;
     for (const ContactEvent& contact : contacts)
     {
-        if (contact.m_phase == ContactPhase::End)
+        if (contact.phase == ContactPhase::End)
             continue;
-        const bool aGoods = world.ecs().alive(contact.m_a) && world.ecs().has<GoodsStateComponent>(contact.m_a);
-        const bool bGoods = world.ecs().alive(contact.m_b) && world.ecs().has<GoodsStateComponent>(contact.m_b);
+        const bool aGoods = world.ecs().alive(contact.a) && world.ecs().has<GoodsStateComponent>(contact.a);
+        const bool bGoods = world.ecs().alive(contact.b) && world.ecs().has<GoodsStateComponent>(contact.b);
         if (!(aGoods != bGoods))
             continue;
-        const Entity goods = aGoods ? contact.m_a : contact.m_b;
-        const Entity role  = aGoods ? contact.m_b : contact.m_a;
+        const Entity goods = aGoods ? contact.a : contact.b;
+        const Entity role  = aGoods ? contact.b : contact.a;
         auto& state        = world.ecs().get<GoodsStateComponent>(goods);
-        if (state.m_phase == GoodsPhase::Idle && world.ecs().has<RoleStateComponent>(role) &&
+        if (state.phase == GoodsPhase::Idle && world.ecs().has<RoleStateComponent>(role) &&
             !world.ecs().has<DespawningComponent>(goods))
         {
-            const auto* row = conf::Config::instance().find<conf::GoodsConfig>(state.m_configId);
+            const auto* row = conf::Config::instance().find<conf::GoodsConfig>(state.configId);
             if (!row)
                 continue;
-            state.m_phase     = GoodsPhase::Collect;
-            state.m_collector = role;
+            state.phase     = GoodsPhase::Collect;
+            state.collector = role;
             if (row->buffId != -1)
                 buff::rules::admit(world, role, row->buffId);
+            if (row->soundPick > 0)
+            {
+                CueEvent event;
+                event.entity = goods;
+                event.kind   = CueKind::Sound;
+                event.id     = row->soundPick;
+                world.ecs().singleton<EventQueue<CueEvent>>().push(event);
+            }
             if (row->summonId > 0)
             {
                 RoleSpawnParams params;
-                params.m_roleId   = row->summonId;
-                params.m_camp     = world.ecs().get<IdentityComponent>(role).m_camp;
-                params.m_level    = world.ecs().get<IdentityComponent>(role).m_level;
-                params.m_owner    = role;
-                params.m_isAi     = true;
-                params.m_position = world.ecs().get<TransformComponent>(goods).m_position;
-                params.m_toward   = world.ecs().get<TransformComponent>(role).m_towardX;
+                params.roleId   = row->summonId;
+                params.camp     = world.ecs().get<IdentityComponent>(role).camp;
+                params.level    = world.ecs().get<IdentityComponent>(role).level;
+                params.owner    = role;
+                params.isAi     = true;
+                params.position = world.ecs().get<TransformComponent>(goods).position;
+                params.toward   = world.ecs().get<TransformComponent>(role).towardX;
                 role::rules::spawnRole(world, params);
             }
             // 拾取后直接回收（省略收集动作，见报告）。
@@ -102,20 +110,20 @@ void runInteract(World& world)
     // 传送门触发：传送门与角色阵营掩码互不敌对，ContactEvent 不覆盖这一对，
     // 改由本系统按半径盒与玩家受击盒求交（对齐旧实现 CollisionSystem 的 interaction 分支）。
     auto& room = world.ecs().singleton<RoomState>();
-    if (!room.m_victory)
+    if (!room.victory)
         return;
     world.ecs().each<PortalStateComponent, TransformComponent, HitboxesComponent>(
         [&](Entity portal, PortalStateComponent& state, const TransformComponent& portalTransform,
             const HitboxesComponent& portalHitboxes) {
             if (world.ecs().has<DespawningComponent>(portal) || world.ecs().has<InactiveComponent>(portal))
                 return;
-            if (state.m_phase != PortalPhase::Active)
+            if (state.phase != PortalPhase::Active)
                 return;
             // 传送门体积：半径铺横向和纵深，高度取直径。不读命中深度字段。
-            const Fixed radius = portalHitboxes.m_radius;
+            const Fixed radius = portalHitboxes.radius;
             const Fixed span   = radius * Fixed::fromInt(2);
-            const WorldBox portalBox{{portalTransform.m_position.x - radius, portalTransform.m_position.z - radius,
-                                      portalTransform.m_position.y},
+            const WorldBox portalBox{{portalTransform.position.x - radius, portalTransform.position.z - radius,
+                                      portalTransform.position.y},
                                      {span, span, span}};
             // 仅英雄或受控玩家接触传送门，且需存活。
             world.ecs().each<IdentityComponent, RoleStateComponent, TransformComponent, HitboxesComponent>(
@@ -123,15 +131,15 @@ void runInteract(World& world)
                     const TransformComponent&, const HitboxesComponent& roleHitboxes) {
                     if (world.ecs().has<DespawningComponent>(role) || world.ecs().has<InactiveComponent>(role))
                         return;
-                    if (identity.m_roleType != 1 && !identity.m_playerSlot.has_value())
+                    if (identity.roleType != 1 && !identity.playerSlot.has_value())
                         return;
-                    if (roleState.m_state == RoleStateId::Death)
+                    if (roleState.state == RoleStateId::Death)
                         return;
-                    for (const WorldBox& body : roleHitboxes.m_damage)
+                    for (const WorldBox& body : roleHitboxes.damage)
                         if (boxIntersects(portalBox, body))
                         {
                             // 只切阶段，换房请求由 RoomTransferSystem 下一帧读取（对齐旧实现延迟一帧）。
-                            state.m_phase = PortalPhase::Transfer;
+                            state.phase = PortalPhase::Transfer;
                             return;
                         }
                 });

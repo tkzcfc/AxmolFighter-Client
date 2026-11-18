@@ -11,15 +11,15 @@ Fixed policyValue(const DrawPolicy& policy, DrawKind kind)
     switch (kind)
     {
     case DrawKind::Dodge:
-        return policy.m_dodge;
+        return policy.dodge;
     case DrawKind::Crit:
-        return policy.m_crit;
+        return policy.crit;
     case DrawKind::DamageFloat:
-        return policy.m_float;
+        return policy.damageFloat;
     case DrawKind::BuffProbability:
     case DrawKind::SkillAiProb:
     case DrawKind::AbilityProb:
-        return policy.m_probability;
+        return policy.probability;
     case DrawKind::Choice:
     case DrawKind::AiTarget:
     case DrawKind::AiWander:
@@ -35,7 +35,7 @@ Fixed draw(World& world, DrawKind kind)
 {
     if (const DrawPolicy* policy = world.drawPolicy())
         return policyValue(*policy, kind);
-    return Fixed::fromInt(world.ecs().singleton<RngState>().m_random.randomN(0, 100));
+    return Fixed::fromInt(world.ecs().singleton<RngState>().random.randomN(0, 100));
 }
 
 // 整数均匀抽样：策略存在时返回 min（首选），否则消耗一次本场随机数。
@@ -43,7 +43,7 @@ int32_t drawN(World& world, DrawKind kind, int32_t min, int32_t max)
 {
     if (world.drawPolicy())
         return min;
-    return world.ecs().singleton<RngState>().m_random.randomN(min, max);
+    return world.ecs().singleton<RngState>().random.randomN(min, max);
 }
 
 // 定点均匀抽样：策略存在时返回 min，否则消耗一次本场随机数。
@@ -51,6 +51,6 @@ Fixed drawF(World& world, DrawKind kind, Fixed min, Fixed max)
 {
     if (world.drawPolicy())
         return min;
-    return world.ecs().singleton<RngState>().m_random.randomF(min, max);
+    return world.ecs().singleton<RngState>().random.randomF(min, max);
 }
 }  // namespace mugen::sim::rng

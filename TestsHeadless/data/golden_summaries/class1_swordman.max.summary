@@ -16,132 +16,132 @@
 35 state role:101#1 Run,Idle Attack,Idle
 35 actionend role:101#1 walk
 35 action role:101#1 10300
-37 disp- role:101#1 922400 1465.333 0.000 254.000
-37 disp+ role:101#1 922410
-37 actionend role:101#1 10300
-37 action role:101#1 10302
-39 spawn role:101#1 fx:920210#1
-40 hit fx:920210#1 role:61300#1 920110 hit
-40 dmg role:101#1 role:61300#1 920210 20716 1
-40 stop fx:920210#1 1
-40 stop role:101#1 1
-40 spawn role:101#1 fx:882498#1
-40 hit fx:920210#1 role:61320#1 920110 hit
-40 dmg role:101#1 role:61320#1 920210 20716 1
-40 stop fx:920210#1 1
-40 stop role:101#1 1
-40 spawn role:101#1 fx:882498#2
-40 state role:61300#1 Idle Hit,Idle
-40 state role:61320#1 Idle Hit,Idle
-41 stop role:61300#1 1
-41 stop role:61320#1 1
-41 disp+ role:61300#1 920330
-41 disp+ role:61320#1 920330
-41 actionend role:61300#1 stand
-41 action role:61300#1 hit
-41 actionend role:61320#1 stand
-41 action role:61320#1 hit
-46 disp- role:101#1 922410 1318.097 0.000 254.000
-46 disp+ role:101#1 922420
-46 actionend role:101#1 10302
-46 action role:101#1 10304
-46 disp- role:101#1 922420 1318.097 0.000 254.000
-46 disp- role:61300#1 920330 931.002 0.000 250.000
-46 disp- role:61320#1 920330 1111.002 0.000 250.000
-47 castend role:101#1 920090 done
-47 cast role:101#1 920000 A
-47 disp+ role:101#1 922000
-47 actionend role:101#1 10304
-47 action role:101#1 10118
-47 state role:61300#1 Hit,Idle HitSwitch,Idle
-47 actionend role:61300#1 hit
-47 action role:61300#1 hitswitch
-47 state role:61320#1 Hit,Idle HitSwitch,Idle
-47 actionend role:61320#1 hit
-47 action role:61320#1 hitswitch
-47 disp- role:101#1 922000 1318.097 0.000 254.000
-49 state role:61300#1 HitSwitch,Idle Idle
-49 state role:61320#1 HitSwitch,Idle Idle
-50 actionend role:61300#1 hitswitch
-50 action role:61300#1 stand
-50 actionend role:61320#1 hitswitch
-50 action role:61320#1 stand
-52 disp+ role:101#1 922010
-52 actionend role:101#1 10118
-52 action role:101#1 10120
-54 spawn role:101#1 fx:920000#1
-55 disp- role:101#1 922010 1295.597 0.000 254.000
-55 disp+ role:101#1 922020
-55 hit fx:920000#1 role:61320#1 920000 hit
-55 dmg role:101#1 role:61320#1 920000 17757 1
-55 stop fx:920000#1 1
-55 stop role:101#1 1
-55 spawn role:101#1 fx:882477#1
-55 actionend role:101#1 10120
-55 action role:101#1 10122
-55 state role:61320#1 Idle Hit,Idle
-55 disp- role:101#1 922020 1295.597 0.000 254.000
-56 stop role:61320#1 1
-56 castend role:101#1 920000 done
-56 cast role:101#1 920010 A
-56 disp+ role:101#1 922030
-56 disp+ role:61320#1 920000
-56 actionend role:101#1 10122
-56 action role:101#1 10124
-56 actionend role:61320#1 stand
-56 action role:61320#1 hit
-56 disp- role:101#1 922030 1295.597 0.000 254.000
-62 disp+ role:101#1 922040
-62 actionend role:101#1 10124
-62 action role:101#1 10126
-63 spawn role:101#1 fx:920010#1
-64 disp- role:101#1 922040 1273.375 0.000 254.000
-64 disp+ role:101#1 922050
-64 hit fx:920010#1 role:61300#1 920010 hit
-64 dmg role:101#1 role:61300#1 920010 17757 1
-64 stop fx:920010#1 1
-64 stop role:101#1 1
-64 spawn role:101#1 fx:882470#1
-64 hit fx:920010#1 role:61320#1 920010 hit
-64 dmg role:101#1 role:61320#1 920010 17757 1
-64 stop fx:920010#1 1
-64 stop role:101#1 1
-64 spawn role:101#1 fx:882470#2
-64 actionend role:101#1 10126
-64 action role:101#1 10128
-64 state role:61300#1 Idle Hit,Idle
-64 disp- role:101#1 922050 1273.375 0.000 254.000
-65 stop role:61300#1 1
-65 stop role:61320#1 1
-65 disp+ role:61300#1 920030
-65 disp- role:61320#1 920000 1040.027 0.000 250.000
-65 disp+ role:61320#1 920030
-65 actionend role:61300#1 stand
-65 action role:61300#1 hit
-75 disp- role:61300#1 920030 866.863 0.000 250.000
-75 disp- role:61320#1 920030 994.221 0.000 250.000
-76 state role:61300#1 Hit,Idle HitSwitch,Idle
-76 actionend role:61300#1 hit
-76 action role:61300#1 hitswitch
-76 state role:61320#1 Hit,Idle HitSwitch,Idle
-76 actionend role:61320#1 hit
-76 action role:61320#1 hitswitch
-77 castend role:101#1 920010 done
-77 state role:101#1 Attack,Idle Idle
-77 actionend role:101#1 10128
-77 action role:101#1 stand
-78 state role:61300#1 HitSwitch,Idle Idle
-78 state role:61320#1 HitSwitch,Idle Idle
-79 actionend role:61300#1 hitswitch
-79 action role:61300#1 stand
-79 actionend role:61320#1 hitswitch
-79 action role:61320#1 stand
+38 disp- role:101#1 922400 1462.554 0.000 254.000
+38 disp+ role:101#1 922410
+38 actionend role:101#1 10300
+38 action role:101#1 10302
+40 spawn role:101#1 fx:920210#1
+41 hit fx:920210#1 role:61300#1 920110 hit
+41 dmg role:101#1 role:61300#1 920210 20716 1
+41 stop fx:920210#1 1
+41 stop role:101#1 1
+41 spawn role:101#1 fx:882498#1
+41 hit fx:920210#1 role:61320#1 920110 hit
+41 dmg role:101#1 role:61320#1 920210 20716 1
+41 stop fx:920210#1 1
+41 stop role:101#1 1
+41 spawn role:101#1 fx:882498#2
+41 state role:61300#1 Idle Hit,Idle
+41 state role:61320#1 Idle Hit,Idle
+42 stop role:61300#1 1
+42 stop role:61320#1 1
+42 disp+ role:61300#1 920330
+42 disp+ role:61320#1 920330
+42 actionend role:61300#1 stand
+42 action role:61300#1 hit
+42 actionend role:61320#1 stand
+42 action role:61320#1 hit
+47 disp- role:101#1 922410 1315.318 0.000 254.000
+47 disp+ role:101#1 922420
+47 actionend role:101#1 10302
+47 action role:101#1 10304
+47 disp- role:101#1 922420 1315.318 0.000 254.000
+47 disp- role:61300#1 920330 931.002 0.000 250.000
+47 disp- role:61320#1 920330 1111.002 0.000 250.000
+48 castend role:101#1 920090 done
+48 cast role:101#1 920000 A
+48 disp+ role:101#1 922000
+48 actionend role:101#1 10304
+48 action role:101#1 10118
+48 state role:61300#1 Hit,Idle HitSwitch,Idle
+48 actionend role:61300#1 hit
+48 action role:61300#1 hitswitch
+48 state role:61320#1 Hit,Idle HitSwitch,Idle
+48 actionend role:61320#1 hit
+48 action role:61320#1 hitswitch
+48 disp- role:101#1 922000 1315.318 0.000 254.000
+50 state role:61300#1 HitSwitch,Idle Idle
+50 state role:61320#1 HitSwitch,Idle Idle
+51 actionend role:61300#1 hitswitch
+51 action role:61300#1 stand
+51 actionend role:61320#1 hitswitch
+51 action role:61320#1 stand
+53 disp+ role:101#1 922010
+53 actionend role:101#1 10118
+53 action role:101#1 10120
+55 spawn role:101#1 fx:920000#1
+56 disp- role:101#1 922010 1292.819 0.000 254.000
+56 disp+ role:101#1 922020
+56 hit fx:920000#1 role:61320#1 920000 hit
+56 dmg role:101#1 role:61320#1 920000 17757 1
+56 stop fx:920000#1 1
+56 stop role:101#1 1
+56 spawn role:101#1 fx:882477#1
+56 actionend role:101#1 10120
+56 action role:101#1 10122
+56 state role:61320#1 Idle Hit,Idle
+56 disp- role:101#1 922020 1292.819 0.000 254.000
+57 stop role:61320#1 1
+57 castend role:101#1 920000 done
+57 cast role:101#1 920010 A
+57 disp+ role:101#1 922030
+57 disp+ role:61320#1 920000
+57 actionend role:101#1 10122
+57 action role:101#1 10124
+57 actionend role:61320#1 stand
+57 action role:61320#1 hit
+57 disp- role:101#1 922030 1292.819 0.000 254.000
+63 disp+ role:101#1 922040
+63 actionend role:101#1 10124
+63 action role:101#1 10126
+64 spawn role:101#1 fx:920010#1
+65 disp- role:101#1 922040 1270.596 0.000 254.000
+65 disp+ role:101#1 922050
+65 hit fx:920010#1 role:61300#1 920010 hit
+65 dmg role:101#1 role:61300#1 920010 17757 1
+65 stop fx:920010#1 1
+65 stop role:101#1 1
+65 spawn role:101#1 fx:882470#1
+65 hit fx:920010#1 role:61320#1 920010 hit
+65 dmg role:101#1 role:61320#1 920010 17757 1
+65 stop fx:920010#1 1
+65 stop role:101#1 1
+65 spawn role:101#1 fx:882470#2
+65 actionend role:101#1 10126
+65 action role:101#1 10128
+65 state role:61300#1 Idle Hit,Idle
+65 disp- role:101#1 922050 1270.596 0.000 254.000
+66 stop role:61300#1 1
+66 stop role:61320#1 1
+66 disp+ role:61300#1 920030
+66 disp- role:61320#1 920000 1040.027 0.000 250.000
+66 disp+ role:61320#1 920030
+66 actionend role:61300#1 stand
+66 action role:61300#1 hit
+76 disp- role:61300#1 920030 866.863 0.000 250.000
+76 disp- role:61320#1 920030 994.221 0.000 250.000
+77 state role:61300#1 Hit,Idle HitSwitch,Idle
+77 actionend role:61300#1 hit
+77 action role:61300#1 hitswitch
+77 state role:61320#1 Hit,Idle HitSwitch,Idle
+77 actionend role:61320#1 hit
+77 action role:61320#1 hitswitch
+78 castend role:101#1 920010 done
+78 state role:101#1 Attack,Idle Idle
+78 actionend role:101#1 10128
+78 action role:101#1 stand
+79 state role:61300#1 HitSwitch,Idle Idle
+79 state role:61320#1 HitSwitch,Idle Idle
 80 cast role:101#1 920100 B
 80 disp+ role:101#1 922430
 80 state role:101#1 Idle Attack,Idle
 80 actionend role:101#1 stand
 80 action role:101#1 10500
-87 disp- role:101#1 922430 1286.208 0.000 254.000
+80 actionend role:61300#1 hitswitch
+80 action role:61300#1 stand
+80 actionend role:61320#1 hitswitch
+80 action role:61320#1 stand
+87 disp- role:101#1 922430 1283.429 0.000 254.000
 88 disp+ role:101#1 922440
 88 actionend role:101#1 10500
 88 action role:101#1 10502
@@ -166,38 +166,39 @@
 91 action role:61300#1 hit
 91 actionend role:61320#1 stand
 91 action role:61320#1 hit
-94 disp- role:101#1 922440 1226.760 0.000 254.000
+94 disp- role:101#1 922440 1223.981 0.000 254.000
 94 disp+ role:101#1 922450
 94 actionend role:101#1 10502
 94 action role:101#1 10504
-96 disp- role:101#1 922450 1206.761 0.000 254.000
+96 disp- role:101#1 922450 1203.982 0.000 254.000
 96 disp+ role:101#1 922460
 96 actionend role:101#1 10504
 96 action role:101#1 10506
 97 spawn role:101#1 fx:920230#1
+98 hit fx:920230#1 role:61300#1 920130 hit
+98 dmg role:101#1 role:61300#1 920230 23675 1
+98 stop fx:920230#1 1
+98 stop role:101#1 1
+98 spawn role:101#1 fx:882466#1
 98 hit fx:920230#1 role:61320#1 920130 hit
 98 dmg role:101#1 role:61320#1 920230 23675 1
 98 stop fx:920230#1 1
 98 stop role:101#1 1
-98 spawn role:101#1 fx:882466#1
+98 spawn role:101#1 fx:882466#2
+99 stop role:61300#1 1
 99 stop role:61320#1 1
+99 disp- role:61300#1 920360 812.427 0.000 250.000
+99 disp+ role:61300#1 920390
 99 disp- role:61320#1 920360 939.785 0.000 250.000
 99 disp+ role:61320#1 920390
-101 disp- role:101#1 922460 1153.987 0.000 254.000
+101 disp- role:101#1 922460 1151.208 0.000 254.000
 101 disp+ role:101#1 922470
 101 actionend role:101#1 10506
 101 action role:101#1 10508
-101 disp- role:61300#1 920360 811.874 0.000 250.000
-102 state role:61300#1 Hit,Idle HitSwitch,Idle
-102 actionend role:61300#1 hit
-102 action role:61300#1 hitswitch
-104 state role:61300#1 HitSwitch,Idle Idle
-105 disp- role:101#1 922470 1133.989 0.000 254.000
+105 disp- role:101#1 922470 1131.211 0.000 254.000
 105 disp+ role:101#1 922480
 105 actionend role:101#1 10508
 105 action role:101#1 10510
-105 actionend role:61300#1 hitswitch
-105 action role:61300#1 stand
 106 spawn role:101#1 fx:920240#1
 108 hit fx:920240#1 role:61300#1 920140 hit
 108 dmg role:101#1 role:61300#1 920240 23675 1
@@ -209,26 +210,24 @@
 108 stop fx:920240#1 1
 108 stop role:101#1 1
 108 spawn role:101#1 fx:882461#4
-108 state role:61300#1 Idle Hit,Idle
 109 stop role:61300#1 1
 109 stop role:61320#1 1
+109 disp- role:61300#1 920390 742.438 0.000 250.000
 109 disp+ role:61300#1 114320
 109 disp- role:61320#1 920390 869.796 0.000 250.000
 109 disp+ role:61320#1 114320
-109 actionend role:61300#1 stand
-109 action role:61300#1 hit
-115 disp- role:101#1 922480 1048.419 0.000 254.000
+115 disp- role:101#1 922480 1045.640 0.000 254.000
 116 disp+ role:101#1 922490
 116 actionend role:101#1 10510
 116 action role:101#1 10512
-116 disp- role:101#1 922490 1048.419 0.000 254.000
+116 disp- role:101#1 922490 1045.640 0.000 254.000
 117 castend role:101#1 920100 done
 117 cast role:101#1 920120 C
 117 disp+ role:101#1 922610
 117 buff+ role:101#1 101
 117 actionend role:101#1 10512
 117 action role:101#1 10600
-119 disp- role:61300#1 114320 756.885 0.000 250.000
+119 disp- role:61300#1 114320 695.226 0.000 250.000
 119 disp- role:61320#1 114320 822.584 0.000 250.000
 120 state role:61300#1 Hit,Idle HitSwitch,Idle
 120 actionend role:61300#1 hit
@@ -242,261 +241,267 @@
 123 action role:61300#1 stand
 123 actionend role:61320#1 hitswitch
 123 action role:61320#1 stand
-124 disp- role:101#1 922610 1034.096 0.000 254.000
-124 disp+ role:101#1 922620
-124 buff+ role:101#1 102
-124 actionend role:101#1 10600
-124 action role:101#1 10602
-125 buff- role:101#1 101
-125 spawn role:101#1 fx:920300#1
-125 spawn role:101#1 fx:920310#1
-125 disp- role:101#1 922620 977.429 0.000 254.000
-125 disp+ role:101#1 922630
+124 disp- role:101#1 922610 1047.983 0.000 254.000
+125 disp+ role:101#1 922620
 125 buff+ role:101#1 102
-125 actionend role:101#1 10602
-125 action role:101#1 10604
-126 buff- role:101#1 102
-126 disp- role:101#1 922630 937.429 0.000 254.000
-126 disp+ role:101#1 922640
-126 buff+ role:101#1 102
-126 hit fx:920310#1 role:61300#1 920200 hit
-126 dmg role:101#1 role:61300#1 920310 29595 1
-126 stop fx:920310#1 1
-126 stop role:101#1 1
-126 spawn role:101#1 fx:882461#5
-126 hit fx:920310#1 role:61320#1 920200 hit
-126 dmg role:101#1 role:61320#1 920310 29595 1
-126 stop fx:920310#1 1
-126 stop role:101#1 1
-126 spawn role:101#1 fx:882461#6
-126 actionend role:101#1 10604
-126 action role:101#1 10606
-126 state role:61300#1 Idle Hit,Idle
-126 state role:61320#1 Idle Hit,Idle
-127 stop role:61300#1 1
-127 stop role:61320#1 1
-127 buff- role:101#1 102
-127 spawn role:101#1 fx:920330#1
-127 disp+ role:61300#1 920600
-127 disp+ role:61320#1 920600
-127 actionend role:61300#1 stand
-127 action role:61300#1 hit
-127 actionend role:61320#1 stand
-127 action role:61320#1 hit
-129 hit fx:920330#1 role:61300#1 920210 hit
-129 dmg role:101#1 role:61300#1 920330 29595 1
-129 stop fx:920330#1 3
-129 stop role:101#1 3
-129 hit fx:920330#1 role:61320#1 920210 hit
-129 dmg role:101#1 role:61320#1 920330 29595 1
-129 stop fx:920330#1 3
-129 stop role:101#1 3
-130 stop role:61300#1 3
-130 stop role:61320#1 3
-131 spawn role:101#1 fx:920320#1
-132 disp- role:61300#1 920600 603.830 0.000 250.000
-132 disp+ role:61300#1 920630
-132 disp- role:61320#1 920600 669.530 0.000 250.000
-132 disp+ role:61320#1 920630
-133 hit fx:920330#1 role:61300#1 920210 hit
-133 dmg role:101#1 role:61300#1 920330 29595 1
-133 stop fx:920330#1 3
-133 stop role:101#1 3
-133 hit fx:920330#1 role:61320#1 920210 hit
-133 dmg role:101#1 role:61320#1 920330 29595 1
-133 stop fx:920330#1 3
-133 stop role:101#1 3
-134 stop role:61300#1 3
-134 stop role:61320#1 3
-136 disp- role:61300#1 920630 558.274 0.000 250.000
-136 disp+ role:61300#1 920630
-136 disp- role:61320#1 920630 623.973 0.000 250.000
-136 disp+ role:61320#1 920630
-140 disp- role:101#1 922640 873.258 0.000 254.000
-141 disp+ role:101#1 922650
-141 buff+ role:101#1 102
-141 actionend role:101#1 10606
-141 action role:101#1 10608
-142 buff- role:101#1 102
-142 disp- role:101#1 922650 858.369 0.000 254.000
-142 disp+ role:101#1 922660
-142 buff+ role:101#1 102
-142 actionend role:101#1 10608
-142 action role:101#1 10610
-143 buff- role:101#1 102
-143 spawn role:101#1 fx:920340#1
-143 disp- role:61300#1 920630 527.155 0.000 250.000
-143 disp- role:61320#1 920630 592.854 0.000 250.000
-144 hit fx:920340#1 role:61300#1 920220 hit
-144 dmg role:101#1 role:61300#1 920340 29595 1
-144 stop fx:920340#1 1
-144 stop role:101#1 1
-144 hit fx:920340#1 role:61320#1 920220 hit
-144 dmg role:101#1 role:61320#1 920340 29595 1
-144 stop fx:920340#1 1
-144 stop role:101#1 1
-144 state role:61300#1 Hit,Idle HitSwitch,Idle
-144 actionend role:61300#1 hit
-144 action role:61300#1 hitswitch
-144 state role:61320#1 Hit,Idle HitSwitch,Idle
-144 actionend role:61320#1 hit
-144 action role:61320#1 hitswitch
-145 stop role:61300#1 1
-145 stop role:61320#1 1
-145 disp+ role:61300#1 114320
-145 disp+ role:61320#1 114320
-145 state role:61300#1 HitSwitch,Idle Hit,Idle
-145 actionend role:61300#1 hitswitch
-145 action role:61300#1 hit
-145 state role:61320#1 HitSwitch,Idle Hit,Idle
-145 actionend role:61320#1 hitswitch
-145 action role:61320#1 hit
-146 hit fx:920340#1 role:61300#1 920220 hit
-146 dmg role:101#1 role:61300#1 920340 29595 1
-146 stop fx:920340#1 1
-146 stop role:101#1 1
-146 hit fx:920340#1 role:61320#1 920220 hit
-146 dmg role:101#1 role:61320#1 920340 29595 1
-146 stop fx:920340#1 1
-146 stop role:101#1 1
-147 stop role:61300#1 1
-147 stop role:61320#1 1
-147 disp- role:61300#1 114320 504.934 0.000 250.000
-147 disp+ role:61300#1 114320
-147 disp- role:61320#1 114320 570.633 0.000 250.000
-147 disp+ role:61320#1 114320
-152 disp- role:101#1 922660 820.169 0.000 254.000
-154 disp+ role:101#1 922670
-154 actionend role:101#1 10610
-154 action role:101#1 10612
-154 disp- role:101#1 922670 820.169 0.000 254.000
-155 buff- role:101#1 102
-155 castend role:101#1 920120 done
-155 cast role:101#1 920150 D
-155 disp+ role:101#1 922790
-155 actionend role:101#1 10612
-155 action role:101#1 10700
-155 disp- role:101#1 922790 820.169 0.000 254.000
-157 disp- role:61300#1 114320 457.722 0.000 250.000
-157 disp- role:61320#1 114320 523.422 0.000 250.000
-158 state role:61300#1 Hit,Idle HitSwitch,Idle
-158 actionend role:61300#1 hit
-158 action role:61300#1 hitswitch
-158 state role:61320#1 Hit,Idle HitSwitch,Idle
-158 actionend role:61320#1 hit
-158 action role:61320#1 hitswitch
-160 state role:61300#1 HitSwitch,Idle Idle
-160 state role:61320#1 HitSwitch,Idle Idle
-161 actionend role:61300#1 hitswitch
-161 action role:61300#1 stand
-161 actionend role:61320#1 hitswitch
-161 action role:61320#1 stand
-162 disp+ role:101#1 922800
-162 buff+ role:101#1 101
-162 actionend role:101#1 10700
-162 action role:101#1 10702
-163 spawn role:101#1 fx:920430#1
-177 disp- role:101#1 922800 645.169 0.000 254.000
-177 disp+ role:101#1 922810
-177 buff+ role:101#1 102
-177 actionend role:101#1 10702
-177 action role:101#1 10704
-177 disp- role:101#1 922810 645.169 0.000 254.000
-178 buff- role:101#1 101
-178 spawn role:101#1 fx:920440#1
-178 spawn role:101#1 fx:920450#1
-179 hit fx:920440#1 role:61300#1 920290 hit
-179 dmg role:101#1 role:61300#1 920440 47352 1
-179 stop fx:920440#1 1
-179 stop role:101#1 1
-179 spawn role:101#1 fx:882450#1
-179 hit fx:920440#1 role:61320#1 920290 hit
-179 dmg role:101#1 role:61320#1 920440 47352 1
-179 stop fx:920440#1 1
-179 stop role:101#1 1
-179 spawn role:101#1 fx:882450#2
-179 state role:61300#1 Idle Hit,Idle
-179 state role:61320#1 Idle Hit,Idle
-180 stop role:61300#1 1
-180 stop role:61320#1 1
-180 disp+ role:61300#1 114320
-180 disp+ role:61320#1 114320
-180 actionend role:61300#1 stand
-180 action role:61300#1 hit
-180 actionend role:61320#1 stand
-180 action role:61320#1 hit
-181 disp+ role:101#1 922820
-181 actionend role:101#1 10704
-181 action role:101#1 10706
-181 disp- role:101#1 922820 645.169 0.000 254.000
-182 buff- role:101#1 102
-182 hit fx:920440#1 role:61300#1 920290 hit
-182 dmg role:101#1 role:61300#1 920440 47352 1
-182 stop fx:920440#1 1
-182 stop role:101#1 1
-182 hit fx:920440#1 role:61320#1 920290 hit
-182 dmg role:101#1 role:61320#1 920440 47352 1
-182 stop fx:920440#1 1
-182 stop role:101#1 1
-183 stop role:61300#1 1
-183 stop role:61320#1 1
-183 disp- role:61300#1 114320 429.946 0.000 250.000
-183 disp+ role:61300#1 114320
-183 disp- role:61320#1 114320 495.646 0.000 250.000
-183 disp+ role:61320#1 114320
-185 hit fx:920440#1 role:61300#1 920290 hit
-185 dmg role:101#1 role:61300#1 920440 47352 1
-185 stop fx:920440#1 1
-185 stop role:101#1 1
-185 hit fx:920440#1 role:61320#1 920290 hit
-185 dmg role:101#1 role:61320#1 920440 47352 1
-185 stop fx:920440#1 1
-185 stop role:101#1 1
-186 stop role:61300#1 1
-186 stop role:61320#1 1
-186 disp- role:61300#1 114320 409.948 0.000 250.000
-186 disp+ role:61300#1 114320
-186 disp- role:61320#1 114320 475.648 0.000 250.000
-186 disp+ role:61320#1 114320
-196 disp- role:61300#1 114320 362.737 0.000 250.000
-196 disp- role:61320#1 114320 428.436 0.000 250.000
-197 state role:61300#1 Hit,Idle HitSwitch,Idle
-197 actionend role:61300#1 hit
-197 action role:61300#1 hitswitch
-197 state role:61320#1 Hit,Idle HitSwitch,Idle
-197 actionend role:61320#1 hit
-197 action role:61320#1 hitswitch
-198 castend role:101#1 920150 done
-198 state role:101#1 Attack,Idle Idle
-198 actionend role:101#1 10706
-198 action role:101#1 stand
-199 state role:61300#1 HitSwitch,Idle Idle
-199 state role:61320#1 HitSwitch,Idle Idle
-200 actionend role:61300#1 hitswitch
-200 action role:61300#1 stand
-200 actionend role:61320#1 hitswitch
-200 action role:61320#1 stand
+125 actionend role:101#1 10600
+125 action role:101#1 10602
+126 buff- role:101#1 101
+126 spawn role:101#1 fx:920300#1
+126 spawn role:101#1 fx:920310#1
+127 disp- role:101#1 922620 957.983 0.000 254.000
+127 disp+ role:101#1 922630
+127 buff+ role:101#1 102
+127 hit fx:920310#1 role:61320#1 920200 hit
+127 dmg role:101#1 role:61320#1 920310 29595 1
+127 stop fx:920310#1 1
+127 stop role:101#1 1
+127 spawn role:101#1 fx:882461#5
+127 actionend role:101#1 10602
+127 action role:101#1 10604
+127 state role:61320#1 Idle Hit,Idle
+128 stop role:61320#1 1
+128 buff- role:101#1 102
+128 disp+ role:61320#1 920600
+128 hit fx:920310#1 role:61300#1 920200 hit
+128 dmg role:101#1 role:61300#1 920310 29595 1
+128 stop fx:920310#1 1
+128 stop role:101#1 1
+128 spawn role:101#1 fx:882461#6
+128 state role:61300#1 Idle Hit,Idle
+128 actionend role:61320#1 stand
+128 action role:61320#1 hit
+129 stop role:61300#1 1
+129 disp- role:101#1 922630 861.317 0.000 254.000
+129 disp+ role:101#1 922640
+129 buff+ role:101#1 102
+129 disp+ role:61300#1 920600
+129 actionend role:101#1 10604
+129 action role:101#1 10606
+129 actionend role:61300#1 stand
+129 action role:61300#1 hit
+130 buff- role:101#1 102
+130 spawn role:101#1 fx:920330#1
+132 spawn role:101#1 fx:920320#1
+132 hit fx:920330#1 role:61300#1 920210 hit
+132 dmg role:101#1 role:61300#1 920330 29595 1
+132 stop fx:920330#1 3
+132 stop role:101#1 3
+132 hit fx:920330#1 role:61320#1 920210 hit
+132 dmg role:101#1 role:61320#1 920330 29595 1
+132 stop fx:920330#1 3
+132 stop role:101#1 3
+133 stop role:61300#1 3
+133 stop role:61320#1 3
+135 disp- role:61300#1 920600 525.507 0.000 250.000
+135 disp+ role:61300#1 920630
+135 disp- role:61320#1 920600 636.199 0.000 250.000
+135 disp+ role:61320#1 920630
+136 hit fx:920330#1 role:61300#1 920210 hit
+136 dmg role:101#1 role:61300#1 920330 29595 1
+136 stop fx:920330#1 3
+136 stop role:101#1 3
+136 hit fx:920330#1 role:61320#1 920210 hit
+136 dmg role:101#1 role:61320#1 920330 29595 1
+136 stop fx:920330#1 3
+136 stop role:101#1 3
+137 stop role:61300#1 3
+137 stop role:61320#1 3
+139 disp- role:61300#1 920630 479.950 0.000 250.000
+139 disp+ role:61300#1 920630
+139 disp- role:61320#1 920630 590.642 0.000 250.000
+139 disp+ role:61320#1 920630
+143 disp- role:101#1 922640 797.146 0.000 254.000
+144 disp+ role:101#1 922650
+144 buff+ role:101#1 102
+144 actionend role:101#1 10606
+144 action role:101#1 10608
+145 buff- role:101#1 102
+146 disp- role:101#1 922650 783.423 0.000 254.000
+146 disp+ role:101#1 922660
+146 buff+ role:101#1 102
+146 actionend role:101#1 10608
+146 action role:101#1 10610
+146 disp- role:61300#1 920630 448.831 0.000 250.000
+146 disp- role:61320#1 920630 559.523 0.000 250.000
+147 buff- role:101#1 102
+147 spawn role:101#1 fx:920340#1
+147 state role:61300#1 Hit,Idle HitSwitch,Idle
+147 actionend role:61300#1 hit
+147 action role:61300#1 hitswitch
+147 state role:61320#1 Hit,Idle HitSwitch,Idle
+147 actionend role:61320#1 hit
+147 action role:61320#1 hitswitch
+148 hit fx:920340#1 role:61300#1 920220 hit
+148 dmg role:101#1 role:61300#1 920340 29595 1
+148 stop fx:920340#1 1
+148 stop role:101#1 1
+148 hit fx:920340#1 role:61320#1 920220 hit
+148 dmg role:101#1 role:61320#1 920340 29595 1
+148 stop fx:920340#1 1
+148 stop role:101#1 1
+149 stop role:61300#1 1
+149 stop role:61320#1 1
+149 disp+ role:61300#1 114320
+149 disp+ role:61320#1 114320
+149 state role:61300#1 HitSwitch,Idle Hit,Idle
+149 actionend role:61300#1 hitswitch
+149 action role:61300#1 hit
+149 state role:61320#1 HitSwitch,Idle Hit,Idle
+149 actionend role:61320#1 hitswitch
+149 action role:61320#1 hit
+150 hit fx:920340#1 role:61300#1 920220 hit
+150 dmg role:101#1 role:61300#1 920340 29595 1
+150 stop fx:920340#1 1
+150 stop role:101#1 1
+150 hit fx:920340#1 role:61320#1 920220 hit
+150 dmg role:101#1 role:61320#1 920340 29595 1
+150 stop fx:920340#1 1
+150 stop role:101#1 1
+151 stop role:61300#1 1
+151 stop role:61320#1 1
+151 disp- role:61300#1 114320 426.610 0.000 250.000
+151 disp+ role:61300#1 114320
+151 disp- role:61320#1 114320 537.302 0.000 250.000
+151 disp+ role:61320#1 114320
+156 disp- role:101#1 922660 745.223 0.000 254.000
+158 disp+ role:101#1 922670
+158 actionend role:101#1 10610
+158 action role:101#1 10612
+158 disp- role:101#1 922670 745.223 0.000 254.000
+159 buff- role:101#1 102
+159 castend role:101#1 920120 done
+159 cast role:101#1 920150 D
+159 disp+ role:101#1 922790
+159 actionend role:101#1 10612
+159 action role:101#1 10700
+159 disp- role:101#1 922790 745.223 0.000 254.000
+161 disp- role:61300#1 114320 379.398 0.000 250.000
+161 disp- role:61320#1 114320 490.090 0.000 250.000
+162 state role:61300#1 Hit,Idle HitSwitch,Idle
+162 actionend role:61300#1 hit
+162 action role:61300#1 hitswitch
+162 state role:61320#1 Hit,Idle HitSwitch,Idle
+162 actionend role:61320#1 hit
+162 action role:61320#1 hitswitch
+164 state role:61300#1 HitSwitch,Idle Idle
+164 state role:61320#1 HitSwitch,Idle Idle
+165 actionend role:61300#1 hitswitch
+165 action role:61300#1 stand
+165 actionend role:61320#1 hitswitch
+165 action role:61320#1 stand
+166 disp+ role:101#1 922800
+166 buff+ role:101#1 101
+166 actionend role:101#1 10700
+166 action role:101#1 10702
+167 spawn role:101#1 fx:920430#1
+170 hit fx:920430#1 role:61320#1 920280 hit
+181 disp- role:101#1 922800 570.223 0.000 254.000
+181 disp+ role:101#1 922810
+181 buff+ role:101#1 102
+181 actionend role:101#1 10702
+181 action role:101#1 10704
+181 disp- role:101#1 922810 570.223 0.000 254.000
+182 buff- role:101#1 101
+182 spawn role:101#1 fx:920440#1
+182 spawn role:101#1 fx:920450#1
+183 hit fx:920440#1 role:61300#1 920290 hit
+183 dmg role:101#1 role:61300#1 920440 47352 1
+183 stop fx:920440#1 1
+183 stop role:101#1 1
+183 spawn role:101#1 fx:882450#1
+183 hit fx:920440#1 role:61320#1 920290 hit
+183 dmg role:101#1 role:61320#1 920440 47352 1
+183 stop fx:920440#1 1
+183 stop role:101#1 1
+183 spawn role:101#1 fx:882450#2
+183 state role:61300#1 Idle Hit,Idle
+183 state role:61320#1 Idle Hit,Idle
+184 stop role:61300#1 1
+184 stop role:61320#1 1
+184 disp+ role:61300#1 114320
+184 disp+ role:61320#1 114320
+184 actionend role:61300#1 stand
+184 action role:61300#1 hit
+184 actionend role:61320#1 stand
+184 action role:61320#1 hit
+186 disp+ role:101#1 922820
+186 hit fx:920440#1 role:61300#1 920290 hit
+186 dmg role:101#1 role:61300#1 920440 47352 1
+186 stop fx:920440#1 1
+186 stop role:101#1 1
+186 hit fx:920440#1 role:61320#1 920290 hit
+186 dmg role:101#1 role:61320#1 920440 47352 1
+186 stop fx:920440#1 1
+186 stop role:101#1 1
+186 actionend role:101#1 10704
+186 action role:101#1 10706
+186 disp- role:101#1 922820 570.223 0.000 254.000
+187 stop role:61300#1 1
+187 stop role:61320#1 1
+187 buff- role:101#1 102
+187 disp- role:61300#1 114320 351.622 0.000 250.000
+187 disp+ role:61300#1 114320
+187 disp- role:61320#1 114320 462.315 0.000 250.000
+187 disp+ role:61320#1 114320
+189 hit fx:920440#1 role:61300#1 920290 hit
+189 dmg role:101#1 role:61300#1 920440 47352 1
+189 stop fx:920440#1 1
+189 stop role:101#1 1
+189 hit fx:920440#1 role:61320#1 920290 hit
+189 dmg role:101#1 role:61320#1 920440 47352 1
+189 stop fx:920440#1 1
+189 stop role:101#1 1
+190 stop role:61300#1 1
+190 stop role:61320#1 1
+190 disp- role:61300#1 114320 331.624 0.000 250.000
+190 disp+ role:61300#1 114320
+190 disp- role:61320#1 114320 442.317 0.000 250.000
+190 disp+ role:61320#1 114320
+200 disp- role:61300#1 114320 284.413 0.000 250.000
+200 disp- role:61320#1 114320 395.105 0.000 250.000
+201 state role:61300#1 Hit,Idle HitSwitch,Idle
+201 actionend role:61300#1 hit
+201 action role:61300#1 hitswitch
+201 state role:61320#1 Hit,Idle HitSwitch,Idle
+201 actionend role:61320#1 hit
+201 action role:61320#1 hitswitch
+203 castend role:101#1 920150 done
+203 state role:101#1 Attack,Idle Idle
+203 actionend role:101#1 10706
+203 action role:101#1 stand
+203 state role:61300#1 HitSwitch,Idle Idle
+203 state role:61320#1 HitSwitch,Idle Idle
+204 actionend role:61300#1 hitswitch
+204 action role:61300#1 stand
+204 actionend role:61320#1 hitswitch
+204 action role:61320#1 stand
 400 cast role:101#1 920180 G
 400 disp+ role:101#1 922980
 400 state role:101#1 Idle Attack,Idle
 400 actionend role:101#1 stand
 400 action role:101#1 10806
-412 disp- role:101#1 922980 561.384 0.000 254.000
+412 disp- role:101#1 922980 486.439 0.000 254.000
 412 disp+ role:101#1 922990
 412 actionend role:101#1 10806
 412 action role:101#1 10808
 413 spawn role:101#1 fx:920520#1
 413 spawn role:101#1 fx:920531#1
+414 hit fx:920520#1 role:61320#1 920330 hit
+414 dmg role:101#1 role:61320#1 920520 41432 1
+414 stop fx:920520#1 1
+414 stop role:101#1 1
+414 spawn role:101#1 fx:882450#3
 414 hit fx:920531#1 role:61300#1 920340 hit
 414 dmg role:101#1 role:61300#1 920531 41432 1
 414 stop fx:920531#1 1
 414 stop role:101#1 1
-414 spawn role:101#1 fx:882466#2
+414 spawn role:101#1 fx:882466#3
 414 hit fx:920531#1 role:61320#1 920340 hit
 414 dmg role:101#1 role:61320#1 920531 41432 1
 414 stop fx:920531#1 1
 414 stop role:101#1 1
-414 spawn role:101#1 fx:882466#3
+414 spawn role:101#1 fx:882466#4
 414 state role:61300#1 Idle Hit,Idle
 414 state role:61320#1 Idle Hit,Idle
 415 stop role:61300#1 1
@@ -504,124 +509,109 @@
 415 disp+ role:61300#1 114320
 415 disp+ role:61320#1 114320
 415 spawn role:101#1 fx:920530#1
-415 hit fx:920520#1 role:61300#1 920330 hit
-415 dmg role:101#1 role:61300#1 920520 41432 1
-415 stop fx:920520#1 1
-415 stop role:101#1 1
-415 spawn role:101#1 fx:882450#3
-415 hit fx:920520#1 role:61320#1 920330 hit
-415 dmg role:101#1 role:61320#1 920520 41432 1
-415 stop fx:920520#1 1
-415 stop role:101#1 1
-415 spawn role:101#1 fx:882450#4
 415 actionend role:61300#1 stand
 415 action role:61300#1 hit
 415 actionend role:61320#1 stand
 415 action role:61320#1 hit
-416 stop role:61300#1 1
-416 stop role:61320#1 1
-416 disp- role:61300#1 114320 347.182 0.000 250.000
-416 disp+ role:61300#1 114320
-416 disp- role:61320#1 114320 412.881 0.000 250.000
-416 disp+ role:61320#1 114320
-418 hit fx:920520#1 role:61300#1 920330 hit
-418 dmg role:101#1 role:61300#1 920520 41432 1
-418 stop fx:920520#1 1
-418 stop role:101#1 1
-418 hit fx:920520#1 role:61320#1 920330 hit
-418 dmg role:101#1 role:61320#1 920520 41432 1
-418 stop fx:920520#1 1
-418 stop role:101#1 1
-419 stop role:61300#1 1
-419 stop role:61320#1 1
-419 disp- role:61300#1 114320 327.184 0.000 250.000
-419 disp+ role:61300#1 114320
-419 disp- role:61320#1 114320 392.883 0.000 250.000
-419 disp+ role:61320#1 114320
-422 disp- role:101#1 922990 475.814 0.000 254.000
+417 hit fx:920520#1 role:61300#1 920330 hit
+417 dmg role:101#1 role:61300#1 920520 41432 1
+417 stop fx:920520#1 1
+417 stop role:101#1 1
+417 spawn role:101#1 fx:882450#4
+417 hit fx:920520#1 role:61320#1 920330 hit
+417 dmg role:101#1 role:61320#1 920520 41432 1
+417 stop fx:920520#1 1
+417 stop role:101#1 1
+418 stop role:61300#1 1
+418 stop role:61320#1 1
+418 disp- role:61300#1 114320 256.637 0.000 250.000
+418 disp+ role:61300#1 114320
+418 disp- role:61320#1 114320 367.330 0.000 250.000
+418 disp+ role:61320#1 114320
+422 disp- role:101#1 922990 400.869 0.000 254.000
 426 disp+ role:101#1 923000
 426 actionend role:101#1 10808
 426 action role:101#1 10810
-426 disp- role:101#1 923000 475.814 0.000 254.000
-429 disp- role:61300#1 114320 279.972 0.000 250.000
-429 disp- role:61320#1 114320 345.672 0.000 250.000
+426 disp- role:101#1 923000 400.869 0.000 254.000
+428 disp- role:61300#1 114320 209.426 0.000 250.000
+428 disp- role:61320#1 114320 320.118 0.000 250.000
+429 state role:61300#1 Hit,Idle HitSwitch,Idle
+429 actionend role:61300#1 hit
+429 action role:61300#1 hitswitch
+429 state role:61320#1 Hit,Idle HitSwitch,Idle
+429 actionend role:61320#1 hit
+429 action role:61320#1 hitswitch
 430 castend role:101#1 920180 done
 430 cast role:101#1 920210 H
 430 disp+ role:101#1 923070
 430 actionend role:101#1 10810
 430 action role:101#1 11000
-430 state role:61300#1 Hit,Idle HitSwitch,Idle
-430 actionend role:61300#1 hit
-430 action role:61300#1 hitswitch
-430 state role:61320#1 Hit,Idle HitSwitch,Idle
-430 actionend role:61320#1 hit
-430 action role:61320#1 hitswitch
-430 disp- role:101#1 923070 475.814 0.000 254.000
-432 disp+ role:101#1 923080
-432 actionend role:101#1 11000
-432 action role:101#1 11002
-432 state role:61300#1 HitSwitch,Idle Idle
-432 state role:61320#1 HitSwitch,Idle Idle
-433 spawn role:101#1 fx:920610#1
-433 actionend role:61300#1 hitswitch
-433 action role:61300#1 stand
-433 actionend role:61320#1 hitswitch
-433 action role:61320#1 stand
-434 hit fx:920610#1 role:61300#1 920370 hit
-434 dmg role:101#1 role:61300#1 920610 47352 1
-434 stop fx:920610#1 1
-434 stop role:101#1 1
-434 spawn role:101#1 fx:882495#1
-434 hit fx:920610#1 role:61320#1 920370 hit
-434 dmg role:101#1 role:61320#1 920610 47352 1
-434 stop fx:920610#1 1
-434 stop role:101#1 1
-434 spawn role:101#1 fx:882495#2
-434 state role:61300#1 Idle Hit,Idle
-434 state role:61320#1 Idle Hit,Idle
-435 stop role:61300#1 1
-435 stop role:61320#1 1
-435 disp+ role:61300#1 921110
-435 disp+ role:61320#1 921110
-435 actionend role:61300#1 stand
-435 action role:61300#1 hit
-435 actionend role:61320#1 stand
-435 action role:61320#1 hit
-443 disp- role:101#1 923080 206.499 0.000 254.000
-443 disp+ role:101#1 923090
-443 actionend role:101#1 11002
-443 action role:101#1 11004
-443 disp- role:101#1 923090 206.499 0.000 254.000
-443 disp- role:61300#1 921110 94.967 0.000 250.000
-443 disp- role:61320#1 921110 160.667 0.000 250.000
-444 state role:61300#1 Hit,Idle HitSwitch,Idle
-444 actionend role:61300#1 hit
-444 action role:61300#1 hitswitch
-444 state role:61320#1 Hit,Idle HitSwitch,Idle
-444 actionend role:61320#1 hit
-444 action role:61320#1 hitswitch
-446 state role:61300#1 HitSwitch,Idle Idle
-446 state role:61320#1 HitSwitch,Idle Idle
-447 actionend role:61300#1 hitswitch
-447 action role:61300#1 stand
-447 actionend role:61320#1 hitswitch
-447 action role:61320#1 stand
-449 castend role:101#1 920210 done
-449 state role:101#1 Attack,Idle Idle
-449 actionend role:101#1 11004
-449 action role:101#1 stand
+430 disp- role:101#1 923070 400.869 0.000 254.000
+431 state role:61300#1 HitSwitch,Idle Idle
+431 state role:61320#1 HitSwitch,Idle Idle
+432 actionend role:61300#1 hitswitch
+432 action role:61300#1 stand
+432 actionend role:61320#1 hitswitch
+432 action role:61320#1 stand
+433 disp+ role:101#1 923080
+433 actionend role:101#1 11000
+433 action role:101#1 11002
+434 spawn role:101#1 fx:920610#1
+435 hit fx:920610#1 role:61300#1 920370 hit
+435 dmg role:101#1 role:61300#1 920610 47352 1
+435 stop fx:920610#1 1
+435 stop role:101#1 1
+435 spawn role:101#1 fx:882495#1
+435 hit fx:920610#1 role:61320#1 920370 hit
+435 dmg role:101#1 role:61320#1 920610 47352 1
+435 stop fx:920610#1 1
+435 stop role:101#1 1
+435 spawn role:101#1 fx:882495#2
+435 state role:61300#1 Idle Hit,Idle
+435 state role:61320#1 Idle Hit,Idle
+436 stop role:61300#1 1
+436 stop role:61320#1 1
+436 disp+ role:61300#1 921110
+436 disp+ role:61320#1 921110
+436 actionend role:61300#1 stand
+436 action role:61300#1 hit
+436 actionend role:61320#1 stand
+436 action role:61320#1 hit
+444 disp- role:101#1 923080 131.554 0.000 254.000
+444 disp+ role:101#1 923090
+444 actionend role:101#1 11002
+444 action role:101#1 11004
+444 disp- role:101#1 923090 131.554 0.000 254.000
+444 disp- role:61300#1 921110 63.500 0.000 250.000
+444 disp- role:61320#1 921110 135.113 0.000 250.000
+445 state role:61300#1 Hit,Idle HitSwitch,Idle
+445 actionend role:61300#1 hit
+445 action role:61300#1 hitswitch
+445 state role:61320#1 Hit,Idle HitSwitch,Idle
+445 actionend role:61320#1 hit
+445 action role:61320#1 hitswitch
+447 state role:61300#1 HitSwitch,Idle Idle
+447 state role:61320#1 HitSwitch,Idle Idle
+448 actionend role:61300#1 hitswitch
+448 action role:61300#1 stand
+448 actionend role:61320#1 hitswitch
+448 action role:61320#1 stand
+450 castend role:101#1 920210 done
+450 state role:101#1 Attack,Idle Idle
+450 actionend role:101#1 11004
+450 action role:101#1 stand
 460 cast role:101#1 920260 M
 460 disp+ role:101#1 923220
 460 buff+ role:101#1 101
 460 state role:101#1 Idle Attack,Idle
 460 actionend role:101#1 stand
 460 action role:101#1 11100
-460 disp- role:101#1 923220 206.499 0.000 254.000
+460 disp- role:101#1 923220 131.554 0.000 254.000
 470 disp+ role:101#1 923230
 470 buff+ role:101#1 102
 470 actionend role:101#1 11100
 470 action role:101#1 11102
-470 disp- role:101#1 923230 206.499 0.000 254.000
+470 disp- role:101#1 923230 131.554 0.000 254.000
 471 buff- role:101#1 101
 471 spawn role:101#1 fx:920670#1
 471 spawn role:101#1 fx:920680#1
@@ -649,10 +639,10 @@
 482 buff+ role:101#1 102
 482 actionend role:101#1 11102
 482 action role:101#1 11104
-482 disp- role:101#1 923230 206.499 0.000 254.000
+482 disp- role:101#1 923230 131.554 0.000 254.000
 483 buff- role:101#1 102
 483 disp- role:61300#1 114320 63.500 0.000 250.000
-483 disp- role:61320#1 114320 105.678 0.000 250.000
+483 disp- role:61320#1 114320 80.124 0.000 250.000
 484 state role:61300#1 Hit,Idle HitSwitch,Idle
 484 actionend role:61300#1 hit
 484 action role:61300#1 hitswitch
@@ -669,7 +659,7 @@
 490 buff+ role:101#1 102
 490 actionend role:101#1 11104
 490 action role:101#1 11106
-490 disp- role:101#1 923230 206.499 0.000 254.000
+490 disp- role:101#1 923230 131.554 0.000 254.000
 491 buff- role:101#1 102
 491 castend role:101#1 920260 done
 491 cast role:101#1 920080 F
@@ -679,76 +669,76 @@
 491 action role:101#1 10400
 492 buff- role:101#1 102
 492 spawn role:101#1 fx:920100#1
-493 spawn role:101#1 fx:920690#1
-494 spawn role:101#1 fx:920700#1
-494 hit fx:920690#1 role:61300#1 920430 hit
-494 dmg role:101#1 role:61300#1 920690 65109 1
-494 stop fx:920690#1 1
-494 stop role:101#1 1
-494 spawn role:101#1 fx:882450#7
-494 hit fx:920690#1 role:61320#1 920430 hit
-494 dmg role:101#1 role:61320#1 920690 65109 1
-494 stop fx:920690#1 1
-494 stop role:101#1 1
-494 spawn role:101#1 fx:882450#8
-494 state role:61300#1 Idle Hit,Idle
-494 state role:61320#1 Idle Hit,Idle
-495 stop role:61300#1 1
-495 stop role:61320#1 1
-495 disp+ role:61300#1 114320
-495 disp+ role:61320#1 114320
-495 actionend role:61300#1 stand
-495 action role:61300#1 hit
-495 actionend role:61320#1 stand
-495 action role:61320#1 hit
-496 disp- role:101#1 922250 56.496 0.000 254.000
+494 spawn role:101#1 fx:920690#1
+495 spawn role:101#1 fx:920700#1
+495 hit fx:920690#1 role:61300#1 920430 hit
+495 dmg role:101#1 role:61300#1 920690 65109 1
+495 stop fx:920690#1 1
+495 stop role:101#1 1
+495 spawn role:101#1 fx:882450#7
+495 hit fx:920690#1 role:61320#1 920430 hit
+495 dmg role:101#1 role:61320#1 920690 65109 1
+495 stop fx:920690#1 1
+495 stop role:101#1 1
+495 spawn role:101#1 fx:882450#8
+495 state role:61300#1 Idle Hit,Idle
+495 state role:61320#1 Idle Hit,Idle
+496 stop role:61300#1 1
+496 stop role:61320#1 1
+496 disp- role:101#1 922250 53.500 0.000 254.000
 496 disp+ role:101#1 922260
 496 buff+ role:101#1 200
-496 hit fx:920690#1 role:61300#1 920430 hit
-496 dmg role:101#1 role:61300#1 920690 65109 1
-496 stop fx:920690#1 1
-496 stop role:101#1 1
-496 hit fx:920690#1 role:61320#1 920430 hit
-496 dmg role:101#1 role:61320#1 920690 65109 1
-496 stop fx:920690#1 1
-496 stop role:101#1 1
+496 disp+ role:61300#1 114320
+496 disp+ role:61320#1 114320
 496 actionend role:101#1 10400
 496 action role:101#1 10402
-497 stop role:61300#1 1
-497 stop role:61320#1 1
+496 actionend role:61300#1 stand
+496 action role:61300#1 hit
+496 actionend role:61320#1 stand
+496 action role:61320#1 hit
 497 buff- role:101#1 200
-497 disp- role:61300#1 114320 63.500 0.000 250.000
-497 disp+ role:61300#1 114320
-497 disp- role:61320#1 114320 83.457 0.000 250.000
-497 disp+ role:61320#1 114320
-498 hit fx:920690#1 role:61300#1 920430 hit
-498 dmg role:101#1 role:61300#1 920690 65109 1
-498 stop fx:920690#1 1
-498 stop role:101#1 1
-498 hit fx:920690#1 role:61320#1 920430 hit
-498 dmg role:101#1 role:61320#1 920690 65109 1
-498 stop fx:920690#1 1
-498 stop role:101#1 1
-499 stop role:61300#1 1
-499 stop role:61320#1 1
-499 disp- role:61300#1 114320 63.500 0.000 250.000
-499 disp+ role:61300#1 114320
-499 disp- role:61320#1 114320 69.013 0.000 250.000
-499 disp+ role:61320#1 114320
-500 hit fx:920690#1 role:61300#1 920430 hit
-500 dmg role:101#1 role:61300#1 920690 65109 1
-500 stop fx:920690#1 1
-500 stop role:101#1 1
-500 hit fx:920690#1 role:61320#1 920430 hit
-500 dmg role:101#1 role:61320#1 920690 65109 1
-500 stop fx:920690#1 1
-500 stop role:101#1 1
-501 stop role:61300#1 1
-501 stop role:61320#1 1
-501 disp- role:61300#1 114320 63.500 0.000 250.000
-501 disp+ role:61300#1 114320
-501 disp- role:61320#1 114320 63.500 0.000 250.000
-501 disp+ role:61320#1 114320
+497 hit fx:920690#1 role:61300#1 920430 hit
+497 dmg role:101#1 role:61300#1 920690 65109 1
+497 stop fx:920690#1 1
+497 stop role:101#1 1
+497 hit fx:920690#1 role:61320#1 920430 hit
+497 dmg role:101#1 role:61320#1 920690 65109 1
+497 stop fx:920690#1 1
+497 stop role:101#1 1
+498 stop role:61300#1 1
+498 stop role:61320#1 1
+498 disp- role:61300#1 114320 63.500 0.000 250.000
+498 disp+ role:61300#1 114320
+498 disp- role:61320#1 114320 63.500 0.000 250.000
+498 disp+ role:61320#1 114320
+499 hit fx:920690#1 role:61300#1 920430 hit
+499 dmg role:101#1 role:61300#1 920690 65109 1
+499 stop fx:920690#1 1
+499 stop role:101#1 1
+499 hit fx:920690#1 role:61320#1 920430 hit
+499 dmg role:101#1 role:61320#1 920690 65109 1
+499 stop fx:920690#1 1
+499 stop role:101#1 1
+500 stop role:61300#1 1
+500 stop role:61320#1 1
+500 disp- role:61300#1 114320 63.500 0.000 250.000
+500 disp+ role:61300#1 114320
+500 disp- role:61320#1 114320 63.500 0.000 250.000
+500 disp+ role:61320#1 114320
+501 hit fx:920690#1 role:61300#1 920430 hit
+501 dmg role:101#1 role:61300#1 920690 65109 1
+501 stop fx:920690#1 1
+501 stop role:101#1 1
+501 hit fx:920690#1 role:61320#1 920430 hit
+501 dmg role:101#1 role:61320#1 920690 65109 1
+501 stop fx:920690#1 1
+501 stop role:101#1 1
+502 stop role:61300#1 1
+502 stop role:61320#1 1
+502 disp- role:61300#1 114320 63.500 0.000 250.000
+502 disp+ role:61300#1 114320
+502 disp- role:61320#1 114320 63.500 0.000 250.000
+502 disp+ role:61320#1 114320
 504 disp- role:101#1 922260 53.500 0.000 254.000
 504 disp+ role:101#1 922270
 504 buff+ role:101#1 200
@@ -756,26 +746,26 @@
 504 action role:101#1 10404
 505 buff- role:101#1 200
 505 spawn role:101#1 fx:920110#1
-508 castend role:101#1 920080 done
-508 state role:101#1 Attack,Idle Idle
-508 actionend role:101#1 10404
-508 action role:101#1 stand
-508 disp- role:101#1 922270 53.501 0.000 254.000
-509 buff- role:101#1 200
-511 disp- role:61300#1 114320 63.500 0.000 250.000
-511 disp- role:61320#1 114320 63.500 0.000 250.000
-512 state role:61300#1 Hit,Idle HitSwitch,Idle
-512 actionend role:61300#1 hit
-512 action role:61300#1 hitswitch
-512 state role:61320#1 Hit,Idle HitSwitch,Idle
-512 actionend role:61320#1 hit
-512 action role:61320#1 hitswitch
-514 state role:61300#1 HitSwitch,Idle Idle
-514 state role:61320#1 HitSwitch,Idle Idle
-515 actionend role:61300#1 hitswitch
-515 action role:61300#1 stand
-515 actionend role:61320#1 hitswitch
-515 action role:61320#1 stand
+509 castend role:101#1 920080 done
+509 state role:101#1 Attack,Idle Idle
+509 actionend role:101#1 10404
+509 action role:101#1 stand
+509 disp- role:101#1 922270 53.502 0.000 254.000
+510 buff- role:101#1 200
+512 disp- role:61300#1 114320 63.500 0.000 250.000
+512 disp- role:61320#1 114320 63.500 0.000 250.000
+513 state role:61300#1 Hit,Idle HitSwitch,Idle
+513 actionend role:61300#1 hit
+513 action role:61300#1 hitswitch
+513 state role:61320#1 Hit,Idle HitSwitch,Idle
+513 actionend role:61320#1 hit
+513 action role:61320#1 hitswitch
+515 state role:61300#1 HitSwitch,Idle Idle
+515 state role:61320#1 HitSwitch,Idle Idle
+516 actionend role:61300#1 hitswitch
+516 action role:61300#1 stand
+516 actionend role:61320#1 hitswitch
+516 action role:61320#1 stand
 520 cast role:101#1 920490 I
 520 buff+ role:101#1 200
 520 state role:101#1 Idle Attack,Idle
@@ -821,54 +811,54 @@
 581 state role:101#1 Run,Idle Attack,Idle
 581 actionend role:101#1 walk
 581 action role:101#1 10300
-583 disp- role:101#1 922400 53.500 0.000 254.000
-583 disp+ role:101#1 922410
-583 actionend role:101#1 10300
-583 action role:101#1 10302
-585 spawn role:101#1 fx:920210#2
-586 hit fx:920210#2 role:61300#1 920110 hit
-586 dmg role:101#1 role:61300#1 920210 20716 1
-586 stop fx:920210#2 1
-586 stop role:101#1 1
-586 spawn role:101#1 fx:882498#3
-586 hit fx:920210#2 role:61320#1 920110 hit
-586 dmg role:101#1 role:61320#1 920210 20716 1
-586 stop fx:920210#2 1
-586 stop role:101#1 1
-586 spawn role:101#1 fx:882498#4
-586 state role:61300#1 Idle Hit,Idle
-586 state role:61320#1 Idle Hit,Idle
-587 stop role:61300#1 1
-587 stop role:61320#1 1
-587 disp+ role:61300#1 920330
-587 disp+ role:61320#1 920330
-587 actionend role:61300#1 stand
-587 action role:61300#1 hit
-587 actionend role:61320#1 stand
-587 action role:61320#1 hit
-592 disp- role:61300#1 920330 63.500 0.000 250.000
-592 disp- role:61320#1 920330 63.500 0.000 250.000
-593 state role:61300#1 Hit,Idle HitSwitch,Idle
-593 actionend role:61300#1 hit
-593 action role:61300#1 hitswitch
-593 state role:61320#1 Hit,Idle HitSwitch,Idle
-593 actionend role:61320#1 hit
-593 action role:61320#1 hitswitch
-593 disp- role:101#1 922410 53.500 0.000 254.000
-595 state role:61300#1 HitSwitch,Idle Idle
-595 state role:61320#1 HitSwitch,Idle Idle
-596 actionend role:61300#1 hitswitch
-596 action role:61300#1 stand
-596 actionend role:61320#1 hitswitch
-596 action role:61320#1 stand
-597 disp+ role:101#1 922420
-597 actionend role:101#1 10302
-597 action role:101#1 10304
-597 disp- role:101#1 922420 53.500 0.000 254.000
-604 castend role:101#1 920090 done
-604 state role:101#1 Attack,Idle Idle
-604 actionend role:101#1 10304
-604 action role:101#1 stand
+584 disp- role:101#1 922400 53.500 0.000 254.000
+584 disp+ role:101#1 922410
+584 actionend role:101#1 10300
+584 action role:101#1 10302
+586 spawn role:101#1 fx:920210#2
+587 hit fx:920210#2 role:61300#1 920110 hit
+587 dmg role:101#1 role:61300#1 920210 20716 1
+587 stop fx:920210#2 1
+587 stop role:101#1 1
+587 spawn role:101#1 fx:882498#3
+587 hit fx:920210#2 role:61320#1 920110 hit
+587 dmg role:101#1 role:61320#1 920210 20716 1
+587 stop fx:920210#2 1
+587 stop role:101#1 1
+587 spawn role:101#1 fx:882498#4
+587 state role:61300#1 Idle Hit,Idle
+587 state role:61320#1 Idle Hit,Idle
+588 stop role:61300#1 1
+588 stop role:61320#1 1
+588 disp+ role:61300#1 920330
+588 disp+ role:61320#1 920330
+588 actionend role:61300#1 stand
+588 action role:61300#1 hit
+588 actionend role:61320#1 stand
+588 action role:61320#1 hit
+593 disp- role:61300#1 920330 63.500 0.000 250.000
+593 disp- role:61320#1 920330 63.500 0.000 250.000
+594 state role:61300#1 Hit,Idle HitSwitch,Idle
+594 actionend role:61300#1 hit
+594 action role:61300#1 hitswitch
+594 state role:61320#1 Hit,Idle HitSwitch,Idle
+594 actionend role:61320#1 hit
+594 action role:61320#1 hitswitch
+594 disp- role:101#1 922410 53.500 0.000 254.000
+596 state role:61300#1 HitSwitch,Idle Idle
+596 state role:61320#1 HitSwitch,Idle Idle
+597 actionend role:61300#1 hitswitch
+597 action role:61300#1 stand
+597 actionend role:61320#1 hitswitch
+597 action role:61320#1 stand
+598 disp+ role:101#1 922420
+598 actionend role:101#1 10302
+598 action role:101#1 10304
+598 disp- role:101#1 922420 53.500 0.000 254.000
+605 castend role:101#1 920090 done
+605 state role:101#1 Attack,Idle Idle
+605 actionend role:101#1 10304
+605 action role:101#1 stand
 611 cast role:101#1 920000 A
 611 disp+ role:101#1 922000
 611 state role:101#1 Idle Attack,Idle
@@ -994,16 +984,16 @@
 648 disp+ role:61300#1 114320
 648 disp- role:61320#1 920060 63.500 0.000 250.000
 648 disp+ role:61320#1 114320
-651 disp- role:101#1 922080 465.566 0.000 254.000
-651 disp+ role:101#1 922090
-651 actionend role:101#1 10134
-651 action role:101#1 10136
-651 disp- role:101#1 922090 465.566 0.000 254.000
-652 castend role:101#1 920020 done
-652 cast role:101#1 920030 A
-652 disp+ role:101#1 922100
-652 actionend role:101#1 10136
-652 action role:101#1 10138
+652 disp- role:101#1 922080 478.233 0.000 254.000
+652 disp+ role:101#1 922090
+652 actionend role:101#1 10134
+652 action role:101#1 10136
+652 disp- role:101#1 922090 478.233 0.000 254.000
+653 castend role:101#1 920020 done
+653 cast role:101#1 920030 A
+653 disp+ role:101#1 922100
+653 actionend role:101#1 10136
+653 action role:101#1 10138
 658 disp- role:61300#1 114320 63.500 0.000 250.000
 658 disp- role:61320#1 114320 63.500 0.000 250.000
 659 state role:61300#1 Hit,Idle HitSwitch,Idle
@@ -1012,13 +1002,13 @@
 659 state role:61320#1 Hit,Idle HitSwitch,Idle
 659 actionend role:61320#1 hit
 659 action role:61320#1 hitswitch
-660 disp- role:101#1 922100 367.378 0.000 254.000
-660 disp+ role:101#1 922110
-660 actionend role:101#1 10138
-660 action role:101#1 10140
-661 spawn role:101#1 fx:920040#1
+661 disp- role:101#1 922100 380.045 0.000 254.000
+661 disp+ role:101#1 922110
+661 actionend role:101#1 10138
+661 action role:101#1 10140
 661 state role:61300#1 HitSwitch,Idle Idle
 661 state role:61320#1 HitSwitch,Idle Idle
+662 spawn role:101#1 fx:920040#1
 662 actionend role:61300#1 hitswitch
 662 action role:61300#1 stand
 662 actionend role:61320#1 hitswitch
@@ -1043,18 +1033,18 @@
 665 action role:61300#1 hit
 665 actionend role:61320#1 stand
 665 action role:61320#1 hit
-669 disp- role:101#1 922110 303.011 0.000 254.000
-669 disp+ role:101#1 922120
-669 actionend role:101#1 10140
-669 action role:101#1 10142
-669 disp- role:101#1 922120 303.011 0.000 254.000
-670 castend role:101#1 920030 done
-670 cast role:101#1 920040 A
-670 disp+ role:101#1 922130
-670 actionend role:101#1 10142
-670 action role:101#1 10144
-670 disp- role:101#1 922130 303.011 0.000 254.000
-671 spawn role:101#1 fx:920050#1
+670 disp- role:101#1 922110 315.678 0.000 254.000
+670 disp+ role:101#1 922120
+670 actionend role:101#1 10140
+670 action role:101#1 10142
+670 disp- role:101#1 922120 315.678 0.000 254.000
+671 castend role:101#1 920030 done
+671 cast role:101#1 920040 A
+671 disp+ role:101#1 922130
+671 actionend role:101#1 10142
+671 action role:101#1 10144
+671 disp- role:101#1 922130 315.678 0.000 254.000
+672 spawn role:101#1 fx:920050#1
 675 disp- role:61300#1 114320 63.500 0.000 250.000
 675 disp- role:61320#1 114320 63.500 0.000 250.000
 676 state role:61300#1 Hit,Idle HitSwitch,Idle
@@ -1069,49 +1059,49 @@
 679 action role:61300#1 stand
 679 actionend role:61320#1 hitswitch
 679 action role:61320#1 stand
-682 disp+ role:101#1 922140
-682 actionend role:101#1 10144
-682 action role:101#1 10146
-683 spawn role:101#1 fx:920060#1
-684 hit fx:920060#1 role:61300#1 920050 hit
-684 dmg role:101#1 role:61300#1 920060 35514 1
-684 stop fx:920060#1 1
-684 stop role:101#1 1
-684 spawn role:101#1 fx:882498#5
-684 hit fx:920060#1 role:61320#1 920050 hit
-684 dmg role:101#1 role:61320#1 920060 35514 1
-684 stop fx:920060#1 1
-684 stop role:101#1 1
-684 spawn role:101#1 fx:882498#6
-684 state role:61300#1 Idle Hit,Idle
-684 state role:61320#1 Idle Hit,Idle
-685 stop role:61300#1 1
-685 stop role:61320#1 1
-685 disp+ role:61300#1 114320
-685 disp+ role:61320#1 114320
-685 actionend role:61300#1 stand
-685 action role:61300#1 hit
-685 actionend role:61320#1 stand
-685 action role:61320#1 hit
-690 disp- role:101#1 922140 59.680 0.000 254.000
-690 disp+ role:101#1 922150
-690 actionend role:101#1 10146
-690 action role:101#1 10148
-690 disp- role:101#1 922150 59.680 0.000 254.000
-695 disp- role:61300#1 114320 63.500 0.000 250.000
-695 disp- role:61320#1 114320 63.500 0.000 250.000
-696 state role:61300#1 Hit,Idle HitSwitch,Idle
-696 actionend role:61300#1 hit
-696 action role:61300#1 hitswitch
-696 state role:61320#1 Hit,Idle HitSwitch,Idle
-696 actionend role:61320#1 hit
-696 action role:61320#1 hitswitch
-698 state role:61300#1 HitSwitch,Idle Idle
-698 state role:61320#1 HitSwitch,Idle Idle
-699 actionend role:61300#1 hitswitch
-699 action role:61300#1 stand
-699 actionend role:61320#1 hitswitch
-699 action role:61320#1 stand
-final role:101#1 382560 59.680 0.000 254.000 Attack,Idle
-final role:61300#1 11077100 63.500 0.000 250.000 Idle
+683 disp+ role:101#1 922140
+683 actionend role:101#1 10144
+683 action role:101#1 10146
+684 spawn role:101#1 fx:920060#1
+685 hit fx:920060#1 role:61300#1 920050 hit
+685 dmg role:101#1 role:61300#1 920060 35514 1
+685 stop fx:920060#1 1
+685 stop role:101#1 1
+685 spawn role:101#1 fx:882498#5
+685 hit fx:920060#1 role:61320#1 920050 hit
+685 dmg role:101#1 role:61320#1 920060 35514 1
+685 stop fx:920060#1 1
+685 stop role:101#1 1
+685 spawn role:101#1 fx:882498#6
+685 state role:61300#1 Idle Hit,Idle
+685 state role:61320#1 Idle Hit,Idle
+686 stop role:61300#1 1
+686 stop role:61320#1 1
+686 disp+ role:61300#1 114320
+686 disp+ role:61320#1 114320
+686 actionend role:61300#1 stand
+686 action role:61300#1 hit
+686 actionend role:61320#1 stand
+686 action role:61320#1 hit
+691 disp- role:101#1 922140 72.346 0.000 254.000
+691 disp+ role:101#1 922150
+691 actionend role:101#1 10146
+691 action role:101#1 10148
+691 disp- role:101#1 922150 72.346 0.000 254.000
+696 disp- role:61300#1 114320 63.500 0.000 250.000
+696 disp- role:61320#1 114320 63.500 0.000 250.000
+697 state role:61300#1 Hit,Idle HitSwitch,Idle
+697 actionend role:61300#1 hit
+697 action role:61300#1 hitswitch
+697 state role:61320#1 Hit,Idle HitSwitch,Idle
+697 actionend role:61320#1 hit
+697 action role:61320#1 hitswitch
+699 state role:61300#1 HitSwitch,Idle Idle
+699 state role:61320#1 HitSwitch,Idle Idle
+700 actionend role:61300#1 hitswitch
+700 action role:61300#1 stand
+700 actionend role:61320#1 hitswitch
+700 action role:61320#1 stand
+final role:101#1 382560 72.346 0.000 254.000 Attack,Idle
+final role:61300#1 11094857 63.500 0.000 250.000 Idle
 final role:61320#1 11035668 63.500 0.000 250.000 Idle

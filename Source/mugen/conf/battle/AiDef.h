@@ -9,59 +9,59 @@ namespace mugen::conf::battle
 struct AiDef
 {
     // 警戒进入延迟范围。
-    std::vector<int32_t> m_alertDelayTime;
+    std::vector<int32_t> alertDelayTime;
     // 追击进入延迟范围。
-    std::vector<int32_t> m_chaseDelayTime;
+    std::vector<int32_t> chaseDelayTime;
     // 追击生效的横向 / 纵深区间。
-    std::vector<int32_t> m_chaseScopeX;
-    std::vector<int32_t> m_chaseScopeZ;
+    std::vector<int32_t> chaseScopeX;
+    std::vector<int32_t> chaseScopeZ;
     // 曝气技能组及其 SkillAi 引用。
-    std::vector<std::vector<int32_t>> m_crazySkillAiIds;
-    std::vector<std::vector<int32_t>> m_crazySkillIds;
+    std::vector<std::vector<int32_t>> crazySkillAiIds;
+    std::vector<std::vector<int32_t>> crazySkillIds;
     // 配置行 id（源表 id）。
-    int32_t m_id = 0;
+    int32_t id = 0;
     // 摇杆指令技能组。
-    std::vector<std::vector<int32_t>> m_joystickSkillIds;
+    std::vector<std::vector<int32_t>> joystickSkillIds;
     // 特殊技能组（醒技能 / 待机技能）。
-    std::vector<std::vector<int32_t>> m_otherSkillIds;
+    std::vector<std::vector<int32_t>> otherSkillIds;
     // 巡逻进入延迟范围。
-    std::vector<int32_t> m_patrolDelayTime;
+    std::vector<int32_t> patrolDelayTime;
     // 巡逻随机偏移的横向 / 纵深区间。
-    std::vector<int32_t> m_patrolScopeX;
-    std::vector<int32_t> m_patrolScopeZ;
+    std::vector<int32_t> patrolScopeX;
+    std::vector<int32_t> patrolScopeZ;
     // 各技能槽的 SkillAi 引用。
-    std::vector<std::vector<int32_t>> m_skillAiIds;
+    std::vector<std::vector<int32_t>> skillAiIds;
     // 普通技能组（按槽位）。
-    std::vector<std::vector<int32_t>> m_skillIds;
+    std::vector<std::vector<int32_t>> skillIds;
     // 全局施法间隔（毫秒）。
-    int32_t m_skillInterval = 0;
+    int32_t skillInterval = 0;
     // 各槽优先级。
-    std::vector<std::vector<int32_t>> m_skillPriorityLevel;
+    std::vector<std::vector<int32_t>> skillPriorityLevel;
     // 各槽施法间隔（毫秒）。
-    std::vector<std::vector<int32_t>> m_skillPriorityLevelCd;
+    std::vector<std::vector<int32_t>> skillPriorityLevelCd;
     // 索敌的横向 / 纵深区间。
-    std::vector<int32_t> m_targetScopeX;
-    std::vector<int32_t> m_targetScopeZ;
+    std::vector<int32_t> targetScopeX;
+    std::vector<int32_t> targetScopeZ;
 
     MG_REFLECT(AiDef,
-               m_alertDelayTime,
-               m_chaseDelayTime,
-               m_chaseScopeX,
-               m_chaseScopeZ,
-               m_crazySkillAiIds,
-               m_crazySkillIds,
-               m_id,
-               m_joystickSkillIds,
-               m_otherSkillIds,
-               m_patrolDelayTime,
-               m_patrolScopeX,
-               m_patrolScopeZ,
-               m_skillAiIds,
-               m_skillIds,
-               m_skillInterval,
-               m_skillPriorityLevel,
-               m_skillPriorityLevelCd,
-               m_targetScopeX,
-               m_targetScopeZ)
+               alertDelayTime,
+               chaseDelayTime,
+               chaseScopeX,
+               chaseScopeZ,
+               crazySkillAiIds,
+               crazySkillIds,
+               id,
+               joystickSkillIds,
+               otherSkillIds,
+               patrolDelayTime,
+               patrolScopeX,
+               patrolScopeZ,
+               skillAiIds,
+               skillIds,
+               skillInterval,
+               skillPriorityLevel,
+               skillPriorityLevelCd,
+               targetScopeX,
+               targetScopeZ)
 };
 }  // namespace mugen::conf::battle

@@ -5,9 +5,6 @@
 #    include "mugen/avatar/AvatarPaths.h"
 #    include "mugen/conf/ReflectedConfig.h"
 #    include "mugen/conf/TypeConversions.h"
-#    include "mugen/sim_legacy/effect/Effect.h"
-#    include "mugen/sim_legacy/room/RoomEntities.h"
-#    include "mugen/sim_legacy/role/RoleComponents.h"
 #    include "ui/progress/SessionFashionAppearance.h"
 
 #    include <algorithm>
@@ -43,34 +40,30 @@ AvatarLook lookFromRow(const Row& row)
     return look;
 }
 
-// 按实体组找到对应配置行；各组的配置 id 均已在生成时校验。
-AvatarLook resolveLook(sim_legacy::World& world, Entity entity, sim_legacy::GroupKind kind)
+// 按可视种类与配置 id 找到对应配置行；各组的配置 id 均已在生成时校验。
+AvatarLook resolveLook(sim::VisualEntityKind kind, int32_t configId)
 {
-    auto& ecs          = world.ecs();
     const auto& config = conf::Config::instance();
     switch (kind)
     {
-    case sim_legacy::GroupKind::Role:
+    case sim::VisualEntityKind::Role:
     {
-        const int32_t roleId = ecs.get<sim_legacy::RoleIdentity>(entity).roleId;
-        AvatarLook look      = lookFromRow(config.get<conf::RoleConfig>(roleId));
-        look.roleId          = roleId;
-        look.characterClass  = type_conversions::toCharacterClass(roleId);
+        AvatarLook look     = lookFromRow(config.get<conf::battle::RoleDef>(configId));
+        look.roleId         = configId;
+        look.characterClass = type_conversions::toCharacterClass(configId);
         return look;
     }
-    case sim_legacy::GroupKind::Effect:
-        return lookFromRow(config.get<conf::EffectConfig>(ecs.get<sim_legacy::EffectState>(entity).m_configId));
-    case sim_legacy::GroupKind::Obstacle:
-        return lookFromRow(config.get<conf::ObstacleConfig>(ecs.get<sim_legacy::ObstacleState>(entity).m_id));
-    case sim_legacy::GroupKind::Goods:
-        return lookFromRow(config.get<conf::GoodsConfig>(ecs.get<sim_legacy::GoodsState>(entity).m_id));
-    case sim_legacy::GroupKind::Portal:
-        return lookFromRow(config.get<conf::PortalConfig>(ecs.get<sim_legacy::PortalState>(entity).m_id));
-    case sim_legacy::GroupKind::Count:
-        break;
+    case sim::VisualEntityKind::Effect:
+        return lookFromRow(config.get<conf::battle::EffectDef>(configId));
+    case sim::VisualEntityKind::Obstacle:
+        return lookFromRow(config.get<conf::ObstacleConfig>(configId));
+    case sim::VisualEntityKind::Goods:
+        return lookFromRow(config.get<conf::GoodsConfig>(configId));
+    case sim::VisualEntityKind::Portal:
+        return lookFromRow(config.get<conf::PortalConfig>(configId));
     }
-    MG_LOG_E("AvatarPresenter: invalid entity group {}", static_cast<int>(kind));
-    MG_ASSERT(false && "Invalid entity group for avatar");
+    MG_LOG_E("AvatarPresenter: invalid visual entity kind {}", static_cast<int>(kind));
+    MG_ASSERT(false && "Invalid visual entity kind for avatar");
     return {};
 }
 
@@ -127,93 +120,96 @@ int wrappedDrift(int shownMs, int targetMs, int durationMs)
 }
 }  // namespace
 
-void AvatarPresenter::present(sim_legacy::World& world, float alpha, float renderDelta)
+void AvatarPresenter::present(sim::World& world, float alpha, float renderDelta)
 {
-    const auto& clock = world.ecs().singleton<sim_legacy::WorldClock>();
+    const uint64_t frame = sim::view::worldFrame(world);
+    const Fixed worldDtMs = sim::view::worldDtMs(world);
+    const Fixed logicDt = sim::view::logicDtMs();
     std::set<uint32_t> live;
-    world.ecs().each<sim_legacy::EntityGroup, sim_legacy::Transform, sim_legacy::MotionState>(
-        [&](Entity entity, const sim_legacy::EntityGroup& group, const sim_legacy::Transform& transform,
-            const sim_legacy::MotionState& motion) {
-        live.insert(entity.value);
-        auto& state = m_avatars[entity.value];
+    sim::view::collectVisualEntities(world, m_visuals);
+    for (const auto& v : m_visuals)
+    {
+        live.insert(v.entity.value);
+        auto& state = m_avatars[v.entity.value];
         // 回滚恢复快照后同一句柄可能指向另一个实体：身份变化则整体重建显示。
-        const LookIdentity identity{group.kind, lookConfigId(world, entity, group.kind), !motion.motionFile.empty()};
+        const LookIdentity identity{v.kind, v.configId, !v.motionFile.empty()};
         if (state.resolved && state.identity != identity)
-            resetState(entity.value, state);
+            resetState(v.entity.value, state);
         if (!state.resolved)
         {
             state.resolved        = true;
             state.identity        = identity;
-            const AvatarLook look = resolveLook(world, entity, group.kind);
+            const AvatarLook look = resolveLook(v.kind, v.configId);
             const SpineInfo spine = AvatarPaths::resolveSpine(look.resSpineId);
             if (!spine.valid)
-                return;
-            const bool roleEntity = group.kind == sim_legacy::GroupKind::Role;
+                continue;
+            const bool roleEntity = v.kind == sim::VisualEntityKind::Role;
             state.fashionAvatar   = roleEntity && look.characterClass != CharacterClass::kUnknown;
             // 只有被镜头跟随的本地玩家使用会话时装；对端玩家按各自职业默认外观创建。
-            state.useSessionFashion = roleEntity && entity == m_followEntity;
+            state.useSessionFashion = roleEntity && v.entity == m_followEntity;
             state.roleId            = look.roleId;
-            state.partnerRageTransformed = motion.m_partnerRageTransformed;
+            state.partnerRageTransformed = v.partnerRageTransformed;
             state.partnerRageStateKnown  = state.fashionAvatar;
             // 无显式换装且非职业角色的节点按外观键复用；时装角色实例私有，不入池。
-            const bool poolable = motion.motionFile.empty() ||
+            const bool poolable = v.motionFile.empty() ||
                                   (!state.m_overrideAppearance.has_value() &&
                                    look.characterClass == CharacterClass::kUnknown);
             if (poolable)
-                state.poolKey = motion.motionFile.empty() ? fmt::format("s:{}", look.resSpineId)
-                                                          : fmt::format("a:{}:{}", look.resSpineId, motion.motionFile);
+                state.poolKey = v.motionFile.empty() ? fmt::format("s:{}", look.resSpineId)
+                                                     : fmt::format("a:{}:{}", look.resSpineId, v.motionFile);
             if (!poolable || !acquirePooled(state))
             {
-                if (motion.motionFile.empty())
+                if (v.motionFile.empty())
                     state.skeleton = MgSkeletonAnimation::createFromCache(look.resSpineId);
                 else if (state.m_overrideAppearance.has_value())
                 {
                     FashionAppearance appearance = *state.m_overrideAppearance;
                     if (appearance.roleId == 0)
                         appearance.roleId = look.roleId;
-                    appearance.transformed = motion.m_partnerRageTransformed;
+                    appearance.transformed = v.partnerRageTransformed;
                     state.avatar          = Avatar::create(appearance);
                 }
                 else
-                    state.avatar = createAvatar(look, spine, motion.motionFile, state.useSessionFashion,
-                                                motion.m_partnerRageTransformed);
+                    state.avatar = createAvatar(look, spine, v.motionFile, state.useSessionFashion,
+                                                v.partnerRageTransformed);
             }
             ax::Node* node = displayNode(state);
             if (!node)
-                return;
+                continue;
             state.spineOffset = look.spineOffset;
             tierLayer(look.tier).addChild(node);
         }
         ax::Node* node = displayNode(state);
         if (!node)
-            return;
+            continue;
         if (state.fashionAvatar &&
-            (!state.partnerRageStateKnown || state.partnerRageTransformed != motion.m_partnerRageTransformed))
-            syncPartnerRageAppearance(entity.value, motion, motion.m_partnerRageTransformed, false);
-        const bool motionChanged = state.motionName != motion.motionName || state.entryId != motion.entryId;
+            (!state.partnerRageStateKnown || state.partnerRageTransformed != v.partnerRageTransformed))
+            syncPartnerRageAppearance(v.entity.value, v, v.partnerRageTransformed, false);
+        const bool motionChanged = state.motionName != v.motionName || state.entryId != v.entryId;
         if (motionChanged)
         {
             if (state.avatar)
-                state.avatar->setMotion(motion.motionName, motion.entryId, motion.loop);
-            else if (!state.skeleton->setAnimation(0, motion.motionName, motion.loop))
-                MG_LOG_W("AvatarPresenter: spine animation '{}' not found for entity {}", motion.motionName,
-                         entity.value);
-            state.motionName = motion.motionName;
-            state.entryId    = motion.entryId;
+                state.avatar->setMotion(v.motionName, v.entryId, v.loop);
+            else if (!state.skeleton->setAnimation(0, v.motionName, v.loop))
+                MG_LOG_W("AvatarPresenter: spine animation '{}' not found for entity {}", v.motionName,
+                         v.entity.value);
+            state.motionName = v.motionName;
+            state.entryId    = v.entryId;
+            state.loop       = v.loop;
         }
         if (state.avatar)
-            driveAvatarTime(state, motion, renderDelta, clock, motionChanged);
+            driveAvatarTime(state, v, renderDelta, frame, worldDtMs, logicDt, motionChanged);
 
         // 仅逻辑帧推进时滚动采样：previous 取上一逻辑帧，current 取最新逻辑帧，
         // 渲染帧按 alpha 在两者间插值，得到平滑运动而非 30Hz 阶梯；回滚纠正偏移随渲染时间衰减。
         // 本地玩家用短时间常数跟手，其余实体（对端英雄等）的回滚纠正用长时间常数与大吸附阈值滑行消化。
-        state.track.setProfile(entity == m_followEntity ? CorrectionProfile::Local : CorrectionProfile::Remote);
-        state.track.sample(clock.frame,
-                           {renderValue(transform.position.x), renderValue(transform.position.y),
-                            renderValue(transform.position.z)});
+        state.track.setProfile(v.entity == m_followEntity ? CorrectionProfile::Local : CorrectionProfile::Remote);
+        state.track.sample(frame,
+                           {renderValue(v.position.x), renderValue(v.position.y),
+                            renderValue(v.position.z)});
         state.track.advance(renderDelta);
-        state.towardX = transform.towardX < 0 ? -1.0f : 1.0f;
-        state.towardZ = transform.vectorZ < Fixed{} ? -1.0f : 1.0f;
+        state.towardX = v.towardX < 0 ? -1.0f : 1.0f;
+        state.towardZ = v.vectorZ < Fixed{} ? -1.0f : 1.0f;
         const RenderPose pose = interpolatePose(state, alpha);
         // Spine 偏移：x 随水平朝向翻转，z 随纵深朝向翻转；层内按偏移后的纵深排序。
         const float depth = pose.z + pose.towardZ * offsetAxis(state.spineOffset, 2);
@@ -221,7 +217,7 @@ void AvatarPresenter::present(sim_legacy::World& world, float alpha, float rende
                           pose.y + offsetAxis(state.spineOffset, 1) + depth);
         node->setLocalZOrder(-static_cast<int>(std::floor(depth)));
         node->setScaleX(pose.towardX);
-    });
+    }
     for (auto it = m_avatars.begin(); it != m_avatars.end();)
     {
         if (!live.contains(it->first))
@@ -256,24 +252,24 @@ void AvatarPresenter::present(sim_legacy::World& world, float alpha, float rende
     }
 }
 
-void AvatarPresenter::driveAvatarTime(AvatarState& state, const sim_legacy::MotionState& motion, float renderDelta,
-                                      const sim_legacy::WorldClock& clock, bool motionChanged)
+void AvatarPresenter::driveAvatarTime(AvatarState& state, const sim::VisualEntityView& view, float renderDelta,
+                                      uint64_t frame, Fixed worldDtMs, Fixed logicDt, bool motionChanged)
 {
-    const int targetMs = static_cast<int>(motion.timeMs.toInt());
-    if (!state.hasSimTime || state.lastLogicFrame != clock.frame)
+    const int targetMs = static_cast<int>(view.timeMs.toInt());
+    if (!state.hasSimTime || state.lastLogicFrame != frame)
     {
         state.simMoving      = !state.hasSimTime || targetMs != state.lastSimTimeMs;
         state.lastSimTimeMs  = targetMs;
-        state.lastLogicFrame = clock.frame;
+        state.lastLogicFrame = frame;
         state.hasSimTime     = true;
     }
 
     const int shownMs    = state.avatar->getCurrentTimeMs();
     const int durationMs = state.avatar->durationMs();
-    const int driftMs    = motion.loop ? wrappedDrift(shownMs, targetMs, durationMs) : targetMs - shownMs;
+    const int driftMs    = view.loop ? wrappedDrift(shownMs, targetMs, durationMs) : targetMs - shownMs;
     // 允许偏差为一逻辑帧的该动作时间（含 actionScale），避免快动作每 tick 被当成跳转。
     const int driftLimit = std::max(
-        1, static_cast<int>(std::lround((sim_legacy::kLogicDtMs * motion.actionScale).toFloatForRender())));
+        1, static_cast<int>(std::lround((logicDt * view.actionScale).toFloatForRender())));
     if (motionChanged || std::abs(driftMs) > driftLimit)
     {
         state.avatar->seek(targetMs);
@@ -281,8 +277,8 @@ void AvatarPresenter::driveAvatarTime(AvatarState& state, const sim_legacy::Moti
     }
     else if (state.simMoving)
     {
-        const float worldScale = clock.dtMs.toFloatForRender() / sim_legacy::kLogicDtMs.toFloatForRender();
-        const float speed      = motion.actionScale.toFloatForRender() * worldScale;
+        const float worldScale = worldDtMs.toFloatForRender() / logicDt.toFloatForRender();
+        const float speed      = view.actionScale.toFloatForRender() * worldScale;
         state.avatar->advance(renderDelta * speed);
     }
     state.avatar->stepAccessories(renderDelta);
@@ -338,10 +334,8 @@ FashionAppearance AvatarPresenter::buildRoleAppearance(const AvatarState& state,
     return appearance;
 }
 
-bool AvatarPresenter::syncPartnerRageAppearance(uint32_t entityValue,
-                                                const sim_legacy::MotionState& motion,
-                                                bool transformed,
-                                                bool force)
+bool AvatarPresenter::syncPartnerRageAppearance(uint32_t entityValue, const sim::VisualEntityView& view,
+                                                bool transformed, bool force)
 {
     auto it = m_avatars.find(entityValue);
     if (it == m_avatars.end())
@@ -357,20 +351,35 @@ bool AvatarPresenter::syncPartnerRageAppearance(uint32_t entityValue,
     state.partnerRageTransformed = transformed;
     state.partnerRageStateKnown  = true;
     // 换骨架后立即重放当前逻辑动作和时间，避免显示回到默认待机片段。
-    state.avatar->setMotion(motion.motionName, motion.entryId, motion.loop);
-    state.avatar->seek(static_cast<int>(motion.timeMs.toInt()));
-    state.motionName = motion.motionName;
-    state.entryId    = motion.entryId;
+    state.avatar->setMotion(view.motionName, view.entryId, view.loop);
+    state.avatar->seek(static_cast<int>(view.timeMs.toInt()));
+    state.motionName = view.motionName;
+    state.entryId    = view.entryId;
+    state.loop       = view.loop;
     state.simMoving  = false;
     return true;
 }
 
-void AvatarPresenter::onPartnerRageChanged(sim_legacy::World& world, Entity entity, bool active)
+void AvatarPresenter::onPartnerRageChanged(sim::World& world, Entity entity, bool active)
 {
-    const auto* motion = world.ecs().tryGet<sim_legacy::MotionState>(entity);
-    if (!motion)
+    const auto info = sim::view::readEntityRoleInfo(world, entity);
+    auto it = m_avatars.find(entity.value);
+    if (it == m_avatars.end())
         return;
-    syncPartnerRageAppearance(entity.value, *motion, active, true);
+    auto& state = it->second;
+    if (info.valid && state.roleId == 0)
+        state.roleId = info.roleId;
+    if (!state.avatar || !state.fashionAvatar)
+        return;
+    const FashionAppearance appearance = buildRoleAppearance(state, active);
+    if (!state.avatar->setAppearance(appearance))
+        return;
+    state.partnerRageTransformed = active;
+    state.partnerRageStateKnown  = true;
+    // 保留当前动作与播放时间，避免变身时跳回默认待机。
+    state.avatar->setMotion(state.motionName, state.entryId, state.loop);
+    state.avatar->seek(state.lastSimTimeMs);
+    state.simMoving = false;
 }
 
 void AvatarPresenter::setPet(int32_t petId, int32_t spineId)
@@ -412,28 +421,6 @@ ax::Node* AvatarPresenter::displayNode(const AvatarState& state)
     return state.skeleton;
 }
 
-int32_t AvatarPresenter::lookConfigId(sim_legacy::World& world, Entity entity, sim_legacy::GroupKind kind)
-{
-    auto& ecs = world.ecs();
-    switch (kind)
-    {
-    case sim_legacy::GroupKind::Role:
-        return ecs.get<sim_legacy::RoleIdentity>(entity).roleId;
-    case sim_legacy::GroupKind::Effect:
-        return ecs.get<sim_legacy::EffectState>(entity).m_configId;
-    case sim_legacy::GroupKind::Obstacle:
-        return ecs.get<sim_legacy::ObstacleState>(entity).m_id;
-    case sim_legacy::GroupKind::Goods:
-        return ecs.get<sim_legacy::GoodsState>(entity).m_id;
-    case sim_legacy::GroupKind::Portal:
-        return ecs.get<sim_legacy::PortalState>(entity).m_id;
-    case sim_legacy::GroupKind::Count:
-        break;
-    }
-    MG_LOG_E("AvatarPresenter: invalid entity group {}", static_cast<int>(kind));
-    MG_ASSERT(false && "Invalid entity group for avatar");
-    return 0;
-}
 
 bool AvatarPresenter::acquirePooled(AvatarState& state)
 {

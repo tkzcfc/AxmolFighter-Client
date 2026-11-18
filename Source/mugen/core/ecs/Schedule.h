@@ -10,11 +10,11 @@ template <class W>
 struct SystemEntry
 {
     // 系统名，用于日志、追踪与表检查。
-    const char* m_name;
+    const char* name;
     // 所属阶段编号，表内必须非递减。
-    uint8_t m_phase;
+    uint8_t phase;
     // 系统入口，不使用 std::function。
-    void (*m_run)(W&);
+    void (*run)(W&);
 };
 
 // 逐系统观察钩子：begin 为真表示系统即将运行，否则表示刚运行完。
@@ -29,7 +29,7 @@ void runSchedule(W& world, std::span<const SystemEntry<W>> table, ScheduleObserv
     {
         if (observer != nullptr)
             observer(world, entry, true);
-        entry.m_run(world);
+        entry.run(world);
         if (observer != nullptr)
             observer(world, entry, false);
     }

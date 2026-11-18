@@ -44,15 +44,15 @@ struct SlowMotionCommand
 struct ReturnToTownCommand
 {
     // 返回命令所属玩家槽位。
-    uint32_t m_slot = 0;
-    MG_REFLECT(ReturnToTownCommand, m_slot)
+    uint32_t slot = 0;
+    MG_REFLECT(ReturnToTownCommand, slot)
 };
 // 房间警告展示结束后由驱动提交确认。
 struct RoomWarningDone
 {
     // 所属房间，拒绝过期确认。
-    int32_t m_roomId = 0;
-    MG_REFLECT(RoomWarningDone, m_roomId)
+    int32_t roomId = 0;
+    MG_REFLECT(RoomWarningDone, roomId)
 };
 using SystemCommand =
     std::variant<ReviveCommand, PauseCommand, SlowMotionCommand, ReturnToTownCommand, RoomWarningDone>;

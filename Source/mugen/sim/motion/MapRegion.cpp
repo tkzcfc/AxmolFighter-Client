@@ -6,19 +6,19 @@ namespace mugen::sim
 // 清空旧区域并从层文件复制移动范围。
 void MapRegion::load(const std::string& layerFile)
 {
-    m_moveRanges.clear();
+    moveRanges.clear();
     for (const auto& range : LayerLoader::load(layerFile).moveRanges)
-        m_moveRanges.push_back({range.x, range.y, range.width, range.height});
+        moveRanges.push_back({range.x, range.y, range.width, range.height});
 }
 namespace
 {
 // 在指定轴向查找点所在或最近区域的边界。
 Fixed boundary(const MapRegion& region, FixedVec2 point, bool horizontal, bool lower)
 {
-    for (const auto& range : region.m_moveRanges)
+    for (const auto& range : region.moveRanges)
     {
-        const bool insideX = point.x >= range.m_x && point.x <= range.m_x + range.m_width;
-        const bool insideY = point.y >= range.m_y && point.y <= range.m_y + range.m_height;
+        const bool insideX = point.x >= range.x && point.x <= range.x + range.width;
+        const bool insideY = point.y >= range.y && point.y <= range.y + range.height;
         if (insideX && insideY)
             return horizontal ? point.x : point.y;
     }
@@ -27,12 +27,12 @@ Fixed boundary(const MapRegion& region, FixedVec2 point, bool horizontal, bool l
     Fixed fallback    = value;
     Fixed result      = value;
     bool matched      = false;
-    for (const auto& range : region.m_moveRanges)
+    for (const auto& range : region.moveRanges)
     {
-        const Fixed start  = horizontal ? range.m_y : range.m_x;
-        const Fixed length = horizontal ? range.m_height : range.m_width;
-        const Fixed edge   = (horizontal ? range.m_x : range.m_y) +
-                           (lower ? Fixed{} : horizontal ? range.m_width : range.m_height);
+        const Fixed start  = horizontal ? range.y : range.x;
+        const Fixed length = horizontal ? range.height : range.width;
+        const Fixed edge   = (horizontal ? range.x : range.y) +
+                           (lower ? Fixed{} : horizontal ? range.width : range.height);
         if (cross >= start && cross <= start + length)
         {
             matched = true;

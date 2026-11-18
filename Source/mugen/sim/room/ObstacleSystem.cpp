@@ -17,7 +17,7 @@ namespace
 void breakObstacle(World& world, Entity obstacle)
 {
     auto& state     = world.ecs().get<ObstacleStateComponent>(obstacle);
-    const auto* row = conf::Config::instance().find<conf::ObstacleConfig>(state.m_configId);
+    const auto* row = conf::Config::instance().find<conf::ObstacleConfig>(state.configId);
     if (row && row->deathEffectId != -1)
         effect::rules::spawnFromRole(world, obstacle, row->deathEffectId, {});
     life::rules::despawn(world, obstacle, DespawnReason::DeathEnd);
@@ -27,22 +27,22 @@ void pushBack(World& world, Entity obstacle, Entity character)
 {
     const auto& wall  = world.ecs().get<HitboxesComponent>(obstacle);
     const auto& body  = world.ecs().get<HitboxesComponent>(character);
-    if (wall.m_damage.empty() || body.m_damage.empty())
+    if (wall.damage.empty() || body.damage.empty())
         return;
-    const auto& a           = body.m_damage.front();
-    const auto& b           = wall.m_damage.front();
-    auto& position          = world.ecs().get<TransformComponent>(character).m_position;
+    const auto& a           = body.damage.front();
+    const auto& b           = wall.damage.front();
+    auto& position          = world.ecs().get<TransformComponent>(character).position;
     const auto* displacement = world.ecs().tryGet<DisplacementComponent>(character);
-    const FixedVec3 offset  = displacement ? displacement->m_offset : FixedVec3{};
-    if (position.x - offset.x <= b.m_pos.x)
-        position.x += b.m_pos.x - a.m_pos.x - a.m_size.x;
-    else if (position.x - offset.x >= b.m_pos.x + b.m_size.x)
-        position.x += b.m_pos.x + b.m_size.x - a.m_pos.x;
+    const FixedVec3 offset  = displacement ? displacement->offset : FixedVec3{};
+    if (position.x - offset.x <= b.pos.x)
+        position.x += b.pos.x - a.pos.x - a.size.x;
+    else if (position.x - offset.x >= b.pos.x + b.size.x)
+        position.x += b.pos.x + b.size.x - a.pos.x;
     else
     {
-        const Fixed z = world.ecs().get<TransformComponent>(obstacle).m_position.z;
-        position.z    = z + (position.z - offset.z <= z ? -(wall.m_radius + body.m_radius)
-                                                        : wall.m_radius + body.m_radius);
+        const Fixed z = world.ecs().get<TransformComponent>(obstacle).position.z;
+        position.z    = z + (position.z - offset.z <= z ? -(wall.radius + body.radius)
+                                                        : wall.radius + body.radius);
     }
 }
 }  // namespace
@@ -50,24 +50,24 @@ void pushBack(World& world, Entity obstacle, Entity character)
 // 系统 ObstacleSystem：8.2 行，见 DESIGN.md §3.2。
 void runObstacle(World& world)
 {
-    auto& contacts = world.ecs().singleton<EventQueue<ContactEvent>>().m_items;
+    auto& contacts = world.ecs().singleton<EventQueue<ContactEvent>>().items;
     for (const ContactEvent& contact : contacts)
     {
-        if (contact.m_phase == ContactPhase::End)
+        if (contact.phase == ContactPhase::End)
             continue;
-        const bool aObstacle = world.ecs().alive(contact.m_a) && world.ecs().has<ObstacleStateComponent>(contact.m_a);
-        const bool bObstacle = world.ecs().alive(contact.m_b) && world.ecs().has<ObstacleStateComponent>(contact.m_b);
+        const bool aObstacle = world.ecs().alive(contact.a) && world.ecs().has<ObstacleStateComponent>(contact.a);
+        const bool bObstacle = world.ecs().alive(contact.b) && world.ecs().has<ObstacleStateComponent>(contact.b);
         if (aObstacle == bObstacle)
             continue;  // 双方都不是或都是障碍。
-        const Entity obstacle  = aObstacle ? contact.m_a : contact.m_b;
-        const Entity other     = aObstacle ? contact.m_b : contact.m_a;
+        const Entity obstacle  = aObstacle ? contact.a : contact.b;
+        const Entity other     = aObstacle ? contact.b : contact.a;
         if (world.ecs().has<DespawningComponent>(obstacle))
             continue;
         if (world.ecs().has<EffectInfoComponent>(other))
         {
             // 特效命中障碍：扣减受击次数，耗尽后击破。
             auto& state = world.ecs().get<ObstacleStateComponent>(obstacle);
-            if (state.m_hits > 0 && --state.m_hits == 0)
+            if (state.hits > 0 && --state.hits == 0)
                 breakObstacle(world, obstacle);
         }
         else if (world.ecs().has<RoleStateComponent>(other))

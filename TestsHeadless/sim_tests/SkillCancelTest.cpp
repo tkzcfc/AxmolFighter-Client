@@ -40,15 +40,15 @@ World makeWorld(CharacterClass occupation = CharacterClass::kSwordman)
     REQUIRE(room != nullptr);
     setup.mapKey = room->mapKey;
     PlayerSetup player;
-    player.m_roleId = type_conversions::toRoleConfigId(occupation);
-    player.m_level  = 1000;
-    player.m_camp   = 2;
-    player.m_slot   = 0;
-    player.m_isAi   = false;
-    setup.m_players.push_back(player);
-    setup.m_stageId   = 0;
-    setup.m_copyId    = 0;
-    setup.m_aiEnabled = false;
+    player.roleId = type_conversions::toRoleConfigId(occupation);
+    player.level  = 1000;
+    player.camp   = 2;
+    player.slot   = 0;
+    player.isAi   = false;
+    setup.players.push_back(player);
+    setup.stageId   = 0;
+    setup.copyId    = 0;
+    setup.aiEnabled = false;
     REQUIRE_FALSE(bootstrapBattle(world, setup).empty());
     return world;
 }
@@ -57,7 +57,7 @@ Entity roleByConfig(World& world, int32_t configId)
 {
     Entity found;
     world.ecs().each<IdentityComponent>([&](Entity entity, const IdentityComponent& identity) {
-        if (identity.m_configId == configId)
+        if (identity.configId == configId)
             found = entity;
     });
     return found;
@@ -125,14 +125,14 @@ TEST_CASE("skill dealButton caches a different-slot next skill during sprint")
     world.tick(cmdInput(32, ControlEvent::CTR_ATKA, 2));
     const auto& book = world.ecs().get<SkillBookComponent>(hero);
     const auto& cast = world.ecs().get<SkillCastComponent>(hero);
-    REQUIRE(cast.m_skill != kNoSkill);
-    CHECK(book.m_slots[static_cast<size_t>(book.m_skills[static_cast<size_t>(cast.m_skill)].m_slot)] == "Y");
+    REQUIRE(cast.skill != kNoSkill);
+    CHECK(book.slots[static_cast<size_t>(book.skills[static_cast<size_t>(cast.skill)].slot)] == "Y");
 
     world.tick(cmdInput(33, ControlEvent::CTR_ATKA, 1));
     const auto& after = world.ecs().get<SkillCastComponent>(hero);
-    CHECK(after.m_nextSkill != kNoSkill);
-    const auto& next = book.m_skills[static_cast<size_t>(after.m_nextSkill)];
-    CHECK(book.m_slots[static_cast<size_t>(next.m_slot)] == "A");
+    CHECK(after.nextSkill != kNoSkill);
+    const auto& next = book.skills[static_cast<size_t>(after.nextSkill)];
+    CHECK(book.slots[static_cast<size_t>(next.slot)] == "A");
 }
 
 TEST_CASE("skill getFightSkill advances to the next link when charges run out")
@@ -140,27 +140,27 @@ TEST_CASE("skill getFightSkill advances to the next link when charges run out")
     World world      = makeWorld();
     const Entity hero = roleByConfig(world, 101);
     auto& book        = world.ecs().get<SkillBookComponent>(hero);
-    REQUIRE_FALSE(book.m_slots.empty());
-    REQUIRE_FALSE(book.m_skills.empty());
+    REQUIRE_FALSE(book.slots.empty());
+    REQUIRE_FALSE(book.skills.empty());
 
-    const int32_t slotIndex = book.m_skills.front().m_slot;
-    const std::string slot  = book.m_slots[static_cast<size_t>(slotIndex)];
-    SkillRuntime extra      = book.m_skills.front();
-    extra.m_link            = 2;
-    extra.m_step            = 1;
-    extra.m_stepCount       = 1;
-    extra.m_mode            = 1;
-    extra.m_configId        = 424242;
-    extra.m_finally         = true;
-    book.m_skills.front().m_finally   = false;
-    book.m_skills.front().m_stepCount = 1;
-    book.m_skills.front().m_releaseMax   = 1;
-    book.m_skills.front().m_releaseCount = 0;
-    book.m_skills.push_back(extra);
+    const int32_t slotIndex = book.skills.front().slot;
+    const std::string slot  = book.slots[static_cast<size_t>(slotIndex)];
+    SkillRuntime extra      = book.skills.front();
+    extra.link            = 2;
+    extra.step            = 1;
+    extra.stepCount       = 1;
+    extra.mode            = 1;
+    extra.configId        = 424242;
+    extra.finally         = true;
+    book.skills.front().finally   = false;
+    book.skills.front().stepCount = 1;
+    book.skills.front().releaseMax   = 1;
+    book.skills.front().releaseCount = 0;
+    book.skills.push_back(extra);
 
     auto& cast   = world.ecs().get<SkillCastComponent>(hero);
-    cast.m_skill = 0;
-    CHECK(skill::rules::getFightSkill(world, hero, slot) == static_cast<int32_t>(book.m_skills.size() - 1));
+    cast.skill = 0;
+    CHECK(skill::rules::getFightSkill(world, hero, slot) == static_cast<int32_t>(book.skills.size() - 1));
 }
 
 TEST_CASE("skill sprint cancel reaches A combo head")
@@ -182,14 +182,14 @@ TEST_CASE("skill sprint cancel reaches A combo head")
         else
             world.tick(FrameInput{frame, {}, {}, {}});
         const auto& cast = world.ecs().get<SkillCastComponent>(hero);
-        if (cast.m_skill == kNoSkill)
+        if (cast.skill == kNoSkill)
             continue;
         const auto& book = world.ecs().get<SkillBookComponent>(hero);
-        const auto& skill = book.m_skills[static_cast<size_t>(cast.m_skill)];
-        const auto& slot  = book.m_slots[static_cast<size_t>(skill.m_slot)];
+        const auto& skill = book.skills[static_cast<size_t>(cast.skill)];
+        const auto& slot  = book.slots[static_cast<size_t>(skill.slot)];
         if (slot == "Y")
-            sawY = skill.m_configId;
-        if (slot == "A" && skill.m_configId == 920000)
+            sawY = skill.configId;
+        if (slot == "A" && skill.configId == 920000)
             sawAHead = true;
     }
     CHECK(sawY == 920090);

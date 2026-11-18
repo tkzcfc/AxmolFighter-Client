@@ -3,9 +3,8 @@
 #include "mugen/conf/BattleConst.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/TypeConversions.h"
-#include "mugen/sim_legacy/buff/BuffPool.h"
-#include "mugen/sim_legacy/input/ControlManagerCore.h"
-#include "mugen/sim_legacy/skill/Skill.h"
+#include "mugen/sim/input/ControlManagerCore.h"
+#include "mugen/sim/view/HudView.h"
 #include "ui/battle/BattleMode.h"
 #include "ui/widgets/common/MessageDialog.h"
 
@@ -17,7 +16,7 @@ namespace gameui
 {
 namespace
 {
-using mugen::sim_legacy::ControlKey;
+using mugen::sim::ControlKey;
 
 // Unwrap config icon variant; tables already store FairyGUI ui:// URLs (or int sentinel).
 std::string configIconString(const std::variant<int32_t, std::string>& icon)
@@ -98,12 +97,11 @@ void BattleHudPanel::onDestroy()
 
 void BattleHudPanel::bindSkillButtons()
 {
-    const auto& world  = m_battle.world();
-    const auto player  = m_battle.localPlayer();
-    const auto& ident  = world.ecs().get<mugen::sim_legacy::RoleIdentity>(player);
-    const auto rows    = mugen::sim_legacy::skill::SkillAssembly::offlineKitRows(
-        mugen::type_conversions::toCharacterClass(ident.roleId));
-    auto findRow = [&rows](mugen::EnumSkillSlot slot) -> const mugen::sim_legacy::skill::OfflineKitRow* {
+    const auto& world = m_battle.world();
+    const auto player = m_battle.localPlayer();
+    const auto hud  = mugen::sim::view::readPlayerHud(world, player);
+    const auto rows = mugen::sim::view::offlineKitRows(mugen::type_conversions::toCharacterClass(hud.roleId));
+    auto findRow    = [&rows](mugen::EnumSkillSlot slot) -> const mugen::sim::view::OfflineKitRow* {
         for (const auto& row : rows)
             if (row.slot == slot)
                 return &row;
@@ -133,7 +131,7 @@ void BattleHudPanel::bindSkillButtons()
         if (row && poolSlotToControlKey(row->poolSlot, binding.m_controlKey))
         {
             binding.m_poolSlot = row->poolSlot;
-            const auto* attack = mugen::conf::Config::instance().find<mugen::conf::SkillAttackConfig>(row->skillId);
+            const auto* attack = mugen::conf::Config::instance().find<mugen::conf::battle::SkillDef>(row->skillId);
             const std::string url = attack ? configIconString(attack->icon) : std::string();
             // 闪避按钮在原版使用固定的 HUD 图标，配置图标缺失时保留组件默认图标。
             if (!url.empty())
@@ -182,8 +180,8 @@ void BattleHudPanel::bindRageHud()
         return;
     }
 
-    m_playerRage            = rageBar;
-    m_rageSkillButton       = {};
+    m_playerRage               = rageBar;
+    m_rageSkillButton          = {};
     m_rageSkillButton.m_button = rageBtn;
     m_rageSkillButton.m_cdMask = dynamic_cast<GLoader*>(rageBtn->getChild("cdMask"));
     m_rageSkillButton.m_cdText = dynamic_cast<GTextField*>(rageBtn->getChild("cd"));
@@ -194,15 +192,15 @@ void BattleHudPanel::bindRageHud()
 
     const auto& world = m_battle.world();
     const auto player = m_battle.localPlayer();
-    const bool hasRage = world.ecs().alive(player) && world.ecs().tryGet<mugen::sim_legacy::PartnerRageState>(player) != nullptr;
+    const auto rageHud = mugen::sim::view::readPartnerRageHud(world, player);
+    const bool hasRage = rageHud.hasRage;
     m_playerRage->setVisible(hasRage);
     rageBtn->setVisible(hasRage);
     if (!hasRage)
         return;
 
-    const auto& ident = world.ecs().get<mugen::sim_legacy::RoleIdentity>(player);
-    const auto rows   = mugen::sim_legacy::skill::SkillAssembly::offlineKitRows(
-        mugen::type_conversions::toCharacterClass(ident.roleId));
+    const auto hud  = mugen::sim::view::readPlayerHud(world, player);
+    const auto rows = mugen::sim::view::offlineKitRows(mugen::type_conversions::toCharacterClass(hud.roleId));
     for (const auto& row : rows)
     {
         if (row.slot != mugen::EnumSkillSlot::Anger)
@@ -210,7 +208,7 @@ void BattleHudPanel::bindRageHud()
         if (poolSlotToControlKey(row.poolSlot, m_rageSkillButton.m_controlKey))
         {
             m_rageSkillButton.m_poolSlot = row.poolSlot;
-            const auto* attack = mugen::conf::Config::instance().find<mugen::conf::SkillAttackConfig>(row.skillId);
+            const auto* attack = mugen::conf::Config::instance().find<mugen::conf::battle::SkillDef>(row.skillId);
             const std::string url = attack ? configIconString(attack->icon) : std::string();
             if (!url.empty())
                 rageBtn->setIcon(url);
@@ -260,7 +258,7 @@ void BattleHudPanel::onClickPause(EventContext* /*context*/)
 void BattleHudPanel::onUpdate(float /*dt*/)
 {
     const auto player = m_battle.localPlayer();
-    if (!m_battle.world().ecs().alive(player))
+    if (!mugen::sim::view::readPlayerHud(m_battle.world(), player).valid)
         return;
     updatePlayer(player);
     updateRage(player);
@@ -271,16 +269,14 @@ void BattleHudPanel::onUpdate(float /*dt*/)
 
 void BattleHudPanel::updatePlayer(mugen::Entity player)
 {
-    const auto& ecs    = m_battle.world().ecs();
-    const auto& vitals = ecs.get<mugen::sim_legacy::Vitals>(player);
-    const auto& ident  = ecs.get<mugen::sim_legacy::RoleIdentity>(player);
-    setProgress(m_playerHp, vitals.hp, vitals.maxHp);
-    setProgress(m_playerMp, vitals.mp, vitals.maxMp);
-    m_playerStatus->getChild("level")->setText(fmt::format("Lv.{}", ident.level));
-    if (m_portraitRoleId == ident.roleId)
+    const auto hud = mugen::sim::view::readPlayerHud(m_battle.world(), player);
+    setProgress(m_playerHp, hud.hp, hud.maxHp);
+    setProgress(m_playerMp, hud.mp, hud.maxMp);
+    m_playerStatus->getChild("level")->setText(fmt::format("Lv.{}", hud.level));
+    if (m_portraitRoleId == hud.roleId)
         return;
-    m_portraitRoleId = ident.roleId;
-    if (const auto* role = mugen::conf::Config::instance().find<mugen::conf::RoleConfig>(ident.roleId))
+    m_portraitRoleId = hud.roleId;
+    if (const auto* role = mugen::conf::Config::instance().find<mugen::conf::battle::RoleDef>(hud.roleId))
         m_playerStatus->getChild("portrait")->setIcon(role->headImage);
 }
 
@@ -289,9 +285,8 @@ void BattleHudPanel::updateRage(mugen::Entity player)
     if (!m_playerRage || !m_rageSkillButton.m_button)
         return;
 
-    const auto& ecs  = m_battle.world().ecs();
-    const auto* rage = ecs.tryGet<mugen::sim_legacy::PartnerRageState>(player);
-    const bool hasRage = rage != nullptr;
+    const auto rage    = mugen::sim::view::readPartnerRageHud(m_battle.world(), player);
+    const bool hasRage = rage.hasRage;
     m_playerRage->setVisible(hasRage);
     m_rageSkillButton.m_button->setVisible(hasRage);
     if (!hasRage)
@@ -304,15 +299,15 @@ void BattleHudPanel::updateRage(mugen::Entity player)
         return;
     }
 
-    const bool draining = rage->m_freezeMs > mugen::Fixed{};
+    const bool draining = rage.freezeMs > mugen::Fixed{};
     if (draining)
-        setProgress(m_playerRage, rage->m_freezeMs, rage->m_maxFreezeMs);
+        setProgress(m_playerRage, rage.freezeMs, rage.maxFreezeMs);
     else
-        setProgress(m_playerRage, rage->m_anger, mugen::conf::kPartnerRageMaxAnger);
-    styleRageBar(m_playerRage, draining || rage->m_transformed);
+        setProgress(m_playerRage, rage.anger, mugen::conf::kPartnerRageMaxAnger);
+    styleRageBar(m_playerRage, draining || rage.transformed);
 
-    const bool ready = !rage->m_transformed && !rage->m_recoverPending &&
-                       rage->m_anger >= mugen::conf::kPartnerRageMaxAnger;
+    const bool ready =
+        !rage.transformed && !rage.recoverPending && rage.anger >= mugen::conf::kPartnerRageMaxAnger;
     if (!ready && m_rageSkillEnabled)
         m_battle.setInput(m_rageSkillButton.m_controlKey, false);
     m_rageSkillEnabled = ready;
@@ -325,22 +320,19 @@ void BattleHudPanel::updateRage(mugen::Entity player)
 
 void BattleHudPanel::updateSkills(mugen::Entity player)
 {
-    const auto& pool = m_battle.world().ecs().get<mugen::sim_legacy::SkillPool>(player);
     for (auto& binding : m_skillButtons)
     {
         if (binding.m_poolSlot.empty())
             continue;
-        const int32_t index = mugen::sim_legacy::skill::getGivenSkill(pool, binding.m_poolSlot);
-        const bool cooling  = index != mugen::sim_legacy::kNoSkill && pool.m_skills.at(index).isCooling();
-        binding.m_cdMask->setVisible(cooling);
-        if (!cooling)
+        const auto cooldown = mugen::sim::view::readSlotCooldown(m_battle.world(), player, binding.m_poolSlot);
+        binding.m_cdMask->setVisible(cooldown.cooling);
+        if (!cooldown.cooling)
         {
             binding.m_cdText->setText("");
             continue;
         }
-        const auto& skill    = pool.m_skills.at(index);
-        const float remainMs = skill.m_cd.toFloatForRender();
-        const float maxMs    = std::max(1.0f, skill.m_coldMaxTime.toFloatForRender());
+        const float remainMs = cooldown.remainMs.toFloatForRender();
+        const float maxMs    = std::max(1.0f, cooldown.maxMs.toFloatForRender());
         binding.m_cdMask->setFillAmount(std::clamp(remainMs / maxMs, 0.0f, 1.0f));
         binding.m_cdText->setText(remainMs >= 1000.0f ? fmt::format("{}", static_cast<int>(std::ceil(remainMs / 1000.0f)))
                                                       : fmt::format("{:.1f}", remainMs / 1000.0f));
@@ -349,51 +341,43 @@ void BattleHudPanel::updateSkills(mugen::Entity player)
 
 void BattleHudPanel::updateBuffs(mugen::Entity player)
 {
-    const auto& pool   = m_battle.world().ecs().get<mugen::sim_legacy::BuffPool>(player);
+    std::vector<mugen::sim::view::ActiveBuffView> buffs;
+    mugen::sim::view::collectActiveBuffs(m_battle.world(), player, buffs);
     const auto& config = mugen::conf::Config::instance();
-    int count          = 0;
-    for (const auto& instance : pool.m_instances)
-        if (instance.m_lifecycle.m_active && !instance.m_lifecycle.m_exit)
-            ++count;
+    const int count    = static_cast<int>(buffs.size());
     while (m_buffList->numChildren() < count)
         m_buffList->addItemFromPool();
     while (m_buffList->numChildren() > count)
         m_buffList->removeChildToPoolAt(m_buffList->numChildren() - 1);
     int index = 0;
-    for (const auto& instance : pool.m_instances)
+    for (const auto& instance : buffs)
     {
-        if (!instance.m_lifecycle.m_active || instance.m_lifecycle.m_exit)
-            continue;
         auto* item = m_buffList->getChildAt(index++)->as<GComponent>();
-        if (const auto* buff = config.find<mugen::conf::BuffConfig>(instance.m_id))
-            item->getChild("icon")->setIcon(configIconString(buff->icon));
-        item->getChild("time")->setText(instance.m_lifecycle.m_repeat > 1
-                                            ? fmt::format("{}", instance.m_lifecycle.m_repeat)
-                                            : std::string());
+        if (const auto* buff = config.find<mugen::conf::battle::BuffDef>(instance.buffId))
+            item->getChild("icon")->setIcon(configIconString(buff->presentation.icon));
+        item->getChild("time")->setText(instance.stacks > 1 ? fmt::format("{}", instance.stacks) : std::string());
     }
 }
 
 void BattleHudPanel::updateTarget(mugen::Entity /*player*/)
 {
-    const auto& ecs     = m_battle.world().ecs();
-    const auto target   = m_battle.lastHurtTarget();
-    const auto* vitals  = ecs.tryGet<mugen::sim_legacy::Vitals>(target);
-    const auto* ident   = ecs.tryGet<mugen::sim_legacy::RoleIdentity>(target);
-    const bool hasTarget = vitals && ident && !vitals->isDead();
-    const bool isBoss    = hasTarget && ident->roleType == static_cast<int32_t>(mugen::EntityRoleType::kBoss);
+    const auto target = m_battle.lastHurtTarget();
+    const auto barView   = mugen::sim::view::readTargetBar(m_battle.world(), target);
+    const bool hasTarget = barView.valid;
+    const bool isBoss    = hasTarget && barView.roleType == static_cast<int32_t>(mugen::EntityRoleType::kBoss);
     m_targetBar->setVisible(hasTarget && !isBoss);
     m_bossBar->setVisible(isBoss);
     if (!hasTarget)
         return;
     GComponent* bar = isBoss ? m_bossBar : m_targetBar;
-    setProgress(bar->getChild("hpBar")->as<GProgressBar>(), vitals->hp, vitals->maxHp);
-    bar->getChild("level")->setText(fmt::format("Lv.{}", ident->level));
-    if (m_targetRoleId == ident->roleId)
+    setProgress(bar->getChild("hpBar")->as<GProgressBar>(), barView.hp, barView.maxHp);
+    bar->getChild("level")->setText(fmt::format("Lv.{}", barView.level));
+    if (m_targetRoleId == barView.roleId)
         return;
-    m_targetRoleId = ident->roleId;
-    bar->getChild("name")->setText(fmt::format("#{}", ident->roleId));
+    m_targetRoleId = barView.roleId;
+    bar->getChild("name")->setText(fmt::format("#{}", barView.roleId));
     if (isBoss)
-        if (const auto* role = mugen::conf::Config::instance().find<mugen::conf::RoleConfig>(ident->roleId))
+        if (const auto* role = mugen::conf::Config::instance().find<mugen::conf::battle::RoleDef>(barView.roleId))
             bar->getChild("portrait")->setIcon(role->headImage);
 }
 

@@ -4,7 +4,6 @@
 
 #    include "mugen/conf/ReflectedConfig.h"
 #    include "mugen/conf/tables/PetTables.h"
-#    include "mugen/sim_legacy/role/RoleComponents.h"
 #    include "ui/progress/SessionFashionAppearance.h"
 
 #    include <algorithm>
@@ -66,16 +65,19 @@ void WorldPresenter::clearEntityPet(Entity entity)
     m_avatars.clearEntityPet(entity);
 }
 
-bool WorldPresenter::refreshLocalPlayerAppearance(sim_legacy::World& world)
+bool WorldPresenter::refreshLocalPlayerAppearance(sim::World& world)
 {
     // 本地玩家即镜头跟随实体；联网对端玩家不套用本机会话时装。
     const Entity local = m_followEntity;
-    if (local.value == 0 || !world.ecs().alive(local))
+    if (local.value == 0)
+        return false;
+    const auto info = sim::view::readEntityRoleInfo(world, local);
+    if (!info.valid)
         return false;
     FashionAppearance appearance = gameui::buildSessionFashionAppearance();
     if (appearance.roleId == 0)
-        appearance.roleId = world.ecs().get<sim_legacy::RoleIdentity>(local).roleId;
-    appearance.transformed = world.ecs().get<sim_legacy::MotionState>(local).m_partnerRageTransformed;
+        appearance.roleId = info.roleId;
+    appearance.transformed = info.partnerRageTransformed;
     return setEntityAppearance(local, appearance);
 }
 
@@ -107,18 +109,18 @@ void WorldPresenter::loadMap(const std::string& mapKey)
     m_avatars.clearPool();
 }
 
-void WorldPresenter::present(sim_legacy::World& world, float interpolationAlpha, float renderDelta)
+void WorldPresenter::present(sim::World& world, float interpolationAlpha, float renderDelta)
 {
     m_avatars.present(world, std::clamp(interpolationAlpha, 0.0f, 1.0f), renderDelta);
-    consumeEvents(world.ecs().singleton<sim_legacy::PresentationEvents>().events, world, true);
+    consumeEvents(sim::view::worldEvents(world), world, true);
     m_hurtNumbers.update(renderDelta);
     m_camera.follow(world, m_followEntity);
     m_camera.update(renderDelta);
     m_debugDraw.present(world, &m_avatars, std::clamp(interpolationAlpha, 0.0f, 1.0f));
 }
 
-void WorldPresenter::presentEvents(const std::vector<sim_legacy::PresentationEvent>& events,
-                                   sim_legacy::World& world,
+void WorldPresenter::presentEvents(const std::vector<sim::PresentationEvent>& events,
+                                   sim::World& world,
                                    float interpolationAlpha,
                                    float renderDelta)
 {
@@ -130,8 +132,8 @@ void WorldPresenter::presentEvents(const std::vector<sim_legacy::PresentationEve
     m_debugDraw.present(world, &m_avatars, std::clamp(interpolationAlpha, 0.0f, 1.0f));
 }
 
-void WorldPresenter::consumeEvents(const std::vector<sim_legacy::PresentationEvent>& events,
-                                   sim_legacy::World& world,
+void WorldPresenter::consumeEvents(const std::vector<sim::PresentationEvent>& events,
+                                   sim::World& world,
                                    bool dedupeBySeq)
 {
     for (const auto& event : events)
@@ -141,10 +143,10 @@ void WorldPresenter::consumeEvents(const std::vector<sim_legacy::PresentationEve
         m_camera.consume(event);
         m_sound.consume(event);
         m_hurtNumbers.consume(event, world);
-        if (const auto* intensity = std::get_if<sim_legacy::RoleIntensity>(&event.payload))
-            m_avatars.setEntityIntensity(event.entity.value, intensity->m_value.toFloatForRender());
-        if (const auto* partnerRage = std::get_if<sim_legacy::PartnerRageChanged>(&event.payload))
-            m_avatars.onPartnerRageChanged(world, event.entity, partnerRage->m_active);
+        if (const auto* intensity = std::get_if<sim::RoleIntensity>(&event.payload))
+            m_avatars.setEntityIntensity(event.entity.value, intensity->value.toFloatForRender());
+        if (const auto* partnerRage = std::get_if<sim::PartnerRageChanged>(&event.payload))
+            m_avatars.onPartnerRageChanged(world, event.entity, partnerRage->active);
         if (dedupeBySeq)
             m_lastEventSequence = event.seq + 1;
     }

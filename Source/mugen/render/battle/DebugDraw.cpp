@@ -18,7 +18,7 @@ float renderValue(Fixed value)
 }
 // 编辑器同一套斜二测：深度相对实体纵深投影到右上 45° ×0.5。
 // 屏幕纵坐标加上实体纵深，与角色节点的 position.y + position.z 对齐。
-void drawCombatBox(ax::DrawNode& node, const sim_legacy::WorldBox& box, float entityDepth, const VisualPos& shift,
+void drawCombatBox(ax::DrawNode& node, const sim::view::DebugBox& box, float entityDepth, const VisualPos& shift,
                    const ax::Color4F& border, const ax::Color4F& fill)
 {
     constexpr float oblique = 0.5f;
@@ -55,26 +55,30 @@ DebugDraw::DebugDraw(ax::Node& root)
     root.addChild(m_node, 300);
 }
 
-void DebugDraw::present(sim_legacy::World& world, const AvatarPresenter* avatars, float alpha)
+void DebugDraw::present(sim::World& world, const AvatarPresenter* avatars, float alpha)
 {
     m_node->clear();
     if (!m_enabled)
         return;
-    world.ecs().each<sim_legacy::Transform, sim_legacy::ColliderState>(
-        [&](Entity entity, const sim_legacy::Transform& transform, const sim_legacy::ColliderState& collider) {
+    std::vector<sim::view::ColliderDebugView> colliders;
+    sim::view::collectColliders(world, colliders);
+    for (const auto& collider : colliders)
+    {
         VisualPos shift;
         if (avatars)
-            avatars->renderOffset(entity.value, alpha, &shift);
-        const float entityDepth = renderValue(transform.position.z) + shift.z;
-        const ax::Vec2 center{renderValue(transform.position.x) + shift.x,
-                              renderValue(transform.position.y) + shift.y + entityDepth};
+            avatars->renderOffset(collider.entity.value, alpha, &shift);
+        const float entityDepth = renderValue(collider.position.z) + shift.z;
+        const ax::Vec2 center{renderValue(collider.position.x) + shift.x,
+                              renderValue(collider.position.y) + shift.y + entityDepth};
         m_node->drawCircle(center, renderValue(collider.radius), 0.0f, 16, false, ax::Color4F::YELLOW);
         for (const auto& box : collider.attack)
             drawCombatBox(*m_node, box, entityDepth, shift, ax::Color4F::RED, kAttackFill);
         for (const auto& box : collider.damage)
             drawCombatBox(*m_node, box, entityDepth, shift, kHurtBoxColor, kHurtFill);
-    });
-    for (const auto& range : world.ecs().singleton<sim_legacy::MapRegion>().moveRanges)
+    }
+    std::vector<sim::view::MapMoveRangeView> ranges;
+    sim::view::moveRanges(world, ranges);
+    for (const auto& range : ranges)
         m_node->drawRect({renderValue(range.x), renderValue(range.y)},
                          {renderValue(range.x + range.width), renderValue(range.y + range.height)}, ax::Color4F::GREEN);
 }

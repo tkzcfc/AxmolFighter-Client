@@ -119,7 +119,7 @@ int32_t hostileMask(int32_t camp)
 // 按配置生成角色：追加 SpawnRequest 到队列。
 void spawnRole(World& world, const RoleSpawnParams& params)
 {
-    const auto* row = conf::Config::instance().find<conf::battle::RoleDef>(params.m_roleId);
+    const auto* row = conf::Config::instance().find<conf::battle::RoleDef>(params.roleId);
     if (!row)
     {
         MG_LOG_E("Invalid roleId in spawnRole");
@@ -127,17 +127,17 @@ void spawnRole(World& world, const RoleSpawnParams& params)
         return;
     }
     SpawnRequest request;
-    request.m_kind         = SpawnKind::Role;
-    request.m_configId     = params.m_roleId;
-    request.m_level        = params.m_level;
-    request.m_camp         = params.m_camp.value_or(row->monsterCamps);
-    request.m_aiDifficulty = params.m_aiDifficulty;
-    request.m_playerSlot   = params.m_playerSlot.value_or(0);
-    request.m_hasPlayerSlot = params.m_playerSlot.has_value();
-    request.m_isAi         = params.m_isAi;
-    request.m_owner        = params.m_owner;
-    request.m_position     = params.m_position;
-    request.m_towardX      = params.m_toward;
+    request.kind         = SpawnKind::Role;
+    request.configId     = params.roleId;
+    request.level        = params.level;
+    request.camp         = params.camp.value_or(row->monsterCamps);
+    request.aiDifficulty = params.aiDifficulty;
+    request.playerSlot   = params.playerSlot.value_or(0);
+    request.hasPlayerSlot = params.playerSlot.has_value();
+    request.isAi         = params.isAi;
+    request.owner        = params.owner;
+    request.position     = params.position;
+    request.towardX      = params.toward;
     world.ecs().singleton<EventQueue<SpawnRequest>>().push(request);
 }
 }  // namespace role::rules

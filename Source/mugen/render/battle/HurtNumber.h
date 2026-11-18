@@ -1,7 +1,9 @@
 #pragma once
 
 #include "mugen/core/StdC.h"
-#include "mugen/sim_legacy/World.h"
+#include "mugen/sim/World.h"
+#include "mugen/sim/present/PresentationEvent.h"
+#include "mugen/sim/view/WorldView.h"
 
 #ifdef RUNTIME_IN_AXMOL
 
@@ -18,7 +20,7 @@ class HurtNumber
 public:
     explicit HurtNumber(ax::Node& root) : m_root(root) {}
     // 消费伤害数值与闪避提示事件，创建飘字。
-    void consume(const sim_legacy::PresentationEvent& event, sim_legacy::World& world);
+    void consume(const sim::PresentationEvent& event, sim::World& world);
     // 按渲染帧推进全部飘字动画。
     void update(float delta);
     // 摘除全部飘字与池内标签。

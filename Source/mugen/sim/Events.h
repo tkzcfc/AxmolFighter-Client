@@ -4,12 +4,13 @@
 #include "mugen/core/math/FixedVec3.h"
 #include "mugen/core/reflect/Reflect.h"
 #include <cstdint>
+#include <vector>
 
 // 本文件登记全部请求事件（XxxRequest）与事实事件（XxxEvent）。
 // 事件只存值与 Entity 句柄；请求由唯一所有者系统排空，事实只读，帧末由 FlushSystem 清空。
 namespace mugen::sim
 {
-// 生成请求的实体种类，与 IdentityComponent.m_kind 对应。
+// 生成请求的实体种类，与 IdentityComponent.kind 对应。
 enum class SpawnKind : uint8_t
 {
     // 角色。
@@ -147,7 +148,9 @@ enum class CueKind : uint8_t
     // 墨汁屏。
     InkScreen = 9,
     // 攻击变身切换显示。
-    TransformSwap = 10
+    TransformSwap = 10,
+    // 伙伴怒气变身。
+    PartnerRage = 11
 };
 // 房间事件种类。
 enum class RoomEventKind : uint8_t
@@ -167,16 +170,16 @@ enum class RoomEventKind : uint8_t
 struct SourceContext
 {
     // 触发生成的技能配置标识。
-    int32_t m_skillId = 0;
+    int32_t skillId = 0;
     // 基础技能标识（变化技能的原技能）。
-    int32_t m_baseSkillId = 0;
+    int32_t baseSkillId = 0;
     // 技能槽位。
-    int32_t m_slot = 0;
+    int32_t slot = 0;
     // 神器标识。
-    int32_t m_artifactId = 0;
+    int32_t artifactId = 0;
     // 神器序号。
-    int32_t m_artifactIndex = 0;
-    MG_REFLECT(SourceContext, m_skillId, m_baseSkillId, m_slot, m_artifactId, m_artifactIndex)
+    int32_t artifactIndex = 0;
+    MG_REFLECT(SourceContext, skillId, baseSkillId, slot, artifactId, artifactIndex)
 };
 
 // ---------------- 请求事件 ----------------
@@ -185,99 +188,99 @@ struct SourceContext
 struct SpawnRequest
 {
     // 实体种类。
-    SpawnKind m_kind = SpawnKind::Role;
+    SpawnKind kind = SpawnKind::Role;
     // 配置标识。
-    int32_t m_configId = 0;
+    int32_t configId = 0;
     // 直接主人。
-    Entity m_owner;
+    Entity owner;
     // 来源上下文。
-    SourceContext m_source;
+    SourceContext source;
     // 生成时已解析的位置。
-    FixedVec3 m_position;
+    FixedVec3 position;
     // 朝向，仅取 -1 或 1。
-    int32_t m_towardX = 1;
+    int32_t towardX = 1;
     // 初始水平速度向量。
-    Fixed m_vectorX;
+    Fixed vectorX;
     // 初始纵深速度向量。
-    Fixed m_vectorZ;
+    Fixed vectorZ;
     // 寿命毫秒，0 表示由配置决定。
-    int32_t m_lifetimeMs = 0;
+    int32_t lifetimeMs = 0;
     // 继承主人属性的位掩码。
-    uint32_t m_inheritMask = 0;
+    uint32_t inheritMask = 0;
     // 角色等级（角色出生时使用）。
-    int32_t m_level = 1;
+    int32_t level = 1;
     // 阵营覆盖；0 表示使用角色配置默认阵营。
-    int32_t m_camp = 0;
-    // 玩家槽位；0 表示非玩家控制（配合 m_hasPlayerSlot 区分槽位 0）。
-    uint32_t m_playerSlot = 0;
+    int32_t camp = 0;
+    // 玩家槽位；0 表示非玩家控制（配合 hasPlayerSlot 区分槽位 0）。
+    uint32_t playerSlot = 0;
     // 是否有玩家槽位（槽位 0 也是有效槽位）。
-    bool m_hasPlayerSlot = false;
+    bool hasPlayerSlot = false;
     // 是否由 AI 驱动。
-    bool m_isAi = false;
+    bool isAi = false;
     // AI 难度等级。
-    int32_t m_aiDifficulty = 1;
+    int32_t aiDifficulty = 1;
     // 受击特效要记住的目标。只有没有后继的特效才写入身份。
-    Entity m_hitEntity;
+    Entity hitEntity;
     MG_REFLECT(SpawnRequest,
-               m_kind,
-               m_configId,
-               m_owner,
-               m_source,
-               m_position,
-               m_towardX,
-               m_vectorX,
-               m_vectorZ,
-               m_lifetimeMs,
-               m_inheritMask,
-               m_level,
-               m_camp,
-               m_playerSlot,
-               m_hasPlayerSlot,
-               m_isAi,
-               m_aiDifficulty,
-               m_hitEntity)
+               kind,
+               configId,
+               owner,
+               source,
+               position,
+               towardX,
+               vectorX,
+               vectorZ,
+               lifetimeMs,
+               inheritMask,
+               level,
+               camp,
+               playerSlot,
+               hasPlayerSlot,
+               isAi,
+               aiDifficulty,
+               hitEntity)
 };
 // 请求销毁实体（同时已立即打上 DespawningComponent）。
 struct DespawnRequest
 {
     // 被销毁的实体。
-    Entity m_entity;
+    Entity entity;
     // 销毁原因。
-    DespawnReason m_reason = DespawnReason::ClipEnd;
-    MG_REFLECT(DespawnRequest, m_entity, m_reason)
+    DespawnReason reason = DespawnReason::ClipEnd;
+    MG_REFLECT(DespawnRequest, entity, reason)
 };
 // 请求角色变身。
 struct TransformRequest
 {
     // 变身的实体。
-    Entity m_entity;
+    Entity entity;
     // 目标角色配置标识。
-    int32_t m_targetRoleId = 0;
+    int32_t targetRoleId = 0;
     // 变身类型。
-    int32_t m_type = 0;
+    int32_t type = 0;
     // 变身动作标识。
-    int32_t m_actionId = 0;
-    MG_REFLECT(TransformRequest, m_entity, m_targetRoleId, m_type, m_actionId)
+    int32_t actionId = 0;
+    MG_REFLECT(TransformRequest, entity, targetRoleId, type, actionId)
 };
 // 请求判定实体死亡。
 struct DeathRequest
 {
     // 将死亡的实体。
-    Entity m_entity;
+    Entity entity;
     // 击杀者。
-    Entity m_killer;
+    Entity killer;
     // 造成击杀的特效。
-    Entity m_effect;
-    MG_REFLECT(DeathRequest, m_entity, m_killer, m_effect)
+    Entity effect;
+    MG_REFLECT(DeathRequest, entity, killer, effect)
 };
 // 请求房间级流程。
 struct RoomRequest
 {
     // 请求种类。
-    RoomRequestKind m_kind = RoomRequestKind::Revive;
+    RoomRequestKind kind = RoomRequestKind::Revive;
     // 相关玩家槽位或目标实体的参数。
-    int32_t m_param = 0;
-    MG_REFLECT(RoomRequest, m_kind, m_param)
+    int32_t param = 0;
+    MG_REFLECT(RoomRequest, kind, param)
 };
 
 // ---------------- 事实事件 ----------------
@@ -286,160 +289,172 @@ struct RoomRequest
 struct SpawnEvent
 {
     // 新实体。
-    Entity m_entity;
+    Entity entity;
     // 实体种类。
-    SpawnKind m_kind = SpawnKind::Role;
+    SpawnKind kind = SpawnKind::Role;
     // 配置标识。
-    int32_t m_configId = 0;
+    int32_t configId = 0;
     // 主人。
-    Entity m_owner;
+    Entity owner;
     // 语义键中的同配置序号。
-    uint32_t m_ordinal = 0;
-    MG_REFLECT(SpawnEvent, m_entity, m_kind, m_configId, m_owner, m_ordinal)
+    uint32_t ordinal = 0;
+    MG_REFLECT(SpawnEvent, entity, kind, configId, owner, ordinal)
 };
 // 两个实体的接触。
 struct ContactEvent
 {
     // 接触方 a（攻击方）。
-    Entity m_a;
+    Entity a;
     // 接触方 b（受击方）。
-    Entity m_b;
+    Entity b;
     // 接触阶段。
-    ContactPhase m_phase = ContactPhase::Began;
+    ContactPhase phase = ContactPhase::Began;
     // 接触点。
-    FixedVec3 m_point;
-    MG_REFLECT(ContactEvent, m_a, m_b, m_phase, m_point)
+    FixedVec3 point;
+    MG_REFLECT(ContactEvent, a, b, phase, point)
 };
 // 一次命中的结果。
 struct HitEvent
 {
     // 攻击者。
-    Entity m_attacker;
+    Entity attacker;
     // 命中的特效。
-    Entity m_effect;
+    Entity effect;
     // 目标。
-    Entity m_target;
+    Entity target;
     // 命中定义标识。
-    int32_t m_hitDefId = 0;
+    int32_t hitDefId = 0;
     // 特效配置标识（供摘要 dmg 行使用）。
-    int32_t m_effectId = 0;
+    int32_t effectId = 0;
     // 命中结果。
-    HitResult m_result = HitResult::Hit;
+    HitResult result = HitResult::Hit;
     // 最终伤害。
-    Fixed m_damage;
+    Fixed damage;
     // 是否暴击。
-    bool m_critical = false;
+    bool critical = false;
     // 是否击杀。
-    bool m_killed = false;
+    bool killed = false;
     // 接触点。
-    FixedVec3 m_contact;
-    MG_REFLECT(HitEvent, m_attacker, m_effect, m_target, m_hitDefId, m_effectId, m_result, m_damage, m_critical,
-               m_killed, m_contact)
+    FixedVec3 contact;
+    MG_REFLECT(HitEvent, attacker, effect, target, hitDefId, effectId, result, damage, critical,
+               killed, contact)
 };
 // 生命值变化。
 struct HpEvent
 {
     // 变化的实体。
-    Entity m_entity;
+    Entity entity;
     // 变化量，负为扣减。
-    Fixed m_delta;
+    Fixed delta;
     // 变化原因。
-    HpCause m_cause = HpCause::Hit;
+    HpCause cause = HpCause::Hit;
     // 来源实体。
-    Entity m_source;
-    MG_REFLECT(HpEvent, m_entity, m_delta, m_cause, m_source)
+    Entity source;
+    MG_REFLECT(HpEvent, entity, delta, cause, source)
 };
 // 实体死亡。
 struct DeathEvent
 {
     // 死亡的实体。
-    Entity m_entity;
+    Entity entity;
     // 击杀者。
-    Entity m_killer;
-    MG_REFLECT(DeathEvent, m_entity, m_killer)
+    Entity killer;
+    MG_REFLECT(DeathEvent, entity, killer)
 };
 // 施法阶段变化。
 struct CastEvent
 {
     // 施法实体。
-    Entity m_entity;
+    Entity entity;
     // 技能标识。
-    int32_t m_skillId = 0;
-    // 技能槽位下标（SkillBookComponent::m_slots）。摘要导出再映射成字母。
-    int32_t m_slot = 0;
+    int32_t skillId = 0;
+    // 技能槽位下标（SkillBookComponent::slots）。摘要导出再映射成字母。
+    int32_t slot = 0;
     // 阶段。
-    CastPhase m_phase = CastPhase::Prepared;
-    MG_REFLECT(CastEvent, m_entity, m_skillId, m_slot, m_phase)
+    CastPhase phase = CastPhase::Prepared;
+    MG_REFLECT(CastEvent, entity, skillId, slot, phase)
 };
 // 动作开始或结束。
 struct ActionEvent
 {
     // 动作所属实体。
-    Entity m_entity;
+    Entity entity;
     // 动作标识。
-    int32_t m_actionId = 0;
+    int32_t actionId = 0;
     // 阶段。
-    ActionPhase m_phase = ActionPhase::Begin;
-    MG_REFLECT(ActionEvent, m_entity, m_actionId, m_phase)
+    ActionPhase phase = ActionPhase::Begin;
+    MG_REFLECT(ActionEvent, entity, actionId, phase)
 };
 // 角色状态转移。
 struct StateEvent
 {
     // 转移的实体。
-    Entity m_entity;
+    Entity entity;
     // 原状态编号。
-    int32_t m_from = 0;
+    int32_t from = 0;
     // 新状态编号。
-    int32_t m_to = 0;
-    MG_REFLECT(StateEvent, m_entity, m_from, m_to)
+    int32_t to = 0;
+    MG_REFLECT(StateEvent, entity, from, to)
 };
 // Buff 变化。
 struct BuffEvent
 {
     // Buff 所在实体。
-    Entity m_entity;
+    Entity entity;
     // Buff 配置标识。
-    int32_t m_buffId = 0;
+    int32_t buffId = 0;
     // 实例序号。
-    uint32_t m_serial = 0;
+    uint32_t serial = 0;
     // 阶段。
-    BuffPhase m_phase = BuffPhase::Added;
-    MG_REFLECT(BuffEvent, m_entity, m_buffId, m_serial, m_phase)
+    BuffPhase phase = BuffPhase::Added;
+    MG_REFLECT(BuffEvent, entity, buffId, serial, phase)
 };
 // 表现提示。
 struct CueEvent
 {
     // 提示相关实体。
-    Entity m_entity;
+    Entity entity;
     // 提示种类。
-    CueKind m_kind = CueKind::Sound;
+    CueKind kind = CueKind::Sound;
     // 主参数（资源或文本标识）。
-    int32_t m_id = 0;
-    // 附加参数。
-    int32_t m_param = 0;
-    MG_REFLECT(CueEvent, m_entity, m_kind, m_id, m_param)
+    int32_t id = 0;
+    // 附加参数（动作标识、开关值、变身目标句柄等）。
+    int32_t param = 0;
+    // 是否停止循环音效。
+    bool stopLoop = false;
+    // 供表现层自行挑选的候选音效。
+    std::vector<int32_t> candidates;
+    // 全屏骨骼分组。
+    std::vector<std::vector<int32_t>> groups;
+    MG_REFLECT(CueEvent, entity, kind, id, param, stopLoop, candidates, groups)
 };
 // 房间流程事件。
 struct RoomEvent
 {
     // 事件种类。
-    RoomEventKind m_kind = RoomEventKind::StateChanged;
+    RoomEventKind kind = RoomEventKind::StateChanged;
     // 载荷：状态变化时为房间状态编号；胜利/失败时为房间标识；警告时为警告编号。
-    int32_t m_payload = 0;
+    int32_t payload = 0;
     // 附加参数：警告事件时为是否暂停推进（1 暂停）。
-    int32_t m_param = 0;
+    int32_t param = 0;
     // 相关实体（英雄死亡进入复活/失败时指向该英雄）。
-    Entity m_entity;
-    MG_REFLECT(RoomEvent, m_kind, m_payload, m_param, m_entity)
+    Entity entity;
+    MG_REFLECT(RoomEvent, kind, payload, param, entity)
 };
 // 实体已销毁。
 struct DespawnEvent
 {
     // 被销毁的实体。
-    Entity m_entity;
+    Entity entity;
     // 销毁原因。
-    DespawnReason m_reason = DespawnReason::ClipEnd;
-    MG_REFLECT(DespawnEvent, m_entity, m_reason)
+    DespawnReason reason = DespawnReason::ClipEnd;
+    // 实体种类（销毁后组件不可读，预先记下）。
+    SpawnKind kind = SpawnKind::Role;
+    // 配置标识。
+    int32_t configId = 0;
+    // 销毁时仍在播的动作片段标识。
+    int32_t clipId = 0;
+    MG_REFLECT(DespawnEvent, entity, reason, kind, configId, clipId)
 };
 // 位移事实的阶段。只由 displacement::rules 产生。
 enum class DispPhase : int32_t
@@ -455,20 +470,20 @@ enum class DispPhase : int32_t
 struct DisplacementEvent
 {
     // 位移所属实体。
-    Entity m_entity;
+    Entity entity;
     // 阶段。
-    DispPhase m_phase = DispPhase::Began;
+    DispPhase phase = DispPhase::Began;
     // 曲线配置标识。
-    int32_t m_curveId = 0;
-    MG_REFLECT(DisplacementEvent, m_entity, m_phase, m_curveId)
+    int32_t curveId = 0;
+    MG_REFLECT(DisplacementEvent, entity, phase, curveId)
 };
 // 顿帧事实。毫秒到帧的换算在 DebugSinkSystem。
 struct HitStopEvent
 {
     // 被顿帧的实体。
-    Entity m_entity;
+    Entity entity;
     // 写入的顿帧毫秒。
-    Fixed m_freezeMs;
-    MG_REFLECT(HitStopEvent, m_entity, m_freezeMs)
+    Fixed freezeMs;
+    MG_REFLECT(HitStopEvent, entity, freezeMs)
 };
 }  // namespace mugen::sim

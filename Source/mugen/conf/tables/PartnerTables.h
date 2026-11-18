@@ -21,7 +21,7 @@ struct PartnerConfig
     int32_t typeValue   = 0;
     int32_t quality  = 0;
     int32_t rare     = 0;
-    // item_partner.spine_id + heiyue UiPartner preview anim (stand).
+    // item_partner.spine_id + partner preview anim (stand).
     std::string spineAnim;
     int32_t spineId = 0;
     int32_t starMax = 20;

@@ -2,6 +2,8 @@
 
 #include "mugen/core/reflect/Reflect.h"
 
+#include <string>
+
 namespace mugen::conf::battle
 {
 // 角色静态数据，由 role.lua 降级（见 DESIGN.md §9.1）。
@@ -60,6 +62,14 @@ struct RoleDef
     std::vector<int32_t> hurtNumPos;
     // 跨房保留标记（isPassRoom，1 表示换房时保留角色）。
     int32_t isPassRoom = 0;
+    // 头像资源路径。
+    std::string headImage;
+    // 时装资源 id 列表。
+    std::vector<int32_t> resFashion;
+    // 渲染层级。
+    int32_t tier = 0;
+    // Spine 相对位置（表现）。
+    std::vector<int32_t> spineRelativePosition;
 
     MG_REFLECT(RoleDef,
                id,
@@ -89,6 +99,10 @@ struct RoleDef
                velocity,
                weight,
                hurtNumPos,
-               isPassRoom)
+               isPassRoom,
+               headImage,
+               resFashion,
+               tier,
+               spineRelativePosition)
 };
 }  // namespace mugen::conf::battle

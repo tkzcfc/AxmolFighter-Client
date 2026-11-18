@@ -13,123 +13,123 @@ inline constexpr int32_t kNoSkill = -1;
 struct SkillRuntime
 {
     // 所属槽位下标。
-    int32_t m_slot = 0;
+    int32_t slot = 0;
     // 技能配置标识。
-    int32_t m_configId = -1;
+    int32_t configId = -1;
     // 槽位链内的步骤序号（1 起）。
-    int32_t m_step = 1;
+    int32_t step = 1;
     // 槽位链内的总步骤数。
-    int32_t m_stepCount = 1;
+    int32_t stepCount = 1;
     // 同槽多链的链序号（1 起）。
-    int32_t m_link = 1;
+    int32_t link = 1;
     // 同链多模式的模式号（1 起；`B_2` 为 2）。
-    int32_t m_mode = 1;
+    int32_t mode = 1;
     // 剩余冷却时间。
-    Fixed m_cd;
+    Fixed cd;
     // 当前冷却周期最大时间。
-    Fixed m_coldMaxTime;
+    Fixed coldMaxTime;
     // 当前可用施放次数。
-    int32_t m_releaseCount = 1;
+    int32_t releaseCount = 1;
     // 可累积的最大施放次数。
-    int32_t m_releaseMax = 1;
+    int32_t releaseMax = 1;
     // 是否正在推进冷却计时。
-    bool m_timing = false;
+    bool timing = false;
     // 是否已是不可续接的末段。
-    bool m_finally = false;
-    MG_REFLECT(SkillRuntime, m_slot, m_configId, m_step, m_stepCount, m_link, m_mode, m_cd, m_coldMaxTime, m_releaseCount,
-               m_releaseMax, m_timing, m_finally)
+    bool finally = false;
+    MG_REFLECT(SkillRuntime, slot, configId, step, stepCount, link, mode, cd, coldMaxTime, releaseCount,
+               releaseMax, timing, finally)
 };
 // 一条技能修正，按来源实例撤销。
 struct SkillMod
 {
     // SkillModField 数值。
-    int32_t m_field = 0;
+    int32_t field = 0;
     // SkillScope 数值。
-    int32_t m_scope = 0;
+    int32_t scope = 0;
     // 槽位下标；非逐槽时为 −1。
-    int32_t m_slot = -1;
+    int32_t slot = -1;
     // 已求值的增量。
-    Fixed m_value;
+    Fixed value;
     // 来源实例序号。
-    uint32_t m_source = 0;
-    MG_REFLECT(SkillMod, m_field, m_scope, m_slot, m_value, m_source)
+    uint32_t source = 0;
+    MG_REFLECT(SkillMod, field, scope, slot, value, source)
 };
 // 角色持有的全部技能运行数据（槽位名 + 技能运行数据）。
 struct SkillBookComponent
 {
     // 槽位名（A、Y、F、E、B、C、D…）。
-    std::vector<std::string> m_slots;
+    std::vector<std::string> slots;
     // 全部技能运行数据（按槽位 + 链内顺序）。
-    std::vector<SkillRuntime> m_skills;
+    std::vector<SkillRuntime> skills;
     // 技能级修正。
-    std::vector<SkillMod> m_mods;
+    std::vector<SkillMod> mods;
     // 查找指定槽位名、步骤、链与模式的技能下标；不存在返回 kNoSkill。
     int32_t find(std::string_view slot, int32_t step, int32_t link = 1, int32_t mode = 1) const;
-    MG_REFLECT(SkillBookComponent, m_slots, m_skills, m_mods)
+    MG_REFLECT(SkillBookComponent, slots, skills, mods)
 };
 // 当前施法状态（当前技能、缓存下一招、打断窗口）。
 struct SkillCastComponent
 {
     // 当前施法技能下标，kNoSkill 表示未施法。
-    int32_t m_skill = kNoSkill;
+    int32_t skill = kNoSkill;
     // 缓存的下一次施放技能下标。
-    int32_t m_nextSkill = kNoSkill;
+    int32_t nextSkill = kNoSkill;
     // 技能结束后是否接续跑动。
-    bool m_nextRun = false;
+    bool nextRun = false;
     // 是否允许普通优先级打断。
-    bool m_allowInterrupt = true;
+    bool allowInterrupt = true;
     // 是否允许额外优先级打断。
-    bool m_allowExtraInterrupt = false;
+    bool allowExtraInterrupt = false;
     // 取消窗口已接受切招：下一帧 FSM 在 Attack 内结束旧施法并开始新施法。
-    bool m_switch = false;
+    bool switched = false;
     // 是否被强制打断。
-    bool m_interrupted = false;
+    bool interrupted = false;
     // 是否处于曝气。
-    bool m_crazy = false;
+    bool crazy = false;
     // 当前施法管线待领取的伙伴怒气。
-    Fixed m_partnerRagePendingGain;
+    Fixed partnerRagePendingGain;
     // 待领取怒气是否有效。
-    bool m_partnerRagePendingGainActive = false;
+    bool partnerRagePendingGainActive = false;
     // 冻结结束后等待回退变身。
-    bool m_partnerRageRecoverPending = false;
-    MG_REFLECT(SkillCastComponent, m_skill, m_nextSkill, m_nextRun, m_allowInterrupt, m_allowExtraInterrupt, m_switch,
-               m_interrupted, m_crazy, m_partnerRagePendingGain, m_partnerRagePendingGainActive,
-               m_partnerRageRecoverPending)
+    bool partnerRageRecoverPending = false;
+    MG_REFLECT(SkillCastComponent, skill, nextSkill, nextRun, allowInterrupt, allowExtraInterrupt, switched,
+               interrupted, crazy, partnerRagePendingGain, partnerRagePendingGainActive,
+               partnerRageRecoverPending)
 };
 // 角色 / 特效的动作时间轴（片段列表与逐片段运行状态）。
 struct ActionTimelineComponent
 {
     // 当前技能或特效的片段 id 列表。
-    std::vector<int32_t> m_clips;
+    std::vector<int32_t> clips;
     // 当前片段下标。
-    int32_t m_index = 0;
+    int32_t index = 0;
     // 当前片段已运行毫秒。
-    Fixed m_clipMs;
+    Fixed clipMs;
     // 当前片段的循环次数要求（-1 无限）。
-    Fixed m_loops = Fixed::fromInt(1);
+    Fixed loops = Fixed::fromInt(1);
     // 当前片段的尾延时（毫秒）。
-    int32_t m_tailMs = 0;
+    int32_t tailMs = 0;
     // 当前片段动画是否已完成。
-    bool m_animationEnd = false;
+    bool animationEnd = false;
     // 时间轴是否已全部完成。
-    bool m_finished = false;
+    bool finished = false;
     // 下一 cue 游标（cue 按帧升序）。
-    int32_t m_nextCue = 0;
+    int32_t nextCue = 0;
     // 当前片段已生成的特效（autoRelease=0 时退出清理）。
-    std::vector<Entity> m_spawnedEffects;
+    std::vector<Entity> spawnedEffects;
     // 当前片段 id（供摘要 action 行使用）。
-    int32_t m_clipId = 0;
+    int32_t clipId = 0;
     // 刚进入的片段要求下一次时间轴遍历不推进。
-    bool m_deferAdvance = false;
+    bool deferAdvance = false;
     // 本片段是否已触发变身 cue。
-    bool m_transformFired = false;
+    bool transformFired = false;
     // 本片段是否已触发召唤 cue。
-    bool m_summoned = false;
+    bool summoned = false;
     // 定身正在生效（复位前不再重复施加）。
-    bool m_timeStopOn = false;
+    bool timeStopOn = false;
     // 定身可再次触发的世界时间（毫秒）。
-    Fixed m_timeStopResetAtMs;
-    MG_REFLECT(ActionTimelineComponent, m_clips, m_index, m_clipMs, m_loops, m_tailMs, m_animationEnd, m_finished, m_nextCue,
-               m_spawnedEffects, m_clipId, m_deferAdvance, m_transformFired, m_summoned, m_timeStopOn, m_timeStopResetAtMs)
+    Fixed timeStopResetAtMs;
+    MG_REFLECT(ActionTimelineComponent, clips, index, clipMs, loops, tailMs, animationEnd, finished, nextCue,
+               spawnedEffects, clipId, deferAdvance, transformFired, summoned, timeStopOn, timeStopResetAtMs)
 };
 }  // namespace mugen::sim

@@ -18,20 +18,20 @@ void runSkillRequest(World& world)
             if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
                 return;
             // 死亡、木偶、挤开、待处理受击不能开新技能；受击中的挣脱由 isAllowCast 只放行 L。
-            if (state.m_state == RoleStateId::Death || state.m_state == RoleStateId::Puppet ||
-                state.m_state == RoleStateId::Jostled || state.m_deathRequested || hit.m_pendingHitDefId != 0)
+            if (state.state == RoleStateId::Death || state.state == RoleStateId::Puppet ||
+                state.state == RoleStateId::Jostled || state.deathRequested || hit.pendingHitDefId != 0)
                 return;
             if (world.ecs().has<HealthComponent>(entity))
             {
                 const auto& health = world.ecs().get<HealthComponent>(entity);
-                if (health.m_dead || health.m_hp <= Fixed{})
+                if (health.dead || health.hp <= Fixed{})
                     return;
             }
             if (!flags.canControl())
                 return;
-            for (const auto& button : intent.m_buttons)
-                if (button.m_pressType == 1)  // 只处理按下（B2 无抬起释放技能）
-                    skill::rules::dealButton(world, entity, button.m_event);
+            for (const auto& button : intent.buttons)
+                if (button.pressType == 1)  // 只处理按下（B2 无抬起释放技能）
+                    skill::rules::dealButton(world, entity, button.event);
         });
 }
 }  // namespace mugen::sim

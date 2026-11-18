@@ -12,22 +12,22 @@ namespace mugen::sim
 // 系统 CooldownSystem：2.1 行，见 DESIGN.md §3.2。递减技能冷却并恢复次数。
 void runCooldown(World& world)
 {
-    const Fixed dt = world.ecs().singleton<WorldClock>().m_dtMs;
+    const Fixed dt = world.ecs().singleton<WorldClock>().dtMs;
     world.ecs().each<SkillBookComponent>([&](Entity entity, SkillBookComponent& book) {
         if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
             return;
-        for (auto& skill : book.m_skills)
+        for (auto& skill : book.skills)
         {
-            if (!skill.m_timing)
+            if (!skill.timing)
                 continue;
-            skill.m_cd = std::max(Fixed{}, skill.m_cd - dt);
-            if (skill.m_cd == Fixed{})
+            skill.cd = std::max(Fixed{}, skill.cd - dt);
+            if (skill.cd == Fixed{})
             {
-                skill.m_timing       = false;
-                skill.m_releaseCount = std::min(skill.m_releaseCount + 1, skill.m_releaseMax);
+                skill.timing       = false;
+                skill.releaseCount = std::min(skill.releaseCount + 1, skill.releaseMax);
                 BuffContext ctx;
-                ctx.m_target  = entity;
-                ctx.m_skillId = skill.m_configId;
+                ctx.target  = entity;
+                ctx.skillId = skill.configId;
                 buff::rules::fire(world, entity, conf::battle::TriggerPoint::SkillColdEnd, ctx);
             }
         }

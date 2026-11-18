@@ -1,5 +1,6 @@
 #pragma once
 #include "Events.h"
+#include "mugen/sim/present/PresentationEvent.h"
 #include "WorldSetup.h"
 #include "mugen/sim/motion/MapRegion.h"
 #include "mugen/sim/room/KoSlowMotion.h"
@@ -17,176 +18,158 @@ namespace mugen::sim
 struct WorldClock
 {
     // 已推进的逻辑帧序号。
-    uint64_t m_frame = 0;
+    uint64_t frame = 0;
     // 从世界开始累计的逻辑毫秒。
-    Fixed m_elapsedMs;
+    Fixed elapsedMs;
     // 当前逻辑帧的秒时长。
-    Fixed m_dtSec = kLogicDtSec;
+    Fixed dtSec = kLogicDtSec;
     // 当前逻辑帧的毫秒时长。
-    Fixed m_dtMs = kLogicDtMs;
-    MG_REFLECT(WorldClock, m_frame, m_elapsedMs, m_dtSec, m_dtMs)
+    Fixed dtMs = kLogicDtMs;
+    MG_REFLECT(WorldClock, frame, elapsedMs, dtSec, dtMs)
 };
 // 每场世界独有的确定性随机数状态；逻辑代码只经它抽样。
 struct RngState
 {
     // 本场唯一的随机数发生器。
-    Random m_random;
-    MG_REFLECT(RngState, m_random)
+    Random random;
+    MG_REFLECT(RngState, random)
 };
 // 当前世界的慢动作控制状态：外部定长慢放 + 房间 KO 曲线。
 struct SlowMotion
 {
     // 应用于逻辑时间的缩放倍率。
-    Fixed m_scale = Fixed::fromInt(1);
+    Fixed scale = Fixed::fromInt(1);
     // 仍需保持缩放的逻辑帧数。
-    uint32_t m_remainingFrames = 0;
+    uint32_t remainingFrames = 0;
     // 房间 KO 曲线独立于外部指定的定长慢放。
-    room::KoSlowMotion m_ko;
-    MG_REFLECT(SlowMotion, m_scale, m_remainingFrames, m_ko)
-};
-// 一条表现事件的最小记录；载荷在表现切片补全。
-struct PresentationEvent
-{
-    // 事件产生的帧号。
-    uint64_t m_frame = 0;
-    // 帧内序号，每帧从 0 开始（R17）。
-    uint32_t m_ordinal = 0;
-    // 相关实体。
-    Entity m_entity;
-    MG_REFLECT(PresentationEvent, m_frame, m_ordinal, m_entity)
-};
-// 表现事件缓冲，保留到下一帧 ClockSystem 才清空，供表现层取走。
-struct PresentationEvents
-{
-    // 上一帧产生的表现事件。
-    std::vector<PresentationEvent> m_events;
-    MG_REFLECT(PresentationEvents, m_events)
+    room::KoSlowMotion ko;
+    MG_REFLECT(SlowMotion, scale, remainingFrames, ko)
 };
 // 玩家槽位到角色实体的确定性映射。
 struct PlayerSlots
 {
     // 按玩家槽位保存其控制的实体句柄。
-    std::map<uint32_t, Entity> m_entities;
-    MG_REFLECT(PlayerSlots, m_entities)
+    std::map<uint32_t, Entity> entities;
+    MG_REFLECT(PlayerSlots, entities)
 };
-// 房间级状态（移植旧实现 sim_legacy/Singletons.h 的 RoomState，含状态机、波次、复活与结算）。
+// 房间级状态（含房间状态机、波次、复活与胜负结算）。
 struct RoomState
 {
     // 当前房间标识。
-    int32_t m_roomId = 0;
+    int32_t roomId = 0;
     // 是否启用房间流程。
-    bool m_enabled = false;
+    bool enabled = false;
     // 是否暂停推进世界。
-    bool m_paused = false;
+    bool paused = false;
     // 副本等级增幅（怪物等级加成）。
-    int32_t m_levelBonus = 0;
+    int32_t levelBonus = 0;
     // 是否已触发 KO（首波怪物清空后进入慢放结算）。
-    bool m_ko = false;
+    bool ko = false;
     // 是否已检测到 Boss 清空、等待下一帧真正启动 KO 慢放（对齐旧实现「房间导演先于碰撞」的一帧延迟）。
-    bool m_pendingKo = false;
+    bool pendingKo = false;
     // 房间是否包含 Boss（roleType 4）。
-    bool m_haveBoss = false;
+    bool haveBoss = false;
     // 房间类型（0 表示无 KO 慢放）。
-    int32_t m_roomType = 0;
+    int32_t roomType = 0;
     // 战斗规则类型（< 2 时才触发 KO 慢放）。
-    int32_t m_battleRuleType = 0;
+    int32_t battleRuleType = 0;
     // 本场房间配置（波次、限时、掉落率等运行时读取）。
-    conf::RoomConfig m_config;
+    conf::RoomConfig config;
     // 当前状态与去重的待切换队列。
-    mugen::RoomState m_state = mugen::RoomState::None;
-    std::vector<mugen::RoomState> m_pending;
-    std::vector<mugen::RoomState> m_recorded;
+    mugen::RoomState state = mugen::RoomState::None;
+    std::vector<mugen::RoomState> pending;
+    std::vector<mugen::RoomState> recorded;
     // 状态等待毫秒、战斗经过秒数与限时。
-    Fixed m_waitMs;
-    Fixed m_gameSeconds;
-    Fixed m_limitSeconds;
+    Fixed waitMs;
+    Fixed gameSeconds;
+    Fixed limitSeconds;
     // 当前波次下标、波次倒计时毫秒与到期标记。
-    int32_t m_wave = 0;
-    Fixed m_waveTimerMs;
-    bool m_waveReady = false;
+    int32_t wave = 0;
+    Fixed waveTimerMs;
+    bool waveReady = false;
     // 复活预算。
-    int32_t m_maxRevives = 0;
-    int32_t m_usedRevives = 0;
+    int32_t maxRevives = 0;
+    int32_t usedRevives = 0;
     // 等待复活标记。
-    bool m_reviving = false;
+    bool reviving = false;
     // 最终结果与返回城镇请求。
-    bool m_victory = false;
-    bool m_failure = false;
-    bool m_returnToTown = false;
+    bool victory = false;
+    bool failure = false;
+    bool returnToTown = false;
     // 已清理房间不重复生成敌人。
-    std::vector<int32_t> m_clearedRooms;
+    std::vector<int32_t> clearedRooms;
     // 供场景逻辑消费的角色死亡事件，保留发生顺序。
-    std::vector<Entity> m_roleDeaths;
+    std::vector<Entity> roleDeaths;
     // 房间切换请求延迟到帧末，避免使遍历句柄失效。
-    int32_t m_transferRoom = 0;
-    int32_t m_transferToward = 1;
-    FixedVec3 m_transferPosition;
+    int32_t transferRoom = 0;
+    int32_t transferToward = 1;
+    FixedVec3 transferPosition;
     // 进入房间时使用的关卡与副本标识。
-    int32_t m_stageId = 0;
-    int32_t m_copyId = 0;
+    int32_t stageId = 0;
+    int32_t copyId = 0;
     // 是否为 PVP 决斗（进入房间时由 WorldSetup 写入；本切片仅保留字段）。
-    bool m_pvp = false;
-    Fixed m_pvpTimeLimit;
-    int32_t m_winnerCamp = 0;
-    MG_REFLECT(RoomState, m_roomId, m_enabled, m_paused, m_levelBonus, m_ko, m_pendingKo, m_haveBoss, m_roomType,
-               m_battleRuleType, m_config, m_state, m_pending, m_recorded, m_waitMs, m_gameSeconds, m_limitSeconds,
-               m_wave, m_waveTimerMs, m_waveReady, m_maxRevives, m_usedRevives, m_reviving, m_victory, m_failure,
-               m_returnToTown, m_clearedRooms, m_roleDeaths, m_transferRoom, m_transferToward, m_transferPosition,
-               m_stageId, m_copyId, m_pvp, m_pvpTimeLimit, m_winnerCamp)
+    bool pvp = false;
+    Fixed pvpTimeLimit;
+    int32_t winnerCamp = 0;
+    MG_REFLECT(RoomState, roomId, enabled, paused, levelBonus, ko, pendingKo, haveBoss, roomType,
+               battleRuleType, config, state, pending, recorded, waitMs, gameSeconds, limitSeconds,
+               wave, waveTimerMs, waveReady, maxRevives, usedRevives, reviving, victory, failure,
+               returnToTown, clearedRooms, roleDeaths, transferRoom, transferToward, transferPosition,
+               stageId, copyId, pvp, pvpTimeLimit, winnerCamp)
 };
 // 生成登记表：各配置的 ordinal 计数（语义键 role:<configId>#<n>）。
 struct SpawnRegistry
 {
     // 配置标识 -> 已生成数量。
-    std::map<int32_t, uint32_t> m_ordinalCounts;
+    std::map<int32_t, uint32_t> ordinalCounts;
     // 取并递增指定配置的下一个 ordinal（从 1 起）。
     uint32_t next(int32_t configId)
     {
-        return ++m_ordinalCounts[configId];
+        return ++ordinalCounts[configId];
     }
-    MG_REFLECT(SpawnRegistry, m_ordinalCounts)
+    MG_REFLECT(SpawnRegistry, ordinalCounts)
 };
 // 一条延迟动作（B2 仅顿帧延迟）。
 struct ScheduledAction
 {
     // 唯一标识。
-    uint64_t m_id = 0;
+    uint64_t id = 0;
     // 所属实体（销毁时一并取消）。
-    Entity m_owner;
+    Entity owner;
     // 到期剩余毫秒。
-    Fixed m_dueMs;
+    Fixed dueMs;
     // 登记序号（到期时间相同时按序号稳定排序）。
-    uint64_t m_seq = 0;
+    uint64_t seq = 0;
     // 顿帧延迟：到期时写入受击者的顿帧时长。
-    Fixed m_freezeMs;
-    MG_REFLECT(ScheduledAction, m_id, m_owner, m_dueMs, m_seq, m_freezeMs)
+    Fixed freezeMs;
+    MG_REFLECT(ScheduledAction, id, owner, dueMs, seq, freezeMs)
 };
 // 有序延迟动作表（取代旧 LogicTimers 的受击顿帧延迟）。
 struct ScheduledActions
 {
     // 按登记顺序保存的活动动作。
-    std::vector<ScheduledAction> m_actions;
+    std::vector<ScheduledAction> actions;
     // 下一个动作标识。
-    uint64_t m_nextId = 1;
+    uint64_t nextId = 1;
     // 下一个登记序号。
-    uint64_t m_nextSeq = 0;
+    uint64_t nextSeq = 0;
     // 登记顿帧延迟并返回标识；到期后写受击者顿帧。
     uint64_t add(Entity owner, Fixed dueMs, Fixed freezeMs)
     {
-        m_actions.push_back({m_nextId, owner, dueMs, m_nextSeq++, freezeMs});
-        return m_nextId++;
+        actions.push_back({nextId, owner, dueMs, nextSeq++, freezeMs});
+        return nextId++;
     }
     // 按标识取消（新命中取消旧的待生效顿帧）。
     void cancel(uint64_t id)
     {
-        std::erase_if(m_actions, [id](const ScheduledAction& a) { return a.m_id == id; });
+        std::erase_if(actions, [id](const ScheduledAction& a) { return a.id == id; });
     }
     // 取消指定实体的全部动作。
     void cancelOwner(Entity owner)
     {
-        std::erase_if(m_actions, [owner](const ScheduledAction& a) { return a.m_owner == owner; });
+        std::erase_if(actions, [owner](const ScheduledAction& a) { return a.owner == owner; });
     }
-    MG_REFLECT(ScheduledActions, m_actions, m_nextId, m_nextSeq)
+    MG_REFLECT(ScheduledActions, actions, nextId, nextSeq)
 };
 }  // namespace mugen::sim
 

@@ -54,19 +54,11 @@ mugen_collect_sources(MUGEN_AVATAR_SOURCES
     "${MUGEN_DIR}/avatar/*.cpp"
     "${MUGEN_DIR}/avatar/*.c"
 )
-# 旧实现（冻结）。
-mugen_collect_sources(MUGEN_SIM_LEGACY_SOURCES
-    "${MUGEN_DIR}/sim_legacy/*.h"
-    "${MUGEN_DIR}/sim_legacy/*.hpp"
-    "${MUGEN_DIR}/sim_legacy/*.cpp"
-    "${MUGEN_DIR}/sim_legacy/*.c"
-)
-# 新 ECS 实现（见 Source/mugen/DESIGN.md）。
 mugen_collect_sources(MUGEN_SIM_SOURCES
     "${MUGEN_DIR}/sim/*.h"
     "${MUGEN_DIR}/sim/*.cpp"
 )
-# 效果摘要格式（附录 A）：解析、比对，两套 sim 都不依赖。
+# 效果摘要格式（附录 A）：解析、比对，不依赖 sim 实现。
 mugen_collect_sources(SUMMARY_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/summary/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/summary/*.cpp"
@@ -106,19 +98,9 @@ function(mugen_apply_compile_settings target_name)
     endif()
 endfunction()
 
-file(GLOB_RECURSE MUGEN_TEST_SOURCES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp"
-)
-
 mugen_collect_sources(MUGEN_SIM_TEST_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/sim_tests/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/sim_tests/*.cpp"
-)
-mugen_collect_sources(LEGACY_CLI_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/legacy_cli/*.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/legacy_cli/*.cpp"
 )
 mugen_collect_sources(SIM_CLI_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/sim_cli/*.h"
@@ -128,33 +110,6 @@ mugen_collect_sources(SIM_CLI_SOURCES
 # 公共部分只编译一次。用 OBJECT 库而不是静态库，避免链接器丢弃只靠静态初始化注册的目标文件。
 add_library(mugen_base OBJECT ${MUGEN_BASE_SOURCES} ${SUMMARY_SOURCES})
 mugen_apply_compile_settings(mugen_base)
-add_library(mugen_sim_legacy OBJECT ${MUGEN_SIM_LEGACY_SOURCES})
-mugen_apply_compile_settings(mugen_sim_legacy)
-
-# 旧实现测试与工具。任何二进制都不同时链接两套 sim。
-add_executable(mugen_tests
-    $<TARGET_OBJECTS:mugen_base>
-    $<TARGET_OBJECTS:mugen_sim_legacy>
-    ${MUGEN_TEST_SOURCES}
-    ${SUMMARY_TEST_SOURCES}
-    "${CMAKE_CURRENT_SOURCE_DIR}/support/ScenarioHarness.cpp"
-    "${DOCTEST_INCLUDE_DIR}/doctest.cpp"
-)
-target_include_directories(mugen_tests PRIVATE "${DOCTEST_INCLUDE_DIR}")
-mugen_apply_compile_settings(mugen_tests)
-
-add_executable(mugen_legacy_cli
-    $<TARGET_OBJECTS:mugen_base>
-    $<TARGET_OBJECTS:mugen_sim_legacy>
-    ${LEGACY_CLI_SOURCES}
-    "${CMAKE_CURRENT_SOURCE_DIR}/support/ScenarioHarness.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/legacy_cli_main.cpp"
-)
-mugen_apply_compile_settings(mugen_legacy_cli)
-
-# 新 sim 测试与工具（sim/ 有源码后才生成目标）。
-set(MUGEN_HEADLESS_TARGETS mugen_tests mugen_legacy_cli)
-if(MUGEN_SIM_SOURCES)
 add_library(mugen_sim OBJECT ${MUGEN_SIM_SOURCES})
 mugen_apply_compile_settings(mugen_sim)
 
@@ -174,8 +129,8 @@ add_executable(mugen_sim_cli
     ${SIM_CLI_SOURCES}
 )
 mugen_apply_compile_settings(mugen_sim_cli)
-list(APPEND MUGEN_HEADLESS_TARGETS mugen_sim_tests mugen_sim_cli)
-endif()
+
+set(MUGEN_HEADLESS_TARGETS mugen_sim_tests mugen_sim_cli)
 
 find_package(Threads REQUIRED)
 foreach(target IN LISTS MUGEN_HEADLESS_TARGETS)

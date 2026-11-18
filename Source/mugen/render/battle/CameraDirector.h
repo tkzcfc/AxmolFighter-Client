@@ -1,7 +1,9 @@
 #pragma once
 
 #include "mugen/core/StdC.h"
-#include "mugen/sim_legacy/World.h"
+#include "mugen/sim/World.h"
+#include "mugen/sim/present/PresentationEvent.h"
+#include "mugen/sim/view/WorldView.h"
 
 #ifdef RUNTIME_IN_AXMOL
 
@@ -14,8 +16,8 @@ class CameraDirector
 public:
     explicit CameraDirector(MapPresenter& map) : m_map(map) {}
 
-    void follow(sim_legacy::World& world, Entity entity);
-    void consume(const sim_legacy::PresentationEvent& event);
+    void follow(sim::World& world, Entity entity);
+    void consume(const sim::PresentationEvent& event);
     void update(float delta);
 
 private:

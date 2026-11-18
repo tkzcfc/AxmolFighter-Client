@@ -12,39 +12,39 @@ namespace mugen::sim
 // 系统 AnimationSystem：6.1 行，见 DESIGN.md §3.2。绑定 MotionPlayer 推进时间并写完成位（R10）。
 void runAnimation(World& world)
 {
-    const Fixed dtMs = world.ecs().singleton<WorldClock>().m_dtMs;
+    const Fixed dtMs = world.ecs().singleton<WorldClock>().dtMs;
     world.ecs().each<MotionStateComponent>([&](Entity entity, MotionStateComponent& motion) {
         if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
             return;
-        const auto& born = world.ecs().get<IdentityComponent>(entity).m_born;
-        if (born.m_frame == world.frame() && born.m_stage > SpawnStage::RoleTimeline)
+        const auto& born = world.ecs().get<IdentityComponent>(entity).born;
+        if (born.frame == world.frame() && born.stage > SpawnStage::RoleTimeline)
             return;
         if (const PauseComponent* pause = world.ecs().tryGet<PauseComponent>(entity))
-            if (pause->m_paused)
+            if (pause->paused)
                 return;
-        motion.m_completedThisFrame = false;
-        if (!motion.m_playing || motion.m_motionName.empty())
+        motion.completedThisFrame = false;
+        if (!motion.playing || motion.motionName.empty())
             return;
         const Fixed actionScale = world.ecs().has<StatsComponent>(entity)
                                       ? world.ecs().get<StatsComponent>(entity).finalStat(202)
                                       : Fixed::fromInt(1);
         MotionPlayer player;
-        if (!player.bind(motion.m_motionFile) || !player.play(motion.m_motionName, motion.m_entryId, motion.m_loop))
+        if (!player.bind(motion.motionFile) || !player.play(motion.motionName, motion.entryId, motion.loop))
         {
-            motion.m_timeMs += dtMs * motion.m_rate * actionScale;
+            motion.timeMs += dtMs * motion.rate * actionScale;
             return;
         }
         const Fixed duration = Fixed::fromInt(player.getDurationMs());
-        motion.m_timeMs += dtMs * motion.m_rate * actionScale;
+        motion.timeMs += dtMs * motion.rate * actionScale;
         if (duration > Fixed{})
         {
-            if (motion.m_timeMs >= duration && (motion.m_loop || motion.m_completedLoops == 0))
+            if (motion.timeMs >= duration && (motion.loop || motion.completedLoops == 0))
             {
-                motion.m_completedLoops += motion.m_loop ? motion.m_timeMs.raw / duration.raw : 1;
-                motion.m_completedThisFrame = true;
+                motion.completedLoops += motion.loop ? motion.timeMs.raw / duration.raw : 1;
+                motion.completedThisFrame = true;
             }
-            motion.m_timeMs = motion.m_loop ? Fixed::fromRaw(motion.m_timeMs.raw % duration.raw)
-                                            : std::min(motion.m_timeMs, duration);
+            motion.timeMs = motion.loop ? Fixed::fromRaw(motion.timeMs.raw % duration.raw)
+                                            : std::min(motion.timeMs, duration);
         }
     });
 }

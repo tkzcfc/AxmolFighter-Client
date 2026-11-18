@@ -17,7 +17,7 @@ struct SkillLeafState
     bool unlocked   = true;
 };
 
-// One editable loadout slot (subset of EnumSkillSlot used by heiyue skill config).
+// One editable loadout slot (subset of EnumSkillSlot exposed in skill configuration).
 struct SkillSlotBinding
 {
     mugen::EnumSkillSlot slot = mugen::EnumSkillSlot::None;
@@ -26,7 +26,7 @@ struct SkillSlotBinding
     int32_t skillId           = 0;
 };
 
-// Editable slots mirrored from heiyue UiSkillConfigNew3 NodeIcon / NodeRub / NodeBuff.
+// Editable slots for active, movement, buff, and combo skill bindings.
 inline constexpr SkillSlotBinding kEditableSlots[] = {
     {mugen::EnumSkillSlot::Attack, "Attack", 0, 0},
     {mugen::EnumSkillSlot::Sprint, "Sprint", 0, 0},

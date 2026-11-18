@@ -18,17 +18,17 @@ void runFollow(World& world)
             if (world.ecs().has<DespawningComponent>(entity) || world.ecs().has<InactiveComponent>(entity))
                 return;
             if (const PauseComponent* pause = world.ecs().tryGet<PauseComponent>(entity))
-                if (pause->m_paused)
+                if (pause->paused)
                     return;
             const auto& identity = world.ecs().get<IdentityComponent>(entity);
-            if (identity.m_born.m_frame == frame && identity.m_born.m_stage > SpawnStage::RoleTimeline)
+            if (identity.born.frame == frame && identity.born.stage > SpawnStage::RoleTimeline)
                 return;
-            if (follow.m_mode != 1 && follow.m_mode != 2)
+            if (follow.mode != 1 && follow.mode != 2)
                 return;
-            if (!world.ecs().alive(follow.m_target) || world.ecs().has<DespawningComponent>(follow.m_target) ||
-                !world.ecs().has<TransformComponent>(follow.m_target))
+            if (!world.ecs().alive(follow.target) || world.ecs().has<DespawningComponent>(follow.target) ||
+                !world.ecs().has<TransformComponent>(follow.target))
                 return;
-            effect::rules::placeFrom(world, entity, follow.m_target, follow.m_mode == 2);
+            effect::rules::placeFrom(world, entity, follow.target, follow.mode == 2);
         });
 }
 }  // namespace mugen::sim

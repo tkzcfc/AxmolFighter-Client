@@ -10,21 +10,21 @@ namespace mugen::sim
 inline WorldBox placeCombatBox(const DamageBox& box, const TransformComponent& transform, Fixed depthFull)
 {
     WorldBox result;
-    const Fixed sizeX  = Fixed::fromInt(box.size.x) * transform.m_scale;
-    const Fixed localX = Fixed::fromInt(box.pos.x) * transform.m_scale;
-    result.m_size.x    = sizeX;
-    result.m_pos.x     = transform.m_position.x + (transform.m_towardX == -1 ? -localX - sizeX : localX);
-    result.m_size.z    = Fixed::fromInt(box.size.z) * transform.m_scale;
-    result.m_pos.z     = transform.m_position.y + Fixed::fromInt(box.pos.z) * transform.m_scale;
+    const Fixed sizeX  = Fixed::fromInt(box.size.x) * transform.scale;
+    const Fixed localX = Fixed::fromInt(box.pos.x) * transform.scale;
+    result.size.x    = sizeX;
+    result.pos.x     = transform.position.x + (transform.towardX == -1 ? -localX - sizeX : localX);
+    result.size.z    = Fixed::fromInt(box.size.z) * transform.scale;
+    result.pos.z     = transform.position.y + Fixed::fromInt(box.pos.z) * transform.scale;
     if (depthFull > Fixed{})
     {
-        result.m_size.y = depthFull;
-        result.m_pos.y  = transform.m_position.z - depthFull * Fixed::ratio(1, 2);
+        result.size.y = depthFull;
+        result.pos.y  = transform.position.z - depthFull * Fixed::ratio(1, 2);
     }
     else
     {
-        result.m_size.y = Fixed::fromInt(box.size.y) * transform.m_scale;
-        result.m_pos.y  = transform.m_position.z + Fixed::fromInt(box.pos.y) * transform.m_scale;
+        result.size.y = Fixed::fromInt(box.size.y) * transform.scale;
+        result.pos.y  = transform.position.z + Fixed::fromInt(box.pos.y) * transform.scale;
     }
     return result;
 }
@@ -43,9 +43,9 @@ inline bool overlapStart(Fixed pos, Fixed size, Fixed otherPos, Fixed otherSize,
 inline bool worldBoxesOverlap(const WorldBox& first, const WorldBox& second, FixedVec3* point)
 {
     Fixed x0, x1, y0, y1, z0, z1;
-    if (!overlapStart(first.m_pos.x, first.m_size.x, second.m_pos.x, second.m_size.x, x0, x1) ||
-        !overlapStart(first.m_pos.y, first.m_size.y, second.m_pos.y, second.m_size.y, y0, y1) ||
-        !overlapStart(first.m_pos.z, first.m_size.z, second.m_pos.z, second.m_size.z, z0, z1))
+    if (!overlapStart(first.pos.x, first.size.x, second.pos.x, second.size.x, x0, x1) ||
+        !overlapStart(first.pos.y, first.size.y, second.pos.y, second.size.y, y0, y1) ||
+        !overlapStart(first.pos.z, first.size.z, second.pos.z, second.size.z, z0, z1))
         return false;
     if (point)
         *point = {(x0 + x1) * Fixed::ratio(1, 2), (z0 + z1) * Fixed::ratio(1, 2), (y0 + y1) * Fixed::ratio(1, 2)};

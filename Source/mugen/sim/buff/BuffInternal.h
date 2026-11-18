@@ -9,19 +9,19 @@ namespace mugen::sim::buff::detail
 struct Exec
 {
     // 世界。
-    World* m_world = nullptr;
+    World* world = nullptr;
     // Buff 持有者。
-    Entity m_self;
+    Entity self;
     // 当前实例序号。执行中可能被删，用序号回查。
-    uint32_t m_serial = 0;
+    uint32_t serial = 0;
     // 当前钩子位。
-    int32_t m_hook = 0;
+    int32_t hook = 0;
     // 这一次列表的寄存器。
-    Fixed m_reg;
+    Fixed reg;
     // 是否刚把门闩合上。
-    bool m_justLatched = false;
+    bool justLatched = false;
     // 来自特殊能力。
-    bool m_fromAbility = false;
+    bool fromAbility = false;
 };
 
 // 按序号查找实例。

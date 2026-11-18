@@ -7,8 +7,11 @@
 #include "AppContext.h"
 #include "core/event/EventDispatcher.h"
 #include "core/event/GameEvents.h"
-#include "mugen/sim_legacy/BattleBootstrap.h"
-#include "mugen/sim_legacy/role/RoleComponents.h"
+#include "mugen/sim/BattleBootstrap.h"
+#include "mugen/sim/input/FrameInput.h"
+#include "mugen/sim/present/PresentationEvent.h"
+#include "mugen/sim/view/HudView.h"
+#include "mugen/sim/view/WorldView.h"
 #include "ui/battle/LocalRoleUtils.h"
 #include "ui/widgets/pet/PetLocalState.h"
 #include "imgui.h"
@@ -18,25 +21,12 @@
 #include <iostream>
 #include <optional>
 #include <utility>
+#include <variant>
 
 namespace gameui
 {
 namespace
 {
-// 房间还有可进入的下一间时，清场只开门，不结算。
-bool roomHasNextRoom(const mugen::conf::RoomConfig& room)
-{
-    const size_t count = room.portalIds.size();
-    for (size_t i = 0; i < count; ++i)
-    {
-        if (room.portalIds[i] <= 0 || i >= room.portalDestRoomIds.size())
-            continue;
-        for (const int32_t dest : room.portalDestRoomIds[i])
-            if (dest > 0)
-                return true;
-    }
-    return false;
-}
 
 // 按房间查询默认关卡与副本，保持离线入口与无头回放使用同一初始化参数。
 std::pair<int32_t, int32_t> resolveStageAndCopy(int32_t roomId)
@@ -102,23 +92,18 @@ bool LocalBattleMode::init()
         return false;
     }
     const int32_t roleId         = m_roleId > 0 ? m_roleId : resolveLocalPlayerRoleId();
-    const auto characterClass    = mugen::type_conversions::toCharacterClass(roleId);
     const auto [stageId, copyId] = resolveStageAndCopy(m_roomId);
-    mugen::sim_legacy::WorldSetup setup;
-    setup.seed        = 1;
-    setup.mode        = mugen::sim_legacy::WorldMode::Battle;
-    setup.roomId      = m_roomId;
-    setup.mapKey      = room->mapKey;
-    setup.m_aiEnabled = true;
-    mugen::sim_legacy::PlayerSetup playerSetup;
-    playerSetup.m_slot   = 0;
-    playerSetup.m_roleId = roleId;
-    playerSetup.m_class  = characterClass;
-    playerSetup.m_level  = 1;
-    setup.m_players.push_back(playerSetup);
-    setup.m_stageId    = stageId;
-    setup.m_copyId     = copyId;
-    const auto players = mugen::sim_legacy::bootstrapBattle(m_world, setup);
+    mugen::sim::WorldSetup setup;
+    setup.seed      = 1;
+    setup.mode      = mugen::sim::WorldMode::Battle;
+    setup.roomId    = m_roomId;
+    setup.mapKey    = room->mapKey;
+    setup.aiEnabled = true;
+    mugen::sim::PlayerSetup playerSetup{.slot = 0, .roleId = roleId, .level = 1};
+    setup.players.push_back(playerSetup);
+    setup.stageId          = stageId;
+    setup.copyId           = copyId;
+    const auto players     = mugen::sim::bootstrapBattle(m_world, setup);
     if (players.empty())
         return false;
     const mugen::Entity player = players.front();
@@ -129,11 +114,11 @@ bool LocalBattleMode::init()
     m_presenter->presenter->loadMap(room->mapKey);
     m_presenter->presenter->setFollowEntity(player);
     m_presenter->presenter->setPet(resolveFollowPetId());
-    m_localPlayer       = player;
-    m_replay            = {};
-    m_replay.schemaHash = mugen::conf::configSchemaHash();
-    m_replay.setup      = setup;
-    m_initialized       = true;
+    m_localPlayer = player;
+    m_replay      = {};
+    m_replay.configSchemaHash = mugen::conf::configSchemaHash();
+    m_replay.setup = setup;
+    m_initialized  = true;
     subscribeAppearanceEvents();
     AXLOGI("LocalBattleMode: ready (room={})", m_roomId);
     return true;
@@ -147,29 +132,29 @@ void LocalBattleMode::onUpdate(float delta)
     uint32_t catchUp = 0;
     while (m_accumulator >= (1.0f / 30.0f) && catchUp < 4 && (!m_debugPaused || m_debugSingleStep))
     {
-        mugen::sim_legacy::FrameInput input;
-        input.frame          = m_world.ecs().singleton<mugen::sim_legacy::WorldClock>().frame + 1;
+        mugen::sim::FrameInput input;
+        input.frame          = mugen::sim::view::worldFrame(m_world) + 1;
         input.systemCommands = std::move(m_systemCommands);
         m_systemCommands.clear();
-        std::vector<mugen::sim_legacy::PlayerCommand> commands;
+        std::vector<mugen::sim::PlayerCommand> commands;
         m_control.advance(commands);
         if (!commands.empty())
             input.players.push_back({0, std::move(commands)});
         m_world.tick(input);
-        for (const auto& event : m_world.ecs().singleton<mugen::sim_legacy::PresentationEvents>().events)
+        for (const auto& event : mugen::sim::view::worldEvents(m_world))
         {
-            using namespace mugen::sim_legacy;
+            using namespace mugen::sim;
             if (std::holds_alternative<HurtNumber>(event.payload))
             {
-                const auto* identity = m_world.ecs().tryGet<RoleIdentity>(event.entity);
-                if (identity && identity->roleType != static_cast<int32_t>(mugen::EntityRoleType::kHero))
+                const auto info = mugen::sim::view::readEntityRoleInfo(m_world, event.entity);
+                if (info.valid && info.roleType != static_cast<int32_t>(mugen::EntityRoleType::kHero))
                     m_lastHurtTarget = event.entity;
             }
             else if (std::holds_alternative<Victory>(event.payload))
             {
                 m_roomMessage    = "Victory";
-                const auto& room = m_world.ecs().singleton<RoomState>();
-                if (!roomHasNextRoom(room.m_config))
+                const auto room = mugen::sim::view::readBattleRoom(m_world, m_localPlayer);
+                if (!room.hasNextRoom)
                     latchResult(true);
             }
             else if (std::holds_alternative<Failure>(event.payload))
@@ -179,7 +164,7 @@ void LocalBattleMode::onUpdate(float delta)
             }
             else if (const auto* warning = std::get_if<RoomWarning>(&event.payload))
             {
-                m_roomMessage = warning->m_boss ? "Boss incoming" : "Warning";
+                m_roomMessage = warning->boss ? "Boss incoming" : "Warning";
             }
             else if (const auto* tip = std::get_if<Tips>(&event.payload))
                 m_roomMessage = "Room tip: " + tip->text;
@@ -194,8 +179,7 @@ void LocalBattleMode::onUpdate(float delta)
         m_debugSingleStep = false;
     }
     m_presenter->presenter->present(m_world, m_accumulator * 30.0f, delta);
-    if (m_autotestFrames > 0 &&
-        m_world.ecs().singleton<mugen::sim_legacy::WorldClock>().frame >= static_cast<uint64_t>(m_autotestFrames))
+    if (m_autotestFrames > 0 && mugen::sim::view::worldFrame(m_world) >= static_cast<uint64_t>(m_autotestFrames))
     {
         const uint64_t hash = m_world.hash();
         AXLOGI("world hash {} {:016x}", m_autotestFrames, hash);
@@ -209,6 +193,7 @@ void LocalBattleMode::onExit()
 {
     if (!m_replayPath.empty() && !m_replay.frames.empty())
     {
+        m_replay.finalWorldHash = m_world.hash();
         std::string error;
         if (!m_replay.save(m_replayPath, error))
             AXLOGE("LocalBattleMode: replay save failed: {}", error);
@@ -223,18 +208,15 @@ void LocalBattleMode::latchResult(bool win)
 {
     if (m_result)
         return;
-    const auto& room = m_world.ecs().singleton<mugen::sim_legacy::RoomState>();
     DungeonBattleResult result;
-    result.win            = win;
-    result.copyId         = room.m_copyId;
+    result.win = win;
+    const auto room       = mugen::sim::view::readBattleRoom(m_world, m_localPlayer);
+    result.copyId         = room.copyId;
     result.roomId         = room.roomId;
-    const int64_t seconds = room.m_gameSeconds.toInt();
+    const int64_t seconds = room.gameSeconds.toInt();
     result.timeSec        = seconds > 0 ? static_cast<int32_t>(seconds) : 0;
-    if (const auto* hit = m_world.ecs().tryGet<mugen::sim_legacy::RoleHitState>(m_localPlayer))
-    {
-        result.maxCombo    = hit->m_maxCombo;
-        result.maxEvaluate = hit->m_maxEvaluate;
-    }
+    result.maxCombo       = room.maxCombo;
+    result.maxEvaluate    = room.maxEvaluate;
     m_result = result;
     // 同一帧不再继续推进，结算界面打开前战斗停住。
     m_debugPaused = true;
@@ -283,18 +265,18 @@ void LocalBattleMode::renderDebugPanel()
         m_debugPanel.render(m_world, m_debugPaused, m_debugSingleStep, collisionDebug);
         debugDraw.setEnabled(collisionDebug);
 
-        const auto& room = m_world.ecs().singleton<mugen::sim_legacy::RoomState>();
+        const auto room = mugen::sim::view::readBattleRoom(m_world, m_localPlayer);
         ImGui::Begin("Room");
         ImGui::TextUnformatted(m_roomMessage.c_str());
-        ImGui::Text("State %d", static_cast<int>(room.m_state));
-        ImGui::Text("Wave %d / %d", room.m_wave, static_cast<int>(room.m_config.battleRuleParam.size()));
-        ImGui::Text("Revives %d / %d", room.m_usedRevives, room.m_maxRevives);
-        if (room.m_state == mugen::RoomState::ReadySpine && room.m_pending.empty())
+        ImGui::Text("State %d", static_cast<int>(room.state));
+        ImGui::Text("Wave %d / %d", room.wave, room.totalWaves);
+        ImGui::Text("Revives %d / %d", room.usedRevives, room.maxRevives);
+        if (room.state == mugen::RoomState::ReadySpine && room.pendingEmpty)
             if (ImGui::Button("Continue"))
-                m_systemCommands.push_back(mugen::sim_legacy::RoomWarningDone{m_roomId});
-        ImGui::BeginDisabled(!room.m_reviving || room.m_failure);
+                m_systemCommands.push_back(mugen::sim::RoomWarningDone{m_roomId});
+        ImGui::BeginDisabled(!room.reviving || room.failure);
         if (ImGui::Button("Revive"))
-            m_systemCommands.push_back(mugen::sim_legacy::ReviveCommand{});
+            m_systemCommands.push_back(mugen::sim::ReviveCommand{});
         ImGui::EndDisabled();
         if (ImGui::Button("Back to town"))
             requestReturnToTown();
@@ -312,8 +294,8 @@ void LocalBattleMode::toggleCollisionDebug()
 
 void LocalBattleMode::setInput(uint32_t slot, bool pressed)
 {
-    if (slot < static_cast<uint32_t>(mugen::sim_legacy::ControlKey::Count))
-        m_control.setKey(static_cast<mugen::sim_legacy::ControlKey>(slot), pressed);
+    if (slot < static_cast<uint32_t>(mugen::sim::ControlKey::Count))
+        m_control.setKey(static_cast<mugen::sim::ControlKey>(slot), pressed);
 }
 
 }  // namespace gameui

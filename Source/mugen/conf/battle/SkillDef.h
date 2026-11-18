@@ -2,6 +2,9 @@
 
 #include "mugen/core/reflect/Reflect.h"
 
+#include <string>
+#include <variant>
+
 namespace mugen::conf::battle
 {
 // 技能施放配置，由 skill.lua 降级（见 DESIGN.md §6.1）。
@@ -38,6 +41,8 @@ struct SkillDef
     int32_t aiGate = 0;
     // 技能类型（type，槽位分类；-1 表示普通技能）。
     int32_t type = 0;
+    // 技能图标（数字资源 id 或路径字符串）。
+    std::variant<int32_t, std::string> icon;
 
     MG_REFLECT(SkillDef,
                id,
@@ -56,6 +61,7 @@ struct SkillDef
                sorder,
                sorderControl,
                aiGate,
-               type)
+               type,
+               icon)
 };
 }  // namespace mugen::conf::battle

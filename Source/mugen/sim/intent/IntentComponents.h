@@ -11,10 +11,10 @@ namespace mugen::sim
 struct PlayerControlComponent
 {
     // 玩家槽位。
-    uint32_t m_slot = 0;
+    uint32_t slot = 0;
     // 未消费的命令队列。
-    std::vector<PlayerCommand> m_commands;
-    MG_REFLECT(PlayerControlComponent, m_slot, m_commands)
+    std::vector<PlayerCommand> commands;
+    MG_REFLECT(PlayerControlComponent, slot, commands)
 };
 // 移动意图模式。
 enum class MoveMode : uint8_t
@@ -34,37 +34,37 @@ enum class MoveMode : uint8_t
 struct MoveIntent
 {
     // 移动模式。
-    MoveMode m_mode = MoveMode::None;
+    MoveMode mode = MoveMode::None;
     // 方向象限。
-    ControlQuadrant m_quadrant = ControlQuadrant::None;
+    ControlQuadrant quadrant = ControlQuadrant::None;
     // 方向角（1/1000 度）。
-    int32_t m_angle = 0;
+    int32_t angle = 0;
     // MoveTo 的目标位置。
-    FixedVec3 m_targetPos;
-    MG_REFLECT(MoveIntent, m_mode, m_quadrant, m_angle, m_targetPos)
+    FixedVec3 targetPos;
+    MG_REFLECT(MoveIntent, mode, quadrant, angle, targetPos)
 };
 // 单条按键意图。
 struct ButtonIntent
 {
     // 控制事件。
-    ControlEvent m_event = ControlEvent::CTR_NONE;
+    ControlEvent event = ControlEvent::CTR_NONE;
     // 按下类型。
-    int32_t m_pressType = 0;
+    int32_t pressType = 0;
     // 方向角（1/1000 度）。
-    int32_t m_angle = 0;
-    MG_REFLECT(ButtonIntent, m_event, m_pressType, m_angle)
+    int32_t angle = 0;
+    MG_REFLECT(ButtonIntent, event, pressType, angle)
 };
 // 意图组件：PlayerIntent/Ai 每帧重写，供 SkillRequest / RoleFsm / Locomotion 读取。
 struct IntentComponent
 {
     // 移动意图。
-    MoveIntent m_move;
+    MoveIntent move;
     // 按键意图（施法，B2 使用）。
-    std::vector<ButtonIntent> m_buttons;
+    std::vector<ButtonIntent> buttons;
     // 是否由 AI 自动施法。
-    bool m_autoCast = false;
+    bool autoCast = false;
     // 目标实体。
-    Entity m_target;
-    MG_REFLECT(IntentComponent, m_move, m_buttons, m_autoCast, m_target)
+    Entity target;
+    MG_REFLECT(IntentComponent, move, buttons, autoCast, target)
 };
 }  // namespace mugen::sim

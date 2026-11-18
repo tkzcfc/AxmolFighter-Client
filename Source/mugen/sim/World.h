@@ -15,14 +15,14 @@ namespace mugen::sim
 struct BuffDispatch
 {
     // 当前链深度。
-    int32_t m_depth = 0;
+    int32_t depth = 0;
     // 本条链已执行的（实例序号，触发点）。
-    std::vector<uint64_t> m_seen;
+    std::vector<uint64_t> seen;
 };
 // 世界使用的组件与单例 ECS 存储类型。
 using WorldECS = ECSManager<Components, Singletons>;
 // 新 sim 快照格式版本。
-inline constexpr uint32_t kWorldSnapshotVersion = 5;
+inline constexpr uint32_t kWorldSnapshotVersion = 8;
 // 持有单场战斗全部可变状态，并按 kSchedule 固定顺序推进一帧。
 class World
 {
@@ -40,7 +40,7 @@ public:
     // 对规范序列化的世界状态计算 xxh64 哈希。
     uint64_t hash() const;
     // 当前已推进的逻辑帧号。
-    uint64_t frame() const { return m_ecs.singleton<WorldClock>().m_frame; }
+    uint64_t frame() const { return m_ecs.singleton<WorldClock>().frame; }
     // 是否已经初始化。
     bool initialized() const { return m_initialized; }
     // 初始化时传入的配置。

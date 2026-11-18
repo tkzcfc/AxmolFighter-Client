@@ -25,52 +25,52 @@ namespace mugen::sim
 struct BornStamp
 {
     // 出生帧号。
-    uint64_t m_frame = 0;
+    uint64_t frame = 0;
     // 出生同步点。
-    SpawnStage m_stage = SpawnStage::RoleTimeline;
-    MG_REFLECT(BornStamp, m_frame, m_stage)
+    SpawnStage stage = SpawnStage::RoleTimeline;
+    MG_REFLECT(BornStamp, frame, stage)
 };
 // 实体的静态身份与阵营信息。
 struct IdentityComponent
 {
     // 实体种类。
-    SpawnKind m_kind = SpawnKind::Role;
+    SpawnKind kind = SpawnKind::Role;
     // 配置标识。
-    int32_t m_configId = 0;
+    int32_t configId = 0;
     // 所属阵营位。
-    int32_t m_camp = 2;
+    int32_t camp = 2;
     // 可敌对阵营的位掩码。
-    int32_t m_hostileMask = 0;
+    int32_t hostileMask = 0;
     // 角色类型标识。
-    int32_t m_roleType = 1;
+    int32_t roleType = 1;
     // 角色等级。
-    int32_t m_level = 1;
+    int32_t level = 1;
     // AI 难度等级（1-based；玩家与无 AI 实体为 1）。
-    int32_t m_aiDifficulty = 1;
+    int32_t aiDifficulty = 1;
     // 可选的控制玩家槽位。
-    std::optional<uint32_t> m_playerSlot;
+    std::optional<uint32_t> playerSlot;
     // 召唤归属句柄。
-    Entity m_owner;
+    Entity owner;
     // 召唤最终归属句柄。
-    Entity m_rootOwner;
+    Entity rootOwner;
     // 出生时间戳。
-    BornStamp m_born;
+    BornStamp born;
     // 同配置的生成序号（语义键 role:<configId>#<n>）。
-    uint32_t m_ordinal = 0;
-    MG_REFLECT(IdentityComponent, m_kind, m_configId, m_camp, m_hostileMask, m_roleType, m_level, m_aiDifficulty,
-               m_playerSlot, m_owner, m_rootOwner, m_born, m_ordinal)
+    uint32_t ordinal = 0;
+    MG_REFLECT(IdentityComponent, kind, configId, camp, hostileMask, roleType, level, aiDifficulty,
+               playerSlot, owner, rootOwner, born, ordinal)
 };
 // 标签组件：变身后休眠、跨房缓冲、房间挂起；所有系统遍历时跳过。
 struct InactiveComponent
 {
-    uint8_t m_tag = 0;
-    MG_REFLECT(InactiveComponent, m_tag)
+    uint8_t tag = 0;
+    MG_REFLECT(InactiveComponent, tag)
 };
 // 标签组件：本帧待回收（R4）；打上后本帧其余系统一律跳过，物理回收在 FlushSystem。
 struct DespawningComponent
 {
-    uint8_t m_tag = 0;
-    MG_REFLECT(DespawningComponent, m_tag)
+    uint8_t tag = 0;
+    MG_REFLECT(DespawningComponent, tag)
 };
 }  // namespace mugen::sim
 

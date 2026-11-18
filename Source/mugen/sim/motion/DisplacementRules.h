@@ -10,8 +10,8 @@ namespace displacement
 // 单轴积分后得到的位移和下一速度。
 struct AxisStep
 {
-    Fixed m_offset;
-    Fixed m_velocity;
+    Fixed offset;
+    Fixed velocity;
 };
 // 按加速度、速度时长和重力积分单轴运动（移植旧实现 displacement::integrate）。
 AxisStep integrate(Fixed time,
