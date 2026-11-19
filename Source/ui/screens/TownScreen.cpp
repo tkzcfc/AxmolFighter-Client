@@ -12,6 +12,7 @@
 #include "mugen/sim/input/FrameInput.h"
 #include "mugen/sim/view/WorldView.h"
 #include "resource/builtin/MapResource.h"
+#include "resource/builtin/SpineResource.h"
 #include "ui/battle/LocalRoleUtils.h"
 #include "ui/core/FeatureEntry.h"
 #include "mugen/render/spine/MgSkeletonAnimation.h"
@@ -77,6 +78,12 @@ void TownScreen::onPrepareLoad()
     else if (!layer.starts_with("/"))
         layer.insert(layer.begin(), '/');
     getResourceLoader().add<gameres::MapResource>(layer);
+    for (const int32_t portalId : town->portalIds)
+    {
+        const auto* portalRow = conf::Config::instance().find<conf::PortalConfig>(portalId);
+        if (portalRow && portalRow->resSpineId > 0)
+            getResourceLoader().add<gameres::SpineResource>(portalRow->resSpineId);
+    }
 }
 
 TownScreen::TownScreen()
@@ -575,11 +582,7 @@ void TownScreen::initPortals()
             const auto facing     = firstAt(town->portalDestVectorX, index);
             portal.destFacing     = facing != 0 ? facing : 1;
         }
-        auto* node = ax::Node::create();
-        node->setPosition(static_cast<float>(valueAt(town->portalPosX, index)),
-                          static_cast<float>(valueAt(town->portalPosZ, index)));
-        m_presenter->presenter->addMapNode(*node);
-        portal.node = node;
+        portal.entity = mugen::sim::view::spawnTownPortal(m_world, id, {portal.posX, Fixed{}, portal.posZ});
         m_portals.push_back(portal);
     }
 }

@@ -4,6 +4,7 @@
 #include "mugen/sim/BattleBootstrap.h"
 #include "mugen/sim/Systems.h"
 #include "mugen/sim/room/RoomRules.h"
+#include "mugen/sim/view/WorldView.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/TypeConversions.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
@@ -131,4 +132,61 @@ TEST_CASE("dungeon portal motion follows close, active, then transfer")
     CHECK(transferMotion.motionName == room::rules::portalMotion(*row, PortalPhase::Transfer));
     CHECK_FALSE(transferMotion.loop);
     CHECK(transferMotion.playing);
+}
+
+TEST_CASE("portal motion resolves integer spine animation names and loop flags")
+{
+    loadAssets();
+    const auto& config = conf::Config::instance();
+
+    const auto* portal101 = config.find<conf::PortalConfig>(101);
+    REQUIRE(portal101 != nullptr);
+    CHECK(room::rules::portalMotion(*portal101, PortalPhase::Close) == "38");
+    CHECK(room::rules::portalMotion(*portal101, PortalPhase::Active) == "2");
+    CHECK(room::rules::portalMotion(*portal101, PortalPhase::Transfer) == "2");
+    CHECK(room::rules::portalLoop(*portal101, PortalPhase::Active, true));
+    CHECK_FALSE(room::rules::portalLoop(*portal101, PortalPhase::Transfer, false));
+
+    const auto* portal200 = config.find<conf::PortalConfig>(200);
+    REQUIRE(portal200 != nullptr);
+    CHECK(room::rules::portalMotion(*portal200, PortalPhase::Active) == "stopleft");
+    CHECK_FALSE(room::rules::portalLoop(*portal200, PortalPhase::Active, true));
+}
+
+TEST_CASE("town portals spawn active with spine animation in world view")
+{
+    loadAssets();
+    const auto* town = conf::Config::instance().find<conf::TownConfig>(41);
+    REQUIRE(town != nullptr);
+
+    World world;
+    WorldSetup setup;
+    setup.seed   = 1;
+    setup.mode   = WorldMode::Town;
+    setup.roomId = town->id;
+    setup.mapKey = town->mapKey;
+    world.init(setup);
+
+    const Entity portal = view::spawnTownPortal(world, 106, {Fixed::fromInt(100), {}, Fixed::fromInt(100)});
+    REQUIRE(portal.value != 0);
+
+    for (int i = 0; i < 5; ++i)
+        world.tick(FrameInput{world.frame() + 1, {}, {}, {}});
+
+    std::vector<VisualEntityView> visuals;
+    view::collectVisualEntities(world, visuals);
+    bool found = false;
+    for (const auto& item : visuals)
+    {
+        if (item.entity == portal)
+        {
+            found = true;
+            CHECK(item.kind == VisualEntityKind::Portal);
+            CHECK(item.configId == 106);
+            CHECK(item.motionFile.empty());
+            CHECK(item.motionName == "7");
+            CHECK(item.loop);
+        }
+    }
+    CHECK(found);
 }

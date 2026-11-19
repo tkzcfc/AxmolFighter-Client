@@ -119,6 +119,8 @@ Entity spawnTownRole(World& world, int32_t roleId, int32_t level, const FixedVec
                      std::optional<uint32_t> playerSlot);
 // 立即生成城镇远端木偶并返回实体。
 Entity spawnTownPuppet(World& world, int64_t playerId, int32_t roleId, const FixedVec3& position, int32_t towardX);
+// 立即生成城镇常开传送门并返回实体（仅展示与位置，触发逻辑由城镇界面处理）。
+Entity spawnTownPortal(World& world, int32_t portalId, const FixedVec3& position);
 // 从玩家槽位移除并销毁城镇实体。
 void destroyTownEntity(World& world, Entity entity);
 // 读取城镇实体移动状态。

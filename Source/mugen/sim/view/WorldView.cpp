@@ -2,6 +2,7 @@
 
 #include "mugen/sim/World.h"
 #include "mugen/sim/life/EntityFactory.h"
+#include "mugen/sim/room/RoomRules.h"
 #include "mugen/sim/skill/SkillRules.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/GameDef.h"
@@ -437,6 +438,25 @@ Entity spawnTownPuppet(World& world, int64_t playerId, int32_t roleId, const Fix
 {
     static_cast<void>(playerId);
     return materializeTownRole(world, roleId, 1, position, towardX, std::nullopt);
+}
+
+// 立即生成城镇常开传送门并返回实体。
+Entity spawnTownPortal(World& world, int32_t portalId, const FixedVec3& position)
+{
+    const auto* row = conf::Config::instance().find<conf::PortalConfig>(portalId);
+    if (!row || portalId <= 0)
+        return {};
+    TransformComponent transform;
+    transform.position = position;
+    const Entity entity = room::rules::spawnPortal(world, portalId, transform, 0, 1, 0, {});
+    if (entity.value == 0)
+        return {};
+    world.ecs().get<PortalStateComponent>(entity).phase = PortalPhase::Active;
+    auto& motion      = world.ecs().get<MotionStateComponent>(entity);
+    motion.motionName = room::rules::portalMotion(*row, PortalPhase::Active);
+    motion.loop       = room::rules::portalLoop(*row, PortalPhase::Active, true);
+    motion.playing    = true;
+    return entity;
 }
 
 // 从玩家槽位移除并销毁城镇实体。

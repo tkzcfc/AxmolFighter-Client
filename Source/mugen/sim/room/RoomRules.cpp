@@ -38,12 +38,23 @@ std::string motionFile(int32_t resSpineId)
     const auto* spine = conf::Config::instance().find<conf::ResSpineConfig>(resSpineId);
     return spine ? AvatarPaths::motionFileFromSpine(spine->fileName) : std::string{};
 }
-// 读取传送门 Spine 动作名；非字符串或缺省视为空。
+// 读取传送门 Spine 动作名；支持字符串与整数（多数传送门骨架以数字命名动画）。
 std::string spineAnimationName(const std::variant<int32_t, std::string>& value)
 {
     if (const auto* name = std::get_if<std::string>(&value))
         return *name;
+    if (const auto* id = std::get_if<int32_t>(&value))
+        return std::to_string(*id);
     return {};
+}
+// 传送门阶段对应的配置数组下标（0=Transfer，1=Active，4=Close）。
+size_t portalPhaseIndex(PortalPhase phase)
+{
+    if (phase == PortalPhase::Transfer)
+        return 0;
+    if (phase == PortalPhase::Active)
+        return 1;
+    return 4;
 }
 // 推进传送门动作入口，强制表现层重播。
 void bumpPortalMotion(MotionStateComponent& motion, std::string name, bool loop)
@@ -326,10 +337,10 @@ Entity spawnPortal(World& world, int32_t id, const TransformComponent& transform
     if (!row || id <= 0)
         return {};
     const Entity entity = base(world, SpawnKind::Portal, id, transform, row->radius, row->resSpineId, false);
-    auto& motion        = world.ecs().get<MotionStateComponent>(entity);
+    auto& motion      = world.ecs().get<MotionStateComponent>(entity);
     motion.motionFile = {};
     motion.motionName = portalMotion(*row, PortalPhase::Close);
-    motion.loop       = true;
+    motion.loop       = portalLoop(*row, PortalPhase::Close, true);
     motion.playing    = true;
     motion.entryId    = "1";
     PortalStateComponent state;
@@ -387,18 +398,9 @@ void drop(World& world, Entity entity)
 // 传送门阶段 → Spine 动作名。
 std::string portalMotion(const conf::PortalConfig& row, PortalPhase phase)
 {
-    size_t index          = 4;
-    const char* fallback = "close";
-    if (phase == PortalPhase::Transfer)
-    {
-        index    = 0;
-        fallback = "transfer";
-    }
-    else if (phase == PortalPhase::Active)
-    {
-        index    = 1;
-        fallback = "active";
-    }
+    const size_t index   = portalPhaseIndex(phase);
+    const char* fallback = phase == PortalPhase::Transfer ? "transfer"
+                                                          : (phase == PortalPhase::Active ? "active" : "close");
     if (index < row.spineAnimations.size() && !row.spineAnimations[index].empty())
     {
         const std::string name = spineAnimationName(row.spineAnimations[index][0]);
@@ -408,17 +410,30 @@ std::string portalMotion(const conf::PortalConfig& row, PortalPhase phase)
     return fallback;
 }
 
+// 传送门阶段是否循环播放。
+bool portalLoop(const conf::PortalConfig& row, PortalPhase phase, bool defaultLoop)
+{
+    const size_t index = portalPhaseIndex(phase);
+    if (index < row.spineAnimations.size() && row.spineAnimations[index].size() >= 2)
+    {
+        if (const auto* flag = std::get_if<int32_t>(&row.spineAnimations[index][1]))
+            return *flag != 0;
+    }
+    return defaultLoop;
+}
+
 // 胜利后开放全部关闭状态的传送门。
 void openPortals(World& world)
 {
     world.ecs().each<PortalStateComponent>([&](Entity entity, PortalStateComponent& state) {
         if (state.phase != PortalPhase::Close)
             return;
-        state.phase = PortalPhase::Active;
+        state.phase     = PortalPhase::Active;
         const auto* row = conf::Config::instance().find<conf::PortalConfig>(state.configId);
         if (!row || !world.ecs().has<MotionStateComponent>(entity))
             return;
-        bumpPortalMotion(world.ecs().get<MotionStateComponent>(entity), portalMotion(*row, PortalPhase::Active), true);
+        bumpPortalMotion(world.ecs().get<MotionStateComponent>(entity), portalMotion(*row, PortalPhase::Active),
+                         portalLoop(*row, PortalPhase::Active, true));
     });
 }
 

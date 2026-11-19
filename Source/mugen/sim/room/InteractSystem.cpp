@@ -51,6 +51,8 @@ bool boxIntersects(const WorldBox& first, const WorldBox& second)
 // 系统 InteractSystem：8.3 行，见 DESIGN.md §3.2。
 void runInteract(World& world)
 {
+    if (world.setup().mode == WorldMode::Town)
+        return;
     // 推进抛射中的掉落物。
     world.ecs().each<GoodsStateComponent, TransformComponent>(
         [&](Entity entity, GoodsStateComponent& state, const TransformComponent&) {
@@ -145,9 +147,9 @@ void runInteract(World& world)
                             const auto* row = conf::Config::instance().find<conf::PortalConfig>(state.configId);
                             if (row && world.ecs().has<MotionStateComponent>(portal))
                             {
-                                auto& motion = world.ecs().get<MotionStateComponent>(portal);
+                                auto& motion      = world.ecs().get<MotionStateComponent>(portal);
                                 motion.motionName = room::rules::portalMotion(*row, PortalPhase::Transfer);
-                                motion.loop       = false;
+                                motion.loop       = room::rules::portalLoop(*row, PortalPhase::Transfer, false);
                                 motion.playing    = true;
                                 motion.timeMs     = {};
                                 int32_t id        = 0;

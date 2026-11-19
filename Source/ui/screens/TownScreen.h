@@ -74,7 +74,7 @@ private:
         int32_t destPosX   = 0;
         int32_t destPosZ   = 0;
         int32_t destFacing = 1;
-        ax::Node* node     = nullptr;
+        mugen::Entity entity;
         // 世界坐标与触发半径（来自 TownConfig.portalPosX/Z 与 PortalConfig.radius）。
         mugen::Fixed posX;
         mugen::Fixed posZ;

@@ -190,9 +190,13 @@ void AvatarPresenter::present(sim::World& world, float alpha, float renderDelta)
         {
             if (state.avatar)
                 state.avatar->setMotion(v.motionName, v.entryId, v.loop);
-            else if (!state.skeleton->setAnimation(0, v.motionName, v.loop))
-                MG_LOG_W("AvatarPresenter: spine animation '{}' not found for entity {}", v.motionName,
-                         v.entity.value);
+            else
+            {
+                state.skeleton->setSlotsToSetupPose();
+                if (!state.skeleton->setAnimation(0, v.motionName, v.loop))
+                    MG_LOG_W("AvatarPresenter: spine animation '{}' not found for entity {}", v.motionName,
+                             v.entity.value);
+            }
             state.motionName = v.motionName;
             state.entryId    = v.entryId;
             state.loop       = v.loop;

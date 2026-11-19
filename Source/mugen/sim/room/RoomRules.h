@@ -23,8 +23,10 @@ Entity spawnGoods(World& world, int32_t id, const TransformComponent& transform,
 // 生成单个传送门并返回实体。
 Entity spawnPortal(World& world, int32_t id, const TransformComponent& transform, int32_t destRoom, int32_t toward,
                    int32_t limit, const FixedVec3& destination);
-// 传送门阶段 → Spine 动作名；缺配置时回退 transfer/active/close。
+// 传送门阶段 → Spine 动作名；支持字符串与整数动作名，缺配置时回退 transfer/active/close。
 std::string portalMotion(const conf::PortalConfig& row, PortalPhase phase);
+// 传送门阶段是否循环播放；配置第 2 项为 0 时不循环，缺配置时返回 defaultLoop。
+bool portalLoop(const conf::PortalConfig& row, PortalPhase phase, bool defaultLoop);
 // 结算实体的死亡掉落（怪物药品与指定物品，移植旧实现 RoomDirector::drop）。
 void drop(World& world, Entity entity);
 // 胜利后开放全部关闭状态的传送门。
