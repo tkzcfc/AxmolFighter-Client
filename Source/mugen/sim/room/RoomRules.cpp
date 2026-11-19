@@ -8,6 +8,8 @@
 #include "mugen/conf/GameDef.h"
 #include "mugen/avatar/AvatarPaths.h"
 #include <array>
+#include <string>
+#include <variant>
 
 namespace mugen::sim
 {
@@ -35,6 +37,26 @@ std::string motionFile(int32_t resSpineId)
 {
     const auto* spine = conf::Config::instance().find<conf::ResSpineConfig>(resSpineId);
     return spine ? AvatarPaths::motionFileFromSpine(spine->fileName) : std::string{};
+}
+// 读取传送门 Spine 动作名；非字符串或缺省视为空。
+std::string spineAnimationName(const std::variant<int32_t, std::string>& value)
+{
+    if (const auto* name = std::get_if<std::string>(&value))
+        return *name;
+    return {};
+}
+// 推进传送门动作入口，强制表现层重播。
+void bumpPortalMotion(MotionStateComponent& motion, std::string name, bool loop)
+{
+    motion.motionName = std::move(name);
+    motion.loop       = loop;
+    motion.playing    = true;
+    motion.timeMs     = {};
+    int32_t id        = 0;
+    for (const char c : motion.entryId)
+        if (c >= '0' && c <= '9')
+            id = id * 10 + (c - '0');
+    motion.entryId = std::to_string(id + 1);
 }
 // 骨骼缩放。
 Fixed spineScale(int32_t resSpineId)
@@ -304,6 +326,12 @@ Entity spawnPortal(World& world, int32_t id, const TransformComponent& transform
     if (!row || id <= 0)
         return {};
     const Entity entity = base(world, SpawnKind::Portal, id, transform, row->radius, row->resSpineId, false);
+    auto& motion        = world.ecs().get<MotionStateComponent>(entity);
+    motion.motionFile = {};
+    motion.motionName = portalMotion(*row, PortalPhase::Close);
+    motion.loop       = true;
+    motion.playing    = true;
+    motion.entryId    = "1";
     PortalStateComponent state;
     state.configId    = id;
     state.roomId      = destRoom;
@@ -356,13 +384,73 @@ void drop(World& world, Entity entity)
     }
 }
 
+// 传送门阶段 → Spine 动作名。
+std::string portalMotion(const conf::PortalConfig& row, PortalPhase phase)
+{
+    size_t index          = 4;
+    const char* fallback = "close";
+    if (phase == PortalPhase::Transfer)
+    {
+        index    = 0;
+        fallback = "transfer";
+    }
+    else if (phase == PortalPhase::Active)
+    {
+        index    = 1;
+        fallback = "active";
+    }
+    if (index < row.spineAnimations.size() && !row.spineAnimations[index].empty())
+    {
+        const std::string name = spineAnimationName(row.spineAnimations[index][0]);
+        if (!name.empty())
+            return name;
+    }
+    return fallback;
+}
+
 // 胜利后开放全部关闭状态的传送门。
 void openPortals(World& world)
 {
-    world.ecs().each<PortalStateComponent>([&](Entity, PortalStateComponent& state) {
-        if (state.phase == PortalPhase::Close)
-            state.phase = PortalPhase::Active;
+    world.ecs().each<PortalStateComponent>([&](Entity entity, PortalStateComponent& state) {
+        if (state.phase != PortalPhase::Close)
+            return;
+        state.phase = PortalPhase::Active;
+        const auto* row = conf::Config::instance().find<conf::PortalConfig>(state.configId);
+        if (!row || !world.ecs().has<MotionStateComponent>(entity))
+            return;
+        bumpPortalMotion(world.ecs().get<MotionStateComponent>(entity), portalMotion(*row, PortalPhase::Active), true);
     });
+}
+
+// 复活全部已死亡玩家。
+void revivePlayers(World& world)
+{
+    for (const auto& [slot, entity] : world.ecs().singleton<PlayerSlots>().entities)
+    {
+        if (!world.ecs().has<RoleStateComponent>(entity))
+            continue;
+        auto& state = world.ecs().get<RoleStateComponent>(entity);
+        if (state.state != RoleStateId::Death)
+            continue;
+        auto& health = world.ecs().get<HealthComponent>(entity);
+        health.mp    = health.maxMp;
+        health.ep    = health.maxEp;
+        state.reviveRequested = true;
+        if (auto* book = world.ecs().tryGet<SkillBookComponent>(entity))
+            for (auto& entry : book->skills)
+            {
+                entry.cd           = {};
+                entry.timing       = false;
+                entry.releaseCount = entry.releaseMax;
+            }
+        if (auto* cast = world.ecs().tryGet<SkillCastComponent>(entity))
+        {
+            cast->skill     = kNoSkill;
+            cast->nextSkill = kNoSkill;
+            cast->switched  = false;
+        }
+        buff::rules::admit(world, entity, 202);
+    }
 }
 
 // 按生成请求装配房间实体（供 SpawnFlushSystem 在同步点调用）。

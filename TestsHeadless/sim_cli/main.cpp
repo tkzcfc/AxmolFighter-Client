@@ -26,7 +26,7 @@ using namespace mugen;
 using namespace mugen::sim;
 
 // 工具版本号。
-constexpr const char* kVersion = "mugen_sim_cli 1.0 (snapshot v8)";
+constexpr const char* kVersion = "mugen_sim_cli 1.0 (snapshot v9)";
 
 // 场景清单条目。
 struct ManifestEntry

@@ -2,9 +2,13 @@
 #include "mugen/sim/skill/TimelineRules.h"
 #include "mugen/sim/buff/BuffRules.h"
 #include "mugen/sim/motion/DisplacementRules.h"
+#include "mugen/sim/base/Rng.h"
+#include "mugen/sim/role/RoleState.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/GameDef.h"
 #include "mugen/conf/BattleConst.h"
+#include "mugen/conf/battle/AiDef.h"
+#include "mugen/conf/battle/RoleDef.h"
 #include <algorithm>
 #include <array>
 
@@ -213,10 +217,191 @@ void finishPartnerRageCast(World& world, Entity entity, const SkillBookComponent
     cue.param  = 1;
     world.ecs().singleton<EventQueue<CueEvent>>().push(cue);
 }
+
+// 目标是否可作为 SkillAi 对手：存活、有坐标、未回收。
+bool skillAiTargetValid(World& world, Entity self, Entity opp)
+{
+    if (opp.value == 0 || opp == self || !world.ecs().alive(opp))
+        return false;
+    if (world.ecs().has<DespawningComponent>(opp) || world.ecs().has<InactiveComponent>(opp))
+        return false;
+    if (world.ecs().tryGet<TransformComponent>(opp) == nullptr)
+        return false;
+    if (const auto* health = world.ecs().tryGet<HealthComponent>(opp))
+        if (health->dead || health->hp <= Fixed{})
+            return false;
+    return true;
+}
+
+// SkillAi 状态码：-1 恒真，1 受击，2 浮空，3 下落，4 倒地，5 起身，6 攻击。
+bool matchesStatus(World& world, Entity entity, int32_t code)
+{
+    if (code == -1)
+        return true;
+    const auto* state = world.ecs().tryGet<RoleStateComponent>(entity);
+    if (!state)
+        return false;
+    switch (code)
+    {
+    case 1:
+        return state->state == RoleStateId::Hit;
+    case 2:
+        return state->state == RoleStateId::HitUp;
+    case 3:
+        return state->state == RoleStateId::HitDown;
+    case 4:
+        return state->state == RoleStateId::HitFloor;
+    case 5:
+        return state->state == RoleStateId::Wake;
+    case 6:
+        return state->state == RoleStateId::Attack;
+    default:
+        return false;
+    }
+}
+
+// 求定点绝对值。
+Fixed absFixed(Fixed value)
+{
+    return value < Fixed{} ? -value : value;
+}
+
+// 检查自动施放闸门；未绑定配置时放行。
+bool checkSkillAi(World& world, Entity self, SkillRuntime& skill)
+{
+    if (skill.aiConfigId <= 0)
+        return true;
+    const auto* row = conf::Config::instance().find<conf::battle::SkillAiDef>(skill.aiConfigId);
+    if (!row)
+        return true;
+    if (skill.aiLoadCd > Fixed{})
+        return false;
+    if (skill.aiUseCount != -1 && skill.aiUseCount <= 0)
+        return false;
+    if (skill.aiCheckCd > Fixed{})
+        return false;
+
+    Entity opp;
+    if (const auto* intent = world.ecs().tryGet<IntentComponent>(self))
+        opp = intent->target;
+    const bool oppValid = skillAiTargetValid(world, self, opp);
+    const auto* selfPos = world.ecs().tryGet<TransformComponent>(self);
+    const auto* oppPos  = oppValid ? world.ecs().tryGet<TransformComponent>(opp) : nullptr;
+
+    const auto evalCond = [&](int32_t cond) -> bool {
+        switch (cond)
+        {
+        case 1:
+        {
+            if (!oppValid || !selfPos || !oppPos || row->oppDisX.size() < 2)
+                return false;
+            const Fixed ox = absFixed(oppPos->position.x - selfPos->position.x);
+            return Fixed::fromInt(row->oppDisX[0]) - skill.aiMoveDistanceFrame <= ox &&
+                   ox <= Fixed::fromInt(row->oppDisX[1]) + skill.aiMoveDistanceFrame;
+        }
+        case 2:
+        {
+            if (!oppValid || !selfPos || !oppPos || row->oppDisZ.size() < 2)
+                return false;
+            const Fixed oz = absFixed(oppPos->position.z - selfPos->position.z);
+            return Fixed::fromInt(row->oppDisZ[0]) - skill.aiMoveDistanceFrame <= oz &&
+                   oz <= Fixed::fromInt(row->oppDisZ[1]) + skill.aiMoveDistanceFrame;
+        }
+        case 3:
+            return oppValid && matchesStatus(world, opp, row->oppStatus);
+        case 4:
+        {
+            if (row->oppCombo == -1)
+                return true;
+            if (!oppValid)
+                return false;
+            const auto* oppState = world.ecs().tryGet<RoleStateComponent>(opp);
+            const auto* oppCast  = world.ecs().tryGet<SkillCastComponent>(opp);
+            const auto* oppBook  = world.ecs().tryGet<SkillBookComponent>(opp);
+            if (!oppState || !oppCast || !oppBook || oppState->state != RoleStateId::Attack ||
+                oppCast->skill < 0 || static_cast<size_t>(oppCast->skill) >= oppBook->skills.size())
+                return false;
+            return oppBook->skills[static_cast<size_t>(oppCast->skill)].step > 1;
+        }
+        case 5:
+        {
+            if (row->oppSkillId == -1)
+                return true;
+            if (!oppValid)
+                return false;
+            const auto* oppState = world.ecs().tryGet<RoleStateComponent>(opp);
+            const auto* oppCast  = world.ecs().tryGet<SkillCastComponent>(opp);
+            const auto* oppBook  = world.ecs().tryGet<SkillBookComponent>(opp);
+            if (!oppState || !oppCast || !oppBook || oppState->state != RoleStateId::Attack ||
+                oppCast->skill < 0 || static_cast<size_t>(oppCast->skill) >= oppBook->skills.size())
+                return false;
+            return oppBook->skills[static_cast<size_t>(oppCast->skill)].configId == row->oppSkillId;
+        }
+        case 6:
+        {
+            if (row->selfHp.size() < 2)
+                return false;
+            const auto* health = world.ecs().tryGet<HealthComponent>(self);
+            if (!health || health->maxHp <= Fixed{})
+                return false;
+            const Fixed per = Fixed::fromInt(100) * health->hp / health->maxHp;
+            return Fixed::fromInt(row->selfHp[0]) <= per && per <= Fixed::fromInt(row->selfHp[1]);
+        }
+        case 7:
+            return matchesStatus(world, self, row->selfStatus);
+        default:
+            return false;
+        }
+    };
+
+    for (const int32_t c : row->mustAll)
+        if (c != -1 && !evalCond(c))
+            return false;
+    if (!row->mustAny.empty())
+    {
+        bool any = false;
+        for (const int32_t c : row->mustAny)
+            if (c == -1 || evalCond(c))
+            {
+                any = true;
+                break;
+            }
+        if (!any)
+            return false;
+    }
+
+    skill.aiCheckCd = Fixed::fromInt(row->checkCd);
+    if (!(rng::draw(world, rng::DrawKind::SkillAiProb) < Fixed::fromInt(row->prob)))
+        return false;
+    if (skill.aiUseCount > 0)
+        --skill.aiUseCount;
+    return true;
+}
 }  // namespace
 
 namespace skill::rules
 {
+// 按 SkillAi 配置初始化技能运行数据的 AI 闸门字段。
+void initSkillAiRuntime(World& world, Entity entity, SkillRuntime& rt, int32_t aiId, bool useRunRate)
+{
+    const auto* aiRow = aiId > 0 ? conf::Config::instance().find<conf::battle::SkillAiDef>(aiId) : nullptr;
+    if (!aiRow)
+    {
+        rt.aiConfigId = -1;
+        return;
+    }
+    rt.aiConfigId = aiId;
+    rt.aiLoadCd   = Fixed::fromInt(aiRow->loadCd);
+    rt.aiCheckCd  = {};
+    rt.aiUseCount = aiRow->useCount;
+    const auto* identity = world.ecs().tryGet<IdentityComponent>(entity);
+    const auto* roleDef =
+        identity ? conf::Config::instance().find<conf::battle::RoleDef>(identity->configId) : nullptr;
+    const Fixed velocity = roleDef ? roleDef->velocity : Fixed{};
+    rt.aiMoveDistanceFrame =
+        velocity * (useRunRate ? conf::kRunRate : conf::kWalkRate) * kLogicDtMs;
+}
+
 // 控制事件 → 槽位名称（ATKA..ATKO → A..O，ATKQ → P，JOY → n+）。
 std::string eventSlot(ControlEvent event)
 {
@@ -358,6 +543,8 @@ void buildSkillBook(World& world, Entity entity, CharacterClass occupation)
             rt.coldMaxTime  = Fixed::fromInt(def->cdMs);
             rt.cd           = {};
             book.skills.push_back(rt);
+            if (rt.mode == 1 && def->aiGate > 0)
+                initSkillAiRuntime(world, entity, book.skills.back(), def->aiGate, true);
             ++step;
             id = def->next;
         }
@@ -411,7 +598,7 @@ int32_t getFightSkill(World& world, Entity entity, std::string_view input)
 }
 
 // 检查技能是否可施放。晶体消耗首批不做，不拦、不扣。
-bool isAllowCast(World& world, Entity entity, int32_t index)
+bool isAllowCast(World& world, Entity entity, int32_t index, bool autoCast)
 {
     auto& book  = world.ecs().get<SkillBookComponent>(entity);
     auto& skill = book.skills[static_cast<size_t>(index)];
@@ -443,6 +630,8 @@ bool isAllowCast(World& world, Entity entity, int32_t index)
         if (const auto* rage = world.ecs().tryGet<RageStateComponent>(entity);
             rage && (rage->transformed || cast.partnerRageRecoverPending || rage->rage < conf::kPartnerRageMaxAnger))
             return false;
+    if (autoCast && !checkSkillAi(world, entity, skill))
+        return false;
     return true;
 }
 
@@ -519,7 +708,7 @@ bool canCancel(World& world, Entity entity, int32_t next, int32_t current, bool 
 }
 
 // 按钮事件 → 槽位处理；A 键在跑动中改走冲刺槽。
-bool dealButton(World& world, Entity entity, ControlEvent event)
+bool dealButton(World& world, Entity entity, ControlEvent event, bool autoCast)
 {
     auto slot = eventSlot(event);
     if (slot.empty())
@@ -548,7 +737,7 @@ bool dealButton(World& world, Entity entity, ControlEvent event)
             prepare.target  = entity;
             prepare.skillId = book.skills[static_cast<size_t>(joy)].configId;
             buff::rules::fire(world, entity, conf::battle::TriggerPoint::BeforePrepareSkill, prepare);
-            if (!isAllowCast(world, entity, joy))
+            if (!isAllowCast(world, entity, joy, autoCast))
                 slot = "A";
         }
     }
@@ -564,8 +753,41 @@ bool dealButton(World& world, Entity entity, ControlEvent event)
     prepare.target  = entity;
     prepare.skillId = book.skills[static_cast<size_t>(next)].configId;
     buff::rules::fire(world, entity, conf::battle::TriggerPoint::BeforePrepareSkill, prepare);
-    if (!isAllowCast(world, entity, next))
+    if (!isAllowCast(world, entity, next, autoCast))
         return false;
+    return commitPreparedCast(world, entity, next);
+}
+
+// 解析槽位并预检下一招。
+int32_t prepareSlotCast(World& world, Entity entity, std::string_view baseSlot, bool autoCast)
+{
+    auto& cast = world.ecs().get<SkillCastComponent>(entity);
+    auto& book = world.ecs().get<SkillBookComponent>(entity);
+    std::string slot(baseSlot);
+    if (slot == "E" &&
+        (cast.crazy || (cast.skill != kNoSkill && slotOf(book, book.skills[static_cast<size_t>(cast.skill)]) == "E")))
+        return kNoSkill;
+    if (cast.crazy && hasNamedSlot(book, slot + '+'))
+        slot += '+';
+    const int32_t next = getFightSkill(world, entity, slot);
+    if (next == kNoSkill)
+        return kNoSkill;
+    BuffContext prepare;
+    prepare.target  = entity;
+    prepare.skillId = book.skills[static_cast<size_t>(next)].configId;
+    buff::rules::fire(world, entity, conf::battle::TriggerPoint::BeforePrepareSkill, prepare);
+    if (!isAllowCast(world, entity, next, autoCast))
+        return kNoSkill;
+    return next;
+}
+
+// 提交已预检的技能下标。
+bool commitPreparedCast(World& world, Entity entity, int32_t next)
+{
+    if (next == kNoSkill)
+        return false;
+    auto& cast = world.ecs().get<SkillCastComponent>(entity);
+    auto& book = world.ecs().get<SkillBookComponent>(entity);
     if (cast.skill == kNoSkill)
     {
         beginCast(world, entity, next);
@@ -573,15 +795,15 @@ bool dealButton(World& world, Entity entity, ControlEvent event)
     }
     const int32_t current = cast.skill;
     const auto& curSkill  = book.skills[static_cast<size_t>(current)];
-    const bool same       = slot == book.slots[static_cast<size_t>(curSkill.slot)];
+    const bool same       = book.skills[static_cast<size_t>(next)].slot == curSkill.slot;
     if (cast.allowInterrupt && isPriority(world, entity, next, current))
     {
         cast.nextSkill = next;
-        cast.switched    = true;
+        cast.switched  = true;
     }
     else
     {
-        if (same && slot == "F")
+        if (same && slotOf(book, curSkill) == "F")
             return false;
         cast.nextSkill = next;
     }

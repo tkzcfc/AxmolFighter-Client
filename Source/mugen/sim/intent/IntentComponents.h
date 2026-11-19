@@ -65,6 +65,8 @@ struct IntentComponent
     bool autoCast = false;
     // 目标实体。
     Entity target;
-    MG_REFLECT(IntentComponent, move, buttons, autoCast, target)
+    // 已预检的技能下标；-1 表示无预约。
+    int32_t presetSkillIndex = -1;
+    MG_REFLECT(IntentComponent, move, buttons, autoCast, target, presetSkillIndex)
 };
 }  // namespace mugen::sim

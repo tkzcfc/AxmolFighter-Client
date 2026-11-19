@@ -176,7 +176,8 @@ struct KeyByOrdinal
     X(battle_role, battle::RoleDef, KeyById)                 \
     X(battle_buff, battle::BuffDef, KeyById)                 \
     X(battle_ability, battle::AbilityDef, KeyById)           \
-    X(battle_ai, battle::AiDef, KeyById)
+    X(battle_ai, battle::AiDef, KeyById)                     \
+    X(battle_skill_ai, battle::SkillAiDef, KeyById)
 // clang-format on
 
 // 派生表：不读取 Lua，而是由转换器在读取全部源表后降级计算得出。
@@ -191,5 +192,6 @@ struct KeyByOrdinal
     X(battle_role, battle::RoleDef, KeyById)              \
     X(battle_buff, battle::BuffDef, KeyById)              \
     X(battle_ability, battle::AbilityDef, KeyById)        \
-    X(battle_ai, battle::AiDef, KeyById)
+    X(battle_ai, battle::AiDef, KeyById)                  \
+    X(battle_skill_ai, battle::SkillAiDef, KeyById)
 // clang-format on

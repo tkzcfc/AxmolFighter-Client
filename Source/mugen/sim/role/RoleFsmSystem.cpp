@@ -75,24 +75,26 @@ using role::rules::transition;
 // 播放受击族动作（除 Wake 外均不循环）。
 void playHitMotion(MotionStateComponent& motion, RoleStateId state)
 {
-    motion.motionName     = role::motionName(state);
-    motion.timeMs         = {};
-    motion.completedLoops = 0;
-    motion.loop           = false;
-    motion.rate           = state == RoleStateId::HitUp      ? conf::kHitUpScaleTime
-                              : state == RoleStateId::HitDown  ? conf::kHitDownScaleTime
-                              : state == RoleStateId::HitFloor ? conf::kHitFloorScaleTime
-                              : state == RoleStateId::GetUp    ? conf::kGetUpScaleTime
-                                                                : conf::kHitScaleTime;
-    motion.playing        = true;
+    motion.motionName         = role::motionName(state);
+    motion.timeMs             = {};
+    motion.completedLoops     = 0;
+    motion.completedThisFrame = false;
+    motion.entryId.clear();
+    motion.loop               = false;
+    motion.rate               = state == RoleStateId::HitUp      ? conf::kHitUpScaleTime
+                                  : state == RoleStateId::HitDown  ? conf::kHitDownScaleTime
+                                  : state == RoleStateId::HitFloor ? conf::kHitFloorScaleTime
+                                  : state == RoleStateId::GetUp    ? conf::kGetUpScaleTime
+                                                                    : conf::kHitScaleTime;
+    motion.playing            = true;
 }
 // 播放待机动作。
 using role::rules::playIdle;
-// 启动受击位移。Began 由 displacement::rules::set 发出。
+// 启动受击位移。Began 由 displacement::rules::set 发出；缺失位移行时回退为 -1 避免永久等制动。
 void setHitDisplacement(World& world, Entity entity, HitStateComponent& hit)
 {
-    if (hit.displacementId != -1)
-        displacement::rules::set(world, entity, hit.displacementId);
+    if (hit.displacementId != -1 && !displacement::rules::set(world, entity, hit.displacementId))
+        hit.displacementId = -1;
 }
 // 进入受击（首次受击 first=true 时重设受击计数）。位移标识由 Combat 已按角色覆盖规则解析好。
 void enterHit(World& world, Entity entity, RoleStateComponent& state, HitStateComponent& hit, MotionStateComponent& motion,
@@ -130,12 +132,14 @@ void enterDeath(World& world, Entity entity, RoleStateComponent& state, HitState
                 DisplacementComponent& disp, const IdentityComponent& identity, int32_t deathDisplacementId)
 {
     skill::rules::forceInterrupt(world, entity);
-    motion.motionName     = role::motionName(RoleStateId::Death);
-    motion.timeMs         = {};
-    motion.loop           = false;
-    motion.completedLoops = 0;
-    motion.playing        = true;
-    hit.animationEnd      = false;
+    motion.motionName         = role::motionName(RoleStateId::Death);
+    motion.timeMs             = {};
+    motion.loop               = false;
+    motion.completedLoops     = 0;
+    motion.completedThisFrame = false;
+    motion.entryId.clear();
+    motion.playing            = true;
+    hit.animationEnd          = false;
     hit.displacementEnd   = false;
     hit.pendingHitDefId   = 0;
     hit.displacementId    = deathDisplacementId;
@@ -277,13 +281,21 @@ void updateHitSwitch(World& world, Entity entity, RoleStateComponent& state, Hit
     transition(world, entity, state, RoleStateId::Idle);
     playIdle(motion);
 }
-// 浮空推进：动画完成且位移 air/lie 后转入下落。
+// 浮空推进：动画完成且位移 air/lie 后转入下落（两者到达先后不限）。
 void updateHitUp(World& world, Entity entity, RoleStateComponent& state, HitStateComponent& hit, MotionStateComponent& motion,
                  DisplacementComponent& disp, const IdentityComponent& identity, Fixed dtMs)
 {
     (void)identity;
     if (motion.completedThisFrame)
+    {
         hit.animationEnd = true;
+        if (hit.displacementEnd)
+        {
+            transition(world, entity, state, RoleStateId::HitDown);
+            enterHitAir(world, entity, state, hit, motion, RoleStateId::HitDown);
+            return;
+        }
+    }
     if ((disp.air || disp.lie) && !hit.displacementEnd)
     {
         hit.displacementEnd = true;
@@ -296,13 +308,21 @@ void updateHitUp(World& world, Entity entity, RoleStateComponent& state, HitStat
     }
     state.stateMs += dtMs;
 }
-// 下落推进：位移 lie 且动画完成后转入倒地。
+// 下落推进：位移 lie 且动画完成后转入倒地（两者到达先后不限）。
 void updateHitDown(World& world, Entity entity, RoleStateComponent& state, HitStateComponent& hit, MotionStateComponent& motion,
                    DisplacementComponent& disp, const IdentityComponent& identity, Fixed dtMs)
 {
     (void)identity;
     if (motion.completedThisFrame)
+    {
         hit.animationEnd = true;
+        if (hit.displacementEnd)
+        {
+            transition(world, entity, state, RoleStateId::HitFloor);
+            enterHitAir(world, entity, state, hit, motion, RoleStateId::HitFloor);
+            return;
+        }
+    }
     if (disp.lie && !hit.displacementEnd)
     {
         hit.displacementEnd = true;
@@ -434,7 +454,8 @@ void chaseHitGround(World& world, Entity entity, RoleStateComponent& state, HitS
         else if (data.hitType == 0)
             hit.displacementId = data.displacementId;
     }
-    displacement::rules::set(world, entity, hit.displacementId);
+    if (!displacement::rules::set(world, entity, hit.displacementId))
+        hit.displacementId = -1;
     if (toHitUp)
     {
         transition(world, entity, state, RoleStateId::HitUp);
@@ -450,7 +471,8 @@ void chaseAir(World& world, Entity entity, RoleStateComponent& state, HitStateCo
     hit.towardX         = hit.pendingTowardX;
     hit.pendingHitDefId = 0;
     hit.displacementId  = data.hitType == 0 ? data.airDisplacementId : data.displacementId;
-    displacement::rules::set(world, entity, hit.displacementId);
+    if (!displacement::rules::set(world, entity, hit.displacementId))
+        hit.displacementId = -1;
     if (data.hitType != 1)
         applyWeight(world, entity, hit, role, data.hitRigidity);
     const RoleStateId current = state.state;

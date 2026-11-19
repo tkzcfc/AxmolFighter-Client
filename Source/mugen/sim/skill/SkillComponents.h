@@ -36,8 +36,18 @@ struct SkillRuntime
     bool timing = false;
     // 是否已是不可续接的末段。
     bool finally = false;
+    // SkillAi 配置 id；-1 表示未绑定。
+    int32_t aiConfigId = -1;
+    // SkillAi 加载冷却剩余毫秒。
+    Fixed aiLoadCd;
+    // SkillAi 检查冷却剩余毫秒。
+    Fixed aiCheckCd;
+    // SkillAi 剩余可用次数；-1 表示不限。
+    int32_t aiUseCount = -1;
+    // 单帧移动距离，用于距离条件的容差。
+    Fixed aiMoveDistanceFrame;
     MG_REFLECT(SkillRuntime, slot, configId, step, stepCount, link, mode, cd, coldMaxTime, releaseCount,
-               releaseMax, timing, finally)
+               releaseMax, timing, finally, aiConfigId, aiLoadCd, aiCheckCd, aiUseCount, aiMoveDistanceFrame)
 };
 // 一条技能修正，按来源实例撤销。
 struct SkillMod

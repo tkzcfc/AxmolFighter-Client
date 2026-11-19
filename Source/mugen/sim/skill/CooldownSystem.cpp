@@ -18,6 +18,8 @@ void runCooldown(World& world)
             return;
         for (auto& skill : book.skills)
         {
+            skill.aiLoadCd  = std::max(Fixed{}, skill.aiLoadCd - dt);
+            skill.aiCheckCd = std::max(Fixed{}, skill.aiCheckCd - dt);
             if (!skill.timing)
                 continue;
             skill.cd = std::max(Fixed{}, skill.cd - dt);

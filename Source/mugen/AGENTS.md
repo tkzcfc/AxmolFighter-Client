@@ -13,15 +13,15 @@ Source/mugen/
     ecs/     ECSManager, entity handles, ComponentPool, singletons (data ECS; no System.h)
     io/ utils/ StdC.h MacroDefinition.h。io 只持有进程入口 set 的 VFS 指针（实现在 Source/3rd/vfs）；Content 挂在虚根 `/`，资源路径为 /mugen/...
   conf/      namespace mugen::conf. Reflected config tables and runtime Config.
-             config.bin packs 34 shared tables plus 9 conf::battle derived tables
-             (SkillDef, ClipDef, EffectClipDef, EffectDef, HitDef, RoleDef, BuffDef, AbilityDef, AiDef).
+             config.bin packs 34 shared tables plus 10 conf::battle derived tables
+             (SkillDef, ClipDef, EffectClipDef, EffectDef, HitDef, RoleDef, BuffDef, AbilityDef, AiDef, SkillAiDef).
              12 source-only battle tables live in AxmolFighter-Tools/config_converter/source/ (MG_SOURCE_TABLES).
   avatar/    MotionPlayer and avatar/data (.motion, .box, avatar.bin). No engine headers.
   render/    Client only. The whole tree is inside #ifdef RUNTIME_IN_AXMOL. Battle presenters live in render/battle/ (one class per .h/.cpp). Roles attach under the map entity layer.
-  sim/       namespace mugen::sim. Sole ECS battle and town simulation (DESIGN.md, slices S0–S8 all completed). kWorldSnapshotVersion = 8; .mgrp replay v5.
+  sim/       namespace mugen::sim. Sole ECS battle and town simulation (DESIGN.md, slices S0–S8 all completed). kWorldSnapshotVersion = 9; .mgrp replay v5.
 ```
 
-Headless targets (`AxmolFighter-Client/TestsHeadless`): `mugen_sim_tests` (350 unit tests covering core math/reflect/ECS, config/avatar, sim systems, buffs, skills, AI, rooms, combo, presentation/views/town, rollback/lockstep/net sync) and `mugen_sim_cli` (`run-summary`, `compare-summary`, `compare-scenario`, `run-ai-room`). Golden regression baselines in `TestsHeadless/data/golden_summaries/` are compared with `mugen_sim_cli compare-scenario --all` (run from `TestsHeadless`; format in DESIGN.md appendix A).
+Headless targets (`AxmolFighter-Client/TestsHeadless`): `mugen_sim_tests` (354 unit tests covering core math/reflect/ECS, config/avatar, sim systems, buffs, skills, AI, rooms, combo, presentation/views/town, rollback/lockstep/net sync) and `mugen_sim_cli` (`run-summary`, `compare-summary`, `compare-scenario`, `run-ai-room`). Golden regression baselines in `TestsHeadless/data/golden_summaries/` are compared with `mugen_sim_cli compare-scenario --all` (run from `TestsHeadless`; format in DESIGN.md appendix A).
 
 `render/` and `Source/ui/` are the only places that may include the engine. `avatar/` must not include engine or spine headers.
 
@@ -83,7 +83,7 @@ No compatibility shim. Interfaces can change. Do not null-check a value the type
 
 ## Config
 
-- `MG_CONFIG_TABLES` in `conf/ConfigTables.h` is the runtime table registry (shared tables + 9 `MG_DERIVED_TABLES` in `conf/battle/`). `MG_CONFIG_REFS` declares cross-table references among packed tables.
+- `MG_CONFIG_TABLES` in `conf/ConfigTables.h` is the runtime table registry (shared tables + 10 `MG_DERIVED_TABLES` in `conf/battle/`). `MG_CONFIG_REFS` declares cross-table references among packed tables.
 - 12 source-only battle tables (`skill`, `skill_hit`, `skill_ai`, `skill_change_system`, `action`, `action_effect`, `role`, `effect`, `ai`, `buff`, `buff_rule`, `special_ability`) are registered in `AxmolFighter-Tools/config_converter/source/SourceTables.h` (`MG_SOURCE_TABLES`, plus `SourceRefs.h` and `BuffRules.h`). Pack reads them for reference checking and lowering; they are not serialized into `config.bin`.
 - A C++ struct is the schema. The packer matches Lua fields both ways and reports the path of every mismatch.
 - `config.bin` starts with magic `MGCF`, a version, and a schema hash. A hash mismatch refuses to load. Derived `conf/battle::*Def` are packed into the same archive and participate in `schemaHash`.

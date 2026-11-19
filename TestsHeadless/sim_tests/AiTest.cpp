@@ -199,21 +199,42 @@ TEST_CASE("ai monster locks the player within sight range")
 // 施法意图：已警戒、有目标且技能就绪时写入按键。
 TEST_CASE("ai monster writes cast intent when alerted and skill ready")
 {
-    World world       = makeAiWorld();
+    World world          = makeAiWorld();
+    const Entity hero    = roleByConfig(world, 101);
     const Entity monster = findMonster(world);
+    REQUIRE(hero.value != 0);
     REQUIRE(monster.value != 0);
     ai::rules::ensureBrain(world, monster, 1);
 
     auto& brain = world.ecs().get<AiBrainComponent>(monster);
-    brain.alerted   = true;
-    brain.target    = roleByConfig(world, 101);
-    // 清空施放间隔，保证 SkillReady 成立。
-    brain.skillIntervalMs = {Fixed{}};
+    brain.alerted = true;
+    brain.target  = hero;
+    for (auto& interval : brain.skillIntervalMs)
+        interval = {};
+    if (brain.skillIntervalMs.empty())
+        brain.skillIntervalMs.push_back({});
+    DrawPolicy policy;
+    world.setDrawPolicy(&policy);
+    auto& book = world.ecs().get<SkillBookComponent>(monster);
+    REQUIRE_FALSE(book.skills.empty());
+    for (auto& skill : book.skills)
+    {
+        skill.aiLoadCd  = {};
+        skill.aiCheckCd = {};
+    }
+    int32_t distX = 80;
+    if (book.skills[0].aiConfigId > 0)
+        if (const auto* gate = conf::Config::instance().find<conf::battle::SkillAiDef>(book.skills[0].aiConfigId);
+            gate && gate->oppDisX.size() >= 2)
+            distX = std::max(1, (gate->oppDisX[0] + gate->oppDisX[1]) / 2);
+    const FixedVec3 mpos = world.ecs().get<TransformComponent>(monster).position;
+    world.ecs().get<TransformComponent>(hero).position = mpos;
+    world.ecs().get<TransformComponent>(hero).position.x += Fixed::fromInt(distX);
     auto& intent = world.ecs().get<IntentComponent>(monster);
     intent.buttons.clear();
 
     ai::rules::updateAgent(world, monster);
-    CHECK_FALSE(intent.buttons.empty());  // 写入了施法按键
+    CHECK(intent.presetSkillIndex >= 0);
     CHECK(intent.autoCast);
 }
 
@@ -256,7 +277,7 @@ TEST_CASE("ai smoke: room 2010101 monsters act without assertion")
                                                                 const IntentComponent& intent) {
             if (brain.alerted)
                 moved = true;
-            if (!intent.buttons.empty())
+            if (intent.presetSkillIndex >= 0 || !intent.buttons.empty())
                 cast = true;
         });
     }

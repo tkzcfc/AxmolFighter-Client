@@ -2,7 +2,9 @@
 #include "mugen/sim/room/RoomComponents.h"
 #include "mugen/sim/motion/MotionComponents.h"
 #include "mugen/conf/tables/MapTables.h"
+#include "mugen/conf/tables/EntityTables.h"
 #include "mugen/sim/base/SpawnStage.h"
+#include <string>
 
 namespace mugen::sim
 {
@@ -21,10 +23,14 @@ Entity spawnGoods(World& world, int32_t id, const TransformComponent& transform,
 // 生成单个传送门并返回实体。
 Entity spawnPortal(World& world, int32_t id, const TransformComponent& transform, int32_t destRoom, int32_t toward,
                    int32_t limit, const FixedVec3& destination);
+// 传送门阶段 → Spine 动作名；缺配置时回退 transfer/active/close。
+std::string portalMotion(const conf::PortalConfig& row, PortalPhase phase);
 // 结算实体的死亡掉落（怪物药品与指定物品，移植旧实现 RoomDirector::drop）。
 void drop(World& world, Entity entity);
 // 胜利后开放全部关闭状态的传送门。
 void openPortals(World& world);
+// 复活全部已死亡玩家：回满 MP/EP、清 CD、挂无敌 Buff，并置复活请求位。
+void revivePlayers(World& world);
 // 按生成请求装配房间实体（物品/障碍/传送门），由 SpawnFlushSystem 在同步点调用。
 Entity materialize(World& world, const SpawnRequest& request, SpawnStage stage);
 }  // namespace room::rules

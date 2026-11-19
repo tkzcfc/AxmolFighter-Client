@@ -3,6 +3,7 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/base/Rng.h"
 #include "mugen/sim/role/RoleState.h"
+#include "mugen/sim/skill/SkillRules.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/GameDef.h"
 #include "mugen/conf/BattleConst.h"
@@ -73,14 +74,6 @@ bool skillReady(const std::vector<Fixed>& intervals, const conf::battle::AiDef* 
         if ((values.empty() ? row->skillInterval : values.front()) <= 0)
             return true;
     return false;
-}
-// 巡逻、追击和游走对应条件表中的移动行。
-int8_t ruleIndex(AiAction action)
-{
-    for (size_t index = 0; index < kMonsterRules.size(); ++index)
-        if (kMonsterRules[index].action == action)
-            return static_cast<int8_t>(index);
-    return -1;
 }
 // 动作是否属于移动类（追击 / 巡逻 / 游走）。
 bool isMoveAction(AiAction action)
@@ -245,8 +238,7 @@ AiFacts gather(World& world, Entity self, const AiBrainComponent& brain, const c
     facts.targetInSight      = sightTarget(world, self, brain, row) != self;
     facts.targetOutsideChase = facts.hasTarget && outsideChase(world, self, brain.target, row);
     facts.skillReady         = current != kNoSkill || skillReady(brain.skillIntervalMs, &row);
-    // 只有角色仍在移动状态时，移动规则才继续占据决策；施法/待机时恢复完整规则匹配。
-    facts.movingRule         = role::isMoveState(state.state) ? brain.movingRule : -1;
+    facts.movingRule         = canAct(world, self) ? brain.movingRule : static_cast<int8_t>(-1);
     facts.lastAction         = facts.movingRule >= 0 ? AiAction::Idle : brain.lastAction;
     facts.hpPercent          = hpPercent(health);
     facts.inAttack           = state.state == RoleStateId::Attack;
@@ -274,29 +266,51 @@ void writeMoveIntent(World& world, Entity self, FixedVec3 to)
     intent.move.quadrant = dx >= Fixed{} ? (dz >= Fixed{} ? ControlQuadrant::UpRight : ControlQuadrant::DownRight)
                                              : (dz >= Fixed{} ? ControlQuadrant::UpLeft : ControlQuadrant::DownLeft);
     const Fixed deg = FixedMath::atan2Deg(absValue(dz), absValue(dx));
-    intent.move.angle = (deg * Fixed::fromInt(1000)).toInt();
+    intent.move.angle = static_cast<int32_t>((deg * Fixed::fromInt(1000)).toInt());
 }
-// 写入一条施法按键意图（按下类型 1），并标记为自动施法。
-void writeCastIntent(World& world, Entity self, ControlEvent event)
+// 怪物普通技能槽名：S0、S1、…，避免与醒/待机槽冲突。
+std::string monsterSkillSlot(size_t index)
 {
-    auto& intent = world.ecs().get<IntentComponent>(self);
-    intent.buttons.push_back({event, 1, 0});
-    intent.autoCast = true;
+    return "S" + std::to_string(index);
 }
-// 通过按键通道请求醒/待机技能（otherSkillIds 分别落槽 H/I/J）。first 为醒技能，否则待机技能。
-bool castSpecial(World& world, Entity self, bool first, const conf::battle::AiDef& row)
+// 面向目标：仅改水平朝向。
+void faceTarget(World& world, Entity self, Entity target)
+{
+    if (target.value == 0 || target == self)
+        return;
+    const auto* other = world.ecs().tryGet<TransformComponent>(target);
+    if (!other)
+        return;
+    auto& transform = world.ecs().get<TransformComponent>(self);
+    const Fixed dx  = other->position.x - transform.position.x;
+    if (dx != Fixed{})
+    {
+        transform.towardX = dx > Fixed{} ? 1 : -1;
+        transform.vectorX = Fixed::fromInt(transform.towardX);
+    }
+}
+// 通过技能槽预约醒/待机技能。first 为醒技能，否则待机技能。
+bool castSpecial(World& world, Entity self, AiBrainComponent& brain, bool first, const conf::battle::AiDef& row)
 {
     if (!canAct(world, self))
         return false;
     if (!first && candidates(world, self).empty())
         return false;
     const size_t otherIndex = first ? 0 : 2;
-    if (otherIndex >= row.otherSkillIds.size())
-        return false;
     if (firstValue(row.otherSkillIds, otherIndex, -1) == -1)
         return false;
-    const auto event = static_cast<ControlEvent>(static_cast<int32_t>(ControlEvent::CTR_ATKH) + otherIndex);
-    writeCastIntent(world, self, event);
+    const int32_t next = skill::rules::prepareSlotCast(world, self, first ? "X" : "Z", !first);
+    if (next == kNoSkill)
+        return false;
+    world.ecs().get<IntentComponent>(self).presetSkillIndex = next;
+    if (first && brain.target == self)
+    {
+        const Entity spotted = sightTarget(world, self, brain, row);
+        if (spotted != self)
+            faceTarget(world, self, spotted);
+    }
+    else if (first || brain.target != self)
+        faceTarget(world, self, brain.target);
     return true;
 }
 // 普通槽按优先级降序、原索引升序检查，成功后重置同优先级间隔。
@@ -320,8 +334,13 @@ bool castBest(World& world, Entity self, AiBrainComponent& brain, const conf::ba
     {
         if (index >= row.skillIds.size() || firstValue(row.skillIds, index, -1) == -1)
             continue;
-        const auto event = static_cast<ControlEvent>(static_cast<int32_t>(ControlEvent::CTR_ATKA) + index);
-        writeCastIntent(world, self, event);
+        const int32_t next = skill::rules::prepareSlotCast(world, self, monsterSkillSlot(index), true);
+        if (next == kNoSkill)
+            continue;
+        auto& intent            = world.ecs().get<IntentComponent>(self);
+        intent.presetSkillIndex = next;
+        intent.autoCast         = true;
+        faceTarget(world, self, brain.target);
         const auto priority = firstValue(row.skillPriorityLevel, index, 1);
         for (size_t i = 0; i < row.skillPriorityLevel.size(); ++i)
             if (firstValue(row.skillPriorityLevel, i, 1) == priority)
@@ -334,60 +353,137 @@ bool castBest(World& world, Entity self, AiBrainComponent& brain, const conf::ba
     }
     return false;
 }
-// 巡逻和游走先抽 X 再抽 Z；追击不消耗随机流。
-bool move(World& world, Entity self, AiBrainComponent& brain, AiAction action, const conf::battle::AiDef& row)
+// 计算巡逻/追击/游走目标点。
+FixedVec3 calcMoveGoal(World& world, Entity self, Entity targetEntity, AiAction action, const conf::battle::AiDef& row)
 {
-    const bool patrol = action == AiAction::Patrol, chase = action == AiAction::Chase;
-    if (!chase && role::isMoveState(world.ecs().get<RoleStateComponent>(self).state))
-        return patrol;
-    if (!canAct(world, self))
-        return false;
+    const bool patrol = action == AiAction::Patrol;
+    const bool chase  = action == AiAction::Chase;
     const FixedVec3 selfPos = world.ecs().get<TransformComponent>(self).position;
     FixedVec3 center        = selfPos;
     if (!patrol)
     {
-        const auto* target = world.ecs().tryGet<TransformComponent>(brain.target);
+        const auto* target = world.ecs().tryGet<TransformComponent>(targetEntity);
         if (!target)
-            return false;
+            return selfPos;
         center = target->position;
     }
-    const auto& xs    = patrol ? row.patrolScopeX : row.chaseScopeX;
-    const auto& zs    = patrol ? row.patrolScopeZ : row.chaseScopeZ;
-    const Fixed x     = chase ? bound(xs, 1) : rng::drawF(world, rng::DrawKind::AiWander, bound(xs, 0), bound(xs, 1));
-    const Fixed z     = chase ? bound(zs, 1) : rng::drawF(world, rng::DrawKind::AiWander, bound(zs, 0), bound(zs, 1));
+    const auto& xs = patrol ? row.patrolScopeX : row.chaseScopeX;
+    const auto& zs = patrol ? row.patrolScopeZ : row.chaseScopeZ;
+    const Fixed x  = chase ? bound(xs, 1) : rng::drawF(world, rng::DrawKind::AiWander, bound(xs, 0), bound(xs, 1));
+    const Fixed z  = chase ? bound(zs, 1) : rng::drawF(world, rng::DrawKind::AiWander, bound(zs, 0), bound(zs, 1));
+    center.x += !patrol && center.x > selfPos.x ? -x : x;
+    center.z += !patrol && center.z > selfPos.z ? -z : z;
+    return calcPos(world, self, center);
+}
+// 目标点是否落在地图可移动区域内。
+bool inMapMoveRange(World& world, FixedVec3 pos)
+{
+    const auto& map = world.ecs().singleton<MapRegion>();
+    if (map.moveRanges.empty())
+        return true;
+    for (const auto& range : map.moveRanges)
+        if (pos.x >= range.x && pos.x <= range.x + range.width && pos.z >= range.y &&
+            pos.z <= range.y + range.height)
+            return true;
+    return false;
+}
+// 抽取移动到达后的停留延迟。
+Fixed drawMoveDelay(World& world, AiAction action, const conf::battle::AiDef& row)
+{
+    const auto& delays = action == AiAction::Patrol ? row.patrolDelayTime
+                                                    : (action == AiAction::Chase ? row.chaseDelayTime : row.alertDelayTime);
+    if (delays.empty())
+        return {};
+    if (delays.size() == 1)
+        return Fixed::fromInt(delays[0]);
+    return rng::drawF(world, rng::DrawKind::AiWander, Fixed::fromInt(delays[0]), Fixed::fromInt(delays[1]));
+}
+// 单帧行走步长；速度为 0 时取 1，避免永远到不了。
+Fixed singleFrameWalkStep(World& world, Entity self)
+{
+    const Fixed dt       = world.ecs().singleton<WorldClock>().dtMs;
+    const auto& identity = world.ecs().get<IdentityComponent>(self);
+    const auto* role     = conf::Config::instance().find<conf::battle::RoleDef>(identity.configId);
+    Fixed step           = "1"_fx;
+    if (role)
+        step = role->velocity * conf::kWalkRate * dt;
+    if (step < "1"_fx)
+        step = "1"_fx;
+    return step;
+}
+// 推进移动或到达后的停留等待；仍在进行返回 true。
+bool stepMoveOrStay(World& world, Entity self, AiBrainComponent& brain, const conf::battle::AiDef& row)
+{
+    static_cast<void>(row);
+    const Fixed dt = world.ecs().singleton<WorldClock>().dtMs;
+    auto& intent   = world.ecs().get<IntentComponent>(self);
+    if (!brain.moveComplete)
+    {
+        const auto* disp = world.ecs().tryGet<DisplacementComponent>(self);
+        const bool hitWall = disp && disp->wall;
+        auto& transform    = world.ecs().get<TransformComponent>(self);
+        const Fixed dx     = brain.moveGoal.x - transform.position.x;
+        const Fixed dz     = brain.moveGoal.z - transform.position.z;
+        const Fixed step   = singleFrameWalkStep(world, self);
+        if (hitWall || (absValue(dx) <= step && absValue(dz) <= step))
+        {
+            transform.position.x = brain.moveGoal.x;
+            transform.position.z = brain.moveGoal.z;
+            brain.moveComplete   = true;
+            brain.moveWaitMs     = {};
+        }
+        else
+        {
+            writeMoveIntent(world, self, brain.moveGoal);
+            return true;
+        }
+    }
+    intent.move.mode     = MoveMode::Stop;
+    intent.move.quadrant = ControlQuadrant::None;
+    intent.move.angle    = 0;
+    if (brain.alerted && brain.target != self)
+        faceTarget(world, self, brain.target);
+    brain.moveWaitMs += dt;
+    return brain.moveWaitMs <= brain.moveDelayMs;
+}
+// 巡逻和游走先抽 X 再抽 Z；追击不消耗随机流。
+bool move(World& world, Entity self, AiBrainComponent& brain, AiAction action, const conf::battle::AiDef& row)
+{
+    if (action == AiAction::Wander && brain.movingRule >= 0)
+        return false;
+    if (!canAct(world, self))
+        return false;
+    const bool patrol = action == AiAction::Patrol;
+    const bool chase  = action == AiAction::Chase;
+    const FixedVec3 selfPos = world.ecs().get<TransformComponent>(self).position;
+    const auto& xs = patrol ? row.patrolScopeX : row.chaseScopeX;
+    const auto& zs = patrol ? row.patrolScopeZ : row.chaseScopeZ;
+    const Fixed x  = chase ? bound(xs, 1) : rng::drawF(world, rng::DrawKind::AiWander, bound(xs, 0), bound(xs, 1));
+    const Fixed z  = chase ? bound(zs, 1) : rng::drawF(world, rng::DrawKind::AiWander, bound(zs, 0), bound(zs, 1));
     const Fixed radius = world.ecs().has<HitboxesComponent>(self) ? world.ecs().get<HitboxesComponent>(self).radius
                                                                   : Fixed{};
     if (!chase && absValue(x) < radius && absValue(z) < radius)
         return false;
-    center.x += !patrol && center.x > selfPos.x ? -x : x;
-    center.z += !patrol && center.z > selfPos.z ? -z : z;
-    const FixedVec3 goal = calcPos(world, self, center);
-    brain.moveTarget   = goal;
-    writeMoveIntent(world, self, goal);
-    brain.movingRule = ruleIndex(action);
-    return true;
+    brain.moveDelayMs  = drawMoveDelay(world, action, row);
+    brain.moveWaitMs   = {};
+    brain.moveComplete = false;
+    brain.moveGoal     = calcMoveGoal(world, self, brain.target, action, row);
+    if (!inMapMoveRange(world, brain.moveGoal))
+        brain.moveComplete = true;
+    return stepMoveOrStay(world, self, brain, row);
 }
-// 延续既有移动：朝 moveTarget 续写移动意图；到达（近于一帧步长）则停下并返回 false。
-bool continueMove(World& world, Entity self, AiBrainComponent& brain)
+// 延续既有移动或停留等待。
+bool continueMove(World& world, Entity self, AiBrainComponent& brain, const conf::battle::AiDef& row)
 {
-    auto& ecs            = world.ecs();
-    const FixedVec3 pos  = ecs.get<TransformComponent>(self).position;
-    const FixedVec3 goal = brain.moveTarget;
-    const Fixed dx       = goal.x - pos.x, dz = goal.z - pos.z;
-    Fixed step           = ecs.singleton<WorldClock>().dtMs;
-    const auto& identity = ecs.get<IdentityComponent>(self);
-    if (const auto* role = conf::Config::instance().find<conf::battle::RoleDef>(identity.configId))
-        step = role->velocity * conf::kWalkRate * ecs.singleton<WorldClock>().dtMs;
-    if (absValue(dx) <= step && absValue(dz) <= step)
-    {
-        auto& intent        = ecs.get<IntentComponent>(self);
-        intent.move.mode     = MoveMode::Stop;
-        intent.move.quadrant = ControlQuadrant::None;
-        intent.move.angle    = 0;
+    if (!canAct(world, self))
         return false;
+    if (brain.movingRule == 5 && !brain.moveComplete)
+    {
+        brain.moveGoal = calcMoveGoal(world, self, brain.target, AiAction::Chase, row);
+        if (!inMapMoveRange(world, brain.moveGoal))
+            brain.moveComplete = true;
     }
-    writeMoveIntent(world, self, goal);
-    return true;
+    return stepMoveOrStay(world, self, brain, row);
 }
 // 执行命中规则的动作，返回动作是否真的启动。
 bool run(World& world, Entity self, AiBrainComponent& brain, AiAction action, const conf::battle::AiDef& row)
@@ -397,9 +493,9 @@ bool run(World& world, Entity self, AiBrainComponent& brain, AiAction action, co
     case AiAction::Idle:
         return false;
     case AiAction::CastWakeSkill:
-        return castSpecial(world, self, true, row);
+        return castSpecial(world, self, brain, true, row);
     case AiAction::CastIdleSkill:
-        return castSpecial(world, self, false, row);
+        return castSpecial(world, self, brain, false, row);
     case AiAction::CastBestSkill:
         return castBest(world, self, brain, row);
     case AiAction::Patrol:
@@ -506,16 +602,16 @@ bool matches(const AiRule& rule, const AiFacts& facts, World& world)
             return false;
     return true;
 }
-// 按配置展开怪物技能簿：普通技能组落 A..O，other 技能组落 H/I/J（醒/备用/待机）。
+// 按配置展开怪物技能簿：普通技能组落 S0、S1、…，other 技能组落 X/W/Z（醒/备用/待机）。
 void buildMonsterSkillBook(World& world, Entity entity, const conf::battle::AiDef& ai)
 {
     SkillBookComponent book;
 
-    const auto addSlot = [&](int32_t firstId, const char* name) {
+    const auto addSlot = [&](int32_t firstId, const std::string& name, const std::vector<int32_t>* aiIds) {
         if (firstId == -1)
             return;
         const int32_t slotIndex = static_cast<int32_t>(book.slots.size());
-        book.slots.emplace_back(name);
+        book.slots.push_back(name);
         std::vector<int32_t> visited;
         int32_t id   = firstId;
         int32_t step = 1;
@@ -542,6 +638,9 @@ void buildMonsterSkillBook(World& world, Entity entity, const conf::battle::AiDe
             rt.releaseCount = rt.releaseMax;
             rt.coldMaxTime  = Fixed::fromInt(def->cdMs);
             rt.cd           = {};
+            const int32_t aiId =
+                aiIds && static_cast<size_t>(step - 1) < aiIds->size() ? (*aiIds)[static_cast<size_t>(step - 1)] : -1;
+            skill::rules::initSkillAiRuntime(world, entity, rt, aiId, false);
             book.skills.push_back(std::move(rt));
             ++step;
             id = def->next;
@@ -556,11 +655,12 @@ void buildMonsterSkillBook(World& world, Entity entity, const conf::battle::AiDe
         }
     };
 
-    const size_t normalCount = std::min(ai.skillIds.size(), static_cast<size_t>('O' - 'A' + 1));
-    for (size_t i = 0; i < normalCount; ++i)
-        addSlot(firstValue(ai.skillIds, i, -1), std::string(1, static_cast<char>('A' + i)).c_str());
+    for (size_t i = 0; i < ai.skillIds.size(); ++i)
+        addSlot(firstValue(ai.skillIds, i, -1), monsterSkillSlot(i),
+                i < ai.skillAiIds.size() ? &ai.skillAiIds[i] : nullptr);
+    static constexpr const char* kOtherSlots[] = {"X", "W", "Z"};
     for (size_t j = 0; j < ai.otherSkillIds.size() && j < 3; ++j)
-        addSlot(firstValue(ai.otherSkillIds, j, -1), std::string(1, static_cast<char>('H' + j)).c_str());
+        addSlot(firstValue(ai.otherSkillIds, j, -1), kOtherSlots[j], nullptr);
 
     world.ecs().add(entity, std::move(book));
 }
@@ -609,44 +709,89 @@ void updateAgent(World& world, Entity entity)
         interval = std::max(Fixed{}, interval - dt);
     tickRuleCooldowns(brain->ruleCooldownMs, dt);
 
-    // 每帧重写意图：清空上一帧的施法按键与自动施法标记，默认停止移动。
+    // 每帧重写意图：清空上一帧的施法按键、预约技能与自动施法标记，默认停止移动。
     auto& intent        = ecs.get<IntentComponent>(entity);
     intent.buttons.clear();
-    intent.autoCast   = false;
-    intent.move.mode     = MoveMode::Stop;
-    intent.move.quadrant = ControlQuadrant::None;
-    intent.move.angle    = 0;
+    intent.autoCast         = false;
+    intent.presetSkillIndex = -1;
+    intent.move.mode        = MoveMode::Stop;
+    intent.move.quadrant    = ControlQuadrant::None;
+    intent.move.angle       = 0;
 
     selectTarget(world, entity, *brain, *row);
     intent.target = brain->target;
     if (canAct(world, entity))
     {
-        const AiFacts facts = gather(world, entity, *brain, *row);
-        const int8_t idx    = pickRule(world, facts, kMonsterRules, brain->ruleCooldownMs);
-        if (idx >= 0)
+        AiFacts facts = gather(world, entity, *brain, *row);
+        size_t limit  = facts.movingRule >= 0 ? static_cast<size_t>(facts.movingRule) : kMonsterRules.size();
+        bool handled  = false;
+        if (facts.inAttack)
+            limit = 0;
+        for (size_t idx = 0; idx < limit; ++idx)
         {
-            const auto& rule = kMonsterRules[static_cast<size_t>(idx)];
-            const bool started = run(world, entity, *brain, rule.action, *row);
-            if (rule.setsAlert)
+            if (idx < brain->ruleCooldownMs.size() && brain->ruleCooldownMs[idx] > Fixed{})
+                continue;
+            const auto& rule = kMonsterRules[idx];
+            if (!matches(rule, facts, world))
+                continue;
+            if (rule.setsAlert && !brain->alerted)
+            {
                 brain->alerted = true;
-            brain->lastAction = started ? rule.action : AiAction::Idle;
-            // 施法类动作打断移动：清掉移动规则，避免攻击期间仍续写移动意图。
-            if (started && !isMoveAction(rule.action))
-                brain->movingRule = -1;
+                facts.alerted  = true;
+                if (brain->target == entity)
+                    selectTarget(world, entity, *brain, *row);
+                facts.hasTarget          = brain->target != entity && ecs.tryGet<TransformComponent>(brain->target) != nullptr;
+                facts.targetOutsideChase = facts.hasTarget && outsideChase(world, entity, brain->target, *row);
+                intent.target            = brain->target;
+            }
             if (rule.cooldownMs > 0)
-                brain->ruleCooldownMs[static_cast<size_t>(idx)] = Fixed::fromInt(rule.cooldownMs);
+                brain->ruleCooldownMs[idx] = Fixed::fromInt(rule.cooldownMs);
+            const bool started = run(world, entity, *brain, rule.action, *row);
+            if (started)
+            {
+                brain->lastAction = rule.action;
+                if (isMoveAction(rule.action))
+                    brain->movingRule = static_cast<int8_t>(idx);
+                else
+                {
+                    brain->movingRule   = -1;
+                    brain->moveComplete = false;
+                }
+                handled = true;
+                break;
+            }
+            if (rule.setsAlert)
+            {
+                brain->movingRule   = -1;
+                brain->moveComplete = false;
+                facts.movingRule    = -1;
+                limit               = kMonsterRules.size();
+            }
         }
-        else if (brain->movingRule >= 0)
+        if (!handled)
         {
-            // 没有更高优先级规则抢占：延续移动，到达目标后停止。
-            if (!continueMove(world, entity, *brain))
-                brain->movingRule = -1;
+            if (brain->movingRule >= 0)
+            {
+                if (!continueMove(world, entity, *brain, *row))
+                {
+                    brain->movingRule   = -1;
+                    brain->moveComplete = false;
+                    brain->lastAction   = AiAction::Idle;
+                }
+            }
+            else
+            {
+                brain->lastAction = AiAction::Idle;
+                if (brain->alerted && brain->target != entity)
+                    faceTarget(world, entity, brain->target);
+            }
         }
     }
     else
     {
         // 死亡/受击/失控时不能决策，终止在跑的移动。
-        brain->movingRule = -1;
+        brain->movingRule   = -1;
+        brain->moveComplete = false;
     }
 
     const Entity taunt = sneerTarget(world, entity);

@@ -29,7 +29,18 @@ void runAnimation(World& world)
                                       ? world.ecs().get<StatsComponent>(entity).finalStat(202)
                                       : Fixed::fromInt(1);
         MotionPlayer player;
-        if (!player.bind(motion.motionFile) || !player.play(motion.motionName, motion.entryId, motion.loop))
+        if (!motion.motionFile.empty() &&
+            (!player.bind(motion.motionFile) || !player.play(motion.motionName, motion.entryId, motion.loop)))
+        {
+            motion.timeMs += dtMs * motion.rate * actionScale;
+            if (!motion.loop && motion.completedLoops == 0)
+            {
+                motion.completedLoops     = 1;
+                motion.completedThisFrame = true;
+            }
+            return;
+        }
+        if (motion.motionFile.empty())
         {
             motion.timeMs += dtMs * motion.rate * actionScale;
             return;
@@ -45,6 +56,11 @@ void runAnimation(World& world)
             }
             motion.timeMs = motion.loop ? Fixed::fromRaw(motion.timeMs.raw % duration.raw)
                                             : std::min(motion.timeMs, duration);
+        }
+        else if (!motion.loop && motion.completedLoops == 0)
+        {
+            motion.completedLoops     = 1;
+            motion.completedThisFrame = true;
         }
     });
 }

@@ -307,3 +307,100 @@ TEST_CASE("hit family: monster death despawns after landing when brake and lie w
     }
     CHECK_FALSE(world.ecs().alive(monster));
 }
+
+// 副本 105 怪物（如 21880）被击倒/击飞致死时，即使位移 air/lie 先于 flyup/flydown 动画结束，也必须推进到倒地并死亡回收。
+TEST_CASE("hit family: copy 105 monster killed by knockdown or launcher does not freeze in HitUp or HitDown")
+{
+    loadAssets();
+    World world;
+    WorldSetup setup;
+    setup.seed   = 37;
+    setup.mode   = WorldMode::Battle;
+    setup.roomId = 2010501;
+    const auto* room = conf::Config::instance().find<conf::RoomConfig>(2010501);
+    REQUIRE(room != nullptr);
+    setup.mapKey = room->mapKey;
+    PlayerSetup player;
+    player.roleId = type_conversions::toRoleConfigId(CharacterClass::kSwordman);
+    player.level  = 1000;
+    player.camp   = 2;
+    player.slot   = 0;
+    player.isAi   = false;
+    setup.players.push_back(player);
+    setup.aiEnabled = false;
+    REQUIRE_FALSE(bootstrapBattle(world, setup).empty());
+
+    std::vector<Entity> monsters;
+    world.ecs().each<IdentityComponent>([&](Entity e, const IdentityComponent& id) {
+        if (id.kind == SpawnKind::Role && id.configId == 21880)
+            monsters.push_back(e);
+    });
+    REQUIRE(monsters.size() >= 2);
+
+    // 1) 地面击倒致死：Hit 结束后转入 HitUp（flyup 134ms），首帧即在地面触发 disp.lie 先于动画完成。
+    const Entity knockdownTarget = monsters[0];
+    const Fixed hp0              = world.ecs().get<HealthComponent>(knockdownTarget).hp;
+    health::rules::applyDelta(world, knockdownTarget, -hp0, HpCause::Hit, hero(world), {});
+    auto& hit0                 = world.ecs().get<HitStateComponent>(knockdownTarget);
+    hit0.pendingHitDefId       = 1;
+    hit0.pendingHitType        = 1;
+    hit0.pendingDisplacementId = -1;
+    hit0.pendingTowardX        = 1;
+    hit0.stiffTime             = Fixed::fromInt(100);
+    tickUntilGone(world, knockdownTarget, 300);
+    CHECK_FALSE(world.ecs().alive(knockdownTarget));
+
+    // 2) 浮空下落致死：HitDown（flydown 134ms）期间提前贴地 disp.lie 先于动画完成。
+    const Entity airTarget = monsters[1];
+    const Fixed hp1        = world.ecs().get<HealthComponent>(airTarget).hp;
+    health::rules::applyDelta(world, airTarget, -hp1, HpCause::Hit, hero(world), {});
+    world.tick(FrameInput{world.frame() + 1, {}, {}, {}});
+    REQUIRE(world.ecs().alive(airTarget));
+    placeHit(world, airTarget, RoleStateId::HitDown, true);
+    auto& motion1         = world.ecs().get<MotionStateComponent>(airTarget);
+    motion1.motionName    = "flydown";
+    motion1.timeMs        = {};
+    motion1.completedLoops = 0;
+    motion1.loop          = false;
+    motion1.playing       = true;
+    world.ecs().get<TransformComponent>(airTarget).position.y = Fixed{};
+    world.ecs().get<DisplacementComponent>(airTarget).velocity = {};
+    tickUntilGone(world, airTarget, 300);
+    CHECK_FALSE(world.ecs().alive(airTarget));
+}
+
+// 非循环受击动作在 .motion 中缺失时，动画系统仍需当帧给出完成脉冲，不能永久卡死在 HitSwitch。
+TEST_CASE("hit family: missing non-looping clip in motion file still completes and exits state")
+{
+    World world          = makeWorld();
+    const Entity monster = monster21881(world);
+    REQUIRE(monster.value != 0);
+    placeHit(world, monster, RoleStateId::HitSwitch, true);
+    auto& motion              = world.ecs().get<MotionStateComponent>(monster);
+    motion.motionName         = "nonexistent_hit_clip";
+    motion.timeMs             = {};
+    motion.completedLoops     = 0;
+    motion.completedThisFrame = false;
+    motion.loop               = false;
+    motion.playing            = true;
+    tickUntilGone(world, monster, 300);
+    CHECK_FALSE(world.ecs().alive(monster));
+}
+
+// 空中霸体怪被击杀时暂缓死亡请求，落地后仍须补入死亡并正常回收。
+TEST_CASE("hit family: airborne super-armor monster killed mid-air dies and despawns upon landing")
+{
+    World world          = makeWorld();
+    const Entity monster = monster21881(world);
+    REQUIRE(monster.value != 0);
+    world.ecs().get<TransformComponent>(monster).position.y = Fixed::fromInt(120);
+    world.ecs().get<DisplacementComponent>(monster).gravity = Fixed::fromInt(2);
+    world.ecs().get<StatusFlagsComponent>(monster).add(mugen::ExtraState::SuperArmor);
+    const Fixed hp = world.ecs().get<HealthComponent>(monster).hp;
+    health::rules::applyDelta(world, monster, -hp, HpCause::Hit, hero(world), {});
+    world.tick(FrameInput{world.frame() + 1, {}, {}, {}});
+    REQUIRE(world.ecs().alive(monster));
+    CHECK_FALSE(world.ecs().get<RoleStateComponent>(monster).deathRequested);
+    tickUntilGone(world, monster, 300);
+    CHECK_FALSE(world.ecs().alive(monster));
+}

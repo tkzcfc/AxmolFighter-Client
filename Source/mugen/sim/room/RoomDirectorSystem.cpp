@@ -7,7 +7,6 @@
 #include "mugen/sim/World.h"
 #include "mugen/sim/role/RoleState.h"
 #include "mugen/sim/role/RoleSpawn.h"
-#include "mugen/sim/buff/BuffRules.h"
 #include "mugen/sim/room/RoomRules.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/GameDef.h"
@@ -189,31 +188,6 @@ void triggerKo(World& world, RoomState& room)
             }
         });
 }
-// 复活主控玩家：回满 MP/EP、清 CD、挂无敌 Buff，并置复活请求位；状态转移 Death→Revive→Idle 交给 FSM（移植旧实现 Revive）。
-void reviveHero(World& world, RoomState& room, Entity entity)
-{
-    auto& health = world.ecs().get<HealthComponent>(entity);
-    health.mp   = health.maxMp;
-    health.ep   = health.maxEp;
-    auto& state = world.ecs().get<RoleStateComponent>(entity);
-    state.reviveRequested = true;
-    if (auto* book = world.ecs().tryGet<SkillBookComponent>(entity))
-        for (auto& entry : book->skills)
-        {
-            entry.cd           = {};
-            entry.timing       = false;
-            entry.releaseCount = entry.releaseMax;
-        }
-    if (auto* cast = world.ecs().tryGet<SkillCastComponent>(entity))
-    {
-        cast->skill     = kNoSkill;
-        cast->nextSkill = kNoSkill;
-        cast->switched    = false;
-    }
-    buff::rules::admit(world, entity, 202);
-    ++room.usedRevives;
-    room.reviving = false;
-}
 // 推进 PVP 决斗：先判定 KO（一方阵营英雄被清空），再判定超时（按剩余生命比例）。
 void updatePvp(World& world, RoomState& room)
 {
@@ -332,31 +306,34 @@ void runRoomDirector(World& world)
     for (const DeathEvent& event : world.ecs().singleton<EventQueue<DeathEvent>>().items)
         room.roleDeaths.push_back(event.entity);
 
-    // 3. 仅 Process 状态推进战斗结算。
-    if (room.state != mugen::RoomState::Process || room.failure || room.victory)
-        return;
-
-    // 4. 复活 / 回城 / 警告确认请求。
+    // 3. 复活 / 回城 / 警告确认请求：胜利/失败后仍需处理回城。
     auto& requests = world.ecs().singleton<EventQueue<RoomRequest>>().items;
     for (const RoomRequest& request : requests)
     {
-        if (request.kind == RoomRequestKind::Revive && room.reviving && !room.failure && !room.pvp &&
-            room.usedRevives < room.maxRevives)
-        {
-            const Entity own = hero(world);
-            if (own.value != 0 && world.ecs().has<RoleStateComponent>(own) &&
-                world.ecs().get<RoleStateComponent>(own).state == RoleStateId::Death)
-                reviveHero(world, room, own);
-        }
-        else if (request.kind == RoomRequestKind::WarningDone && room.state == mugen::RoomState::ReadySpine)
-        {
-            expectState(room, mugen::RoomState::Tip);
-        }
-        else if (request.kind == RoomRequestKind::ReturnToTown)
+        if (request.kind == RoomRequestKind::ReturnToTown)
         {
             room.returnToTown = true;
         }
+        else if (request.kind == RoomRequestKind::WarningDone)
+        {
+            if (room.state == mugen::RoomState::ReadySpine &&
+                (request.param == 0 || request.param == room.roomId))
+                enterState(world, room, mugen::RoomState::Tip);
+        }
+        else if (request.kind == RoomRequestKind::Revive && room.state == mugen::RoomState::Process &&
+                 room.reviving && !room.failure && !room.victory && !room.pvp &&
+                 room.usedRevives < room.maxRevives)
+        {
+            ++room.usedRevives;
+            room.reviving = false;
+            room::rules::revivePlayers(world);
+        }
     }
+
+    // 4. 仅 Process 状态推进战斗结算。
+    if (room.state != mugen::RoomState::Process || room.failure || room.victory)
+        return;
+
     if (room.returnToTown)
         return;
     if (room.pvp)

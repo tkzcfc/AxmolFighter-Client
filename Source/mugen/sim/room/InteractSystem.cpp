@@ -10,8 +10,10 @@
 #include "mugen/sim/motion/DisplacementRules.h"
 #include "mugen/sim/anim/HitboxRules.h"
 #include "mugen/sim/room/RoomComponents.h"
+#include "mugen/sim/room/RoomRules.h"
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/BattleConst.h"
+#include <string>
 
 namespace mugen::sim
 {
@@ -140,6 +142,20 @@ void runInteract(World& world)
                         {
                             // 只切阶段，换房请求由 RoomTransferSystem 下一帧读取（对齐旧实现延迟一帧）。
                             state.phase = PortalPhase::Transfer;
+                            const auto* row = conf::Config::instance().find<conf::PortalConfig>(state.configId);
+                            if (row && world.ecs().has<MotionStateComponent>(portal))
+                            {
+                                auto& motion = world.ecs().get<MotionStateComponent>(portal);
+                                motion.motionName = room::rules::portalMotion(*row, PortalPhase::Transfer);
+                                motion.loop       = false;
+                                motion.playing    = true;
+                                motion.timeMs     = {};
+                                int32_t id        = 0;
+                                for (const char c : motion.entryId)
+                                    if (c >= '0' && c <= '9')
+                                        id = id * 10 + (c - '0');
+                                motion.entryId = std::to_string(id + 1);
+                            }
                             return;
                         }
                 });

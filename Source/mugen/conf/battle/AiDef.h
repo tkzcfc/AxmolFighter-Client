@@ -1,5 +1,6 @@
 #pragma once
 
+#include "mugen/core/math/Fixed.h"
 #include "mugen/core/reflect/Reflect.h"
 
 namespace mugen::conf::battle
@@ -63,5 +64,40 @@ struct AiDef
                skillPriorityLevelCd,
                targetScopeX,
                targetScopeZ)
+};
+
+// 单技能自动施放门槛，由 skill_ai.lua 降级。
+struct SkillAiDef
+{
+    int32_t id       = 0;
+    int32_t loadCd   = 0;
+    int64_t checkCd  = 0;
+    int32_t useCount = -1;
+    int32_t prob     = 100;
+    std::vector<int32_t> oppDisX;
+    std::vector<int32_t> oppDisZ;
+    int32_t oppStatus  = -1;
+    int32_t oppCombo   = -1;
+    int32_t oppSkillId = -1;
+    std::vector<int32_t> selfHp;
+    int32_t selfStatus = -1;
+    std::vector<int32_t> mustAll;
+    std::vector<int32_t> mustAny;
+
+    MG_REFLECT(SkillAiDef,
+               id,
+               loadCd,
+               checkCd,
+               useCount,
+               prob,
+               oppDisX,
+               oppDisZ,
+               oppStatus,
+               oppCombo,
+               oppSkillId,
+               selfHp,
+               selfStatus,
+               mustAll,
+               mustAny)
 };
 }  // namespace mugen::conf::battle

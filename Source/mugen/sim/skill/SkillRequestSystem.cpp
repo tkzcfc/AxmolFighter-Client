@@ -29,9 +29,11 @@ void runSkillRequest(World& world)
             }
             if (!flags.canControl())
                 return;
+            if (intent.presetSkillIndex >= 0)
+                skill::rules::commitPreparedCast(world, entity, intent.presetSkillIndex);
             for (const auto& button : intent.buttons)
                 if (button.pressType == 1)  // 只处理按下（B2 无抬起释放技能）
-                    skill::rules::dealButton(world, entity, button.event);
+                    skill::rules::dealButton(world, entity, button.event, intent.autoCast);
         });
 }
 }  // namespace mugen::sim

@@ -217,9 +217,9 @@ TEST_CASE("presentation buff spine and visual cues")
     CHECK(border->enabled);
 }
 
-TEST_CASE("presentation snapshot roundtrips PresentationEvents at version 8")
+TEST_CASE("presentation snapshot roundtrips PresentationEvents at version 9")
 {
-    CHECK(kWorldSnapshotVersion == 8);
+    CHECK(kWorldSnapshotVersion == 9);
     Harness h;
     CueEvent white;
     white.entity = h.self;

@@ -44,21 +44,44 @@ void runLocomotion(World& world)
                 return;
             }
             const Fixed angle = Fixed::ratio(move.angle, 1000);
-            if (hasHorizontal(move.angle))
+            const Fixed moveSignX =
+                hasHorizontal(move.angle) ? Fixed::fromInt(vectorX(move.quadrant)) : transform.vectorX;
+            const Fixed moveSignZ =
+                hasVertical(move.angle) ? Fixed::fromInt(vectorZ(move.quadrant)) : transform.vectorZ;
+            const bool aiFacingTarget =
+                !identity.playerSlot.has_value() && identity.roleType != 1 && intent.target.value != 0 &&
+                intent.target != entity && world.ecs().tryGet<TransformComponent>(intent.target) != nullptr;
+            if ((move.mode == MoveMode::Walk || move.mode == MoveMode::Run) && aiFacingTarget)
             {
-                transform.towardX = vectorX(move.quadrant);
-                transform.vectorX = Fixed::fromInt(transform.towardX);
+                const auto& targetPos = world.ecs().get<TransformComponent>(intent.target).position;
+                const Fixed dx        = targetPos.x - transform.position.x;
+                const Fixed dz        = targetPos.z - transform.position.z;
+                if (dx != Fixed{})
+                {
+                    transform.towardX = dx > Fixed{} ? 1 : -1;
+                    transform.vectorX = Fixed::fromInt(transform.towardX);
+                }
+                if (dz != Fixed{})
+                    transform.vectorZ = dz > Fixed{} ? Fixed::fromInt(1) : Fixed::fromInt(-1);
             }
-            if (hasVertical(move.angle))
-                transform.vectorZ = Fixed::fromInt(vectorZ(move.quadrant));
+            else
+            {
+                if (hasHorizontal(move.angle))
+                {
+                    transform.towardX = vectorX(move.quadrant);
+                    transform.vectorX = Fixed::fromInt(transform.towardX);
+                }
+                if (hasVertical(move.angle))
+                    transform.vectorZ = Fixed::fromInt(vectorZ(move.quadrant));
+            }
             const auto* row = conf::Config::instance().find<conf::battle::RoleDef>(identity.configId);
             if (row)
             {
                 const Fixed rate  = state.state == RoleStateId::Run ? conf::kRunRate : conf::kWalkRate;
                 const Fixed speed = row->velocity * rate;
                 // 移速修正只由 DisplacementComponent 乘 velocityScale，这里写原始速度。
-                displacement.velocity.x = FixedMath::cosDeg(angle) * speed * transform.vectorX;
-                displacement.velocity.z = FixedMath::sinDeg(angle) * speed * transform.vectorZ;
+                displacement.velocity.x = FixedMath::cosDeg(angle) * speed * moveSignX;
+                displacement.velocity.z = FixedMath::sinDeg(angle) * speed * moveSignZ;
                 displacement.velocity.y = {};
             }
         });

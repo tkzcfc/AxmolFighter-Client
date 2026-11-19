@@ -29,6 +29,35 @@ void announceDeath(World& world, Entity entity, RoleStateComponent& state)
     if (owner.value != 0 && world.ecs().alive(owner))
         buff::rules::notifySummonDeath(world, owner);
 }
+// 采纳死亡请求：置位死亡请求、同步双生变换成员并生成生命归零当帧的 KO 特效。
+void acceptDeathRequest(World& world, Entity entity, Entity killer)
+{
+    auto& state          = world.ecs().get<RoleStateComponent>(entity);
+    state.deathRequested = true;
+    state.deathKiller    = killer;
+    if (world.ecs().has<TransformLinkComponent>(entity))
+    {
+        const auto members = world.ecs().get<TransformLinkComponent>(entity).members;
+        for (const Entity member : members)
+        {
+            if (member.value == entity.value || !world.ecs().alive(member) ||
+                world.ecs().has<DespawningComponent>(member) || !world.ecs().has<RoleStateComponent>(member))
+                continue;
+            auto& other = world.ecs().get<RoleStateComponent>(member);
+            if (other.deathRequested)
+                continue;
+            other.deathRequested = true;
+            other.deathKiller    = killer;
+            if (world.ecs().has<HealthComponent>(member))
+                world.ecs().get<HealthComponent>(member).dead = true;
+        }
+    }
+    // KO 特效在生命归零当帧生成；死亡状态再等 FSM 进入 Death 后宣布（受击族延迟到硬直/倒地结束）。
+    const auto* role = conf::Config::instance().find<conf::battle::RoleDef>(
+        world.ecs().get<IdentityComponent>(entity).configId);
+    if (role && role->koEffectId > 0)
+        effect::rules::spawnFromRole(world, entity, role->koEffectId, {});
+}
 }  // namespace
 
 // 系统 DeathSystem：9.1 行，见 DESIGN.md §3.2。
@@ -47,35 +76,30 @@ void runDeath(World& world)
         const bool superArmor = world.ecs().has<StatusFlagsComponent>(request.entity) &&
                                 world.ecs().get<StatusFlagsComponent>(request.entity).active(mugen::ExtraState::SuperArmor);
         const bool grounded = world.ecs().get<TransformComponent>(request.entity).position.y == Fixed{};
-        // 霸体且未落地：只保护，不进入死亡。
+        // 霸体且未落地：暂缓进入死亡，先记住击杀者，落地或脱离霸体后由下方 HealthComponent::dead 扫描接管。
         if (superArmor && !grounded && !role::isHitState(state.state))
-            continue;
-        state.deathRequested = true;
-        state.deathKiller    = request.killer;
-        if (world.ecs().has<TransformLinkComponent>(request.entity))
         {
-            const auto members = world.ecs().get<TransformLinkComponent>(request.entity).members;
-            for (const Entity member : members)
-            {
-                if (member.value == request.entity.value || !world.ecs().alive(member) ||
-                    world.ecs().has<DespawningComponent>(member) || !world.ecs().has<RoleStateComponent>(member))
-                    continue;
-                auto& other = world.ecs().get<RoleStateComponent>(member);
-                if (other.deathRequested)
-                    continue;
-                other.deathRequested = true;
-                other.deathKiller    = request.killer;
-                if (world.ecs().has<HealthComponent>(member))
-                    world.ecs().get<HealthComponent>(member).dead = true;
-            }
+            state.deathKiller = request.killer;
+            if (world.ecs().has<HealthComponent>(request.entity))
+                world.ecs().get<HealthComponent>(request.entity).dead = true;
+            continue;
         }
-        // KO 特效在生命归零当帧生成；死亡状态再等 FSM 进入 Death 后宣布（受击族延迟到硬直/倒地结束）。
-        const auto* role = conf::Config::instance().find<conf::battle::RoleDef>(
-            world.ecs().get<IdentityComponent>(request.entity).configId);
-        if (role && role->koEffectId > 0)
-            effect::rules::spawnFromRole(world, request.entity, role->koEffectId, {});
+        acceptDeathRequest(world, request.entity, request.killer);
     }
     requests.clear();
+
+    world.ecs().each<HealthComponent, RoleStateComponent>(
+        [&](Entity entity, const HealthComponent& health, RoleStateComponent& state) {
+            if (!health.dead || state.deathRequested || world.ecs().has<DespawningComponent>(entity) ||
+                world.ecs().has<InactiveComponent>(entity))
+                return;
+            const bool superArmor = world.ecs().has<StatusFlagsComponent>(entity) &&
+                                    world.ecs().get<StatusFlagsComponent>(entity).active(mugen::ExtraState::SuperArmor);
+            const bool grounded = world.ecs().get<TransformComponent>(entity).position.y == Fixed{};
+            if (superArmor && !grounded && !role::isHitState(state.state))
+                return;
+            acceptDeathRequest(world, entity, state.deathKiller);
+        });
 
     world.ecs().each<RoleStateComponent, HitStateComponent, IdentityComponent, MotionStateComponent>(
         [&](Entity entity, RoleStateComponent& state, const HitStateComponent& hit, const IdentityComponent& identity, const MotionStateComponent& motion) {
