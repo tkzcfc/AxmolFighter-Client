@@ -8,6 +8,7 @@
 #include "mugen/conf/ReflectedConfig.h"
 #include "mugen/conf/TypeConversions.h"
 #include "mugen/conf/BattleConst.h"
+#include "mugen/conf/battle/HitDef.h"
 #include "mugen/conf/battle/RoleDef.h"
 #include "mugen/avatar/data/AvatarAssetCache.h"
 
@@ -403,4 +404,324 @@ TEST_CASE("hit family: airborne super-armor monster killed mid-air dies and desp
     CHECK_FALSE(world.ecs().get<RoleStateComponent>(monster).deathRequested);
     tickUntilGone(world, monster, 300);
     CHECK_FALSE(world.ecs().alive(monster));
+}
+
+// 辅助：查找指定 hitType 且带有效位移的受击配置 id。
+namespace
+{
+int32_t findHitDefId(int32_t hitType)
+{
+    for (const auto& row : conf::Config::instance().table<conf::battle::HitDef>())
+    {
+        if (row.hitType != hitType)
+            continue;
+        const int32_t dispId = hitType == 0 ? row.airDisplacementId : row.displacementId;
+        if (dispId > 0 && conf::Config::instance().find<conf::DisplacementConfig>(dispId) != nullptr)
+            return row.id;
+    }
+    return 0;
+}
+
+// 推进世界直到目标进入期望状态或达到最大帧数。
+bool tickUntilState(World& world, Entity entity, RoleStateId expected, int maxFrames)
+{
+    for (int i = 0; i < maxFrames; ++i)
+    {
+        if (world.ecs().get<RoleStateComponent>(entity).state == expected)
+            return true;
+        world.tick(FrameInput{world.frame() + 1, {}, {}, {}});
+    }
+    return world.ecs().get<RoleStateComponent>(entity).state == expected;
+}
+}  // namespace
+
+// HitUp 动画恰好完成当帧被 hitType=0 空中追击命中（chaseAir 不切状态、不重播动画）：
+// 动画完成事实不得因追击提前返回而丢失，落地后必须正常推进到 HitDown -> HitFloor -> GetUp -> Wake -> Idle。
+TEST_CASE("hit family: HitUp chase hit on animation completion frame does not softlock")
+{
+    World world       = makeWorld();
+    const Entity unit = hero(world);
+    REQUIRE(unit.value != 0);
+    const int32_t normalHitId = findHitDefId(0);
+    REQUIRE(normalHitId > 0);
+    const auto* normalHit = conf::Config::instance().find<conf::battle::HitDef>(normalHitId);
+    REQUIRE(normalHit != nullptr);
+
+    // 进入 HitUp，给予高初速确保 flyup 动画先于下落拐点（disp.air）结束。
+    placeHit(world, unit, RoleStateId::HitUp, false);
+    auto& hit            = world.ecs().get<HitStateComponent>(unit);
+    hit.stiffTime        = Fixed::fromInt(100);
+    auto& motion         = world.ecs().get<MotionStateComponent>(unit);
+    motion.motionName    = role::motionName(RoleStateId::HitUp);
+    motion.timeMs        = {};
+    motion.completedLoops     = 0;
+    motion.completedThisFrame = false;
+    motion.loop          = false;
+    motion.rate          = conf::kHitUpScaleTime;
+    motion.playing       = true;
+    world.ecs().get<TransformComponent>(unit).position.y = Fixed::fromInt(80);
+    auto& disp      = world.ecs().get<DisplacementComponent>(unit);
+    disp.velocity   = {Fixed{}, Fixed::fromInt(2), Fixed{}};
+    disp.gravity    = Fixed::fromInt(1);
+    disp.bounces    = {};
+    disp.air        = false;
+    disp.lie        = false;
+
+    // 逐帧推进至 AnimationSystem 恰好发出 completedThisFrame 的那一帧（仍在 HitUp）。
+    bool hitCompletionFrame = false;
+    for (int i = 0; i < 60; ++i)
+    {
+        world.tick(FrameInput{world.frame() + 1, {}, {}, {}});
+        const auto& st = world.ecs().get<RoleStateComponent>(unit);
+        const auto& mo = world.ecs().get<MotionStateComponent>(unit);
+        REQUIRE(st.state == RoleStateId::HitUp);
+        if (mo.completedThisFrame)
+        {
+            hitCompletionFrame = true;
+            break;
+        }
+    }
+    REQUIRE(hitCompletionFrame);
+    REQUIRE(world.ecs().get<MotionStateComponent>(unit).completedLoops >= 1);
+
+    // 模拟同帧 CombatSystem 写入 hitType=0 追击请求。
+    hit.pendingHitDefId       = normalHit->id;
+    hit.pendingHitType        = normalHit->hitType;
+    hit.pendingDisplacementId = normalHit->displacementId;
+    hit.pendingTowardX        = 1;
+
+    // 下一帧 FSM 走 chaseAir 提前返回（不切状态、不重播动作），但必须锁存动画已完成。
+    world.tick(FrameInput{world.frame() + 1, {}, {}, {}});
+    CHECK(world.ecs().get<RoleStateComponent>(unit).state == RoleStateId::HitUp);
+    CHECK(world.ecs().get<HitStateComponent>(unit).pendingHitDefId == 0);
+    CHECK(world.ecs().get<HitStateComponent>(unit).animationEnd);
+    CHECK_FALSE(world.ecs().get<MotionStateComponent>(unit).completedThisFrame);
+
+    // 后续无需任何外力攻击，应自然落完并恢复到 Idle。
+    CHECK(tickUntilState(world, unit, RoleStateId::HitDown, 120));
+    // 切入新状态 HitDown 时必须清掉旧动作完成态，不能把 HitUp 的完成带入 HitDown。
+    CHECK_FALSE(world.ecs().get<HitStateComponent>(unit).animationEnd);
+    CHECK(world.ecs().get<MotionStateComponent>(unit).completedLoops == 0);
+    CHECK(tickUntilState(world, unit, RoleStateId::Idle, 240));
+}
+
+// HitDown 动画完成当帧遇到不切状态的追击（浮空值耗尽时的 hitType=0，或已贴地时的 hitType=1）：
+// 不得永久卡死在 HitDown，必须正常推进到 HitFloor -> Idle。
+TEST_CASE("hit family: HitDown non-transitioning chase hit on completion frame does not softlock")
+{
+    loadAssets();
+    const int32_t normalHitId   = findHitDefId(0);
+    const int32_t knockDownId   = findHitDefId(1);
+    REQUIRE(normalHitId > 0);
+    REQUIRE(knockDownId > 0);
+    const auto* normalHit = conf::Config::instance().find<conf::battle::HitDef>(normalHitId);
+    const auto* knockDown = conf::Config::instance().find<conf::battle::HitDef>(knockDownId);
+    REQUIRE(normalHit != nullptr);
+    REQUIRE(knockDown != nullptr);
+
+    SUBCASE("airborne rigidity-exhausted chase hit (hitType=0)")
+    {
+        World world       = makeWorld();
+        const Entity unit = hero(world);
+        REQUIRE(unit.value != 0);
+
+        placeHit(world, unit, RoleStateId::HitDown, false);
+        auto& hit            = world.ecs().get<HitStateComponent>(unit);
+        hit.rigidity         = {};
+        hit.stiffTime        = Fixed::fromInt(100);
+        auto& motion         = world.ecs().get<MotionStateComponent>(unit);
+        motion.motionName    = role::motionName(RoleStateId::HitDown);
+        motion.timeMs        = {};
+        motion.completedLoops     = 0;
+        motion.completedThisFrame = false;
+        motion.loop          = false;
+        motion.rate          = conf::kHitDownScaleTime;
+        motion.playing       = true;
+        world.ecs().get<TransformComponent>(unit).position.y = Fixed::fromInt(200);
+        auto& disp    = world.ecs().get<DisplacementComponent>(unit);
+        disp.velocity = {Fixed{}, Fixed{}, Fixed{}};
+        disp.gravity  = Fixed::fromInt(1);
+        disp.lie      = false;
+
+        bool completed = false;
+        for (int i = 0; i < 60; ++i)
+        {
+            world.tick(FrameInput{world.frame() + 1, {}, {}, {}});
+            REQUIRE(world.ecs().get<RoleStateComponent>(unit).state == RoleStateId::HitDown);
+            if (world.ecs().get<MotionStateComponent>(unit).completedThisFrame)
+            {
+                completed = true;
+                break;
+            }
+        }
+        REQUIRE(completed);
+
+        hit.pendingHitDefId       = normalHit->id;
+        hit.pendingHitType        = normalHit->hitType;
+        hit.pendingDisplacementId = normalHit->displacementId;
+        hit.pendingTowardX        = 1;
+
+        world.tick(FrameInput{world.frame() + 1, {}, {}, {}});
+        CHECK(world.ecs().get<RoleStateComponent>(unit).state == RoleStateId::HitDown);
+        CHECK(world.ecs().get<HitStateComponent>(unit).animationEnd);
+
+        CHECK(tickUntilState(world, unit, RoleStateId::HitFloor, 180));
+        CHECK(tickUntilState(world, unit, RoleStateId::Idle, 240));
+    }
+
+    SUBCASE("already-grounded displacementEnd with hitType=1 chase hit")
+    {
+        World world       = makeWorld();
+        const Entity unit = hero(world);
+        REQUIRE(unit.value != 0);
+
+        placeHit(world, unit, RoleStateId::HitDown, false);
+        auto& hit            = world.ecs().get<HitStateComponent>(unit);
+        hit.stiffTime        = Fixed::fromInt(100);
+        auto& motion         = world.ecs().get<MotionStateComponent>(unit);
+        motion.motionName    = role::motionName(RoleStateId::HitDown);
+        motion.timeMs        = {};
+        motion.completedLoops     = 0;
+        motion.completedThisFrame = false;
+        motion.loop          = false;
+        motion.rate          = conf::kHitDownScaleTime;
+        motion.playing       = true;
+        // 初始即贴地静止，使 displacementEnd 早于 flydown 动画完成。
+        world.ecs().get<TransformComponent>(unit).position.y = Fixed{};
+        world.ecs().get<DisplacementComponent>(unit).velocity = {};
+
+        bool completed = false;
+        for (int i = 0; i < 60; ++i)
+        {
+            world.tick(FrameInput{world.frame() + 1, {}, {}, {}});
+            REQUIRE(world.ecs().get<RoleStateComponent>(unit).state == RoleStateId::HitDown);
+            if (world.ecs().get<MotionStateComponent>(unit).completedThisFrame)
+            {
+                completed = true;
+                break;
+            }
+        }
+        REQUIRE(completed);
+        REQUIRE(world.ecs().get<HitStateComponent>(unit).displacementEnd);
+
+        // 追击命中：HitDown 下 hitType=1 不切状态也不清 displacementEnd。
+        hit.pendingHitDefId       = knockDown->id;
+        hit.pendingHitType        = knockDown->hitType;
+        hit.pendingDisplacementId = knockDown->displacementId;
+        hit.pendingTowardX        = 1;
+
+        world.tick(FrameInput{world.frame() + 1, {}, {}, {}});
+        CHECK(world.ecs().get<RoleStateComponent>(unit).state == RoleStateId::HitDown);
+        CHECK(world.ecs().get<HitStateComponent>(unit).animationEnd);
+        CHECK(world.ecs().get<HitStateComponent>(unit).displacementEnd);
+
+        // 下一帧即使无新的完成脉冲或位移沿，也必须由双标志满足而进入 HitFloor 并恢复 Idle。
+        CHECK(tickUntilState(world, unit, RoleStateId::HitFloor, 5));
+        CHECK(tickUntilState(world, unit, RoleStateId::Idle, 240));
+    }
+}
+
+// HitFloor 动画完成后只清零一次 hitTimeMs，后续帧即使 completedLoops > 0 也不得反复清零倒地计时；
+// 同时从 HitFloor 转入 GetUp 时须清理残留的 pendingHitDefId，防止吞掉 GetUp 首帧推进。
+TEST_CASE("hit family: HitFloor stiff timer advances once after completion and GetUp clears stale pending hit")
+{
+    World world       = makeWorld();
+    const Entity unit = hero(world);
+    REQUIRE(unit.value != 0);
+
+    placeHit(world, unit, RoleStateId::HitFloor, false);
+    auto& hit            = world.ecs().get<HitStateComponent>(unit);
+    hit.stiffTime        = Fixed::fromInt(200);
+    auto& motion         = world.ecs().get<MotionStateComponent>(unit);
+    motion.motionName    = role::motionName(RoleStateId::HitFloor);
+    motion.timeMs        = {};
+    motion.completedLoops     = 0;
+    motion.completedThisFrame = false;
+    motion.loop          = false;
+    motion.rate          = conf::kHitFloorScaleTime;
+    motion.playing       = true;
+    world.ecs().get<TransformComponent>(unit).position.y  = Fixed{};
+    world.ecs().get<DisplacementComponent>(unit).velocity = {};
+
+    // 推进至双完成标志均满足后，确认 hitTimeMs 持续单调递增而非被 completedLoops>0 反复清零。
+    const Fixed dtMs = world.ecs().singleton<WorldClock>().dtMs;
+    Fixed prevHitTime;
+    int advancingFrames = 0;
+    bool enteredGetUp   = false;
+    for (int i = 0; i < 120; ++i)
+    {
+        // 在 HitFloor 满硬直当帧注入一个挂起追击，验证转入 GetUp 时会被清理。
+        if (hit.animationEnd && hit.displacementEnd && hit.hitTimeMs + dtMs >= hit.stiffTime)
+            hit.pendingHitDefId = findHitDefId(0);
+        world.tick(FrameInput{world.frame() + 1, {}, {}, {}});
+        const auto curState = world.ecs().get<RoleStateComponent>(unit).state;
+        if (curState == RoleStateId::GetUp)
+        {
+            enteredGetUp = true;
+            CHECK(world.ecs().get<HitStateComponent>(unit).pendingHitDefId == 0);
+            break;
+        }
+        if (hit.animationEnd && hit.displacementEnd)
+        {
+            if (advancingFrames > 0)
+                CHECK(hit.hitTimeMs > prevHitTime);
+            prevHitTime = hit.hitTimeMs;
+            ++advancingFrames;
+        }
+    }
+    REQUIRE(enteredGetUp);
+    CHECK(advancingFrames >= 3);
+    CHECK(tickUntilState(world, unit, RoleStateId::Idle, 180));
+}
+
+// HitSwitch 与 GetUp 即使错过一次性 completedThisFrame 脉冲，只要 completedLoops > 0 仍须正常退出。
+TEST_CASE("hit family: HitSwitch and GetUp exit via persistent completedLoops when pulse was missed")
+{
+    World world       = makeWorld();
+    const Entity unit = hero(world);
+    REQUIRE(unit.value != 0);
+
+    placeHit(world, unit, RoleStateId::HitSwitch, false);
+    auto& motion              = world.ecs().get<MotionStateComponent>(unit);
+    motion.motionName         = role::motionName(RoleStateId::HitSwitch);
+    motion.loop               = false;
+    motion.playing            = true;
+    motion.completedLoops     = 1;
+    motion.completedThisFrame = false;
+    world.tick(FrameInput{world.frame() + 1, {}, {}, {}});
+    CHECK(world.ecs().get<RoleStateComponent>(unit).state == RoleStateId::Idle);
+
+    placeHit(world, unit, RoleStateId::GetUp, false);
+    motion.motionName         = role::motionName(RoleStateId::GetUp);
+    motion.loop               = false;
+    motion.playing            = true;
+    motion.completedLoops     = 1;
+    motion.completedThisFrame = false;
+    world.tick(FrameInput{world.frame() + 1, {}, {}, {}});
+    CHECK(world.ecs().get<RoleStateComponent>(unit).state == RoleStateId::Wake);
+    world.tick(FrameInput{world.frame() + 1, {}, {}, {}});
+    CHECK(world.ecs().get<RoleStateComponent>(unit).state == RoleStateId::Idle);
+}
+
+// 出生与霸体受击保护直入 HitDown 时，hitCounts 必须为正数（不得沿用 RoleDef::hitCount=-1），
+// 否则浮空值耗尽后在 HitFloor 每帧计算 stiffTime - fatigue * hitCounts 会反向暴涨导致永久倒地。
+TEST_CASE("hit family: spawned hitCounts is positive and hitProtect HitDown does not inflate HitFloor stiffTime")
+{
+    World world       = makeWorld();
+    const Entity unit = hero(world);
+    REQUIRE(unit.value != 0);
+
+    auto& hit = world.ecs().get<HitStateComponent>(unit);
+    CHECK(hit.hitCounts == 1);
+
+    // 模拟从未进入 Hit（例如霸体硬吃伤害触发受击保护）直接从 Idle 转入 HitDown，且浮空值已耗尽。
+    hit.hitProtectExecuted = true;
+    hit.rigidity           = {};
+    hit.stiffTime          = Fixed::fromInt(300);
+
+    world.tick(FrameInput{world.frame() + 1, {}, {}, {}});
+    REQUIRE(world.ecs().get<RoleStateComponent>(unit).state == RoleStateId::HitDown);
+    CHECK(hit.hitCounts == 1);
+    CHECK(tickUntilState(world, unit, RoleStateId::HitFloor, 60));
+    CHECK(tickUntilState(world, unit, RoleStateId::Idle, 180));
 }

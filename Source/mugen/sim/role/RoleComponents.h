@@ -44,8 +44,8 @@ struct HitStateComponent
     Fixed weight;
     // 当前疲劳值。
     Fixed fatigue;
-    // 已累计的受击次数。
-    int32_t hitCounts = 0;
+    // 已累计的受击次数（进入受击或出生时为 1，浮空耗尽后每次追击递增）。
+    int32_t hitCounts = 1;
     // 硬直持续时间（读取时逐次扣除疲劳）。
     Fixed stiffTime;
     // 待处理受击请求（CombatSystem 写，RoleFsm 消费）。

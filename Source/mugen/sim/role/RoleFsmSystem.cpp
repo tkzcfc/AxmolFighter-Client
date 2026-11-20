@@ -88,6 +88,11 @@ void playHitMotion(MotionStateComponent& motion, RoleStateId state)
                                                                     : conf::kHitScaleTime;
     motion.playing            = true;
 }
+// 当前受击动作是否已完成（同时认完成脉冲与已完成圈数，防止追击分支提前返回漏掉一次性完成位）。
+bool motionCompleted(const MotionStateComponent& motion)
+{
+    return motion.completedThisFrame || motion.completedLoops > 0;
+}
 // 播放待机动作。
 using role::rules::playIdle;
 // 启动受击位移。Began 由 displacement::rules::set 发出；缺失位移行时回退为 -1 避免永久等制动。
@@ -156,6 +161,7 @@ void enterGetUp(World& world, Entity entity, RoleStateComponent& state, HitState
 {
     hit.animationEnd    = false;
     hit.displacementEnd = false;
+    hit.pendingHitDefId = 0;
     hit.hitTimeMs       = {};
     playHitMotion(motion, RoleStateId::GetUp);
     if (identity.roleType == 1)
@@ -189,7 +195,7 @@ void updateDeath(World& world, Entity entity, RoleStateComponent& state, const M
                  const DisplacementComponent& disp, HitStateComponent& hit, Fixed dtMs)
 {
     state.stateMs += dtMs;
-    if (motion.completedLoops > 0)
+    if (motionCompleted(motion))
         hit.animationEnd = true;
     if (disp.brake || disp.lie)
         hit.displacementEnd = true;
@@ -208,7 +214,7 @@ bool updateHit(World& world, Entity entity, RoleStateComponent& state, HitStateC
     const auto* role = roleDef(identity);
     const bool dead  = state.deathRequested;
     // 动画完成：击倒/击飞且角色未配置受击位移覆盖时转入浮空。
-    if (motion.completedThisFrame)
+    if (!hit.animationEnd && motionCompleted(motion))
     {
         hit.animationEnd = true;
         if (hit.hitType != 0 && role && role->hitDisplacementId == -1)
@@ -267,7 +273,7 @@ bool updateHit(World& world, Entity entity, RoleStateComponent& state, HitStateC
 void updateHitSwitch(World& world, Entity entity, RoleStateComponent& state, HitStateComponent& hit, MotionStateComponent& motion,
                      DisplacementComponent& disp, const IdentityComponent& identity, Fixed dtMs)
 {
-    if (!motion.completedThisFrame)
+    if (!motionCompleted(motion))
     {
         state.stateMs += dtMs;
         return;
@@ -286,25 +292,15 @@ void updateHitUp(World& world, Entity entity, RoleStateComponent& state, HitStat
                  DisplacementComponent& disp, const IdentityComponent& identity, Fixed dtMs)
 {
     (void)identity;
-    if (motion.completedThisFrame)
-    {
+    if (motionCompleted(motion))
         hit.animationEnd = true;
-        if (hit.displacementEnd)
-        {
-            transition(world, entity, state, RoleStateId::HitDown);
-            enterHitAir(world, entity, state, hit, motion, RoleStateId::HitDown);
-            return;
-        }
-    }
-    if ((disp.air || disp.lie) && !hit.displacementEnd)
-    {
+    if (disp.air || disp.lie)
         hit.displacementEnd = true;
-        if (hit.animationEnd)
-        {
-            transition(world, entity, state, RoleStateId::HitDown);
-            enterHitAir(world, entity, state, hit, motion, RoleStateId::HitDown);
-            return;
-        }
+    if (hit.animationEnd && hit.displacementEnd)
+    {
+        transition(world, entity, state, RoleStateId::HitDown);
+        enterHitAir(world, entity, state, hit, motion, RoleStateId::HitDown);
+        return;
     }
     state.stateMs += dtMs;
 }
@@ -313,25 +309,15 @@ void updateHitDown(World& world, Entity entity, RoleStateComponent& state, HitSt
                    DisplacementComponent& disp, const IdentityComponent& identity, Fixed dtMs)
 {
     (void)identity;
-    if (motion.completedThisFrame)
-    {
+    if (motionCompleted(motion))
         hit.animationEnd = true;
-        if (hit.displacementEnd)
-        {
-            transition(world, entity, state, RoleStateId::HitFloor);
-            enterHitAir(world, entity, state, hit, motion, RoleStateId::HitFloor);
-            return;
-        }
-    }
-    if (disp.lie && !hit.displacementEnd)
-    {
+    if (disp.lie)
         hit.displacementEnd = true;
-        if (hit.animationEnd)
-        {
-            transition(world, entity, state, RoleStateId::HitFloor);
-            enterHitAir(world, entity, state, hit, motion, RoleStateId::HitFloor);
-            return;
-        }
+    if (hit.animationEnd && hit.displacementEnd)
+    {
+        transition(world, entity, state, RoleStateId::HitFloor);
+        enterHitAir(world, entity, state, hit, motion, RoleStateId::HitFloor);
+        return;
     }
     state.stateMs += dtMs;
 }
@@ -342,7 +328,7 @@ bool updateHitFloor(World& world, Entity entity, RoleStateComponent& state, HitS
 {
     const auto* role = roleDef(identity);
     const bool dead  = state.deathRequested;
-    if (motion.completedThisFrame)
+    if (!hit.animationEnd && motionCompleted(motion))
     {
         hit.animationEnd = true;
         hit.hitTimeMs    = {};
@@ -387,7 +373,7 @@ bool updateHitFloor(World& world, Entity entity, RoleStateComponent& state, HitS
 void updateGetUp(World& world, Entity entity, RoleStateComponent& state, HitStateComponent& hit, MotionStateComponent& motion,
                  DisplacementComponent& disp, const IdentityComponent& identity, Fixed dtMs)
 {
-    if (!motion.completedThisFrame)
+    if (!motionCompleted(motion))
     {
         state.stateMs += dtMs;
         return;
@@ -698,6 +684,9 @@ void runRoleFsm(World& world)
                     }
                     case RoleStateId::HitUp:
                     case RoleStateId::HitDown:
+                        if (motionCompleted(motion))
+                            hit.animationEnd = true;
+                        [[fallthrough]];
                     case RoleStateId::HitFloor:
                     {
                         const auto* data = hitDef(hit.pendingHitDefId);
@@ -748,6 +737,7 @@ void runRoleFsm(World& world)
                  state.state == RoleStateId::Walk || state.state == RoleStateId::Run))
             {
                 skill::rules::forceInterrupt(world, entity);
+                hit.hitCounts = 1;
                 transition(world, entity, state, RoleStateId::HitDown);
                 enterHitAir(world, entity, state, hit, motion, RoleStateId::HitDown);
                 return;

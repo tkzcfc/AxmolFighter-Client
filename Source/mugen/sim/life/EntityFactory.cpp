@@ -127,7 +127,7 @@ Entity materializeRole(World& world, const SpawnRequest& request, SpawnStage sta
     hitState.rigidity  = Fixed::fromInt(row->rigidity);
     hitState.weight    = row->weight;
     hitState.fatigue   = Fixed::fromInt(row->fatigue);
-    hitState.hitCounts = row->hitCount;
+    hitState.hitCounts = 1;
     hitState.stiffTime = Fixed::fromInt(row->hitStiffTime);
     ecs.add(entity, hitState);
 
